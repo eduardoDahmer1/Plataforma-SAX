@@ -129,4 +129,12 @@ class UploadController extends Controller
 
         return redirect()->route('uploads.index')->with('success', 'Arquivo excluído com sucesso!');
     }
+
+        public function show($id)
+    {
+        // Recupera o upload com base no ID
+        $upload = Upload::findOrFail($id);
+
+        return view('uploads.show', compact('upload'));
+    }
 }

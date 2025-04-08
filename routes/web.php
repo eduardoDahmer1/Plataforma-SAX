@@ -2,14 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
-
-Route::get('/sobre-nos', function () {
-    return view('sobre-nos');
-})->name('sobre-nos');
-
-Route::get('/contato', function () {
-    return view('contato');
-})->name('contato');
+// web.php
+Route::get('/', fn() => view('pages.home'))->name('pages.home');
+Route::get('/sobre-nos', fn() => view('pages.sobre-nos'))->name('pages.sobre');
+Route::get('/contato', fn() => view('pages.contato'))->name('pages.contato');

@@ -1,0 +1,29 @@
+@extends('layout.layout')
+
+@section('content')
+<div class="container">
+    <a href="{{ route('pages.contato') }}" class="btn btn-link">Contato</a>
+    <a href="{{ route('pages.sobre') }}" class="btn btn-link">Sobre Nós</a>
+    <a href="{{ route('pages.home') }}" class="btn btn-link">Home</a>
+
+    <h1>Editar Upload</h1>
+
+    <form action="{{ route('uploads.update', $upload->id) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+        <div class="form-group">
+            <label for="title">Título</label>
+            <input type="text" name="title" class="form-control" value="{{ $upload->title }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Descrição</label>
+            <textarea name="description" class="form-control" rows="4" required>{{ $upload->description }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="file">Arquivo (se desejar substituir)</label>
+            <input type="file" name="file" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Salvar Alterações</button>
+    </form>
+</div>
+@endsection

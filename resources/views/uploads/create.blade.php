@@ -1,0 +1,28 @@
+@extends('layout.layout')
+
+@section('content')
+<div class="container">
+    <a href="{{ route('pages.contato') }}" class="btn btn-link">Contato</a>
+    <a href="{{ route('pages.sobre') }}" class="btn btn-link">Sobre Nós</a>
+    <a href="{{ route('pages.home') }}" class="btn btn-link">Home</a>
+
+    <h1>Criar Novo Upload</h1>
+
+    <form action="{{ route('uploads.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        <div class="form-group">
+            <label for="title">Título</label>
+            <input type="text" name="title" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Descrição</label>
+            <textarea name="description" class="form-control" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="file">Arquivo</label>
+            <input type="file" name="file" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Enviar</button>
+    </form>
+</div>
+@endsection

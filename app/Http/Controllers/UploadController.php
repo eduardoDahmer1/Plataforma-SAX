@@ -44,8 +44,8 @@ class UploadController extends Controller
         // Valida o arquivo enviado
         $request->validate([
             'file' => 'required|file|max:10240', // Máximo 10MB
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255',
+            'title' => 'required|string|max:10240',
+            'description' => 'nullable|string|max:',
         ]);
 
         $file = $request->file('file');
@@ -80,37 +80,43 @@ class UploadController extends Controller
     {
         // Valida os dados
         $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255',
+            'title' => 'required|string|max:10240',
+            'description' => 'nullable|string|max:10240',
             'file' => 'nullable|file|max:10240', // Máximo 10MB
         ]);
 
+        // Encontra o upload pelo ID
         $upload = Upload::findOrFail($id);
+
+        // Atualiza o título e a descrição
         $upload->title = $request->title;
         $upload->description = $request->description;
 
-        // Atualiza o arquivo, se houver um novo
+        // Verifica se um novo arquivo foi enviado
         if ($request->hasFile('file')) {
             // Remove o arquivo antigo, se existir
-            if (Storage::disk('public')->exists($upload->file_path)) {
-                Storage::disk('public')->delete($upload->file_path);
+            if ($upload->file_path && Storage::disk('public')->exists($upload->file_path)) {
+                Storage::disk('public')->delete($upload->file_path); // Exclui o arquivo anterior
             }
 
             // Faz o upload do novo arquivo
             $file = $request->file('file');
-            $path = $file->store('uploads', 'public');
+            $path = $file->store('uploads', 'public'); // Faz o upload e armazena no diretório 'uploads'
 
-            // Atualiza os dados do upload
+            // Atualiza as informações no banco de dados
             $upload->file_path = $path;
-            $upload->file_type = $file->getClientOriginalExtension();
-            $upload->original_name = $file->getClientOriginalName();
-            $upload->mime_type = $file->getClientMimeType();
+            $upload->file_type = $file->getClientOriginalExtension(); // Tipo de arquivo (extensão)
+            $upload->original_name = $file->getClientOriginalName(); // Nome original do arquivo
+            $upload->mime_type = $file->getClientMimeType(); // Tipo MIME do arquivo
         }
 
+        // Salva as alterações no banco de dados
         $upload->save();
 
+        // Redireciona com uma mensagem de sucesso
         return redirect()->route('uploads.index')->with('success', 'Arquivo atualizado com sucesso!');
     }
+
 
     /**
      * Remove um upload do banco e do armazenamento.

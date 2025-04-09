@@ -27,17 +27,17 @@
             <!-- Submit Button -->
             <button type="submit" class="submit-btn">Login</button>
 
-            <!-- Forgot Password Link -->
+            <!-- Forgot Password Link
             @if (Route::has('password.request'))
                 <div class="forgot-password">
                     <a href="{{ route('password.request') }}">{{ __('Forgot your password?') }}</a>
                 </div>
             @endif
 
-            <!-- Register Link -->
+             Register Link
             <div class="register-link">
                 <p>Don't have an account? <a href="{{ route('register') }}">{{ __('Register here') }}</a></p>
-            </div>
+            </div> -->
         </form>
     </div>
 </x-guest-layout>

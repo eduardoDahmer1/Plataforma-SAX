@@ -48,7 +48,4 @@
     <a href="{{ route('uploads.index') }}" class="btn btn-primary mt-4">Voltar para a lista de arquivos</a>
 </div>
 
-<!-- Lightbox JS (Adicionando a funcionalidade de lightbox para imagens) -->
-<script src="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/js/lightbox.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css" rel="stylesheet">
 @endsection

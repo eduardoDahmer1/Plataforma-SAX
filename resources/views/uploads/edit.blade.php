@@ -12,11 +12,11 @@
         @method('PUT')
         <div class="form-group">
             <label for="title">Título</label>
-            <input type="text" name="title" class="form-control" value="{{ $upload->title }}" required>
+            <input type="text" name="title" class="form-control" value="{{ $upload->title }}">
         </div>
         <div class="form-group">
             <label for="description">Descrição</label>
-            <textarea name="description" class="form-control" rows="4" required>{{ $upload->description }}</textarea>
+            <textarea name="description" class="form-control" rows="4">{{ $upload->description }}</textarea>
         </div>
 
         <div class="form-group">
@@ -28,7 +28,6 @@
 </div>
 
 <script>
-    // Sincronizar o conteúdo do TinyMCE com o textarea original ao enviar o formulário
     document.getElementById('uploadForm').addEventListener('submit', function() {
         var content = tinymce.get('description').getContent();
         document.querySelector('textarea[name="description"]').value = content;

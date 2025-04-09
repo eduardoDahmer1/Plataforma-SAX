@@ -2,8 +2,7 @@
 
 @section('content')
 <div class="container">
-    @if (auth()->check()) <!-- Verifica se o usuário está logado -->
-        <a href="{{ route('pages.home') }}" class="btn btn-link">Home</a>
+    @if (auth()->check())
 
         <h2>Bem-vindo à Página Inicial</h2>
         <p>Esta é a página de uploads. Aqui você pode ver os arquivos que foram carregados.</p>
@@ -45,9 +44,9 @@
             </li>
             @endforeach
         </ul>
-    @else <!-- Caso o usuário não esteja logado -->
+    @else
         <div class="alert alert-warning">
-            Você precisa estar logado para acessar esta página. <a href="{{ route('login') }}">Clique aqui para fazer login</a>.
+            Você precisa estar logado para acessar esta página.
         </div>
     @endif
 </div>

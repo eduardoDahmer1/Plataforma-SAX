@@ -1,6 +1,32 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
 .text-home{
     margin-top: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.slider-section {
+    margin: 60px auto;
+}
+
+.swiper,
+.splide,
+.glide,
+.flickity-carousel,
+#lightgallery {
+    max-width: 900px;
+    margin: auto;
+}
+
+.swiper-slide img,
+.splide__slide img,
+.glide__slide img,
+.flickity-carousel img,
+#lightgallery a img {
+    width: 100%;
+    border-radius: 10px;
 }

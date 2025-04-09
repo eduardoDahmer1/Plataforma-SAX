@@ -55,7 +55,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://plataforma.cloudcrow.com.br/'),
+    'url' => env('APP_URL', 'http://plataforma.cloudcrow.com.br'),
 
     'asset_url' => env('ASSET_URL'),
 

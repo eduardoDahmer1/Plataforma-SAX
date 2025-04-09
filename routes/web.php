@@ -31,4 +31,6 @@ Route::middleware('auth')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::post('/upload-tinymce-image', [App\Http\Controllers\TinyMCEUploadController::class, 'upload']);
+
 require __DIR__.'/auth.php';

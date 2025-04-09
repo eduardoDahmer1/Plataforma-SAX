@@ -12,12 +12,12 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
-    <link rel="stylesheet" href="{{ asset('resources/css/app.css') }}">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap CSS (Remover o `integrity`) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Bootstrap Icons -->
@@ -98,7 +98,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/zoom/lg-zoom.umd.min.js"></script>
 
-    <!-- Inicialização dos sliders
+    <!-- Inicialização dos sliders -->
     <script>
     new Swiper(".mySwiper", {
         loop: true,
@@ -123,7 +123,47 @@
         plugins: [lgZoom],
         speed: 500,
     });
-    </script> -->
+    </script>
+
+    <!-- TinyMCE -->
+    <script src="https://cdn.tiny.cloud/1/43mbnibu3ong3lcvte3voj7cmoja1hxwscj81q2ublgk3rju/tinymce/7/tinymce.min.js"
+        referrerpolicy="origin"></script>
+
+    <script>
+    tinymce.init({
+        selector: 'textarea[name=description]', // Selecione o textarea
+        height: 400,
+        plugins: [
+            'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link',
+            'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+            'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed',
+            'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste',
+            'advtable', 'advcode', 'editimage', 'advtemplate', 'mentions',
+            'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography',
+            'inlinecss', 'markdown', 'importword', 'exportword', 'exportpdf'
+        ],
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+        tinycomments_mode: 'embedded',
+        tinycomments_author: 'Seu Nome',
+        mergetags_list: [{
+                value: 'First.Name',
+                title: 'First Name'
+            },
+            {
+                value: 'Email',
+                title: 'Email'
+            }
+        ],
+        language: 'pt_BR', // opcional, você pode adaptar depois se precisar
+        setup: function(editor) {
+            editor.on('change', function() {
+                // Sincronize o conteúdo do editor com o textarea original para validação
+                var content = editor.getContent();
+                editor.targetElm.value = content;
+            });
+        }
+    });
+    </script>
 
 </body>
 

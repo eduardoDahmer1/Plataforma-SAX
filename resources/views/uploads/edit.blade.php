@@ -7,7 +7,7 @@
 
     <h1>Editar Upload</h1>
 
-    <form action="{{ route('uploads.update', $upload->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('uploads.update', $upload->id) }}" method="POST" enctype="multipart/form-data" id="uploadForm">
         @csrf
         @method('PUT')
         <div class="form-group">
@@ -18,6 +18,7 @@
             <label for="description">Descrição</label>
             <textarea name="description" class="form-control" rows="4" required>{{ $upload->description }}</textarea>
         </div>
+
         <div class="form-group">
             <label for="file">Arquivo (se desejar substituir)</label>
             <input type="file" name="file" class="form-control">
@@ -25,4 +26,12 @@
         <button type="submit" class="btn btn-primary mt-3">Salvar Alterações</button>
     </form>
 </div>
+
+<script>
+    // Sincronizar o conteúdo do TinyMCE com o textarea original ao enviar o formulário
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        var content = tinymce.get('description').getContent();
+        document.querySelector('textarea[name="description"]').value = content;
+    });
+</script>
 @endsection

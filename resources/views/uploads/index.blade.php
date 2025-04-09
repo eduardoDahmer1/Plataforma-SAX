@@ -34,7 +34,6 @@
         <thead>
             <tr>
                 <th>Título</th>
-                <th>Descrição</th>
                 <th>Arquivo</th>
                 <th>Ações</th>
             </tr>
@@ -43,7 +42,6 @@
             @foreach($uploads as $upload)
             <tr>
                 <td>{{ $upload->title }}</td>
-                <td>{{ $upload->description }}</td>
                 <td><a href="{{ asset('storage/' . $upload->file_path) }}"
                         target="_blank">{{ $upload->original_name }}</a></td>
                 <td>

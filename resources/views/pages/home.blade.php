@@ -16,12 +16,32 @@
         <a href="{{ route('uploads.index') }}" class="btn btn-primary mb-3">Ver Todos os Arquivos</a>
 
         <h4 class="mt-4">Arquivos Recentes:</h4>
-        <ul>
+        <ul class="list-group">
             @foreach($uploads->take(5) as $upload) <!-- Exibe somente os 5 uploads mais recentes -->
-            <li>
+            <li class="list-group-item mb-3">
                 <strong>{{ $upload->title ?? 'Sem título' }}</strong> <br>
-                <p>{{ $upload->description ?? 'Sem descrição' }}</p>
-                <a href="{{ route('uploads.show', $upload->id) }}" class="btn btn-sm btn-info">Ver Detalhes</a> <!-- Botão para visualizar o upload -->
+                <p class="text-home">{{ $upload->description ?? 'Sem descrição' }}</p>
+
+                <!-- Exibir conteúdo -->
+                @if($upload->file)
+                    <div class="mb-2">
+                        @php
+                            $fileExtension = pathinfo($upload->file, PATHINFO_EXTENSION);
+                        @endphp
+
+                        @if(in_array(strtolower($fileExtension), ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                            <img src="{{ asset('storage/' . $upload->file) }}" alt="Imagem" class="img-fluid rounded" style="max-height: 300px;">
+                        @elseif(strtolower($fileExtension) === 'pdf')
+                            <a href="{{ asset('storage/' . $upload->file) }}" target="_blank" class="btn btn-sm btn-secondary">Abrir PDF</a>
+                        @else
+                            <a href="{{ asset('storage/' . $upload->file) }}" target="_blank" class="btn btn-sm btn-secondary">Baixar Arquivo</a>
+                        @endif
+                    </div>
+                @else
+                    <p><em>Nenhum arquivo associado.</em></p>
+                @endif
+
+                <a href="{{ route('uploads.show', $upload->id) }}" class="btn btn-sm btn-info">Ver Detalhes</a>
             </li>
             @endforeach
         </ul>

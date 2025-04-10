@@ -16,13 +16,13 @@
                 <x-text-input id="password" type="password" name="password" placeholder="Password" required autocomplete="current-password" />
             </div>
 
-            <!-- Remember Me -->
+            <!-- Remember Me
             <div class="form-group">
                 <label for="remember_me" class="checkbox-label">
                     <input id="remember_me" type="checkbox" name="remember">
                     <span>{{ __('Remember me') }}</span>
                 </label>
-            </div>
+            </div> -->
 
             <!-- Submit Button -->
             <button type="submit" class="submit-btn">Login</button>

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'user_type', // Campo para definir se é admin master ou usuário comum
     ];
 
     /**
@@ -42,4 +42,18 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Accessor para o nome do perfil do usuário.
+     *
+     * @return string
+     */
+    public function getUserRoleAttribute()
+    {
+        return match ($this->user_type) {
+            1 => 'Admin Master',
+            2 => 'Usuário Comum',
+            default => 'Desconhecido',
+        };
+    }
 }

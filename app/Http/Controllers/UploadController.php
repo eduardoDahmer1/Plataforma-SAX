@@ -14,7 +14,7 @@ class UploadController extends Controller
     public function index()
     {
         // Exibe todos os uploads para a página principal
-        $uploads = Upload::latest()->take(5)->get();  // Limita a 5 uploads mais recentes
+        $uploads = Upload::paginate(5);  // Exibe 4 uploads por página
         return view('pages.home', compact('uploads')); // Home exibe os 5 uploads mais recentes
     }
 
@@ -45,12 +45,12 @@ class UploadController extends Controller
         $request->validate([
             'file' => 'required|file|max:10240', // Máximo 10MB
             'title' => 'required|string|max:10240',
-            'description' => 'nullable|string|max:',
+            'description' => 'nullable|string|max:10000', // Definindo um valor máximo válido para description
         ]);
-
+    
         $file = $request->file('file');
         $path = $file->store('uploads', 'public');
-
+    
         Upload::create([
             'title' => $request->title,
             'description' => $request->description,
@@ -60,9 +60,10 @@ class UploadController extends Controller
             'mime_type' => $file->getClientMimeType(),
             'user_id' => auth()->id() ?? null,  // Opcional, se o usuário estiver autenticado
         ]);
-
+    
         return redirect()->route('uploads.index')->with('success', 'Arquivo enviado com sucesso!');
     }
+    
 
     /**
      * Exibe o formulário de edição.

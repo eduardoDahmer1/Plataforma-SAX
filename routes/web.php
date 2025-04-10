@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LoginController;
 
 // Página inicial - exibe os uploads mais recentes
 Route::get('/', [UploadController::class, 'index'])->name('pages.home');
@@ -29,8 +32,20 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Rotas administrativas (apenas para admin)
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('index');
+    
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('/users/{user}/update-type', [AdminUserController::class, 'updateType'])->name('users.updateType');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+});
+
+// Rota de logout
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+// Rota para upload de imagem TinyMCE
 Route::post('/upload-tinymce-image', [App\Http\Controllers\TinyMCEUploadController::class, 'upload']);
 
+// Arquivo de autenticação
 require __DIR__.'/auth.php';

@@ -2,8 +2,9 @@
 
 @section('content')
 <div class="container">
-    <a href="{{ route('pages.home') }}" class="btn btn-link">Home</a>
-    <a href="{{ route('uploads.index') }}" class="btn btn-link">Adicionar novos arquivos</a>
+    <a href="{{ route('admin.index') }}" class="btn btn-primary mb-3">Admin</a>
+    <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
+    <a href="{{ route('uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
 
     <h1>Criar Novo Upload</h1>
 

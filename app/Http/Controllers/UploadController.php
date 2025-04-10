@@ -11,10 +11,19 @@ class UploadController extends Controller
     /**
      * Exibe os uploads recentes (home).
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Exibe todos os uploads para a página principal
-        $uploads = Upload::paginate(5);  // Exibe 4 uploads por página
+        $query = Upload::query();
+
+        // Verifica se há um termo de pesquisa
+        if ($request->has('search') && $request->search != '') {
+            $query->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        // Recupera os uploads com paginação
+        $uploads = $query->paginate(5);
+
         return view('pages.home', compact('uploads')); // Home exibe os 5 uploads mais recentes
     }
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\LoginController;
 // Página inicial - exibe os uploads mais recentes
 Route::get('/', [UploadController::class, 'index'])->name('pages.home');
 
+
 // Página com todos os uploads
 Route::get('/uploads', [UploadController::class, 'allUploads'])->name('uploads.index');
 
@@ -39,6 +40,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/update-type', [AdminUserController::class, 'updateType'])->name('users.updateType');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/uploads', [UploadController::class, 'index'])->name('uploads.index');
 });
 
 // Rota de logout

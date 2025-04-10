@@ -42,9 +42,6 @@
 
 .form-group {
     margin-bottom: 1em;
-    justify-content: unset;
-    align-items: normal;
-    display: flex;
 }
 
 .form-group input {

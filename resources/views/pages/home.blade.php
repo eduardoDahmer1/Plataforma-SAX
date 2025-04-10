@@ -12,7 +12,7 @@
         @endif
 
         <!-- Exibir botão para todos os arquivos -->
-        <a href="{{ route('uploads.index') }}" class="btn btn-primary mb-3">Ver Todos os Arquivos</a>
+        <a href="{{ route('uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
 
         <h4 class="mt-4">Arquivos Recentes:</h4>
         <ul class="list-group">

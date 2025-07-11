@@ -19,4 +19,19 @@ class Upload extends Model
         'mime_type',
         'user_id',
     ];
+
+    // Relacionamento com a model User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // Se sua tabela não usa os timestamps padrão, desabilite-os:
+    // public $timestamps = false;
+
+    // Caso você queira definir o tipo de dados para alguns campos, por exemplo:
+    // protected $casts = [
+    //     'created_at' => 'datetime',
+    //     'updated_at' => 'datetime',
+    // ];
 }

@@ -21,8 +21,8 @@ class UploadController extends Controller
                   ->orWhere('description', 'like', '%' . $request->search . '%');
         }
 
-        // Recupera os uploads com paginação
-        $uploads = $query->paginate(5);
+        // Utiliza eager loading para carregar a relação 'user' de forma antecipada
+        $uploads = $query->with('user')->paginate(5);  // Carrega uploads com o usuário
 
         return view('pages.home', compact('uploads')); // Home exibe os 5 uploads mais recentes
     }
@@ -32,8 +32,9 @@ class UploadController extends Controller
      */
     public function allUploads()
     {
-        // Exibe todos os uploads para a página index
-        $uploads = Upload::all();  // Aqui você pode aplicar a paginação, se necessário
+        // Carrega todos os uploads com a relação 'user' de forma antecipada
+        $uploads = Upload::with('user')->get();  // Carrega todos os uploads com o usuário
+
         return view('uploads.index', compact('uploads')); // A página com todos os uploads
     }
 
@@ -127,7 +128,6 @@ class UploadController extends Controller
         return redirect()->route('uploads.index')->with('success', 'Arquivo atualizado com sucesso!');
     }
 
-
     /**
      * Remove um upload do banco e do armazenamento.
      */
@@ -146,7 +146,7 @@ class UploadController extends Controller
         return redirect()->route('uploads.index')->with('success', 'Arquivo excluído com sucesso!');
     }
 
-        public function show($id)
+    public function show($id)
     {
         // Recupera o upload com base no ID
         $upload = Upload::findOrFail($id);

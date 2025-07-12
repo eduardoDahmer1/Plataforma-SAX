@@ -1,6 +1,6 @@
 <header class="bg-dark text-white p-3">
     <div class="container d-flex justify-content-between align-items-center">
-        <h1>Plataforma de documentos e cursos Sax</h1>
+        <h1>Sax</h1>
 
         @if (Auth::check())
         <!-- Botão de Logout (aparece se estiver logado) -->

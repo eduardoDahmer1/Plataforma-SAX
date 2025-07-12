@@ -10,6 +10,7 @@ use App\Http\Controllers\LoginController;
 // Página inicial - exibe os uploads mais recentes
 Route::get('/', [UploadController::class, 'index'])->name('pages.home');
 
+Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 
 // Página com todos os uploads
 Route::get('/uploads', [UploadController::class, 'allUploads'])->name('uploads.index');

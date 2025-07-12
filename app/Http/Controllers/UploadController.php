@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Upload;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;  // Se ainda não tiver
+use Illuminate\Http\Request;         // Se ainda não tiver
+use Illuminate\Support\Facades\DB;   // Se usar DB::raw()
+use App\Models\Product;
 
 class UploadController extends Controller
 {
@@ -13,18 +18,58 @@ class UploadController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Upload::query();
-
-        // Verifica se há um termo de pesquisa
-        if ($request->has('search') && $request->search != '') {
-            $query->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        $search = $request->search;
+    
+        // Busca uploads
+        $uploadsQuery = Upload::select(
+            'id', 'title', 'description', 'created_at', DB::raw("'upload' as type")
+        );
+    
+        if ($search) {
+            $uploadsQuery->where(function ($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+            });
         }
-
-        // Utiliza eager loading para carregar a relação 'user' de forma antecipada
-        $uploads = $query->with('user')->paginate(30);  // Carrega uploads com o usuário
-
-        return view('pages.home', compact('uploads')); // Home exibe os 5 uploads mais recentes
+    
+        $uploads = $uploadsQuery->get();
+    
+        // Busca produtos
+        $productsQuery = Product::select(
+            'id',
+            DB::raw("external_name as title"),
+            DB::raw("sku as description"),
+            'created_at',
+            DB::raw("'product' as type"),
+            'price'
+        );
+    
+        if ($search) {
+            $productsQuery->where(function ($q) use ($search) {
+                $q->where('external_name', 'like', '%' . $search . '%')
+                  ->orWhere('sku', 'like', '%' . $search . '%');
+            });
+        }
+    
+        $products = $productsQuery->get();
+    
+        // Une e ordena por created_at desc
+        $merged = $uploads->merge($products)->sortByDesc('created_at');
+    
+        // Paginação manual
+        $page = Paginator::resolveCurrentPage('page');
+        $perPage = 30;
+        $itemsForCurrentPage = $merged->slice(($page - 1) * $perPage, $perPage)->values();
+    
+        $paginatedItems = new LengthAwarePaginator(
+            $itemsForCurrentPage,
+            $merged->count(),
+            $perPage,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()]
+        );
+    
+        return view('pages.home', ['items' => $paginatedItems]);
     }
 
     /**

@@ -25,6 +25,11 @@ class Upload extends Model
     {
         return $this->belongsTo(User::class);
     }
+    // No modelo Upload
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 
     // Se sua tabela não usa os timestamps padrão, desabilite-os:
     // public $timestamps = false;

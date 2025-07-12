@@ -6,6 +6,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ProductController;
+
+Route::resource('product', ProductController::class);
 
 // Página inicial - exibe os uploads mais recentes
 Route::get('/', [UploadController::class, 'index'])->name('pages.home');
@@ -14,6 +17,12 @@ Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.ind
 
 // Página com todos os uploads
 Route::get('/uploads', [UploadController::class, 'allUploads'])->name('uploads.index');
+
+// Rota para a listagem de produtos com pesquisa
+Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
+
+// Rota para exibir os detalhes do produto
+Route::get('product/{id}', [ProductController::class, 'show'])->name('product.show');
 
 // Rotas resource para uploads
 Route::resource('uploads', UploadController::class)->except(['index']); // Excluímos o método index do resource

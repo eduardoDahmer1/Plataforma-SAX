@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Upload;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;  // Se ainda não tiver
-use Illuminate\Http\Request;         // Se ainda não tiver
-use Illuminate\Support\Facades\DB;   // Se usar DB::raw()
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use App\Models\Product;
+
 
 class UploadController extends Controller
 {
@@ -36,12 +36,7 @@ class UploadController extends Controller
     
         // Busca produtos
         $productsQuery = Product::select(
-            'id',
-            DB::raw("external_name as title"),
-            DB::raw("sku as description"),
-            'created_at',
-            DB::raw("'product' as type"),
-            'price'
+            'id', DB::raw("external_name as title"), DB::raw("sku as description"), 'created_at', DB::raw("'product' as type"), 'price'
         );
     
         if ($search) {
@@ -53,24 +48,26 @@ class UploadController extends Controller
     
         $products = $productsQuery->get();
     
-        // Une e ordena por created_at desc
+        // Unir e ordenar por created_at
         $merged = $uploads->merge($products)->sortByDesc('created_at');
     
-        // Paginação manual
-        $page = Paginator::resolveCurrentPage('page');
+        // Paginar manualmente
         $perPage = 30;
-        $itemsForCurrentPage = $merged->slice(($page - 1) * $perPage, $perPage)->values();
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $merged->slice(($currentPage - 1) * $perPage, $perPage)->values();
     
-        $paginatedItems = new LengthAwarePaginator(
-            $itemsForCurrentPage,
+        $paginated = new LengthAwarePaginator(
+            $currentItems,
             $merged->count(),
             $perPage,
-            $page,
-            ['path' => Paginator::resolveCurrentPath()]
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
         );
     
-        return view('pages.home', ['items' => $paginatedItems]);
-    }
+        return view('pages.home', [
+            'items' => $paginated
+        ]);
+    }    
 
     /**
      * Exibe a página com todos os uploads.

@@ -97,5 +97,11 @@ class Product extends Model
         'promotion_price',
     ];
 
+    // No modelo Product
+    public function uploads()
+    {
+        return $this->hasMany(Upload::class, 'product_id'); // Supondo que a chave estrangeira seja 'product_id'
+    }
+
     public $timestamps = true;
 }

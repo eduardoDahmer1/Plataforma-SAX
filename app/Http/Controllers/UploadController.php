@@ -22,7 +22,7 @@ class UploadController extends Controller
         }
 
         // Utiliza eager loading para carregar a relação 'user' de forma antecipada
-        $uploads = $query->with('user')->paginate(5);  // Carrega uploads com o usuário
+        $uploads = $query->with('user')->paginate(30);  // Carrega uploads com o usuário
 
         return view('pages.home', compact('uploads')); // Home exibe os 5 uploads mais recentes
     }

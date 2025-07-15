@@ -7,6 +7,15 @@
         <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">Nova Categoria</a>
     </div>
 
+    <!-- Formulário de busca -->
+    <form action="{{ route('admin.categories.index') }}" method="GET" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Buscar por nome ou ID"
+                value="{{ request('search') }}">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+        </div>
+    </form>
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif

@@ -11,8 +11,21 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Cache::remember('categories.all', 3600, function () {
-            return Category::orderBy('name')->paginate(20);
+        // Captura o termo de busca
+        $search = request('search');
+
+        // Utiliza o cache com o filtro de busca
+        $categories = Cache::remember('categories.search.' . md5($search) . '.page.' . request('page', 1), 3600, function () use ($search) {
+            $query = Category::orderBy('name'); // Ordena as categorias pelo nome
+
+            // Aplica filtro de busca se houver
+            if ($search) {
+                $query->where('name', 'like', "%{$search}%")  // Busca por nome
+                      ->orWhere('id', $search)               // Busca por ID
+                      ->orWhere('slug', 'like', "%{$search}%"); // Busca por slug
+            }
+
+            return $query->paginate(20); // Pagina os resultados
         });
 
         return view('pages.categories.index', compact('categories'));

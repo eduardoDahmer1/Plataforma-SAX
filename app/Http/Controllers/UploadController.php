@@ -13,16 +13,22 @@ use App\Models\Product;
 
 class UploadController extends Controller
 {
-    /**
-     * Exibe os uploads recentes (home).
-     */
     public function index(Request $request)
     {
         $search = $request->search;
+        $perPage = 40;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
     
         // Busca uploads
         $uploadsQuery = Upload::select(
-            'id', 'title', 'description', 'created_at', DB::raw("'upload' as type")
+            'id',
+            'title',
+            'description',
+            'created_at',
+            DB::raw("'upload' as type"),
+            DB::raw('NULL as price'),
+            'file_path',
+            'original_name'
         );
     
         if ($search) {
@@ -36,7 +42,14 @@ class UploadController extends Controller
     
         // Busca produtos
         $productsQuery = Product::select(
-            'id', DB::raw("external_name as title"), DB::raw("sku as description"), 'created_at', DB::raw("'product' as type"), 'price'
+            'id',
+            DB::raw("external_name as title"),
+            DB::raw("sku as description"),
+            'created_at',
+            DB::raw("'product' as type"),
+            'price',
+            DB::raw('NULL as file_path'),
+            DB::raw('NULL as original_name')
         );
     
         if ($search) {
@@ -48,13 +61,11 @@ class UploadController extends Controller
     
         $products = $productsQuery->get();
     
-        // Unir e ordenar por created_at
-        $merged = $uploads->merge($products)->sortByDesc('created_at');
+        // Une as coleções e ordena por data
+        $merged = $uploads->merge($products)->sortByDesc('created_at')->values();
     
-        // Paginar manualmente
-        $perPage = 40;
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $currentItems = $merged->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        // Paginação manual com LengthAwarePaginator
+        $currentItems = $merged->forPage($currentPage, $perPage);
     
         $paginated = new LengthAwarePaginator(
             $currentItems,
@@ -64,10 +75,9 @@ class UploadController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
     
-        return view('pages.home', [
-            'items' => $paginated
-        ]);
-    }    
+        return view('admin.uploads.index', ['uploads' => $paginated]);
+    }
+    
 
     /**
      * Exibe a página com todos os uploads.
@@ -85,7 +95,7 @@ class UploadController extends Controller
      */
     public function create()
     {
-        return view('uploads.create');
+        return view('admin.uploads.create');
     }
 
     /**
@@ -123,50 +133,44 @@ class UploadController extends Controller
     public function edit(string $id)
     {
         $upload = Upload::findOrFail($id);  // Recupera o upload com base no ID
-        return view('uploads.edit', compact('upload'));
+        return view('admin.uploads.edit', compact('upload'));
     }
 
-    /**
-     * Atualiza um upload existente.
-     */
     public function update(Request $request, string $id)
     {
-        // Valida os dados
+        // Validação dos dados
         $request->validate([
             'title' => 'required|string|max:10240',
             'description' => 'nullable|string|max:10240',
-            'file' => 'nullable|file|max:10240', // Máximo 10MB
+            'file' => 'nullable|file|max:10240', // máximo 10MB
         ]);
-
-        // Encontra o upload pelo ID
+    
         $upload = Upload::findOrFail($id);
-
-        // Atualiza o título e a descrição
+    
+        // Atualiza título e descrição
         $upload->title = $request->title;
         $upload->description = $request->description;
-
-        // Verifica se um novo arquivo foi enviado
+    
+        // Verifica se novo arquivo foi enviado
         if ($request->hasFile('file')) {
-            // Remove o arquivo antigo, se existir
+            // Deleta arquivo antigo se existir
             if ($upload->file_path && Storage::disk('public')->exists($upload->file_path)) {
-                Storage::disk('public')->delete($upload->file_path); // Exclui o arquivo anterior
+                Storage::disk('public')->delete($upload->file_path);
             }
-
-            // Faz o upload do novo arquivo
+    
+            // Faz upload do novo arquivo
             $file = $request->file('file');
-            $path = $file->store('uploads', 'public'); // Faz o upload e armazena no diretório 'uploads'
-
-            // Atualiza as informações no banco de dados
+            $path = $file->store('uploads', 'public');
+    
+            // Atualiza os dados do arquivo
             $upload->file_path = $path;
-            $upload->file_type = $file->getClientOriginalExtension(); // Tipo de arquivo (extensão)
-            $upload->original_name = $file->getClientOriginalName(); // Nome original do arquivo
-            $upload->mime_type = $file->getClientMimeType(); // Tipo MIME do arquivo
+            $upload->file_type = $file->getClientOriginalExtension();
+            $upload->original_name = $file->getClientOriginalName();
+            $upload->mime_type = $file->getClientMimeType();
         }
-
-        // Salva as alterações no banco de dados
+    
         $upload->save();
-
-        // Redireciona com uma mensagem de sucesso
+    
         return redirect()->route('admin.uploads.index')->with('success', 'Arquivo atualizado com sucesso!');
     }
 
@@ -193,6 +197,6 @@ class UploadController extends Controller
         // Recupera o upload com base no ID
         $upload = Upload::findOrFail($id);
 
-        return view('uploads.show', compact('upload'));
+        return view('admin.uploads.show', compact('upload'));
     }
 }

@@ -1,13 +1,13 @@
-@extends('admin.admin')
+@extends('layout.admin')
 
-@section('admin-content')
+@section('content')
 <div class="container">
     <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
     <a href="{{ route('admin.uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
 
     <h1>Editar Upload</h1>
 
-    <form action="{{ route('uploads.update', $upload->id) }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+    <form action="{{ route('admin.uploads.update', $upload->id) }}" method="POST" enctype="multipart/form-data" id="uploadForm">
         @csrf
         @method('PUT')
         <div class="form-group">

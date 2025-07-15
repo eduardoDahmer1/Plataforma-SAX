@@ -2,13 +2,11 @@
 
 @section('content')
 <div class="container">
-    <a href="{{ route('admin.index') }}" class="btn btn-primary mb-3">Admin</a>
-    <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
     <a href="{{ route('admin.uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
 
     <h1>Criar Novo Upload</h1>
 
-    <form action="{{ route('uploads.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.uploads.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="form-group">
             <label for="title">Título</label>

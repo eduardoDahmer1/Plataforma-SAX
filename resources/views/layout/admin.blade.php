@@ -49,7 +49,7 @@
                             Catálogos
                         </a>
                         <div class="collapse" id="menuCatalogos">
-                            <a class="list-group-item list-group-item-action ps-4">Produtos</a>
+                            <a href="{{ route('admin.uploads.index') }}" class="list-group-item list-group-item-action ps-4">Produtos</a>
                             <a href="{{ route('admin.brands.index') }}"
                                 class="list-group-item list-group-item-action ps-4">Marcas</a>
                             <a href="{{ route('admin.categories.index') }}"
@@ -104,11 +104,6 @@
                             <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
                             <a class="list-group-item list-group-item-action ps-4">Termos de Serviços Gerais</a>
                         </div>
-
-                        <!-- Uploads -->
-                        <a href="{{ route('admin.uploads.index') }}" class="list-group-item list-group-item-action">
-                            Adicionar novos arquivos
-                        </a>
                     </div>
                 </div>
 

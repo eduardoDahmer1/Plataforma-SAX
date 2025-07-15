@@ -5,7 +5,6 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Categorias</h2>
         <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">Nova Categoria</a>
-        <a href="{{ route('admin.index') }}" class="btn btn-primary">Admin</a>
     </div>
 
     @if(session('success'))

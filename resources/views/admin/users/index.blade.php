@@ -5,9 +5,6 @@
     <h2 class="mb-3">Gerenciar Usuários</h2>
 
     <p>Total de usuários cadastrados: <strong>{{ $userCount }}</strong></p>
-    <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
-    <a href="{{ route('admin.index') }}" class="btn btn-primary mb-3">Admin</a>
-    <a href="{{ route('admin.uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

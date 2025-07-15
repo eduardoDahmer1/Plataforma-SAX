@@ -68,7 +68,7 @@ class BrandController extends Controller
         $brand->delete();
         $this->clearBrandsCache();
 
-        return redirect()->route('brands.index')->with('success', 'Marca deletada com sucesso.');
+        return redirect()->route('admin.brands.index')->with('success', 'Marca deletada com sucesso.');
     }
 
     private function clearBrandsCache()

@@ -4,24 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
     // Função para listar os produtos com paginação e pesquisa
     public function index(Request $request)
     {
-        // Busca com filtro opcional por nome, SKU ou slug
         $query = Product::query();
-
+    
+        $columns = [
+            'id', 'sku', 'external_name', 'slug', 'price', 'stock', 'photo', 'brand_id', 'category_id'
+        ];
+    
         if ($request->has('search')) {
             $search = $request->search;
-            $query->where('external_name', 'LIKE', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('external_name', 'LIKE', "%{$search}%")
                   ->orWhere('sku', 'LIKE', "%{$search}%")
                   ->orWhere('slug', 'LIKE', "%{$search}%");
+            });
+    
+            $products = $query->select($columns)->orderBy('id', 'desc')->paginate(10);
+        } else {
+            $page = $request->get('page', 1);
+            $products = Cache::remember("products_page_$page", now()->addMinutes(5), function () use ($query, $columns) {
+                return $query->select($columns)->orderBy('id', 'desc')->paginate(10);
+            });
         }
-
-        $products = $query->orderBy('id', 'desc')->paginate(10);
-
+    
         return view('produtos.index', compact('products'));
     }
 

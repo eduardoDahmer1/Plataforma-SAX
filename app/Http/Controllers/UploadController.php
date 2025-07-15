@@ -52,7 +52,7 @@ class UploadController extends Controller
         $merged = $uploads->merge($products)->sortByDesc('created_at');
     
         // Paginar manualmente
-        $perPage = 30;
+        $perPage = 40;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $currentItems = $merged->slice(($currentPage - 1) * $perPage, $perPage)->values();
     

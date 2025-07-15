@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\Upload;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 class HomeController extends Controller
 {
@@ -16,17 +15,18 @@ class HomeController extends Controller
         $search = $request->search;
         $perPage = 40;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
-    
-        // Monta as queries com os campos alinhados
+
+        // Query uploads
         $uploadsQuery = Upload::select([
             'id',
             'title',
             'description',
             'created_at',
             DB::raw("'upload' as type"),
-            DB::raw("NULL as price") // para alinhar colunas no union
+            DB::raw("NULL as price")
         ]);
-    
+
+        // Query products
         $productsQuery = Product::select([
             'id',
             DB::raw("external_name as title"),
@@ -35,43 +35,45 @@ class HomeController extends Controller
             DB::raw("'product' as type"),
             'price'
         ]);
-    
+
+        // Aplica filtro de busca se houver
         if ($search) {
             $uploadsQuery->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%");
             });
-    
+
             $productsQuery->where(function ($q) use ($search) {
                 $q->where('external_name', 'like', "%{$search}%")
                   ->orWhere('sku', 'like', "%{$search}%");
             });
         }
-    
-        // Converte as queries para SQL e bindings
+
+        // Monta SQL para union
         $uploadsSql = $uploadsQuery->toSql();
         $productsSql = $productsQuery->toSql();
-    
+
+        // Junta os bindings das queries
         $bindings = array_merge($uploadsQuery->getBindings(), $productsQuery->getBindings());
-    
-        // Monta o SQL union para paginação
-        $unionSql = "({$uploadsSql}) UNION ALL ({$productsSql}) ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    
-        // Calcula offset
+
+        // Calcula offset para paginação
         $offset = ($currentPage - 1) * $perPage;
-    
-        // Acrescenta limite e offset aos bindings
+
+        // SQL completo com union e paginação
+        $unionSql = "({$uploadsSql}) UNION ALL ({$productsSql}) ORDER BY created_at DESC LIMIT ? OFFSET ?";
+
+        // Acrescenta bindings para limit e offset
         $bindings[] = $perPage;
         $bindings[] = $offset;
-    
-        // Executa a query paginada
+
+        // Executa query
         $items = collect(DB::select($unionSql, $bindings));
-    
-        // Conta total para paginação (se a busca for simples, conta separadamente)
+
+        // Conta total para paginação
         $uploadsCount = $uploadsQuery->count();
         $productsCount = $productsQuery->count();
         $total = $uploadsCount + $productsCount;
-    
+
         // Cria o paginator
         $paginated = new LengthAwarePaginator(
             $items,
@@ -80,53 +82,37 @@ class HomeController extends Controller
             $currentPage,
             ['path' => $request->url(), 'query' => $request->query()]
         );
-    
+
         return view('pages.home', ['items' => $paginated]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    // Os demais métodos que você deixou vazios podem permanecer assim
+
     public function create()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         //

@@ -4,7 +4,7 @@
 <div class="container">
     <a href="{{ route('admin.uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
 
-    <h1>Criar Novo Upload</h1>
+    <!-- <h1>Criar Novo Upload</h1> -->
 
     <form action="{{ route('admin.uploads.store') }}" method="POST" enctype="multipart/form-data">
         @csrf

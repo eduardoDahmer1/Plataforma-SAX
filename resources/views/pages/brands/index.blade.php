@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Marcas</h2>
-        <a href="{{ route('admin.brands.create') }}" class="btn btn-secondary">Nova Marca</a>
+        <!-- <a href="{{ route('admin.brands.create') }}" class="btn btn-secondary">Nova Marca</a> -->
     </div>
 
     @if(session('success'))

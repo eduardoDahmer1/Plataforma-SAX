@@ -19,8 +19,8 @@ class UploadController extends Controller
         $perPage = 40;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
     
-        // Busca uploads
-        $uploadsQuery = Upload::select(
+        // Query uploads
+        $uploadsQuery = Upload::select([
             'id',
             'title',
             'description',
@@ -29,19 +29,10 @@ class UploadController extends Controller
             DB::raw('NULL as price'),
             'file_path',
             'original_name'
-        );
+        ]);
     
-        if ($search) {
-            $uploadsQuery->where(function ($q) use ($search) {
-                $q->where('title', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%');
-            });
-        }
-    
-        $uploads = $uploadsQuery->get();
-    
-        // Busca produtos
-        $productsQuery = Product::select(
+        // Query products
+        $productsQuery = Product::select([
             'id',
             DB::raw("external_name as title"),
             DB::raw("sku as description"),
@@ -50,26 +41,50 @@ class UploadController extends Controller
             'price',
             DB::raw('NULL as file_path'),
             DB::raw('NULL as original_name')
-        );
+        ]);
     
+        // Aplica filtro de busca se houver
         if ($search) {
+            $uploadsQuery->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+    
             $productsQuery->where(function ($q) use ($search) {
-                $q->where('external_name', 'like', '%' . $search . '%')
-                  ->orWhere('sku', 'like', '%' . $search . '%');
+                $q->where('external_name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
             });
         }
     
-        $products = $productsQuery->get();
+        // Monta SQL para union
+        $uploadsSql = $uploadsQuery->toSql();
+        $productsSql = $productsQuery->toSql();
     
-        // Une as coleções e ordena por data
-        $merged = $uploads->merge($products)->sortByDesc('created_at')->values();
+        // Junta os bindings das queries
+        $bindings = array_merge($uploadsQuery->getBindings(), $productsQuery->getBindings());
     
-        // Paginação manual com LengthAwarePaginator
-        $currentItems = $merged->forPage($currentPage, $perPage);
+        // Calcula offset
+        $offset = ($currentPage - 1) * $perPage;
     
+        // SQL completo com union e paginação
+        $unionSql = "({$uploadsSql}) UNION ALL ({$productsSql}) ORDER BY created_at DESC LIMIT ? OFFSET ?";
+    
+        // Adiciona os bindings de paginação
+        $bindings[] = $perPage;
+        $bindings[] = $offset;
+    
+        // Executa a query
+        $items = collect(DB::select($unionSql, $bindings));
+    
+        // Conta total de registros
+        $uploadsCount = $uploadsQuery->count();
+        $productsCount = $productsQuery->count();
+        $total = $uploadsCount + $productsCount;
+    
+        // Cria paginator
         $paginated = new LengthAwarePaginator(
-            $currentItems,
-            $merged->count(),
+            $items,
+            $total,
             $perPage,
             $currentPage,
             ['path' => $request->url(), 'query' => $request->query()]
@@ -77,6 +92,7 @@ class UploadController extends Controller
     
         return view('admin.uploads.index', ['uploads' => $paginated]);
     }
+    
     
 
     /**

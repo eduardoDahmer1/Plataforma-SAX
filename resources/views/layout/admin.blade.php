@@ -39,20 +39,15 @@
                 <div class="col-md-3">
                     <!-- Links laterais -->
                     <div class="list-group">
-                        <a href="{{ route('admin.users.index') }}"
-                            class="list-group-item list-group-item-action">Usuários</a>
-                        <!-- Adicione outros links conforme necessário -->
-                        <a href="{{ route('admin.uploads.index') }}" class="list-group-item list-group-item-action">Adicionar
-                            novos
-                            arquivos</a>
                         <a href="{{ route('pages.home') }}" class="list-group-item list-group-item-action">Home</a>
-                        <a href="{{ route('admin.categories.index') }}"
-                            class="list-group-item list-group-item-action">Categorias</a>
+                        <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action">Usuários</a>
                         <a href="{{ route('admin.brands.index') }}" class="list-group-item list-group-item-action">Marcas</a>
+                        <a href="{{ route('admin.categories.index') }}" class="list-group-item list-group-item-action">Categorias</a>
+                        <a href="{{ route('admin.uploads.index') }}" class="list-group-item list-group-item-action">Adicionar novos arquivos</a>
                     </div>
                 </div>
                 <div class="col-md-9">
-                    <!-- Conteúdo principal que você vai ver depois -->
+                    <!-- Conteúdo principal -->
                     <div class="card">
                         <div class="card-header">
                             <strong>Quadro Principal</strong>

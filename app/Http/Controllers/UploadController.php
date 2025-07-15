@@ -77,7 +77,7 @@ class UploadController extends Controller
         // Carrega todos os uploads com a relação 'user' de forma antecipada
         $uploads = Upload::with('user')->get();  // Carrega todos os uploads com o usuário
 
-        return view('uploads.index', compact('uploads')); // A página com todos os uploads
+        return view('admin.uploads.index', compact('uploads')); // A página com todos os uploads
     }
 
     /**
@@ -113,7 +113,7 @@ class UploadController extends Controller
             'user_id' => auth()->id() ?? null,  // Opcional, se o usuário estiver autenticado
         ]);
     
-        return redirect()->route('uploads.index')->with('success', 'Arquivo enviado com sucesso!');
+        return redirect()->route('admin.uploads.index')->with('success', 'Arquivo enviado com sucesso!');
     }
     
 
@@ -167,7 +167,7 @@ class UploadController extends Controller
         $upload->save();
 
         // Redireciona com uma mensagem de sucesso
-        return redirect()->route('uploads.index')->with('success', 'Arquivo atualizado com sucesso!');
+        return redirect()->route('admin.uploads.index')->with('success', 'Arquivo atualizado com sucesso!');
     }
 
     /**
@@ -185,7 +185,7 @@ class UploadController extends Controller
         // Exclui o upload do banco de dados
         $upload->delete();
 
-        return redirect()->route('uploads.index')->with('success', 'Arquivo excluído com sucesso!');
+        return redirect()->route('admin.uploads.index')->with('success', 'Arquivo excluído com sucesso!');
     }
 
     public function show($id)

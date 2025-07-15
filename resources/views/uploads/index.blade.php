@@ -1,4 +1,5 @@
-@extends('layout.layout')
+@extends('layout.admin')
+
 <style>
 .alert .close {
     position: absolute;

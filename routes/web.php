@@ -7,57 +7,53 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\CategoryController;
 
-Route::resource('product', ProductController::class);
-
-// Página inicial - exibe os uploads mais recentes
+// Rota Home — adicionada para corrigir erro de rota não definida
 Route::get('/', [UploadController::class, 'index'])->name('pages.home');
 
-Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
+// Rotas admin, só para admins autenticados
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
+    Route::resource('brands', BrandController::class);
+    Route::resource('categories', CategoryController::class);
 
-// Página com todos os uploads
-Route::get('/uploads', [UploadController::class, 'allUploads'])->name('uploads.index');
+    Route::get('/', [AdminController::class, 'index'])->name('index');
 
-// Rota para a listagem de produtos com pesquisa
-Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('/users/{user}/update-type', [AdminUserController::class, 'updateType'])->name('users.updateType');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
-// Rota para exibir os detalhes do produto
-Route::get('product/{id}', [ProductController::class, 'show'])->name('product.show');
+    Route::get('/uploads', [UploadController::class, 'index'])->name('uploads.index');
+});
 
-// Rotas resource para uploads
-Route::resource('uploads', UploadController::class)->except(['index']); // Excluímos o método index do resource
+// Rotas públicas para produtos
+Route::resource('product', ProductController::class); // público
 
-// Rota para visualizar um upload específico
+Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index'); // público
+Route::get('product/{id}', [ProductController::class, 'show'])->name('product.show'); // público
+
+// Uploads públicos
+Route::get('/uploads', [UploadController::class, 'allUploads'])->name('uploads.all');
+Route::resource('uploads', UploadController::class)->except(['index']);
 Route::get('uploads/{id}', [UploadController::class, 'show'])->name('uploads.show');
 
-// Rotas de autenticação
+// Rotas de autenticação para usuário logado
 Route::middleware('auth')->group(function () {
-    // Rota para o dashboard, acessível apenas para usuários autenticados e verificados
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->middleware(['verified'])->name('dashboard');
 
-    // Rotas para o perfil do usuário
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Rotas administrativas (apenas para admin)
-Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('index');
-    
-    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
-    Route::post('/users/{user}/update-type', [AdminUserController::class, 'updateType'])->name('users.updateType');
-    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
-    Route::get('/uploads', [UploadController::class, 'index'])->name('uploads.index');
-});
-
-// Rota de logout
+// Logout
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Rota para upload de imagem TinyMCE
+// Upload TinyMCE
 Route::post('/upload-tinymce-image', [App\Http\Controllers\TinyMCEUploadController::class, 'upload']);
 
-// Arquivo de autenticação
+// Arquivo padrão de autenticação
 require __DIR__.'/auth.php';

@@ -16,7 +16,7 @@
     <!-- Exibir botão apenas para admin master -->
     <a href="{{ route('admin.index') }}" class="btn btn-primary mb-3">Admin</a>
     <a href="{{ route('admin.users.index') }}" class="btn btn-primary mb-3">Usuários</a>
-    <a href="{{ route('uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
+    <a href="{{ route('admin.uploads.index') }}" class="btn btn-primary mb-3">Adicionar novos arquivos</a>
     @endif
 
     <!-- Formulário de busca -->

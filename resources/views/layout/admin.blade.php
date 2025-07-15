@@ -17,15 +17,12 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap CSS (Remover o `integrity`) -->
+    <!-- Bootstrap 5 + Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 <body>
-
     {{-- Header --}}
     @include('components.header')
 
@@ -37,15 +34,84 @@
             <!-- Quadro com links laterais -->
             <div class="row mt-4">
                 <div class="col-md-3">
-                    <!-- Links laterais -->
+                    <!-- Sidebar -->
                     <div class="list-group">
+
+                        <a href="{{ route('admin.index') }}" class="list-group-item list-group-item-action">Admin</a>
+                        <a class="list-group-item list-group-item-action">Atualizar produtos</a>
                         <a href="{{ route('pages.home') }}" class="list-group-item list-group-item-action">Home</a>
-                        <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action">Usuários</a>
-                        <a href="{{ route('admin.brands.index') }}" class="list-group-item list-group-item-action">Marcas</a>
-                        <a href="{{ route('admin.categories.index') }}" class="list-group-item list-group-item-action">Categorias</a>
-                        <a href="{{ route('admin.uploads.index') }}" class="list-group-item list-group-item-action">Adicionar novos arquivos</a>
+                        <a href="{{ route('admin.users.index') }}"
+                            class="list-group-item list-group-item-action">Usuários</a>
+
+                        <!-- Catálogos -->
+                        <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"
+                            href="#menuCatalogos" role="button" aria-expanded="false" aria-controls="menuCatalogos">
+                            Catálogos
+                        </a>
+                        <div class="collapse" id="menuCatalogos">
+                            <a class="list-group-item list-group-item-action ps-4">Produtos</a>
+                            <a href="{{ route('admin.brands.index') }}"
+                                class="list-group-item list-group-item-action ps-4">Marcas</a>
+                            <a href="{{ route('admin.categories.index') }}"
+                                class="list-group-item list-group-item-action ps-4">Categorias</a>
+                        </div>
+
+                        <!-- Vendas -->
+                        <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"
+                            href="#menuVendas" role="button" aria-expanded="false" aria-controls="menuVendas">
+                            Vendas
+                        </a>
+                        <div class="collapse" id="menuVendas">
+                            <a class="list-group-item list-group-item-action ps-4">Pedidos</a>
+                            <a class="list-group-item list-group-item-action ps-4">Clientes</a>
+                        </div>
+
+                        <!-- Conteúdos -->
+                        <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"
+                            href="#menuConteudos" role="button" aria-expanded="false" aria-controls="menuConteudos">
+                            Conteúdos
+                        </a>
+                        <div class="collapse" id="menuConteudos">
+                            <a class="list-group-item list-group-item-action ps-4">Blog</a>
+                            <a class="list-group-item list-group-item-action ps-4">Serviços</a>
+                            <a class="list-group-item list-group-item-action ps-4">Slider</a>
+                            <a class="list-group-item list-group-item-action ps-4">Banners</a>
+                            <a class="list-group-item list-group-item-action ps-4">Popup</a>
+                            <a class="list-group-item list-group-item-action ps-4">Páginas</a>
+                            <a class="list-group-item list-group-item-action ps-4">Contato</a>
+                            <a class="list-group-item list-group-item-action ps-4">Página Não Encontrada</a>
+                            <a class="list-group-item list-group-item-action ps-4">Política de Compra/Devolução</a>
+                            <a class="list-group-item list-group-item-action ps-4">Política de Privacidade</a>
+                        </div>
+
+                        <!-- Marketing -->
+                        <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"
+                            href="#menuMarketing" role="button" aria-expanded="false" aria-controls="menuMarketing">
+                            Marketing
+                        </a>
+                        <div class="collapse" id="menuMarketing">
+                            <a class="list-group-item list-group-item-action ps-4">Cupons</a>
+                            <a class="list-group-item list-group-item-action ps-4">Palavras Chave Meta</a>
+                        </div>
+
+                        <!-- Sistema -->
+                        <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"
+                            href="#menuSistema" role="button" aria-expanded="false" aria-controls="menuSistema">
+                            Sistema
+                        </a>
+                        <div class="collapse" id="menuSistema">
+                            <a class="list-group-item list-group-item-action ps-4">Limpar Cache</a>
+                            <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
+                            <a class="list-group-item list-group-item-action ps-4">Termos de Serviços Gerais</a>
+                        </div>
+
+                        <!-- Uploads -->
+                        <a href="{{ route('admin.uploads.index') }}" class="list-group-item list-group-item-action">
+                            Adicionar novos arquivos
+                        </a>
                     </div>
                 </div>
+
                 <div class="col-md-9">
                     <!-- Conteúdo principal -->
                     <div class="card">
@@ -55,7 +121,6 @@
                         <div class="card-body">
                             @yield('content')
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -65,35 +130,8 @@
     {{-- Footer --}}
     @include('components.footer')
 
-    <!-- JS Bibliotecas -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Inicialização dos sliders -->
-    <script>
-    new Swiper(".mySwiper", {
-        loop: true,
-        pagination: {
-            el: ".swiper-pagination",
-            clickable: true,
-        },
-    });
-
-    new Splide('#splide', {
-        type: 'loop',
-        perPage: 1,
-        autoplay: true,
-    }).mount();
-
-    new Glide('.glide', {
-        type: 'carousel',
-        autoplay: 2000,
-    }).mount();
-
-    lightGallery(document.getElementById('lightgallery'), {
-        plugins: [lgZoom],
-        speed: 500,
-    });
-    </script>
 
     <!-- TinyMCE -->
     <script src="https://cdn.tiny.cloud/1/43mbnibu3ong3lcvte3voj7cmoja1hxwscj81q2ublgk3rju/tinymce/7/tinymce.min.js"
@@ -118,8 +156,6 @@
         }
     });
     </script>
-
-
 </body>
 
 </html>

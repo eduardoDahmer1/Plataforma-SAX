@@ -6,15 +6,26 @@ use App\Models\Category;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
+use Illuminate\Http\Request;
+
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Cache::remember('categories.all', 3600, function () {
-            return Category::orderBy('name')->paginate(20);
+        $search = $request->input('search');
+    
+        $categories = Cache::remember('categories.page.' . request('page', 1) . '.search.' . $search, 3600, function () use ($search) {
+            if ($search) {
+                return Category::where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%")
+                    ->orderBy('name')
+                    ->paginate(20);
+            } else {
+                return Category::orderBy('name')->paginate(20);
+            }
         });
-
+    
         return view('pages.categories.index', compact('categories'));
     }
 
@@ -28,7 +39,7 @@ class CategoryController extends Controller
         Category::create($request->only('name', 'slug'));
         $this->clearCategoriesCache();
 
-        return redirect()->route('categories.index')->with('success', 'Categoria criada com sucesso.');
+        return redirect()->route('admin.categories.index')->with('success', 'Categoria criada com sucesso.');
     }
 
     public function show(Category $category)

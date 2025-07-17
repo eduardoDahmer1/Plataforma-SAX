@@ -39,9 +39,12 @@ class BrandController extends Controller
 
     public function store(StoreBrandRequest $request)
     {
-        Brand::create($request->only('name', 'slug'));
+        $data = $request->only('slug');
+        $data['name'] = $data['slug'];  // Garante que name = slug
+    
+        Brand::create($data);
         $this->clearBrandsCache();
-
+    
         return redirect()->route('brands.index')->with('success', 'Marca criada com sucesso.');
     }
 
@@ -57,9 +60,12 @@ class BrandController extends Controller
 
     public function update(UpdateBrandRequest $request, Brand $brand)
     {
-        $brand->update($request->only('name', 'slug'));
+        $data = $request->only('slug');
+        $data['name'] = $data['slug'];  // Garante que name = slug
+    
+        $brand->update($data);
         $this->clearBrandsCache();
-
+    
         return redirect()->route('brands.index')->with('success', 'Marca atualizada com sucesso.');
     }
 

@@ -22,6 +22,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
+
 <body>
     {{-- Header --}}
     @include('components.header')
@@ -30,6 +31,11 @@
         <div class="container mt-4">
             <h2>Página Administrativa</h2>
             <p>Bem-vindo ao painel de administração.</p>
+            <form action="/upload-image" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="file" name="image" required>
+                <button type="submit">Enviar Imagem</button>
+            </form>
 
             <!-- Quadro com links laterais -->
             <div class="row mt-4">

@@ -11,6 +11,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TinyMCEUploadController;
+use App\Http\Controllers\Admin\SystemController;
 
 // Rota Home
 Route::get('/', [HomeController::class, 'index'])->name('pages.home');
@@ -43,6 +44,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Marcas e Categorias (admin)
     Route::resource('brands', BrandController::class);
     Route::resource('categories', CategoryController::class);
+
+    Route::get('/clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
 });
 
 // Autenticação de usuário logado

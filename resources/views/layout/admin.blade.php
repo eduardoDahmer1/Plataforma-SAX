@@ -100,7 +100,7 @@
                             Sistema
                         </a>
                         <div class="collapse" id="menuSistema">
-                            <a class="list-group-item list-group-item-action ps-4">Limpar Cache</a>
+                            <button id="clearCacheBtn" class="list-group-item list-group-item-action ps-4">Limpar Cache</button>
                             <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
                             <a class="list-group-item list-group-item-action ps-4">Termos de Serviços Gerais</a>
                         </div>
@@ -131,6 +131,24 @@
     <!-- TinyMCE -->
     <script src="https://cdn.tiny.cloud/1/43mbnibu3ong3lcvte3voj7cmoja1hxwscj81q2ublgk3rju/tinymce/7/tinymce.min.js"
         referrerpolicy="origin"></script>
+
+        <script>
+            document.getElementById('clearCacheBtn').addEventListener('click', function () {
+                fetch('{{ secure_url(route('admin.clear-cache', [], false)) }}', {
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(error => {
+                    alert('Erro ao limpar o cache');
+                    console.error(error);
+                });
+            });
+        </script>
 
     <script>
     tinymce.init({

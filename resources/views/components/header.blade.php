@@ -1,6 +1,13 @@
 <header class="bg-dark text-white p-3">
     <div class="container d-flex justify-content-between align-items-center">
-        <h1>Sax</h1>
+
+        @if(session('webpImage'))
+        <div>
+            <img src="{{ asset('storage/uploads/' . session('webpImage')) }}" alt="Imagem convertida"
+                style="height: 5em;">
+        </div>
+        @endif
+
 
         @if (Auth::check())
         <!-- Botão de Logout (aparece se estiver logado) -->

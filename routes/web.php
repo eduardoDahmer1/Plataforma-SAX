@@ -12,6 +12,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TinyMCEUploadController;
 use App\Http\Controllers\Admin\SystemController;
+use App\Http\Controllers\ImageUploadController;
+use App\Http\Controllers\ImageConvertController; // controlador para conversão
 
 // Rota Home
 Route::get('/', [HomeController::class, 'index'])->name('pages.home');
@@ -45,7 +47,17 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('brands', BrandController::class);
     Route::resource('categories', CategoryController::class);
 
+    // Limpar cache do sistema
     Route::get('/clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
+
+   // Rota para upload de imagem
+   Route::post('/upload-image', [ImageUploadController::class, 'upload'])->name('image.upload');
+
+   // Rota para excluir a imagem
+   Route::delete('/delete-image', [ImageUploadController::class, 'delete'])->name('image.delete');
+
+    // Rota para conversão de imagens para WebP
+    Route::get('/convert-webp', [ImageConvertController::class, 'convertAllToWebp'])->name('convert.webp');
 });
 
 // Autenticação de usuário logado

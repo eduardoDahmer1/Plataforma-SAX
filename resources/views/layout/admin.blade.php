@@ -31,11 +31,6 @@
         <div class="container mt-4">
             <h2>Página Administrativa</h2>
             <p>Bem-vindo ao painel de administração.</p>
-            <form action="/upload-image" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="file" name="image" required>
-                <button type="submit">Enviar Imagem</button>
-            </form>
 
             <!-- Quadro com links laterais -->
             <div class="row mt-4">
@@ -107,6 +102,7 @@
                         </a>
                         <div class="collapse" id="menuSistema">
                             <button id="clearCacheBtn" class="list-group-item list-group-item-action ps-4">Limpar Cache</button>
+                            <a class="list-group-item list-group-item-action ps-4" href="{{ route('admin.convert.webp') }}" class="btn btn-primary">Converter todas as imagens para WebP</a>
                             <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
                             <a class="list-group-item list-group-item-action ps-4">Termos de Serviços Gerais</a>
                         </div>

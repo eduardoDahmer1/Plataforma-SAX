@@ -4,34 +4,47 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ImageUploadController extends Controller
 {
-    // Exibe o formulário de upload
     public function form()
-    {
-        // Traz a imagem atual que está salva, caso tenha sido feita um upload anterior
-        $webpImage = session('webpImage');  // Pega a imagem da sessão (se existir)
-        return view('upload-image-form', compact('webpImage'));
+{
+    $attribute = DB::table('attributes')->find(1);
+    $webpImage = $attribute?->header_image;
+
+    // Se a imagem foi salva na sessão (logo após upload), usa ela
+    if(session('webpImage')) {
+        $webpImage = session('webpImage');
     }
 
-    // Faz o upload da imagem e converte para WebP
+    return view('admin.image-upload', compact('webpImage'));
+}
+
+public function index()
+{
+    $attribute = DB::table('attributes')->find(1);
+    $webpImage = $attribute?->header_image;
+
+    return view('admin.admin', compact('webpImage'));
+}
+
+    
     public function upload(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|max:10240', // até 10MB
+            'header_image' => 'required|image|max:10240',
         ]);
 
-        if ($request->hasFile('image') && $request->file('image')->isValid()) {
+        if ($request->hasFile('header_image') && $request->file('header_image')->isValid()) {
 
-            $file = $request->file('image');
-            $originalExtension = strtolower($file->getClientOriginalExtension());
-            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $webpName = $originalName . '.webp';
+            $file = $request->file('header_image');
             $tempPath = $file->getRealPath();
 
-            // Criar recurso de imagem baseado no tipo
-            switch ($originalExtension) {
+            $imageResource = null;
+            $extension = strtolower($file->getClientOriginalExtension());
+
+            switch ($extension) {
                 case 'jpeg':
                 case 'jpg':
                     $imageResource = imagecreatefromjpeg($tempPath);
@@ -43,54 +56,52 @@ class ImageUploadController extends Controller
                     $imageResource = imagecreatefromgif($tempPath);
                     break;
                 default:
-                    return back()->with('error', 'Formato de imagem não suportado para conversão WebP.');
+                    return redirect()->route('admin.index')->with('error', 'Formato de imagem não suportado.');
             }
 
             if (!$imageResource) {
-                return back()->with('error', 'Falha ao criar recurso de imagem.');
+                return redirect()->route('admin.index')->with('error', 'Falha ao criar recurso de imagem.');
             }
 
-            // Converte para WebP e captura o conteúdo
             ob_start();
             imagewebp($imageResource, null, 55);
             $webpData = ob_get_clean();
             imagedestroy($imageResource);
 
-            // Verifica se já existe uma imagem antes de salvar a nova
-            $oldImage = session('webpImage');
-            if ($oldImage) {
-                // Exclui a imagem antiga se houver
-                Storage::disk('public')->delete("uploads/{$oldImage}");
+            $attributeId = 1;
+
+            $filename = 'header_image.webp'; // nome fixo para evitar múltiplos arquivos
+
+            // Apaga a imagem antiga, se existir
+            if (Storage::disk('public')->exists("uploads/{$filename}")) {
+                Storage::disk('public')->delete("uploads/{$filename}");
             }
 
-            // Salva o arquivo WebP com o nome original
-            Storage::disk('public')->put("uploads/{$webpName}", $webpData);
+            // Salva a nova imagem com o nome fixo
+            Storage::disk('public')->put("uploads/{$filename}", $webpData);
 
-            // Salva o nome da imagem na sessão
-            session(['webpImage' => $webpName]);
+            // Atualiza o nome fixo no banco
+            DB::table('attributes')->where('id', $attributeId)->update([
+                'header_image' => $filename,
+            ]);
 
-            // Retorna à página com o nome da imagem convertida
-            return back()->with('success', "Imagem convertida e salva com sucesso! Nome: {$webpName}");
+            return redirect()->route('admin.index')->with('success', 'Imagem enviada e salva com sucesso no banco!');
         }
 
-        return back()->with('error', 'Nenhuma imagem válida enviada.');
+        return redirect()->route('admin.index')->with('error', 'Nenhuma imagem válida enviada.');
     }
 
-    // Exclui a imagem convertida
     public function delete(Request $request)
     {
-        $webpImage = session('webpImage');  // Pega a imagem da sessão
+        $attributeId = 1; // ajuste conforme seu cenário
+        $webpImage = DB::table('attributes')->where('id', $attributeId)->value('header_image');
 
         if ($webpImage && Storage::disk('public')->exists("uploads/{$webpImage}")) {
-            // Exclui a imagem convertida
             Storage::disk('public')->delete("uploads/{$webpImage}");
-
-            // Remove o nome da imagem da sessão
-            session()->forget('webpImage');
-
-            return back()->with('success', 'Imagem excluída com sucesso!');
+            DB::table('attributes')->where('id', $attributeId)->update(['header_image' => null]);
+            return redirect()->route('admin.index')->with('success', 'Imagem excluída com sucesso!');
         }
 
-        return back()->with('error', 'Nenhuma imagem encontrada para excluir.');
+        return redirect()->route('admin.index')->with('error', 'Nenhuma imagem encontrada para excluir.');
     }
 }

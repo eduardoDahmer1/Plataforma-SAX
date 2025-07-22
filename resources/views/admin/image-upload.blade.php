@@ -14,16 +14,15 @@
 
     @if($errors->any())
         <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+            <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
             </ul>
         </div>
     @endif
 
-    <!-- Formulário de upload -->
-    <form action="{{ route('admin.image.upload') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+    <form action="{{ route('admin.image.upload') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="mb-3">
             <label for="header_image" class="form-label">Selecione a imagem</label>
@@ -32,17 +31,16 @@
         <button type="submit" class="btn btn-primary">Enviar Imagem</button>
     </form>
 
-    @if ($webpImage)
-    <div class="mb-3">
-        <h5>Imagem atual:</h5>
-        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 150px; display: block; margin-bottom: 10px;">
-        <form action="{{ route('admin.image.delete') }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir a imagem?');">
+    @isset($webpImage)
+        <hr>
+        <h3>Imagem atual:</h3>
+        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 150px; display:block; margin-bottom:10px;">
+
+        <form action="{{ route('admin.image.delete') }}" method="POST" style="margin-top: 0;">
             @csrf
             @method('DELETE')
             <button type="submit" class="btn btn-danger">Excluir Imagem</button>
         </form>
-    </div>
-@endif
-
+    @endisset
 </div>
 @endsection

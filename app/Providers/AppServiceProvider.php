@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
-
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,10 +21,20 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot()
+    public function boot(): void
     {
+        // Força HTTPS em produção
         if (config('app.env') === 'production') {
-            \URL::forceScheme('https');
+            URL::forceScheme('https');
         }
+
+        // Usa o estilo Bootstrap para a paginação
+        Paginator::useBootstrap();
+
+        // View Composer para passar a imagem header para todas as views
+        View::composer('*', function ($view) {
+            $webpImage = DB::table('attributes')->where('id', 1)->value('header_image');
+            $view->with('webpImage', $webpImage);
+        });
     }
 }

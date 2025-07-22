@@ -17,11 +17,13 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap 5 + Icons -->
+    <!-- Bootstrap 5.3.3 CSS (sem integrity para evitar erro) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-</head>
 
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+</head>
 
 <body>
     {{-- Header --}}
@@ -37,12 +39,10 @@
                 <div class="col-md-3">
                     <!-- Sidebar -->
                     <div class="list-group">
-
                         <a href="{{ route('admin.index') }}" class="list-group-item list-group-item-action">Admin</a>
                         <a class="list-group-item list-group-item-action">Atualizar produtos</a>
                         <a href="{{ route('pages.home') }}" class="list-group-item list-group-item-action">Home</a>
-                        <a href="{{ route('admin.users.index') }}"
-                            class="list-group-item list-group-item-action">Usuários</a>
+                        <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action">Usuários</a>
 
                         <!-- Catálogos -->
                         <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"
@@ -51,10 +51,8 @@
                         </a>
                         <div class="collapse" id="menuCatalogos">
                             <a href="{{ route('admin.uploads.index') }}" class="list-group-item list-group-item-action ps-4">Produtos</a>
-                            <a href="{{ route('admin.brands.index') }}"
-                                class="list-group-item list-group-item-action ps-4">Marcas</a>
-                            <a href="{{ route('admin.categories.index') }}"
-                                class="list-group-item list-group-item-action ps-4">Categorias</a>
+                            <a href="{{ route('admin.brands.index') }}" class="list-group-item list-group-item-action ps-4">Marcas</a>
+                            <a href="{{ route('admin.categories.index') }}" class="list-group-item list-group-item-action ps-4">Categorias</a>
                         </div>
 
                         <!-- Vendas -->
@@ -102,7 +100,7 @@
                         </a>
                         <div class="collapse" id="menuSistema">
                             <button id="clearCacheBtn" class="list-group-item list-group-item-action ps-4">Limpar Cache</button>
-                            <a class="list-group-item list-group-item-action ps-4" href="{{ route('admin.convert.webp') }}" class="btn btn-primary">Converter todas as imagens para WebP</a>
+                            <a href="{{ route('admin.convert.webp') }}" class="list-group-item list-group-item-action ps-4">Converter todas as imagens para WebP</a>
                             <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
                             <a class="list-group-item list-group-item-action ps-4">Termos de Serviços Gerais</a>
                         </div>
@@ -127,49 +125,49 @@
     {{-- Footer --}}
     @include('components.footer')
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS Bundle (sem integrity para evitar erro) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- TinyMCE -->
     <script src="https://cdn.tiny.cloud/1/43mbnibu3ong3lcvte3voj7cmoja1hxwscj81q2ublgk3rju/tinymce/7/tinymce.min.js"
         referrerpolicy="origin"></script>
 
-        <script>
-            document.getElementById('clearCacheBtn').addEventListener('click', function () {
-                fetch('{{ secure_url(route('admin.clear-cache', [], false)) }}', {
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                })
-                .catch(error => {
-                    alert('Erro ao limpar o cache');
-                    console.error(error);
-                });
+    <script>
+        document.getElementById('clearCacheBtn').addEventListener('click', function () {
+            fetch('{{ secure_url(route('admin.clear-cache', [], false)) }}', {
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => {
+                alert('Erro ao limpar o cache');
+                console.error(error);
             });
-        </script>
+        });
+    </script>
 
     <script>
-    tinymce.init({
-        selector: 'textarea[name=description]',
-        height: 400,
-        plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'print', 'preview', 'anchor',
-            'searchreplace', 'visualblocks', 'code', 'fullscreen', 'insertdatetime', 'media', 'table',
-            'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-        language: 'pt_BR',
-        setup: function(editor) {
-            editor.on('change', function() {
-                var content = editor.getContent();
-                editor.targetElm.value = content;
-            });
-        }
-    });
+        tinymce.init({
+            selector: 'textarea[name=description]',
+            height: 400,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'print', 'preview', 'anchor',
+                'searchreplace', 'visualblocks', 'code', 'fullscreen', 'insertdatetime', 'media', 'table',
+                'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+            language: 'pt_BR',
+            setup: function(editor) {
+                editor.on('change', function() {
+                    var content = editor.getContent();
+                    editor.targetElm.value = content;
+                });
+            }
+        });
     </script>
 </body>
 

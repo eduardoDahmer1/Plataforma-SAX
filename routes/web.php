@@ -28,8 +28,8 @@ Route::get('/produto/{product}', [ProductController::class, 'show'])->name('prod
 
 // Rotas protegidas para admin
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
-    // Painel administrativo
-    Route::get('/', [AdminController::class, 'index'])->name('index');
+    // ALTERAÇÃO AQUI: Rota /admin agora usa ImageUploadController@index para ter $webpImage
+    Route::get('/', [ImageUploadController::class, 'index'])->name('index');
 
     // Usuários (admin)
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
@@ -50,11 +50,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Limpar cache do sistema
     Route::get('/clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
 
-   // Rota para upload de imagem
-   Route::post('/upload-image', [ImageUploadController::class, 'upload'])->name('image.upload');
-
-   // Rota para excluir a imagem
-   Route::delete('/delete-image', [ImageUploadController::class, 'delete'])->name('image.delete');
+    // Rotas para upload, delete e formulário da imagem do header
+    Route::post('/image-upload', [ImageUploadController::class, 'upload'])->name('image.upload');
+    Route::delete('/image-upload', [ImageUploadController::class, 'delete'])->name('image.delete');
+    Route::get('/image-upload', [ImageUploadController::class, 'form'])->name('admin.image.form');
 
     // Rota para conversão de imagens para WebP
     Route::get('/convert-webp', [ImageConvertController::class, 'convertAllToWebp'])->name('convert.webp');

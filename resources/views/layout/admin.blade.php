@@ -71,7 +71,7 @@
                             Conteúdos
                         </a>
                         <div class="collapse" id="menuConteudos">
-                            <a class="list-group-item list-group-item-action ps-4">Blog</a>
+                            <a class="list-group-item list-group-item-action ps-4" href="{{ route('admin.blogs.index') }}">Blog</a>
                             <a class="list-group-item list-group-item-action ps-4">Serviços</a>
                             <a class="list-group-item list-group-item-action ps-4">Slider</a>
                             <a class="list-group-item list-group-item-action ps-4">Banners</a>

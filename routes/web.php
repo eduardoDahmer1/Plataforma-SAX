@@ -14,6 +14,8 @@ use App\Http\Controllers\TinyMCEUploadController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\ImageConvertController; // controlador para conversão
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 
 // Controllers para contato, com alias para o admin
 use App\Http\Controllers\ContactController;
@@ -21,6 +23,10 @@ use App\Http\Controllers\Admin\ContactController as AdminContactController;
 
 // Rota Home
 Route::get('/', [HomeController::class, 'index'])->name('pages.home');
+
+// Frontend
+Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 
 // Página de contato pública
 Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
@@ -38,6 +44,8 @@ Route::get('/produto/{product}', [ProductController::class, 'show'])->name('prod
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     // Dashboard admin
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
+
+    Route::resource('blogs', AdminBlogController::class);
 
     // Usuários (admin)
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');

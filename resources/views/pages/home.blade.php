@@ -16,6 +16,8 @@
     <a href="{{ route('admin.index') }}" class="btn btn-primary mb-3">Admin</a>
     @endif
     <a href="{{ route('contact.form') }}" class="btn btn-primary mb-3">Fale Conosco</a>
+    <a href="{{ route('blogs.index') }}" class="btn btn-primary mb-3">Ver Blogs</a>
+
 
     <!-- Formulário de busca -->
     <form action="{{ url('/') }}" method="GET" class="mb-4">

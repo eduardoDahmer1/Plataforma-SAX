@@ -5,7 +5,7 @@
     <h2>Detalhes da Categoria</h2>
 
     <div class="card p-4 shadow-sm">
-        <p><strong>Nome:</strong> {{ $category->name }}</p>
+        <p><strong>Nome:</strong> {{ $category->name ?? $category->slug }}</p>
         <p><strong>Slug:</strong> {{ $category->slug }}</p>
     </div>
 

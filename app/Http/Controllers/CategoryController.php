@@ -15,19 +15,17 @@ class CategoryController extends Controller
     {
         $search = $request->input('search');
     
-        $categories = Cache::remember('categories.page.' . request('page', 1) . '.search.' . $search, 3600, function () use ($search) {
-            if ($search) {
-                return Category::where('name', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%")
-                    ->orderBy('name')
-                    ->paginate(20);
-            } else {
-                return Category::orderBy('name')->paginate(20);
-            }
-        });
+        if ($search) {
+            $categories = Category::where('name', 'like', "%{$search}%")
+                ->orWhere('slug', 'like', "%{$search}%")
+                ->orderBy('name')
+                ->paginate(20);
+        } else {
+            $categories = Category::orderBy('name')->paginate(20);
+        }
     
         return view('pages.categories.index', compact('categories'));
-    }
+    }    
 
     public function create()
     {

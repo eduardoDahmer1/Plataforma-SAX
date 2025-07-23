@@ -15,26 +15,38 @@ use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\ImageConvertController; // controlador para conversão
 
+// Controllers para contato, com alias para o admin
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
+
 // Rota Home
 Route::get('/', [HomeController::class, 'index'])->name('pages.home');
+
+// Página de contato pública
+Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
+Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
 
 // Rotas públicas para uploads
 Route::get('/uploads-publico', [UploadController::class, 'allUploads'])->name('uploads.public');
 Route::get('/uploads/{id}', [UploadController::class, 'show'])->name('uploads.show');
 
-// Rotas públicas para produtos (com nomes que batem com seu Blade)
+// Rotas públicas para produtos
 Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
 
 // Rotas protegidas para admin
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
-    // ALTERAÇÃO AQUI: Rota /admin agora usa ImageUploadController@index para ter $webpImage
+    // Dashboard admin
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
 
     // Usuários (admin)
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/update-type', [AdminUserController::class, 'updateType'])->name('users.updateType');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+    Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
+    Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
+    Route::post('users/{id}/update-type', [\App\Http\Controllers\Admin\UserController::class, 'updateType'])->name('users.updateType');
+    Route::delete('users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
 
     // Uploads (admin)
     Route::get('/uploads', [UploadController::class, 'index'])->name('uploads.index');
@@ -43,14 +55,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Produtos (admin)
     Route::resource('products', ProductController::class);
 
+    // Contatos (admin)
+    Route::get('/contatos', [AdminContactController::class, 'index'])->name('contacts.index');
+
     // Marcas e Categorias (admin)
     Route::resource('brands', BrandController::class);
     Route::resource('categories', CategoryController::class);
-
-    Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
-    Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
-    Route::post('users/{id}/update-type', [\App\Http\Controllers\Admin\UserController::class, 'updateType'])->name('users.updateType');
-    Route::delete('users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
 
     // Limpar cache do sistema
     Route::get('/clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');

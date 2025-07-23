@@ -77,7 +77,7 @@
                             <a class="list-group-item list-group-item-action ps-4">Banners</a>
                             <a class="list-group-item list-group-item-action ps-4">Popup</a>
                             <a class="list-group-item list-group-item-action ps-4">Páginas</a>
-                            <a class="list-group-item list-group-item-action ps-4">Contato</a>
+                            <a class="list-group-item list-group-item-action ps-4" href="{{ route('admin.contacts.index') }}">Contato</a>
                             <a class="list-group-item list-group-item-action ps-4">Página Não Encontrada</a>
                             <a class="list-group-item list-group-item-action ps-4">Política de Compra/Devolução</a>
                             <a class="list-group-item list-group-item-action ps-4">Política de Privacidade</a>

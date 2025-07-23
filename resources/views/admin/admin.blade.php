@@ -35,7 +35,7 @@
     @if ($webpImage)
     <div class="mb-3">
         <h5>Imagem atual:</h5>
-        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 150px; display: block; margin-bottom: 10px;">
+        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 100px; display: block; margin-bottom: 10px;">
         <form action="{{ route('admin.image.delete') }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir a imagem?');">
             @csrf
             @method('DELETE')

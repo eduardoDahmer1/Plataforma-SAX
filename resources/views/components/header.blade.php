@@ -1,10 +1,11 @@
 <header class="bg-dark text-white p-3">
     <div class="container d-flex justify-content-between align-items-center">
 
-    @if ($webpImage)
-            <div>
-                <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 150px; display: block; margin-bottom: 10px;">
-            </div>
+        @if ($webpImage)
+        <div>
+            <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header"
+                style="max-height: 100px; display: block; margin-bottom: 10px;">
+        </div>
         @endif
 
         @if (Auth::check())

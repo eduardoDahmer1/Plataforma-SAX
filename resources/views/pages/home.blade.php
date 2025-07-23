@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container">
-    @if (auth()->check())
 
     <h2>Bem-vindo à Página Inicial</h2>
     <p>Esta é a página de uploads. Aqui você pode ver os arquivos que foram carregados.</p>
@@ -12,7 +11,7 @@
     @endif
 
     {{-- Verifica se o usuário é admin master --}}
-    @if(auth()->user()->user_type == 1)
+    @if(auth()->check() && auth()->user()->user_type == 1)
     <!-- Exibir botão apenas para admin master -->
     <a href="{{ route('admin.index') }}" class="btn btn-primary mb-3">Admin</a>
     @endif
@@ -61,10 +60,5 @@
         {{ $items->links('pagination::bootstrap-4') }}
     </div>
 
-    @else
-    <div class="alert alert-warning">
-        Você precisa estar logado para acessar esta página.
-    </div>
-    @endif
 </div>
 @endsection

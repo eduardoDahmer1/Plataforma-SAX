@@ -3,7 +3,7 @@
     @if ($webpImage)
     <div>
         <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header"
-            style="max-height: 150px; display: block; margin-bottom: 10px;">
+            style="max-height: 100px; display: block; margin-bottom: 10px;">
     </div>
     @endif
 </footer>

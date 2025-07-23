@@ -34,7 +34,7 @@
     @isset($webpImage)
         <hr>
         <h3>Imagem atual:</h3>
-        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 150px; display:block; margin-bottom:10px;">
+        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 100px; display:block; margin-bottom:10px;">
 
         <form action="{{ route('admin.image.delete') }}" method="POST" style="margin-top: 0;">
             @csrf

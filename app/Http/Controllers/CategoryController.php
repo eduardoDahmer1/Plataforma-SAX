@@ -57,7 +57,7 @@ class CategoryController extends Controller
         $category->update($request->only('name', 'slug'));
         $this->clearCategoriesCache();
 
-        return redirect()->route('categories.index')->with('success', 'Categoria atualizada com sucesso.');
+        return redirect()->route('admin.categories.index')->with('success', 'Categoria atualizada com sucesso.');
     }
 
     public function destroy(Category $category)

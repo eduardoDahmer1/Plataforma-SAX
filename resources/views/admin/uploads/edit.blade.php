@@ -16,17 +16,21 @@
         @if($type === 'product')
             <div class="form-group">
                 <label for="sku">SKU</label>
-                <input type="text" name="sku" class="form-control" value="{{ old('sku', $item->sku ?? '') }}">
+                <input readonly type="text" name="sku" class="form-control" value="{{ old('sku', $item->sku ?? '') }}">
             </div>
 
             <div class="form-group">
                 <label for="external_name">Nome Externo</label>
-                <input type="text" name="external_name" class="form-control" value="{{ old('external_name', $item->external_name ?? '') }}">
+                <input type="text" name="external_name" class="form-control" 
+                       value="{{ $item->external_name ?? '' }}" readonly>
             </div>
-        @else
+
             <div class="form-group">
-                <label for="title">Título</label>
-                <input type="text" name="title" class="form-control" value="{{ old('title', $item->title ?? '') }}">
+                <label for="name">Nome</label>
+                @php
+                    $nameValue = old('name') ?? (!empty($item->name) ? $item->name : ($item->external_name ?? ''));
+                @endphp
+                <input type="text" name="name" class="form-control" value="{{ $nameValue }}">
             </div>
         @endif
 
@@ -43,7 +47,7 @@
 
             <div class="form-group">
                 <label for="stock">Estoque</label>
-                <input type="number" name="stock" class="form-control" value="{{ old('stock', $item->stock ?? '') }}">
+                <input readonly type="number" name="stock" class="form-control" value="{{ old('stock', $item->stock ?? '') }}">
             </div>
         @else
             <div class="form-group">

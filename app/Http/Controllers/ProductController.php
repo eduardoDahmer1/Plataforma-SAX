@@ -83,14 +83,16 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
-
+        
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'external_name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255', // <-- aqui
             'description' => 'nullable|string|max:1000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
         ]);
+        
 
         $product->fill($request->only([
             'sku', 'external_name', 'description', 'price', 'stock'

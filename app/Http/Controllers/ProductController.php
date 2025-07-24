@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Upload; // Assumindo que exista esse model para uploads
+use App\Models\Upload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Subcategory;
+use App\Models\Childcategory;
+use App\Models\Brand;
+use App\Models\Category;
 
 class ProductController extends Controller
 {
@@ -14,11 +18,9 @@ class ProductController extends Controller
     {
         $search = $request->get('search');
         $page = $request->get('page', 1);
-        $columns = ['id', 'sku', 'external_name', 'slug', 'price', 'stock', 'photo', 'brand_id', 'category_id'];
+        $columns = ['id', 'sku', 'external_name', 'slug', 'price', 'stock', 'photo', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id'];
 
-        $cacheKey = $search 
-            ? null 
-            : "products_page_{$page}";
+        $cacheKey = $search ? null : "products_page_{$page}";
 
         $products = $cacheKey
             ? Cache::remember($cacheKey, now()->addMinutes(5), function () use ($columns) {
@@ -35,22 +37,26 @@ class ProductController extends Controller
                 ->orderBy('id', 'desc')
                 ->paginate(10);
 
-        return view('produtos.index', compact('products'));
+        return view('admin.uploads.index', compact('products'));
     }
 
-    // Exibe detalhes de um produto
     public function show($id)
     {
         $product = Product::findOrFail($id);
-        $uploads = $product->uploads ?? null;
-
+        $uploads = $product->uploads; // ← agora estamos pegando todos os uploads
+    
         return view('produtos.show', compact('product', 'uploads'));
     }
-
-    // Formulário de criação de produto
+    
+    // Formulário de criação do produto
     public function create()
     {
-        return view('produtos.create');
+        $brands = Brand::all();
+        $categories = Category::all();
+        $subcategories = Subcategory::all();
+        $childcategories = Childcategory::all();
+
+        return view('admin.uploads.create', compact('brands', 'categories', 'subcategories', 'childcategories'));
     }
 
     // Armazena novo produto
@@ -62,45 +68,80 @@ class ProductController extends Controller
             'description' => 'nullable|string|max:1000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'brand_id' => 'nullable|exists:brands,id',
+            'category_id' => 'nullable|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:subcategories,id',
+            'childcategory_id' => 'nullable|exists:childcategories,id',
         ]);
 
-        Product::create($request->all());
+        $data = $request->only([
+            'sku',
+            'external_name',
+            'description',
+            'price',
+            'stock',
+            'brand_id',
+            'category_id',
+            'subcategory_id',
+            'childcategory_id',
+        ]);
 
-        return redirect()->route('product.index')->with('success', 'Produto criado com sucesso!');
+        Product::create($data);
+
+        return redirect()->route('admin.uploads.index')->with('success', 'Produto criado com sucesso!');
     }
 
-    // Formulário de edição para produtos (usando view unificada)
     public function edit($id)
     {
         $product = Product::findOrFail($id);
+    
+        $brands = Brand::all();
+        $categories = Category::all();
+        $subcategories = Subcategory::all();
+        $childcategories = Childcategory::all();
+    
         return view('admin.uploads.edit', [
             'item' => $product,
             'type' => 'product',
+            'brands' => $brands,
+            'categories' => $categories,
+            'subcategories' => $subcategories,
+            'childcategories' => $childcategories,
         ]);
     }
 
-    // Atualiza produto
+    // Atualiza o produto
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
-        
+
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'external_name' => 'required|string|max:255',
-            'name' => 'nullable|string|max:255', // <-- aqui
             'description' => 'nullable|string|max:1000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'brand_id' => 'nullable|exists:brands,id',
+            'category_id' => 'nullable|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:subcategories,id',
+            'childcategory_id' => 'nullable|exists:childcategories,id',
         ]);
-        
 
-        $product->fill($request->only([
-            'sku', 'external_name', 'description', 'price', 'stock'
-        ]));
+        $data = $request->only([
+            'sku',
+            'external_name',
+            'description',
+            'price',
+            'stock',
+            'brand_id',
+            'category_id',
+            'subcategory_id',
+            'childcategory_id',
+        ]);
 
-        $product->save();
+        $product->update($data);
 
-        return redirect()->route('admin.uploads.index')->with('success', 'Arquivo atualizado com sucesso!');
+        return redirect()->route('admin.uploads.index')->with('success', 'Produto atualizado com sucesso!');
     }
 
     // Remove produto
@@ -109,21 +150,22 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $product->delete();
 
-        return redirect()->route('product.index')->with('success', 'Produto excluído com sucesso!');
+        return redirect()->route('admin.uploads.index')->with('success', 'Produto excluído com sucesso!');
     }
 
-    /*
-    * Métodos para Uploads — se precisar unificar na mesma controller
-    */
 
-    // Listagem uploads (exemplo, se quiser)
+    /*
+     * Métodos para Uploads — se precisar unificar na mesma controller
+     */
+
+    // Listagem uploads
     public function uploadsIndex()
     {
         $uploads = Upload::orderBy('id', 'desc')->paginate(10);
         return view('admin.uploads.index', compact('uploads'));
     }
 
-    // Formulário edição uploads (usando mesma view)
+    // Formulário edição uploads
     public function editUpload($id)
     {
         $upload = Upload::findOrFail($id);
@@ -141,14 +183,13 @@ class ProductController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx', // ajuste conforme tipos aceitos
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx',
         ]);
 
         $upload->title = $request->title;
         $upload->description = $request->description;
 
         if ($request->hasFile('file')) {
-            // exemplo de salvar arquivo, ajuste conforme seu fluxo
             $path = $request->file('file')->store('uploads');
             $upload->file = $path;
         }

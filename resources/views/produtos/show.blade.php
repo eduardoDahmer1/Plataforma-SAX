@@ -1,36 +1,50 @@
-@extends('layout.layout')  <!-- Usando o layout criado -->
+@extends('layout.layout')
 
 @section('content')
 <div class="container mt-5">
-    <div class="product-card">
-        <div class="product-card-header">
-            <h1>{{ $product->external_name }}</h1>
-        </div>
-        <div class="product-card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <!-- Exibe a imagem principal do produto, se existir -->
-                    <div class="product-images">
-                        @if($product->photo)
-                            <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->external_name }}" class="img-fluid">
-                        @endif
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <!-- Detalhes do produto -->
-                    <p><strong>SKU:</strong> {{ $product->sku }}</p>
-                    <p><strong>Preço:</strong> R$ {{ number_format($product->price, 2, ',', '.') }}</p>
-                    <p><strong>Descrição:</strong> {{ $product->description }}</p>
-                    <p><strong>Status:</strong> {{ $product->status }}</p>
-                    <p><strong>Categoria:</strong> {{ $product->category_id }}</p>
-                    <p><strong>Marca:</strong> {{ $product->brand_id }}</p>
-                </div>
+    <div class="card shadow-lg rounded-4 border-0">
+        <div class="row g-0">
+            <!-- Imagem do Produto -->
+            <div class="col-md-6 p-4 text-center">
+                @if($product->photo)
+                    <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->external_name }}" class="img-fluid rounded-3 shadow-sm">
+                @else
+                    <img src="https://via.placeholder.com/400x400?text=Sem+Imagem" alt="Sem Imagem" class="img-fluid rounded-3">
+                @endif
             </div>
 
-            <!-- Exemplo de exibição de uploads relacionados, se necessário -->
-            @if($uploads->isNotEmpty())
-                <h3 class="mt-4">Arquivos Relacionados</h3>
-                <ul class="list-group">
+            <!-- Detalhes do Produto -->
+            <div class="col-md-6 p-4">
+                <h1 class="h3 mb-3">{{ $product->external_name }}</h1>
+
+                <p class="mb-2"><strong>Marca:</strong> {{ $product->brand->name ?? 'Sem Marca' }}</p>
+                <p class="mb-2"><strong>Categoria:</strong> {{ $product->category->name ?? 'Sem Categoria' }}</p>
+                <p class="mb-2"><strong>SKU:</strong> {{ $product->sku }}</p>
+                <p class="mb-2"><strong>Status:</strong> {{ ucfirst($product->status) }}</p>
+                <p class="mb-2"><strong>Preço:</strong>
+                    @if($product->price)
+                        <span class="text-success h5">R$ {{ number_format($product->price, 2, ',', '.') }}</span>
+                    @else
+                        <span class="text-muted">Não informado</span>
+                    @endif
+                </p>
+
+                @if($product->description)
+                    <p class="mt-4"><strong>Descrição:</strong><br>{{ $product->description }}</p>
+                @endif
+
+                <div class="mt-4 d-flex gap-3">
+                    <a href="#" class="btn btn-primary px-4">Comprar</a>
+                    <a href="{{ url('/') }}" class="btn btn-outline-secondary">Voltar para a Home</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arquivos Relacionados -->
+        @if($uploads->isNotEmpty())
+            <div class="p-4 border-top">
+                <h4 class="mb-3">Arquivos Relacionados</h4>
+                <ul class="list-group list-group-flush">
                     @foreach($uploads as $upload)
                         <li class="list-group-item">
                             <a href="{{ Storage::url($upload->file_path) }}" target="_blank">
@@ -39,13 +53,8 @@
                         </li>
                     @endforeach
                 </ul>
-            @endif
-        </div>
-
-        <div class="product-card-footer">
-            <!-- Link para voltar à página inicial -->
-            <a href="{{ url('/') }}" class="btn btn-secondary mt-3">Voltar para a Home</a>
-        </div>
+            </div>
+        @endif
     </div>
 </div>
 @endsection

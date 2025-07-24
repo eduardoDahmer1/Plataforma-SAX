@@ -16,6 +16,8 @@ use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\ImageConvertController; // controlador para conversão
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\SubcategoryController;
+use App\Http\Controllers\Admin\ChildcategoryController;
 
 // Controllers para contato, com alias para o admin
 use App\Http\Controllers\ContactController;
@@ -62,6 +64,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Produtos (admin)
     Route::resource('products', ProductController::class);
+
+    Route::resource('subcategories', SubcategoryController::class);
+    Route::resource('childcategories', ChildcategoryController::class);
 
     // Contatos (admin)
     Route::get('/contatos', [AdminContactController::class, 'index'])->name('contacts.index');

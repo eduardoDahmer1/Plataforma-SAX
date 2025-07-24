@@ -25,9 +25,7 @@ class Product extends Model
         'size_qty',
         'size_price',
         'color',
-        'price',
         'previous_price',
-        'stock',
         'status',
         'views',
         'colors',
@@ -56,7 +54,6 @@ class Product extends Model
         'whole_sell_discount',
         'is_catalog',
         'catalog_id',
-        'brand_id',
         'ref_code',
         'ref_code_int',
         'mpn',
@@ -95,12 +92,37 @@ class Product extends Model
         'synced',
         'gtin',
         'promotion_price',
+        'name',
+        'description',
+        'price',
+        'stock',
+        'brand_id',
     ];
 
     // No modelo Product
     public function uploads()
     {
         return $this->hasMany(Upload::class, 'product_id'); // Supondo que a chave estrangeira seja 'product_id'
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function subcategory()
+    {
+        return $this->belongsTo(Subcategory::class);
+    }
+    
+    public function childcategory()
+    {
+        return $this->belongsTo(Childcategory::class);
     }
 
     public $timestamps = true;

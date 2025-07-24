@@ -24,7 +24,6 @@
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm p-3">
             <h5>{{ $category->name ?? $category->slug }}</h5>
-                <p class="text-muted">Slug: {{ $category->slug }}</p>
                 <div class="d-flex justify-content-between">
                     <a href="{{ route('admin.categories.show', $category) }}" class="btn btn-info btn-sm">Ver</a>
                     <a href="{{ route('admin.categories.edit', $category) }}" class="btn btn-warning btn-sm">Editar</a>

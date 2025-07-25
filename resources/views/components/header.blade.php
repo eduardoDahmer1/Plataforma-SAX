@@ -3,25 +3,28 @@
 
         @if ($webpImage)
         <div>
-            <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header"
-                style="max-height: 100px; display: block; margin-bottom: 10px;">
+            <a href="{{ route('pages.home') }}">
+                <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header"
+                    style="max-height: 100px; display: block; margin-bottom: 10px;">
+            </a>
         </div>
-        @endif
+    </div>
+    @endif
 
-        @if (Auth::check())
-        <!-- Botão de Logout (aparece se estiver logado) -->
-        <form action="{{ route('logout') }}" method="POST" id="logout-form" style="display: inline;">
-            @csrf
-            <button type="submit" class="btn btn-danger">
-                <i class="fa fa-sign-out-alt"></i> Logout
-            </button>
-        </form>
-        @else
-        <!-- Botão de Login que abre o Modal -->
-        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#loginModal">
-            <i class="fa fa-sign-in-alt"></i> Login
+    @if (Auth::check())
+    <!-- Botão de Logout (aparece se estiver logado) -->
+    <form action="{{ route('logout') }}" method="POST" id="logout-form" style="display: inline;">
+        @csrf
+        <button type="submit" class="btn btn-danger">
+            <i class="fa fa-sign-out-alt"></i> Logout
         </button>
-        @endif
+    </form>
+    @else
+    <!-- Botão de Login que abre o Modal -->
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#loginModal">
+        <i class="fa fa-sign-in-alt"></i> Login
+    </button>
+    @endif
     </div>
 </header>
 

@@ -49,7 +49,7 @@
             {{-- Categoria --}}
             <div class="form-group">
                 <label for="category_id">Categoria</label>
-                <select name="category_id" id="category_id" class="form-control" required>
+                <select name="category_id" id="category_id" class="form-control">
                     <option value="">Selecione uma categoria</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" {{ $item->category_id == $category->id ? 'selected' : '' }}>
@@ -62,7 +62,7 @@
             {{-- Subcategoria --}}
             <div class="form-group">
                 <label for="subcategory_id">Subcategoria</label>
-                <select name="subcategory_id" id="subcategory_id" class="form-control" required>
+                <select name="subcategory_id" id="subcategory_id" class="form-control">
                     <option value="">Selecione uma subcategoria</option>
                     @foreach($subcategories as $subcategory)
                         @if($subcategory->category_id == $item->category_id)
@@ -77,7 +77,7 @@
             {{-- Childcategory --}}
             <div class="form-group">
                 <label for="childcategory_id">Childcategory</label>
-                <select name="childcategory_id" id="childcategory_id" class="form-control" required>
+                <select name="childcategory_id" id="childcategory_id" class="form-control">
                     <option value="">Selecione uma childcategory</option>
                     @foreach($childcategories as $childcategory)
                         @if($childcategory->subcategory_id == $item->subcategory_id)

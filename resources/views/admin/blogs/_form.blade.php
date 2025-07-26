@@ -23,7 +23,7 @@
 
 <div class="mb-3">
     <label>Conteúdo</label>
-    <textarea name="content" class="form-control" rows="5">{{ old('content', $blog->content ?? '') }}</textarea>
+    <textarea id="editor-blog" name="content" class="form-control" rows="5">{{ old('content', $blog->content ?? '') }}</textarea>
 </div>
 
 <div class="mb-3">

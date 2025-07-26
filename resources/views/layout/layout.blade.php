@@ -39,56 +39,6 @@
     <!-- JS Bibliotecas -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Inicialização dos sliders -->
-    <script>
-    new Swiper(".mySwiper", {
-        loop: true,
-        pagination: {
-            el: ".swiper-pagination",
-            clickable: true,
-        },
-    });
-
-    new Splide('#splide', {
-        type: 'loop',
-        perPage: 1,
-        autoplay: true,
-    }).mount();
-
-    new Glide('.glide', {
-        type: 'carousel',
-        autoplay: 2000,
-    }).mount();
-
-    lightGallery(document.getElementById('lightgallery'), {
-        plugins: [lgZoom],
-        speed: 500,
-    });
-    </script>
-
-    <!-- TinyMCE -->
-    <script src="https://cdn.tiny.cloud/1/43mbnibu3ong3lcvte3voj7cmoja1hxwscj81q2ublgk3rju/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-
-    <script>
-    tinymce.init({
-        selector: 'textarea[name=description]',
-        height: 400,
-        plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'print', 'preview', 'anchor',
-            'searchreplace', 'visualblocks', 'code', 'fullscreen', 'insertdatetime', 'media', 'table', 'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-        language: 'pt_BR',
-        setup: function(editor) {
-            editor.on('change', function() {
-                var content = editor.getContent();
-                editor.targetElm.value = content;
-            });
-        }
-    });
-    </script>
-
-
 </body>
 
 </html>

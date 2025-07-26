@@ -21,6 +21,9 @@ class SystemController extends Controller
     
         Artisan::call('view:clear');
         $output[] = Artisan::output();
+
+        Artisan::call('config:clear');
+        $output[] = Artisan::output();
     
         // ⚠️ LOG antes de config:clear
         \Log::info('Caches limpos manualmente pelo admin.', [

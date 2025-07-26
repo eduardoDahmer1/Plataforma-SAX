@@ -10,7 +10,6 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\TinyMCEUploadController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\ImageConvertController; // controlador para conversão
@@ -98,9 +97,6 @@ Route::middleware('auth')->group(function () {
 
 // Logout
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
-// Upload TinyMCE (usado em textarea com editor)
-Route::post('/upload-tinymce-image', [TinyMCEUploadController::class, 'upload']);
 
 // Arquivo de autenticação padrão do Laravel
 require __DIR__.'/auth.php';

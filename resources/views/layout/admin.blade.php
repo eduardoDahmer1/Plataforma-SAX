@@ -27,7 +27,7 @@
 
 <body>
     {{-- Header --}}
-    @include('components.header')
+    @include('components.header-admin')
 
     <main class="py-4">
         <div class="container mt-4">

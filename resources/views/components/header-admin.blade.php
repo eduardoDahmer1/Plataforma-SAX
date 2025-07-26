@@ -25,16 +25,6 @@
         </button>
         @endif
     </div>
-    <div class="container">
-    <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
-    {{-- Verifica se o usuário é admin master --}}
-    @if(auth()->check() && auth()->user()->user_type == 1)
-    <!-- Exibir botão apenas para admin master -->
-    <a href="{{ route('admin.index') }}" class="btn btn-primary mb-3">Admin</a>
-    @endif
-    <a href="{{ route('contact.form') }}" class="btn btn-primary mb-3">Fale Conosco</a>
-    <a href="{{ route('blogs.index') }}" class="btn btn-primary mb-3">Ver Blogs</a>
-    </div>
 </header>
 
 @include('components.modal-login')

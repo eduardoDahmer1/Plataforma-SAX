@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container">
-    <h1>Upload de Imagem do Header</h1>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -26,7 +25,7 @@
     <form action="{{ route('admin.image.upload') }}" method="POST" enctype="multipart/form-data" class="mb-4">
         @csrf
         <div class="mb-3">
-            <label for="header_image" class="form-label">Selecione a imagem</label>
+            <label for="header_image" class="form-label">Selecione a imagem do header</label>
             <input class="form-control" type="file" id="header_image" name="header_image" required>
         </div>
         <button type="submit" class="btn btn-primary">Enviar Imagem</button>
@@ -34,7 +33,6 @@
 
     @if ($webpImage)
     <div class="mb-3">
-        <h5>Imagem atual:</h5>
         <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header" style="max-height: 100px; display: block; margin-bottom: 10px;">
         <form action="{{ route('admin.image.delete') }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir a imagem?');">
             @csrf

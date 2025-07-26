@@ -1,4 +1,4 @@
-@extends('layout.admin')
+<!-- @extends('layout.admin')
 
 @section('content')
 <div class="container">
@@ -43,4 +43,4 @@
         </form>
     @endisset
 </div>
-@endsection
+@endsection -->

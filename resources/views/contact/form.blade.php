@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container py-5">
-    <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
     <h2>Fale Conosco</h2>
 
     @if(session('success'))

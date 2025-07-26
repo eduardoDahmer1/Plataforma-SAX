@@ -33,7 +33,31 @@ class BlogController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('blogs', 'public');
+            $originalPath = $request->file('image')->store('blogs', 'public');
+            $fullPath = storage_path('app/public/' . $originalPath);
+            $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            $image = null;
+
+            if (in_array($extension, ['jpg', 'jpeg'])) {
+                $image = imagecreatefromjpeg($fullPath);
+            } elseif ($extension === 'png') {
+                $image = imagecreatefrompng($fullPath);
+                imagepalettetotruecolor($image);
+                imagealphablending($image, true);
+                imagesavealpha($image, true);
+            }
+
+            if ($image) {
+                $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
+                imagewebp($image, $webpPath, 20);
+                imagedestroy($image);
+
+                // Remove imagem original
+                @unlink($fullPath);
+
+                // Atualiza o caminho salvo no banco
+                $data['image'] = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
+            }
         }
 
         Blog::create($data);
@@ -59,7 +83,32 @@ class BlogController extends Controller
 
         if ($request->hasFile('image')) {
             if ($blog->image) Storage::disk('public')->delete($blog->image);
-            $data['image'] = $request->file('image')->store('blogs', 'public');
+
+            $originalPath = $request->file('image')->store('blogs', 'public');
+            $fullPath = storage_path('app/public/' . $originalPath);
+            $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            $image = null;
+
+            if (in_array($extension, ['jpg', 'jpeg'])) {
+                $image = imagecreatefromjpeg($fullPath);
+            } elseif ($extension === 'png') {
+                $image = imagecreatefrompng($fullPath);
+                imagepalettetotruecolor($image);
+                imagealphablending($image, true);
+                imagesavealpha($image, true);
+            }
+
+            if ($image) {
+                $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
+                imagewebp($image, $webpPath, 75);
+                imagedestroy($image);
+
+                // Remove imagem original
+                @unlink($fullPath);
+
+                // Atualiza o caminho salvo no banco
+                $data['image'] = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
+            }
         }
 
         $blog->update($data);

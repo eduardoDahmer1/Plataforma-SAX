@@ -61,6 +61,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/uploads', [UploadController::class, 'index'])->name('uploads.index');
     Route::resource('uploads', UploadController::class)->except(['index']);
 
+    Route::post('/blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
+
     // Produtos (admin)
     Route::resource('products', ProductController::class);
 

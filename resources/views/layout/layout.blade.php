@@ -11,17 +11,7 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-
-    <!-- Bootstrap CSS (Remover o `integrity`) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    @include('components.styles')
 </head>
 
 <body>
@@ -29,15 +19,14 @@
     {{-- Header --}}
     @include('components.header')
 
-    <main class="py-4">
+    <main class="py-4 container">
         @yield('content')
     </main>
 
     {{-- Footer --}}
     @include('components.footer')
-
-    <!-- JS Bibliotecas -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @include('components.scripts')
+    @include('components.javascripts')
 
 </body>
 

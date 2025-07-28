@@ -11,7 +11,7 @@
                 @endif
                 <div class="card-body">
                     <h5 class="card-title">{{ $blog->title }}</h5>
-                    <p class="card-text">{{ Str::limit($blog->content, 100) }}</p>
+                    <p class="card-text">{{ $blog->subtitle }}</p>
                     <a href="{{ route('blogs.show', $blog->slug) }}" class="btn btn-primary">Leia mais</a>
                 </div>
             </div>

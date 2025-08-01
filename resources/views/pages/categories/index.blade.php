@@ -7,6 +7,11 @@
         <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">Nova Categoria</a>
     </div>
 
+    <!-- Total de categorias exibidas -->
+    <p class="text-muted">
+        Exibindo {{ $categories->count() }} de {{ $categories->total() }} categoria(s).
+    </p>
+
     <form action="{{ route('admin.categories.index') }}" method="GET" class="mb-4">
         <div class="input-group">
             <input type="text" name="search" class="form-control" placeholder="Buscar por nome ou slug"

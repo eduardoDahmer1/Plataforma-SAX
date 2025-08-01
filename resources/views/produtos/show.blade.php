@@ -6,11 +6,13 @@
         <div class="row g-0">
             <!-- Imagem do Produto -->
             <div class="col-md-6 p-4 text-center">
-                @if($product->photo)
-                    <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->external_name }}" class="img-fluid rounded-3 shadow-sm">
-                @else
-                    <img src="https://via.placeholder.com/400x400?text=Sem+Imagem" alt="Sem Imagem" class="img-fluid rounded-3">
-                @endif
+            @if($product->photo && Storage::disk('public')->exists($product->photo))
+                <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->external_name }}" class="img-fluid rounded-3 shadow-sm">
+            @elseif(!empty($noimage) && Storage::disk('public')->exists('uploads/' . $noimage))
+                <img src="{{ asset('storage/uploads/' . $noimage) }}" alt="Imagem padrão" class="img-fluid rounded-3 shadow-sm">
+            @else
+                <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid rounded-3 shadow-sm">
+            @endif
             </div>
 
             <!-- Detalhes do Produto -->

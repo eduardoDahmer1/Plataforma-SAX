@@ -16,6 +16,11 @@
 @section('content')
 <div class="container">
 
+    <!-- Contador -->
+    <div class="mb-3">
+        <strong>Exibindo:</strong> {{ $uploads->count() }} de {{ $uploads->total() }} registros
+    </div>
+
     <!-- Formulário de busca -->
     <form action="{{ route('admin.uploads.index') }}" method="GET" class="mb-4">
         <div class="input-group">
@@ -33,9 +38,6 @@
         </button>
     </div>
     @endif
-
-    <!-- Botão para criar novo upload -->
-    <!-- <a href="{{ route('admin.uploads.create') }}" class="btn btn-success mb-3">Novo Upload</a> -->
 
     <table class="table">
         <thead>

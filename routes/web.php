@@ -79,11 +79,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Limpar cache do sistema
     Route::get('/clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
-
+    
     // Rotas para upload, delete e formulário da imagem do header
     Route::post('/image-upload', [ImageUploadController::class, 'upload'])->name('image.upload');
     Route::delete('/image-upload', [ImageUploadController::class, 'delete'])->name('image.delete');
-    Route::get('/image-upload', [ImageUploadController::class, 'form'])->name('admin.image.form');
+    Route::get('/image-upload', [ImageUploadController::class, 'form'])->name('image.form');
+
+    // Rotas para upload e delete da imagem noimage
+    Route::post('/noimage-upload', [ImageUploadController::class, 'uploadNoimage'])->name('noimage.upload');
+    Route::delete('/noimage-upload', [ImageUploadController::class, 'deleteNoimage'])->name('noimage.delete');
 
     // Rota para conversão de imagens para WebP
     Route::get('/convert-webp', [ImageConvertController::class, 'convertAllToWebp'])->name('convert.webp');

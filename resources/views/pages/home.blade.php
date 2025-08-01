@@ -7,11 +7,8 @@
     <p>Esta é a página de uploads. Aqui você pode ver os arquivos que foram carregados.</p>
 
     @if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
-
-
-
 
     <!-- Formulário de busca -->
     <form action="{{ url('/') }}" method="GET" class="mb-4">
@@ -28,6 +25,23 @@
         @foreach($items as $item)
             <div class="col-6 col-md-4 col-lg-3 mb-4">
                 <div class="card h-100">
+
+                    {{-- IMAGEM NO TOPO --}}
+                    @php
+                        $photoPath = null;
+                        $hasPhoto = property_exists($item, 'photo') && $item->photo;
+
+                        if ($hasPhoto && Storage::disk('public')->exists($item->photo)) {
+                            $photoPath = Storage::url($item->photo);
+                        } elseif (!empty($noimage) && Storage::disk('public')->exists('uploads/' . $noimage)) {
+                            $photoPath = asset('storage/uploads/' . $noimage);
+                        } else {
+                            $photoPath = asset('storage/uploads/noimage.webp');
+                        }
+                    @endphp
+
+                    <img src="{{ $photoPath }}" class="card-img-top img-fluid" alt="Imagem" style="max-height: 200px; object-fit: cover;">
+
                     <div class="card-body">
                         @if($item->type === 'upload')
                             <h5 class="card-title">{{ $item->title ?? 'Sem título' }}</h5>

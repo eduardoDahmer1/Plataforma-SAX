@@ -5,6 +5,11 @@
     <h2>Subcategorias</h2>
     <a href="{{ route('admin.subcategories.create') }}" class="btn btn-primary mb-3">Nova Subcategoria</a>
 
+    <!-- Total de Subcategorias exibidas -->
+    <p class="text-muted">
+        Exibindo {{ $subcategories->count() }} de {{ $subcategories->total() }} categoria(s).
+    </p>
+
     <table class="table table-striped">
         <thead>
             <tr>

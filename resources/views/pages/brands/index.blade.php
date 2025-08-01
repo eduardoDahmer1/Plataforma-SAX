@@ -6,7 +6,11 @@
         <h2>Marcas</h2>
         <!-- <a href="{{ route('admin.brands.create') }}" class="btn btn-secondary">Nova Marca</a> -->
     </div>
-
+    
+    <!-- Total de marcas exibidas -->
+    <p class="text-muted">
+        Exibindo {{ $brands->count() }} de {{ $brands->total() }} marca(s).
+    </p>
     <!-- Formulário de busca -->
     <form action="{{ route('admin.brands.index') }}" method="GET" class="mb-4">
         <div class="input-group">

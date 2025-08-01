@@ -40,16 +40,11 @@
         </a>
         <div class="collapse" id="menuConteudos">
             <a class="list-group-item list-group-item-action ps-4" href="{{ route('admin.blogs.index') }}">Blog</a>
-            <a class="list-group-item list-group-item-action ps-4">Serviços</a>
-            <a class="list-group-item list-group-item-action ps-4">Slider</a>
             <a class="list-group-item list-group-item-action ps-4">Banners</a>
-            <a class="list-group-item list-group-item-action ps-4">Popup</a>
-            <a class="list-group-item list-group-item-action ps-4">Páginas</a>
             <a class="list-group-item list-group-item-action ps-4"
                 href="{{ route('admin.contacts.index') }}">Contato</a>
             <a class="list-group-item list-group-item-action ps-4">Página Não Encontrada</a>
-            <a class="list-group-item list-group-item-action ps-4">Política de Compra/Devolução</a>
-            <a class="list-group-item list-group-item-action ps-4">Política de Privacidade</a>
+            <a class="list-group-item list-group-item-action ps-4">Políticas</a>
         </div>
 
         <!-- Marketing -->
@@ -59,7 +54,6 @@
         </a>
         <div class="collapse" id="menuMarketing">
             <a class="list-group-item list-group-item-action ps-4">Cupons</a>
-            <a class="list-group-item list-group-item-action ps-4">Palavras Chave Meta</a>
         </div>
 
         <!-- Sistema -->
@@ -72,7 +66,6 @@
             <a href="{{ route('admin.convert.webp') }}" class="list-group-item list-group-item-action ps-4">Converter
                 todas as imagens para WebP</a>
             <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
-            <a class="list-group-item list-group-item-action ps-4">Termos de Serviços Gerais</a>
         </div>
     </div>
 </div>

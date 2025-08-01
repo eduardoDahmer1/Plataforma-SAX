@@ -97,6 +97,7 @@
             <textarea name="description" id="editor">{{ old('description', $item->description ?? '') }}</textarea>
         </div>
 
+
         @if($type === 'product')
         <div class="form-group">
             <label for="price">Preço</label>

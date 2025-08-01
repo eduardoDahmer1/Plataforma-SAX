@@ -62,6 +62,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('uploads', UploadController::class)->except(['index']);
 
     Route::post('/blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
+    Route::post('/uploads/trumbowyg-image', [UploadController::class, 'uploadImage'])->name('uploads.trumbowyg-image');
 
     // Produtos (admin)
     Route::resource('products', ProductController::class);
@@ -86,6 +87,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Rota para conversão de imagens para WebP
     Route::get('/convert-webp', [ImageConvertController::class, 'convertAllToWebp'])->name('convert.webp');
+    
 });
 
 // Autenticação de usuário logado

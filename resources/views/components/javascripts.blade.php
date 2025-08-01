@@ -17,15 +17,14 @@
 </script>
 <script>
 $(document).ready(function () {
-    // Botões comuns para os editores
-    var commonBtns = [
+    const commonBtns = [
         ['viewHTML'],
         ['undo', 'redo'],
         ['formatting'],
         ['strong', 'em', 'del'],
         ['superscript', 'subscript'],
         ['link'],
-        ['insertImage'],
+        ['insertImage'], // Apenas inserir imagem via URL
         ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
         ['unorderedList', 'orderedList'],
         ['horizontalRule'],
@@ -33,65 +32,59 @@ $(document).ready(function () {
         ['fullscreen']
     ];
 
-    // Editor simples (#editor)
-    $('#editor').trumbowyg({
-        btns: commonBtns,
-        plugins: {
-            resizimg: {
-                minSize: 64,
-                step: 16
-            },
-            autogrow: {}
-        },
-        autogrow: true,
-        removeformatPasted: true,
-        allowTagsFromPaste: true,
-    });
-
-    // Editor com upload (#editor-blog)
-    $('#editor-blog').trumbowyg({
-        btns: [
-            ['viewHTML'],
-            ['undo', 'redo'],
-            ['formatting'],
-            ['strong', 'em', 'del'],
-            ['superscript', 'subscript'],
-            ['link'],
-            ['upload'], // botão upload
-            ['insertImage'],
-            ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
-            ['unorderedList', 'orderedList'],
-            ['horizontalRule'],
-            ['removeformat'],
-            ['fullscreen']
-        ],
-        plugins: {
+    function getPlugins(serverPath = null) {
+        const plugins = {
             resizimg: {
                 minSize: 64,
                 step: 16
             },
             autogrow: {},
-            upload: {
-                serverPath: '/admin/blogs/upload-image',
+        };
+
+        // Plugin de upload apenas se serverPath for definido
+        if (serverPath) {
+            plugins.upload = {
+                serverPath: serverPath,
                 fileFieldName: 'image',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
-            },
-        },
-        autogrow: true,
-        removeformatPasted: true,
-        allowTagsFromPaste: true,
-    });
+            };
+        }
 
-    // Salvar conteúdo no form
+        return plugins;
+    }
+
+    // Editor do blog (com upload)
+    if ($('#editor-blog').length) {
+        $('#editor-blog').trumbowyg({
+            btns: commonBtns.concat([['upload']]),
+            plugins: getPlugins('/admin/blogs/upload-image'),
+            autogrow: true,
+            removeformatPasted: true,
+            allowTagsFromPaste: true,
+        });
+    }
+
+    // Editor de produto (sem upload)
+    if ($('#editor').length) {
+        $('#editor').trumbowyg({
+            // btns: commonBtns.concat([['upload']]),
+            btns: commonBtns, // Sem botão de upload
+            plugins: getPlugins(), // Sem upload
+            autogrow: true,
+            removeformatPasted: true,
+            allowTagsFromPaste: true,
+        });
+    }
+
+    // Sincronizar conteúdo do editor ao enviar o formulário
     $('#editForm').on('submit', function () {
-        // Se existir textarea description, atualiza com editor #editor
-        if ($('textarea[name="description"]').length) {
+        if ($('#editor').length) {
             $('textarea[name="description"]').val($('#editor').trumbowyg('html'));
         }
-        // Atualiza o textarea content com o conteúdo do #editor-blog
-        if ($('textarea[name="content"]').length) {
+
+        if ($('#editor-blog').length) {
             $('textarea[name="content"]').val($('#editor-blog').trumbowyg('html'));
         }
     });

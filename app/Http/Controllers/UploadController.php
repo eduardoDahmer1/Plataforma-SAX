@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Upload;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use App\Models\Product;
-
+use Illuminate\Support\Str;
 
 class UploadController extends Controller
 {
@@ -18,8 +17,7 @@ class UploadController extends Controller
         $search = $request->search;
         $perPage = 40;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
-    
-        // Query uploads
+
         $uploadsQuery = Upload::select([
             'id',
             'title',
@@ -30,8 +28,7 @@ class UploadController extends Controller
             'file_path',
             'original_name'
         ]);
-    
-        // Query products
+
         $productsQuery = Product::select([
             'id',
             DB::raw("external_name as title"),
@@ -42,46 +39,34 @@ class UploadController extends Controller
             DB::raw('NULL as file_path'),
             DB::raw('NULL as original_name')
         ]);
-    
-        // Aplica filtro de busca se houver
+
         if ($search) {
             $uploadsQuery->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%");
             });
-    
+
             $productsQuery->where(function ($q) use ($search) {
                 $q->where('external_name', 'like', "%{$search}%")
                   ->orWhere('sku', 'like', "%{$search}%");
             });
         }
-    
-        // Monta SQL para union
+
         $uploadsSql = $uploadsQuery->toSql();
         $productsSql = $productsQuery->toSql();
-    
-        // Junta os bindings das queries
+
         $bindings = array_merge($uploadsQuery->getBindings(), $productsQuery->getBindings());
-    
-        // Calcula offset
         $offset = ($currentPage - 1) * $perPage;
-    
-        // SQL completo com union e paginação
+
         $unionSql = "({$uploadsSql}) UNION ALL ({$productsSql}) ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    
-        // Adiciona os bindings de paginação
         $bindings[] = $perPage;
         $bindings[] = $offset;
-    
-        // Executa a query
+
         $items = collect(DB::select($unionSql, $bindings));
-    
-        // Conta total de registros
         $uploadsCount = $uploadsQuery->count();
         $productsCount = $productsQuery->count();
         $total = $uploadsCount + $productsCount;
-    
-        // Cria paginator
+
         $paginated = new LengthAwarePaginator(
             $items,
             $total,
@@ -89,46 +74,48 @@ class UploadController extends Controller
             $currentPage,
             ['path' => $request->url(), 'query' => $request->query()]
         );
-    
+
         return view('admin.uploads.index', ['uploads' => $paginated]);
     }
-    
-    
 
-    /**
-     * Exibe a página com todos os uploads.
-     */
-    public function allUploads()
+    public function uploadImage(Request $request)
     {
-        // Carrega todos os uploads com a relação 'user' de forma antecipada
-        $uploads = Upload::with('user')->get();  // Carrega todos os uploads com o usuário
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $filename = Str::random(20) . '.' . $image->getClientOriginalExtension();
+            $path = $image->store('uploads', 'public');
 
-        return view('admin.uploads.index', compact('uploads')); // A página com todos os uploads
+            return response()->json([
+                'success' => true,
+                'file' => Storage::url($path)
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Nenhuma imagem enviada.']);
     }
 
-    /**
-     * Exibe o formulário de criação.
-     */
+    public function allUploads()
+    {
+        $uploads = Upload::with('user')->get();
+        return view('admin.uploads.index', compact('uploads'));
+    }
+
     public function create()
     {
         return view('admin.uploads.create');
     }
 
-    /**
-     * Armazena um novo upload.
-     */
     public function store(Request $request)
     {
-        // Valida o arquivo enviado
         $request->validate([
-            'file' => 'required|file|max:10240', // Máximo 10MB
+            'file' => 'required|file|max:10240',
             'title' => 'required|string|max:10240',
-            'description' => 'nullable|string|max:10000', // Definindo um valor máximo válido para description
+            'description' => 'nullable|string|max:10000',
         ]);
-    
+
         $file = $request->file('file');
         $path = $file->store('uploads', 'public');
-    
+
         Upload::create([
             'title' => $request->title,
             'description' => $request->description,
@@ -136,83 +123,104 @@ class UploadController extends Controller
             'file_path' => $path,
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getClientMimeType(),
-            'user_id' => auth()->id() ?? null,  // Opcional, se o usuário estiver autenticado
+            'user_id' => auth()->id() ?? null,
         ]);
-    
+
         return redirect()->route('admin.uploads.index')->with('success', 'Arquivo enviado com sucesso!');
     }
-    
 
-    /**
-     * Exibe o formulário de edição.
-     */
     public function edit(string $id)
     {
-        $upload = Upload::findOrFail($id);  // Recupera o upload com base no ID
+        $upload = Upload::findOrFail($id);
         return view('admin.uploads.edit', compact('upload'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        // Validação dos dados
-        $request->validate([
-            'title' => 'required|string|max:10240',
-            'description' => 'nullable|string|max:10240',
-            'file' => 'nullable|file|max:10240', // máximo 10MB
-        ]);
-    
-        $upload = Upload::findOrFail($id);
-    
-        // Atualiza título e descrição
-        $upload->title = $request->title;
-        $upload->description = $request->description;
-    
-        // Verifica se novo arquivo foi enviado
-        if ($request->hasFile('file')) {
-            // Deleta arquivo antigo se existir
-            if ($upload->file_path && Storage::disk('public')->exists($upload->file_path)) {
-                Storage::disk('public')->delete($upload->file_path);
-            }
-    
-            // Faz upload do novo arquivo
-            $file = $request->file('file');
-            $path = $file->store('uploads', 'public');
-    
-            // Atualiza os dados do arquivo
-            $upload->file_path = $path;
-            $upload->file_type = $file->getClientOriginalExtension();
-            $upload->original_name = $file->getClientOriginalName();
-            $upload->mime_type = $file->getClientMimeType();
-        }
-    
-        $upload->save();
-    
-        return redirect()->route('admin.uploads.index')->with('success', 'Arquivo atualizado com sucesso!');
+        $product = Product::findOrFail($id);
+
+        // Apenas atualiza a descrição
+        $product->description = $request->input('description');
+        $product->save();
+
+        return redirect()->back()->with('success', 'Produto atualizado com sucesso!');
     }
 
-    /**
-     * Remove um upload do banco e do armazenamento.
-     */
     public function destroy(string $id)
     {
         $upload = Upload::findOrFail($id);
 
-        // Exclui o arquivo do armazenamento, se existir
-        if (Storage::disk('public')->exists($upload->file_path)) {
+        // Apaga imagens da descrição (se houver)
+        $images = $this->extractImageUrls($upload->description);
+        foreach ($images as $url) {
+            $path = parse_url($url, PHP_URL_PATH);
+            $relative = ltrim(str_replace('/storage/', '', $path), '/');
+            if (Storage::disk('public')->exists($relative)) {
+                Storage::disk('public')->delete($relative);
+            }
+        }
+
+        if ($upload->file_path && Storage::disk('public')->exists($upload->file_path)) {
             Storage::disk('public')->delete($upload->file_path);
         }
 
-        // Exclui o upload do banco de dados
         $upload->delete();
 
         return redirect()->route('admin.uploads.index')->with('success', 'Arquivo excluído com sucesso!');
     }
 
+    public function deleteImages($id)
+    {
+        $product = Product::findOrFail($id);
+
+        // Remove imagens do storage contidas na descrição
+        libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML(mb_convert_encoding($product->description, 'HTML-ENTITIES', 'UTF-8'));
+
+        $images = $dom->getElementsByTagName('img');
+
+        foreach ($images as $img) {
+            $src = $img->getAttribute('src');
+
+            if (str_contains($src, '/storage/')) {
+                $path = str_replace('/storage/', '', parse_url($src, PHP_URL_PATH));
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+        }
+
+        // Limpa a descrição
+        $product->description = null;
+        $product->save();
+
+        return back()->with('success', 'Imagens e descrição removidas com sucesso.');
+    }
+
+    private function extractImageUrls($html)
+    {
+        $urls = [];
+
+        if (!$html) {
+            return $urls;
+        }
+
+        libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+        foreach ($dom->getElementsByTagName('img') as $img) {
+            $src = $img->getAttribute('src');
+            if ($src) {
+                $urls[] = $src;
+            }
+        }
+        return $urls;
+    }
+
     public function show($id)
     {
-        // Recupera o upload com base no ID
         $upload = Upload::findOrFail($id);
-
         return view('admin.uploads.show', compact('upload'));
     }
 }

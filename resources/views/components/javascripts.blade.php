@@ -92,6 +92,30 @@ $(document).ready(function () {
 </script>
 
 <script>
+function setFormType(type) {
+    document.getElementById('contact_type').value = type;
+
+    document.querySelectorAll('.form-field').forEach(el => {
+        const types = el.getAttribute('data-type').split(' ');
+        const show = types.includes(String(type));
+        el.style.display = show ? 'block' : 'none';
+
+        // Toggle required attr nos campos dinâmicos
+        el.querySelectorAll('input, textarea').forEach(input => {
+            input.required = show;
+        });
+    });
+
+    // Campo nome e email sempre required
+    document.querySelector('input[name="name"]').required = true;
+    document.querySelector('input[name="email"]').required = true;
+}
+
+// Inicializa no Fale Conosco
+setFormType(1);
+</script>
+
+<script>
     /** ========================
      * Categoria/Subcategoria/Filha
      ========================== */

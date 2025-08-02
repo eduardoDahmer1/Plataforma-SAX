@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Http\Requests\StoreBrandRequest;
 use App\Http\Requests\UpdateBrandRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BrandController extends Controller
 {
@@ -39,13 +40,22 @@ class BrandController extends Controller
 
     public function store(StoreBrandRequest $request)
     {
-        $data = $request->only('slug');
-        $data['name'] = $data['slug'];  // Garante que name = slug
+        $data = $request->only('name', 'slug');
+    
+        $request->validate([
+            'image' => 'nullable|image|max:2048',
+        ]);
+    
+        if ($request->hasFile('image')) {
+            // Salva a imagem na pasta 'brands' dentro do disco 'public'
+            $path = $request->file('image')->store('brands', 'public');
+            $data['image'] = $path;
+        }
     
         Brand::create($data);
         $this->clearBrandsCache();
     
-        return redirect()->route('brands.index')->with('success', 'Marca criada com sucesso.');
+        return redirect()->route('admin.brands.index')->with('success', 'Marca criada com sucesso.');
     }
 
     public function show(Brand $brand)
@@ -60,13 +70,26 @@ class BrandController extends Controller
 
     public function update(UpdateBrandRequest $request, Brand $brand)
     {
-        $data = $request->only('slug');
-        $data['name'] = $data['slug'];  // Garante que name = slug
+        $data = $request->only('name', 'slug');
+    
+        $request->validate([
+            'image' => 'nullable|image|max:2048',
+        ]);
+    
+        if ($request->hasFile('image')) {
+            // Apaga a imagem antiga se existir
+            if ($brand->image && Storage::disk('public')->exists($brand->image)) {
+                Storage::disk('public')->delete($brand->image);
+            }
+    
+            $path = $request->file('image')->store('brands', 'public');
+            $data['image'] = $path;
+        }
     
         $brand->update($data);
         $this->clearBrandsCache();
     
-        return redirect()->route('brands.index')->with('success', 'Marca atualizada com sucesso.');
+        return redirect()->route('admin.brands.index')->with('success', 'Marca atualizada com sucesso.');
     }
 
     public function destroy(Brand $brand)

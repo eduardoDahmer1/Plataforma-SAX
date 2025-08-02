@@ -34,6 +34,8 @@
     @endif
     <a href="{{ route('contact.form') }}" class="btn btn-primary mb-3">Fale Conosco</a>
     <a href="{{ route('blogs.index') }}" class="btn btn-primary mb-3">Ver Blogs</a>
+    <a class="btn btn-primary mb-3">Marcas</a>
+    <a class="btn btn-primary mb-3">Categorias</a>
     </div>
 </header>
 

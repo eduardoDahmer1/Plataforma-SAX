@@ -83,38 +83,14 @@ class HomeController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return view('pages.home', ['items' => $paginated]);
+        // Aqui está o ajuste:
+        return view('home', ['items' => $paginated]);
     }
 
-    // Os demais métodos que você deixou vazios podem permanecer assim
-
-    public function create()
-    {
-        //
-    }
-
-    public function store(Request $request)
-    {
-        //
-    }
-
-    public function show(string $id)
-    {
-        //
-    }
-
-    public function edit(string $id)
-    {
-        //
-    }
-
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    public function destroy(string $id)
-    {
-        //
-    }
+    public function create() {}
+    public function store(Request $request) {}
+    public function show(string $id) {}
+    public function edit(string $id) {}
+    public function update(Request $request, string $id) {}
+    public function destroy(string $id) {}
 }

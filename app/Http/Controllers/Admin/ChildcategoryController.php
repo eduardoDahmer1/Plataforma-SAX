@@ -13,13 +13,13 @@ class ChildcategoryController extends Controller
     public function index()
     {
         $childcategories = Childcategory::with('subcategory')->paginate(10);
-        return view('pages.childcategories.index', compact('childcategories'));
+        return view('admin.childcategories.index', compact('childcategories'));
     }
 
     public function create()
     {
         $subcategories = Subcategory::all();
-        return view('pages.childcategories.create', compact('subcategories'));
+        return view('admin.childcategories.create', compact('subcategories'));
     }
 
     public function store(Request $request)
@@ -39,13 +39,13 @@ class ChildcategoryController extends Controller
 
     public function show(Childcategory $childcategory)
     {
-        return view('pages.childcategories.show', compact('childcategory'));
+        return view('admin.childcategories.show', compact('childcategory'));
     }
 
     public function edit(Childcategory $childcategory)
     {
         $subcategories = Subcategory::all();
-        return view('pages.childcategories.edit', compact('childcategory', 'subcategories'));
+        return view('admin.childcategories.edit', compact('childcategory', 'subcategories'));
     }
 
     public function update(Request $request, Childcategory $childcategory)

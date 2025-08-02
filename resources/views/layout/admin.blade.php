@@ -16,8 +16,9 @@
 
 <body>
     {{-- Header --}}
-    @include('components.header-admin')
-
+    @include('components.header')
+    <!-- header-admin -->
+     
     <main class="py-4">
         <div class="container mt-4">
             <h2>Página Administrativa</h2>

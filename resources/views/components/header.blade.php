@@ -3,7 +3,7 @@
 
         @if ($webpImage)
         <div>
-            <a href="{{ route('pages.home') }}">
+            <a href="{{ route('home') }}">
                 <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header"
                 style="max-height: 100px; display: block; margin-bottom: 10px;">
             </a>
@@ -26,7 +26,7 @@
         @endif
     </div>
     <div class="container">
-    <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
+    <a href="{{ route('home') }}" class="btn btn-primary mb-3">Home</a>
     {{-- Verifica se o usuário é admin master --}}
     @if(auth()->check() && auth()->user()->user_type == 1)
     <!-- Exibir botão apenas para admin master -->
@@ -34,8 +34,8 @@
     @endif
     <a href="{{ route('contact.form') }}" class="btn btn-primary mb-3">Fale Conosco</a>
     <a href="{{ route('blogs.index') }}" class="btn btn-primary mb-3">Ver Blogs</a>
-    <a class="btn btn-primary mb-3">Marcas</a>
-    <a class="btn btn-primary mb-3">Categorias</a>
+    <a href="{{ route('brands.index') }}" class="btn btn-primary mb-3">Marcas</a>
+    <a href="{{ route('categories.index') }}" class="btn btn-primary mb-3">Categorias</a>
     </div>
 </header>
 

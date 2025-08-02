@@ -3,7 +3,7 @@
 
         @if ($webpImage)
         <div>
-            <a href="{{ route('pages.home') }}">
+            <a href="{{ route('home') }}">
                 <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Imagem Header"
                 style="max-height: 100px; display: block; margin-bottom: 10px;">
             </a>

@@ -24,12 +24,12 @@ class CategoryController extends Controller
             $categories = Category::orderBy('name')->paginate(20);
         }
     
-        return view('pages.categories.index', compact('categories'));
+        return view('admin.categories.index', compact('categories'));
     }    
 
     public function create()
     {
-        return view('pages.categories.create');
+        return view('admin.categories.create');
     }
 
     public function store(StoreCategoryRequest $request)
@@ -42,12 +42,25 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
-        return view('pages.categories.show', compact('category'));
+        return view('admin.categories.show', compact('category'));
     }
 
     public function edit(Category $category)
     {
-        return view('pages.categories.edit', compact('category'));
+        return view('admin.categories.edit', compact('category'));
+    }
+
+    // Frontend - listar categorias
+    public function publicIndex()
+    {
+        $categories = Category::orderBy('name')->paginate(12);
+        return view('categories.index', compact('categories'));
+    }
+
+    // Frontend - detalhe da categoria
+    public function publicShow(Category $category)
+    {
+        return view('categories.show', compact('category'));
     }
 
     public function update(UpdateCategoryRequest $request, Category $category)

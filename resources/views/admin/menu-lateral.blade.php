@@ -3,7 +3,7 @@
     <div class="list-group">
         <a href="{{ route('admin.index') }}" class="list-group-item list-group-item-action">Admin</a>
         <a class="list-group-item list-group-item-action">Atualizar produtos</a>
-        <a href="{{ route('pages.home') }}" class="list-group-item list-group-item-action">Home</a>
+        <a href="{{ route('home') }}" class="list-group-item list-group-item-action">Home</a>
         <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action">Usuários</a>
 
         <!-- Catálogos -->
@@ -40,7 +40,6 @@
         </a>
         <div class="collapse" id="menuConteudos">
             <a class="list-group-item list-group-item-action ps-4" href="{{ route('admin.blogs.index') }}">Blog</a>
-            <a class="list-group-item list-group-item-action ps-4">Banners</a>
             <a class="list-group-item list-group-item-action ps-4"
                 href="{{ route('admin.contacts.index') }}">Contato</a>
             <a class="list-group-item list-group-item-action ps-4">Página Não Encontrada</a>
@@ -66,6 +65,7 @@
             <a href="{{ route('admin.convert.webp') }}" class="list-group-item list-group-item-action ps-4">Converter
                 todas as imagens para WebP</a>
             <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
+            <a class="list-group-item list-group-item-action ps-4">Email</a>
         </div>
     </div>
 </div>

@@ -30,12 +30,12 @@ class BrandController extends Controller
             }
         });
 
-        return view('pages.brands.index', compact('brands'));
+        return view('admin.brands.index', compact('brands'));
     }
 
     public function create()
     {
-        return view('pages.brands.create');
+        return view('admin.brands.create');
     }
 
     public function store(StoreBrandRequest $request)
@@ -60,12 +60,12 @@ class BrandController extends Controller
 
     public function show(Brand $brand)
     {
-        return view('pages.brands.show', compact('brand'));
+        return view('admin.brands.show', compact('brand'));
     }
 
     public function edit(Brand $brand)
     {
-        return view('pages.brands.edit', compact('brand'));
+        return view('admin.brands.edit', compact('brand'));
     }
 
     public function update(UpdateBrandRequest $request, Brand $brand)
@@ -98,6 +98,19 @@ class BrandController extends Controller
         $this->clearBrandsCache();
 
         return redirect()->route('admin.brands.index')->with('success', 'Marca deletada com sucesso.');
+    }
+
+    // Frontend - listar marcas
+    public function publicIndex()
+    {
+        $brands = Brand::orderBy('name')->paginate(12);
+        return view('brands.index', compact('brands'));
+    }
+
+    // Frontend - detalhe da marca
+    public function publicShow(Brand $brand)
+    {
+        return view('brands.show', compact('brand'));
     }
 
     private function clearBrandsCache()

@@ -12,13 +12,13 @@ class SubcategoryController extends Controller
     public function index()
     {
         $subcategories = Subcategory::with('category')->paginate(10);
-        return view('pages.subcategories.index', compact('subcategories'));
+        return view('admin.subcategories.index', compact('subcategories'));
     }
 
     public function create()
     {
         $categories = Category::all();
-        return view('pages.subcategories.create', compact('categories'));
+        return view('admin.subcategories.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -36,13 +36,13 @@ class SubcategoryController extends Controller
     public function show(Subcategory $subcategory)
     {
         // Se quiser mostrar detalhes de uma subcategoria, pode criar essa view ou usar modal na listagem
-        return view('pages.subcategories.show', compact('subcategory'));
+        return view('admin.subcategories.show', compact('subcategory'));
     }
 
     public function edit(Subcategory $subcategory)
     {
         $categories = Category::all();
-        return view('pages.subcategories.edit', compact('subcategory', 'categories'));
+        return view('admin.subcategories.edit', compact('subcategory', 'categories'));
     }
 
     public function update(Request $request, Subcategory $subcategory)

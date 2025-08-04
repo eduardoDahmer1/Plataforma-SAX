@@ -2,7 +2,6 @@
     <!-- Sidebar -->
     <div class="list-group">
         <a href="{{ route('admin.index') }}" class="list-group-item list-group-item-action">Admin</a>
-        <a class="list-group-item list-group-item-action">Atualizar produtos</a>
         <a href="{{ route('home') }}" class="list-group-item list-group-item-action">Home</a>
         <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action">Usuários</a>
 

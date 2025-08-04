@@ -1,5 +1,6 @@
 <?php
 
+// front
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\ProfileController;
@@ -10,15 +11,16 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\ImageConvertController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ContactController;
+
+// admin
+use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\ChildcategoryController;
-use App\Http\Controllers\Admin\ContactController;
-
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 
 // --- Rota Home ---

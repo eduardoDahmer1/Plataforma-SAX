@@ -9,6 +9,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\Order;
+
 
 class AuthenticatedSessionController extends Controller
 {
@@ -23,12 +25,42 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $request->authenticate();
-
+        // já vem com a lógica de autenticação
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+    
+        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+    
         $request->session()->regenerate();
-
+    
+        // Restaurar carrinho da base
+        $order = Order::where('user_id', auth()->id())
+            ->where('status', 'cart')
+            ->with('items') // garantir que puxe os itens
+            ->first();
+    
+        $cart = [];
+    
+        if ($order) {
+            foreach ($order->items as $item) {
+                $cart[$item->product_id] = [
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                    // você pode puxar nome, imagem etc. se quiser também
+                ];
+            }
+        }
+    
+        session()->put('cart', $cart);
+    
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

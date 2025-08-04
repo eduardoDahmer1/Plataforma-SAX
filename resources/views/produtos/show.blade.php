@@ -47,7 +47,18 @@
                 @endif
 
                 <div class="mt-4 d-flex gap-3">
-                    <a href="#" class="btn btn-primary px-4">Comprar</a>
+                    @auth
+                        @if(in_array(auth()->user()->user_type, [0, 1, 2]))
+                            <form action="{{ route('cart.add') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                <button type="submit" class="btn btn-primary px-4">Comprar</button>
+                            </form>
+                        @endif
+                    @else
+                        <a href="#" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#loginModal">Login para Comprar</a>
+                    @endauth
+
                     <a href="{{ url('/') }}" class="btn btn-outline-secondary">Voltar para a Home</a>
                 </div>
             </div>

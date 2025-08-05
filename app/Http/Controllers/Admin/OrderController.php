@@ -20,4 +20,20 @@ class OrderController extends Controller
         $order = Order::with('user', 'items')->findOrFail($id);
         return view('admin.orders.show', compact('order'));
     }
+
+    public function destroy($id)
+    {
+        $order = Order::with('items')->findOrFail($id);
+
+        // Exclui os itens do pedido
+        foreach ($order->items as $item) {
+            $item->delete();
+        }
+
+        // Exclui o pedido
+        $order->delete();
+
+        return redirect()->route('admin.orders.index')->with('success', 'Pedido excluído com sucesso.');
+    }
+
 }

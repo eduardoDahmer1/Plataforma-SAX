@@ -49,7 +49,7 @@
                 <div class="mt-4 d-flex gap-3">
                     @auth
                         @if(in_array(auth()->user()->user_type, [0, 1, 2]))
-                            <form action="{{ route('cart.add') }}" method="POST">
+                            <form action="{{ route('checkout.step1') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <button type="submit" class="btn btn-primary px-4">Comprar</button>

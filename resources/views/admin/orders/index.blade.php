@@ -25,6 +25,14 @@
                 <td>R$ {{ number_format($order->total ?? 0, 2, ',', '.') }}</td>
                 <td>
                     <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-primary">Ver Pedido</a>
+
+                    <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST"
+                        style="display:inline-block;"
+                        onsubmit="return confirm('Tem certeza que deseja excluir este pedido?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                    </form>
                 </td>
             </tr>
             @empty

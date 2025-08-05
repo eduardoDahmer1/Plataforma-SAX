@@ -23,8 +23,11 @@ class CartController extends Controller
             $cart[$productId]['quantity'] += $quantity;
         } else {
             $cart[$productId] = [
-                'quantity' => $quantity,
+                'product_id' => $productId,
+                'title' => $product->title,
+                'slug' => $product->slug,
                 'price' => $product->price,
+                'quantity' => $quantity,
             ];
         }
 
@@ -41,8 +44,14 @@ class CartController extends Controller
             );
         
             $order->items()->updateOrCreate(
-                ['product_id' => $product->id],
-                ['quantity' => $cart[$productId]['quantity'], 'price' => $product->price]
+                [
+                    'order_id' => $order->id,
+                    'product_id' => $product->id
+                ],
+                [
+                    'quantity' => $cart[$productId]['quantity'],
+                    'price' => $product->price
+                ]
             );
         }
 
@@ -85,9 +94,27 @@ class CartController extends Controller
         if (isset($cart[$productId])) {
             unset($cart[$productId]);
             session()->put('cart', $cart);
+    
+            if (auth()->check()) {
+                $order = Order::where('user_id', auth()->id())
+                    ->where('status', 'cart')
+                    ->first();
+    
+                if ($order) {
+                    // Remove o item do banco
+                    $order->items()->where('product_id', $productId)->delete();
+    
+                    // Se não tiver mais itens, remove o pedido inteiro
+                    if ($order->items()->count() === 0) {
+                        $order->delete();
+                    }
+                }
+            }
+    
             return back()->with('success', 'Produto removido do carrinho!');
         }
-
+    
         return back()->with('error', 'Produto não encontrado no carrinho.');
     }
+    
 }

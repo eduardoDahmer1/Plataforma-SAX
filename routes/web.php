@@ -19,6 +19,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\CheckoutController;
 
+
 // admin
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Admin\ChildcategoryController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController;
+
 
 // --- Rota Home ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -73,6 +75,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Clientes
     Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+
+    Route::resource('payments', \App\Http\Controllers\Admin\PaymentMethodController::class);
+    Route::post('payments/{id}/toggle-active', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'toggleActive'])->name('payments.toggleActive');
 
     // Pedidos
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
@@ -149,9 +154,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/checkout/3', [CheckoutController::class, 'storeStep3']);
         Route::get('/checkout/4', [CheckoutController::class, 'step4'])->name('checkout.step4');
         Route::post('/checkout/finish', [CheckoutController::class, 'finish'])->name('checkout.finish');
-
-        Route::get('/payment/bancard/{order}', [PaymentController::class, 'bancard'])->name('payment.bancard');
-        Route::get('/payment/deposito/{order}', [PaymentController::class, 'deposito'])->name('payment.deposito');
     });
 });
 

@@ -19,6 +19,7 @@ class PaymentMethodController extends Controller
         return view('admin.payments.create');
     }
 
+    // store
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -28,20 +29,22 @@ class PaymentMethodController extends Controller
             'active' => 'boolean',
             'public_key' => 'nullable|string',
             'private_key' => 'nullable|string',
+            'bank_details' => 'nullable|string', // Para detalhes da conta bancária
         ]);
     
-        // Preenche as credenciais no formato adequado
-        $data['credentials'] = [
-            'public_key' => $request->input('public_key'),
-            'private_key' => $request->input('private_key'),
-        ];
-    
-        // Se não existir public_key e private_key, deixa o campo vazio
-        if (!$data['credentials']['public_key'] && !$data['credentials']['private_key']) {
+        if ($data['type'] === 'bank') {
+            // Para tipo bank, salva detalhes bancários
             $data['credentials'] = null;
+            $data['bank_details'] = $request->input('bank_details'); // Salva os detalhes do banco
+        } else {
+            // Para tipo gateway, salva as credenciais
+            $data['credentials'] = json_encode([
+                'public_key' => $request->input('public_key'),
+                'private_key' => $request->input('private_key'),
+            ]);
+            $data['bank_details'] = null; // Limpa os detalhes bancários
         }
     
-        // Cria o método de pagamento
         PaymentMethod::create($data);
     
         return redirect()->route('admin.payments.index')->with('success', 'Método de pagamento criado com sucesso!');
@@ -50,31 +53,46 @@ class PaymentMethodController extends Controller
     public function edit($id)
     {
         $method = PaymentMethod::findOrFail($id);
+
+        // Como credentials já é array (por cast), pega direto
+        $credentials = $method->credentials ?? [];
+
+        $method->public_key = $credentials['public_key'] ?? '';
+        $method->private_key = $credentials['private_key'] ?? '';
+
         return view('admin.payments.edit', compact('method'));
     }
 
+    // update
     public function update(Request $request, $id)
     {
         $method = PaymentMethod::findOrFail($id);
-
+    
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:bank,gateway',
-            'details' => 'nullable|string',
+            'description' => 'nullable|string',
             'active' => 'boolean',
             'public_key' => 'nullable|string',
             'private_key' => 'nullable|string',
+            'bank_details' => 'nullable|string', // Para detalhes da conta bancária
         ]);
-
+    
         $data['active'] = $request->has('active');
-
-        $data['credentials'] = [
-            'public_key' => $request->input('public_key'),
-            'private_key' => $request->input('private_key'),
-        ];
-
+    
+        if ($data['type'] === 'bank') {
+            $data['credentials'] = null;
+            $data['bank_details'] = $request->input('bank_details'); // Atualiza os detalhes bancários
+        } else {
+            $data['credentials'] = json_encode([
+                'public_key' => $request->input('public_key'),
+                'private_key' => $request->input('private_key'),
+            ]);
+            $data['bank_details'] = null; // Limpa os detalhes bancários
+        }
+    
         $method->update($data);
-
+    
         return redirect()->route('admin.payments.index')->with('success', 'Método atualizado com sucesso');
     }
 
@@ -82,14 +100,19 @@ class PaymentMethodController extends Controller
     {
         $method = PaymentMethod::findOrFail($id);
         $method->delete();
+
         return redirect()->route('admin.payments.index')->with('success', 'Método de pagamento excluído.');
     }
 
     public function toggleActive(Request $request, $id)
     {
-        $method = PaymentMethod::findOrFail($id);
-        $method->active = $request->input('active') ? 1 : 0;
-        $method->save();
+        \Log::info('toggleActive chamado', ['id' => $id, 'active' => $request->input('active')]);
+
+        $payment = PaymentMethod::findOrFail($id);
+
+        $payment->active = $request->input('active') == 1 ? 1 : 2;
+
+        $payment->save();
 
         return response()->json(['message' => 'Status atualizado com sucesso']);
     }

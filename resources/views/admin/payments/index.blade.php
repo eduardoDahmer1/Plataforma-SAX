@@ -21,9 +21,9 @@
                 <tr>
                     <td>{{ $method->name }}</td>
                     <td>{{ ucfirst($method->type) }}</td>
-                    <td>{{ $method->active ? 'Ativo' : 'Inativo' }}</td>
+                    <td>{{ $method->active == 1 ? 'Ativo' : 'Inativo' }}</td>
                     <td>
-                        <input type="checkbox" class="toggle-active" data-id="{{ $method->id }}" {{ $method->active ? 'checked' : '' }}>
+                        <input type="checkbox" class="toggle-active" data-id="{{ $method->id }}" {{ $method->active == 1 ? 'checked' : '' }}>
                     </td>
                     <td>
                         <a href="{{ route('admin.payments.edit', $method->id) }}" class="btn btn-sm btn-primary">Editar</a>
@@ -43,7 +43,7 @@
 document.querySelectorAll('.toggle-active').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
         const id = this.dataset.id;
-        const active = this.checked ? 1 : 0;
+        const active = this.checked ? 1 : 2; // já ajustado para 1 ou 2
 
         fetch(`/admin/payments/${id}/toggle-active`, {
             method: 'POST',
@@ -60,15 +60,15 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
         })
         .then(data => {
             alert(data.message);
-            // opcional: atualizar texto da coluna status
             const statusCell = this.closest('tr').querySelector('td:nth-child(3)');
-            statusCell.textContent = active ? 'Ativo' : 'Inativo';
+            statusCell.textContent = active == 1 ? 'Ativo' : 'Inativo';
         })
         .catch(() => {
             alert('Falha ao alterar status');
-            this.checked = !this.checked; // reverte checkbox
+            this.checked = !this.checked;
         });
     });
 });
+
 </script>
 @endsection

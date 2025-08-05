@@ -30,7 +30,7 @@
         <div class="collapse" id="menuVendas">
             <a href="{{ route('admin.orders.index') }}" class="list-group-item list-group-item-action ps-4">Pedidos</a>
             <a href="{{ route('admin.clients.index') }}" class="list-group-item list-group-item-action ps-4">Clientes</a>
-            <!-- <a href('admin.payments.index') }}" class="list-group-item list-group-item-action ps-4">Métodos de Pagamento</a> -->
+            <a href="{{ route('admin.payments.index') }}" class="list-group-item list-group-item-action ps-4">Métodos de Pagamento</a>
         </div>
 
         <!-- Conteúdos -->

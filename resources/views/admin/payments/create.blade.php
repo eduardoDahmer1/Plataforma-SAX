@@ -23,17 +23,19 @@
             </select>
         </div>
 
-        <div class="mb-3" id="details-container">
-            <label for="details" class="form-label">Detalhes</label>
-            <textarea name="details" class="form-control" rows="4" placeholder="Ex: Nome do banco, número da conta, instruções..." required>{{ $method->details ?? '' }}</textarea>
+        {{-- Detalhes de conta bancária --}}
+        <div class="mb-3 bank-only">
+            <label for="bank_details" class="form-label">Detalhes da Conta Bancária</label>
+            <textarea name="bank_details" class="form-control" rows="4" placeholder="Ex: Nome do banco, número da conta..." @if(isset($method) && $method->type === 'gateway') style="display:none" @endif>{{ $method->bank_details ?? '' }}</textarea>
         </div>
 
-        <div class="mb-3 gateway-only" style="display: none;">
+        {{-- Campos para Gateway --}}
+        <div class="mb-3 gateway-only" style="{{ isset($method) && $method->type === 'gateway' ? '' : 'display:none' }}">
             <label for="public_key" class="form-label">Chave Pública</label>
             <input type="text" name="public_key" class="form-control" value="{{ $method->credentials['public_key'] ?? '' }}">
         </div>
 
-        <div class="mb-3 gateway-only" style="display: none;">
+        <div class="mb-3 gateway-only" style="{{ isset($method) && $method->type === 'gateway' ? '' : 'display:none' }}">
             <label for="private_key" class="form-label">Chave Privada</label>
             <input type="text" name="private_key" class="form-control" value="{{ $method->credentials['private_key'] ?? '' }}">
         </div>
@@ -50,17 +52,11 @@
 <script>
 function toggleFields() {
     const type = document.getElementById('type').value;
-    const gatewayFields = document.querySelectorAll('.gateway-only');
-    if(type === 'gateway') {
-        gatewayFields.forEach(el => el.style.display = 'block');
-    } else {
-        gatewayFields.forEach(el => el.style.display = 'none');
-    }
+    document.querySelectorAll('.gateway-only').forEach(el => el.style.display = (type === 'gateway') ? 'block' : 'none');
+    document.querySelectorAll('.bank-only').forEach(el => el.style.display = (type === 'bank') ? 'block' : 'none');
 }
 
 document.getElementById('type').addEventListener('change', toggleFields);
-
-// Inicializa no carregamento da página
 toggleFields();
 </script>
 @endsection

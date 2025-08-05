@@ -51,8 +51,8 @@ class User extends Authenticatable
     public function getUserRoleAttribute()
     {
         return match ($this->user_type) {
-            1 => 'Admin Master',
-            2 => 'Usuário Comum',
+            1 => 'Usuário Comum',
+            2 => 'Admin Master',
             default => 'Desconhecido',
         };
     }

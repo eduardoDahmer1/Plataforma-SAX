@@ -104,3 +104,80 @@ body {
 .list-group-item a:hover {
     text-decoration: underline;
 }
+.custom-btn {
+    background-color: #d4d4d4 !important;
+    color: #000000 !important;
+    border: none !important;
+    transition: background-color 0.3s ease !important;
+}
+
+.custom-btn:hover {
+    background-color: #5a6268 !important;
+    color: #fff !important;
+}
+/* Container do card */
+.card-checkout {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Título do checkout */
+.card-checkout h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+/* Botões */
+.card-checkout .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    margin: 8px 4px;
+    white-space: nowrap;
+}
+
+.card-checkout .btn-primary {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.card-checkout .btn-primary:hover {
+    background-color: #0069d9;
+}
+
+.card-checkout .btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.card-checkout .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .card-checkout {
+        margin: 20px 15px;
+        padding: 15px;
+    }
+
+    .card-checkout h2 {
+        font-size: 1.5rem;
+    }
+
+    .card-checkout .btn {
+        width: 100%;
+        margin: 6px 0;
+    }
+}

@@ -72,12 +72,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     // Clientes
-    Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
     Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
 
     // Pedidos
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    Route::delete('orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
     // Clientes
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');

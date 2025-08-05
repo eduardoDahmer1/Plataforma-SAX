@@ -60,29 +60,24 @@
                         <small>ID: {{ $item->id }}</small>
                     </p>
 
-                    <a href="{{ route('produto.show', $item->id) }}" class="btn btn-sm btn-info">Ver Detalhes</a>
+                    <a href="{{ route('produto.show', $item->id) }}" class="btn btn-sm btn-info mb-2 custom-btn">Ver Detalhes</a>
 
                     @auth
                         @if(in_array(auth()->user()->user_type, [0, 1, 2]))
                             <form action="{{ route('cart.add') }}" method="POST" class="d-inline">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $item->id }}">
-                                <button type="submit" class="btn btn-sm btn-success mb-2">Adicionar ao Carrinho</button>
+                                <button type="submit" class="btn btn-sm custom-btn mb-2">+ 🛒</button>
                             </form>
 
                             <form action="{{ route('checkout.step1') }}" method="GET" class="d-inline">
                                 <input type="hidden" name="product_id" value="{{ $item->id }}">
-                                <button type="submit" class="btn btn-sm btn-primary mb-2">Comprar Agora</button>
+                                <button type="submit" class="btn btn-sm custom-btn mb-2">Comprar Agora 🛒</button>
                             </form>
                         @endif
                     @else
                         <a href="#" class="btn btn-sm btn-warning mb-2" data-bs-toggle="modal" data-bs-target="#loginModal">Login para Comprar</a>
                     @endauth
-
-                    @guest
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal"
-                        class="btn btn-sm btn-warning mt-2">Login para comprar</a>
-                    @endguest
 
                     @endif
                 </div>

@@ -29,9 +29,9 @@
                     <td>{{ $user->email }}</td>
                     <td>
                     @if($user->user_type == 1)
-                        <span class="badge bg-success">Usuário Comum</span>
+                        <span class="badge bg-success">Admin Master</span>
                     @elseif($user->user_type == 2)
-                        <span class="badge bg-primary">Admin Master</span>
+                        <span class="badge bg-primary">Usuário Comum</span>
                     @elseif($user->user_type == 3)
                         <span class="badge bg-warning text-dark">Usuário Curso</span>
                     @endif

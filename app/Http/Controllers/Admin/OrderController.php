@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Cart;
+use Illuminate\Support\Facades\Session;
+
 
 class OrderController extends Controller
 {
     public function index()
     {
-        // Busca os pedidos com info do usuário relacionado
         $orders = Order::with('user')->orderBy('created_at', 'desc')->paginate(20);
-
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -24,16 +25,19 @@ class OrderController extends Controller
     public function destroy($id)
     {
         $order = Order::with('items')->findOrFail($id);
-
-        // Exclui os itens do pedido
+    
+        // Deleta itens do pedido
         foreach ($order->items as $item) {
             $item->delete();
         }
-
-        // Exclui o pedido
+    
+        // Deleta o pedido
         $order->delete();
-
+    
+        // Limpa carrinho da sessão do usuário — só vai funcionar se for o mesmo usuário logado!
+        // Se for no admin e você não é o mesmo usuário, isso não afeta.
+        Session::forget('cart');
+    
         return redirect()->route('admin.orders.index')->with('success', 'Pedido excluído com sucesso.');
     }
-
 }

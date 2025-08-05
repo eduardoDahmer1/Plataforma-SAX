@@ -7,7 +7,11 @@
     <table class="table table-bordered">
         <tr>
             <th>Cliente</th>
-            <td>{{ $order->user->name }} ({{ $order->user->email }})</td>
+            <td>{{ $order->user->name }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>({{ $order->user->email }})</td>
         </tr>
         <tr>
             <th>Status</th>
@@ -19,7 +23,12 @@
         </tr>
         <tr>
             <th>Total</th>
-            <td>R$ {{ number_format($order->total, 2, ',', '.') }}</td>
+
+            <td>@php
+                $total = $order->items->sum(function($item) {
+                return $item->price * $item->quantity;
+                });
+                @endphp R$ {{ number_format($total, 2, ',', '.') }}</td>
         </tr>
         <tr>
             <th>Método de Pagamento</th>
@@ -41,7 +50,7 @@
         <tbody>
             @foreach($order->items as $item)
             <tr>
-                <td>{{ $item->product_name ?? 'Produto não identificado' }}</td>
+                <td>{{ $item->product->slug ?? 'Produto não encontrado' }}</td>
                 <td>{{ $item->quantity }}</td>
                 <td>R$ {{ number_format($item->price, 2, ',', '.') }}</td>
                 <td>R$ {{ number_format($item->quantity * $item->price, 2, ',', '.') }}</td>

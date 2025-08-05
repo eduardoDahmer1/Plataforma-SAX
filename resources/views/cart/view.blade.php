@@ -15,6 +15,7 @@
             @method('DELETE')
             <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
         </form>
+        
     </li>
     @endforeach
 </ul>

@@ -22,7 +22,11 @@
                 <td>{{ $order->user->name ?? 'Cliente não encontrado' }}</td>
                 <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                 <td>{{ $order->status }}</td>
-                <td>R$ {{ number_format($order->total ?? 0, 2, ',', '.') }}</td>
+                <td>@php
+                    $total = $order->items->sum(function($item) {
+                    return $item->price * $item->quantity;
+                    });
+                    @endphp R$ {{ number_format($total, 2, ',', '.') }}</td>
                 <td>
                     <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-primary">Ver Pedido</a>
 

@@ -58,6 +58,8 @@ Route::get('/uploads/{id}', [UploadController::class, 'show'])->name('uploads.sh
 Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
 
+Route::put('/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
+
 // Carrinho
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'view'])->name('cart.view');
@@ -109,6 +111,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
     Route::post('uploads/trumbowyg-image', [UploadController::class, 'uploadImage'])->name('uploads.trumbowyg-image');
 
+
     // Produtos e categorias admin
     Route::resource('products', ProductController::class);
     Route::resource('subcategories', SubcategoryController::class);
@@ -133,28 +136,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('convert-webp', [ImageConvertController::class, 'convertAllToWebp'])->name('convert.webp');
 });
 
-// Rotas autenticadas
+// --- Checkout ---
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', fn () => view('dashboard'))->middleware(['verified'])->name('dashboard');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Checkout com middleware 'cliente'
-    Route::middleware('cliente')->group(function () {
-        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-        Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-
-        Route::get('/checkout/1', [CheckoutController::class, 'step1'])->name('checkout.step1');
-        Route::post('/checkout/1', [CheckoutController::class, 'storeStep1']);
-        Route::get('/checkout/2', [CheckoutController::class, 'step2'])->name('checkout.step2');
-        Route::post('/checkout/2', [CheckoutController::class, 'storeStep2']);
-        Route::get('/checkout/3', [CheckoutController::class, 'step3'])->name('checkout.step3');
-        Route::post('/checkout/3', [CheckoutController::class, 'storeStep3']);
-        Route::get('/checkout/4', [CheckoutController::class, 'step4'])->name('checkout.step4');
-        Route::post('/checkout/finish', [CheckoutController::class, 'finish'])->name('checkout.finish');
-    });
+    Route::get('/checkout/success', function() {
+        return view('checkout.success');
+    })->name('checkout.success');
 });
 
 // Logout

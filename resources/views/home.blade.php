@@ -70,7 +70,7 @@
                                 <button type="submit" class="btn btn-sm custom-btn mb-2">+ 🛒</button>
                             </form>
 
-                            <form action="{{ route('checkout.step1') }}" method="GET" class="d-inline">
+                            <form action="{{ route('checkout.index') }}" method="GET" class="d-inline">
                                 <input type="hidden" name="product_id" value="{{ $item->id }}">
                                 <button type="submit" class="btn btn-sm custom-btn mb-2">Comprar Agora 🛒</button>
                             </form>

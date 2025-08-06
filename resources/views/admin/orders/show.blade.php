@@ -22,13 +22,15 @@
             <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
         </tr>
         <tr>
-            <th>Total</th>
-
-            <td>@php
-                $total = $order->items->sum(function($item) {
-                return $item->price * $item->quantity;
-                });
-                @endphp R$ {{ number_format($total, 2, ',', '.') }}</td>
+        <th>Total</th>
+            <td>
+                @php
+                    $total = $order->items->sum(function($item) {
+                        return $item->price * $item->quantity;
+                    });
+                @endphp
+                R$ {{ number_format($total, 2, ',', '.') }}
+            </td>
         </tr>
         <tr>
             <th>Método de Pagamento</th>
@@ -50,7 +52,10 @@
         <tbody>
             @foreach($order->items as $item)
             <tr>
-                <td>{{ $item->product->slug ?? 'Produto não encontrado' }}</td>
+                <td>
+                    {{-- Verificando o título do produto usando name ou external_name --}}
+                    {{ $item->product->name ?? $item->product->external_name ?? 'Produto não encontrado' }}
+                </td>
                 <td>{{ $item->quantity }}</td>
                 <td>R$ {{ number_format($item->price, 2, ',', '.') }}</td>
                 <td>R$ {{ number_format($item->quantity * $item->price, 2, ',', '.') }}</td>

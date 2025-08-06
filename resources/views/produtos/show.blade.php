@@ -49,7 +49,7 @@
                 <div class="mt-4 d-flex gap-3">
                     @auth
                     @if(in_array(auth()->user()->user_type, [0, 1, 2]))
-                    <form action="{{ route('checkout.step1') }}" method="POST">
+                    <form action="{{ route('checkout.index') }}" method="GET">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <button type="submit" class="btn btn-outline-secondary">Comprar</button>
@@ -62,7 +62,7 @@
 
                     <a href="{{ url('/') }}" class="btn btn-outline-secondary">Voltar para a Home</a>
 
-                    <form action="{{ route('cart.add') }}" method="POST" class="btn btn-outline-secondary">
+                    <form action="{{ route('cart.add') }}" method="GET" class="btn btn-outline-secondary">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <button type="submit" class="btn btn-sm mb-2">+ 🛒</button>

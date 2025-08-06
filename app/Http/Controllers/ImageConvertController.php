@@ -14,7 +14,7 @@ class ImageConvertController extends Controller
 
         $extensions = ['jpg', 'jpeg', 'png'];
 
-        $folders = ['blog_images', 'blogs', 'config', 'images', 'uploads'];
+        $folders = ['blog_images', 'blogs', 'config', 'images', 'uploads','categories'];
 
         foreach ($folders as $folder) {
             $folderPath = $basePath . '/' . $folder;

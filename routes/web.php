@@ -91,6 +91,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
     Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
 
+    Route::delete('categories/delete-photo/{category}', [CategoryController::class, 'deletePhoto'])->name('categories.deletePhoto');
+    Route::delete('categories/delete-banner/{category}', [CategoryController::class, 'deleteBanner'])->name('categories.deleteBanner');
+    Route::get('/admin/categories/convert-images', [CategoryController::class, 'convertCategoryImagesToWebp'])
+    ->name('admin.categories.convertImages');
+
+
     // Blogs admin
     Route::resource('blogs', AdminBlogController::class);
 

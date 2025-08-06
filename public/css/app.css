@@ -160,7 +160,12 @@ body {
     background-color: #6c757d;
     color: #fff;
 }
-
+.mt-4 .shadow-sm{
+width: 100% !important;
+}
+.text-center .shadow-sm {
+    width: 10em;
+}
 .card-checkout .btn-secondary:hover {
     background-color: #5a6268;
 }

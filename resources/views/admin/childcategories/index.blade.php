@@ -24,8 +24,7 @@
                     <td>{{ $childcategory->name }}</td>
                     <td>{{ $childcategory->subcategory->name ?? 'Sem Subcategoria' }}</td>
                     <td>
-                    <a href="{{ route('admin.childcategories.show', $childcategory->id) }}"
-                    class="btn btn-sm btn-info">Ver</a>
+                        <a href="{{ route('admin.childcategories.show', $childcategory->id) }}" class="btn btn-sm btn-info">Ver</a>
                         <a href="{{ route('admin.childcategories.edit', $childcategory->id) }}" class="btn btn-sm btn-warning">Editar</a>
                         <form action="{{ route('admin.childcategories.destroy', $childcategory->id) }}" method="POST" style="display:inline;">
                             @csrf
@@ -37,5 +36,10 @@
             @endforeach
         </tbody>
     </table>
+
+    <!-- Links da paginação -->
+    <div>
+        {{ $childcategories->links() }}
+    </div>
 </div>
 @endsection

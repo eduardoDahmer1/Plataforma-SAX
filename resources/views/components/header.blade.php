@@ -37,6 +37,7 @@
        <a href="{{ route('brands.index') }}" class="btn btn-primary me-2 mb-2">Marcas</a>
        <a href="{{ route('categories.index') }}" class="btn btn-primary me-2 mb-2">Categorias</a>
        <a href="{{ route('subcategories.index') }}" class="btn btn-primary me-2 mb-2">Subcategorias</a>
+       <a href="{{ route('childcategories.index') }}" class="btn btn-primary me-2 mb-2">Categorias Filhas</a>
 
 
        @php

@@ -19,12 +19,13 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SubcategoryController; // ✅ Adicionado o controller público de subcategorias
+use App\Http\Controllers\ChildcategoryController as PublicChildcategoryController;
 
 // Admin
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\SubcategoryController as AdminSubcategoryController;
-use App\Http\Controllers\Admin\ChildcategoryController;
+use App\Http\Controllers\Admin\ChildcategoryController as AdminChildcategoryController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController;
@@ -68,10 +69,20 @@ Route::get('/cart', [CartController::class, 'view'])->name('cart.view');
 Route::post('/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 
+// Rotas públicas (fora do grupo 'admin')
+Route::get('/subsubcategorias', [PublicChildcategoryController::class, 'index'])->name('childcategories.index');
+Route::get('/subsubcategorias/{slug}', [PublicChildcategoryController::class, 'show'])->name('childcategories.show');
+
 // --- Rotas protegidas para admin ---
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
 
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
+
+    // Rotas admin (dentro do grupo 'admin')
+    Route::delete('childcategories/{childcategory}/delete-photo', [AdminChildcategoryController::class, 'deletePhoto'])->name('childcategories.deletePhoto');
+    Route::delete('childcategories/{childcategory}/delete-banner', [AdminChildcategoryController::class, 'deleteBanner'])->name('childcategories.deleteBanner'); 
+
+    Route::resource('childcategories', AdminChildcategoryController::class);
 
     // --- Rotas para exclusão da foto e do banner de subcategoria --- 
     Route::delete('subcategories/{subcategory}/delete-photo', [AdminSubcategoryController::class, 'deletePhoto'])->name('subcategories.deletePhoto');
@@ -128,7 +139,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Produtos e categorias admin
     Route::resource('products', ProductController::class);
     Route::resource('subcategories', AdminSubcategoryController::class);
-    Route::resource('childcategories', ChildcategoryController::class);
 
     // Contatos admin
     Route::get('contatos', [AdminContactController::class, 'index'])->name('contacts.index');

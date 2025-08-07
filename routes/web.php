@@ -1,6 +1,6 @@
 <?php
 
-// front
+// Frontend
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\ProfileController;
@@ -18,20 +18,22 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\SubcategoryController; // ✅ Adicionado o controller público de subcategorias
 
-
-// admin
+// Admin
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
-use App\Http\Controllers\Admin\SubcategoryController;
+use App\Http\Controllers\Admin\SubcategoryController as AdminSubcategoryController;
 use App\Http\Controllers\Admin\ChildcategoryController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController;
 
-
 // --- Rota Home ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/subcategorias', [SubcategoryController::class, 'index'])->name('subcategories.index');
+Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->name('subcategories.show');
 
 // --- Frontend ---
 // Blogs
@@ -71,6 +73,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
 
+    // --- Rotas para exclusão da foto e do banner de subcategoria --- 
+    Route::delete('subcategories/{subcategory}/delete-photo', [AdminSubcategoryController::class, 'deletePhoto'])->name('subcategories.deletePhoto');
+    Route::delete('subcategories/{subcategory}/delete-banner', [AdminSubcategoryController::class, 'deleteBanner'])->name('subcategories.deleteBanner');
+
+    // --- Rota para exclusão da subcategoria inteira --- 
+    Route::delete('subcategories/{subcategory}', [AdminSubcategoryController::class, 'destroy'])->name('subcategories.destroy');
+    
     // Pedidos
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -96,7 +105,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/admin/categories/convert-images', [CategoryController::class, 'convertCategoryImagesToWebp'])
     ->name('admin.categories.convertImages');
 
-
     // Blogs admin
     Route::resource('blogs', AdminBlogController::class);
 
@@ -117,10 +125,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
     Route::post('uploads/trumbowyg-image', [UploadController::class, 'uploadImage'])->name('uploads.trumbowyg-image');
 
-
     // Produtos e categorias admin
     Route::resource('products', ProductController::class);
-    Route::resource('subcategories', SubcategoryController::class);
+    Route::resource('subcategories', AdminSubcategoryController::class);
     Route::resource('childcategories', ChildcategoryController::class);
 
     // Contatos admin

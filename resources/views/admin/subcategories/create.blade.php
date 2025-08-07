@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
     <h2>Criar Subcategoria</h2>
-    <form action="{{ route('admin.subcategories.store') }}" method="POST">
+    <form action="{{ route('admin.subcategories.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="form-group">
             <label>Nome</label>
@@ -13,14 +13,19 @@
             <label>Categoria Pai</label>
             <select name="category_id" class="form-control">
                 @foreach ($categories as $category)
-                <option
-                    value="{{ $category->id }}"
-                    {{ old('category_id') == $category->id ? 'selected' : '' }}
-                >
+                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                     {{ $category->name ?: $category->slug }}
                 </option>
                 @endforeach
             </select>
+            <div class="form-group">
+                <label>Foto</label>
+                <input type="file" name="photo" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Banner</label>
+                <input type="file" name="banner" class="form-control">
+            </div>
         </div>
         <button type="submit" class="btn btn-success">Salvar</button>
     </form>

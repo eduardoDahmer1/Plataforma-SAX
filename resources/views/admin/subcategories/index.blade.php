@@ -5,11 +5,6 @@
     <h2>Subcategorias</h2>
     <a href="{{ route('admin.subcategories.create') }}" class="btn btn-primary mb-3">Nova Subcategoria</a>
 
-    <!-- Total de Subcategorias exibidas -->
-    <p class="text-muted">
-        Exibindo {{ $subcategories->count() }} de {{ $subcategories->total() }} categoria(s).
-    </p>
-
     <table class="table table-striped">
         <thead>
             <tr>
@@ -36,7 +31,7 @@
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-sm btn-danger"
-                            onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</button>
+                            onclick="return confirm('Tem certeza que deseja excluir?')">Excluir Subcategoria</button>
                     </form>
                 </td>
             </tr>
@@ -44,7 +39,6 @@
         </tbody>
     </table>
 
-    {{-- Paginação --}}
     <div class="d-flex justify-content-center">
         {{ $subcategories->links() }}
     </div>

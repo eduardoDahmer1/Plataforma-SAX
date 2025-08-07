@@ -197,4 +197,16 @@ class CategoryController extends Controller
 
         return response()->json(['message' => 'Banner excluído com sucesso!'], 200);
     }
+
+    public function destroy($id)
+    {
+        // Encontrar a categoria pelo ID
+        $category = Category::findOrFail($id);
+
+        // Deletar a categoria
+        $category->delete();
+
+        // Redirecionar de volta com uma mensagem de sucesso
+        return redirect()->route('admin.categories.index')->with('success', 'Categoria deletada com sucesso!');
+    }
 }

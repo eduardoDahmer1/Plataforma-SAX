@@ -2,25 +2,33 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                @if($childcategory->banner && Storage::disk('public')->exists($childcategory->banner))
-                    <img src="{{ Storage::url($childcategory->banner) }}" alt="{{ $childcategory->name }}" class="card-img-top">
-                @endif
+    <h1>{{ $childcategory->name ?? $childcategory->slug }}</h1>
 
-                <div class="card-body text-center">
-                    <h2 class="card-title">{{ $childcategory->name ?? $childcategory->slug }}</h2>
-
-                    @if($childcategory->photo && Storage::disk('public')->exists($childcategory->photo))
-                        <img src="{{ Storage::url($childcategory->photo) }}" alt="{{ $childcategory->name }}" class="img-fluid rounded mb-3" width="150">
-                    @endif
-
-                    <p class="mb-1"><strong>Subcategoria:</strong> {{ $childcategory->subcategory->name ?? 'Sem Subcategoria' }}</p>
-                    <p class="mb-1"><strong>Categoria:</strong> {{ $childcategory->subcategory->category->name ?? 'Sem Categoria' }}</p>
-                </div>
-            </div>
-        </div>
+    <div class="text-center mb-3">
+        @if($childcategory->photo && Storage::disk('public')->exists($childcategory->photo))
+            <img src="{{ Storage::url($childcategory->photo) }}" alt="{{ $childcategory->name }}" class="img-fluid rounded-3 shadow-sm">
+        @elseif(Storage::disk('public')->exists('uploads/noimage.webp'))
+            <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid rounded-3 shadow-sm">
+        @else
+            <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid rounded-3 shadow-sm">
+        @endif
     </div>
+
+    <p><strong>ID:</strong> {{ $childcategory->id }}</p>
+    <p><strong>Slug:</strong> {{ $childcategory->slug ?? 'N/A' }}</p>
+    <p><strong>Subcategoria:</strong> {{ $childcategory->subcategory->name ?? 'N/A' }}</p>
+    <p><strong>Categoria:</strong> {{ $childcategory->subcategory->category->name ?? 'N/A' }}</p>
+
+    <div class="text-center mt-4">
+        @if($childcategory->banner && Storage::disk('public')->exists($childcategory->banner))
+            <img src="{{ Storage::url($childcategory->banner) }}" alt="Banner da Childcategory" class="img-fluid rounded-3 shadow-sm">
+        @elseif(Storage::disk('public')->exists('uploads/noimage.webp'))
+            <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid rounded-3 shadow-sm">
+        @else
+            <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid rounded-3 shadow-sm">
+        @endif
+    </div>
+
+    <a href="{{ route('childcategories.index') }}" class="btn btn-secondary mt-3">Voltar</a>
 </div>
 @endsection

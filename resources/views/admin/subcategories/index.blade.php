@@ -22,16 +22,12 @@
                 </td>
 
                 <td>
-                    <a href="{{ route('admin.subcategories.show', $subcategory->id) }}"
-                        class="btn btn-sm btn-info">Ver</a>
-                    <a href="{{ route('admin.subcategories.edit', $subcategory->id) }}"
-                        class="btn btn-sm btn-warning">Editar</a>
-                    <form action="{{ route('admin.subcategories.destroy', $subcategory->id) }}" method="POST"
-                        style="display:inline-block;">
+                    <a href="{{ route('admin.subcategories.show', $subcategory->id) }}" class="btn btn-sm btn-info">Ver</a>
+                    <a href="{{ route('admin.subcategories.edit', $subcategory->id) }}" class="btn btn-sm btn-warning">Editar</a>
+                    <form action="{{ route('admin.subcategories.destroy', $subcategory->id) }}" method="POST" style="display:inline-block;">
                         @csrf
                         @method('DELETE')
-                        <button class="btn btn-sm btn-danger"
-                            onclick="return confirm('Tem certeza que deseja excluir?')">Excluir Subcategoria</button>
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir?')">Excluir Subcategoria</button>
                     </form>
                 </td>
             </tr>

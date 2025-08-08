@@ -11,15 +11,16 @@
             Catálogos
         </a>
         <div class="collapse" id="menuCatalogos">
-            <a href="{{ route('admin.uploads.index') }}"
-                class="list-group-item list-group-item-action ps-4">Produtos</a>
-            <a href="{{ route('admin.brands.index') }}" class="list-group-item list-group-item-action ps-4">Marcas</a>
+            <a href="{{ route('admin.products.index') }}"
+            class="list-group-item list-group-item-action ps-4">Produtos</a>
+            <a href="{{ route('admin.brands.index') }}"
+            class="list-group-item list-group-item-action ps-4">Marcas</a>
             <a href="{{ route('admin.categories.index') }}"
-                class="list-group-item list-group-item-action ps-4">Categorias</a>
+            class="list-group-item list-group-item-action ps-4">Categorias</a>
             <a href="{{ route('admin.subcategories.index') }}"
-                class="list-group-item list-group-item-action ps-4">Subcategorias</a>
+            class="list-group-item list-group-item-action ps-4">Subcategorias</a>
             <a href="{{ route('admin.childcategories.index') }}"
-                class="list-group-item list-group-item-action ps-4">Categoria Filhas</a>
+            class="list-group-item list-group-item-action ps-4">Categorias Filhas</a>
         </div>
 
         <!-- Vendas -->

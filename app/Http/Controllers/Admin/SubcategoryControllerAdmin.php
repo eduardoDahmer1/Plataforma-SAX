@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Childcategory;
+use App\Models\Category;
 use App\Models\Subcategory;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,26 +12,26 @@ class SubcategoryControllerAdmin extends Controller
 {
     public function index()
     {
-        $childcategories = Childcategory::with('subcategory')->paginate(10);
-        return view('admin.childcategories.index', compact('childcategories'));
+        $subcategories = Subcategory::with('category')->paginate(10);
+        return view('admin.subcategories.index', compact('subcategories'));
     }
 
     public function create()
     {
-        $subcategories = Subcategory::all();
-        return view('admin.childcategories.create', compact('subcategories'));
+        $categories = Category::all();
+        return view('admin.subcategories.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'subcategory_id' => 'required|exists:subcategories,id',
+            'category_id' => 'required|exists:categories,id',
             'photo' => 'nullable|image|max:10240',
             'banner' => 'nullable|image|max:10240',
         ]);
 
-        $data = $request->only(['name', 'subcategory_id']);
+        $data = $request->only(['name', 'category_id']);
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
@@ -41,80 +41,83 @@ class SubcategoryControllerAdmin extends Controller
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
-        Childcategory::create($data);
+        Subcategory::create($data);
 
-        return redirect()->route('admin.childcategories.index')->with('success', 'Sub-subcategoria criada com sucesso.');
+        return redirect()->route('admin.subcategories.index')->with('success', 'Subcategoria criada com sucesso.');
     }
 
-    public function edit(Childcategory $childcategory)
+    public function edit(Subcategory $subcategory)
     {
-        $subcategories = Subcategory::all();
-        return view('admin.childcategories.edit', compact('childcategory', 'subcategories'));
+        $categories = Category::all();
+        return view('admin.subcategories.edit', compact('subcategory', 'categories'));
     }
 
-    public function update(Request $request, Childcategory $childcategory)
+    public function update(Request $request, Subcategory $subcategory)
     {
-        $data = $request->only(['name', 'subcategory_id']);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
+        ]);
+
+        $data = $request->only(['name', 'category_id']);
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            if ($childcategory->photo) {
-                $this->deleteFileIfExists($childcategory->photo);
+            if ($subcategory->photo) {
+                $this->deleteFileIfExists($subcategory->photo);
             }
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
 
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            if ($childcategory->banner) {
-                $this->deleteFileIfExists($childcategory->banner);
+            if ($subcategory->banner) {
+                $this->deleteFileIfExists($subcategory->banner);
             }
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
-        $childcategory->update($data);
+        $subcategory->update($data);
 
-        return redirect()->route('admin.childcategories.index')->with('success', 'Sub-subcategoria atualizada com sucesso.');
+        return redirect()->route('admin.subcategories.index')->with('success', 'Subcategoria atualizada com sucesso.');
     }
 
-    public function show(Childcategory $childcategory)
+    public function show(Subcategory $subcategory)
     {
-        return view('admin.childcategories.show', compact('childcategory'));
+        return view('admin.subcategories.show', compact('subcategory'));
     }
 
-    public function deletePhoto(Childcategory $childcategory)
+    public function deletePhoto(Subcategory $subcategory)
     {
-        if ($childcategory->photo) {
-            $this->deleteFileIfExists($childcategory->photo);
-            $childcategory->photo = null;
-            $childcategory->save();
+        if ($subcategory->photo) {
+            $this->deleteFileIfExists($subcategory->photo);
+            $subcategory->photo = null;
+            $subcategory->save();
         }
         return back()->with('success', 'Foto excluída com sucesso.');
     }
 
-    public function deleteBanner(Childcategory $childcategory)
+    public function deleteBanner(Subcategory $subcategory)
     {
-        if ($childcategory->banner) {
-            $this->deleteFileIfExists($childcategory->banner);
-            $childcategory->banner = null;
-            $childcategory->save();
+        if ($subcategory->banner) {
+            $this->deleteFileIfExists($subcategory->banner);
+            $subcategory->banner = null;
+            $subcategory->save();
         }
         return back()->with('success', 'Banner excluído com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy(Subcategory $subcategory)
     {
-        $childcategory = Childcategory::findOrFail($id);
-
-        if ($childcategory->photo) {
-            $this->deleteFileIfExists($childcategory->photo);
+        if ($subcategory->photo) {
+            $this->deleteFileIfExists($subcategory->photo);
         }
-
-        if ($childcategory->banner) {
-            $this->deleteFileIfExists($childcategory->banner);
+        if ($subcategory->banner) {
+            $this->deleteFileIfExists($subcategory->banner);
         }
+        $subcategory->delete();
 
-        $childcategory->delete();
-
-        return redirect()->route('admin.childcategories.index')->with('success', 'Sub-subcategoria deletada com sucesso!');
+        return redirect()->route('admin.subcategories.index')->with('success', 'Subcategoria deletada com sucesso!');
     }
 
     private function deleteFileIfExists($filePath)
@@ -149,7 +152,7 @@ class SubcategoryControllerAdmin extends Controller
             throw new \Exception('Falha ao criar recurso de imagem.');
         }
 
-        $directory = ($type === 'banner') ? 'childcategories/banner/' : 'childcategories/photo/';
+        $directory = ($type === 'banner') ? 'subcategories/banner/' : 'subcategories/photo/';
         $filename = uniqid() . '.webp';
         $fullPath = storage_path("app/public/{$directory}{$filename}");
 

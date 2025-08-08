@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Storage;
 
 class ChildcategoryControllerAdmin extends Controller
 {
-
     public function index()
     {
-        $childcategories = Childcategory::with('subcategory.category')->paginate(10); // 10 por página, pode ajustar
+        $childcategories = Childcategory::with('subcategory')->paginate(10);
         return view('admin.childcategories.index', compact('childcategories'));
     }
+    
 
     public function create()
     {
@@ -47,43 +47,43 @@ class ChildcategoryControllerAdmin extends Controller
         return view('admin.childcategories.edit', compact('childcategory', 'subcategories'));
     }
 
-    public function update(Request $request, ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
+    public function update(Request $request, Childcategory $childcategory)
     {
         $data = $request->only(['name', 'subcategory_id']);
-
+    
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $this->deleteFileIfExists($ChildcategoryControllerAdmin->photo);
+            $this->deleteFileIfExists($childcategory->photo);
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
-
+    
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            $this->deleteFileIfExists($ChildcategoryControllerAdmin->banner);
+            $this->deleteFileIfExists($childcategory->banner);
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
-
-        $ChildcategoryControllerAdmin->update($data);
+    
+        $childcategory->update($data);
         return redirect()->route('admin.childcategories.index')->with('success', 'Atualizado com sucesso');
     }
 
-    public function destroy(ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
+    public function destroy(Childcategory $childcategory)
     {
-        $this->deleteFileIfExists($ChildcategoryControllerAdmin->photo);
-        $this->deleteFileIfExists($ChildcategoryControllerAdmin->banner);
-        $ChildcategoryControllerAdmin->delete();
+        $this->deleteFileIfExists($childcategory->photo);
+        $this->deleteFileIfExists($childcategory->banner);
+        $childcategory->delete();
         return back()->with('success', 'Removido com sucesso');
     }
 
-    public function deletePhoto(ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
+    public function deletePhoto(Childcategory $childcategory)
     {
-        $this->deleteFileIfExists($ChildcategoryControllerAdmin->photo);
-        $ChildcategoryControllerAdmin->update(['photo' => null]);
+        $this->deleteFileIfExists($childcategory->photo);
+        $childcategory->update(['photo' => null]);
         return back();
     }
 
-    public function deleteBanner(ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
+    public function deleteBanner(Childcategory $childcategory)
     {
-        $this->deleteFileIfExists($ChildcategoryControllerAdmin->banner);
-        $ChildcategoryControllerAdmin->update(['banner' => null]);
+        $this->deleteFileIfExists($childcategory->banner);
+        $childcategory->update(['banner' => null]);
         return back();
     }
 
@@ -129,9 +129,8 @@ class ChildcategoryControllerAdmin extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Childcategory $childcategory)
     {
-        $ChildcategoryControllerAdmin = ChildcategoryControllerAdmin::with('subcategory')->findOrFail($id);
-        return view('admin.childcategories.show', compact('ChildcategoryControllerAdmin'));
+        return view('admin.childcategories.show', compact('childcategory'));
     }
 }

@@ -4,12 +4,10 @@
 <div class="container">
     <h2>Editar Subcategoria</h2>
 
-    {{-- FORM PRINCIPAL --}}
     <form action="{{ route('admin.subcategories.update', $subcategory->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
-        {{-- Nome --}}
         <div class="mb-3">
             <label for="name" class="form-label">Nome da Subcategoria</label>
             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
@@ -19,7 +17,6 @@
             @enderror
         </div>
 
-        {{-- Categoria Pai --}}
         <div class="mb-3">
             <label for="category_id" class="form-label">Categoria Pai</label>
             <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id" required>
@@ -36,7 +33,6 @@
             @enderror
         </div>
 
-        {{-- Foto --}}
         <div class="mb-3">
             <label class="form-label">Foto</label>
             @if ($subcategory->photo)
@@ -48,7 +44,6 @@
             <input type="file" name="photo" class="form-control mt-2">
         </div>
 
-        {{-- Banner --}}
         <div class="mb-3">
             <label class="form-label">Banner</label>
             @if ($subcategory->banner)
@@ -60,12 +55,10 @@
             <input type="file" name="banner" class="form-control mt-2">
         </div>
 
-        {{-- Botões --}}
         <button type="submit" class="btn btn-primary">Salvar</button>
         <a href="{{ route('admin.subcategories.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 
-    {{-- FORM DELETE FOTO (fora do form principal) --}}
     @if ($subcategory->photo)
     <form id="delete-photo-form" action="{{ route('admin.subcategories.deletePhoto', $subcategory->id) }}" method="POST" style="display: none;">
         @csrf
@@ -73,7 +66,6 @@
     </form>
     @endif
 
-    {{-- FORM DELETE BANNER (fora do form principal) --}}
     @if ($subcategory->banner)
     <form id="delete-banner-form" action="{{ route('admin.subcategories.deleteBanner', $subcategory->id) }}" method="POST" style="display: none;">
         @csrf

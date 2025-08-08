@@ -7,7 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductController;               // front controller
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\ChildcategoryControllerAdmin;
 use App\Http\Controllers\Admin\ContactControllerAdmin;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ProductControllerAdmin;      // admin controller
 
 // --- Rota Home ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -137,7 +138,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('uploads/trumbowyg-image', [UploadController::class, 'uploadImage'])->name('uploads.trumbowyg-image');
 
     // Produtos e categorias admin
-    Route::resource('products', ProductController::class);
+    Route::resource('products', ProductControllerAdmin::class);
     Route::resource('subcategories', SubcategoryControllerAdmin::class);
 
     // Contatos admin

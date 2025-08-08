@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
-class ChildcategoryController extends Controller
+class ChildcategoryControllerAdmin extends Controller
 {
 
     public function index()
@@ -47,49 +47,49 @@ class ChildcategoryController extends Controller
         return view('admin.childcategories.edit', compact('childcategory', 'subcategories'));
     }
 
-    public function update(Request $request, Childcategory $childcategory)
+    public function update(Request $request, ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
     {
         $data = $request->only(['name', 'subcategory_id']);
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $this->deleteFileIfExists($childcategory->photo);
+            $this->deleteFileIfExists($ChildcategoryControllerAdmin->photo);
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
 
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            $this->deleteFileIfExists($childcategory->banner);
+            $this->deleteFileIfExists($ChildcategoryControllerAdmin->banner);
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
-        $childcategory->update($data);
+        $ChildcategoryControllerAdmin->update($data);
         return redirect()->route('admin.childcategories.index')->with('success', 'Atualizado com sucesso');
     }
 
-    public function destroy(Childcategory $childcategory)
+    public function destroy(ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
     {
-        $this->deleteFileIfExists($childcategory->photo);
-        $this->deleteFileIfExists($childcategory->banner);
-        $childcategory->delete();
+        $this->deleteFileIfExists($ChildcategoryControllerAdmin->photo);
+        $this->deleteFileIfExists($ChildcategoryControllerAdmin->banner);
+        $ChildcategoryControllerAdmin->delete();
         return back()->with('success', 'Removido com sucesso');
     }
 
-    public function deletePhoto(Childcategory $childcategory)
+    public function deletePhoto(ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
     {
-        $this->deleteFileIfExists($childcategory->photo);
-        $childcategory->update(['photo' => null]);
+        $this->deleteFileIfExists($ChildcategoryControllerAdmin->photo);
+        $ChildcategoryControllerAdmin->update(['photo' => null]);
         return back();
     }
 
-    public function deleteBanner(Childcategory $childcategory)
+    public function deleteBanner(ChildcategoryControllerAdmin $ChildcategoryControllerAdmin)
     {
-        $this->deleteFileIfExists($childcategory->banner);
-        $childcategory->update(['banner' => null]);
+        $this->deleteFileIfExists($ChildcategoryControllerAdmin->banner);
+        $ChildcategoryControllerAdmin->update(['banner' => null]);
         return back();
     }
 
     private function convertToWebp($file, $prefix)
     {
-        $directory = ($prefix === 'banner') ? 'childcategory/banner' : 'childcategory/photo';
+        $directory = ($prefix === 'banner') ? 'childcategories/banner' : 'childcategories/photo';
         $filename = $prefix . '_' . time() . '.webp';
     
         // Certifica que a pasta existe (cria se não existir)
@@ -131,7 +131,7 @@ class ChildcategoryController extends Controller
 
     public function show($id)
     {
-        $childcategory = Childcategory::with('subcategory')->findOrFail($id);
-        return view('admin.childcategories.show', compact('childcategory'));
+        $ChildcategoryControllerAdmin = ChildcategoryControllerAdmin::with('subcategory')->findOrFail($id);
+        return view('admin.childcategories.show', compact('ChildcategoryControllerAdmin'));
     }
 }

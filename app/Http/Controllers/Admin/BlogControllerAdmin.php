@@ -7,7 +7,7 @@ use App\Models\Blog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class BlogController extends Controller
+class BlogControllerAdmin extends Controller
 {
     public function index()
     {

@@ -10,7 +10,7 @@ use App\Exports\ContactsExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 
-class ContactController extends Controller
+class ContactControllerAdmin extends Controller
 {
     public function index(Request $request)
     {

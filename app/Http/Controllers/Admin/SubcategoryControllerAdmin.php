@@ -8,7 +8,7 @@ use App\Models\Childcategory;
 use App\Models\Subcategory;
 use Illuminate\Support\Facades\Storage;
 
-class ChildcategoryController extends Controller
+class SubcategoryControllerAdmin extends Controller
 {
     public function index()
     {

@@ -23,10 +23,10 @@ use App\Http\Controllers\ChildcategoryController as PublicChildcategoryControlle
 
 // Admin
 use App\Http\Controllers\Admin\SystemController;
-use App\Http\Controllers\Admin\BlogController as AdminBlogController;
-use App\Http\Controllers\Admin\SubcategoryController as AdminSubcategoryController;
-use App\Http\Controllers\Admin\ChildcategoryController as AdminChildcategoryController;
-use App\Http\Controllers\Admin\ContactController as AdminContactController;
+use App\Http\Controllers\Admin\BlogControllerAdmin;
+use App\Http\Controllers\Admin\SubcategoryControllerAdmin;
+use App\Http\Controllers\Admin\ChildcategoryControllerAdmin;
+use App\Http\Controllers\Admin\ContactControllerAdmin;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController;
 
@@ -79,17 +79,17 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
 
     // Rotas admin (dentro do grupo 'admin')
-    Route::delete('childcategories/{childcategory}/delete-photo', [AdminChildcategoryController::class, 'deletePhoto'])->name('childcategories.deletePhoto');
-    Route::delete('childcategories/{childcategory}/delete-banner', [AdminChildcategoryController::class, 'deleteBanner'])->name('childcategories.deleteBanner'); 
+    Route::delete('childcategories/{childcategory}/delete-photo', [ChildcategoryControllerAdmin::class, 'deletePhoto'])->name('childcategories.deletePhoto');
+    Route::delete('childcategories/{childcategory}/delete-banner', [ChildcategoryControllerAdmin::class, 'deleteBanner'])->name('childcategories.deleteBanner'); 
 
-    Route::resource('childcategories', AdminChildcategoryController::class);
+    Route::resource('childcategories', ChildcategoryControllerAdmin::class);
 
     // --- Rotas para exclusão da foto e do banner de subcategoria --- 
-    Route::delete('subcategories/{subcategory}/delete-photo', [AdminSubcategoryController::class, 'deletePhoto'])->name('subcategories.deletePhoto');
-    Route::delete('subcategories/{subcategory}/delete-banner', [AdminSubcategoryController::class, 'deleteBanner'])->name('subcategories.deleteBanner');
+    Route::delete('subcategories/{subcategory}/delete-photo', [SubcategoryControllerAdmin::class, 'deletePhoto'])->name('subcategories.deletePhoto');
+    Route::delete('subcategories/{subcategory}/delete-banner', [SubcategoryControllerAdmin::class, 'deleteBanner'])->name('subcategories.deleteBanner');
 
     // --- Rota para exclusão da subcategoria inteira --- 
-    Route::delete('subcategories/{subcategory}', [AdminSubcategoryController::class, 'destroy'])->name('subcategories.destroy');
+    Route::delete('subcategories/{subcategory}', [SubcategoryControllerAdmin::class, 'destroy'])->name('subcategories.destroy');
     
     // Pedidos
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
@@ -117,7 +117,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     ->name('admin.categories.convertImages');
 
     // Blogs admin
-    Route::resource('blogs', AdminBlogController::class);
+    Route::resource('blogs', BlogControllerAdmin::class);
 
     // Usuários admin
     Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
@@ -138,12 +138,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Produtos e categorias admin
     Route::resource('products', ProductController::class);
-    Route::resource('subcategories', AdminSubcategoryController::class);
+    Route::resource('subcategories', SubcategoryControllerAdmin::class);
 
     // Contatos admin
-    Route::get('contatos', [AdminContactController::class, 'index'])->name('contacts.index');
-    Route::delete('contatos/{contact}', [AdminContactController::class, 'destroy'])->name('contacts.destroy');
-    Route::get('contacts/export', [AdminContactController::class, 'export'])->name('contacts.export');
+    Route::get('contatos', [ContactControllerAdmin::class, 'index'])->name('contacts.index');
+    Route::delete('contatos/{contact}', [ContactControllerAdmin::class, 'destroy'])->name('contacts.destroy');
+    Route::get('contacts/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
 
     // Brands e categories admin
     Route::resource('brands', BrandController::class);

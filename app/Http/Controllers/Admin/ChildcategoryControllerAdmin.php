@@ -121,8 +121,18 @@ class ChildcategoryControllerAdmin extends Controller
             case 'gif':
                 $imageResource = imagecreatefromgif($tempPath);
                 break;
+            case 'webp':
+            case 'avif':
+                // Já está no formato final, só salva no storage
+                $finalName = $prefix . '_' . time() . '.' . $extension;
+                Storage::disk('public')->putFileAs($directory, $file, $finalName);
+                return "{$directory}/{$finalName}";
             default:
                 throw new \Exception('Formato de imagem não suportado.');
+        }
+    
+        if (!$imageResource) {
+            throw new \Exception('Falha ao criar recurso de imagem.');
         }
     
         $fullPath = storage_path("app/public/{$directory}/{$filename}");
@@ -131,6 +141,7 @@ class ChildcategoryControllerAdmin extends Controller
     
         return "{$directory}/{$filename}";
     }
+    
 
     private function deleteFileIfExists($path)
     {

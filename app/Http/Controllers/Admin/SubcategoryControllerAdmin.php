@@ -140,9 +140,23 @@ class SubcategoryControllerAdmin extends Controller
     private function convertToWebp($image, $type)
     {
         $tempPath = $image->getRealPath();
-        $imageResource = null;
         $extension = strtolower($image->getClientOriginalExtension());
-
+    
+        $directory = ($type === 'banner') ? 'subcategories/banner/' : 'subcategories/photo/';
+        
+        // Se já for webp ou avif, só salvar o arquivo sem conversão
+        if (in_array($extension, ['webp', 'avif'])) {
+            $finalName = uniqid() . '.' . $extension;
+    
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
+    
+            Storage::disk('public')->putFileAs($directory, $image, $finalName);
+            return "{$directory}{$finalName}";
+        }
+    
+        // Conversão para webp
         switch ($extension) {
             case 'jpeg':
             case 'jpg':
@@ -157,22 +171,22 @@ class SubcategoryControllerAdmin extends Controller
             default:
                 throw new \Exception('Formato de imagem não suportado.');
         }
-
+    
         if (!$imageResource) {
             throw new \Exception('Falha ao criar recurso de imagem.');
         }
-
-        $directory = ($type === 'banner') ? 'subcategories/banner/' : 'subcategories/photo/';
+    
         $filename = uniqid() . '.webp';
         $fullPath = storage_path("app/public/{$directory}{$filename}");
-
+    
         if (!Storage::disk('public')->exists($directory)) {
             Storage::disk('public')->makeDirectory($directory);
         }
-
+    
         imagewebp($imageResource, $fullPath, 45);
         imagedestroy($imageResource);
-
+    
         return "{$directory}{$filename}";
     }
+    
 }

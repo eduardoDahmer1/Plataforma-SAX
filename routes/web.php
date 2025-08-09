@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductControllerAdmin;      // admin controller
 use App\Http\Controllers\Admin\CategoryControllerAdmin;
+use App\Http\Controllers\Admin\BrandControllerAdmin;
 
 // --- Rota Home ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -52,7 +53,7 @@ Route::post('/contato', [ContactController::class, 'store'])->name('contact.stor
 Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/categorias/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
-// Marcas públicas
+// Rotas públicas para brands
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
 Route::get('/marcas/{brand}', [BrandController::class, 'publicShow'])->name('brands.show');
 
@@ -97,6 +98,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
     Route::resource('categories', CategoryControllerAdmin::class);
 
+    Route::delete('categories/delete-photo/{id}', [CategoryControllerAdmin::class, 'deletePhoto'])->name('admin.categories.deletePhoto');
+    Route::delete('categories/delete-banner/{id}', [CategoryControllerAdmin::class, 'deleteBanner'])->name('admin.categories.deleteBanner');
+
+
     // Pedidos
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -131,8 +136,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Produtos admin
     Route::resource('products', ProductControllerAdmin::class);
 
-    // Marcas admin
-    Route::resource('brands', BrandController::class);
+    Route::resource('brands', BrandControllerAdmin::class);
+    // Dentro do group admin
+    Route::delete('brands/{brand}/delete-logo', [BrandControllerAdmin::class, 'deleteLogo'])->name('brands.deleteLogo');
+    Route::delete('brands/{brand}/delete-banner', [BrandControllerAdmin::class, 'deleteBanner'])->name('brands.deleteBanner');
+
 
     // Contatos admin
     Route::get('contatos', [ContactControllerAdmin::class, 'index'])->name('contacts.index');

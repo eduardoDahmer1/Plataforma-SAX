@@ -11,9 +11,19 @@ use Illuminate\Support\Facades\Storage;
 
 class ChildcategoryControllerAdmin extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $childcategories = Childcategory::with('subcategory')->paginate(10);
+        $query = Childcategory::with('subcategory');
+    
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('subcategory', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+        }
+    
+        $childcategories = $query->paginate(10)->withQueryString();
+    
         return view('admin.childcategories.index', compact('childcategories'));
     }
     

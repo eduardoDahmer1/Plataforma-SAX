@@ -40,7 +40,7 @@
                         </div>
                     @endif
 
-                    <a href="{{ route('categories.show', $category->id) }}" class="btn btn-primary mt-3">Ver detalhes</a>
+                    <a href="{{ route('categories.show', $category->slug) }}" class="btn btn-primary mt-3">Ver detalhes</a>
                 </div>
             </div>
         </div>

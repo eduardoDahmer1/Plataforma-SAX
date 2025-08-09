@@ -30,15 +30,17 @@ use App\Http\Controllers\Admin\ContactControllerAdmin;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductControllerAdmin;      // admin controller
+use App\Http\Controllers\Admin\CategoryControllerAdmin;
 
 // --- Rota Home ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// --- Frontend ---
+// Subcategorias públicas
 Route::get('/subcategorias', [SubcategoryController::class, 'index'])->name('subcategories.index');
 Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->name('subcategories.show');
 
-// --- Frontend ---
-// Blogs
+// Blogs públicos
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 
@@ -47,8 +49,8 @@ Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.fo
 Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
 
 // Categorias públicas
-Route::get('/categorias', [CategoryController::class, 'publicIndex'])->name('categories.index');
-Route::get('/categorias/{category}', [CategoryController::class, 'publicShow'])->name('categories.show');
+Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categorias/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
 // Marcas públicas
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
@@ -62,15 +64,14 @@ Route::get('/uploads/{id}', [UploadController::class, 'show'])->name('uploads.sh
 Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
 
-Route::put('/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
-
 // Carrinho
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'view'])->name('cart.view');
 Route::post('/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
+Route::put('/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 
-// Rotas públicas (fora do grupo 'admin')
+// Sub-subcategorias públicas
 Route::get('/subsubcategorias', [PublicChildcategoryController::class, 'index'])->name('childcategories.index');
 Route::get('/subsubcategorias/{slug}', [PublicChildcategoryController::class, 'show'])->name('childcategories.show');
 
@@ -79,46 +80,39 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
 
-    // Rotas admin (dentro do grupo 'admin')
+    // Childcategories admin
     Route::delete('childcategories/{childcategory}/delete-photo', [ChildcategoryControllerAdmin::class, 'deletePhoto'])->name('childcategories.deletePhoto');
-    Route::delete('childcategories/{childcategory}/delete-banner', [ChildcategoryControllerAdmin::class, 'deleteBanner'])->name('childcategories.deleteBanner'); 
-
+    Route::delete('childcategories/{childcategory}/delete-banner', [ChildcategoryControllerAdmin::class, 'deleteBanner'])->name('childcategories.deleteBanner');
     Route::resource('childcategories', ChildcategoryControllerAdmin::class);
 
-    // --- Rotas para exclusão da foto e do banner de subcategoria --- 
+    // Subcategories admin
     Route::delete('subcategories/{subcategory}/delete-photo', [SubcategoryControllerAdmin::class, 'deletePhoto'])->name('subcategories.deletePhoto');
     Route::delete('subcategories/{subcategory}/delete-banner', [SubcategoryControllerAdmin::class, 'deleteBanner'])->name('subcategories.deleteBanner');
-
-    // --- Rota para exclusão da subcategoria inteira --- 
     Route::delete('subcategories/{subcategory}', [SubcategoryControllerAdmin::class, 'destroy'])->name('subcategories.destroy');
-    
-    // Pedidos
-    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::resource('subcategories', SubcategoryControllerAdmin::class);
 
-    // Clientes
-    Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
-
-    Route::resource('payments', \App\Http\Controllers\Admin\PaymentMethodController::class);
-    Route::post('payments/{id}/toggle-active', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'toggleActive'])->name('payments.toggleActive');
+    // Categorias admin
+    Route::delete('categories/delete-photo/{category}', [CategoryControllerAdmin::class, 'deletePhoto'])->name('categories.deletePhoto');
+    Route::delete('categories/delete-banner/{category}', [CategoryControllerAdmin::class, 'deleteBanner'])->name('categories.deleteBanner');
+    Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
+    Route::resource('categories', CategoryControllerAdmin::class);
 
     // Pedidos
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-
     Route::delete('orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
     // Clientes
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
     Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
 
-    Route::delete('categories/delete-photo/{category}', [CategoryController::class, 'deletePhoto'])->name('categories.deletePhoto');
-    Route::delete('categories/delete-banner/{category}', [CategoryController::class, 'deleteBanner'])->name('categories.deleteBanner');
-    Route::get('/admin/categories/convert-images', [CategoryController::class, 'convertCategoryImagesToWebp'])
-    ->name('admin.categories.convertImages');
+    // Métodos de pagamento
+    Route::resource('payments', \App\Http\Controllers\Admin\PaymentMethodController::class);
+    Route::post('payments/{id}/toggle-active', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'toggleActive'])->name('payments.toggleActive');
 
     // Blogs admin
     Route::resource('blogs', BlogControllerAdmin::class);
+    Route::post('blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
 
     // Usuários admin
     Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
@@ -132,25 +126,20 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Uploads admin
     Route::get('uploads', [UploadController::class, 'index'])->name('uploads.index');
     Route::resource('uploads', UploadController::class)->except(['index']);
-
-    // Uploads de imagens específicas
-    Route::post('blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
     Route::post('uploads/trumbowyg-image', [UploadController::class, 'uploadImage'])->name('uploads.trumbowyg-image');
 
-    // Produtos e categorias admin
+    // Produtos admin
     Route::resource('products', ProductControllerAdmin::class);
-    Route::resource('subcategories', SubcategoryControllerAdmin::class);
+
+    // Marcas admin
+    Route::resource('brands', BrandController::class);
 
     // Contatos admin
     Route::get('contatos', [ContactControllerAdmin::class, 'index'])->name('contacts.index');
     Route::delete('contatos/{contact}', [ContactControllerAdmin::class, 'destroy'])->name('contacts.destroy');
     Route::get('contacts/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
 
-    // Brands e categories admin
-    Route::resource('brands', BrandController::class);
-    Route::resource('categories', CategoryController::class);
-
-    // Cache, uploads e conversões
+    // Cache e uploads
     Route::get('clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
     Route::post('image-upload', [ImageUploadController::class, 'upload'])->name('image.upload');
     Route::delete('image-upload', [ImageUploadController::class, 'delete'])->name('image.delete');
@@ -165,7 +154,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
 
-    Route::get('/checkout/success', function() {
+    Route::get('/checkout/success', function () {
         return view('checkout.success');
     })->name('checkout.success');
 });
@@ -173,4 +162,4 @@ Route::middleware('auth')->group(function () {
 // Logout
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

@@ -10,9 +10,19 @@ use Illuminate\Support\Facades\Storage;
 
 class SubcategoryControllerAdmin extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $subcategories = Subcategory::with('category')->paginate(10);
+        $query = Subcategory::with('category');
+    
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+        }
+    
+        $subcategories = $query->paginate(10)->withQueryString();
+    
         return view('admin.subcategories.index', compact('subcategories'));
     }
 

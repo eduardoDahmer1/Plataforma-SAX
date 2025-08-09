@@ -18,6 +18,7 @@
 
     <!-- Contador -->
     <div class="mb-3">
+        <h1>Produtos</h1>
         <strong>Exibindo:</strong> {{ $products->count() }} de {{ $products->total() }} registros
     </div>
 

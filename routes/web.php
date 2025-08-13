@@ -20,6 +20,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SubcategoryController; // ✅ Adicionado o controller público de subcategorias
 use App\Http\Controllers\ChildcategoryController as PublicChildcategoryController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 
 // Admin
 use App\Http\Controllers\Admin\SystemController;
@@ -165,7 +167,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/success', function () {
         return view('checkout.success');
     })->name('checkout.success');
+
+    // Página que pede para o usuário verificar o e-mail
+    Route::get('/email/verify', function () {
+        return view('auth.verify-email');  // cria essa view
+    })->name('verification.notice');
+
+    // Confirmação de e-mail via link (com signed e id+hash)
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        return redirect('/home'); // ou onde quiser depois de verificar
+    })->middleware(['signed'])->name('verification.verify');
+
+    // Reenvio do link de verificação
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return back()->with('message', 'Link de verificação reenviado!');
+    })->middleware(['throttle:6,1'])->name('verification.send');
 });
+
+Auth::routes(['verify' => true]);
 
 // Logout
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

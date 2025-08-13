@@ -10,13 +10,18 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class HomeController extends Controller
 {
+    // REMOVE o middleware 'auth' pra home ficar pública
+    // public function __construct()
+    // {
+    //     $this->middleware('auth');
+    // }
+
     public function index(Request $request)
     {
         $search = $request->search;
         $perPage = 40;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
-        // Query uploads
         $uploadsQuery = Upload::select([
             'id',
             'title',
@@ -26,7 +31,6 @@ class HomeController extends Controller
             DB::raw("NULL as price")
         ]);
 
-        // Query products
         $productsQuery = Product::select([
             'id',
             DB::raw("external_name as title"),
@@ -36,7 +40,6 @@ class HomeController extends Controller
             'price'
         ]);
 
-        // Aplica filtro de busca se houver
         if ($search) {
             $uploadsQuery->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
@@ -49,32 +52,22 @@ class HomeController extends Controller
             });
         }
 
-        // Monta SQL para union
         $uploadsSql = $uploadsQuery->toSql();
         $productsSql = $productsQuery->toSql();
-
-        // Junta os bindings das queries
         $bindings = array_merge($uploadsQuery->getBindings(), $productsQuery->getBindings());
 
-        // Calcula offset para paginação
         $offset = ($currentPage - 1) * $perPage;
 
-        // SQL completo com union e paginação
         $unionSql = "({$uploadsSql}) UNION ALL ({$productsSql}) ORDER BY created_at DESC LIMIT ? OFFSET ?";
-
-        // Acrescenta bindings para limit e offset
         $bindings[] = $perPage;
         $bindings[] = $offset;
 
-        // Executa query
         $items = collect(DB::select($unionSql, $bindings));
 
-        // Conta total para paginação
         $uploadsCount = $uploadsQuery->count();
         $productsCount = $productsQuery->count();
         $total = $uploadsCount + $productsCount;
 
-        // Cria o paginator
         $paginated = new LengthAwarePaginator(
             $items,
             $total,
@@ -83,10 +76,10 @@ class HomeController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // Aqui está o ajuste:
         return view('home', ['items' => $paginated]);
     }
 
+    // Métodos vazios caso queira implementar depois
     public function create() {}
     public function store(Request $request) {}
     public function show(string $id) {}

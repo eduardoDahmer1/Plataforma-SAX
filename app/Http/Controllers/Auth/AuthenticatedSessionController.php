@@ -26,15 +26,22 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        // já vem com a lógica de autenticação
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
     
-        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+            // Se for AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('auth.failed')
+                ], 401);
+            }
+    
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
@@ -42,28 +49,32 @@ class AuthenticatedSessionController extends Controller
     
         $request->session()->regenerate();
     
-        // Restaurar carrinho da base
+        // Restaurar carrinho
         $order = Order::where('user_id', auth()->id())
             ->where('status', 'cart')
-            ->with('items') // garantir que puxe os itens
+            ->with('items')
             ->first();
     
         $cart = [];
-    
         if ($order) {
             foreach ($order->items as $item) {
                 $cart[$item->product_id] = [
                     'quantity' => $item->quantity,
                     'price' => $item->price,
-                    // você pode puxar nome, imagem etc. se quiser também
                 ];
             }
         }
-    
         session()->put('cart', $cart);
     
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => route('home') // ou sua rota real
+            ]);
+        }
+    
         return redirect()->intended(RouteServiceProvider::HOME);
-    }
+    }    
 
     /**
      * Destroy an authenticated session.

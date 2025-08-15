@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container py-4">
-    <h1>Sub-Subcategorias</h1>
+    <h1>Categorias filhas</h1>
 
     {{-- Busca --}}
     <form method="GET" class="mb-3">

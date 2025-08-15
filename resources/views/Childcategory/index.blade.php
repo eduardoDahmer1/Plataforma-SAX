@@ -3,6 +3,16 @@
 @section('content')
 <div class="container py-4">
     <h1>Sub-Subcategorias</h1>
+
+    {{-- Busca --}}
+    <form method="GET" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Buscar categoria filha..."
+                value="{{ request('search') }}">
+            <button class="btn btn-primary">Buscar</button>
+        </div>
+    </form>
+
     <div class="row">
         @foreach ($childcategories as $childcategory)
         <div class="col-md-4 mb-4">

@@ -3,20 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subcategory;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class SubcategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $subcategories = Subcategory::with('category')->orderBy('name')->paginate(12);
+        $query = Subcategory::with('category')->orderBy('name');
+
+        // Filtro por busca
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $subcategories = $query->paginate(12)->withQueryString();
 
         return view('subcategories.index', compact('subcategories'));
     }
 
-    public function show($id)
+    public function show($slug)
     {
-        $subcategory = Subcategory::with('category')->findOrFail($id);
+        $subcategory = Subcategory::with('category')
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         return view('subcategories.show', compact('subcategory'));
     }

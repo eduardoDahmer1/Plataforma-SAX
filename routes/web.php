@@ -130,6 +130,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('users/{id}/update-type', [\App\Http\Controllers\Admin\UserController::class, 'updateType'])->name('users.updateType');
     Route::delete('users/{id}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
 
+    Route::resource('blog-categories', App\Http\Controllers\Admin\BlogCategoryController::class)->except(['create', 'edit', 'show']);
+
     // Uploads admin
     Route::get('uploads', [UploadController::class, 'index'])->name('uploads.index');
     Route::resource('uploads', UploadController::class)->except(['index']);

@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 class Blog extends Model
 {
     protected $fillable = [
-        'title', 'subtitle', 'slug', 'image', 'content', 'is_active', 'published_at'
+        'title', 'subtitle', 'slug', 'image', 'content', 'is_active', 'published_at', 'category_id'
     ];
 
     protected $casts = [
@@ -26,5 +26,10 @@ class Blog extends Model
                 $blog->slug = Str::slug($blog->title);
             }
         });
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(BlogCategory::class, 'category_id');
     }
 }

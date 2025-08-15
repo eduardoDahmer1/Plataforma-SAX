@@ -4,13 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\Childcategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ChildcategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $childcategories = Childcategory::with('subcategory.category')->paginate(12);
+        $query = Childcategory::with('subcategory.category');
+
+        // Filtro por busca
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('slug', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $childcategories = $query->paginate(12)->withQueryString();
+
         return view('Childcategory.index', compact('childcategories'));
     }
 

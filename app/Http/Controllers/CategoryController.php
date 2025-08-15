@@ -5,23 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Exibe categorias no site público
-        $categories = Category::orderBy('name')->paginate(12);
+        $query = Category::query()->orderBy('name');
+
+        // Filtro por busca
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%')
+            ->orWhere('slug', 'like', '%' . $request->search . '%');
+        }
+
+        $categories = $query->paginate(12)->withQueryString();
 
         return view('categories.index', compact('categories'));
     }
 
     public function show(Category $category)
     {
-        // Pode carregar produtos ou subcategorias junto se precisar
-        $category->load('subcategories');
-
+        $category->load('subcategories.childcategories'); // carrega tudo de uma vez
         return view('categories.show', compact('category'));
     }
 }

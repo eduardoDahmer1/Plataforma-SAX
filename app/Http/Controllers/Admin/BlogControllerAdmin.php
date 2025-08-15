@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\BlogCategory;
 
 class BlogControllerAdmin extends Controller
 {
@@ -17,7 +18,8 @@ class BlogControllerAdmin extends Controller
 
     public function create()
     {
-        return view('admin.blogs.create');
+        $categories = BlogCategory::orderBy('name')->get();
+        return view('admin.blogs.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -30,6 +32,7 @@ class BlogControllerAdmin extends Controller
             'content' => 'required',
             'published_at' => 'nullable|date',
             'is_active' => 'boolean',
+            'category_id' => 'required|exists:blog_categories,id',
         ]);
 
         if ($request->hasFile('image')) {
@@ -64,7 +67,8 @@ class BlogControllerAdmin extends Controller
 
     public function edit(Blog $blog)
     {
-        return view('admin.blogs.edit', compact('blog'));
+        $categories = BlogCategory::orderBy('name')->get();
+        return view('admin.blogs.edit', compact('blog', 'categories'));
     }
 
     public function update(Request $request, Blog $blog)
@@ -77,6 +81,7 @@ class BlogControllerAdmin extends Controller
             'content' => 'required',
             'published_at' => 'nullable|date',
             'is_active' => 'boolean',
+            'category_id' => 'required|exists:blog_categories,id',
         ]);
 
         // 🔥 Apagar imagens que foram removidas do campo content

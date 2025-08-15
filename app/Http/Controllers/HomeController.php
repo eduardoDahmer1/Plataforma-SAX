@@ -12,7 +12,7 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $perPage = 40;
+        $perPage = 12;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
         // Query de produtos

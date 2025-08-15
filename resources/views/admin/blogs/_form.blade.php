@@ -9,6 +9,19 @@
 </div>
 
 <div class="mb-3">
+    <label>Categoria</label>
+    <select name="category_id" class="form-control">
+        <option value="">-- Selecione --</option>
+        @foreach($categories as $cat)
+            <option value="{{ $cat->id }}" 
+                {{ old('category_id', $blog->category_id ?? '') == $cat->id ? 'selected' : '' }}>
+                {{ $cat->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+<div class="mb-3">
     <label>Slug</label>
     <input type="text" name="slug" class="form-control" value="{{ old('slug', $blog->slug ?? '') }}">
 </div>
@@ -39,3 +52,20 @@
 </div>
 
 <button type="submit" class="btn btn-primary">Salvar</button>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const titleInput = document.querySelector('input[name="title"]');
+    const slugInput = document.querySelector('input[name="slug"]');
+
+    titleInput.addEventListener("input", function () {
+        let slug = this.value
+            .toLowerCase()
+            .normalize("NFD") // remove acentos
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-") // troca espaço e símbolos por -
+            .replace(/(^-|-$)+/g, ""); // remove traços no início/fim
+        slugInput.value = slug;
+    });
+});
+</script>

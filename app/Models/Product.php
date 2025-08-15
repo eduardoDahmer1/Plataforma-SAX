@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -63,6 +64,7 @@ class Product extends Model
         'width',
         'height',
         'length',
+        'gallery',
         'external_name',
         'ftp_hash',
         'color_qty',
@@ -99,10 +101,13 @@ class Product extends Model
         'brand_id',
     ];
 
-    // No modelo Product
-    public function uploads()
+    // URL da foto do produto
+    public function getPhotoUrlAttribute()
     {
-        return $this->hasMany(Upload::class, 'product_id'); // Supondo que a chave estrangeira seja 'product_id'
+        if ($this->photo && Storage::disk('public')->exists($this->photo)) {
+            return Storage::url($this->photo);
+        }
+        return asset('storage/uploads/noimage.webp');
     }
 
     public function brand()

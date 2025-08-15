@@ -47,15 +47,6 @@
             <a class="list-group-item list-group-item-action ps-4">Políticas</a>
         </div>
 
-        <!-- Marketing -->
-        <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"
-            href="#menuMarketing" role="button" aria-expanded="false" aria-controls="menuMarketing">
-            Marketing
-        </a>
-        <div class="collapse" id="menuMarketing">
-            <a class="list-group-item list-group-item-action ps-4">Cupons</a>
-        </div>
-
         <!-- Sistema -->
         <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse" href="#menuSistema"
             role="button" aria-expanded="false" aria-controls="menuSistema">
@@ -65,6 +56,7 @@
             <button id="clearCacheBtn" class="list-group-item list-group-item-action ps-4">Limpar Cache</button>
             <a href="{{ route('admin.convert.webp') }}" class="list-group-item list-group-item-action ps-4">Converter
                 todas as imagens para WebP</a>
+            <a class="list-group-item list-group-item-action ps-4">Cupons</a>
             <a class="list-group-item list-group-item-action ps-4">Manutenção</a>
             <a class="list-group-item list-group-item-action ps-4">Email</a>
         </div>

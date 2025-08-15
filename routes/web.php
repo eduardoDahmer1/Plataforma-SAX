@@ -139,7 +139,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('products', ProductControllerAdmin::class);
 
     Route::resource('brands', BrandControllerAdmin::class);
-    // Dentro do group admin
+    // Dentro do group admi
     Route::delete('brands/{brand}/delete-logo', [BrandControllerAdmin::class, 'deleteLogo'])->name('brands.deleteLogo');
     Route::delete('brands/{brand}/delete-banner', [BrandControllerAdmin::class, 'deleteBanner'])->name('brands.deleteBanner');
 
@@ -148,6 +148,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('contatos', [ContactControllerAdmin::class, 'index'])->name('contacts.index');
     Route::delete('contatos/{contact}', [ContactControllerAdmin::class, 'destroy'])->name('contacts.destroy');
     Route::get('contacts/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
+
+    // Deletar foto principal do produto
+    Route::delete('products/{id}/photo', [ProductControllerAdmin::class, 'deletePhoto'])
+    ->name('products.deletePhoto');
+
+    // Deletar imagem da galeria
+    Route::delete('products/{id}/gallery/{image}', [ProductControllerAdmin::class, 'deleteGalleryImage'])
+    ->name('products.deleteGalleryImage');
 
     // Cache e uploads
     Route::get('clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');

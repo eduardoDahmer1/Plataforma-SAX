@@ -27,7 +27,6 @@ class ChildcategoryControllerAdmin extends Controller
         return view('admin.childcategories.index', compact('childcategories'));
     }
     
-
     public function create()
     {
         $subcategories = Subcategory::all();
@@ -38,6 +37,12 @@ class ChildcategoryControllerAdmin extends Controller
     {
         $data = $request->only(['name', 'subcategory_id']);
         $data['slug'] = Str::slug($request->name);
+
+        // Preenche category_id baseado na subcategory
+        if (!empty($request->subcategory_id)) {
+            $subcategory = Subcategory::find($request->subcategory_id);
+            $data['category_id'] = $subcategory->category_id ?? null;
+        }
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
@@ -60,17 +65,23 @@ class ChildcategoryControllerAdmin extends Controller
     public function update(Request $request, Childcategory $childcategory)
     {
         $data = $request->only(['name', 'subcategory_id']);
-    
+
+        // Atualiza category_id
+        if (!empty($request->subcategory_id)) {
+            $subcategory = Subcategory::find($request->subcategory_id);
+            $data['category_id'] = $subcategory->category_id ?? null;
+        }
+
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $this->deleteFileIfExists($childcategory->photo);
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
-    
+
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
             $this->deleteFileIfExists($childcategory->banner);
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
-    
+
         $childcategory->update($data);
         return redirect()->route('admin.childcategories.index')->with('success', 'Atualizado com sucesso');
     }
@@ -102,7 +113,6 @@ class ChildcategoryControllerAdmin extends Controller
         $directory = ($prefix === 'banner') ? 'childcategories/banner' : 'childcategories/photo';
         $filename = $prefix . '_' . time() . '.webp';
     
-        // Certifica que a pasta existe (cria se não existir)
         if (!Storage::disk('public')->exists($directory)) {
             Storage::disk('public')->makeDirectory($directory);
         }
@@ -123,7 +133,6 @@ class ChildcategoryControllerAdmin extends Controller
                 break;
             case 'webp':
             case 'avif':
-                // Já está no formato final, só salva no storage
                 $finalName = $prefix . '_' . time() . '.' . $extension;
                 Storage::disk('public')->putFileAs($directory, $file, $finalName);
                 return "{$directory}/{$finalName}";
@@ -141,7 +150,6 @@ class ChildcategoryControllerAdmin extends Controller
     
         return "{$directory}/{$filename}";
     }
-    
 
     private function deleteFileIfExists($path)
     {

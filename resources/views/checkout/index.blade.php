@@ -174,7 +174,7 @@
                         </div>
                         <div class="modal-body">
                             <label><input type="radio" name="payment_type" value="card" checked onclick="togglePaymentForm('card')"> Cartão de Crédito</label><br>
-                            <label><input type="radio" name="payment_type" value="qr_code" onclick="togglePaymentForm('qr_code')"> QR Code</label><br>
+                            <!-- <label><input type="radio" name="payment_type" value="qr_code" onclick="togglePaymentForm('qr_code')"> QR Code</label><br> -->
 
                             <!-- Cartão de Crédito -->
                             <div id="cardPayment" style="display:block;">

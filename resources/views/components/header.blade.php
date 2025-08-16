@@ -59,14 +59,48 @@
                <button id="cart-close" class="btn btn-sm btn-outline-danger">&times;</button>
            </div>
            <ul class="list-group list-group-flush">
-               @foreach($cart as $item)
-                   <li class="list-group-item">
-                       {{ $item['slug'] ?? 'Produto' }}<br>
-                       <small>R$ {{ number_format($item['price'] ?? 0, 2, ',', '.') }}</small><br>
-                       Quantidade: {{ $item['quantity'] ?? 1 }}
-                   </li>
-               @endforeach
-           </ul>
+                @foreach($cart as $productId => $item)
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ $item['title'] ?? $item['slug'] ?? 'Produto' }}</strong><br>
+                                <small>R$ {{ number_format($item['price'] ?? 0, 2, ',', '.') }}</small>
+                            </div>
+
+                            {{-- Excluir item --}}
+                            <form action="{{ route('cart.remove', $productId) }}" method="POST" 
+                                onsubmit="return confirm('Remover este item do carrinho?')" class="ms-2">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover">
+                                    🗑
+                                </button>
+                            </form>
+                        </div>
+
+                        {{-- Controles de quantidade --}}
+                        <div class="d-flex align-items-center mt-2">
+                            @if (($item['quantity'] ?? 1) > 1)
+                            <form action="{{ route('cart.update', $productId) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="quantity" value="{{ $item['quantity'] - 1 }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Diminuir">-</button>
+                            </form>
+                            @endif
+
+                            <span class="mx-2">{{ $item['quantity'] ?? 1 }}</span>
+
+                            <form action="{{ route('cart.update', $productId) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="quantity" value="{{ ($item['quantity'] ?? 1) + 1 }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Aumentar">+</button>
+                            </form>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
            <a href="{{ route('cart.view') }}" class="btn btn-primary btn-sm mt-3 w-100">Ir para o Carrinho</a>
        </div>
        @endif
@@ -103,7 +137,6 @@
                    cartModal.style.display = 'none';
                });
            }
-
 
            document.addEventListener('click', function(event) {
                if (cartModal && !cartModal.contains(event.target) && event.target !== cartButton) {

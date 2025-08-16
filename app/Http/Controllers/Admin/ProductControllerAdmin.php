@@ -47,8 +47,8 @@ class ProductControllerAdmin extends Controller
     {
         $brands = Brand::all();
         $categories = Category::all();
-        $subcategories = Subcategory::all();
-        $childcategories = Childcategory::all();
+        $subcategories = Subcategory::where('category_id', $item->category_id)->get();
+        $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
 
         return view('admin.products.create', compact('brands','categories','subcategories','childcategories'));
     }
@@ -119,14 +119,16 @@ class ProductControllerAdmin extends Controller
         $item = Product::findOrFail($id);
         $brands = Brand::all();
         $categories = Category::all();
-        $subcategories = Subcategory::all(); // pega todas, não só da categoria atual
-        $childcategories = Childcategory::all(); // pega todas, não só da subcategoria atual
+    
+        // Filtra subcategorias pela categoria atual do produto
+        $subcategories = Subcategory::where('category_id', $item->category_id)->get();
+    
+        // Filtra childcategories pela subcategoria atual do produto
+        $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
     
         return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'childcategories'));
     }
     
-
-
     // ================== UPDATE ==================
     public function update(Request $request, $id)
     {

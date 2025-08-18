@@ -65,18 +65,23 @@ class OrderController extends Controller
     public function destroy($id)
     {
         $order = Order::with('items')->findOrFail($id);
-
-        if ($order->deposit_receipt && Storage::disk('public')->exists($order->deposit_receipt)) {
-            Storage::disk('public')->delete($order->deposit_receipt);
+    
+        // Deleta comprovante, se existir
+        if ($order->deposit_receipt && Storage::disk('public')->exists('deposits/' . $order->deposit_receipt)) {
+            Storage::disk('public')->delete('deposits/' . $order->deposit_receipt);
         }
-
+    
+        // Deleta itens do pedido
         foreach ($order->items as $item) {
             $item->delete();
         }
-
+    
+        // Deleta pedido
         $order->delete();
+    
         Session::forget('cart');
-
+    
         return redirect()->route('admin.orders.index')->with('success', 'Pedido excluído com sucesso.');
     }
+    
 }

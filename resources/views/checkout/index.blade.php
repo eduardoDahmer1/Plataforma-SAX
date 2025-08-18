@@ -1,4 +1,4 @@
-@extends('layout.layout')
+@extends('layout.checkout')
 
 @section('content')
 <style>
@@ -181,6 +181,31 @@
                 </div>
             </div>
 
+            {{-- Modal Bancard --}}
+            <div class="modal fade" id="bancardModal" tabindex="-1" aria-labelledby="bancardModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bancardModalLabel">Pagamento Bancard</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Preencha os dados do cartão e confirme para continuar com o pagamento.</p>
+                    <label>Número do Cartão</label>
+                    <input type="text" class="form-control" name="card_number"><br>
+                    <label>Validade</label>
+                    <input type="text" class="form-control" name="card_expiry"><br>
+                    <label>CVV</label>
+                    <input type="text" class="form-control" name="card_cvv"><br>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="checkoutForm" class="btn btn-primary">Pagar com Bancard</button>
+                </div>
+                </div>
+            </div>
+            </div>
+
             {{-- Resumo do Pedido --}}
             @php $totalPedido = 0; @endphp
             <div class="checkout-box">
@@ -197,7 +222,7 @@
             </div>
 
             <button type="button" class="btn btn-secondary" onclick="prevStep(3)">Voltar</button>
-            <button type="submit" class="btn btn-success">Finalizar Compra</button>
+            <button type="submit" class="btn btn-success" id="checkoutSubmit">Finalizar Compra</button>
         </div>
     </form>
 </div>
@@ -244,10 +269,17 @@ document.addEventListener('DOMContentLoaded', function() {
     updateShippingDisplay();
 
     // ====== PAGAMENTO ======
+    const bancardModal = new bootstrap.Modal(document.getElementById('bancardModal'));
     window.togglePaymentMethod = function(method){
         const bankDetails = document.getElementById('bankDetails');
-        if(method==='bancard') bankDetails.style.display='none';
-        else if(method==='deposito') bankDetails.style.display='block';
+
+        if(method === 'bancard'){
+            bankDetails.style.display = 'none';
+            bancardModal.show(); // abrir modal
+        } else if(method === 'deposito'){
+            bankDetails.style.display = 'block';
+            bancardModal.hide(); // fechar modal
+        }
     }
 
     // ====== VALIDAÇÃO SIMPLES NO FRONT ======
@@ -261,4 +293,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
 @endsection

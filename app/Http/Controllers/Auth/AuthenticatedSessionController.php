@@ -54,17 +54,27 @@ class AuthenticatedSessionController extends Controller
             ->where('status', 'cart')
             ->with('items')
             ->first();
-    
+
         $cart = [];
         if ($order) {
             foreach ($order->items as $item) {
                 $cart[$item->product_id] = [
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
+                    'product_id'    => $item->product_id,
+                    'quantity'      => $item->quantity,
+                    'price'         => $item->price,
+                    'name'          => $item->name,
+                    'external_name' => $item->external_name,
+                    'slug'          => $item->slug,
+                    'sku'           => $item->sku,
+                    'stock'         => $item->product->stock ?? 0,
                 ];
             }
         }
+
         session()->put('cart', $cart);
+
+        // Sincronizar dados atualizados do produto, caso algo tenha mudado
+        app(\App\Http\Controllers\CartController::class)->syncCartSession();
     
         if ($request->expectsJson()) {
             return response()->json([
@@ -75,6 +85,12 @@ class AuthenticatedSessionController extends Controller
     
         return redirect()->intended(RouteServiceProvider::HOME);
     }    
+
+    public function authenticated(Request $request, $user)
+    {
+        app(\App\Http\Controllers\CartController::class)->syncCartSession();
+        return redirect()->intended('user/dashboard');
+    }
 
     /**
      * Destroy an authenticated session.

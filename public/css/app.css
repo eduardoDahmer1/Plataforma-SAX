@@ -22,7 +22,9 @@ body {
     max-width: 900px;
     margin: auto;
 }
-
+.list-group-item a {
+    color:white !important;
+}
 .swiper-slide img,
 .splide__slide img,
 .glide__slide img,

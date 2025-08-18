@@ -23,7 +23,7 @@ class ContactControllerAdmin extends Controller
         $contacts = $query->latest()->paginate(10);
         $selectedType = $request->type;
     
-        return view('admin.contacts.index', compact('contacts', 'selectedType'));
+        return view('admin.contatos.index', compact('contacts', 'selectedType'));
     }
     
     public function export(\Illuminate\Http\Request $request)

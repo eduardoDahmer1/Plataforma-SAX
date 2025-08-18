@@ -75,20 +75,29 @@
 
                 <div class="mt-4 d-flex gap-3 flex-wrap">
                     @auth
-                    @if(in_array(auth()->user()->user_type, [0, 1, 2]))
-                    <form action="{{ route('checkout.index') }}" method="GET">
-                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <button type="submit" class="btn btn-outline-secondary">Comprar</button>
-                    </form>
+                    @php
+                        // Verifica quantidade atual no carrinho
+                        $cart = session('cart', []);
+                        $currentQty = $cart[$product->id]['quantity'] ?? 0;
+                    @endphp
 
-                    <form action="{{ route('cart.add') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                        <button type="submit" class="btn btn-success">+ 🛒 Adicionar</button>
-                    </form>
+                    @if(in_array(auth()->user()->user_type, [0, 1, 2]))
+                        <form action="{{ route('checkout.index') }}" method="GET">
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <button type="submit" class="btn btn-outline-secondary">Comprar</button>
+                        </form>
+
+                        <form action="{{ route('cart.add') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <button type="submit" class="btn btn-success"
+                                @if($currentQty >= $product->stock) disabled @endif>
+                                + 🛒 Adicionar
+                            </button>
+                        </form>
                     @endif
                     @else
-                    <a href="#" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#loginModal">Login para Comprar</a>
+                        <a href="#" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#loginModal">Login para Comprar</a>
                     @endauth
 
                     <a href="{{ url('/') }}" class="btn btn-outline-secondary">Voltar para a Home</a>

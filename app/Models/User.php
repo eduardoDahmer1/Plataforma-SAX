@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;  // IMPORTANTE: precisa importar
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements MustVerifyEmail  // IMPLEMENTA A INTERFACE
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -17,6 +17,15 @@ class User extends Authenticatable implements MustVerifyEmail  // IMPLEMENTA A I
         'email',
         'password',
         'user_type',
+        'phone_country',
+        'phone_number',
+        'location_country',
+        'address',
+        'cep',
+        'state',
+        'city',
+        'already_registered',
+        'additional_info',
     ];
 
     protected $hidden = [

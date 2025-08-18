@@ -6,19 +6,19 @@
 
     <div class="mb-3">
         <div class="btn-group flex-wrap" role="group" aria-label="Filtros de contato">
-            <a href="{{ route('admin.contacts.index') }}"
+            <a href="{{ route('admin.contatos.index') }}"
                 class="btn {{ request('type') === null ? 'btn-dark' : 'btn-outline-dark' }}">
                 Todos
             </a>
-            <a href="{{ route('admin.contacts.index', ['type' => 1]) }}"
+            <a href="{{ route('admin.contatos.index', ['type' => 1]) }}"
                 class="btn {{ request('type') == 1 ? 'btn-primary' : 'btn-outline-primary' }}">
                 Fale Conosco
             </a>
-            <a href="{{ route('admin.contacts.index', ['type' => 2]) }}"
+            <a href="{{ route('admin.contatos.index', ['type' => 2]) }}"
                 class="btn {{ request('type') == 2 ? 'btn-success' : 'btn-outline-success' }}">
                 Currículos
             </a>
-            <a href="{{ route('admin.contacts.export', ['type' => request('type')]) }}"
+            <a href="{{ route('admin.contatos.export', ['type' => request('type')]) }}"
                 class="btn {{ request('type') === null ? 'btn-dark' : 'btn-outline-dark' }}">
                 Baixar Contatos
             </a>

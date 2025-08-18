@@ -93,28 +93,35 @@
                         <strong>SKU:</strong> {{ $item->sku ?? 'Sem SKU' }}<br>
                         <strong>Preço:</strong> R$
                         {{ isset($item->price) ? number_format($item->price, 2, ',', '.') : 'Não informado' }}<br>
-                        <small>ID: {{ $item->id }}</small>
                     </p>
+
                     <div class="d-flex flex-column">
-                        <a href="{{ route('produto.show', $item->id) }}" class="btn btn-sm btn-info mb-2">Ver
-                            Detalhes</a>
+                        <a href="{{ route('produto.show', $item->id) }}" class="btn btn-sm btn-info mb-2">Ver Detalhes</a>
 
                         @auth
-                        @if(in_array(auth()->user()->user_type, [0,1,2]))
-                        <form action="{{ route('cart.add') }}" method="POST" class="d-flex mb-2">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $item->id }}">
-                            <button type="submit" class="btn btn-sm btn-success me-2">+ 🛒 Adicionar</button>
-                        </form>
+                        @php
+                            $cart = session('cart', []);
+                            $currentQty = $cart[$item->id]['quantity'] ?? 0;
+                        @endphp
 
-                        <form action="{{ route('checkout.index') }}" method="GET" class="d-flex">
-                            <input type="hidden" name="product_id" value="{{ $item->id }}">
-                            <button type="submit" class="btn btn-sm btn-primary">Comprar Agora 🛒</button>
-                        </form>
+                        @if(in_array(auth()->user()->user_type, [0,1,2]))
+                            <form action="{{ route('cart.add') }}" method="POST" class="d-flex mb-2">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                <button type="submit" class="btn btn-sm btn-success me-2"
+                                    @if($currentQty >= $item->stock) disabled @endif>
+                                    + 🛒 Adicionar
+                                </button>
+                            </form>
+
+                            <form action="{{ route('checkout.index') }}" method="GET" class="d-flex">
+                                <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                <button type="submit" class="btn btn-sm btn-primary">Comprar Agora 🛒</button>
+                            </form>
                         @endif
                         @else
-                        <a href="#" class="btn btn-sm btn-warning mt-2" data-bs-toggle="modal"
-                            data-bs-target="#loginModal">Login para Comprar</a>
+                            <a href="#" class="btn btn-sm btn-warning mt-2" data-bs-toggle="modal"
+                                data-bs-target="#loginModal">Login para Comprar</a>
                         @endauth
                     </div>
                 </div>

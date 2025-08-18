@@ -11,150 +11,152 @@ class CartController extends Controller
 {
     public function add(Request $request)
     {
-        // Pegando os dados do produto e a quantidade do request
         $productId = $request->input('product_id');
         $quantity = (int) $request->input('quantity', 1);
-    
-        // Encontrar o produto no banco de dados
+
         $product = Product::findOrFail($productId);
-    
-        // Recupera o carrinho atual da sessão
+
         $cart = session()->get('cart', []);
-    
-        // Definindo o nome do produto, priorizando o "name" e usando "external_name" caso não tenha "name"
+
         $productName = $product->name ?? $product->external_name ?? 'Produto';
-    
-        // Se o produto já existe no carrinho, apenas aumenta a quantidade
+
         if (isset($cart[$productId])) {
-            $cart[$productId]['quantity'] += $quantity;
+            $newQty = $cart[$productId]['quantity'] + $quantity;
+            $cart[$productId]['quantity'] = min($newQty, $product->stock); // Limita pelo estoque
         } else {
-            // Se o produto não existir, cria um novo item no carrinho
             $cart[$productId] = [
-                'product_id' => $productId,
-                'title' => $productName, // Usando o nome do produto (ou external_name)
-                'slug' => $product->slug,   // Slug (se necessário para SEO ou links)
-                'price' => $product->price, // Preço do produto
-                'quantity' => $quantity,    // Quantidade do produto
+                'product_id'    => $productId,
+                'name'          => $product->name,
+                'external_name' => $product->external_name,
+                'slug'          => $product->slug,
+                'sku'           => $product->sku,  // se tiver no model
+                'price'         => $product->price,
+                'quantity'      => min($quantity, $product->stock),
             ];
         }
-    
-        // Se o usuário estiver autenticado
+
         if (auth()->check()) {
-            // Cria ou encontra o pedido existente
             $order = Order::firstOrCreate(
                 [
                     'user_id' => auth()->id(),
-                    'status' => 'cart', // Status do pedido como "carrinho"
+                    'status' => 'cart',
                 ],
                 [
                     'total' => 0,
-                    'payment_method' => 'none', // Defina o método de pagamento inicial
+                    'payment_method' => 'none',
                 ]
             );
-    
-            // Atualiza ou cria o item no pedido
+        
             $order->items()->updateOrCreate(
                 [
                     'order_id' => $order->id,
                     'product_id' => $product->id
                 ],
                 [
-                    'quantity' => $cart[$productId]['quantity'],
-                    'price' => $product->price
+                    'quantity'      => $cart[$productId]['quantity'],
+                    'price'         => $product->price,
+                    'name'          => $product->name,
+                    'external_name' => $product->external_name,
+                    'slug'          => $product->slug,
+                    'sku'           => $product->sku, // se tiver no model
                 ]
             );
         }
-    
-        // Atualiza a sessão com o carrinho
-        session()->put('cart', $cart);
-    
-        // Retorna para a página anterior com sucesso
-        return back()->with('success', 'Produto adicionado ao carrinho!');
-    }    
 
-    // Mostrar o carrinho
+        session()->put('cart', $cart);
+
+        return back()->with('success', 'Produto adicionado ao carrinho!');
+    }
+
+    public function syncCartSession()
+    {
+        $cart = session()->get('cart', []);
+
+        foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            if ($product) {
+                $cart[$productId]['name'] = $product->name;
+                $cart[$productId]['external_name'] = $product->external_name;
+                $cart[$productId]['slug'] = $product->slug;
+                $cart[$productId]['sku'] = $product->sku;
+                $cart[$productId]['stock'] = $product->stock;
+            } else {
+                // Remove produtos que não existem mais
+                unset($cart[$productId]);
+            }
+        }
+
+        session()->put('cart', $cart);
+    }
+
     public function view()
     {
         $cart = session()->get('cart', []);
         return view('cart.view', compact('cart'));
     }
 
-    // Atualizar quantidade do item no carrinho
     public function update(Request $request, $productId)
     {
         $quantity = (int) $request->input('quantity', 1);
-    
         $cart = session()->get('cart', []);
-    
+
         if (isset($cart[$productId])) {
+            $product = Product::find($productId);
+            if (!$product) return back()->with('error', 'Produto não encontrado.');
+
             if ($quantity > 0) {
-                $cart[$productId]['quantity'] = $quantity;
+                $cart[$productId]['quantity'] = min($quantity, $product->stock); // Limita pelo estoque
             } else {
                 unset($cart[$productId]);
             }
-            
-            // Atualiza a sessão com o carrinho
+
             session()->put('cart', $cart);
-    
-            // Se o usuário estiver autenticado, atualiza o pedido no banco de dados
+
             if (auth()->check()) {
-                $order = Order::where('user_id', auth()->id())
-                              ->where('status', 'cart')
-                              ->first();
-    
+                $order = Order::where('user_id', auth()->id())->where('status', 'cart')->first();
                 if ($order) {
-                    // Atualiza a quantidade e o preço do item
                     $orderItem = $order->items()->where('product_id', $productId)->first();
                     if ($orderItem) {
                         $orderItem->update([
-                            'quantity' => $cart[$productId]['quantity'],
-                            'price' => $cart[$productId]['price'], // Pode ser necessário recalcular o preço aqui
+                            'quantity'      => $cart[$productId]['quantity'] ?? 0,
+                            'price'         => $product->price,
+                            'name'          => $product->name,
+                            'external_name' => $product->external_name,
+                            'slug'          => $product->slug,
+                            'sku'           => $product->sku,
                         ]);
                     }
-    
-                    // Recalcula o total do pedido
                     $total = $order->items->sum(function($item) {
                         return $item->price * $item->quantity;
                     });
-                    
-                    // Atualiza o total no pedido
                     $order->update(['total' => $total]);
                 }
             }
-    
+
             return back()->with('success', 'Carrinho atualizado!');
         }
-    
+
         return back()->with('error', 'Produto não encontrado no carrinho.');
     }
 
-    // Remover item do carrinho
     public function remove($productId)
     {
         $cart = session()->get('cart', []);
         if (isset($cart[$productId])) {
             unset($cart[$productId]);
             session()->put('cart', $cart);
-    
+
             if (auth()->check()) {
-                $order = Order::where('user_id', auth()->id())
-                    ->where('status', 'cart')
-                    ->first();
-    
+                $order = Order::where('user_id', auth()->id())->where('status', 'cart')->first();
                 if ($order) {
-                    // Remove o item do banco
                     $order->items()->where('product_id', $productId)->delete();
-    
-                    // Se não tiver mais itens, remove o pedido inteiro
-                    if ($order->items()->count() === 0) {
-                        $order->delete();
-                    }
+                    if ($order->items()->count() === 0) $order->delete();
                 }
             }
-    
+
             return back()->with('success', 'Produto removido do carrinho!');
         }
-    
+
         return back()->with('error', 'Produto não encontrado no carrinho.');
     }
 }

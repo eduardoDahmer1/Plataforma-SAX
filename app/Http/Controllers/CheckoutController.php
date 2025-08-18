@@ -6,128 +6,221 @@ use Illuminate\Http\Request;
 use App\Models\PaymentMethod;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Cart;
+use App\Models\OrderItem;
+use Illuminate\Support\Facades\DB;
+use App\Models\BankAccount;
 
 class CheckoutController extends Controller
 {
+    // Exibe página de checkout
     public function index(Request $request)
     {
-        // Recupera o passo atual da sessão ou começa no passo 1
-        $step = $request->session()->get('checkout_step', 1);
-
-        // Recupera os itens do carrinho da sessão
-        $cart = session()->get('cart', []);
-
-        // Recarrega os dados completos do produto para exibição
-        foreach ($cart as $productId => $item) {
-            $product = Product::find($productId);
-            if ($product) {
-                $cart[$productId]['name'] = $product->name;
-                $cart[$productId]['external_name'] = $product->external_name;
-                $cart[$productId]['slug'] = $product->slug;
-                $cart[$productId]['sku'] = $product->sku;
-                $cart[$productId]['stock'] = $product->stock;
-            }
-        }
-
-        // Busca os métodos de pagamento ativos
+        $user = auth()->user();
+        $cart = Cart::with('product')->where('user_id', $user->id)->get();
         $paymentMethods = PaymentMethod::where('active', 1)->get();
 
-        return view('checkout.index', compact('step', 'paymentMethods', 'cart'));
+        return view('checkout.index', compact('paymentMethods', 'cart'));
     }
 
+    // Cria o pedido
     public function store(Request $request)
     {
-        $step = $request->input('step');
-        $cart = session()->get('cart', []);
+        $user = auth()->user();
 
-        switch ($step) {
-            case 1:
-                $request->session()->put('checkout_step', 2);
-                break;
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'document' => 'required|string|max:50',
+            'email' => 'required|email',
+            'phone' => 'required|string',
+            'shipping' => 'required|in:1,2,3',
+            'payment_method' => 'required|in:deposito,bancard,whatsapp',
+            'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
+            'street' => 'required_if:shipping,2',
+            'number' => 'required_if:shipping,2',
+            'country' => 'required_if:shipping,2',
+            'cep' => 'required_if:shipping,2',
+            'house_code' => 'required_if:country,paraguai',
+        ]);
 
-            case 2:
-                $request->session()->put('checkout_step', 3);
-                break;
-
-            case 3:
-                $request->session()->put('checkout_step', 4);
-                break;
-
-            case 4:
-                $paymentMethod = $request->input('payment_method');
-
-                if ($paymentMethod === 'bancard') {
-                    $request->session()->put('payment_method', 'bancard');
-                } elseif ($paymentMethod === 'deposito') {
-                    $bankId = $request->input('bank_id');
-                    $request->session()->put('payment_method', 'deposito');
-                    $request->session()->put('bank_id', $bankId);
-                }
-
-                // Criação do pedido
-                $order = Order::create([
-                    'user_id' => auth()->id(),
-                    'status' => 'pending',
-                    'total' => array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $cart)),
-                    'payment_method' => $paymentMethod,
-                ]);
-
-                // Associando os itens ao pedido com campos extras
-                foreach ($cart as $item) {
-                    $product = Product::find($item['product_id']);
-                    if ($product) {
-                        $order->items()->create([
-                            'product_id'    => $item['product_id'],
-                            'quantity'      => $item['quantity'],
-                            'price'         => $item['price'],
-                            'name'          => $product->name,
-                            'external_name' => $product->external_name,
-                            'slug'          => $product->slug,
-                            'sku'           => $product->sku,
-                        ]);
-                    }
-                }
-
-                $request->session()->put('checkout_step', 5);
-                break;
-
-            case 5:
-                return redirect()->route('checkout.success')->with('success', 'Compra realizada com sucesso!');
+        $cart = Cart::with('product')->where('user_id', $user->id)->get();
+        if ($cart->isEmpty()) {
+            return back()->with('error', 'Carrinho vazio');
         }
 
-        return response()->json(['success' => true]);
+        $paymentMethod = $request->input('payment_method');
+        $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
+
+        DB::beginTransaction();
+        try {
+            // Cria pedido
+            $order = Order::create([
+                'user_id' => $user->id,
+                'status' => 'pending',
+                'total' => $total,
+                'payment_method' => $paymentMethod,
+                'name' => $request->input('name'),
+                'document' => $request->input('document'),
+                'email' => $request->input('email'),
+                'phone' => $request->input('phone'),
+            ]);
+
+            // Salva endereço ou loja
+            if ($request->shipping == '1') {
+                $order->update([
+                    'street' => $user->street,
+                    'number' => $user->number,
+                    'city' => $user->city,
+                    'state' => $user->state,
+                    'country' => 'brasil',
+                ]);
+            } elseif ($request->shipping == '2') {
+                $order->update([
+                    'street' => $request->input('street'),
+                    'number' => $request->input('number'),
+                    'city' => $request->input('city') ?? '',
+                    'state' => $request->input('state') ?? '',
+                    'country' => $request->input('country'),
+                ]);
+            } else { // Retirada na loja
+                $order->store_id = $request->input('store');
+                $order->save();
+            }
+
+            // Adiciona itens do carrinho
+            foreach ($cart as $cartItem) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->product->price,
+                    'name' => $cartItem->product->name,
+                    'external_name' => $cartItem->product->external_name,
+                    'slug' => $cartItem->product->slug,
+                    'sku' => $cartItem->product->sku,
+                ]);
+            }
+
+            // Salva comprovante de depósito
+            if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
+                $file = $request->file('deposit_receipt');
+                $filename = time().'_'.$file->getClientOriginalName();
+                $file->storeAs('deposits', $filename, 'public');
+                $order->deposit_receipt = $filename;
+                $order->save();
+            }
+
+            // Limpa carrinho
+            Cart::where('user_id', $user->id)->delete();
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Erro ao processar pedido: '.$e->getMessage());
+        }
+
+        // Redirecionamento pós-checkout
+        if ($paymentMethod === 'bancard') {
+            $token = $this->generateBancardToken($order);
+            $bancardUrl = config('services.bancard.url');
+            return view('payment.bancard', compact('order', 'bancardUrl', 'token'));
+        }
+
+        if ($paymentMethod === 'deposito') {
+            $bankAccounts = \DB::table('payment_methods')
+                ->where('type', 'bank')
+                ->where('active', 1)
+                ->get();
+            return view('payment.deposito', compact('order', 'bankAccounts'));
+        }
+
+        if ($paymentMethod === 'whatsapp') {
+            return $this->whatsapp();
+        }
+
+        return redirect()->route('checkout.success')->with('success', 'Pedido criado com sucesso!');
     }
 
+    // WhatsApp direto do carrinho
     public function whatsapp(Request $request)
     {
-        $cart = session('cart', []);
-        
-        if (empty($cart)) {
-            return back()->with('error', 'Seu carrinho está vazio!');
-        }
-
         $user = auth()->user();
-        $message = "Olá! Quero finalizar minha compra:\n\n";
-
-        foreach($cart as $item) {
-            $product = Product::find($item['product_id']);
-            if ($product) {
-                $message .= "Produto: {$product->name} ({$product->external_name})\n";
-                $message .= "SKU: {$product->sku}\n";
-                $message .= "Preço: R$ ".number_format($item['price'], 2, ',', '.')."\n";
-                $message .= "Qtd: {$item['quantity']}\n";
-                $message .= "------------------------\n";
-            }
+        $cart = Cart::with('product')->where('user_id', $user->id)->get();
+    
+        if ($cart->isEmpty()) {
+            return back()->with('error', 'Carrinho vazio');
         }
-
-        $total = array_reduce($cart, fn($sum, $item) => $sum + ($item['price'] * $item['quantity']), 0);
-        $message .= "Total da compra: R$ ".number_format($total, 2, ',', '.')."\n\n";
+    
+        $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
+    
+        // Cria o pedido
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'user_id' => $user->id,
+                'status' => 'pending',
+                'total' => $total,
+                'payment_method' => 'whatsapp',
+                'name' => $user->name,
+                'document' => $user->document ?? '',
+                'email' => $user->email,
+                'phone' => $user->phone_number,
+            ]);
+    
+            foreach ($cart as $cartItem) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->product->price,
+                    'name' => $cartItem->product->name,
+                    'external_name' => $cartItem->product->external_name,
+                    'slug' => $cartItem->product->slug,
+                    'sku' => $cartItem->product->sku,
+                ]);
+            }
+    
+            // Zera o carrinho
+            Cart::where('user_id', $user->id)->delete();
+    
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Erro ao criar pedido: ' . $e->getMessage());
+        }
+    
+        // Monta a mensagem do WhatsApp
+        $message = "Olá! Quero finalizar minha compra:\n\n";
+        foreach ($order->items as $item) {
+            $message .= "Produto: {$item->name}\n";
+            $message .= "Preço: R$ " . number_format($item->price, 2, ',', '.') . "\n";
+            $message .= "Qtd: {$item->quantity}\n";
+            $message .= "------------------------\n";
+        }
+    
+        $message .= "Total da compra: R$ " . number_format($order->total, 2, ',', '.') . "\n\n";
         $message .= "Cliente: {$user->name}\n";
-        $message .= "Email: {$user->email}\n";
-
+        $message .= "Telefone: +{$user->phone_country}{$user->phone_number}\n";
+    
         $message = urlencode($message);
         $whatsappNumber = '595984167575';
-
+    
         return redirect("https://wa.me/{$whatsappNumber}?text={$message}");
+    }
+    
+
+    // Bancard
+    private function processBancard(Order $order)
+    {
+        return redirect()->route('checkout.bancard', ['order' => $order->id])
+            ->with('success', 'Redirecionando para pagamento Bancard...');
+    }
+
+    // Depósito
+    private function processDeposit(Order $order)
+    {
+        return redirect()->route('checkout.success')
+            ->with('success', 'Pedido registrado! Aguarde a confirmação do depósito.');
     }
 }

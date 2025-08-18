@@ -15,19 +15,36 @@
         </tr>
         <tr>
             <th>Status</th>
-            <td>{{ $order->status }}</td>
+            <td>
+                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="d-flex gap-2">
+                    @csrf
+                    @method('PUT')
+                    <select name="status" class="form-control">
+                        @foreach([
+                        'pending' => 'Pendente',
+                        'processing' => 'Em Andamento',
+                        'completed' => 'Completo',
+                        'canceled' => 'Cancelado'
+                        ] as $key => $label)
+                        <option value="{{ $key }}" {{ $order->status === $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                        @endforeach
+                    </select>
+
+                    <button type="submit" class="btn btn-primary">Atualizar</button>
+                </form>
+            </td>
         </tr>
         <tr>
             <th>Data do Pedido</th>
             <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
         </tr>
         <tr>
-        <th>Total</th>
+            <th>Total</th>
             <td>
                 @php
-                    $total = $order->items->sum(function($item) {
-                        return $item->price * $item->quantity;
-                    });
+                $total = $order->items->sum(fn($item) => $item->price * $item->quantity);
                 @endphp
                 R$ {{ number_format($total, 2, ',', '.') }}
             </td>
@@ -36,6 +53,17 @@
             <th>Método de Pagamento</th>
             <td>{{ $order->payment_method }}</td>
         </tr>
+        @if($order->deposit_receipt)
+        <tr>
+            <th>Comprovante</th>
+            <td>
+                <a href="{{ asset('storage/' . $order->deposit_receipt) }}" target="_blank">
+                    <img src="{{ asset('storage/' . $order->deposit_receipt) }}" alt="Comprovante"
+                        style="max-width:200px; border:1px solid #ccc;">
+                </a>
+            </td>
+        </tr>
+        @endif
     </table>
 
     <h3>Itens do Pedido</h3>
@@ -52,10 +80,7 @@
         <tbody>
             @foreach($order->items as $item)
             <tr>
-                <td>
-                    {{-- Verificando o título do produto usando name ou external_name --}}
-                    {{ $item->product->name ?? $item->product->external_name ?? 'Produto não encontrado' }}
-                </td>
+                <td>{{ $item->product->name ?? $item->product->external_name ?? 'Produto não encontrado' }}</td>
                 <td>{{ $item->quantity }}</td>
                 <td>R$ {{ number_format($item->price, 2, ',', '.') }}</td>
                 <td>R$ {{ number_format($item->quantity * $item->price, 2, ',', '.') }}</td>

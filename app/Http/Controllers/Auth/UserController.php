@@ -36,7 +36,7 @@ class UserController extends Controller
         $request->validate([
             'name'             => 'required|string|max:255',
             'email'            => 'required|email|max:255|unique:users,email,' . $user->id,
-            'phone_country'    => 'nullable|string|max:5', // ajuste pro tamanho correto
+            'phone_country'    => 'nullable|string|max:5',
             'phone_number'     => 'nullable|string|max:20',
             'address'          => 'nullable|string|max:255',
             'cep'              => 'nullable|string|max:20',
@@ -45,7 +45,7 @@ class UserController extends Controller
             'additional_info'  => 'nullable|string|max:255',
         ]);
     
-        // Remove o "+" do código do país se você for optar por isso
+        // Remove o "+" do código do país se quiser
         $request->merge([
             'phone_country' => str_replace('+', '', $request->phone_country),
         ]);
@@ -56,7 +56,7 @@ class UserController extends Controller
             'email'             => $request->email,
             'phone_country'     => $request->phone_country,
             'phone_number'      => $request->phone_number,
-            'already_registered'=> $request->already_registered,
+            'already_registered'=> $request->already_registered ?? $user->already_registered,
             'address'           => $request->address,
             'cep'               => $request->cep,
             'city'              => $request->city,
@@ -67,7 +67,6 @@ class UserController extends Controller
         return back()->with('success', 'Perfil atualizado com sucesso!');
     }
       
-
     // Lista todos os pedidos do usuário
     public function orders()
     {
@@ -76,29 +75,27 @@ class UserController extends Controller
                         ->orderBy('created_at', 'desc')
                         ->get();
 
-        return view('users.order', compact('orders')); // aqui você tinha 'users.orders', mas sua pasta tem apenas 'order.blade.php'
+        return view('users.order', compact('orders')); 
     }
 
     // Mostra um pedido específico
     public function showOrder($id)
     {
         $user = Auth::user();
-        $order = Order::where('id', $id)
+        $order = Order::with('items') // carrega itens
+                      ->where('id', $id)
                       ->where('user_id', $user->id)
                       ->firstOrFail();
 
-        return view('users.order', compact('order')); // mantém o mesmo 'order.blade.php'
+        return view('users.order', compact('order')); 
     }
 
-    // Redireciona após checkout
+    // Redireciona após checkout (sucesso)
     public function checkoutSuccess(Request $request)
     {
         session()->forget('cart');
 
-        // Se quiser detectar desktop, é melhor fazer via JS; aqui só deixei como placeholder
-        // $isDesktop = !$request->isMobile(); // requer pacote, se não, trate via JS
-
-        // Temporário: sempre redireciona pro WhatsApp
+        // Apenas exemplo de redirecionamento para WhatsApp
         $whatsappNumber = '595984167575';
         return redirect()->away("https://wa.me/{$whatsappNumber}?text=Pedido finalizado");
     }

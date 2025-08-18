@@ -48,7 +48,28 @@
         <ul class="list-group">
             @foreach($orders as $order)
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                Pedido #{{ $order->id }} - {{ $order->created_at->format('d/m/Y') }}
+                <div>
+                    Pedido #{{ $order->id }} - {{ $order->created_at->format('d/m/Y') }}
+                    <br>
+                    <small>Status:
+                        @switch($order->status)
+                        @case('pending') Pendente @break
+                        @case('processing') Em Andamento @break
+                        @case('completed') Completo @break
+                        @case('canceled') Cancelado @break
+                        @default Desconhecido
+                        @endswitch
+                    </small>
+                </div>
+                <span class="badge 
+            @switch($order->payment_method)
+                @case('whatsapp') bg-success @break
+                @case('bancard') bg-primary @break
+                @case('deposito') bg-warning @break
+                @default bg-secondary
+            @endswitch">
+                    {{ ucfirst($order->payment_method) }}
+                </span>
                 <a href="{{ route('user.orders.show', $order->id) }}" class="btn btn-sm btn-primary">Ver Detalhes</a>
             </li>
             @endforeach

@@ -4,40 +4,79 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\Cart;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-
+use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        $query = Order::with(['user', 'items']); // sem paymentMethod nem store
+
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('user_name')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->user_name}%");
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->paginate(20);
+        $orders->appends($request->all());
+
         return view('admin.orders.index', compact('orders'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $request->validate([
+            'status' => 'required|in:pending,processing,completed,canceled',
+        ]);
+
+        $order->status = $request->status;
+        $order->save();
+
+        return redirect()->back()->with('success', 'Status do pedido atualizado!');
     }
 
     public function show($id)
     {
-        $order = Order::with('user', 'items')->findOrFail($id);
+        $order = Order::with(['user', 'items'])->findOrFail($id); // sem paymentMethod nem store
         return view('admin.orders.show', compact('order'));
     }
 
     public function destroy($id)
     {
         $order = Order::with('items')->findOrFail($id);
-    
-        // Deleta itens do pedido
+
+        if ($order->deposit_receipt && Storage::disk('public')->exists($order->deposit_receipt)) {
+            Storage::disk('public')->delete($order->deposit_receipt);
+        }
+
         foreach ($order->items as $item) {
             $item->delete();
         }
-    
-        // Deleta o pedido
+
         $order->delete();
-    
-        // Limpa carrinho da sessão do usuário — só vai funcionar se for o mesmo usuário logado!
-        // Se for no admin e você não é o mesmo usuário, isso não afeta.
         Session::forget('cart');
-    
+
         return redirect()->route('admin.orders.index')->with('success', 'Pedido excluído com sucesso.');
     }
 }

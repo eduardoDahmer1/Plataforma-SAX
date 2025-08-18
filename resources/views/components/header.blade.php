@@ -45,10 +45,12 @@
 
 
         @php
-        $cart = session('cart', []);
-        $cartCount = count($cart);
-        @endphp
+        use App\Models\Cart;
 
+        $user = auth()->user();
+        $cart = $user ? Cart::with('product')->where('user_id', $user->id)->get() : collect();
+        $cartCount = $cart->sum('quantity');
+        @endphp
 
         <div class="position-relative d-inline-block ms-3" id="cart-hover-area" style="cursor:pointer;">
             <button id="cart-button" class="btn btn-light">
@@ -64,48 +66,43 @@
                     <button id="cart-close" class="btn btn-sm btn-outline-danger">&times;</button>
                 </div>
                 <ul class="list-group list-group-flush">
-                    @foreach($cart as $productId => $item)
+                @foreach($cart as $item)
                     <li class="list-group-item">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <strong>{{ $item['title'] ?? $item['slug'] ?? 'Produto' }}</strong><br>
-                                <small>R$ {{ number_format($item['price'] ?? 0, 2, ',', '.') }}</small>
+                                <strong>{{ $item->product->title ?? $item->product->slug ?? 'Produto' }}</strong><br>
+                                <small>R$ {{ number_format($item->product->price ?? 0, 2, ',', '.') }}</small>
                             </div>
 
                             {{-- Excluir item --}}
-                            <form action="{{ route('cart.remove', $productId) }}" method="POST"
+                            <form action="{{ route('cart.remove', $item->product_id) }}" method="POST"
                                 onsubmit="return confirm('Remover este item do carrinho?')" class="ms-2">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover">
-                                    🗑
-                                </button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover">🗑</button>
                             </form>
                         </div>
 
                         {{-- Controles de quantidade --}}
                         <div class="d-flex align-items-center mt-2">
-                            @if (($item['quantity'] ?? 1) > 1)
-                            <form action="{{ route('cart.update', $productId) }}" method="POST" class="d-inline">
+                            @if ($item->quantity > 1)
+                            <form action="{{ route('cart.update', $item->product_id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('PUT')
-                                <input type="hidden" name="quantity" value="{{ $item['quantity'] - 1 }}">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                    title="Diminuir">-</button>
+                                <input type="hidden" name="quantity" value="{{ $item->quantity - 1 }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Diminuir">-</button>
                             </form>
                             @endif
 
-                            <span class="mx-2">{{ $item['quantity'] ?? 1 }}</span>
+                            <span class="mx-2">{{ $item->quantity }}</span>
 
-                            {{-- Botão de aumentar quantidade --}}
-                            <form action="{{ route('cart.update', $productId) }}" method="POST" class="d-inline">
+                            {{-- Aumentar quantidade --}}
+                            <form action="{{ route('cart.update', $item->product_id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('PUT')
-                                <input type="hidden" name="quantity" value="{{ ($item['quantity'] ?? 1) + 1 }}">
+                                <input type="hidden" name="quantity" value="{{ $item->quantity + 1 }}">
                                 <button type="submit" class="btn btn-sm btn-outline-secondary" title="Aumentar"
-                                    @if(($item['quantity'] ?? 1)>= ($item['stock'] ?? 1)) disabled @endif>
-                                    +
-                                </button>
+                                    @if($item->quantity >= ($item->product->stock ?? 1)) disabled @endif>+</button>
                             </form>
                         </div>
                     </li>

@@ -94,6 +94,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');
 
+    Route::put('admin/orders/{order}', [OrderController::class, 'update'])->name('admin.orders.update');
+
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');

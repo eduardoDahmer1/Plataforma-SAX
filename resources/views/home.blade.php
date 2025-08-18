@@ -66,8 +66,8 @@
     document.getElementById('filterForm').addEventListener('submit', function() {
         // Após enviar o formulário, limpa todos os inputs/selects
         setTimeout(() => {
-            this.querySelectorAll('input, select').forEach(el => el.value = '');
-        }, 10); // pequeno delay para garantir que a submissão ocorreu
+            this.querySelectorAll('input, select').forEach(el => el.value = '';
+        }, 10); 
     });
     </script>
 
@@ -78,7 +78,6 @@
         <div class="col-6 col-md-4 col-lg-3 mb-4">
             <div class="card h-100 shadow-sm">
 
-                {{-- Imagem --}}
                 <img src="{{ $item->photo_url }}" class="card-img-top img-fluid" alt="{{ $item->external_name }}"
                     style="max-height: 200px; object-fit: cover;">
 
@@ -100,8 +99,7 @@
 
                         @auth
                         @php
-                            $cart = session('cart', []);
-                            $currentQty = $cart[$item->id]['quantity'] ?? 0;
+                            $currentQty = $cartItems[$item->id] ?? 0;
                         @endphp
 
                         @if(in_array(auth()->user()->user_type, [0,1,2]))
@@ -130,7 +128,6 @@
         @endforeach
     </div>
 
-    <!-- Paginação -->
     <div class="d-flex justify-content-center mt-4">
         {{ $paginated->links('pagination::bootstrap-4') }}
     </div>

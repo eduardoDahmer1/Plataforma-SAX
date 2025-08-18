@@ -4,20 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BrandController extends Controller
 {
     // Lista marcas públicas com busca e paginação
     public function publicIndex(Request $request)
     {
-        $query = Brand::orderBy('name');
+        $page   = $request->get('page', 1);
+        $search = $request->get('search', '');
 
-        // Filtro por busca
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
+        $cacheKey = "brands_index_{$page}_".md5($search);
 
-        $brands = $query->paginate(12)->withQueryString();
+        $brands = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
+            $query = Brand::orderBy('name');
+
+            if (!empty($search)) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+
+            return $query->paginate(12)->withQueryString();
+        });
 
         return view('brands.index', compact('brands'));
     }
@@ -25,7 +32,11 @@ class BrandController extends Controller
     // Mostra marca específica pelo slug
     public function publicShow($slug)
     {
-        $brand = Brand::where('slug', $slug)->firstOrFail();
+        $cacheKey = "brand_show_{$slug}";
+
+        $brand = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
+            return Brand::where('slug', $slug)->firstOrFail();
+        });
 
         return view('brands.show', compact('brand'));
     }

@@ -4,31 +4,42 @@ namespace App\Http\Controllers;
 
 use App\Models\Childcategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ChildcategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Childcategory::with('subcategory.category');
+        $page   = $request->get('page', 1);
+        $search = $request->get('search', '');
 
-        // Filtro por busca
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('slug', 'like', '%' . $request->search . '%');
-            });
-        }
+        $cacheKey = "childcategories_index_{$page}_" . md5($search);
 
-        $childcategories = $query->paginate(12)->withQueryString();
+        $childcategories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
+            $query = Childcategory::with('subcategory.category')->orderBy('name');
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('slug', 'like', "%{$search}%");
+                });
+            }
+
+            return $query->paginate(12)->withQueryString();
+        });
 
         return view('Childcategory.index', compact('childcategories'));
     }
 
     public function show($slug)
     {
-        $childcategory = Childcategory::with('subcategory.category')
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $cacheKey = "childcategory_show_{$slug}";
+
+        $childcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
+            return Childcategory::with('subcategory.category')
+                ->where('slug', $slug)
+                ->firstOrFail();
+        });
 
         return view('Childcategory.show', compact('childcategory'));
     }

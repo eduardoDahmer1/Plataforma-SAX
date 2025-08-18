@@ -4,31 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Models\Subcategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class SubcategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Subcategory::with('category')->orderBy('name');
+        $page    = $request->get('page', 1);
+        $search  = $request->get('search', '');
 
-        // Filtro por busca
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            });
-        }
+        $cacheKey = "subcategories_index_{$page}_".md5($search);
 
-        $subcategories = $query->paginate(12)->withQueryString();
+        $subcategories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
+            $query = Subcategory::with('category')->orderBy('name');
+
+            if (!empty($search)) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+
+            return $query->paginate(12)->withQueryString();
+        });
 
         return view('subcategories.index', compact('subcategories'));
     }
 
-    public function show($slug)
+    public function show($identifier)
     {
-        $subcategory = Subcategory::with('category')
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $cacheKey = "subcategory_show_{$identifier}";
+
+        $subcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($identifier) {
+            return Subcategory::with('category')
+                ->when(is_numeric($identifier), fn($q) => $q->where('id', $identifier))
+                ->when(!is_numeric($identifier), fn($q) => $q->where('slug', $identifier))
+                ->firstOrFail();
+        });
 
         return view('subcategories.show', compact('subcategory'));
     }

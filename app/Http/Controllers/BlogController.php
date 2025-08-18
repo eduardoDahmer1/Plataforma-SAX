@@ -3,42 +3,54 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Blog;
 use App\Models\BlogCategory;
 
 class BlogController extends Controller
 {
-    // Lista blogs ativos com filtro, busca e categorias
+    // Lista blogs ativos com filtro, busca, categorias e cache
     public function index(Request $request)
     {
-        $categories = BlogCategory::orderBy('name')->get();
+        $search = $request->input('search', '');
+        $category = $request->input('category', '');
+        $page = $request->input('page', 1);
 
-        $query = Blog::where('is_active', true)
-                     ->whereNotNull('published_at')
-                     ->latest();
+        $cacheKey = "blogs_index_{$page}_" . md5($search . $category);
 
-        // Filtra por categoria
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $category) {
+            $categories = BlogCategory::orderBy('name')->get();
 
-        // Busca por título
-        if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
-        }
+            $query = Blog::where('is_active', true)
+                         ->whereNotNull('published_at')
+                         ->latest();
 
-        $blogs = $query->paginate(10)->withQueryString();
+            if (!empty($category)) {
+                $query->where('category_id', $category);
+            }
 
-        return view('blogs.index', compact('blogs', 'categories'));
+            if (!empty($search)) {
+                $query->where('title', 'like', "%{$search}%");
+            }
+
+            $blogs = $query->paginate(10)->withQueryString();
+
+            return compact('blogs', 'categories');
+        });
+
+        return view('blogs.index', $data);
     }
 
-    // Mostra blog específico
+    // Mostra blog específico com cache
     public function show($slug)
     {
-        $blog = Blog::where('slug', $slug)
-                    ->where('is_active', true)
-                    ->firstOrFail();
+        $cacheKey = "blog_show_{$slug}";
+
+        $blog = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
+            return Blog::where('slug', $slug)
+                       ->where('is_active', true)
+                       ->firstOrFail();
+        });
 
         return view('blogs.show', compact('blog'));
     }

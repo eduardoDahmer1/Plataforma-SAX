@@ -56,7 +56,7 @@ Route::get('/categorias/{category:slug}', [CategoryController::class, 'show'])->
 
 // Brands
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
-Route::get('/marcas/{brand}', [BrandController::class, 'publicShow'])->name('brands.show');
+Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('brands.show');
 
 // Blogs
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');

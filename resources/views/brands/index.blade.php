@@ -27,7 +27,7 @@
                 </div>
                 <div class="card-body text-center">
                     <h5>{{ $brand->name ?? $brand->slug }}</h5>
-                    <a href="{{ route('brands.show', $brand->id) }}" class="btn btn-primary">Ver detalhes</a>
+                    <a href="{{ route('brands.show', $brand->slug) }}" class="btn btn-primary">Ver detalhes</a>
                 </div>
             </div>
         </div>

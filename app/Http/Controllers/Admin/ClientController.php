@@ -16,7 +16,7 @@ class ClientController extends Controller
 
     public function show($id)
     {
-        $client = User::findOrFail($id);
+        $client = User::with(['orders.items'])->findOrFail($id);
         return view('admin.clients.show', compact('client'));
     }
 }

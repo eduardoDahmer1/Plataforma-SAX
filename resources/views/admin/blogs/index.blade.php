@@ -1,71 +1,85 @@
 @extends('layout.admin')
 @section('content')
 <div class="container py-4">
-    <h1>Gerenciar Blogs</h1>
-    <a href="{{ route('admin.blogs.create') }}" class="btn btn-success mb-3">Novo Blog</a>
-    <a href="#" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#categoryModal">Gerenciar
-        Categorias</a>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+        <h1 class="mb-2 mb-md-0">Gerenciar Blogs</h1>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.blogs.create') }}" class="btn btn-success">
+                <i class="fa fa-plus me-1"></i> Novo Blog
+            </a>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                <i class="fa fa-folder me-1"></i> Gerenciar Categorias
+            </button>
+        </div>
+    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="categoryModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Categorias</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="categoryForm">
+                    <form id="categoryForm" class="mb-3">
                         @csrf
                         <input type="hidden" id="category_id">
-                        <div class="mb-3">
-                            <label>Nome</label>
-                            <input type="text" id="category_name" class="form-control">
+                        <div class="input-group mb-2 flex-column flex-md-row gap-2">
+                            <input type="text" id="category_name" class="form-control" placeholder="Nome da categoria">
+                            <button type="submit" class="btn btn-success flex-shrink-0">
+                                <i class="fa fa-save me-1"></i> Salvar
+                            </button>
                         </div>
-                        <button type="submit" class="btn btn-success">Salvar</button>
                     </form>
-                    <hr>
-                    <table class="table" id="categoryTable">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="categoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Título</th>
-                <th>Publicado</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($blogs as $blog)
-            <tr>
-                <td>{{ $blog->title }}</td>
-                <td>{{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '-' }}</td>
-                <td>
-                    <a href="{{ route('admin.blogs.edit', $blog) }}" class="btn btn-warning btn-sm">Editar</a>
-                    <form action="{{ route('admin.blogs.destroy', $blog) }}" method="POST" class="d-inline"
-                        onsubmit="return confirm('Excluir?')">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-danger btn-sm">Excluir</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Título</th>
+                    <th>Publicado</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($blogs as $blog)
+                <tr>
+                    <td>{{ $blog->title }}</td>
+                    <td>{{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '-' }}</td>
+                    <td class="d-flex flex-column flex-md-row gap-2">
+                        <a href="{{ route('admin.blogs.edit', $blog) }}" class="btn btn-warning btn-sm flex-fill">
+                            <i class="fa fa-edit me-1"></i> Editar
+                        </a>
+                        <form action="{{ route('admin.blogs.destroy', $blog) }}" method="POST" class="flex-fill m-0"
+                              onsubmit="return confirm('Excluir?')">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-danger btn-sm w-100">
+                                <i class="fa fa-trash me-1"></i> Excluir
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
-
 
 <script>
 document.addEventListener('DOMContentLoaded', loadCategories);
@@ -78,9 +92,13 @@ function loadCategories(){
             data.forEach(cat => {
                 rows += `<tr>
                     <td>${cat.name}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" onclick="editCategory(${cat.id}, '${cat.name}')">Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteCategory(${cat.id})">Excluir</button>
+                    <td class="d-flex flex-column flex-md-row gap-2">
+                        <button class="btn btn-warning btn-sm flex-fill" onclick="editCategory(${cat.id}, '${cat.name}')">
+                            <i class="fa fa-edit me-1"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm flex-fill" onclick="deleteCategory(${cat.id})">
+                            <i class="fa fa-trash me-1"></i> Excluir
+                        </button>
                     </td>
                 </tr>`;
             });
@@ -122,5 +140,4 @@ function deleteCategory(id){
     .then(() => loadCategories());
 }
 </script>
-
 @endsection

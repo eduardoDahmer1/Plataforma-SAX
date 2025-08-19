@@ -1,12 +1,13 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container">
-    <h2>Pedidos dos Clientes</h2>
+<div class="container mt-4">
+    <h2 class="mb-3">Pedidos dos Clientes</h2>
 
+    <!-- Filtros -->
     <form method="GET" action="{{ route('admin.orders.index') }}" class="mb-3">
-        <div class="row g-2">
-            <div class="col-md-2">
+        <div class="row g-2 flex-column flex-md-row">
+            <div class="col-12 col-md-2">
                 <select name="payment_method" class="form-control">
                     <option value="">Todos os Pagamentos</option>
                     <option value="bancard" {{ request('payment_method') == 'bancard' ? 'selected' : '' }}>Bancard</option>
@@ -14,7 +15,7 @@
                     <option value="whatsapp" {{ request('payment_method') == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-12 col-md-2">
                 <select name="status" class="form-control">
                     <option value="">Todos os Status</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendente</option>
@@ -23,23 +24,28 @@
                     <option value="canceled" {{ request('status') == 'canceled' ? 'selected' : '' }}>Cancelado</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-12 col-md-2">
                 <input type="text" name="user_name" class="form-control" placeholder="Nome do Cliente" value="{{ request('user_name') }}">
             </div>
-            <div class="col-md-2">
+            <div class="col-12 col-md-2">
                 <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
             </div>
-            <div class="col-md-2">
+            <div class="col-12 col-md-2">
                 <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
             </div>
-            <div class="col-md-2 d-flex">
-                <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="fa fa-filter me-1"></i> Filtrar
+                </button>
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary flex-fill">
+                    <i class="fa fa-refresh me-1"></i> Limpar
+                </a>
             </div>
         </div>
     </form>
 
-    <table class="table table-bordered table-striped mt-4">
-        <thead>
+    <table class="table table-bordered table-striped table-responsive">
+        <thead class="table-light">
             <tr>
                 <th>ID Pedido</th>
                 <th>Cliente</th>
@@ -72,13 +78,13 @@
                 <td>
                     @switch($order->payment_method)
                         @case('bancard')
-                            <span class="badge bg-success">Bancard</span>
+                            <span class="badge bg-success"><i class="fa fa-credit-card me-1"></i>Bancard</span>
                             @break
                         @case('deposito')
-                            <span class="badge bg-info text-dark">Depósito</span>
+                            <span class="badge bg-info text-dark"><i class="fa fa-university me-1"></i>Depósito</span>
                             @break
                         @case('whatsapp')
-                            <span class="badge bg-warning text-dark">WhatsApp</span>
+                            <span class="badge bg-warning text-dark"><i class="fa fa-whatsapp me-1"></i>WhatsApp</span>
                             @break
                         @default
                             <span class="badge bg-secondary">Não informado</span>
@@ -90,14 +96,17 @@
                     @endphp
                     R$ {{ number_format($total, 2, ',', '.') }}
                 </td>
-                <td>
-                    <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-primary">Ver Pedido</a>
-                    <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST"
-                        style="display:inline-block;"
+                <td class="d-flex flex-column flex-md-row gap-2">
+                    <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-primary flex-fill">
+                        <i class="fa fa-eye me-1"></i> Ver Pedido
+                    </a>
+                    <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" class="flex-fill m-0"
                         onsubmit="return confirm('Tem certeza que deseja excluir este pedido?');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                        <button type="submit" class="btn btn-sm btn-danger w-100">
+                            <i class="fa fa-trash me-1"></i> Excluir
+                        </button>
                     </form>
                 </td>
             </tr>
@@ -109,7 +118,7 @@
         </tbody>
     </table>
 
-    <div class="d-flex justify-content-center">
+    <div class="d-flex justify-content-center mt-4">
         {{ $orders->links() }}
     </div>
 </div>

@@ -2,48 +2,60 @@
 
 @section('content')
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Sub-Subcategorias</h2>
-        <a href="{{ route('admin.childcategories.create') }}" class="btn btn-primary">Nova Sub-Subcategoria</a>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+        <h2 class="mb-2 mb-md-0">Sub-Subcategorias</h2>
+        <a href="{{ route('admin.childcategories.create') }}" class="btn btn-primary">
+            <i class="fa fa-plus me-1"></i> Nova Sub-Subcategoria
+        </a>
     </div>
 
-    <p class="text-muted">
+    <p class="text-muted mb-3">
         Exibindo {{ $childcategories->count() }} de {{ $childcategories->total() }} sub-subcategoria(s).
     </p>
 
     <form action="{{ route('admin.childcategories.index') }}" method="GET" class="mb-4">
-        <div class="input-group">
+        <div class="input-group flex-column flex-md-row gap-2">
             <input type="text" name="search" class="form-control" placeholder="Buscar por nome"
                 value="{{ request('search') }}">
-            <button class="btn btn-primary" type="submit">Buscar</button>
+            <button class="btn btn-primary flex-shrink-0" type="submit">
+                <i class="fa fa-search me-1"></i> Buscar
+            </button>
         </div>
     </form>
 
     @if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
     @endif
 
     <div class="row">
         @foreach($childcategories as $childcategory)
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm p-3">
-                <h5>{{ $childcategory->name }}</h5>
-                <p class="text-muted">
-                    Subcategoria Pai:
-                    {{ $childcategory->subcategory ? ($childcategory->subcategory->name ?: $childcategory->subcategory->slug) : 'Sem Subcategoria' }}
-                </p>
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route('admin.childcategories.show', $childcategory) }}" class="btn btn-info btn-sm">Ver</a>
-                    <a href="{{ route('admin.childcategories.edit', $childcategory) }}" class="btn btn-warning btn-sm">Editar</a>
-                    <form action="{{ route('admin.childcategories.destroy', $childcategory) }}" method="POST"
-                        onsubmit="return confirm('Tem certeza?')">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-danger btn-sm">Excluir</button>
-                    </form>
+            <div class="col-12 col-sm-6 col-md-4 mb-3">
+                <div class="card shadow-sm p-3 h-100 d-flex flex-column justify-content-between">
+                    <h5 class="mb-2">{{ $childcategory->name }}</h5>
+                    <p class="text-muted mb-3">
+                        Subcategoria Pai:
+                        {{ $childcategory->subcategory ? ($childcategory->subcategory->name ?: $childcategory->subcategory->slug) : 'Sem Subcategoria' }}
+                    </p>
+                    <div class="d-flex flex-column flex-md-row gap-2 mt-auto">
+                        <a href="{{ route('admin.childcategories.show', $childcategory) }}" class="btn btn-info btn-sm flex-fill">
+                            <i class="fa fa-eye me-1"></i> Ver
+                        </a>
+                        <a href="{{ route('admin.childcategories.edit', $childcategory) }}" class="btn btn-warning btn-sm flex-fill">
+                            <i class="fa fa-edit me-1"></i> Editar
+                        </a>
+                        <form action="{{ route('admin.childcategories.destroy', $childcategory) }}" method="POST" class="flex-fill m-0" onsubmit="return confirm('Tem certeza?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-danger btn-sm w-100">
+                                <i class="fa fa-trash me-1"></i> Excluir
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
         @endforeach
     </div>
 

@@ -1,98 +1,76 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container">
-    <h2>Editar Childcategory</h2>
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-folder me-2"></i>Editar Sub-Subcategoria</h2>
 
-    {{-- FORM PRINCIPAL --}}
     <form action="{{ route('admin.childcategories.update', $childcategory->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
         {{-- Nome --}}
         <div class="mb-3">
-            <label for="name" class="form-label">Nome da Childcategory</label>
-            <input
-                type="text"
-                class="form-control @error('name') is-invalid @enderror"
-                id="name"
-                name="name"
-                value="{{ old('name', $childcategory->name) }}"
-                required
-            >
-            @error('name')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <label class="form-label"><i class="fas fa-tag me-1"></i>Nome</label>
+            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $childcategory->name) }}" required>
+            @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
         {{-- Subcategoria Pai --}}
         <div class="mb-3">
-            <label for="subcategory_id" class="form-label">Subcategoria Pai</label>
-            <select
-                class="form-select @error('subcategory_id') is-invalid @enderror"
-                id="subcategory_id"
-                name="subcategory_id"
-                required
-            >
+            <label class="form-label"><i class="fas fa-sitemap me-1"></i>Subcategoria Pai</label>
+            <select name="subcategory_id" class="form-select @error('subcategory_id') is-invalid @enderror" required>
                 <option value="">Selecione uma subcategoria</option>
                 @foreach ($subcategories as $subcategory)
-                    <option
-                        value="{{ $subcategory->id }}"
-                        {{ old('subcategory_id', $childcategory->subcategory_id) == $subcategory->id ? 'selected' : '' }}
-                    >
+                    <option value="{{ $subcategory->id }}" {{ old('subcategory_id', $childcategory->subcategory_id) == $subcategory->id ? 'selected' : '' }}>
                         {{ $subcategory->name }}
                     </option>
                 @endforeach
             </select>
-            @error('subcategory_id')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            @error('subcategory_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
         {{-- Foto --}}
         <div class="mb-3">
-            <label class="form-label">Foto</label>
+            <label class="form-label"><i class="fas fa-image me-1"></i>Foto</label>
             @if ($childcategory->photo)
-                <div class="mb-2">
-                    <img src="{{ asset('storage/' . $childcategory->photo) }}" alt="Foto" width="100">
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('delete-photo-form').submit();" class="btn btn-sm btn-danger">Excluir Foto</a>
+                <div class="position-relative d-inline-block mb-2">
+                    <img src="{{ asset('storage/' . $childcategory->photo) }}" class="img-thumbnail" style="max-width:150px;">
+                    <button onclick="event.preventDefault(); document.getElementById('delete-photo-form').submit();" class="btn btn-sm btn-danger position-absolute top-0 end-0"><i class="fas fa-times"></i></button>
                 </div>
             @endif
-            <input type="file" name="photo" class="form-control mt-2" accept="image/*">
+            <input type="file" name="photo" class="form-control mt-2">
         </div>
 
         {{-- Banner --}}
         <div class="mb-3">
-            <label class="form-label">Banner</label>
+            <label class="form-label"><i class="fas fa-images me-1"></i>Banner</label>
             @if ($childcategory->banner)
-                <div class="mb-2">
-                    <img src="{{ asset('storage/' . $childcategory->banner) }}" alt="Banner" width="100">
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('delete-banner-form').submit();" class="btn btn-sm btn-danger">Excluir Banner</a>
+                <div class="position-relative d-inline-block mb-2">
+                    <img src="{{ asset('storage/' . $childcategory->banner) }}" class="img-thumbnail" style="max-width:150px;">
+                    <button onclick="event.preventDefault(); document.getElementById('delete-banner-form').submit();" class="btn btn-sm btn-danger position-absolute top-0 end-0"><i class="fas fa-times"></i></button>
                 </div>
             @endif
-            <input type="file" name="banner" class="form-control mt-2" accept="image/*">
+            <input type="file" name="banner" class="form-control mt-2">
         </div>
 
-        {{-- Botões --}}
-        <button type="submit" class="btn btn-primary">Salvar</button>
-        <a href="{{ route('admin.childcategories.index') }}" class="btn btn-secondary">Cancelar</a>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Salvar</button>
+            <a href="{{ route('admin.childcategories.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Cancelar</a>
+        </div>
     </form>
 
-    {{-- FORM DELETE FOTO (fora do form principal) --}}
     @if ($childcategory->photo)
-    <form id="delete-photo-form" action="{{ route('admin.childcategories.deletePhoto', $childcategory->id) }}" method="POST" style="display: none;">
+    <form id="delete-photo-form" action="{{ route('admin.childcategories.deletePhoto', $childcategory->id) }}" method="POST" style="display:none;">
         @csrf
         @method('DELETE')
     </form>
     @endif
 
-    {{-- FORM DELETE BANNER (fora do form principal) --}}
     @if ($childcategory->banner)
-    <form id="delete-banner-form" action="{{ route('admin.childcategories.deleteBanner', $childcategory->id) }}" method="POST" style="display: none;">
+    <form id="delete-banner-form" action="{{ route('admin.childcategories.deleteBanner', $childcategory->id) }}" method="POST" style="display:none;">
         @csrf
         @method('DELETE')
     </form>
     @endif
-
 </div>
 @endsection

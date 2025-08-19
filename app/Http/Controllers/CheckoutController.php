@@ -147,13 +147,13 @@ class CheckoutController extends Controller
     {
         $user = auth()->user();
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
-    
+
         if ($cart->isEmpty()) {
             return back()->with('error', 'Carrinho vazio');
         }
-    
+
         $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
-    
+
         // Cria o pedido
         DB::beginTransaction();
         try {
@@ -167,7 +167,7 @@ class CheckoutController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone_number,
             ]);
-    
+
             foreach ($cart as $cartItem) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -180,35 +180,41 @@ class CheckoutController extends Controller
                     'sku' => $cartItem->product->sku,
                 ]);
             }
-    
+
             // Zera o carrinho
             Cart::where('user_id', $user->id)->delete();
-    
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Erro ao criar pedido: ' . $e->getMessage());
         }
-    
-        // Monta a mensagem do WhatsApp
-        $message = "Olá! Quero finalizar minha compra:\n\n";
-        foreach ($order->items as $item) {
-            $message .= "Produto: {$item->name}\n";
-            $message .= "Preço: R$ " . number_format($item->price, 2, ',', '.') . "\n";
-            $message .= "Qtd: {$item->quantity}\n";
-            $message .= "------------------------\n";
-        }
-    
-        $message .= "Total da compra: R$ " . number_format($order->total, 2, ',', '.') . "\n\n";
-        $message .= "Cliente: {$user->name}\n";
-        $message .= "Telefone: +{$user->phone_country}{$user->phone_number}\n";
-    
-        $message = urlencode($message);
-        $whatsappNumber = '595984167575';
-    
-        return redirect("https://wa.me/{$whatsappNumber}?text={$message}");
+
+    // Monta a mensagem do WhatsApp
+    $message = "Olá! Quero finalizar minha compra:\n\n";
+    foreach ($cart as $cartItem) {
+        $product = $cartItem->product;
+        $productName = $product->external_name ?? 'Produto não encontrado';
+        $productSku = $product->sku ?? 'N/A';
+        $productLink = route('produto.show', $product->id);
+
+        $message .= "Produto: {$productName}\n";
+        $message .= "SKU: {$productSku}\n";
+        $message .= "Link: {$productLink}\n";
+        $message .= "Preço: R$ " . number_format($cartItem->product->price, 2, ',', '.') . "\n";
+        $message .= "Qtd: {$cartItem->quantity}\n";
+        $message .= "------------------------\n";
     }
-    
+
+    $message .= "Total da compra: R$ " . number_format($total, 2, ',', '.') . "\n\n";
+    $message .= "Cliente: {$user->name}\n";
+    $message .= "Telefone: +{$user->phone_country}{$user->phone_number}\n";
+
+    $message = urlencode($message);
+    $whatsappNumber = '595984167575';
+
+    return redirect("https://wa.me/{$whatsappNumber}?text={$message}");
+    }
 
     // Bancard
     private function processBancard(Order $order)

@@ -46,4 +46,9 @@ class User extends Authenticatable implements MustVerifyEmail
             default => 'Desconhecido',
         };
     }
+
+    public function orders()
+{
+    return $this->hasMany(\App\Models\Order::class);
+}
 }

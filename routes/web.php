@@ -172,7 +172,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Contacts Admin
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index','destroy']);
-    Route::get('contacts/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
+    Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
 
     // System & Images
     Route::get('clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');

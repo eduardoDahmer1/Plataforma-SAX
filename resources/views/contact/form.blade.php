@@ -22,44 +22,38 @@
     </div>
 
     {{-- Formulário --}}
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 mb-5">
         <div class="card-body">
             <form action="{{ route('contact.store') }}" method="POST" id="contactForm" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="contact_type" id="contact_type" value="1">
 
-                {{-- Nome --}}
                 <div class="mb-3">
                     <label class="form-label"><i class="fas fa-user me-1"></i> Nome</label>
                     <input type="text" name="name" class="form-control" placeholder="Digite seu nome completo" required>
                 </div>
 
-                {{-- Email --}}
                 <div class="mb-3">
                     <label class="form-label"><i class="fas fa-envelope me-1"></i> Email</label>
                     <input type="email" name="email" class="form-control" placeholder="Digite seu email" required>
                 </div>
 
-                {{-- Telefone --}}
                 <div class="mb-3">
                     <label class="form-label"><i class="fas fa-phone me-1"></i> Telefone</label>
                     <input type="text" name="phone" class="form-control" placeholder="(XX) XXXXX-XXXX">
                 </div>
 
-                {{-- Mensagem (tipo 1) --}}
                 <div class="mb-3 form-field" data-type="1">
                     <label class="form-label"><i class="fas fa-comment-alt me-1"></i> Mensagem ou Comentário</label>
                     <textarea name="message" class="form-control" rows="5" placeholder="Escreva aqui sua mensagem..." required></textarea>
                 </div>
 
-                {{-- Currículo (tipo 2) --}}
                 <div class="mb-3 form-field" data-type="2" style="display:none;">
                     <label class="form-label"><i class="fas fa-paperclip me-1"></i> Currículo</label>
                     <input type="file" name="attachment" class="form-control" accept=".pdf,image/*">
                     <div class="form-text">Formatos aceitos: PDF ou imagem</div>
                 </div>
 
-                {{-- Botão de envio --}}
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary btn-lg">
                         <i class="fas fa-paper-plane me-1"></i> Enviar
@@ -68,9 +62,21 @@
             </form>
         </div>
     </div>
+
+    {{-- Mapas das lojas --}}
+    <div class="mb-5">
+        <h4 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i> SAX - Ciudad del Este</h4>
+        <div class="ratio ratio-16x9 mb-4">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3600.8882062800003!2d-54.60985242460801!3d-25.508774677511763!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94f69aaaec5ef03d%3A0xff12a8b090a63ebd!2sSAX%20Department%20Store!5e0!3m2!1spt-BR!2spy!4v1755633236261!5m2!1spt-BR!2spy" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+
+        <h4 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i> SAX - Asunción</h4>
+        <div class="ratio ratio-16x9">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1818.5976216080874!2d-57.564660298266034!3d-25.284507459303036!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x945da8a8f48ce025%3A0x2715791645730d75!2sSAX!5e0!3m2!1spt-BR!2spy!4v1755633297166!5m2!1spt-BR!2spy" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </div>
 </div>
 
-{{-- Script de troca do tipo de formulário --}}
 <script>
 function setFormType(type) {
     document.getElementById('contact_type').value = type;

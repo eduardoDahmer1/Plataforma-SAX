@@ -28,7 +28,7 @@
 
     <div class="row g-3">
         @foreach($brands as $brand)
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-4">
                 <div class="card shadow-sm h-100 d-flex flex-column">
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title mb-3 text-truncate">{{ $brand->name }}</h5>

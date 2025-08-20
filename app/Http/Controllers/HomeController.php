@@ -57,12 +57,28 @@ class HomeController extends Controller
             ->when($request->childcategory, fn($q2) => $q2->where('childcategory_id', $request->childcategory)))
             ->orderBy('name')->get();
 
+        // Ajuste: usar name ou slug (se name vazio)
+        $categories = Category::selectRaw("id, COALESCE(NULLIF(name, ''), slug) as name")
+            ->whereNotNull('slug')
+            ->orderBy('name')
+            ->get();
+
+        $subcategories = Subcategory::selectRaw("id, COALESCE(NULLIF(name, ''), slug) as name")
+            ->whereNotNull('slug')
+            ->orderBy('name')
+            ->get();
+
+        $childcategories = Childcategory::selectRaw("id, COALESCE(NULLIF(name, ''), slug) as name")
+            ->whereNotNull('slug')
+            ->orderBy('name')
+            ->get();
+
         return view('home', [
             'paginated' => $paginated,
             'brands' => $brands,
-            'categories' => Category::orderBy('name')->get(),
-            'subcategories' => Subcategory::orderBy('name')->get(),
-            'childcategories' => Childcategory::orderBy('name')->get(),
+            'categories' => $categories,
+            'subcategories' => $subcategories,
+            'childcategories' => $childcategories,
             'cartItems' => $cartItems,
         ]);
     }

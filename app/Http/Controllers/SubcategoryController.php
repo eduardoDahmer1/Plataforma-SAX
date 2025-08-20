@@ -10,10 +10,10 @@ class SubcategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $page    = $request->get('page', 1);
-        $search  = $request->get('search', '');
+        $page   = $request->get('page', 1);
+        $search = $request->get('search', '');
 
-        $cacheKey = "subcategories_index_{$page}_".md5($search);
+        $cacheKey = "subcategories_index_{$page}_" . md5($search);
 
         $subcategories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
             $query = Subcategory::with('category')->orderBy('name');
@@ -33,7 +33,7 @@ class SubcategoryController extends Controller
         $cacheKey = "subcategory_show_{$identifier}";
 
         $subcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($identifier) {
-            return Subcategory::with('category')
+            return Subcategory::with(['category', 'childcategories'])
                 ->when(is_numeric($identifier), fn($q) => $q->where('id', $identifier))
                 ->when(!is_numeric($identifier), fn($q) => $q->where('slug', $identifier))
                 ->firstOrFail();

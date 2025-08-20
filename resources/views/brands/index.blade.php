@@ -18,7 +18,7 @@
 
     {{-- Listagem --}}
     <div class="row">
-        @foreach ($brands as $brand)
+        @forelse ($brands as $brand)
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-img-top text-center p-3">
@@ -30,19 +30,37 @@
                              class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
                     @endif
                 </div>
-                <div class="card-body text-center">
+                <div class="card-body text-center d-flex flex-column">
+
+                    {{-- Nome --}}
                     <h5 class="fw-semibold">{{ $brand->name ?? $brand->slug }}</h5>
-                    <a href="{{ route('brands.show', $brand->slug) }}" class="btn btn-outline-primary btn-sm mt-2">
-                        <i class="fas fa-eye me-1"></i> Ver detalhes
+
+                    {{-- Contador de produtos --}}
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-box me-1"></i>
+                        {{ $brand->products_count ?? 0 }} produto(s)
+                    </p>
+
+                    {{-- Botão --}}
+                    <a href="{{ route('brands.show', $brand->slug) }}"
+                       class="btn btn-outline-primary btn-sm mt-auto">
+                       <i class="fas fa-eye me-1"></i> Ver detalhes
                     </a>
                 </div>
             </div>
         </div>
-        @endforeach
+        @empty
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-1"></i> Nenhuma marca encontrada.
+                </div>
+            </div>
+        @endforelse
     </div>
 
+    {{-- Paginação --}}
     <div class="d-flex justify-content-center mt-4">
-        {{ $brands->links() }}
+        {{ $brands->links('pagination::bootstrap-4') }}
     </div>
 </div>
 @endsection

@@ -18,7 +18,7 @@
 
     {{-- Listagem --}}
     <div class="row">
-        @foreach ($categories as $category)
+        @forelse ($categories as $category)
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-img-top text-center p-3">
@@ -30,12 +30,18 @@
                              class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
                     @endif
                 </div>
-                <div class="card-body text-center">
+                <div class="card-body text-center d-flex flex-column">
+
+                    {{-- Nome --}}
                     <h5 class="fw-semibold">{{ $category->name ?? $category->slug }}</h5>
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-box me-1"></i>
+                        {{ $category->products_count ?? 0 }} produto(s)
+                    </p>
 
                     {{-- Subcategorias --}}
                     @if($category->subcategories && $category->subcategories->count())
-                        <div class="mt-3 text-start">
+                        <div class="mt-2 text-start">
                             <strong>Subcategorias:</strong>
                             <ul class="list-unstyled small mb-0">
                                 @foreach($category->subcategories as $subcategory)
@@ -54,18 +60,26 @@
                         </div>
                     @endif
 
+                    {{-- Ação --}}
                     <a href="{{ route('categories.show', $category->slug) }}"
-                       class="btn btn-outline-primary btn-sm mt-3">
+                       class="btn btn-outline-primary btn-sm mt-auto">
                        <i class="fas fa-eye me-1"></i> Ver detalhes
                     </a>
                 </div>
             </div>
         </div>
-        @endforeach
+        @empty
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-1"></i> Nenhuma categoria encontrada.
+                </div>
+            </div>
+        @endforelse
     </div>
 
+    {{-- Paginação --}}
     <div class="d-flex justify-content-center mt-4">
-        {{ $categories->links() }}
+        {{ $categories->links('pagination::bootstrap-4') }}
     </div>
 </div>
 @endsection

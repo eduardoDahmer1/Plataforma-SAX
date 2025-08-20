@@ -33,8 +33,54 @@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
             <p><strong>Categoria Pai:</strong> {{ $subcategory->category->name ?? 'N/A' }}</p>
+
+            {{-- Childcategories --}}
+            @if($subcategory->childcategories && $subcategory->childcategories->count())
+                <p><strong>Childcategories:</strong></p>
+                <ul>
+                    @foreach($subcategory->childcategories as $child)
+                        <li>{{ $child->name ?? $child->slug }}</li>
+                    @endforeach
+                </ul>
+            @endif
         </div>
     </div>
+
+    {{-- Produtos --}}
+    @if($subcategory->products && $subcategory->products->count())
+        <h3 class="mb-3 fw-semibold">Produtos desta Subcategoria</h3>
+        <div class="row">
+            @foreach($subcategory->products as $product)
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-img-top text-center p-3">
+                        @if($product->photo && Storage::disk('public')->exists($product->photo))
+                            <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->name }}"
+                                 class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
+                        @else
+                            <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem"
+                                 class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
+                        @endif
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <h5 class="fw-semibold">{{ $product->name ?? $product->slug }}</h5>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-tag me-1"></i> {{ number_format($product->price, 2, ',', '.') }} GS$
+                        </p>
+                        <a href="{{ route('products.show', $product->id) }}"
+                           class="btn btn-outline-primary btn-sm mt-auto">
+                           <i class="fas fa-eye me-1"></i> Ver produto
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    @else
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle me-1"></i> Nenhum produto encontrado nesta subcategoria.
+        </div>
+    @endif
 
     {{-- Banner --}}
     @if($subcategory->banner && Storage::disk('public')->exists($subcategory->banner))

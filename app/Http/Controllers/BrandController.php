@@ -17,7 +17,7 @@ class BrandController extends Controller
         $cacheKey = "brands_index_{$page}_".md5($search);
 
         $brands = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            $query = Brand::orderBy('name');
+            $query = Brand::withCount('products')->orderBy('name');
 
             if (!empty($search)) {
                 $query->where('name', 'like', "%{$search}%");
@@ -30,14 +30,19 @@ class BrandController extends Controller
     }
 
     // Mostra marca específica pelo slug
-    public function publicShow($slug)
+    public function publicShow($slug, Request $request)
     {
-        $cacheKey = "brand_show_{$slug}";
+        $page = $request->get('page', 1);
+        $cacheKey = "brand_show_{$slug}_page_{$page}";
 
-        $brand = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
+        $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
             return Brand::where('slug', $slug)->firstOrFail();
         });
 
-        return view('brands.show', compact('brand'));
+        $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand) {
+            return $brand->products()->with('brand')->paginate(12)->withQueryString();
+        });
+
+        return view('brands.show', compact('brand', 'products'));
     }
 }

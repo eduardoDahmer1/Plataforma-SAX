@@ -19,10 +19,7 @@ class ChildcategoryController extends Controller
             $query = Childcategory::with('subcategory.category')->orderBy('name');
 
             if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('slug', 'like', "%{$search}%");
-                });
+                $query->where('name', 'like', "%{$search}%");
             }
 
             return $query->paginate(12)->withQueryString();
@@ -36,9 +33,7 @@ class ChildcategoryController extends Controller
         $cacheKey = "childcategory_show_{$slug}";
 
         $childcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
-            return Childcategory::with('subcategory.category')
-                ->where('slug', $slug)
-                ->firstOrFail();
+            return Childcategory::with(['subcategory.category', 'products'])->where('slug', $slug)->firstOrFail();
         });
 
         return view('Childcategory.show', compact('childcategory'));

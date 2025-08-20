@@ -21,7 +21,7 @@
 
     {{-- Lista --}}
     <div class="row">
-        @foreach ($subcategories as $subcategory)
+        @forelse ($subcategories as $subcategory)
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-img-top text-center p-3">
@@ -33,23 +33,42 @@
                              class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
                     @endif
                 </div>
-                <div class="card-body text-center">
+                <div class="card-body text-center d-flex flex-column">
                     <h5 class="fw-semibold">{{ $subcategory->name }}</h5>
+
+                    {{-- Categoria Pai --}}
                     <small class="text-muted d-block mb-2">
+                        <i class="fas fa-layer-group me-1"></i>
                         Categoria Pai: {{ $subcategory->category->name ?? 'N/A' }}
                     </small>
+
+                    {{-- Quantidade de Childcategories --}}
+                    @if($subcategory->childcategories)
+                        <small class="text-muted mb-2">
+                            <i class="fas fa-list-ul me-1"></i>
+                            {{ $subcategory->childcategories->count() }} childcategories
+                        </small>
+                    @endif
+
                     <a href="{{ route('subcategories.show', $subcategory->id) }}"
-                       class="btn btn-outline-primary btn-sm">
+                       class="btn btn-outline-primary btn-sm mt-auto">
                        <i class="fas fa-eye me-1"></i> Ver detalhes
                     </a>
                 </div>
             </div>
         </div>
-        @endforeach
+        @empty
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-1"></i> Nenhuma subcategoria encontrada.
+            </div>
+        </div>
+        @endforelse
     </div>
 
+    {{-- Paginação --}}
     <div class="d-flex justify-content-center mt-4">
-        {{ $subcategories->links() }}
+        {{ $subcategories->links('pagination::bootstrap-4') }}
     </div>
 </div>
 @endsection

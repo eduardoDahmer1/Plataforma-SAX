@@ -15,7 +15,7 @@ class BrandControllerAdmin extends Controller
         $brands = Brand::when($search, fn($q) => 
             $q->where('name', 'like', "%{$search}%")
               ->orWhere('id', $search)
-        )->orderBy('name')->paginate(20);
+        )->orderBy('name')->paginate(18);
 
         return view('admin.brands.index', compact('brands'));
     }

@@ -18,7 +18,7 @@ class CategoryControllerAdmin extends Controller
                       ->orWhere('slug', 'like', "%{$search}%");
             })
             ->orderBy('name')
-            ->paginate(9);
+            ->paginate(18);
 
         return view('admin.categories.index', compact('categories'));
     }

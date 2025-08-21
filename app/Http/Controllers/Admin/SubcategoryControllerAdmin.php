@@ -21,7 +21,7 @@ class SubcategoryControllerAdmin extends Controller
                   });
         }
     
-        $subcategories = $query->paginate(10)->withQueryString();
+        $subcategories = $query->paginate(18)->withQueryString();
     
         return view('admin.subcategories.index', compact('subcategories'));
     }

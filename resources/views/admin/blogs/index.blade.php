@@ -1,7 +1,8 @@
 @extends('layout.admin')
 @section('content')
 <div class="container py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+    <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <h1 class="mb-2 mb-md-0">Gerenciar Blogs</h1>
         <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('admin.blogs.create') }}" class="btn btn-success">
@@ -66,14 +67,21 @@
                         <a href="{{ route('admin.blogs.edit', $blog) }}" class="btn btn-warning btn-sm flex-fill">
                             <i class="fa fa-edit me-1"></i> Editar
                         </a>
+
+                        <a href="{{ route('blogs.show', $blog->slug) }}" target="_blank"
+                            class="btn btn-success btn-sm flex-fill">
+                            <i class="fa fa-eye me-1"></i> Ver Pública
+                        </a>
+
                         <form action="{{ route('admin.blogs.destroy', $blog) }}" method="POST" class="flex-fill m-0"
-                              onsubmit="return confirm('Excluir?')">
+                            onsubmit="return confirm('Excluir?')">
                             @csrf @method('DELETE')
                             <button class="btn btn-danger btn-sm w-100">
                                 <i class="fa fa-trash me-1"></i> Excluir
                             </button>
                         </form>
                     </td>
+
                 </tr>
                 @endforeach
             </tbody>
@@ -84,7 +92,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', loadCategories);
 
-function loadCategories(){
+function loadCategories() {
     fetch('/admin/blog-categories')
         .then(res => res.json())
         .then(data => {
@@ -106,7 +114,7 @@ function loadCategories(){
         });
 }
 
-document.querySelector('#categoryForm').addEventListener('submit', function(e){
+document.querySelector('#categoryForm').addEventListener('submit', function(e) {
     e.preventDefault();
     let id = document.querySelector('#category_id').value;
     let name = document.querySelector('#category_name').value;
@@ -114,30 +122,37 @@ document.querySelector('#categoryForm').addEventListener('submit', function(e){
     let method = id ? 'PUT' : 'POST';
 
     fetch(url, {
-        method: method,
-        headers: {'Content-Type': 'application/json','X-CSRF-TOKEN': '{{ csrf_token() }}'},
-        body: JSON.stringify({name: name})
-    })
-    .then(res => res.json())
-    .then(() => {
-        document.querySelector('#categoryForm').reset();
-        document.querySelector('#category_id').value = '';
-        loadCategories();
-    });
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                name: name
+            })
+        })
+        .then(res => res.json())
+        .then(() => {
+            document.querySelector('#categoryForm').reset();
+            document.querySelector('#category_id').value = '';
+            loadCategories();
+        });
 });
 
-function editCategory(id, name){
+function editCategory(id, name) {
     document.querySelector('#category_id').value = id;
     document.querySelector('#category_name').value = name;
 }
 
-function deleteCategory(id){
-    if(!confirm('Excluir categoria?')) return;
+function deleteCategory(id) {
+    if (!confirm('Excluir categoria?')) return;
     fetch('/admin/blog-categories/' + id, {
-        method: 'DELETE',
-        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
-    })
-    .then(() => loadCategories());
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(() => loadCategories());
 }
 </script>
 @endsection

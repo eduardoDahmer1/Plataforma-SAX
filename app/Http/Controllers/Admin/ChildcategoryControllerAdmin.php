@@ -22,7 +22,7 @@ class ChildcategoryControllerAdmin extends Controller
                   });
         }
     
-        $childcategories = $query->paginate(10)->withQueryString();
+        $childcategories = $query->paginate(18)->withQueryString();
     
         return view('admin.childcategories.index', compact('childcategories'));
     }

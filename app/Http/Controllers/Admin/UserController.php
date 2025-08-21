@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
 {
@@ -24,11 +25,14 @@ class UserController extends Controller
         ]);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name'      => $request->name,
+            'email'     => $request->email,
+            'password'  => Hash::make($request->password),
             'user_type' => $request->user_type,
         ]);
+
+        // limpa cache da lista de usuários após criar
+        Cache::forget('users_all');
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
     }
@@ -43,6 +47,9 @@ class UserController extends Controller
         $user->user_type = $request->user_type;
         $user->save();
 
+        // limpa cache da lista de usuários após update
+        Cache::forget('users_all');
+
         return redirect()->back()->with('success', 'Tipo de usuário atualizado com sucesso.');
     }
 
@@ -51,6 +58,19 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
+        // limpa cache da lista de usuários após excluir
+        Cache::forget('users_all');
+
         return redirect()->back()->with('success', 'Usuário excluído com sucesso.');
+    }
+
+    public function index()
+    {
+        // mantém cache por 10 minutos
+        $users = Cache::remember('users_all', 600, function () {
+            return User::orderBy('id', 'desc')->get();
+        });
+
+        return view('admin.users.index', compact('users'));
     }
 }

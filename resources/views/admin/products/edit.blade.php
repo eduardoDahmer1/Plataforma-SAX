@@ -158,5 +158,35 @@ $type = $type ?? 'product';
     </form>
     @endforeach
 @endif
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('category_id');
+    const subcategorySelect = document.getElementById('subcategory_id');
+    const childSelect = document.getElementById('childcategory_id');
+
+    categorySelect?.addEventListener('change', function() {
+        fetch(`/admin/subcategories/${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+                subcategorySelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
+                childSelect.innerHTML = '<option value="">Selecione uma childcategory</option>'; // limpa child
+                data.forEach(sc => {
+                    subcategorySelect.innerHTML += `<option value="${sc.id}">${sc.name}</option>`;
+                });
+            });
+    });
+
+    subcategorySelect?.addEventListener('change', function() {
+        fetch(`/admin/childcategories/${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+                childSelect.innerHTML = '<option value="">Selecione uma childcategory</option>';
+                data.forEach(cc => {
+                    childSelect.innerHTML += `<option value="${cc.id}">${cc.name}</option>`;
+                });
+            });
+    });
+});
+</script>
 
 @endsection

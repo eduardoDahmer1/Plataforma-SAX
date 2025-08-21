@@ -47,9 +47,11 @@ class ProductControllerAdmin extends Controller
     {
         $brands = Brand::all();
         $categories = Category::all();
-        $subcategories = Subcategory::where('category_id', $item->category_id)->get();
-        $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
-
+    
+        // Não tem $item ainda, então sub e childcategories ficam vazias
+        $subcategories = collect();
+        $childcategories = collect();
+    
         return view('admin.products.create', compact('brands','categories','subcategories','childcategories'));
     }
 
@@ -120,10 +122,10 @@ class ProductControllerAdmin extends Controller
         $brands = Brand::all();
         $categories = Category::all();
     
-        // Filtra subcategorias pela categoria atual do produto
+        // Filtra subcategorias pela categoria do produto
         $subcategories = Subcategory::where('category_id', $item->category_id)->get();
     
-        // Filtra childcategories pela subcategoria atual do produto
+        // Filtra childcategories pela subcategoria do produto
         $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
     
         return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'childcategories'));
@@ -167,6 +169,16 @@ class ProductControllerAdmin extends Controller
 
         $product->update($data);
         return redirect()->route('admin.products.index')->with('success','Produto atualizado com sucesso!');
+    }
+
+    public function getSubcategories($categoryId)
+    {
+        return Subcategory::where('category_id', $categoryId)->get();
+    }
+
+    public function getChildcategories($subcategoryId)
+    {
+        return Childcategory::where('subcategory_id', $subcategoryId)->get();
     }
 
     // ================== DELETE GALLERY IMAGE ==================

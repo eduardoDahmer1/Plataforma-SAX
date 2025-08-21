@@ -74,6 +74,18 @@ Route::get('/produto/{product}', [ProductController::class, 'show'])->name('prod
 Route::get('/uploads-publico', [UploadController::class, 'allUploads'])->name('uploads.public');
 Route::get('/uploads/{id}', [UploadController::class, 'show'])->name('uploads.show');
 
+// Produtos por categoria
+Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->name('products.byCategory');
+
+// Produtos por subcategoria
+Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
+
+// Produtos por childcategory
+Route::get('/childcategorias/{childcategory}/produtos', [ProductController::class, 'byChildcategory'])->name('products.byChildcategory');
+
+// Detalhes do produto
+Route::get('/produtos/{product}', [ProductController::class, 'show'])->name('products.show');
+
 // Cart
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'view'])->name('cart.view');
@@ -117,6 +129,10 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
+
+    // web.php
+    Route::get('subcategories/{category}', [ProductControllerAdmin::class, 'getSubcategories'])->name('products.getSubcategories');
+    Route::get('childcategories/{subcategory}', [ProductControllerAdmin::class, 'getChildcategories'])->name('products.getChildcategories');
 
     // Childcategories Admin
     Route::delete('childcategories/{childcategory}/delete-photo', [ChildcategoryControllerAdmin::class, 'deletePhoto'])->name('childcategories.deletePhoto');

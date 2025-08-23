@@ -16,6 +16,8 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\SearchController;
+
 
 // Admin Controllers
 use App\Http\Controllers\Admin\SystemController;
@@ -61,6 +63,8 @@ Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('bran
 // Blogs
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
+
+Route::get('/search', [SearchController::class, 'index'])->name('search');
 
 // Contact
 Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');

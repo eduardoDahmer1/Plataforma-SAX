@@ -13,55 +13,6 @@
     </div>
     @endif
 
-    <!-- Filtros -->
-    <form id="filterForm" action="{{ url('/') }}" method="GET" class="mb-4 card card-body shadow-sm">
-        <div class="row g-2">
-            <div class="col-md-4">
-                <input type="text" name="search" class="form-control"
-                    placeholder="🔎 Buscar por nome ou SKU" value="{{ request('search') }}">
-            </div>
-            <div class="col-md-2">
-                <select name="brand" class="form-select">
-                    <option value="">🏷️ Marcas</option>
-                    @foreach($brands as $brand)
-                    <option value="{{ $brand->id }}" {{ request('brand') == $brand->id ? 'selected' : '' }}>
-                        {{ $brand->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="category" class="form-select">
-                    <option value="">📂 Categorias</option>
-                    @foreach($categories as $category)
-                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="subcategory" class="form-select">
-                    <option value="">📁 Subcategorias</option>
-                    @foreach($subcategories as $subcategory)
-                    <option value="{{ $subcategory->id }}" {{ request('subcategory') == $subcategory->id ? 'selected' : '' }}>
-                        {{ $subcategory->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="childcategory" class="form-select">
-                    <option value="">🗂️ Categorias filhas</option>
-                    @foreach($childcategories as $childcategory)
-                    <option value="{{ $childcategory->id }}" {{ request('childcategory') == $childcategory->id ? 'selected' : '' }}>
-                        {{ $childcategory->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-1 d-grid">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i> Filtrar</button>
-            </div>
-        </div>
-    </form>
-
     <h4 class="mt-4 mb-3"><i class="fas fa-box-open me-2"></i> Produtos</h4>
 
     <div class="row">

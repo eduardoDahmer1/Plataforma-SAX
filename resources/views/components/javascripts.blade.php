@@ -92,6 +92,29 @@ $(document).ready(function () {
 </script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const backToTop = document.getElementById('backToTop');
+    
+        // Mostra o botão quando o scroll passa 100px
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+    
+        // Scroll suave ao topo
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    });
+    </script>
+
+<script>
 function setFormType(type) {
     document.getElementById('contact_type').value = type;
 

@@ -70,9 +70,36 @@
     <a class="list-group-item list-group-item-action">
         <i class="fa fa-download me-2"></i> Baixar meus Dados
     </a>
-    <a class="list-group-item list-group-item-action text-danger">
-        <i class="fa fa-trash-alt me-2"></i> Excluir Conta
-    </a>
+    <!-- Botão para abrir modal -->
+    <button type="button" class="list-group-item list-group-item-action text-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+        <i class="fa fa-trash-alt me-2"></i>Excluir Conta
+    </button>
+
+    <!-- Modal de confirmação -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+        <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="confirmDeleteModalLabel"><i class="fa fa-exclamation-triangle me-2"></i>Confirmação</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+            <p>Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.</p>
+            <form method="POST" action="{{ route('user.destroy') }}" id="deleteAccountForm">
+                @csrf
+                @method('DELETE')
+                <div class="mb-3">
+                    <input type="password" name="password" placeholder="Confirme sua senha" class="form-control" required>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Sim, excluir</button>
+                </div>
+            </form>
+        </div>
+        </div>
+    </div>
+    </div>
 
     {{-- 🚪 Logout --}}
     <a href="{{ route('logout') }}"

@@ -138,7 +138,7 @@ class CategoryControllerAdmin extends Controller
         }
     
         ob_start();
-        imagewebp($imageResource, null, 45); // qualidade 45
+        imagewebp($imageResource, null, 60); // qualidade 45
         $webpData = ob_get_clean();
         imagedestroy($imageResource);
     

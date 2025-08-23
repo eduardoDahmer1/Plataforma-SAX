@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -98,5 +99,28 @@ class UserController extends Controller
         // Apenas exemplo de redirecionamento para WhatsApp
         $whatsappNumber = '595984167575';
         return redirect()->away("https://wa.me/{$whatsappNumber}?text=Pedido finalizado");
+    }
+
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'password' => ['required'],
+        ]);
+
+        $user = Auth::user();
+
+        // Confirma senha
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Senha incorreta']);
+        }
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('status', 'Conta deletada com sucesso.');
     }
 }

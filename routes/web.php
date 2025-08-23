@@ -113,6 +113,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
 
+    Route::delete('/user/delete', [App\Http\Controllers\Auth\UserController::class, 'destroy'])
+    ->name('user.destroy');
+
     // Email verification
     Route::get('/email/verify', function () { return view('auth.verify-email'); })->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {

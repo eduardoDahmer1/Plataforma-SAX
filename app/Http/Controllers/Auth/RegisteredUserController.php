@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -33,7 +34,22 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => [
+                'required',
+                'confirmed',
+                'min:8',
+                function ($attribute, $value, $fail) {
+                    if (!preg_match('/[A-Z]/', $value)) {
+                        $fail('A senha deve conter pelo menos 1 letra maiúscula.');
+                    }
+                    if (!preg_match_all('/[a-zA-Z]/', $value) || preg_match_all('/[a-zA-Z]/', $value) < 4) {
+                        $fail('A senha deve conter pelo menos 4 letras.');
+                    }
+                    if (!preg_match_all('/[0-9]/', $value) || preg_match_all('/[0-9]/', $value) < 2) {
+                        $fail('A senha deve conter pelo menos 2 números.');
+                    }
+                },
+            ],
         ]);
 
         $user = User::create([
@@ -42,7 +58,14 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $e) {
+            Log::error('Falha ao disparar evento Registered: '.$e->getMessage(), [
+                'user_id' => $user->id,
+                'trace'   => $e->getTraceAsString()
+            ]);
+        }
 
         Auth::login($user);
 

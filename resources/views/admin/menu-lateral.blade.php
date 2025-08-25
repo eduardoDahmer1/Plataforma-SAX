@@ -86,9 +86,10 @@
             <a class="list-group-item list-group-item-action ps-4">
                 <i class="fa-solid fa-ticket me-2"></i> Cupons
             </a>
-            <a class="list-group-item list-group-item-action ps-4">
-                <i class="fa-solid fa-screwdriver-wrench me-2"></i> Manutenção
-            </a>
+            <a href="{{ route('admin.maintenance.index') }}" 
+            class="list-group-item list-group-item-action ps-4">
+             <i class="fa-solid fa-screwdriver-wrench me-2"></i> Manutenção
+         </a>             
             <a class="list-group-item list-group-item-action ps-4">
             <i class="fa-solid fa-envelope me-2"></i> Email
             </a>

@@ -84,6 +84,11 @@ Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCate
 // Produtos por subcategoria
 Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
 
+// Página de manutenção pública
+Route::get('/manutencao', function () {
+    return view('manutencao.index');
+})->name('maintenance.page');
+
 // Produtos por childcategory
 Route::get('/childcategorias/{childcategory}/produtos', [ProductController::class, 'byChildcategory'])->name('products.byChildcategory');
 
@@ -136,6 +141,9 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
+
+    Route::get('maintenance', [\App\Http\Controllers\Admin\SystemController::class, 'maintenanceIndex'])->name('maintenance.index');
+    Route::get('maintenance/toggle', [\App\Http\Controllers\Admin\SystemController::class, 'toggleMaintenance'])->name('maintenance.toggle');
 
     // web.php
     Route::get('subcategories/{category}', [ProductControllerAdmin::class, 'getSubcategories'])->name('products.getSubcategories');

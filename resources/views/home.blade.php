@@ -26,6 +26,15 @@
             'ofertas_relampago' => 'Exibir em Ofertas Relâmpago',
             'navbar' => 'Exibir em Navbar',
         ];
+
+        // Array dos banners
+        $banners = [
+            $banner1 ?? null,
+            $banner2 ?? null,
+            $banner3 ?? null,
+            $banner4 ?? null,
+            $banner5 ?? null,
+        ];
     @endphp
 
     @foreach($highlightTitles as $key => $title)
@@ -159,17 +168,32 @@
                     @endforeach
                 </div>
             @endif
+
+            {{-- Banner entre seções --}}
+            @if(isset($banners[$loop->index]) && $banners[$loop->index])
+                <div class="my-4 text-center">
+                    <img src="{{ asset('storage/uploads/' . $banners[$loop->index]) }}" 
+                         alt="Banner {{ $loop->index + 1 }}" 
+                         class="img-fluid rounded banner-img">
+                </div>
+            @endif
+
         @endif
     @endforeach
 
 </div>
 
-{{-- CSS extra para setas pretas --}}
+{{-- CSS extra para setas pretas e banner --}}
 <style>
     .custom-arrow {
         background-color: black !important;
         background-size: 50%, 50%;
         border-radius: 50%;
+    }
+    .banner-img {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
     }
 </style>
 

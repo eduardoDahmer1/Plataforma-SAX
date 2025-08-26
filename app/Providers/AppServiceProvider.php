@@ -10,31 +10,31 @@ use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Força HTTPS em produção
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
 
-        // Usa o estilo Bootstrap para a paginação
         Paginator::useBootstrap();
 
-        // View Composer para passar a imagem header para todas as views
+        // View composer seguro
         View::composer('*', function ($view) {
-            $webpImage = DB::table('attributes')->where('id', 1)->value('header_image');
-            $view->with('webpImage', $webpImage);
+            $attribute = DB::table('attributes')->where('id', 1)->first();
+
+            $view->with([
+                'webpImage' => $attribute?->header_image ?? null,
+                'banner1'   => $attribute?->banner1 ?? null,
+                'banner2'   => $attribute?->banner2 ?? null,
+                'banner3'   => $attribute?->banner3 ?? null,
+                'banner4'   => $attribute?->banner4 ?? null,
+                'banner5'   => $attribute?->banner5 ?? null,
+            ]);
         });
     }
 }

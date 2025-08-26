@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container py-4">
+    <h1>Banner/Logos</h1>
 
     {{-- Alertas --}}
     @if(session('success'))
@@ -40,6 +41,11 @@
             ['field' => 'banner3', 'title' => 'Banner 3', 'btnClass' => 'info', 'file' => $banner3, 'routeUpload' => 'admin.banner3.upload', 'routeDelete' => 'admin.banner3.delete'],
             ['field' => 'banner4', 'title' => 'Banner 4', 'btnClass' => 'info', 'file' => $banner4, 'routeUpload' => 'admin.banner4.upload', 'routeDelete' => 'admin.banner4.delete'],
             ['field' => 'banner5', 'title' => 'Banner 5', 'btnClass' => 'info', 'file' => $banner5, 'routeUpload' => 'admin.banner5.upload', 'routeDelete' => 'admin.banner5.delete'],
+            ['field' => 'banner6', 'title' => 'Banner 6', 'btnClass' => 'info', 'file' => $banner6, 'routeUpload' => 'admin.banner6.upload', 'routeDelete' => 'admin.banner6.delete'],
+            ['field' => 'banner7', 'title' => 'Banner 7', 'btnClass' => 'info', 'file' => $banner7, 'routeUpload' => 'admin.banner7.upload', 'routeDelete' => 'admin.banner7.delete'],
+            ['field' => 'banner8', 'title' => 'Banner 8', 'btnClass' => 'info', 'file' => $banner8, 'routeUpload' => 'admin.banner8.upload', 'routeDelete' => 'admin.banner8.delete'],
+            ['field' => 'banner9', 'title' => 'Banner 9', 'btnClass' => 'info', 'file' => $banner9, 'routeUpload' => 'admin.banner9.upload', 'routeDelete' => 'admin.banner9.delete'],
+            ['field' => 'banner10', 'title' => 'Banner 10', 'btnClass' => 'info', 'file' => $banner10, 'routeUpload' => 'admin.banner10.upload', 'routeDelete' => 'admin.banner10.delete'],
         ];
     @endphp
 

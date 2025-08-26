@@ -20,6 +20,11 @@ class ImageUploadController extends Controller
             'banner3' => $attribute?->banner3,
             'banner4' => $attribute?->banner4,
             'banner5' => $attribute?->banner5,
+            'banner6' => $attribute?->banner6,
+            'banner7' => $attribute?->banner7,
+            'banner8' => $attribute?->banner8,
+            'banner9' => $attribute?->banner9,
+            'banner10' => $attribute?->banner10,
         ];
 
         return view('admin.admin', compact('webpImage', 'noimage', 'banners'));
@@ -135,11 +140,9 @@ class ImageUploadController extends Controller
         return back()->with('success', 'Header removido com sucesso!');
     }    
 
-    // Noimage
     public function uploadNoimage(Request $request) { return $this->uploadImage($request, 'noimage', 'noimage.webp'); }
     public function deleteNoimage() { return $this->deleteImage('noimage'); }
 
-    // Banners 1 a 5
     public function uploadBanner1(Request $request) { return $this->uploadImage($request, 'banner1', 'banner1.webp'); }
     public function deleteBanner1() { return $this->deleteImage('banner1'); }
 
@@ -154,4 +157,19 @@ class ImageUploadController extends Controller
 
     public function uploadBanner5(Request $request) { return $this->uploadImage($request, 'banner5', 'banner5.webp'); }
     public function deleteBanner5() { return $this->deleteImage('banner5'); }
+
+    public function uploadBanner6(Request $request) { return $this->uploadImage($request, 'banner6', 'banner6.webp'); }
+    public function deleteBanner6() { return $this->deleteImage('banner6'); }
+
+    public function uploadBanner7(Request $request) { return $this->uploadImage($request, 'banner7', 'banner7.webp'); }
+    public function deleteBanner7() { return $this->deleteImage('banner7'); }
+
+    public function uploadBanner8(Request $request) { return $this->uploadImage($request, 'banner8', 'banner8.webp'); }
+    public function deleteBanner8() { return $this->deleteImage('banner8'); }
+
+    public function uploadBanner9(Request $request) { return $this->uploadImage($request, 'banner9', 'banner9.webp'); }
+    public function deleteBanner9() { return $this->deleteImage('banner9'); }
+
+    public function uploadBanner10(Request $request) { return $this->uploadImage($request, 'banner10', 'banner10.webp'); }
+    public function deleteBanner10() { return $this->deleteImage('banner10'); }
 }

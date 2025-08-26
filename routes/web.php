@@ -219,6 +219,26 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('banner5/upload', [ImageUploadController::class, 'uploadBanner5'])->name('banner5.upload');
     Route::delete('banner5/delete', [ImageUploadController::class, 'deleteBanner5'])->name('banner5.delete');
 
+    // Banner 6
+    Route::post('banner6/upload', [ImageUploadController::class, 'uploadBanner6'])->name('banner6.upload');
+    Route::delete('banner6/delete', [ImageUploadController::class, 'deleteBanner6'])->name('banner6.delete');
+
+    // Banner 7
+    Route::post('banner7/upload', [ImageUploadController::class, 'uploadBanner7'])->name('banner7.upload');
+    Route::delete('banner7/delete', [ImageUploadController::class, 'deleteBanner7'])->name('banner7.delete');
+
+    // Banner 8
+    Route::post('banner8/upload', [ImageUploadController::class, 'uploadBanner8'])->name('banner8.upload');
+    Route::delete('banner8/delete', [ImageUploadController::class, 'deleteBanner8'])->name('banner8.delete');
+
+    // Banner 9
+    Route::post('banner9/upload', [ImageUploadController::class, 'uploadBanner9'])->name('banner9.upload');
+    Route::delete('banner9/delete', [ImageUploadController::class, 'deleteBanner9'])->name('banner9.delete');
+
+    // Banner 10
+    Route::post('banner10/upload', [ImageUploadController::class, 'uploadBanner10'])->name('banner10.upload');
+    Route::delete('banner10/delete', [ImageUploadController::class, 'deleteBanner10'])->name('banner10.delete');
+
     // Products Admin
     Route::resource('products', ProductControllerAdmin::class);
     Route::delete('products/{id}/photo', [ProductControllerAdmin::class, 'deletePhoto'])->name('products.deletePhoto');

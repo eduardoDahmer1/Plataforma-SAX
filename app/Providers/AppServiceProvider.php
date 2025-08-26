@@ -34,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
                 'banner3'   => $attribute?->banner3 ?? null,
                 'banner4'   => $attribute?->banner4 ?? null,
                 'banner5'   => $attribute?->banner5 ?? null,
+                'banner6'   => $attribute?->banner6 ?? null,
+                'banner7'   => $attribute?->banner7 ?? null,
+                'banner8'   => $attribute?->banner8 ?? null,
+                'banner9'   => $attribute?->banner9 ?? null,
+                'banner10'   => $attribute?->banner10 ?? null,
             ]);
         });
     }

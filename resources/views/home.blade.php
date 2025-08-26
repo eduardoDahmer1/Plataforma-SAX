@@ -34,6 +34,11 @@
             $banner3 ?? null,
             $banner4 ?? null,
             $banner5 ?? null,
+            $banner6 ?? null,
+            $banner7 ?? null,
+            $banner8 ?? null,
+            $banner9 ?? null,
+            $banner10 ?? null,
         ];
     @endphp
 

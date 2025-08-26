@@ -2,17 +2,15 @@
 
 @section('content')
 <div class="container mt-4">
-    <div
-        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <h2 class="mb-2 mb-md-0">Categorias Filhas</h2>
         <a href="{{ route('admin.childcategories.create') }}" class="btn btn-primary">
             <i class="fa fa-plus me-1"></i> Nova Sub-Subcategoria
         </a>
+        <p class="text-muted mb-3">
+            Exibindo {{ $childcategories->count() }} de {{ $childcategories->total() }} sub-subcategoria(s).
+        </p>
     </div>
-
-    <p class="text-muted mb-3">
-        Exibindo {{ $childcategories->count() }} de {{ $childcategories->total() }} sub-subcategoria(s).
-    </p>
 
     <form action="{{ route('admin.childcategories.index') }}" method="GET" class="mb-4">
         <div class="input-group flex-column flex-md-row gap-2">

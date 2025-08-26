@@ -2,15 +2,13 @@
 
 @section('content')
 <div class="container mt-4">
-    <div
-        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <h2 class="mb-2 mb-md-0">Subcategorias</h2>
         <a href="{{ route('admin.subcategories.create') }}" class="btn btn-primary">Nova Subcategoria</a>
+        <p class="text-muted mb-3">
+            Exibindo {{ $subcategories->count() }} de {{ $subcategories->total() }} subcategoria(s).
+        </p>
     </div>
-
-    <p class="text-muted mb-3">
-        Exibindo {{ $subcategories->count() }} de {{ $subcategories->total() }} subcategoria(s).
-    </p>
 
     <!-- Formulário de busca -->
     <form action="{{ route('admin.subcategories.index') }}" method="GET" class="mb-4">

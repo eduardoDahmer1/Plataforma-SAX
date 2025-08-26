@@ -142,6 +142,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
+    Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
+
+    Route::patch('products/{product}/update-highlights', [ProductControllerAdmin::class, 'updateHighlights'])
+    ->name('products.updateHighlights');
+
     Route::get('maintenance', [\App\Http\Controllers\Admin\SystemController::class, 'maintenanceIndex'])->name('maintenance.index');
     Route::get('maintenance/toggle', [\App\Http\Controllers\Admin\SystemController::class, 'toggleMaintenance'])->name('maintenance.toggle');
 

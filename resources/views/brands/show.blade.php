@@ -113,7 +113,7 @@
     <div class="text-center mt-4">
         <div class="ratio ratio-21x9 mx-auto" style="max-width: 900px;">
             <img src="{{ Storage::url($brand->banner) }}" alt="Banner da Marca"
-                 class="img-fluid rounded-3 shadow-sm object-fit-cover">
+                 class="img-fluid rounded-3 shadow-sm object-fit-coverr">
         </div>
     </div>
     @endif

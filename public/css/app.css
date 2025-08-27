@@ -94,7 +94,10 @@ body {
     font-size: 1.1rem;
     color: #555;
 }
-
+.object-fit-coverr {
+    -o-object-fit: cover!important;
+    object-fit: scale-down !important;
+}
 .product-card-body .product-images img {
     max-width: 100%;
     border-radius: 8px;

@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Childcategory;
 use App\Models\Cart;
+use App\Models\Blog; // 👈 importa o model Blog
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
@@ -74,6 +75,11 @@ class HomeController extends Controller
                 ->toArray();
         }
 
+        // 🔹 Últimos blogs (pega só alguns p/ home)
+        $blogs = Cache::remember('home_blogs', 600, function () {
+            return Blog::latest()->take(9)->get(); // 👈 pega 9 posts
+        });
+
         return view('home', [
             'brands' => $brands,
             'categories' => $categories,
@@ -81,6 +87,7 @@ class HomeController extends Controller
             'childcategories' => $childcategories,
             'cartItems' => $cartItems,
             'highlights' => $highlights, // Produtos destacados
+            'blogs' => $blogs, // 👈 joga na view
         ]);
     }
 }

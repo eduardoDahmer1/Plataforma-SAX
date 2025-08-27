@@ -38,11 +38,11 @@
                 {{-- Imagem --}}
                 <div class="ratio ratio-16x9 bg-light">
                     @if($blog->image && Storage::disk('public')->exists($blog->image))
-                        <img src="{{ Storage::url($blog->image) }}" alt="{{ $blog->title }}" class="img-fluid object-fit-cover">
+                        <img src="{{ Storage::url($blog->image) }}" alt="{{ $blog->title }}" class="img-fluid object-fit-coverr">
                     @elseif(Storage::disk('public')->exists('uploads/noimage.webp'))
-                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid object-fit-cover">
+                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid object-fit-coverr">
                     @else
-                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid object-fit-cover">
+                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão" class="img-fluid object-fit-coverr">
                     @endif
                 </div>
 

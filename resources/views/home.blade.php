@@ -63,7 +63,7 @@
                                                 <div class="card h-100 shadow-sm border-0">
                                                     <img src="{{ $item->photo_url }}" class="card-img-top"
                                                         alt="{{ $item->external_name }}"
-                                                        style="max-height:150px; object-fit:cover;">
+                                                        style="max-height:150px; object-fit:scale-down;">
                                                     <div class="card-body p-2 d-flex flex-column">
                                                         <h6 class="card-title mb-2">
                                                             <a href="{{ route('produto.show', $item->id) }}"
@@ -74,8 +74,21 @@
                                                         <p class="small text-muted mb-2">
                                                             {{ $item->brand->name ?? 'Sem marca' }}<br>
                                                             SKU: {{ $item->sku ?? 'N/A' }}<br>
-                                                            {{ isset($item->price) ? 'R$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}
+                                                            {{ isset($item->price) ? 'R$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}<br>
+
+                                                            {{-- Estoque --}}
+                                                            @if ($item->stock > 0)
+                                                                <span class="badge bg-success">
+                                                                    <i class="fas fa-box me-1"></i> {{ $item->stock }} em
+                                                                    estoque
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-danger">
+                                                                    <i class="fas fa-times-circle me-1"></i> Sem estoque
+                                                                </span>
+                                                            @endif
                                                         </p>
+
                                                         <div class="mt-auto d-flex flex-column">
                                                             <a href="{{ route('produto.show', $item->id) }}"
                                                                 class="btn btn-sm btn-info mb-2">
@@ -138,7 +151,7 @@
                             <div class="col-6 col-md-3 mb-4">
                                 <div class="card h-100 shadow-sm border-0">
                                     <img src="{{ $item->photo_url }}" class="card-img-top"
-                                        alt="{{ $item->external_name }}" style="max-height:150px; object-fit:cover;">
+                                        alt="{{ $item->external_name }}" style="max-height:150px; object-fit:scale-down;">
                                     <div class="card-body p-2 d-flex flex-column">
                                         <h6 class="card-title mb-2">
                                             <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none">
@@ -148,8 +161,20 @@
                                         <p class="small text-muted mb-2">
                                             {{ $item->brand->name ?? 'Sem marca' }}<br>
                                             SKU: {{ $item->sku ?? 'N/A' }}<br>
-                                            {{ isset($item->price) ? 'R$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}
+                                            {{ isset($item->price) ? 'R$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}<br>
+
+                                            {{-- Estoque --}}
+                                            @if ($item->stock > 0)
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-box me-1"></i> {{ $item->stock }} em estoque
+                                                </span>
+                                            @else
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i> Sem estoque
+                                                </span>
+                                            @endif
                                         </p>
+
                                         <div class="mt-auto d-flex flex-column">
                                             <a href="{{ route('produto.show', $item->id) }}"
                                                 class="btn btn-sm btn-info mb-2">

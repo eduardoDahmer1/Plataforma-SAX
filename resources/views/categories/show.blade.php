@@ -50,7 +50,7 @@
 
                     {{-- Imagem --}}
                     <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-top"
-                         alt="{{ $item->external_name }}" style="max-height: 200px; object-fit: cover;">
+                         alt="{{ $item->external_name }}" style="max-height: 200px; object-fit: scale-down;">
 
                     <div class="card-body d-flex flex-column">
                         {{-- Nome --}}

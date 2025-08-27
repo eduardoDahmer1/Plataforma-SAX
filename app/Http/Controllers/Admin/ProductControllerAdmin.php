@@ -347,7 +347,7 @@ class ProductControllerAdmin extends Controller
         };
 
         ob_start();
-        imagewebp($imgRes, null, 70);
+        imagewebp($imgRes, null, 85);
         $webpData = ob_get_clean();
         imagedestroy($imgRes);
 

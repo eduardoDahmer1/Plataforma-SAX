@@ -117,7 +117,7 @@ class BlogControllerAdmin extends Controller
 
             if ($image) {
                 $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
-                imagewebp($image, $webpPath, 75);
+                imagewebp($image, $webpPath, 85);
                 imagedestroy($image);
                 @unlink($fullPath);
                 $data['image'] = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);

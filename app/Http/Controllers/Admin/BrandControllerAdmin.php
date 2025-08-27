@@ -130,7 +130,7 @@ class BrandControllerAdmin extends Controller
         }
     
         ob_start();
-        imagewebp($imageResource, null, 45);
+        imagewebp($imageResource, null, 85);
         $webpData = ob_get_clean();
         imagedestroy($imageResource);
     

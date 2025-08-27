@@ -145,7 +145,7 @@ class ChildcategoryControllerAdmin extends Controller
         }
     
         $fullPath = storage_path("app/public/{$directory}/{$filename}");
-        imagewebp($imageResource, $fullPath, 45);
+        imagewebp($imageResource, $fullPath, 85);
         imagedestroy($imageResource);
     
         return "{$directory}/{$filename}";

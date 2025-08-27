@@ -62,7 +62,7 @@ class ImageUploadController extends Controller
         if (!$imageResource) return null;
 
         ob_start();
-        imagewebp($imageResource, null, 80);
+        imagewebp($imageResource, null, 85);
         $webpData = ob_get_clean();
         imagedestroy($imageResource);
 

@@ -183,7 +183,7 @@ class SubcategoryControllerAdmin extends Controller
             Storage::disk('public')->makeDirectory($directory);
         }
     
-        imagewebp($imageResource, $fullPath, 45);
+        imagewebp($imageResource, $fullPath, 85);
         imagedestroy($imageResource);
     
         return "{$directory}{$filename}";

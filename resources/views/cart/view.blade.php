@@ -14,7 +14,7 @@
         <div class="mb-2 mb-md-0">
             {{-- Nome do produto --}}
             <strong><i class="fas fa-box-open me-1"></i>{{ $item->product->external_name ?? 'Produto' }}</strong><br>
-            
+
             {{-- Slug e SKU --}}
             <small><i class="fas fa-link me-1"></i>Slug: {{ $item->product->slug ?? '-' }}</small><br>
             <small><i class="fas fa-barcode me-1"></i>SKU: {{ $item->product->sku ?? '-' }}</small>
@@ -22,13 +22,13 @@
 
         <div class="d-flex align-items-center gap-3 flex-wrap">
             {{-- Preço unitário --}}
-            <span><i class="fas fa-tag me-1"></i>R$ {{ number_format($item->product->price ?? 0, 2, ',', '.') }}</span>
-            
+            <span><i class="fas fa-tag me-1"></i>{{ currency_format($item->product->price ?? 0) }}</span>
+
             {{-- Quantidade --}}
             <span><i class="fas fa-sort-numeric-up me-1"></i>x {{ $item->quantity }}</span>
 
             {{-- Total do item --}}
-            <span><i class="fas fa-equals me-1"></i>R$ {{ number_format(($item->product->price ?? 0) * $item->quantity, 2, ',', '.') }}</span>
+            <span><i class="fas fa-equals me-1"></i>{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</span>
 
             {{-- Botões --}}
             <div class="d-flex flex-column ms-2">
@@ -69,7 +69,7 @@
     @endforeach
 </ul>
 
-<h4 class="mb-3"><i class="fas fa-calculator me-1"></i>Total do Carrinho: R$ {{ number_format($totalCarrinho, 2, ',', '.') }}</h4>
+<h4 class="mb-3"><i class="fas fa-calculator me-1"></i>Total do Carrinho: {{ currency_format($totalCarrinho) }}</h4>
 
 <div class="mt-3 d-flex gap-2 flex-wrap">
     <form action="{{ route('checkout.index') }}" method="GET">

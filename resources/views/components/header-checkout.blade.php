@@ -1,4 +1,5 @@
 <header class="text-white py-3 background-header">
+    <x-currency-selector />
     <div class="container">
 
         {{-- Topo: Logo e login/logout --}}

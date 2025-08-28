@@ -13,11 +13,11 @@
         <table class="table table-bordered">
             <tr>
                 <th>Cliente</th>
-                <td>{{ $order->user->name }}</td>
+                <td>{{ $order->user->name ?? 'Cliente' }}</td>
             </tr>
             <tr>
                 <th>Email</th>
-                <td>{{ $order->user->email }}</td>
+                <td>{{ $order->user->email ?? '-' }}</td>
             </tr>
             <tr>
                 <th>Status</th>
@@ -53,7 +53,7 @@
                     @php
                         $total = $order->items->sum(fn($item) => $item->price * $item->quantity);
                     @endphp
-                    R$ {{ number_format($total, 2, ',', '.') }}
+                    {{ currency_format($total) }}
                 </td>
             </tr>
             <tr>
@@ -61,13 +61,13 @@
                 <td>
                     @switch($order->payment_method)
                         @case('bancard')
-                            <i class="fa fa-credit-card me-1"></i> Bancard
+                            <i class="fa fa-credit-card me-1 text-primary"></i> Bancard
                             @break
                         @case('deposito')
-                            <i class="fa fa-university me-1"></i> Depósito
+                            <i class="fa fa-university me-1 text-primary"></i> Depósito
                             @break
                         @case('whatsapp')
-                            <i class="fa fa-whatsapp me-1"></i> WhatsApp
+                            <i class="fa fa-whatsapp me-1 text-success"></i> WhatsApp
                             @break
                         @default
                             Não informado
@@ -80,7 +80,7 @@
                 <td>
                     <a href="{{ asset('storage/' . $order->deposit_receipt) }}" target="_blank">
                         <img src="{{ asset('storage/' . $order->deposit_receipt) }}" alt="Comprovante"
-                            class="img-fluid border" style="max-width:200px;">
+                            class="img-fluid border rounded" style="max-width:200px;">
                     </a>
                 </td>
             </tr>
@@ -105,8 +105,8 @@
                 <tr>
                     <td>{{ $item->product->name ?? $item->product->external_name ?? 'Produto não encontrado' }}</td>
                     <td>{{ $item->quantity }}</td>
-                    <td>R$ {{ number_format($item->price, 2, ',', '.') }}</td>
-                    <td>R$ {{ number_format($item->quantity * $item->price, 2, ',', '.') }}</td>
+                    <td>{{ currency_format($item->price) }}</td>
+                    <td>{{ currency_format($item->quantity * $item->price) }}</td>
                 </tr>
                 @endforeach
             </tbody>

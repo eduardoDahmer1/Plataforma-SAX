@@ -43,7 +43,7 @@
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fa fa-shopping-cart me-2 text-primary"></i>Total do pedido</span>
-                            <span>R$ {{ number_format($order->total, 2, ',', '.') }}</span>
+                            <span>{{ currency_format($order->total) }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span><i class="fa fa-credit-card me-2 text-primary"></i>Método de pagamento</span>

@@ -9,6 +9,7 @@
     <div class="col-md-9">
         <h2 class="mb-3"><i class="fas fa-receipt me-2"></i>Detalhes do Pedido #{{ $order->id }}</h2>
 
+        {{-- Status --}}
         <p>
             <i class="fas fa-info-circle me-1"></i>Status:
             <span class="badge 
@@ -23,6 +24,7 @@
             </span>
         </p>
 
+        {{-- Método de Pagamento --}}
         <p>
             <i class="fas fa-credit-card me-1"></i>Método de Pagamento:
             <span class="badge 
@@ -36,7 +38,8 @@
             </span>
         </p>
 
-        <p><i class="fas fa-dollar-sign me-1"></i>Total: R$ {{ number_format($order->items->sum(fn($i) => $i->price * $i->quantity), 2, ',', '.') }}</p>
+        {{-- Total --}}
+        <p><i class="fas fa-dollar-sign me-1"></i>Total: {{ currency_format($order->items->sum(fn($i) => $i->price * $i->quantity)) }}</p>
 
         {{-- Comprovante --}}
         @if($order->deposit_receipt)
@@ -49,6 +52,7 @@
         </div>
         @endif
 
+        {{-- Itens do pedido --}}
         <h3 class="mb-3"><i class="fas fa-boxes me-2"></i>Itens</h3>
         <div class="table-responsive">
             <table class="table table-striped align-middle">
@@ -63,17 +67,19 @@
                 <tbody>
                     @foreach($order->items as $item)
                     <tr>
-                        <td>{{ $item->product->external_name ?? 'Produto' }}</td>
+                        <td>{{ $item->product->external_name ?? $item->product->name ?? 'Produto' }}</td>
                         <td>{{ $item->quantity }}</td>
-                        <td>R$ {{ number_format($item->price, 2, ',', '.') }}</td>
-                        <td>R$ {{ number_format($item->price * $item->quantity, 2, ',', '.') }}</td>
+                        <td>{{ currency_format($item->price) }}</td>
+                        <td>{{ currency_format($item->price * $item->quantity) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
 
-        <a href="{{ route('user.dashboard') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-1"></i>Voltar</a>
+        <a href="{{ route('user.dashboard') }}" class="btn btn-secondary mt-3">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
     </div>
 </div>
 @endsection

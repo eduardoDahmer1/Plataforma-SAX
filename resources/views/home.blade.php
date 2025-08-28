@@ -74,7 +74,7 @@
                                                         <p class="small text-muted mb-2">
                                                             {{ $item->brand->name ?? 'Sem marca' }}<br>
                                                             SKU: {{ $item->sku ?? 'N/A' }}<br>
-                                                            {{ isset($item->price) ? 'R$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}<br>
+                                                            {{ isset($item->price) ? currency_format((float) $item->price) : 'Não informado' }}<br>
 
                                                             {{-- Estoque --}}
                                                             @if ($item->stock > 0)
@@ -161,7 +161,7 @@
                                         <p class="small text-muted mb-2">
                                             {{ $item->brand->name ?? 'Sem marca' }}<br>
                                             SKU: {{ $item->sku ?? 'N/A' }}<br>
-                                            {{ isset($item->price) ? 'R$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}<br>
+                                            {{ isset($item->price) ? currency_format((float) $item->price) : 'Não informado' }}<br>
 
                                             {{-- Estoque --}}
                                             @if ($item->stock > 0)

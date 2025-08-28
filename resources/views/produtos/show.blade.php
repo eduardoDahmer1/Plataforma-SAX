@@ -105,28 +105,22 @@
                         {{-- SKU e Estoque --}}
                         <p class="mb-2"><strong>SKU:</strong> {{ $product->sku }}</p>
                         <p class="mb-2"><strong>Estoque:</strong>
-                            @if ($product->stock > 0)
-                                <span class="badge bg-success">
-                                    <i class="fas fa-box me-1"></i> {{ $product->stock }} em estoque
-                                </span>
-                            @else
-                                <span class="badge bg-danger">
-                                    <i class="fas fa-times-circle me-1"></i> Sem estoque
-                                </span>
-                            @endif
+                            <span class="{{ $product->stock > 0 ? 'text-success' : 'text-danger' }}">
+                                {{ $product->stock ?? 'Indisponível' }}
+                            </span>
                         </p>
-
 
                         {{-- Preço --}}
                         <p class="mb-2"><strong>Preço:</strong>
                             @if ($product->price)
                                 <span class="text-success fs-4 fw-semibold">
-                                    R$ {{ number_format($product->price, 2, ',', '.') }}
+                                    {{ currency_format($product->price) }}
                                 </span>
                             @else
                                 <span class="text-muted">Não informado</span>
                             @endif
                         </p>
+
 
                         {{-- Descrição --}}
                         @if ($product->description)

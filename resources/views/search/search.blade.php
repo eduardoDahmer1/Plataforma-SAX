@@ -12,92 +12,7 @@
         @endif
 
         <div class="row">
-            {{-- SIDEBAR DE FILTROS --}}
-            {{-- SIDEBAR DE FILTROS --}}
-            <div class="col-md-3 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-light">
-                        <i class="fas fa-filter me-2"></i> Filtrar Resultados
-                    </div>
-                    <div class="card-body">
-                        <form action="{{ route('search') }}" method="GET" id="filterForm">
-                            <input type="hidden" name="search" value="{{ request('search') }}">
-
-                            {{-- Marca --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Marca</label>
-                                <select name="brand" class="form-select">
-                                    <option value="">Todas</option>
-                                    @foreach ($brands as $brand)
-                                        <option value="{{ $brand->id }}"
-                                            {{ request('brand') == $brand->id ? 'selected' : '' }}>
-                                            {{ $brand->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Categoria --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Categoria</label>
-                                <select name="category" class="form-select">
-                                    <option value="">Todas</option>
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}"
-                                            {{ request('category') == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Subcategoria --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Subcategoria</label>
-                                <select name="subcategory" class="form-select">
-                                    <option value="">Todas</option>
-                                    @foreach ($subcategories as $subcategory)
-                                        <option value="{{ $subcategory->id }}"
-                                            {{ request('subcategory') == $subcategory->id ? 'selected' : '' }}>
-                                            {{ $subcategory->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Categoria filha --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Categoria filha</label>
-                                <select name="childcategory" class="form-select">
-                                    <option value="">Todas</option>
-                                    @foreach ($childcategories as $childcategory)
-                                        <option value="{{ $childcategory->id }}"
-                                            {{ request('childcategory') == $childcategory->id ? 'selected' : '' }}>
-                                            {{ $childcategory->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Filtro de valor --}}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Preço (US$)</label>
-                                <div class="d-flex gap-2">
-                                    <input type="number" name="min_price" class="form-control" placeholder="Mín"
-                                        min="5" value="{{ request('min_price', 5) }}">
-                                    <input type="number" name="max_price" class="form-control" placeholder="Máx"
-                                        max="1000" value="{{ request('max_price', 1000) }}">
-                                </div>
-                                <small class="text-muted">Entre $5 e $1000</small>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 mt-2">
-                                <i class="fas fa-search me-1"></i> Aplicar Filtros
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+            <x-sidebar-filters :brands="$brands" :categories="$categories" :subcategories="$subcategories" :childcategories="$childcategories" />
 
 
             {{-- LISTA DE PRODUTOS --}}
@@ -110,8 +25,7 @@
                             <div class="col-6 col-md-4 col-lg-3 mb-4">
                                 <div class="card h-100 shadow-sm border-0">
                                     <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-top"
-                                        alt="{{ $item->external_name }}"
-                                        style="max-height: 200px; object-fit: scale-down;">
+                                        alt="{{ $item->external_name }}" style="max-height: 200px; object-fit: scale-down;">
 
                                     <div class="card-body d-flex flex-column">
                                         <h6 class="card-title mb-2">
@@ -125,7 +39,7 @@
                                             {{ $item->brand->name ?? 'Sem marca' }}<br>
                                             <i class="fas fa-barcode me-1"></i> {{ $item->sku ?? 'Sem SKU' }}<br>
                                             <i class="fas fa-dollar-sign me-1"></i>
-                                            {{ isset($item->price) ? 'US$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}<br>
+                                            {{ isset($item->price) ? currency_format($item->price) : 'Não informado' }}<br>
 
                                             {{-- Estoque --}}
                                             @if ($item->stock > 0)

@@ -19,9 +19,18 @@ class CheckoutController extends Controller
         $user = auth()->user();
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
         $paymentMethods = PaymentMethod::where('active', 1)->get();
-
+    
+        // Formata preços
+        $cart->transform(function ($item) {
+            if ($item->product) {
+                $item->product->formatted_price = currency_format($item->product->price);
+                $item->product->formatted_previous_price = $item->product->previous_price ? currency_format($item->product->previous_price) : null;
+            }
+            return $item;
+        });
+    
         return view('checkout.index', compact('paymentMethods', 'cart'));
-    }
+    }    
 
     // Cria o pedido
     public function store(Request $request)
@@ -201,12 +210,12 @@ class CheckoutController extends Controller
         $message .= "Produto: {$productName}\n";
         $message .= "SKU: {$productSku}\n";
         $message .= "Link: {$productLink}\n";
-        $message .= "Preço: R$ " . number_format($cartItem->product->price, 2, ',', '.') . "\n";
+        $message .= "Preço: " . currency($cartItem->product->price) . "\n";
         $message .= "Qtd: {$cartItem->quantity}\n";
         $message .= "------------------------\n";
     }
 
-    $message .= "Total da compra: R$ " . number_format($total, 2, ',', '.') . "\n\n";
+    $message .= "Total da compra: " . currency($total) . "\n\n";
     $message .= "Cliente: {$user->name}\n";
     $message .= "Telefone: +{$user->phone_country}{$user->phone_number}\n";
 

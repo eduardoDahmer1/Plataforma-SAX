@@ -83,6 +83,9 @@
             <a href="{{ route('admin.convert.webp') }}" class="list-group-item list-group-item-action ps-4">
                 <i class="fa-solid fa-image me-2"></i> Converter todas as imagens para WebP
             </a>
+            <a href="{{ route('admin.currencies.index') }}" class="list-group-item list-group-item-action ps-4">
+                <i class="fa-solid fa-image me-2"></i> Moedas
+            </a>
             <a class="list-group-item list-group-item-action ps-4">
                 <i class="fa-solid fa-ticket me-2"></i> Cupons
             </a>

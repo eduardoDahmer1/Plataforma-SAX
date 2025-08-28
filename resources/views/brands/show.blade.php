@@ -54,7 +54,7 @@
                         <p class="card-text small text-muted mb-2">
                             <i class="fas fa-barcode me-1"></i> {{ $item->sku ?? 'Sem SKU' }}<br>
                             <i class="fas fa-dollar-sign me-1"></i>
-                            {{ isset($item->price) ? 'R$ ' . number_format($item->price, 2, ',', '.') : 'Não informado' }}
+                            {{ isset($item->price) ? currency_format($item->price) : 'Não informado' }}
                         </p>
 
                         {{-- Ações --}}

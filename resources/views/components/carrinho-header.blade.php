@@ -1,114 +1,124 @@
 @php
-$cart = session('cart', []);
-$cartCount = count($cart);
+use App\Models\Cart;
+use App\Models\Currency;
+
+$user = auth()->user();
+$cart = $user ? Cart::with('product')->where('user_id', $user->id)->get() : collect();
+$cartCount = $cart->sum('quantity');
+
+// Pega a moeda da sessão
+$currencySession = session('currency');
+$currencyId = null;
+
+// Força pegar só o ID
+if (is_object($currencySession)) {
+    $currencyId = $currencySession->id ?? null;
+} elseif (is_array($currencySession)) {
+    $currencyId = $currencySession['id'] ?? $currencySession[0] ?? null;
+} else {
+    $currencyId = $currencySession;
+}
+
+// Busca a moeda
+$currency = Currency::find($currencyId);
+if (!$currency) {
+    $currency = Currency::where('is_default', 1)->first();
+}
+
+// Valores fallback
+$symbol = $currency->sign ?? 'R$';
+$decimal = $currency->decimal_separator ?? ',';
+$thousand = $currency->thousands_separator ?? '.';
+$rate = $currency->value ?? 1;
 @endphp
 
-<div class="position-relative d-inline-block ms-3" id="cart-hover-area" style="cursor:pointer;">
-    <button id="cart-button" class="btn btn-light position-relative">
-        <i class="fas fa-shopping-cart me-1"></i> Carrinho
-        @if($cartCount > 0)
-        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">{{ $cartCount }}</span>
-        @endif
+<div class="d-flex justify-content-center justify-content-md-end position-relative">
+    <button id="cart-button" class="btn btn-light">
+        <i class="fa fa-shopping-cart me-1"></i> Carrinho ({{ $cartCount }})
     </button>
 
-    @if($cartCount > 0)
-    <div id="cart-modal" class="card shadow-lg p-3 position-absolute bg-white text-dark"
-        style="top: 50px; right: 0; display: none; width: 320px; max-width: 90vw; z-index:999;">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0"><i class="fas fa-boxes me-1"></i>Itens no carrinho:</h6>
-            <button id="cart-close" class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button>
+    @if ($cartCount > 0)
+        <div id="cart-modal" class="card shadow-lg p-3 position-absolute bg-white text-dark"
+            style="top: 50px; right: 0; display: none; width: 22em; z-index: 999;">
+            
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Itens no carrinho</h6>
+                <button id="cart-close" class="btn btn-sm btn-outline-danger">&times;</button>
+            </div>
+
+            <ul class="list-group list-group-flush">
+                @foreach ($cart as $item)
+                    @php
+                        $basePrice = $item->product->price ?? 0;
+                        $convertedPrice = $basePrice * $rate;
+                        $formattedPrice = $symbol . ' ' . number_format($convertedPrice, 2, $decimal, $thousand);
+
+                        $convertedTotal = ($basePrice * $item->quantity) * $rate;
+                        $formattedTotal = $symbol . ' ' . number_format($convertedTotal, 2, $decimal, $thousand);
+                    @endphp
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="text-start">
+                                <strong>{{ $item->product->title ?? ($item->product->slug ?? 'Produto') }}</strong><br>
+                                <small>Preço: {{ $formattedPrice }}</small><br>
+                                <small>Total: {{ $formattedTotal }}</small>
+                            </div>
+                            <form action="{{ route('cart.remove', $item->product_id) }}" method="POST"
+                                onsubmit="return confirm('Remover este item?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="d-flex align-items-center mt-2 gap-2">
+                            @if ($item->quantity > 1)
+                                <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="quantity" value="{{ $item->quantity - 1 }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">-</button>
+                                </form>
+                            @endif
+                            <span>{{ $item->quantity }}</span>
+                            <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="quantity" value="{{ $item->quantity + 1 }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                    @if ($item->quantity >= ($item->product->stock ?? 1)) disabled @endif>+</button>
+                            </form>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+
+            <a href="{{ route('cart.view') }}" class="btn btn-primary btn-sm mt-3 w-100">
+                <i class="fa fa-shopping-cart me-1"></i> Ir para o Carrinho
+            </a>
         </div>
-
-        <ul class="list-group list-group-flush">
-            @foreach($cart as $productId => $item)
-            <li class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <strong><i class="fas fa-box-open me-1"></i>{{ $item['title'] ?? $item['slug'] ?? 'Produto' }}</strong><br>
-                        <small><i class="fas fa-tag me-1"></i>R$ {{ number_format($item['price'] ?? 0, 2, ',', '.') }}</small>
-                    </div>
-
-                    {{-- Excluir item --}}
-                    <form action="{{ route('cart.remove', $productId) }}" method="POST"
-                        onsubmit="return confirm('Remover este item do carrinho?')" class="ms-2">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
-                </div>
-
-                {{-- Controles de quantidade --}}
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    {{-- Diminuir --}}
-                    @if (($item['quantity'] ?? 1) > 1)
-                    <form action="{{ route('cart.update', $productId) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="quantity" value="{{ $item['quantity'] - 1 }}">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Diminuir">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </form>
-                    @endif
-
-                    {{-- Quantidade --}}
-                    <span class="fw-bold">{{ $item['quantity'] ?? 1 }}</span>
-
-                    {{-- Aumentar --}}
-                    <form action="{{ route('cart.update', $productId) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="quantity" value="{{ ($item['quantity'] ?? 1) + 1 }}">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Aumentar"
-                            @if(($item['quantity'] ?? 1) >= ($item['stock'] ?? 1)) disabled @endif>
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </form>
-                </div>
-            </li>
-            @endforeach
-        </ul>
-
-        <a href="{{ route('cart.view') }}" class="btn btn-primary btn-sm mt-3 w-100">
-            <i class="fas fa-shopping-cart me-1"></i> Ir para o Carrinho
-        </a>
-    </div>
     @endif
 </div>
 
+
+{{-- Script Carrinho --}}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const cartButton = document.getElementById('cart-button');
-    const cartModal = document.getElementById('cart-modal');
-    const cartClose = document.getElementById('cart-close');
+    document.addEventListener('DOMContentLoaded', function() {
+        const cartButton = document.getElementById('cart-button');
+        const cartModal = document.getElementById('cart-modal');
+        const cartClose = document.getElementById('cart-close');
 
-    function toggleCartModal() {
-        if (cartModal && cartModal.style.display === 'block') {
-            cartModal.style.display = 'none';
-        } else if (cartModal) {
-            cartModal.style.display = 'block';
-        }
-    }
-
-    if (cartButton) {
-        cartButton.addEventListener('click', function(e) {
+        cartButton?.addEventListener('click', e => {
             e.stopPropagation();
-            toggleCartModal();
+            cartModal.style.display = cartModal.style.display === 'block' ? 'none' : 'block';
         });
-    }
-
-    if (cartClose) {
-        cartClose.addEventListener('click', function() {
-            cartModal.style.display = 'none';
+        cartClose?.addEventListener('click', () => cartModal.style.display = 'none');
+        document.addEventListener('click', event => {
+            if (cartModal && !cartModal.contains(event.target) && event.target !== cartButton) {
+                cartModal.style.display = 'none';
+            }
         });
-    }
-
-    document.addEventListener('click', function(event) {
-        if (cartModal && !cartModal.contains(event.target) && event.target !== cartButton) {
-            cartModal.style.display = 'none';
-        }
     });
-});
 </script>

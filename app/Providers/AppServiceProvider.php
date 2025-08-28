@@ -17,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+        // Carrega helper de moeda
+        require_once app_path('Helpers/CurrencyHelper.php');
+        
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }

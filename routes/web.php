@@ -17,6 +17,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CurrencyController;
 
 
 // Admin Controllers
@@ -32,6 +33,7 @@ use App\Http\Controllers\Admin\CategoryControllerAdmin;
 use App\Http\Controllers\Admin\BrandControllerAdmin;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 
 // Auth Controllers
 use App\Http\Controllers\Auth\UserController;
@@ -59,6 +61,9 @@ Route::get('/categorias/{category:slug}', [CategoryController::class, 'show'])->
 // Brands
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
 Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('brands.show');
+
+// Currencies
+Route::post('/currency/change', [CurrencyController::class, 'change'])->name('currency.change');
 
 // Blogs
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
@@ -143,6 +148,18 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
+
+    // Listar moedas
+    Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
+
+    // Adicionar moeda
+    Route::post('currencies', [CurrencyControllerAdmin::class, 'store'])->name('currencies.store');
+
+    // Editar moeda
+    Route::put('currencies/{id}', [CurrencyControllerAdmin::class, 'update'])->name('currencies.update');
+
+    // Definir como padrão
+    Route::get('currencies/{id}/default', [CurrencyControllerAdmin::class, 'setDefault'])->name('currencies.default');
 
     Route::patch('products/{product}/update-highlights', [ProductControllerAdmin::class, 'updateHighlights'])
     ->name('products.updateHighlights');

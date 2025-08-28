@@ -7,10 +7,8 @@ if (!function_exists('currency_format')) {
     {
         // Garante que price seja float
         if (is_object($price)) {
-            // Se for stdClass, tenta pegar 'value' ou 'price'
             $price = (float) ($price->value ?? $price->price ?? 0);
         } elseif (is_array($price)) {
-            // Se for array, pega o primeiro índice ou 'value'
             $price = (float) ($price['value'] ?? $price['price'] ?? $price[0] ?? 0);
         } else {
             $price = (float) $price;
@@ -42,5 +40,12 @@ if (!function_exists('currency_format')) {
         $sign = $currency->sign ?? '';
 
         return trim($sign . ' ' . number_format($converted, $decimals, $decPoint, $thousandsSep));
+    }
+}
+
+if (!function_exists('currency')) {
+    function currency($price)
+    {
+        return currency_format($price);
     }
 }

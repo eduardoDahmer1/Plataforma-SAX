@@ -91,7 +91,7 @@
 
                                 <!-- Preço -->
                                 <p class="fw-semibold text-success mb-1">
-                                    R$ {{ number_format($product->price, 2, ',', '.') }}
+                                    {{ currency_format($product->price) }}
                                 </p>
 
                                 <!-- Estoque -->

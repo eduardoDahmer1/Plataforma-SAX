@@ -85,7 +85,7 @@ $type = $type ?? 'product';
             <!-- Preço / Estoque -->
             <div class="col-md-6">
                 <label for="price" class="form-label"><i class="fas fa-dollar-sign me-1"></i>Preço</label>
-                <input type="number" step="0.01" id="price" name="price" class="form-control" value="{{ old('price', $item->price ?? '') }}">
+                <input type="text" id="price" name="price" class="form-control" value="{{ currency_format(old('price', $item->price ?? 0)) }}" readonly>
             </div>
 
             <div class="col-md-6">

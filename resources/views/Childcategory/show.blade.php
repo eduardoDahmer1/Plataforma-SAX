@@ -39,37 +39,88 @@
 
     {{-- Produtos --}}
     @if($childcategory->products && $childcategory->products->count())
-        <h3 class="mb-3 fw-semibold">Produtos desta Sub-Subcategoria</h3>
+        <h3 class="mb-3 fw-semibold">Produtos desta Childcategory</h3>
         <div class="row">
             @foreach($childcategory->products as $product)
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-img-top text-center p-3">
-                        @if($product->photo && Storage::disk('public')->exists($product->photo))
-                            <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->name }}"
-                                 class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
-                        @else
-                            <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem"
-                                 class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
-                        @endif
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <h5 class="fw-semibold">{{ $product->name ?? $product->slug }}</h5>
-                        <p class="text-muted mb-2">
-                            <i class="fas fa-tag me-1"></i> {{ number_format($product->price, 2, ',', '.') }} GS$
-                        </p>
-                        <a href="{{ route('products.show', $product->id) }}"
-                           class="btn btn-outline-primary btn-sm mt-auto">
-                           <i class="fas fa-eye me-1"></i> Ver produto
-                        </a>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card h-100 shadow-sm border-0">
+
+                        {{-- Imagem --}}
+                        <div class="card-img-top text-center p-3">
+                            @if($product->photo && Storage::disk('public')->exists($product->photo))
+                                <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->name }}"
+                                     class="img-fluid rounded-3" style="max-height: 150px; object-fit: scale-down;">
+                            @else
+                                <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem"
+                                     class="img-fluid rounded-3" style="max-height: 150px; object-fit: scale-down;">
+                            @endif
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            {{-- Nome --}}
+                            <h6 class="card-title mb-2">
+                                <a href="{{ route('products.show', $product->id) }}" class="text-decoration-none">
+                                    <i class="fas fa-tag me-1"></i> {{ $product->name ?? $product->slug }}
+                                </a>
+                            </h6>
+
+                            {{-- Preço --}}
+                            <p class="text-success fw-semibold mb-1">
+                                {{ isset($product->price) ? currency_format($product->price) : 'Não informado' }}
+                            </p>
+
+                            {{-- Estoque --}}
+                            <p class="mb-2">
+                                @if ($product->stock > 0)
+                                    <span class="badge bg-success"><i class="fas fa-box me-1"></i>
+                                        {{ $product->stock }} em estoque
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Sem estoque</span>
+                                @endif
+                            </p>
+
+                            {{-- Botões --}}
+                            <div class="mt-auto d-flex flex-column gap-2">
+                                <a href="{{ route('products.show', $product->id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye me-1"></i> Ver Produto
+                                </a>
+
+                                @auth
+                                    @php $currentQty = $cartItems[$product->id] ?? 0; @endphp
+
+                                    @if(in_array(auth()->user()->user_type, [0,1,2]))
+                                        <form action="{{ route('cart.add') }}" method="POST" class="d-flex mb-2">
+                                            @csrf
+                                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                            <button type="submit" class="btn btn-sm btn-success flex-grow-1"
+                                                @if($currentQty >= $product->stock) disabled @endif>
+                                                <i class="fas fa-cart-plus me-1"></i> Adicionar
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('checkout.index') }}" method="GET" class="d-flex">
+                                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                            <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
+                                                <i class="fas fa-bolt me-1"></i> Comprar Agora
+                                            </button>
+                                        </form>
+                                    @endif
+                                @else
+                                    <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                       data-bs-target="#loginModal">
+                                        <i class="fas fa-sign-in-alt me-1"></i> Login para Comprar
+                                    </a>
+                                @endauth
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
             @endforeach
         </div>
     @else
         <div class="alert alert-info text-center">
-            <i class="fas fa-info-circle me-1"></i> Nenhum produto encontrado nesta sub-subcategoria.
+            <i class="fas fa-info-circle me-1"></i> Nenhum produto encontrado nesta childcategory.
         </div>
     @endif
 
@@ -77,8 +128,8 @@
     @if($childcategory->banner && Storage::disk('public')->exists($childcategory->banner))
     <div class="text-center mt-4">
         <div class="ratio ratio-21x9 mx-auto" style="max-width: 900px;">
-            <img src="{{ Storage::url($childcategory->banner) }}" alt="Banner da Sub-Subcategoria"
-                 class="img-fluid rounded-3 shadow-sm object-fit-coverr">
+            <img src="{{ Storage::url($childcategory->banner) }}" alt="Banner da Childcategory"
+                 class="img-fluid rounded-3 shadow-sm object-fit-cover">
         </div>
     </div>
     @endif

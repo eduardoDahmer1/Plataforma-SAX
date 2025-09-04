@@ -9,7 +9,7 @@ use App\Models\Product;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
-use App\Models\BankAccount;
+use App\Http\Controllers\BancardController;
 
 class CheckoutController extends Controller
 {
@@ -19,8 +19,7 @@ class CheckoutController extends Controller
         $user = auth()->user();
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
         $paymentMethods = PaymentMethod::where('active', 1)->get();
-    
-        // Formata preços
+
         $cart->transform(function ($item) {
             if ($item->product) {
                 $item->product->formatted_price = currency_format($item->product->price);
@@ -28,9 +27,9 @@ class CheckoutController extends Controller
             }
             return $item;
         });
-    
+
         return view('checkout.index', compact('paymentMethods', 'cart'));
-    }    
+    }
 
     // Cria o pedido
     public function store(Request $request)
@@ -123,119 +122,58 @@ class CheckoutController extends Controller
             Cart::where('user_id', $user->id)->delete();
 
             DB::commit();
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Erro ao processar pedido: '.$e->getMessage());
         }
 
-        // Redirecionamento pós-checkout
+        // Redireciona conforme método de pagamento
         if ($paymentMethod === 'bancard') {
-            $token = $this->generateBancardToken($order);
-            $bancardUrl = config('services.bancard.url');
-            return view('payment.bancard', compact('order', 'bancardUrl', 'token'));
+            $bancard = new BancardController();
+            return $bancard->checkout(new Request(['order_id' => $order->id]));
         }
 
         if ($paymentMethod === 'deposito') {
-            $bankAccounts = \DB::table('payment_methods')
-                ->where('type', 'bank')
-                ->where('active', 1)
-                ->get();
-            return view('payment.deposito', compact('order', 'bankAccounts'));
+            return redirect()->route('checkout.deposito', ['order' => $order->id]);
         }
 
         if ($paymentMethod === 'whatsapp') {
-            return $this->whatsapp();
+            return $this->whatsapp($order);
         }
 
         return redirect()->route('checkout.success')->with('success', 'Pedido criado com sucesso!');
     }
 
     // WhatsApp direto do carrinho
-    public function whatsapp(Request $request)
+    public function whatsapp(Order $order)
     {
         $user = auth()->user();
-        $cart = Cart::with('product')->where('user_id', $user->id)->get();
+        $cartItems = $order->items()->with('product')->get();
 
-        if ($cart->isEmpty()) {
-            return back()->with('error', 'Carrinho vazio');
+        $total = $cartItems->sum(fn($item) => $item->quantity * $item->product->price);
+
+        $message = "Olá! Quero finalizar minha compra:\n\n";
+        foreach ($cartItems as $cartItem) {
+            $product = $cartItem->product;
+            $productName = $product->external_name ?? 'Produto não encontrado';
+            $productSku = $product->sku ?? 'N/A';
+            $productLink = route('produto.show', $product->id);
+
+            $message .= "Produto: {$productName}\n";
+            $message .= "SKU: {$productSku}\n";
+            $message .= "Link: {$productLink}\n";
+            $message .= "Preço: " . currency($cartItem->product->price) . "\n";
+            $message .= "Qtd: {$cartItem->quantity}\n";
+            $message .= "------------------------\n";
         }
 
-        $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
+        $message .= "Total da compra: " . currency($total) . "\n\n";
+        $message .= "Cliente: {$user->name}\n";
+        $message .= "Telefone: +{$user->phone_country}{$user->phone_number}\n";
 
-        // Cria o pedido
-        DB::beginTransaction();
-        try {
-            $order = Order::create([
-                'user_id' => $user->id,
-                'status' => 'pending',
-                'total' => $total,
-                'payment_method' => 'whatsapp',
-                'name' => $user->name,
-                'document' => $user->document ?? '',
-                'email' => $user->email,
-                'phone' => $user->phone_number,
-            ]);
+        $message = urlencode($message);
+        $whatsappNumber = '595984167575';
 
-            foreach ($cart as $cartItem) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $cartItem->product_id,
-                    'quantity' => $cartItem->quantity,
-                    'price' => $cartItem->product->price,
-                    'name' => $cartItem->product->name,
-                    'external_name' => $cartItem->product->external_name,
-                    'slug' => $cartItem->product->slug,
-                    'sku' => $cartItem->product->sku,
-                ]);
-            }
-
-            // Zera o carrinho
-            Cart::where('user_id', $user->id)->delete();
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Erro ao criar pedido: ' . $e->getMessage());
-        }
-
-    // Monta a mensagem do WhatsApp
-    $message = "Olá! Quero finalizar minha compra:\n\n";
-    foreach ($cart as $cartItem) {
-        $product = $cartItem->product;
-        $productName = $product->external_name ?? 'Produto não encontrado';
-        $productSku = $product->sku ?? 'N/A';
-        $productLink = route('produto.show', $product->id);
-
-        $message .= "Produto: {$productName}\n";
-        $message .= "SKU: {$productSku}\n";
-        $message .= "Link: {$productLink}\n";
-        $message .= "Preço: " . currency($cartItem->product->price) . "\n";
-        $message .= "Qtd: {$cartItem->quantity}\n";
-        $message .= "------------------------\n";
-    }
-
-    $message .= "Total da compra: " . currency($total) . "\n\n";
-    $message .= "Cliente: {$user->name}\n";
-    $message .= "Telefone: +{$user->phone_country}{$user->phone_number}\n";
-
-    $message = urlencode($message);
-    $whatsappNumber = '595984167575';
-
-    return redirect("https://wa.me/{$whatsappNumber}?text={$message}");
-    }
-
-    // Bancard
-    private function processBancard(Order $order)
-    {
-        return redirect()->route('checkout.bancard', ['order' => $order->id])
-            ->with('success', 'Redirecionando para pagamento Bancard...');
-    }
-
-    // Depósito
-    private function processDeposit(Order $order)
-    {
-        return redirect()->route('checkout.success')
-            ->with('success', 'Pedido registrado! Aguarde a confirmação do depósito.');
+        return redirect("https://wa.me/{$whatsappNumber}?text={$message}");
     }
 }

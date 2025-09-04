@@ -18,6 +18,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\BancardController;
 
 
 // Admin Controllers
@@ -38,7 +39,6 @@ use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 // Auth Controllers
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\ImageConvertController;
 
@@ -126,6 +126,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
+    
+    // Bancard
+    Route::get('/checkout/bancard', [BancardController::class, 'checkout'])->name('checkout.bancard');
+    Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');
+    
+    // Depósito
+    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');    
 
     Route::delete('/user/delete', [App\Http\Controllers\Auth\UserController::class, 'destroy'])
     ->name('user.destroy');

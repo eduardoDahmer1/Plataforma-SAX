@@ -2,12 +2,17 @@
 <div class="step" id="step4">
     <div class="checkout-box">
         <h4><i class="fa fa-credit-card"></i> Método de Pagamento</h4>
-        <label><input type="radio" name="payment_method" value="deposito" checked
-                onclick="togglePaymentMethod('deposito')"> Depósito bancário</label><br>
-        <label><input type="radio" name="payment_method" value="bancard" onclick="togglePaymentMethod('bancard')">
-            Bancard</label>
+        <label>
+            <input type="radio" name="payment_method" value="deposito" checked
+                   onclick="togglePaymentMethod('deposito')"> Depósito bancário
+        </label><br>
+        <label>
+            <input type="radio" name="payment_method" value="bancard" onclick="togglePaymentMethod('bancard')">
+            Bancard
+        </label>
     </div>
 
+    {{-- Depósito bancário --}}
     <div id="bankDetails" class="payment-details">
         <h5><i class="fa fa-university"></i> Escolha o Banco</h5>
         <div class="row">
@@ -30,45 +35,11 @@
         </div>
     </div>
 
-    {{-- Modal Bancard --}}
-    <div class="modal fade" id="bancardModal" tabindex="-1" aria-labelledby="bancardModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.2);">
-                <div class="modal-header bg-primary text-white"
-                    style="border-top-left-radius:12px; border-top-right-radius:12px;">
-                    <h5 class="modal-title" id="bancardModalLabel"><i class="fa fa-credit-card"></i> Pagamento
-                        Bancard</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted mb-3"><i class="fa fa-info-circle"></i> Preencha os dados do cartão
-                        para continuar com o pagamento.</p>
-
-                    <div class="mb-3">
-                        <label><i class="fa fa-credit-card"></i> Número do Cartão</label>
-                        <input type="text" class="form-control" name="card_number" placeholder="XXXX XXXX XXXX XXXX">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label><i class="fa fa-calendar-alt"></i> Validade</label>
-                            <input type="text" class="form-control" name="card_expiry" placeholder="MM/AA">
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label><i class="fa fa-lock"></i> CVV</label>
-                            <input type="text" class="form-control" name="card_cvv" placeholder="XXX">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i
-                            class="fa fa-times"></i> Cancelar</button>
-                    <button type="submit" form="checkoutForm" class="btn btn-primary"><i
-                            class="fa fa-check-circle"></i> Pagar com Bancard</button>
-                </div>
-            </div>
-        </div>
+    {{-- Bancard iFrame --}}
+    <div id="bancardContainer" class="payment-details" style="display:none;">
+        <h5><i class="fa fa-credit-card"></i> Pagamento com Bancard</h5>
+        <p class="text-muted mb-3"><i class="fa fa-info-circle"></i> Preencha os dados do cartão no iframe abaixo.</p>
+        <div id="iframe-container" style="height: 200px; width: 100%; margin: auto;"></div>
     </div>
 
     {{-- Resumo do Pedido --}}
@@ -86,8 +57,17 @@
         <h5><i class="fa fa-money-bill-wave"></i> Total do Pedido: {{ currency_format($totalPedido) }}</h5>
     </div>
 
-    <button type="button" class="btn btn-secondary" onclick="prevStep(3)"><i class="fa fa-arrow-left"></i>
-        Voltar</button>
-    <button type="submit" class="btn btn-success" id="checkoutSubmit"><i class="fa fa-check"></i> Finalizar
-        Compra</button>
+    <button type="button" class="btn btn-secondary" onclick="prevStep(3)">
+        <i class="fa fa-arrow-left"></i> Voltar
+    </button>
+    <button type="submit" class="btn btn-success" id="checkoutSubmit">
+        <i class="fa fa-check"></i> Finalizar Compra
+    </button>
 </div>
+
+<!-- Script Bancard -->
+<script src="{{ asset('js/bancard-checkout-5.0.1.js') }}"></script>
+<script>
+    const processId = '{{ $processId ?? '' }}';
+    console.log("Bancard Process ID:", processId);
+</script>

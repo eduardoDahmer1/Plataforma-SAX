@@ -34,7 +34,7 @@ class UserController extends Controller
         // limpa cache da lista de usuários após criar
         Cache::forget('users_all');
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
+        return redirect()->route('admin.clients.index', compact('users', 'userCount'))->with('success', 'Usuário criado com sucesso!');
     }
 
     public function updateType(Request $request, $id)

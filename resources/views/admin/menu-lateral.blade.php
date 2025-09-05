@@ -4,12 +4,6 @@
         <a href="{{ route('admin.index') }}" class="list-group-item list-group-item-action">
             <i class="fa-solid fa-gauge-high me-2"></i> Admin
         </a>
-        <a href="{{ route('home') }}" class="list-group-item list-group-item-action">
-            <i class="fa-solid fa-house me-2"></i> Home
-        </a>
-        <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action">
-            <i class="fa-solid fa-users me-2"></i> Usuários
-        </a>
 
         <!-- Catálogos -->
         <a class="list-group-item list-group-item-action dropdown-toggle" data-bs-toggle="collapse"

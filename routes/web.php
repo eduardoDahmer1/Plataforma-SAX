@@ -130,9 +130,17 @@ Route::middleware('auth')->group(function () {
     // Bancard
     Route::get('/checkout/bancard', [BancardController::class, 'checkout'])->name('checkout.bancard');
     Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');
+
+    // web.php
+    Route::get('/checkout/bancard/{order}', [BancardController::class, 'checkoutPage'])->name('checkout.bancard');
     
     // Depósito
     Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');    
+
+    Route::post('checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
+
+    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])
+    ->name('orders.deposit.submit');
 
     Route::delete('/user/delete', [App\Http\Controllers\Auth\UserController::class, 'destroy'])
     ->name('user.destroy');
@@ -209,7 +217,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
 
     // Users Admin
-    Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
     Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
     Route::post('users/{id}/update-type', [\App\Http\Controllers\Admin\UserController::class, 'updateType'])->name('users.updateType');

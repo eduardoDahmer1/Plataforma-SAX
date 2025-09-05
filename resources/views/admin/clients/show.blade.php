@@ -9,65 +9,54 @@
         </a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered mt-3">
-            <tr>
-                <th><i class="fa fa-hashtag me-1"></i> ID</th>
-                <td>{{ $client->id }}</td>
-            </tr>
-            <tr>
-                <th><i class="fa fa-user me-1"></i> Nome</th>
-                <td>{{ $client->name }}</td>
-            </tr>
-            <tr>
-                <th><i class="fa fa-envelope me-1"></i> Email</th>
-                <td>{{ $client->email }}</td>
-            </tr>
-            <tr>
-                <th><i class="fa fa-calendar-alt me-1"></i> Data de Cadastro</th>
-                <td>{{ $client->created_at->format('d/m/Y H:i') }}</td>
-            </tr>
-            <tr>
-                <th><i class="fa fa-id-badge me-1"></i> Tipo</th>
-                <td>
-                    @switch($client->user_type)
-                        @case(1)
-                            <i class="fa fa-user me-1"></i> Cliente
-                        @break
-                        @case(2)
-                            <i class="fa fa-user-shield me-1"></i> Admin
-                        @break
-                        @case(3)
-                            <i class="fa fa-graduation-cap me-1"></i> Curso
-                        @break
-                        @default
-                            <i class="fa fa-question-circle me-1"></i> Desconhecido
-                    @endswitch
-                </td>
-            </tr>
-        </table>
+    {{-- Card de informações do cliente --}}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row gy-3">
+                <div class="col-md-6">
+                    <p class="mb-1 text-muted"><i class="fa fa-hashtag me-1"></i> ID</p>
+                    <h6>{{ $client->id }}</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1 text-muted"><i class="fa fa-user me-1"></i> Nome</p>
+                    <h6>{{ $client->name }}</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1 text-muted"><i class="fa fa-envelope me-1"></i> Email</p>
+                    <h6>{{ $client->email }}</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1 text-muted"><i class="fa fa-calendar-alt me-1"></i> Data de Cadastro</p>
+                    <h6>{{ $client->created_at->format('d/m/Y H:i') }}</h6>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1 text-muted"><i class="fa fa-id-badge me-1"></i> Tipo</p>
+                    <h6>
+                        @switch($client->user_type)
+                            @case(1) <i class="fa fa-user me-1"></i> Cliente @break
+                            @case(2) <i class="fa fa-user-shield me-1"></i> Admin @break
+                            @case(3) <i class="fa fa-graduation-cap me-1"></i> Curso @break
+                            @default <i class="fa fa-question-circle me-1"></i> Desconhecido
+                        @endswitch
+                    </h6>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Pedidos do cliente --}}
-    <h3 class="mt-5 mb-3">Pedidos do Cliente</h3>
+    <h3 class="mt-4 mb-3">Pedidos do Cliente</h3>
 
-    <div class="table-responsive">
-        @if($client->orders && $client->orders->count())
-            <table class="table table-striped table-bordered mt-2">
-                <thead>
-                    <tr>
-                        <th><i class="fa fa-hashtag me-1"></i> ID Pedido</th>
-                        <th><i class="fa fa-info-circle me-1"></i> Status</th>
-                        <th><i class="fa fa-dollar-sign me-1"></i> Total</th>
-                        <th><i class="fa fa-calendar-alt me-1"></i> Data</th>
-                        <th><i class="fa fa-cogs me-1"></i> Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($client->orders as $order)
-                        <tr>
-                            <td>{{ $order->id }}</td>
-                            <td>
+    @if($client->orders && $client->orders->count())
+        <div class="row g-3">
+            @foreach($client->orders as $order)
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fa fa-hashtag me-1"></i> Pedido #{{ $order->id }}
+                            </h5>
+                            <p class="mb-2">
                                 @switch($order->status)
                                     @case('pending')
                                         <span class="badge bg-warning text-dark"><i class="fa fa-hourglass-half me-1"></i> Pendente</span>
@@ -84,21 +73,21 @@
                                     @default
                                         <span class="badge bg-secondary"><i class="fa fa-question-circle me-1"></i> Desconhecido</span>
                                 @endswitch
-                            </td>
-                            <td>R$ {{ number_format($order->total, 2, ',', '.') }}</td>
-                            <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                            <td>
-                                <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-info">
-                                    <i class="fa fa-eye me-1"></i> Ver Pedido
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <p>Este cliente ainda não realizou nenhum pedido.</p>
-        @endif
-    </div>
+                            </p>
+                            <p class="mb-1"><i class="fa fa-dollar-sign me-1"></i> <strong>R$ {{ number_format($order->total, 2, ',', '.') }}</strong></p>
+                            <p class="text-muted mb-3"><i class="fa fa-calendar-alt me-1"></i> {{ $order->created_at->format('d/m/Y H:i') }}</p>
+                            <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-eye me-1"></i> Ver Pedido
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="alert alert-info mt-3">
+            <i class="fa fa-info-circle me-1"></i> Este cliente ainda não realizou nenhum pedido.
+        </div>
+    @endif
 </div>
 @endsection

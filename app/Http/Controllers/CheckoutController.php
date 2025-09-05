@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\BancardController;
 
 class CheckoutController extends Controller
 {
@@ -23,7 +22,9 @@ class CheckoutController extends Controller
         $cart->transform(function ($item) {
             if ($item->product) {
                 $item->product->formatted_price = currency_format($item->product->price);
-                $item->product->formatted_previous_price = $item->product->previous_price ? currency_format($item->product->previous_price) : null;
+                $item->product->formatted_previous_price = $item->product->previous_price 
+                    ? currency_format($item->product->previous_price) 
+                    : null;
             }
             return $item;
         });
@@ -35,7 +36,7 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-
+    
         $request->validate([
             'name' => 'required|string|max:255',
             'document' => 'required|string|max:50',
@@ -46,23 +47,36 @@ class CheckoutController extends Controller
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street' => 'required_if:shipping,2',
             'number' => 'required_if:shipping,2',
+            'city' => 'nullable|string',
+            'state' => 'nullable|string',
             'country' => 'required_if:shipping,2',
             'cep' => 'required_if:shipping,2',
-            'house_code' => 'required_if:country,paraguai',
+            'store' => 'required_if:shipping,3',
+            'observations' => 'nullable|string',
         ]);
-
+    
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
-        if ($cart->isEmpty()) {
-            return back()->with('error', 'Carrinho vazio');
-        }
-
-        $paymentMethod = $request->input('payment_method');
+        if ($cart->isEmpty()) return back()->with('error', 'Carrinho vazio');
+    
         $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
-
+        $paymentMethod = $request->input('payment_method');
+    
         DB::beginTransaction();
         try {
-            // Cria pedido
-            $order = Order::create([
+            // Determina observações corretas
+            $observations = '';
+            switch ($request->shipping) {
+                case '1': // endereço cadastrado
+                case '2': // endereço alternativo
+                    $observations = $request->input('observations') ?? '';
+                    break;
+                case '3': // retirada na loja
+                    $observations = $request->input('observations_store') ?? '';
+                    break;
+            }
+    
+            // Cria o pedido
+            $orderData = [
                 'user_id' => $user->id,
                 'status' => 'pending',
                 'total' => $total,
@@ -71,29 +85,115 @@ class CheckoutController extends Controller
                 'document' => $request->input('document'),
                 'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
-            ]);
-
+                'observations' => $observations,
+                'shipping' => $request->input('shipping'),
+            ];
+    
+            $order = Order::create($orderData);
+    
             // Salva endereço ou loja
-            if ($request->shipping == '1') {
-                $order->update([
-                    'street' => $user->street,
-                    'number' => $user->number,
-                    'city' => $user->city,
-                    'state' => $user->state,
-                    'country' => 'brasil',
+            switch ($request->shipping) {
+                case '1': // Endereço cadastrado do usuário
+                    $order->update([
+                        'street' => $user->street,
+                        'number' => $user->number,
+                        'city' => $user->city,
+                        'state' => $user->state,
+                        'cep' => $user->cep,
+                        'country' => $user->country ?? 'brasil',
+                    ]);
+                    break;
+    
+                case '2': // Endereço alternativo
+                    $order->update([
+                        'street' => $request->input('street'),
+                        'number' => $request->input('number'),
+                        'city' => $request->input('city') ?? '',
+                        'state' => $request->input('state') ?? '',
+                        'cep' => $request->input('cep') ?? '',
+                        'country' => $request->input('country'),
+                    ]);
+                    break;
+    
+                case '3': // Retirada na loja
+                    $order->update([
+                        'store' => $request->input('store')
+                    ]);
+                    break;
+            }
+    
+            // Adiciona itens do carrinho ao pedido
+            foreach ($cart as $cartItem) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->product->price,
+                    'name' => $cartItem->product->name,
+                    'external_name' => $cartItem->product->external_name,
+                    'slug' => $cartItem->product->slug,
+                    'sku' => $cartItem->product->sku,
                 ]);
-            } elseif ($request->shipping == '2') {
-                $order->update([
-                    'street' => $request->input('street'),
-                    'number' => $request->input('number'),
-                    'city' => $request->input('city') ?? '',
-                    'state' => $request->input('state') ?? '',
-                    'country' => $request->input('country'),
-                ]);
-            } else { // Retirada na loja
-                $order->store_id = $request->input('store');
+            }
+    
+            // Salva comprovante de depósito, se houver
+            if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
+                $file = $request->file('deposit_receipt');
+                $filename = time().'_'.$file->getClientOriginalName();
+                $file->storeAs('deposits', $filename, 'public');
+                $order->deposit_receipt = $filename;
                 $order->save();
             }
+    
+            DB::commit();
+    
+            // Limpa carrinho
+            Cart::where('user_id', $user->id)->delete();
+    
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Erro ao processar pedido: '.$e->getMessage());
+        }
+    
+        // Redireciona conforme método de pagamento
+        switch ($paymentMethod) {
+            case 'bancard':
+                return redirect()->route('checkout.bancard', ['order' => $order->id]);
+            case 'deposito':
+                return redirect()->route('checkout.deposito', ['order' => $order->id]);
+            case 'whatsapp':
+                return $this->whatsappOld($user, $cart);
+        }
+    
+        return redirect()->route('checkout.success')->with('success', 'Pedido criado com sucesso!');
+    }    
+      
+
+    // WhatsApp (lógica antiga da mensagem, mas cria pedido)
+    public function whatsapp(Request $request)
+    {
+        $user = auth()->user();
+        $cart = Cart::with('product')->where('user_id', $user->id)->get();
+
+        if ($cart->isEmpty()) {
+            return back()->with('error', 'Carrinho vazio');
+        }
+
+        $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
+
+        // Cria pedido
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'user_id' => $user->id,
+                'status' => 'pending',
+                'total' => $total,
+                'payment_method' => 'whatsapp',
+                'name' => $user->name,
+                'document' => $user->document ?? '',
+                'email' => $user->email,
+                'phone' => $user->phone_number,
+            ]);
 
             // Adiciona itens do carrinho
             foreach ($cart as $cartItem) {
@@ -109,53 +209,17 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // Salva comprovante de depósito
-            if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
-                $file = $request->file('deposit_receipt');
-                $filename = time().'_'.$file->getClientOriginalName();
-                $file->storeAs('deposits', $filename, 'public');
-                $order->deposit_receipt = $filename;
-                $order->save();
-            }
-
-            // Limpa carrinho
-            Cart::where('user_id', $user->id)->delete();
-
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Erro ao processar pedido: '.$e->getMessage());
+            return back()->with('error', 'Erro ao criar pedido: ' . $e->getMessage());
         }
 
-        // Redireciona conforme método de pagamento
-        if ($paymentMethod === 'bancard') {
-            $bancard = new BancardController();
-            return $bancard->checkout(new Request(['order_id' => $order->id]));
-        }
-
-        if ($paymentMethod === 'deposito') {
-            return redirect()->route('checkout.deposito', ['order' => $order->id]);
-        }
-
-        if ($paymentMethod === 'whatsapp') {
-            return $this->whatsapp($order);
-        }
-
-        return redirect()->route('checkout.success')->with('success', 'Pedido criado com sucesso!');
-    }
-
-    // WhatsApp direto do carrinho
-    public function whatsapp(Order $order)
-    {
-        $user = auth()->user();
-        $cartItems = $order->items()->with('product')->get();
-
-        $total = $cartItems->sum(fn($item) => $item->quantity * $item->product->price);
-
+        // Gera a mensagem WhatsApp
         $message = "Olá! Quero finalizar minha compra:\n\n";
-        foreach ($cartItems as $cartItem) {
+        foreach ($cart as $cartItem) {
             $product = $cartItem->product;
-            $productName = $product->external_name ?? 'Produto não encontrado';
+            $productName = $product->external_name ?? $product->name ?? 'Produto não encontrado';
             $productSku = $product->sku ?? 'N/A';
             $productLink = route('produto.show', $product->id);
 
@@ -171,9 +235,47 @@ class CheckoutController extends Controller
         $message .= "Cliente: {$user->name}\n";
         $message .= "Telefone: +{$user->phone_country}{$user->phone_number}\n";
 
+        // Limpa carrinho
+        Cart::where('user_id', $user->id)->delete();
+
         $message = urlencode($message);
         $whatsappNumber = '595984167575';
 
         return redirect("https://wa.me/{$whatsappNumber}?text={$message}");
     }
+
+    // Página de depósito
+    public function deposito(Order $order)
+    {
+        $user = auth()->user();
+        if ($order->user_id !== $user->id) {
+            abort(403, 'Acesso negado ao pedido.');
+        }
+
+        $bankAccounts = PaymentMethod::where('type', 'bank')->where('active', 1)->get();
+        $orderItems = $order->items;
+
+        return view('layout.deposito', compact('order', 'bankAccounts', 'orderItems'));
+    }
+
+    // Submete comprovante de depósito
+    public function submitDeposito(Request $request, Order $order)
+    {
+        $request->validate([
+            'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
+
+        if ($request->hasFile('deposit_receipt')) {
+            $file = $request->file('deposit_receipt');
+            $filePath = $file->store('deposit_receipts', 'public');
+
+            $order->deposit_receipt = $filePath;
+            $order->save();
+        }
+
+        // Redireciona para a página do pedido no painel do usuário
+        return redirect()->route('user.orders.show', $order->id)
+                        ->with('success', 'Comprovante enviado com sucesso!');
+    }
+
 }

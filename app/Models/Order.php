@@ -14,15 +14,30 @@ class Order extends Model
         'status',
         'total',
         'payment_method',
-        'deposit_receipt', // ADICIONADO para salvar o arquivo
-        // demais campos que você quer permitir atribuir em massa
+        'deposit_receipt',
+        'name',
+        'document',
+        'email',
+        'phone',
+        'address',
+        'city',
+        'state',
+        'country',
+        'cep',
+        'street',
+        'number',
+        'observations',
+        'shipping',
+        'store',
     ];
 
+    // Relacionamento com itens do pedido
     public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
     
+    // Relacionamento com o usuário
     public function user()
     {
         return $this->belongsTo(User::class);

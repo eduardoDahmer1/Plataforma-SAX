@@ -29,11 +29,39 @@
         // ====== ENDEREÇO =========
         // =========================
         const shippingRadios = document.querySelectorAll('input[name="shipping"]');
-        const ncAddressShipping = document.getElementById('nc_addressShipping');
-        const storePickUp = document.getElementById('storePickUp');
+        const shippingRegistered = document.getElementById('shipping_registered');
+        const shippingAlternative = document.getElementById('shipping_alternative');
+        const shippingStore = document.getElementById('shipping_store');
         const countrySelect = document.getElementById('country');
         const brasilAddress = document.getElementById('brasil_address');
         const paraguaiAddress = document.getElementById('paraguai_address');
+        const storeSelect = document.getElementById('storeSelect');
+        const storeMaps = document.querySelectorAll('.store-map');
+        const observationsInput = document.getElementById('observations');
+    
+        // Guarda valores iniciais
+        let observationsValues = {
+            1: observationsInput?.value || '',
+            2: observationsInput?.value || '',
+            3: observationsInput?.value || ''
+        };
+    
+        window.toggleShippingFields = function(value) {
+            shippingRegistered.style.display = value == 1 ? 'block' : 'none';
+            shippingAlternative.style.display = value == 2 ? 'block' : 'none';
+            shippingStore.style.display = value == 3 ? 'block' : 'none';
+    
+            if (value == 2) updateCountryFields();
+            else {
+                brasilAddress.style.display = 'none';
+                paraguaiAddress.style.display = 'none';
+            }
+    
+            // Atualiza campo de observations
+            if (observationsInput) {
+                observationsInput.value = observationsValues[value] || '';
+            }
+        }
     
         function updateCountryFields() {
             if (!countrySelect) return;
@@ -41,61 +69,41 @@
             paraguaiAddress.style.display = countrySelect.value === 'paraguai' ? 'block' : 'none';
         }
     
-        function updateShippingDisplay() {
-            const checkedRadio = document.querySelector('input[name="shipping"]:checked');
-            if (!checkedRadio) return;
-            const value = checkedRadio.value;
-            ncAddressShipping.style.display = value === '2' ? 'block' : 'none';
-            storePickUp.style.display = value === '3' ? 'block' : 'none';
-            if (value === '2') updateCountryFields();
-            else {
-                brasilAddress.style.display = 'none';
-                paraguaiAddress.style.display = 'none';
-            }
+        // Atualiza valor do observations ao digitar
+        if (observationsInput) {
+            observationsInput.addEventListener('input', function() {
+                const checked = document.querySelector('input[name="shipping"]:checked');
+                if (checked) observationsValues[checked.value] = this.value;
+            });
         }
     
-        shippingRadios.forEach(radio => radio.addEventListener('change', updateShippingDisplay));
+        shippingRadios.forEach(radio => radio.addEventListener('change', function() {
+            toggleShippingFields(this.value);
+        }));
+    
         if (countrySelect) countrySelect.addEventListener('change', updateCountryFields);
-        updateShippingDisplay();
+    
+        // Mapas da loja
+        if (storeSelect) {
+            storeSelect.addEventListener('change', function() {
+                storeMaps.forEach(map => map.style.display = map.dataset.store === this.value ? 'block' : 'none');
+            });
+        }
+    
+        // Inicializa display correto
+        const checkedRadio = document.querySelector('input[name="shipping"]:checked');
+        if (checkedRadio) toggleShippingFields(checkedRadio.value);
     
         // =========================
         // ====== PAGAMENTO =======
         // =========================
-        const bancardContainer = document.getElementById('bancardContainer');
-        const bankDetails = document.getElementById('bankDetails');
+        window.selectPayment = function(method) {
+            const paymentInput = document.getElementById('payment_method');
+            if(paymentInput) paymentInput.value = method;
     
-        window.togglePaymentMethod = function(method) {
-            if (method === 'bancard') {
-                bankDetails.style.display = 'none';
-                bancardContainer.style.display = 'block';
-    
-                setTimeout(function() {
-                    if (typeof Bancard !== 'undefined' && processId) {
-                        const styles = {
-                            'input-background-color': '#ffffff',
-                            'input-text-color': '#333333',
-                            'input-border-color': '#cccccc',
-                            'input-placeholder-color': '#999999',
-                            'button-background-color': '#5CB85C',
-                            'button-text-color': '#ffffff',
-                            'button-border-color': '#4CAE4C',
-                            'form-background-color': '#f9f9f9',
-                            'form-border-color': '#dddddd',
-                            'header-background-color': '#f5f5f5',
-                            'header-text-color': '#333333',
-                            'hr-border-color': '#eeeeee'
-                        };
-                        const options = { styles: styles };
-                        Bancard.Checkout.createForm('iframe-container', processId, options);
-                    } else {
-                        console.error('Bancard ainda não está definido ou processId vazio.');
-                    }
-                }, 100);
-    
-            } else if (method === 'deposito') {
-                bankDetails.style.display = 'block';
-                bancardContainer.style.display = 'none';
-            }
+            document.getElementById('btn-deposito')?.classList.remove('active');
+            document.getElementById('btn-bancard')?.classList.remove('active');
+            document.getElementById('btn-' + method)?.classList.add('active');
         };
     
         // =========================
@@ -104,17 +112,11 @@
         const checkoutForm = document.getElementById('checkoutForm');
         if (checkoutForm) {
             checkoutForm.addEventListener('submit', function(e) {
-                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
-                if (!selectedPayment) {
+                const selectedMethod = document.getElementById('payment_method')?.value;
+                if (!selectedMethod) {
                     e.preventDefault();
                     alert('Escolha um método de pagamento');
                     return false;
-                }
-    
-                // Bloqueia envio do formulário para Bancard, só exibe iframe
-                if (selectedPayment.value === 'bancard') {
-                    e.preventDefault();
-                    togglePaymentMethod('bancard');
                 }
             });
         }

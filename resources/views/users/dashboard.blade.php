@@ -42,6 +42,10 @@
             @if(auth()->user()->additional_info)
             <li class="list-group-item"><i class="fas fa-id-card me-2"></i>Número do Cadastro: {{ auth()->user()->additional_info }}</li>
             @endif
+
+            @if(auth()->user()->document)
+            <li class="list-group-item"><i class="fas fa-id-card me-2"></i>Número do Documento: {{ auth()->user()->document }}</li>
+            @endif
         </ul>
 
         <h2 class="mb-3">Seus Pedidos</h2>

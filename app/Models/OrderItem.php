@@ -14,8 +14,10 @@ class OrderItem extends Model
         'product_id',
         'quantity',
         'price',
-        'title',
+        'name',          // Nome do produto (ou external_name)
+        'external_name', // Caso seja produto externo/afiliado
         'slug',
+        'sku',
     ];
 
     public function order()

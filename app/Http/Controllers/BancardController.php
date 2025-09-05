@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
 use App\Models\Notification;
-use Illuminate\Support\Facades\Session;
 
 class BancardController extends Controller
 {
@@ -16,7 +15,6 @@ class BancardController extends Controller
 
     public function __construct()
     {
-        // Define ambiente: sandbox ou produção
         $this->baseUrl = (env('BANCARD_MODE', 'sandbox') === 'sandbox')
             ? 'https://vpos.infonet.com.py:8888'
             : 'https://vpos.infonet.com.py';
@@ -29,41 +27,84 @@ class BancardController extends Controller
      */
     public function checkout(Request $request)
     {
-        $orderId = $request->query('order_id', 1);
-        $order = Order::findOrFail($orderId);
-
-        $amount = intval($order->total); // valor em PYG
-
+        // pega pedido existente
+        $order = Order::find($request->input('order_id'));
+        if (!$order) {
+            return back()->with('error', 'Pedido não encontrado');
+        }
+    
+        // garante payment_method
+        $order->payment_method = 'bancard';
+        $order->save();
+    
+        $amount = intval($order->total); // PYG sem decimais
+        $shopProcessId = uniqid();
+    
         $payload = [
-            "shop_process_id" => uniqid(),
+            "shop_process_id" => $shopProcessId,
             "amount" => $amount,
             "currency" => "PYG",
             "description" => "Compra na loja SAX",
             "return_url" => route('bancard.callback'),
         ];
-
+    
         $response = Http::withHeaders([
             'Authorization' => 'Basic ' . base64_encode(env('BANCARD_PUBLIC_KEY') . ':' . env('BANCARD_PRIVATE_KEY')),
             'Accept' => 'application/json',
         ])->post("{$this->apiUrl}/single_buy", $payload);
-
+    
         $data = $response->json();
-
+    
         if (!isset($data['process_id'])) {
             Log::error('Erro ao gerar process_id Bancard', $data);
             return back()->with('error', 'Erro ao iniciar pagamento Bancard');
         }
-
-        // salva process_id no pedido
+    
+        // salva process_id
         $order->shop_process_id = $data['process_id'];
         $order->save();
-
+    
+        // retorna view
         return view('layout.bancard', [
             'process_id' => $data['process_id'],
-            'order' => $order
+            'order'      => $order
+        ]);
+    }    
+
+    public function checkoutPage(Order $order)
+    {
+        $amount = intval($order->total); // PYG sem decimais
+        $shopProcessId = uniqid();
+    
+        $payload = [
+            "shop_process_id" => $shopProcessId,
+            "amount" => $amount,
+            "currency" => "PYG",
+            "description" => "Compra na loja SAX",
+            "return_url" => route('bancard.callback'),
+        ];
+    
+        $response = Http::withHeaders([
+            'Authorization' => 'Basic ' . base64_encode(env('BANCARD_PUBLIC_KEY') . ':' . env('BANCARD_PRIVATE_KEY')),
+            'Accept' => 'application/json',
+        ])->post("{$this->apiUrl}/single_buy", $payload);
+    
+        $data = $response->json();
+    
+        if (!isset($data['process_id'])) {
+            Log::error('Erro ao gerar process_id Bancard', $data);
+            return back()->with('error', 'Erro ao iniciar pagamento Bancard');
+        }
+    
+        $order->shop_process_id = $data['process_id'];
+        $order->save();
+    
+        return view('layout.bancard', [
+            'process_id' => $data['process_id'],
+            'order'      => $order
         ]);
     }
-
+      
     /**
      * Callback que o Bancard chama após pagamento
      */
@@ -87,11 +128,7 @@ class BancardController extends Controller
             $order->status = 'paid';
             $order->save();
 
-            // Notificação opcional
-            $notification = new Notification();
-            $notification->order_id = $order->id;
-            $notification->save();
-
+            Notification::create(['order_id' => $order->id]);
         } else {
             $order->status = 'failed';
             $order->save();

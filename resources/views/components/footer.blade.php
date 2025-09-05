@@ -3,12 +3,12 @@
 
         {{-- Logo --}}
         @if ($webpImage)
-        <div class="text-center mb-4">
-            <a href="{{ route('home') }}">
-                <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Logo Footer" 
-                     class="img-fluid" style="max-height:90px;">
-            </a>
-        </div>
+            <div class="text-center mb-4">
+                <a href="{{ route('home') }}">
+                    <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Logo Footer" class="img-fluid"
+                        style="max-height:90px;">
+                </a>
+            </div>
         @endif
 
         {{-- Links principais --}}
@@ -36,6 +36,18 @@
             </a>
         </div>
 
+        {{-- Contato via WhatsApp --}}
+        <div class="text-center mb-4 fs-5">
+            <p>
+                <strong>Precisa de ajuda?</strong><br>
+                <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Olá, você visitou nosso site. Precisa de ajuda com algo?') }}"
+                    target="_blank" class="text-success fw-bold">
+                    Clique aqui e fale conosco pelo WhatsApp
+                </a>
+            </p>
+        </div>
+
+
         {{-- Métodos de pagamento --}}
         <div class="text-center mb-4 fs-6">
             <p class="mb-1"><strong>Métodos de Pagamento:</strong></p>
@@ -56,18 +68,19 @@
 
 {{-- CSS para fixar no final da página --}}
 <style>
-html, body {
-    height: 100%;
-}
+    html,
+    body {
+        height: 100%;
+    }
 
-body {
-    display: flex;
-    flex-direction: column;
-}
+    body {
+        display: flex;
+        flex-direction: column;
+    }
 
-footer {
-    flex-shrink: 0;
-    font-size: 1rem;
-    line-height: 1.6;
-}
+    footer {
+        flex-shrink: 0;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
 </style>

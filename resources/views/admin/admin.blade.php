@@ -34,8 +34,8 @@
 
         @php
         $images = [
-            ['field' => 'header_image', 'title' => 'Imagem do Header', 'btnClass' => 'primary', 'file' => $webpImage, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
-            ['field' => 'noimage', 'title' => 'Imagem Noimage', 'btnClass' => 'secondary', 'file' => $noimage, 'routeUpload' => 'admin.noimage.upload', 'routeDelete' => 'admin.noimage.delete'],
+            ['field' => 'header_image', 'title' => 'Imagem do Header', 'btnClass' => 'info', 'file' => $webpImage, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
+            ['field' => 'noimage', 'title' => 'Imagem Noimage', 'btnClass' => 'info', 'file' => $noimage, 'routeUpload' => 'admin.noimage.upload', 'routeDelete' => 'admin.noimage.delete'],
             ['field' => 'banner1', 'title' => 'Banner 1', 'btnClass' => 'info', 'file' => $banner1, 'routeUpload' => 'admin.banner1.upload', 'routeDelete' => 'admin.banner1.delete'],
             ['field' => 'banner2', 'title' => 'Banner 2', 'btnClass' => 'info', 'file' => $banner2, 'routeUpload' => 'admin.banner2.upload', 'routeDelete' => 'admin.banner2.delete'],
             ['field' => 'banner3', 'title' => 'Banner 3', 'btnClass' => 'info', 'file' => $banner3, 'routeUpload' => 'admin.banner3.upload', 'routeDelete' => 'admin.banner3.delete'],

@@ -9,48 +9,47 @@
         </a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th><i class="fa fa-money-bill-wave me-1"></i> Nome</th>
-                    <th><i class="fa fa-layer-group me-1"></i> Tipo</th>
-                    <th><i class="fa fa-info-circle me-1"></i> Status</th>
-                    <th><i class="fa fa-toggle-on me-1"></i> Ativo</th>
-                    <th><i class="fa fa-cogs me-1"></i> Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($methods as $method)
-                    <tr>
-                        <td>{{ $method->name }}</td>
-                        <td>{{ ucfirst($method->type) }}</td>
-                        <td>
-                            @if($method->active == 1)
-                                <span class="badge bg-success"><i class="fa fa-check-circle me-1"></i> Ativo</span>
-                            @else
-                                <span class="badge bg-secondary"><i class="fa fa-times-circle me-1"></i> Inativo</span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <input type="checkbox" class="toggle-active" data-id="{{ $method->id }}" {{ $method->active == 1 ? 'checked' : '' }}>
-                        </td>
-                        <td class="d-flex flex-wrap gap-1">
-                            <a href="{{ route('admin.payments.edit', $method->id) }}" class="btn btn-sm btn-primary">
-                                <i class="fa fa-edit me-1"></i> Editar
-                            </a>
-                            <form action="{{ route('admin.payments.destroy', $method->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Quer mesmo excluir esse método?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="fa fa-trash me-1"></i> Excluir
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <div class="row g-3">
+        @forelse($methods as $method)
+        <div class="col-12">
+            <div class="card shadow-sm p-3">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <strong><i class="fa fa-money-bill-wave me-1"></i> {{ $method->name }}</strong>
+                    </div>
+                    <div class="col-md-2">{{ ucfirst($method->type) }}</div>
+                    <div class="col-md-2">
+                        @if($method->active == 1)
+                            <span class="badge bg-success"><i class="fa fa-check-circle me-1"></i> Ativo</span>
+                        @else
+                            <span class="badge bg-secondary"><i class="fa fa-times-circle me-1"></i> Inativo</span>
+                        @endif
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <input type="checkbox" class="toggle-active" data-id="{{ $method->id }}" {{ $method->active == 1 ? 'checked' : '' }}>
+                    </div>
+                    <div class="col-md-4 d-flex flex-wrap gap-2 justify-content-md-end mt-2 mt-md-0">
+                        <a href="{{ route('admin.payments.edit', $method->id) }}" class="btn btn-sm btn-primary">
+                            <i class="fa fa-edit me-1"></i> Editar
+                        </a>
+                        <form action="{{ route('admin.payments.destroy', $method->id) }}" method="POST" onsubmit="return confirm('Quer mesmo excluir esse método?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fa fa-trash me-1"></i> Excluir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                Nenhum método de pagamento encontrado.
+            </div>
+        </div>
+        @endforelse
     </div>
 </div>
 
@@ -74,7 +73,7 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
             return res.json();
         })
         .then(data => {
-            const statusCell = this.closest('tr').querySelector('td:nth-child(3)');
+            const statusCell = this.closest('.row').querySelector('.col-md-2');
             if(active == 1){
                 statusCell.innerHTML = '<span class="badge bg-success"><i class="fa fa-check-circle me-1"></i> Ativo</span>';
             } else {
@@ -88,4 +87,10 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
     });
 });
 </script>
+
+<style>
+.card { border-radius: 12px; }
+.card .row { align-items: center; }
+.card-body { font-size: 0.95rem; line-height: 1.6; }
+</style>
 @endsection

@@ -44,6 +44,7 @@ class UserController extends Controller
             'city'             => 'nullable|string|max:255',
             'state'            => 'nullable|string|max:255',
             'additional_info'  => 'nullable|string|max:255',
+            'document'  => 'nullable|string|max:255',
         ]);
     
         // Remove o "+" do código do país se quiser
@@ -63,6 +64,7 @@ class UserController extends Controller
             'city'              => $request->city,
             'state'             => $request->state,
             'additional_info'   => $request->additional_info,
+            'document'=> $request->document, 
         ]);
     
         return back()->with('success', 'Perfil atualizado com sucesso!');

@@ -26,62 +26,51 @@
         </div>
     </div>
 
-    {{-- Tabela --}}
-    <div class="table-responsive shadow-sm rounded-3 border">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Tipo</th>
-                    <th>Nome</th>
-                    <th>Email</th>
-                    <th>Telefone</th>
-                    <th>Mensagem</th>
-                    <th>Anexo</th>
-                    <th>Data</th>
-                    <th class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($contacts as $contact)
-                <tr>
-                    <td>
-                        @switch($contact->contact_type)
-                            @case(1) Fale Conosco @break
-                            @case(2) Currículo @break
-                            @default Desconhecido
-                        @endswitch
-                    </td>
-                    <td>{{ $contact->name }}</td>
-                    <td>{{ $contact->email }}</td>
-                    <td>{{ $contact->phone }}</td>
-                    <td>{{ Str::limit($contact->message, 50) }}</td>
-                    <td>
+    {{-- Cards de mensagens --}}
+    <div class="row g-3">
+        @forelse($contacts as $contact)
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            @switch($contact->contact_type)
+                                @case(1) <span class="badge bg-primary">Fale Conosco</span> @break
+                                @case(2) <span class="badge bg-success">Currículo</span> @break
+                                @default <span class="badge bg-secondary">Desconhecido</span>
+                            @endswitch
+                        </h6>
+
+                        <h5 class="card-title mb-1">{{ $contact->name }}</h5>
+                        <p class="mb-1"><i class="fas fa-envelope me-1"></i> {{ $contact->email }}</p>
+                        <p class="mb-1"><i class="fas fa-phone me-1"></i> {{ $contact->phone }}</p>
+                        <p class="small text-muted mb-2">{{ Str::limit($contact->message, 80) }}</p>
+
                         @if($contact->attachment)
-                            <a href="{{ asset('storage/' . $contact->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ asset('storage/' . $contact->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
                                 <i class="fas fa-file me-1"></i>Ver arquivo
                             </a>
-                        @else
-                            <span class="text-muted">-</span>
                         @endif
-                    </td>
-                    <td>{{ $contact->created_at->format('d/m/Y H:i') }}</td>
-                    <td class="text-center">
-                        <form action="{{ route('admin.contatos.destroy', $contact->id) }}" method="POST" onsubmit="return confirm('Confirma exclusão?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger">
-                                <i class="fas fa-trash-alt me-1"></i>Excluir
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="8" class="text-center text-muted py-3">Nenhuma mensagem encontrada.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>{{ $contact->created_at->format('d/m/Y H:i') }}
+                            </small>
+                            <form action="{{ route('admin.contatos.destroy', $contact->id) }}" method="POST" onsubmit="return confirm('Confirma exclusão?')" class="m-0">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash-alt me-1"></i>Excluir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="col-12 text-center text-muted py-4">
+                Nenhuma mensagem encontrada.
+            </div>
+        @endforelse
     </div>
 
     {{-- Paginação --}}

@@ -4,7 +4,7 @@
 <div class="container my-4">
     <!-- Cabeçalho -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
-        <h2 class="fw-bold text-primary">
+        <h2 class="fw-bold">
             <i class="fa fa-users me-2"></i> Gerenciar Usuários
         </h2>
         <a href="{{ route('admin.users.create') }}" class="btn btn-success">

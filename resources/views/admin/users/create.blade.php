@@ -3,7 +3,7 @@
 @section('content')
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary"><i class="fa fa-user-plus me-2"></i> Criar Novo Usuário</h2>
+        <h2 class="fw-bold"><i class="fa fa-user-plus me-2"></i> Criar Novo Usuário</h2>
         <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-secondary">
             <i class="fa fa-arrow-left me-1"></i> Voltar
         </a>

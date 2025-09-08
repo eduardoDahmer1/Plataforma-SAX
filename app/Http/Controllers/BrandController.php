@@ -23,7 +23,7 @@ class BrandController extends Controller
                 $query->where('name', 'like', "%{$search}%");
             }
 
-            return $query->paginate(12)->withQueryString();
+            return $query->paginate(20)->withQueryString();
         });
 
         return view('brands.index', compact('brands'));

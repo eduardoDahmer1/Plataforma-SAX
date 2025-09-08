@@ -18,7 +18,7 @@ class CategoryController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('slug', 'like', "%{$search}%")
             )
-            ->paginate(12)
+            ->paginate(20)
             ->withQueryString();
     
         return view('categories.index', compact('categories'));

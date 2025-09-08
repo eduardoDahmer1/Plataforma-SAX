@@ -16,102 +16,70 @@ class SearchController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = 12;
+        $perPage = $request->per_page ?? 12;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
-        // 🔹 Cache por busca + filtros
         $cacheKey = 'search_' . md5(json_encode([
-            'search'       => $request->search,
-            'brand'        => $request->brand,
-            'category'     => $request->category,
-            'subcategory'  => $request->subcategory,
-            'childcategory'=> $request->childcategory,
-            'min_price'    => $request->min_price,
-            'max_price'    => $request->max_price,
-            'page'         => $currentPage,
+            'search' => $request->search,
+            'brand' => $request->brand,
+            'category' => $request->category,
+            'subcategory' => $request->subcategory,
+            'childcategory' => $request->childcategory,
+            'min_price' => $request->min_price,
+            'max_price' => $request->max_price,
+            'sort_by' => $request->sort_by,
+            'per_page' => $perPage,
+            'page' => $currentPage,
         ]));
 
         $paginated = Cache::remember($cacheKey, 600, function () use ($request, $perPage, $currentPage) {
-            $productsQuery = Product::query()
-                ->when($request->search, function($q) use ($request) {
+            $query = Product::query()
+                ->when($request->search, fn($q) => 
                     $q->where('external_name', 'like', "%{$request->search}%")
                       ->orWhere('sku', 'like', "%{$request->search}%")
                       ->orWhere('name', 'like', "%{$request->search}%")
-                      ->orWhere('description', 'like', "%{$request->search}%");
-                })
+                      ->orWhere('description', 'like', "%{$request->search}%")
+                )
                 ->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
                 ->when($request->category, fn($q) => $q->where('category_id', $request->category))
                 ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
                 ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory))
                 ->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
-                ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price))
-                ->orderByRaw('(CASE WHEN photo IS NOT NULL AND photo != "" THEN 1 ELSE 0 END) DESC')
-                ->orderBy('updated_at', 'desc');
+                ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
 
-            $total = $productsQuery->count();
-            $products = $productsQuery->skip(($currentPage - 1) * $perPage)->take($perPage)->get();
+            // Ordenação
+            switch ($request->sort_by) {
+                case 'latest': $query->orderBy('created_at','desc'); break;
+                case 'oldest': $query->orderBy('created_at','asc'); break;
+                case 'name_az': $query->orderBy('external_name','asc'); break;
+                case 'name_za': $query->orderBy('external_name','desc'); break;
+                case 'price_low': $query->orderBy('price','asc'); break;
+                case 'price_high': $query->orderBy('price','desc'); break;
+                case 'in_stock': $query->orderByRaw('stock>0 DESC')->orderBy('updated_at','desc'); break;
+                default: $query->orderByRaw('(CASE WHEN photo IS NOT NULL AND photo != "" THEN 1 ELSE 0 END) DESC')
+                               ->orderBy('updated_at','desc');
+            }
 
-            return new LengthAwarePaginator(
-                $products,
-                $total,
-                $perPage,
-                $currentPage,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
+            $total = $query->count();
+            $products = $query->skip(($currentPage-1)*$perPage)->take($perPage)->get();
+
+            return new LengthAwarePaginator($products, $total, $perPage, $currentPage, ['path'=>$request->url(),'query'=>$request->query()]);
         });
 
-        // 🔹 Filtros
-        $brandsKey = 'search_brands_' . md5(json_encode([
-            'category'     => $request->category,
-            'subcategory'  => $request->subcategory,
-            'childcategory'=> $request->childcategory,
-        ]));
+        // Filtros sidebar
+        $brands = Cache::remember('search_brands', 600, fn() => Brand::orderBy('name')->get());
+        $categories = Cache::remember('search_categories', 600, fn() => Category::orderBy('name')->get());
+        $subcategories = Cache::remember('search_subcategories', 600, fn() => Subcategory::orderBy('name')->get());
+        $childcategories = Cache::remember('search_childcategories', 600, fn() => Childcategory::orderBy('name')->get());
 
-        $brands = Cache::remember($brandsKey, 600, function () use ($request) {
-            return Brand::whereHas('products', fn($q) =>
-                $q->when($request->category, fn($q2) => $q2->where('category_id', $request->category))
-                  ->when($request->subcategory, fn($q2) => $q2->where('subcategory_id', $request->subcategory))
-                  ->when($request->childcategory, fn($q2) => $q2->where('childcategory_id', $request->childcategory))
-            )->orderBy('name')->get();
-        });
-
-        $categories = Cache::remember('search_categories_all', 600, function () {
-            return Category::selectRaw("id, COALESCE(NULLIF(name, ''), slug) as name")
-                ->whereNotNull('slug')
-                ->orderBy('name')
-                ->get();
-        });
-
-        $subcategories = Cache::remember('search_subcategories_all', 600, function () {
-            return Subcategory::selectRaw("id, COALESCE(NULLIF(name, ''), slug) as name")
-                ->whereNotNull('slug')
-                ->orderBy('name')
-                ->get();
-        });
-
-        $childcategories = Cache::remember('search_childcategories_all', 600, function () {
-            return Childcategory::selectRaw("id, COALESCE(NULLIF(name, ''), slug) as name")
-                ->whereNotNull('slug')
-                ->orderBy('name')
-                ->get();
-        });
-
-        // 🔹 Carrinho
+        // Carrinho
         $cartItems = [];
         if ($user = $request->user()) {
-            $cartItems = Cart::where('user_id', $user->id)
-                ->pluck('quantity', 'product_id')
-                ->toArray();
+            $cartItems = Cart::where('user_id',$user->id)->pluck('quantity','product_id')->toArray();
         }
 
-        return view('search.search', [
-            'query'          => $request->search,
-            'paginated'      => $paginated,
-            'brands'         => $brands,
-            'categories'     => $categories,
-            'subcategories'  => $subcategories,
-            'childcategories'=> $childcategories,
-            'cartItems'      => $cartItems,
-        ]);
+        return view('search.search', compact(
+            'paginated','brands','categories','subcategories','childcategories','cartItems'
+        ))->with('query',$request->search);
     }
 }

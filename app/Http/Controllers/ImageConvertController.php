@@ -43,7 +43,7 @@ class ImageConvertController extends Controller
 
                     if ($image) {
                         $newPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
-                        imagewebp($image, $newPath, 80);
+                        imagewebp($image, $newPath, 90);
                         imagedestroy($image);
 
                         // Apagar imagem antiga

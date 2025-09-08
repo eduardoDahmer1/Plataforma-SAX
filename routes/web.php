@@ -33,7 +33,6 @@ use App\Http\Controllers\Admin\ProductControllerAdmin;
 use App\Http\Controllers\Admin\CategoryControllerAdmin;
 use App\Http\Controllers\Admin\BrandControllerAdmin;
 use App\Http\Controllers\Admin\PaymentMethodController;
-use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 
 // Auth Controllers
@@ -122,22 +121,18 @@ Route::middleware('auth')->group(function () {
 
     Route::put('admin/orders/{order}', [OrderController::class, 'update'])->name('admin.orders.update');
 
-    // Checkout
+    // Checkout padrão
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
-    
+
     // Bancard
-    Route::get('/checkout/bancard', [BancardController::class, 'checkout'])->name('checkout.bancard');
+    Route::get('/checkout/bancard/{order}', [CheckoutController::class, 'bancardCheckout'])->name('checkout.bancard');
     Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');
 
-    // web.php
-    Route::get('/checkout/bancard/{order}', [BancardController::class, 'checkoutPage'])->name('checkout.bancard');
-    
     // Depósito
     Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');    
-
-    Route::post('checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
+    Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
 
     Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])
     ->name('orders.deposit.submit');

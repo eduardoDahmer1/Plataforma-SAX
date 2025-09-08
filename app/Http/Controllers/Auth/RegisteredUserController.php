@@ -37,27 +37,16 @@ class RegisteredUserController extends Controller
             'password' => [
                 'required',
                 'confirmed',
-                'min:8',
-                function ($attribute, $value, $fail) {
-                    if (!preg_match('/[A-Z]/', $value)) {
-                        $fail('A senha deve conter pelo menos 1 letra maiúscula.');
-                    }
-                    if (!preg_match_all('/[a-zA-Z]/', $value) || preg_match_all('/[a-zA-Z]/', $value) < 4) {
-                        $fail('A senha deve conter pelo menos 4 letras.');
-                    }
-                    if (!preg_match_all('/[0-9]/', $value) || preg_match_all('/[0-9]/', $value) < 2) {
-                        $fail('A senha deve conter pelo menos 2 números.');
-                    }
-                },
+                'min:5',
             ],
         ]);
-
+    
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
-
+    
         try {
             event(new Registered($user));
         } catch (\Throwable $e) {
@@ -66,9 +55,9 @@ class RegisteredUserController extends Controller
                 'trace'   => $e->getTraceAsString()
             ]);
         }
-
+    
         Auth::login($user);
-
+    
         return redirect(RouteServiceProvider::HOME);
-    }
+    }    
 }

@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
-use App\Models\Notification;
 
 class BancardController extends Controller
 {
@@ -25,88 +24,63 @@ class BancardController extends Controller
     /**
      * Exibe o checkout Bancard
      */
-    public function checkout(Request $request)
-    {
-        // pega pedido existente
-        $order = Order::find($request->input('order_id'));
-        if (!$order) {
-            return back()->with('error', 'Pedido não encontrado');
-        }
-    
-        // garante payment_method
-        $order->payment_method = 'bancard';
-        $order->save();
-    
-        $amount = intval($order->total); // PYG sem decimais
-        $shopProcessId = uniqid();
-    
-        $payload = [
-            "shop_process_id" => $shopProcessId,
-            "amount" => $amount,
-            "currency" => "PYG",
-            "description" => "Compra na loja SAX",
-            "return_url" => route('bancard.callback'),
-        ];
-    
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . base64_encode(env('BANCARD_PUBLIC_KEY') . ':' . env('BANCARD_PRIVATE_KEY')),
-            'Accept' => 'application/json',
-        ])->post("{$this->apiUrl}/single_buy", $payload);
-    
-        $data = $response->json();
-    
-        if (!isset($data['process_id'])) {
-            Log::error('Erro ao gerar process_id Bancard', $data);
-            return back()->with('error', 'Erro ao iniciar pagamento Bancard');
-        }
-    
-        // salva process_id
-        $order->shop_process_id = $data['process_id'];
-        $order->save();
-    
-        // retorna view
-        return view('layout.bancard', [
-            'process_id' => $data['process_id'],
-            'order'      => $order
-        ]);
-    }    
-
     public function checkoutPage(Order $order)
     {
-        $amount = intval($order->total); // PYG sem decimais
-        $shopProcessId = uniqid();
-    
-        $payload = [
-            "shop_process_id" => $shopProcessId,
-            "amount" => $amount,
-            "currency" => "PYG",
-            "description" => "Compra na loja SAX",
-            "return_url" => route('bancard.callback'),
-        ];
-    
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . base64_encode(env('BANCARD_PUBLIC_KEY') . ':' . env('BANCARD_PRIVATE_KEY')),
-            'Accept' => 'application/json',
-        ])->post("{$this->apiUrl}/single_buy", $payload);
-    
-        $data = $response->json();
-    
-        if (!isset($data['process_id'])) {
-            Log::error('Erro ao gerar process_id Bancard', $data);
-            return back()->with('error', 'Erro ao iniciar pagamento Bancard');
+        try {
+            $user = auth()->user();
+            if ($order->user_id !== $user->id) {
+                abort(403, 'Acesso negado ao pedido.');
+            }
+
+            $amount = intval(round($order->total));
+            if ($amount < 1000) {
+                return back()->with('error', 'O valor mínimo para pagamento Bancard é 1000 PYG');
+            }
+
+            $shopProcessId = $order->id . '-' . time();
+
+            $payload = [
+                "shop_process_id" => $shopProcessId,
+                "amount" => $amount,
+                "currency" => "PYG",
+                "description" => "Compra na loja SAX",
+                "return_url" => route('bancard.callback'),
+                "first_name" => $order->name,
+                "email" => $order->email,
+            ];
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Basic ' . base64_encode(env('BANCARD_PUBLIC_KEY') . ':' . env('BANCARD_PRIVATE_KEY')),
+                'Accept' => 'application/json',
+            ])->timeout(10)
+              ->throw()
+              ->post("{$this->apiUrl}/single_buy", $payload);
+
+            $data = $response->json();
+
+            Log::info('Bancard request', $payload);
+            Log::info('Bancard response', $data);
+
+            if (!isset($data['process_id'])) {
+                Log::error('Erro ao gerar process_id Bancard', $data);
+                return back()->with('error', 'Erro ao iniciar pagamento Bancard');
+            }
+
+            $order->shop_process_id = $data['process_id'];
+            $order->save();
+
+            return view('layout.bancard', [
+                'process_id' => $data['process_id'],
+                'order'      => $order
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Erro checkout Bancard', ['message' => $e->getMessage()]);
+            return back()->with('error', 'Erro ao processar pagamento Bancard: ' . $e->getMessage());
         }
-    
-        $order->shop_process_id = $data['process_id'];
-        $order->save();
-    
-        return view('layout.bancard', [
-            'process_id' => $data['process_id'],
-            'order'      => $order
-        ]);
     }
-      
+
     /**
-     * Callback que o Bancard chama após pagamento
+     * Callback do Bancard após pagamento
      */
     public function bancardCallback(Request $request)
     {
@@ -118,21 +92,13 @@ class BancardController extends Controller
         }
 
         $order = Order::where('shop_process_id', $data['shop_process_id'])->first();
-
         if (!$order) {
             Log::error('Pedido Bancard não encontrado', $data);
             return response()->json(['error' => 'Pedido não encontrado'], 404);
         }
 
-        if (isset($data['status']) && $data['status'] === 'success') {
-            $order->status = 'paid';
-            $order->save();
-
-            Notification::create(['order_id' => $order->id]);
-        } else {
-            $order->status = 'failed';
-            $order->save();
-        }
+        $order->status = (isset($data['status']) && $data['status'] === 'success') ? 'paid' : 'failed';
+        $order->save();
 
         return response()->json(['message' => 'Callback recebido com sucesso']);
     }
@@ -142,19 +108,15 @@ class BancardController extends Controller
      */
     public function bancardFinish(Request $request)
     {
-        $bancardResponse = $request->all();
-        Log::debug('bancard_callback_finish', $bancardResponse);
+        $resp = $request->all();
+        Log::debug('bancard_callback_finish', $resp);
 
-        if (isset($bancardResponse['operation']) && $bancardResponse['operation']['response_code'] == "00") {
-            $order = Order::where('shop_process_id', $bancardResponse['operation']['shop_process_id'])->first();
+        if (isset($resp['operation']) && $resp['operation']['response_code'] == "00") {
+            $order = Order::where('shop_process_id', $resp['operation']['shop_process_id'])->first();
 
             if ($order && $order->status !== "paid") {
                 $order->status = 'paid';
                 $order->save();
-
-                $notification = new Notification();
-                $notification->order_id = $order->id;
-                $notification->save();
             }
 
             return response()->json(["status" => 200, "message" => __("Success")]);
@@ -176,27 +138,29 @@ class BancardController extends Controller
             ]
         ];
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json'
-        ])->post("{$this->apiUrl}/single_buy/rollback", $data);
+        try {
+            $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                            ->timeout(10)
+                            ->throw()
+                            ->post("{$this->apiUrl}/single_buy/rollback", $data);
 
-        $bancardResponse = $response->json();
+            $resp = $response->json();
+            Log::info('bancard_rollback_response', $resp);
 
-        if (isset($bancardResponse['status']) && $bancardResponse['status'] === "success") {
-            $order = Order::where('shop_process_id', $shop_process_id)->first();
-            if ($order) {
-                $order->status = 'pending';
-                $order->save();
-
-                $notification = new Notification();
-                $notification->order_id = $order->id;
-                $notification->save();
+            if (isset($resp['status']) && $resp['status'] === "success") {
+                $order = Order::where('shop_process_id', $shop_process_id)->first();
+                if ($order) {
+                    $order->status = 'pending';
+                    $order->save();
+                }
+                return response()->json(["status" => 200, "message" => "Payment rollbacked successfully."]);
             }
 
-            return response()->json(["status" => 200, "message" => "Payment rollbacked successfully."]);
-        } else {
-            Log::debug('bancard_rollback_response', [$bancardResponse]);
             return response()->json(["status" => 404, "message" => "Not Found"], 404);
+
+        } catch (\Throwable $e) {
+            Log::error('Erro rollback Bancard', ['message' => $e->getMessage()]);
+            return response()->json(["status" => 500, "message" => "Erro no rollback"]);
         }
     }
 }

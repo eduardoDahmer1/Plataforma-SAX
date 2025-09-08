@@ -113,9 +113,9 @@
         if (checkoutForm) {
             checkoutForm.addEventListener('submit', function(e) {
                 const selectedMethod = document.getElementById('payment_method')?.value;
-                if (!selectedMethod) {
+                if (!selectedMethod || !['bancard','deposito'].includes(selectedMethod)) {
                     e.preventDefault();
-                    alert('Escolha um método de pagamento');
+                    alert('Escolha um método de pagamento válido');
                     return false;
                 }
             });

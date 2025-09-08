@@ -1,4 +1,4 @@
-@extends('layout.checkout') {{-- ou seu layout principal --}}
+@extends('layout.checkout')
 
 @section('content')
 <div class="container mt-5 mb-5">
@@ -7,30 +7,42 @@
         <p class="text-muted">Você será redirecionado para o pagamento seguro.</p>
     </div>
 
-    {{-- Container do iframe do Bancard --}}
     <div class="card shadow-sm mb-4">
         <div class="card-body d-flex justify-content-center align-items-center" style="min-height: 250px;">
-            <div id="bancardContainer" class="w-100" style="max-width: 500px;"></div>
+            <div id="iframe-container" class="w-100" style="max-width: 500px;"></div>
         </div>
     </div>
 
-    {{-- Mensagem extra --}}
     <div class="text-center">
         <p class="text-muted">Não feche esta página até concluir o pagamento.</p>
     </div>
 </div>
 
-{{-- Script Bancard --}}
 <script src="https://vpos.infonet.com.py/bancard-checkout-5.0.1.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const processId = "{{ $process_id }}";
-        const options = {
-            process_id: processId,
-            container: "#bancardContainer",
-            callback: "{{ route('bancard.callback') }}",
-        };
-        BancardCheckout.initialize(options);
-    });
+document.addEventListener("DOMContentLoaded", function() {
+    const processId = "{{ $process_id }}"; // enviado do backend
+
+    // Estilos do formulário Bancard
+    const styles = {
+        'input-background-color' : '#FFFFFF',
+        'input-text-color': '#555555',
+        'input-border-color' : '#CCCCCC',
+        'input-placeholder-color' : '#999999',
+        'button-background-color' : '#5CB85C',
+        'button-text-color' : '#FFFFFF',
+        'button-border-color' : '#4CAE4C',
+        'form-background-color' : '#FFFFFF',
+        'form-border-color' : '#DDDDDD',
+        'header-background-color' : '#F5F5F5',
+        'header-text-color' : '#333333',
+        'hr-border-color' : '#EEEEEE'
+    };
+
+    const options = { styles: styles };
+
+    // Inicializa o iFrame do Bancard
+    Bancard.Checkout.createForm('iframe-container', processId, options);
+});
 </script>
 @endsection

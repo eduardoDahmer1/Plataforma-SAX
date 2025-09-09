@@ -29,6 +29,18 @@
         @endforeach
     </div>
 
+    {{-- Banner da categoria selecionada --}}
+    @if(request('category'))
+        @php
+            $selectedCategory = $categories->firstWhere('id', request('category'));
+        @endphp
+        @if($selectedCategory && $selectedCategory->banner && Storage::disk('public')->exists($selectedCategory->banner))
+            <div class="mb-4">
+                <img src="{{ Storage::url($selectedCategory->banner) }}" alt="{{ $selectedCategory->name }}" class="img-fluid rounded shadow-sm">
+            </div>
+        @endif
+    @endif
+
     {{-- Lista de blogs --}}
     <div class="row">
         @forelse ($blogs as $blog)

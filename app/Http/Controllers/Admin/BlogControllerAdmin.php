@@ -4,154 +4,148 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
+use App\Models\BlogCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Models\BlogCategory;
+use Illuminate\Support\Str;
 
 class BlogControllerAdmin extends Controller
 {
+    // Lista blogs
     public function index()
     {
-        $blogs = Blog::latest()->paginate(10);
+        $blogs = Blog::with('category')->latest()->paginate(10);
         return view('admin.blogs.index', compact('blogs'));
     }
 
+    // Form para criar blog
     public function create()
     {
         $categories = BlogCategory::orderBy('name')->get();
         return view('admin.blogs.create', compact('categories'));
     }
 
+    // Salva blog novo
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'title' => 'required',
-            'subtitle' => 'nullable',
-            'slug' => 'nullable|unique:blogs',
-            'image' => 'nullable|image',
-            'content' => 'required',
-            'published_at' => 'nullable|date',
-            'is_active' => 'boolean',
-            'category_id' => 'required|exists:blog_categories,id',
-        ]);
+        $data = $this->validateBlog($request);
 
         if ($request->hasFile('image')) {
-            $originalPath = $request->file('image')->store('blogs', 'public');
-            $fullPath = storage_path('app/public/' . $originalPath);
-            $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-            $image = null;
-
-            if (in_array($extension, ['jpg', 'jpeg'])) {
-                $image = imagecreatefromjpeg($fullPath);
-            } elseif ($extension === 'png') {
-                $image = imagecreatefrompng($fullPath);
-                imagepalettetotruecolor($image);
-                imagealphablending($image, true);
-                imagesavealpha($image, true);
-            }
-
-            if ($image) {
-                $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
-                imagewebp($image, $webpPath, 20);
-                imagedestroy($image);
-
-                @unlink($fullPath);
-
-                $data['image'] = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
-            }
+            $data['image'] = $this->processImage($request->file('image'));
         }
 
         Blog::create($data);
+
         return redirect()->route('admin.blogs.index')->with('success', 'Blog criado com sucesso!');
     }
 
+    // Form para editar
     public function edit(Blog $blog)
     {
         $categories = BlogCategory::orderBy('name')->get();
         return view('admin.blogs.edit', compact('blog', 'categories'));
     }
 
+    // Atualiza blog
     public function update(Request $request, Blog $blog)
     {
-        $data = $request->validate([
-            'title' => 'required',
-            'subtitle' => 'nullable',
-            'slug' => 'nullable|unique:blogs,slug,' . $blog->id,
-            'image' => 'nullable|image',
-            'content' => 'required',
-            'published_at' => 'nullable|date',
-            'is_active' => 'boolean',
-            'category_id' => 'required|exists:blog_categories,id',
-        ]);
+        $data = $this->validateBlog($request, $blog->id);
 
-        // 🔥 Apagar imagens que foram removidas do campo content
+        // Remove imagens antigas do conteúdo
         $oldImages = $this->extractImageUrls($blog->content);
         $newImages = $this->extractImageUrls($data['content']);
         $removedImages = array_diff($oldImages, $newImages);
-
         foreach ($removedImages as $url) {
-            $path = parse_url($url, PHP_URL_PATH);
-            $relative = ltrim(str_replace('/storage/', '', $path), '/');
-            if (Storage::disk('public')->exists($relative)) {
-                Storage::disk('public')->delete($relative);
-            }
+            $this->deleteImageByUrl($url);
         }
 
-        // Atualiza imagem principal se trocada
+        // Atualiza imagem principal
         if ($request->hasFile('image')) {
             if ($blog->image) Storage::disk('public')->delete($blog->image);
-
-            $originalPath = $request->file('image')->store('blogs', 'public');
-            $fullPath = storage_path('app/public/' . $originalPath);
-            $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-            $image = null;
-
-            if (in_array($extension, ['jpg', 'jpeg'])) {
-                $image = imagecreatefromjpeg($fullPath);
-            } elseif ($extension === 'png') {
-                $image = imagecreatefrompng($fullPath);
-                imagepalettetotruecolor($image);
-                imagealphablending($image, true);
-                imagesavealpha($image, true);
-            }
-
-            if ($image) {
-                $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
-                imagewebp($image, $webpPath, 85);
-                imagedestroy($image);
-                @unlink($fullPath);
-                $data['image'] = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
-            }
+            $data['image'] = $this->processImage($request->file('image'));
         }
 
         $blog->update($data);
+
         return redirect()->route('admin.blogs.index')->with('success', 'Blog atualizado com sucesso!');
     }
 
+    // Remove blog
     public function destroy(Blog $blog)
     {
-        // Remove imagem principal
         if ($blog->image) Storage::disk('public')->delete($blog->image);
 
-        // Remove imagens do campo content
         $images = $this->extractImageUrls($blog->content);
         foreach ($images as $url) {
-            $path = parse_url($url, PHP_URL_PATH);
-            $relative = ltrim(str_replace('/storage/', '', $path), '/');
-            if (Storage::disk('public')->exists($relative)) {
-                Storage::disk('public')->delete($relative);
-            }
+            $this->deleteImageByUrl($url);
         }
 
         $blog->delete();
+
         return redirect()->route('admin.blogs.index')->with('success', 'Blog removido com sucesso!');
     }
 
-    // ✅ Função auxiliar para extrair URLs de imagens no HTML
+    // Retorna blog JSON (útil para modal preview)
+    public function show(Blog $blog)
+    {
+        return response()->json($blog->load('category'));
+    }
+
+    /*** Helpers ***/
+    private function validateBlog(Request $request, $id = null)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'subtitle' => 'nullable|string',
+            'slug' => 'nullable|unique:blogs,slug' . ($id ? ",$id" : ''),
+            'image' => 'nullable|image',
+            'content' => 'required|string',
+            'published_at' => 'nullable|date',
+            'is_active' => 'sometimes|boolean',
+            'category_id' => 'required|exists:blog_categories,id',
+        ]);
+
+        $data['is_active'] = $request->has('is_active') ? 1 : 0;
+        $data['published_at'] = $data['published_at'] ?? null;
+
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($data['title']);
+        }
+
+        return $data;
+    }
+
+    private function processImage($file)
+    {
+        $originalPath = $file->store('blogs', 'public');
+        $fullPath = storage_path('app/public/' . $originalPath);
+        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+        $image = null;
+
+        if (in_array($extension, ['jpg', 'jpeg'])) {
+            $image = imagecreatefromjpeg($fullPath);
+        } elseif ($extension === 'png') {
+            $image = imagecreatefrompng($fullPath);
+            imagepalettetotruecolor($image);
+            imagealphablending($image, true);
+            imagesavealpha($image, true);
+        }
+
+        if ($image) {
+            $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
+            imagewebp($image, $webpPath, 85);
+            imagedestroy($image);
+            @unlink($fullPath);
+
+            return preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
+        }
+
+        return $originalPath;
+    }
+
     private function extractImageUrls($html)
     {
         $urls = [];
-
         if (!$html) return $urls;
 
         libxml_use_internal_errors(true);
@@ -163,5 +157,14 @@ class BlogControllerAdmin extends Controller
         }
 
         return $urls;
+    }
+
+    private function deleteImageByUrl($url)
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        $relative = ltrim(str_replace('/storage/', '', $path), '/');
+        if (Storage::disk('public')->exists($relative)) {
+            Storage::disk('public')->delete($relative);
+        }
     }
 }

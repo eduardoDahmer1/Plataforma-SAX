@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\CategoryControllerAdmin;
 use App\Http\Controllers\Admin\BrandControllerAdmin;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
+use App\Http\Controllers\Admin\BlogCategoryController;
 
 // Auth Controllers
 use App\Http\Controllers\Auth\UserController;
@@ -64,9 +65,12 @@ Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('bran
 // Currencies
 Route::post('/currency/change', [CurrencyController::class, 'change'])->name('currency.change');
 
-// Blogs
+// Lista blogs ativos com filtro, busca e categorias
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+
+// Visualizar blog específico
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
+
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 
@@ -206,10 +210,23 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('payments', PaymentMethodController::class);
     Route::post('payments/{id}/toggle-active', [PaymentMethodController::class, 'toggleActive'])->name('payments.toggleActive');
 
-    // Blogs Admin
+    // Blogs
     Route::resource('blogs', BlogControllerAdmin::class);
-    Route::post('blogs/upload-image', [BlogController::class, 'uploadImage'])->name('blogs.upload-image');
 
+    // Upload de imagens via admin
+    Route::post('blogs/upload-image', [BlogControllerAdmin::class, 'uploadImage'])->name('blogs.upload-image');
+
+    // Blog Categories
+    Route::get('blog-categories', [BlogCategoryController::class, 'index'])->name('blog-categories.index');
+    Route::get('blog-categories/create', [BlogCategoryController::class, 'create'])->name('blog-categories.create');
+    Route::post('blog-categories', [BlogCategoryController::class, 'store'])->name('blog-categories.store');
+    Route::get('blog-categories/{category}/edit', [BlogCategoryController::class, 'edit'])->name('blog-categories.edit');
+    Route::get('blog-categories/{category}', [BlogCategoryController::class, 'show'])->name('blog-categories.show');
+    Route::put('blog-categories/{category}', [BlogCategoryController::class, 'update'])->name('blog-categories.update');
+    Route::delete('blog-categories/{category}', [BlogCategoryController::class, 'destroy'])->name('blog-categories.destroy');
+
+    Route::get('admin/blog-categories/{category}', [BlogCategoryController::class, 'show'])->name('admin.blog-categories.show');
+    
     // Users Admin
     Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
     Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');

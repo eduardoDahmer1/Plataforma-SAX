@@ -7,7 +7,8 @@ use Illuminate\Support\Str;
 
 class BlogCategory extends Model
 {
-    protected $fillable = ['name', 'slug'];
+    // Adicione 'banner' aqui
+    protected $fillable = ['name', 'slug', 'banner'];
 
     protected static function boot()
     {

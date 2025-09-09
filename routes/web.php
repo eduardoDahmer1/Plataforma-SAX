@@ -134,11 +134,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');    
     Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
 
-    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])
-    ->name('orders.deposit.submit');
+    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->name('orders.deposit.submit');
 
-    Route::delete('/user/delete', [App\Http\Controllers\Auth\UserController::class, 'destroy'])
-    ->name('user.destroy');
+    // Excluir conta
+    Route::delete('/user/delete', [App\Http\Controllers\Auth\UserController::class, 'destroy'])->name('user.destroy');
 
     // Email verification
     Route::get('/email/verify', function () { return view('auth.verify-email'); })->name('verification.notice');

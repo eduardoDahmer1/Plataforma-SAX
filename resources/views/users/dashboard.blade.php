@@ -51,7 +51,7 @@
         <h2 class="mb-3">Seus Pedidos</h2>
         @if($orders->count())
         <ul class="list-group">
-            @foreach($orders as $order)
+            @foreach($orders->take(5) as $order)
             <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
                 <div class="mb-2 mb-md-0">
                     <i class="fas fa-box-open me-2"></i>Pedido #{{ $order->id }} - {{ $order->created_at->format('d/m/Y') }}
@@ -80,6 +80,12 @@
                 </div>
             </li>
             @endforeach
+            <!-- Botão para histórico -->
+            <div class="mt-3 text-center">
+                <a href="{{ route('user.orders') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-history me-1"></i> Histórico de Pedidos
+                </a>
+            </div>
         </ul>
         @else
         <p>Você ainda não realizou pedidos.</p>

@@ -37,7 +37,7 @@
             <form action="{{ route('checkout.deposito.submit', $order->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="mb-3">
-                    <label for="deposit_receipt" class="form-label">Envie o comprovante de depósito (opcional)</label>
+                    <label for="deposit_receipt" class="form-label">Envie o comprovante de depósito</label>
                     <input type="file" name="deposit_receipt" id="deposit_receipt" class="form-control">
                 </div>
 

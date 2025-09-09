@@ -152,7 +152,7 @@
         <div class="mt-4">
             <p>
                 <strong>Precisa de ajuda?</strong><br>
-                <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Olá, você visitou nosso site. Precisa de ajuda com algo?') }}"
+                <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Olá, estou tentando finalizar uma compra na web, poderia me ajudar por favor?') }}"
                    target="_blank" class="btn btn-success">
                     <i class="fab fa-whatsapp me-1"></i> Falar no WhatsApp
                 </a>

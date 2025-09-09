@@ -18,9 +18,9 @@
     <div class="list-group-item bg-light fw-bold mt-3">
         <i class="fa fa-shopping-bag me-2"></i> Pedidos e Compras
     </div>
-    <a class="list-group-item list-group-item-action">
+    <a href="{{ route('user.orders') }}" class="list-group-item list-group-item-action">
         <i class="fa fa-list me-2"></i> Histórico de Pedidos
-    </a>
+    </a>    
     <a class="list-group-item list-group-item-action">
         <i class="fa fa-file-invoice me-2"></i> Notas Fiscais / Comprovantes
     </a>

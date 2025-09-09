@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <h2 class="mb-2 mb-md-0">Marcas</h2>
-        <!-- <a href="{{ route('admin.brands.create') }}" class="btn btn-secondary">Nova Marca</a> -->
+        <a href="{{ route('admin.brands.create') }}" class="btn btn-primary">Nova Marca</a>
         <p class="text-muted mb-3">
             Exibindo {{ $brands->count() }} de {{ $brands->total() }} marca(s).
         </p>
@@ -32,27 +32,37 @@
             <div class="card shadow-sm h-100 d-flex flex-column">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title mb-3 text-truncate">{{ $brand->name }}</h5>
-                    <div class="d-flex flex-wrap gap-2 mt-auto">
-                        <a href="{{ route('admin.brands.show', $brand) }}"
-                            class="btn btn-info btn-sm flex-fill flex-md-grow-1">
-                            <i class="fa fa-eye me-1"></i> Ver Admin
-                        </a>
-                        <a href="{{ route('brands.show', $brand->slug) }}" target="_blank"
-                            class="btn btn-success btn-sm flex-fill flex-md-grow-1">
-                            <i class="fa fa-link me-1"></i> Ver Pública
-                        </a>
-                        <a href="{{ route('admin.brands.edit', $brand) }}"
-                            class="btn btn-warning btn-sm flex-fill flex-md-grow-1">
-                            <i class="fa fa-edit me-1"></i> Editar
-                        </a>
-                        <form action="{{ route('admin.brands.destroy', $brand) }}" method="POST"
-                            onsubmit="return confirm('Tem certeza?')" class="flex-fill flex-md-grow-1 m-0">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-danger btn-sm w-100">
-                                <i class="fa fa-trash me-1"></i> Excluir
-                            </button>
-                        </form>
+                    <div class="d-flex flex-column flex-md-row gap-2 mt-auto">
+                        <div class="row g-2 mt-auto">
+                            <div class="col-6 d-grid">
+                                <a href="{{ route('admin.brands.show', $brand) }}"
+                                    class="btn btn-info btn-sm w-100">
+                                    <i class="fa fa-eye me-1"></i> Ver Admin
+                                </a>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <a href="{{ route('brands.show', $brand->slug) }}" target="_blank"
+                                    class="btn btn-success btn-sm w-100">
+                                    <i class="fa fa-link me-1"></i> Ver Pública
+                                </a>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <a href="{{ route('admin.brands.edit', $brand) }}"
+                                    class="btn btn-warning btn-sm w-100">
+                                    <i class="fa fa-edit me-1"></i> Editar
+                                </a>
+                            </div>
+                            <div class="col-6 d-grid">
+                                <form action="{{ route('admin.brands.destroy', $brand) }}" method="POST"
+                                    onsubmit="return confirm('Tem certeza?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-danger btn-sm w-100">
+                                        <i class="fa fa-trash me-1"></i> Excluir
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,10 +1,14 @@
- <!-- jQuery -->
- <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 
-<!-- Trumbowyg core -->
+<!-- Bootstrap CSS / JS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Trumbowyg Core -->
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
 
-<!-- Plugins -->
+<!-- Trumbowyg Plugins -->
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/upload/trumbowyg.upload.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/resizimg/trumbowyg.resizimg.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/autogrow/trumbowyg.autogrow.min.js"></script>
@@ -18,3 +22,6 @@
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/history/trumbowyg.history.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/preformatted/trumbowyg.preformatted.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/template/trumbowyg.template.min.js"></script>
+
+<!-- Seus scripts customizados -->
+<script src="{{ asset('js/app-custom.js') }}"></script>

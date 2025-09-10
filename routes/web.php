@@ -41,6 +41,7 @@ use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\ImageConvertController;
+use App\Http\Controllers\Auth\UserPreferenceController;
 
 // --- Home ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -125,6 +126,9 @@ Route::middleware('auth')->group(function () {
 
     Route::put('admin/orders/{order}', [OrderController::class, 'update'])->name('admin.orders.update');
 
+    Route::get('/meus-preferidos', [UserPreferenceController::class, 'index'])->name('user.preferences');
+    Route::post('/user/preferences/toggle', [UserPreferenceController::class, 'toggle'])->name('user.preferences.toggle');
+    
     // Checkout padrão
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');

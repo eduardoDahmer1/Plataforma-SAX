@@ -130,5 +130,11 @@ class Product extends Model
         return $this->belongsTo(Childcategory::class);
     }
 
+    // Product.php
+    public function favoredByUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_product_preferences')->withTimestamps();
+    }
+
     public $timestamps = true;
 }

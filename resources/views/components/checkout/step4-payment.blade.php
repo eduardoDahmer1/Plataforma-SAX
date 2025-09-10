@@ -8,10 +8,10 @@
                 onclick="selectPayment('deposito')">
                 <i class="fa fa-university"></i> Depósito Bancário
             </button>
-            <button type="button" class="btn btn-outline-success btn-lg" id="btn-bancard"
+            {{-- <button type="button" class="btn btn-outline-success btn-lg" id="btn-bancard"
                 onclick="selectPayment('bancard')">
                 <i class="fa fa-credit-card"></i> Bancard
-            </button>
+            </button> --}}
         </div>
     </div>
 

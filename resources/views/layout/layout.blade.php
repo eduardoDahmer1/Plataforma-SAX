@@ -45,10 +45,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5.3.3 CSS (SRI + crossorigin) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!-- Trumbowyg Core CSS e Plugins -->
     <link rel="stylesheet" href="https://unpkg.com/trumbowyg/dist/ui/trumbowyg.min.css" />
@@ -59,6 +57,10 @@
 
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
 </head>
 
 <body>
@@ -72,7 +74,7 @@
 
     <!-- Botão Voltar ao Topo -->
     <button id="backToTop" class="btn btn-primary position-fixed"
-            style="bottom:30px; right:1em; display:none; z-index:1050;width: 3em;">
+        style="bottom:30px; right:1em; display:none; z-index:1050;width: 3em;">
         <i class="fa fa-arrow-up"></i>
     </button>
 
@@ -81,6 +83,61 @@
 
     {{-- Scripts principais --}}
     @include('components.scripts')
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <script>
+        const swiper = new Swiper(".mySwiper", {
+            slidesPerView: 4,
+            spaceBetween: 20,
+            loop: true, // 🔄 loop infinito real
+            grabCursor: true, // 🤚 arrastar com mouse
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+            breakpoints: {
+                320: {
+                    slidesPerView: 1
+                },
+                768: {
+                    slidesPerView: 2
+                },
+                1024: {
+                    slidesPerView: 4
+                },
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const blogSwiper = new Swiper('.blogSwiper', {
+                slidesPerView: 3,
+                spaceBetween: 20,
+                loop: true,
+                grabCursor: true,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                breakpoints: {
+                    320: {
+                        slidesPerView: 1
+                    },
+                    576: {
+                        slidesPerView: 1
+                    },
+                    768: {
+                        slidesPerView: 2
+                    },
+                    992: {
+                        slidesPerView: 3
+                    },
+                }
+            });
+        });
+    </script>
 
 </body>
+
 </html>

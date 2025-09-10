@@ -49,12 +49,18 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     public function orders()
-{
-    return $this->hasMany(\App\Models\Order::class);
-}
+    {
+        return $this->hasMany(\App\Models\Order::class);
+    }
 
-public function cart()
-{
-    return $this->hasMany(\App\Models\Cart::class);
-}
+    public function cart()
+    {
+        return $this->hasMany(\App\Models\Cart::class);
+    }
+    // User.php
+    public function favoriteProducts()
+    {
+        return $this->belongsToMany(Product::class, 'user_product_preferences')->withTimestamps();
+    }
+
 }

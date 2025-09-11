@@ -161,3 +161,40 @@ if (window.jQuery) {
         });
     });
 }
+
+document.querySelectorAll('.carousel').forEach(carousel => {
+    let startX = 0,
+        endX = 0;
+    carousel.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    carousel.addEventListener('touchend', e => {
+        endX = e.changedTouches[0].clientX;
+        if (startX - endX > 50) bootstrap.Carousel.getInstance(carousel).next();
+        if (endX - startX > 50) bootstrap.Carousel.getInstance(carousel).prev();
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const blogSwiper = new Swiper('.blogSwiper', {
+        slidesPerView: 3,
+        spaceBetween: 20,
+        loop: true,
+        grabCursor: true,
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        breakpoints: {
+            320: {
+                slidesPerView: 1
+            },
+            576: {
+                slidesPerView: 1
+            },
+            768: {
+                slidesPerView: 2
+            },
+            992: {
+                slidesPerView: 3
+            },
+        }
+    });
+});

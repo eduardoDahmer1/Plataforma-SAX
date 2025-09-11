@@ -13,6 +13,7 @@
                 <i class="fa fa-credit-card"></i> Bancard
             </button> --}}
         </div>
+        <p class="mt-1">Cartão ou QR Code? Chame no WhatsApp e concluímos seu pedido.</p>
     </div>
 
     {{-- Campo oculto que guarda o método de pagamento --}}

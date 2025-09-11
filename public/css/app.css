@@ -1,9 +1,9 @@
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
     overflow-x: hidden;
 }
 
-.text-home{
+.text-home {
     margin-top: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -13,7 +13,7 @@ body {
 .slider-section {
     margin: 60px auto;
 }
-.background-header{
+.background-header {
     background-color: rgb(231 231 231) !important;
 }
 .btn-primary {
@@ -40,7 +40,7 @@ body {
     margin: auto;
 }
 .list-group-item a {
-    color:white !important;
+    color: white !important;
 }
 .swiper-slide img,
 .splide__slide img,
@@ -80,7 +80,7 @@ body {
     display: flex;
     flex-wrap: wrap;
 }
-.format-header-mobile{
+.format-header-mobile {
     display: flex;
     justify-content: center;
     gap: 11px;
@@ -94,11 +94,11 @@ body {
     color: #555;
 }
 .object-fit-coverr {
-    -o-object-fit: cover!important;
+    -o-object-fit: cover !important;
     object-fit: scale-down !important;
 }
 .object-fit-contain {
-    -o-object-fit: contain!important;
+    -o-object-fit: contain !important;
     object-fit: scale-down !important;
 }
 .product-card-body .product-images img {
@@ -159,7 +159,7 @@ body {
     padding: 20px;
     background-color: #fff;
     border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Título do checkout */
@@ -197,8 +197,8 @@ body {
     background-color: #6c757d;
     color: #fff;
 }
-.mt-4 .shadow-sm{
-width: 100% !important;
+.mt-4 .shadow-sm {
+    width: 100% !important;
 }
 .text-center .shadow-sm {
     width: 10em;
@@ -206,7 +206,9 @@ width: 100% !important;
 .card-checkout .btn-secondary:hover {
     background-color: #5a6268;
 }
-
+.bg-success{
+    width: 50%;
+}
 /* Responsivo */
 @media (max-width: 768px) {
     .card-checkout {
@@ -214,6 +216,9 @@ width: 100% !important;
         padding: 15px;
     }
 
+    .bg-success{
+        width: 100%;
+    }
     .card-checkout h2 {
         font-size: 1.5rem;
     }
@@ -222,7 +227,7 @@ width: 100% !important;
         width: 100%;
         margin: 6px 0;
     }
-    .input-group>.form-control{
+    .input-group > .form-control {
         width: 100% !important;
     }
 }
@@ -236,7 +241,7 @@ width: 100% !important;
     right: 8px;
 }
 
-.card:hover .card-favorite-form{
+.card:hover .card-favorite-form {
     display: flex !important;
     flex-direction: row; /* lado a lado */
     gap: 5px; /* espaço entre os botões */
@@ -256,4 +261,19 @@ width: 100% !important;
     justify-content: center;
     padding: 0;
     font-size: 16px;
+}
+/* Ajuste para o swiper-slide do blog */
+.blogSwiper .swiper-slide {
+    width: auto;
+}
+.custom-arrow {
+    background-color: black !important;
+    background-size: 50%, 50%;
+    border-radius: 50%;
+}
+
+.banner-img {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
 }

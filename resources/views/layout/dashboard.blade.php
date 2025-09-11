@@ -15,8 +15,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0d6efd">
     <meta name="application-name" content="SAX">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SAX">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <!-- Open Graph / Facebook -->
@@ -37,19 +37,18 @@
     <title>SAX - E-commerce de Luxo</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
-    <!-- CSS do app compilado com Laravel Mix ou Vite -->
+    <!-- CSS do app -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/checkout.css') }}" rel="stylesheet">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5.3.3 CSS (SRI + crossorigin) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
-    <!-- Trumbowyg Core CSS e Plugins CSS -->
+    <!-- Trumbowyg Core CSS e Plugins -->
     <link rel="stylesheet" href="https://unpkg.com/trumbowyg/dist/ui/trumbowyg.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/trumbowyg/dist/plugins/resizimg/trumbowyg.resizimg.min.css" />
 
@@ -59,13 +58,43 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
 </head>
 
 <body>
 
-    <main class="py-4 container-fluid">
-        @yield('content')
+    {{-- Header --}}
+    @include('components.header')
+
+    <main class="py-4 container">
+        <div class="row">
+            <!-- Menu lateral -->
+            <div class="col-md-3 mb-4">
+                @include('users.components.menu')
+            </div>
+
+            <!-- Conteúdo principal -->
+            <div class="col-md-9">
+                @yield('content')
+            </div>
+        </div>
     </main>
+
+    <!-- Botão Voltar ao Topo -->
+    <button id="backToTop" class="btn btn-primary position-fixed"
+        style="bottom:30px; right:1em; display:none; z-index:1050;width: 3em;">
+        <i class="fa fa-arrow-up"></i>
+    </button>
+
+    {{-- Footer --}}
+    @include('components.footer')
+
+    {{-- Scripts principais --}}
+    @include('components.scripts')
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 </body>
 

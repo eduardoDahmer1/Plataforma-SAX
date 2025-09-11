@@ -101,7 +101,7 @@
 
                                             {{-- Estoque --}}
                                             @if ($item->stock > 0)
-                                                <span style="width:50%;" class="badge bg-success"><i
+                                                <span class="badge bg-success"><i
                                                         class="fas fa-box me-1"></i>
                                                     {{ $item->stock }} em estoque</span>
                                             @else
@@ -179,7 +179,6 @@
                                     </form>
                                 @endauth
                                 
-
                                     <div class="card-body p-2 d-flex flex-column">
                                         <h6 class="card-title mb-2">
                                             <a href="{{ route('produto.show', $item->id) }}"
@@ -193,7 +192,7 @@
 
                                         {{-- Estoque --}}
                                         @if ($item->stock > 0)
-                                            <span style="width:50%;" class="badge bg-success"><i
+                                            <span class="badge bg-success"><i
                                                     class="fas fa-box me-1"></i>
                                                 {{ $item->stock }} em estoque</span>
                                         @else
@@ -283,57 +282,9 @@
                         </div>
                     @endforeach
                 </div>
-
-                {{-- Navegação --}}
                 <div class="swiper-button-prev"></div>
                 <div class="swiper-button-next"></div>
             </div>
-
-            <style>
-                /* Ajuste para o swiper-slide do blog */
-                .blogSwiper .swiper-slide {
-                    width: auto;
-                }
-            </style>
         @endif
-
-
-        {{-- CSS para setas pretas --}}
-        <style>
-            #blogSlider .custom-arrow {
-                background-color: black !important;
-                border-radius: 50%;
-            }
-        </style>
-
     </div>
-
-    {{-- CSS extra para setas pretas e banner --}}
-    <style>
-        .custom-arrow {
-            background-color: black !important;
-            background-size: 50%, 50%;
-            border-radius: 50%;
-        }
-
-        .banner-img {
-            width: 100%;
-            max-height: 300px;
-            object-fit: cover;
-        }
-    </style>
-
-    {{-- JS para swipe com mouse/touch --}}
-    <script>
-        document.querySelectorAll('.carousel').forEach(carousel => {
-            let startX = 0,
-                endX = 0;
-            carousel.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-            carousel.addEventListener('touchend', e => {
-                endX = e.changedTouches[0].clientX;
-                if (startX - endX > 50) bootstrap.Carousel.getInstance(carousel).next();
-                if (endX - startX > 50) bootstrap.Carousel.getInstance(carousel).prev();
-            });
-        });
-    </script>
 @endsection

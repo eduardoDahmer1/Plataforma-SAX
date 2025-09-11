@@ -79,10 +79,6 @@ label {
     font-weight: bold;
 }
 
-.btn+.btn {
-    margin-left: 10px;
-}
-
 /* ===================== RADIO & PAYMENT ===================== */
 .payment-details .card {
     border: 1px solid #eee;

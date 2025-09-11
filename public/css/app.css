@@ -206,9 +206,6 @@ body {
 .card-checkout .btn-secondary:hover {
     background-color: #5a6268;
 }
-.bg-success{
-    width: 50%;
-}
 /* Responsivo */
 @media (max-width: 768px) {
     .card-checkout {
@@ -216,9 +213,6 @@ body {
         padding: 15px;
     }
 
-    .bg-success{
-        width: 100%;
-    }
     .card-checkout h2 {
         font-size: 1.5rem;
     }

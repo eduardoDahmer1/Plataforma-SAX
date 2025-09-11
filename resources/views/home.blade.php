@@ -15,16 +15,16 @@
 
         @php
             $highlightTitles = [
-                'destaque' => 'Exibir em Destaques',
-                'mais_vendidos' => 'Exibir em Mais Vendidos',
-                'melhores_avaliacoes' => 'Exibir em Melhores Avaliações',
-                'super_desconto' => 'Exibir em Super Desconto',
-                'famosos' => 'Exibir em Famosos',
-                'lancamentos' => 'Exibir em Lançamentos',
-                'tendencias' => 'Exibir em Tendências',
-                'promocoes' => 'Exibir em Promoções',
-                'ofertas_relampago' => 'Exibir em Ofertas Relâmpago',
-                'navbar' => 'Exibir em Navbar',
+                'destaque' => 'Destaques',
+                'mais_vendidos' => 'Mais Vendidos',
+                'melhores_avaliacoes' => 'Melhores Avaliações',
+                'super_desconto' => 'Super Desconto',
+                'famosos' => 'Famosos',
+                'lancamentos' => 'Lançamentos',
+                'tendencias' => 'Tendências',
+                'promocoes' => 'Promoções',
+                'ofertas_relampago' => 'Ofertas Relâmpago',
+                'navbar' => 'Navbar',
             ];
 
             // Array dos banners

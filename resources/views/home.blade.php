@@ -6,12 +6,8 @@
         <h2 class="mb-4"><i class="fas fa-home me-2"></i> Bem-vindo à Página Inicial</h2>
         <p class="text-muted">Confira os produtos mais recentes em nosso catálogo.</p>
 
-        {{-- Alertas de sucesso --}}
-        @if (session('success'))
-            <div class="alert alert-success d-flex align-items-center">
-                <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-            </div>
-        @endif
+    {{-- Alertas --}}
+    <x-alert type="success" :message="session('success')" />
 
         @php
             $highlightTitles = [

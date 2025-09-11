@@ -198,10 +198,3 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
-
-<style>
-.login-container .form-control { padding: 0.75rem; font-size: 0.95rem; border-radius: 0.5rem; }
-.login-form .btn { border-radius: 0.5rem; }
-.modal-header { font-weight: 600; font-size: 1.1rem; }
-.position-relative .btn { font-size: 0.75rem; }
-</style>

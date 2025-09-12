@@ -33,20 +33,26 @@ $rate = $currency->value ?? 1;
 @endphp
 
 <div class="d-flex justify-content-center justify-content-md-end position-relative">
-    <button id="cart-button" class="btn btn-light">
-        <i class="fa fa-shopping-cart me-1"></i> Carrinho ({{ $cartCount }})
+    <button id="cart-button" class="btn btn-outline-dark position-relative">
+        <i class="fa fa-shopping-cart me-1"></i> 
+        <span>Carrinho</span>
+        @if ($cartCount > 0)
+            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                {{ $cartCount }}
+            </span>
+        @endif
     </button>
 
     @if ($cartCount > 0)
-        <div id="cart-modal" class="card shadow-lg p-3 position-absolute bg-white text-dark"
-            style="top: 50px; right: 0; display: none; width: 22em; z-index: 999;">
+        <div id="cart-modal" class="cart-popup shadow-lg bg-white text-dark rounded-4"
+            style="display: none; z-index: 1055;">
             
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0">Itens no carrinho</h6>
-                <button id="cart-close" class="btn btn-sm btn-outline-danger">&times;</button>
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h6 class="fw-bold mb-0"><i class="fa fa-shopping-bag me-1"></i> Itens no carrinho</h6>
+                <button id="cart-close" class="btn btn-sm btn-outline-danger rounded-circle">&times;</button>
             </div>
 
-            <ul class="list-group list-group-flush">
+            <ul class="list-group list-group-flush small">
                 @foreach ($cart as $item)
                     @php
                         $basePrice = $item->product->price ?? 0;
@@ -57,11 +63,11 @@ $rate = $currency->value ?? 1;
                         $formattedTotal = $symbol . ' ' . number_format($convertedTotal, 2, $decimal, $thousand);
                     @endphp
                     <li class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="text-start">
-                                <strong>{{ $item->product->title ?? ($item->product->slug ?? 'Produto') }}</strong><br>
-                                <small>Preço: {{ $formattedPrice }}</small><br>
-                                <small>Total: {{ $formattedTotal }}</small>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong class="d-block">{{ $item->product->title ?? ($item->product->slug ?? 'Produto') }}</strong>
+                                <small class="text-muted">Preço: {{ $formattedPrice }}</small><br>
+                                <small class="fw-semibold">Total: {{ $formattedTotal }}</small>
                             </div>
                             <form action="{{ route('cart.remove', $item->product_id) }}" method="POST"
                                 onsubmit="return confirm('Remover este item?');">
@@ -82,7 +88,7 @@ $rate = $currency->value ?? 1;
                                     <button type="submit" class="btn btn-sm btn-outline-secondary">-</button>
                                 </form>
                             @endif
-                            <span>{{ $item->quantity }}</span>
+                            <span class="fw-bold">{{ $item->quantity }}</span>
                             <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
@@ -102,6 +108,30 @@ $rate = $currency->value ?? 1;
     @endif
 </div>
 
+{{-- CSS custom --}}
+<style>
+    .cart-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 90%;
+        max-width: 400px;
+        transform: translate(-50%, -50%);
+        padding: 1rem;
+        display: none;
+    }
+
+    @media (min-width: 768px) {
+        .cart-popup {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            left: auto;
+            transform: none;
+            width: 22em;
+        }
+    }
+</style>
 
 {{-- Script Carrinho --}}
 <script>

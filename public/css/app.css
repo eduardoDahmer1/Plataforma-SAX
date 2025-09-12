@@ -293,3 +293,189 @@ body {
 .input-group:not(.has-validation)>.dropdown-toggle:nth-last-child(n+3), .input-group:not(.has-validation)>.form-floating:not(:last-child)>.form-control, .input-group:not(.has-validation)>.form-floating:not(:last-child)>.form-select, .input-group:not(.has-validation)>:not(:last-child):not(.dropdown-toggle):not(.dropdown-menu):not(.form-floating) {
     margin-bottom: 0 !important;
 }
+/* Fundo elegante */
+.background-header {
+    background: #111;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* Logo */
+.logo-header {
+    max-height: 80px;
+    transition: transform 0.3s ease;
+}
+.logo-header:hover {
+    transform: scale(1.05);
+}
+
+/* Botões login/logout */
+.btn-auth {
+    background: transparent;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+.btn-auth:hover {
+    background: rgb(255, 255, 255);
+    color: #111;
+}
+
+/* Links de navegação desktop */
+.nav-links a {
+    background: transparent !important;
+    border: none !important;
+    color: #000000 !important;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+.nav-links a:hover {
+    background: rgb(0, 0, 0);
+    color: #111 !important;
+}
+
+/* Botão hamburguer mobile */
+.btn-mobile-menu {
+    border: 1px solid rgb(0, 0, 0);
+    background: transparent;
+    color: rgb(0, 0, 0);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.btn-mobile-menu:hover {
+    background: rgb(0, 0, 0);
+    color: #111;
+}
+
+/* Drawer Mobile */
+.drawer-mobile {
+    position: fixed;
+    top: 0;
+    start: 0;
+    width: 250px;
+    height: 100vh;
+    background: #ffffff;
+    color: #000000;
+    padding: 20px;
+    transform: translateX(-100%);
+    transition: 0.3s;
+    z-index: 1050;
+}
+.drawer-mobile h5 {
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgb(0, 0, 0);
+}
+.drawer-mobile a {
+    background: transparent !important;
+    border: none !important;
+    color: #000000 !important;
+    font-weight: 500;
+    text-align: left;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.drawer-mobile a:hover {
+    background: gold;
+    color: #111 !important;
+}
+.btn-close-drawer {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: rgb(0, 0, 0);
+    cursor: pointer;
+}
+
+/* Busca */
+.search-bar input {
+    border-radius: 30px 0 0 30px;
+    border: none;
+    padding: 10px 15px;
+}
+.search-bar button {
+    border-radius: 0 30px 30px 0;
+    border: 1px solid white;
+    background: #e7e7e7;
+    color: #111;
+    transition: all 0.3s ease;
+    padding: 0 18px;
+}
+.search-bar button:hover {
+    background: #cecece;
+}
+
+.admin-sidebar .list-group-item {
+    background: transparent;
+    color: #000000;
+    border: none;
+    padding: 12px 20px;
+    transition: 0.3s;
+}
+
+.admin-sidebar .collapse a {
+    padding-left: 40px;
+}
+
+/* Drawer mobile */
+.drawer-mobile {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    color: #fff;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1050;
+    padding: 15px;
+}
+
+.drawer-mobile.open {
+    transform: translateX(0);
+}
+
+.drawer-mobile h5 {
+    color: black;
+    font-weight: 600;
+}
+
+.drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 1049;
+}
+
+.drawer-overlay.show {
+    display: block;
+}
+
+/* Botão abrir menu mobile */
+.btn-menu-mobile {
+    border: 1px solid rgb(0, 0, 0);
+    color: black;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: 0.3s;
+}
+
+.btn-menu-mobile:hover {
+    background: black;
+    color: #111;
+}
+
+/* Botão voltar topo */
+#backToTop {
+    background: #737373;
+    color: #ffffff;
+    border: none;
+}
+
+#backToTop:hover {
+    background: #e6c200;
+}

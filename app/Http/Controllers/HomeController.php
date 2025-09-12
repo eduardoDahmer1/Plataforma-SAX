@@ -9,7 +9,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Childcategory;
 use App\Models\Cart;
-use App\Models\Blog; // 👈 importa o model Blog
+use App\Models\Blog;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller

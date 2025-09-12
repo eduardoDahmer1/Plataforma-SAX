@@ -102,7 +102,8 @@
                                             {{ $product->stock }} em estoque
                                         </span>
                                     @else
-                                        <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Sem estoque</span>
+                                        <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Sem
+                                            estoque</span>
                                     @endif
                                 </p>
 
@@ -116,8 +117,9 @@
                                         @php $currentQty = $cartItems[$product->id] ?? 0; @endphp
 
                                         @if (in_array(auth()->user()->user_type, [0, 1, 2]))
-                                            <form action="{{ route('checkout.index') }}" method="GET" class="d-flex">
-                                                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                            <form action="{{ route('cart.addAndCheckout') }}" method="POST" class="d-flex">
+                                                @csrf
+                                                <input type="hidden" name="product_id" value="{{ $item->id }}">
                                                 <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
                                                     <i class="fas fa-bolt me-1"></i> Comprar Agora
                                                 </button>

@@ -88,6 +88,38 @@ class CartController extends Controller
         return view('cart.view', compact('cart'));
     }
 
+    public function addAndCheckout(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Você precisa estar logado para comprar.');
+        }
+
+        $productId = $request->input('product_id');
+        $quantity  = (int) $request->input('quantity', 1);
+
+        $product = Product::find($productId);
+        if (!$product) {
+            return back()->with('error', 'Produto não encontrado.');
+        }
+
+        // Busca itens do carrinho do usuário
+        $cart = Cart::where('user_id', $user->id)->get();
+
+        // Se carrinho estiver vazio -> adiciona
+        if ($cart->isEmpty()) {
+            Cart::create([
+                'user_id'    => $user->id,
+                'product_id' => $productId,
+                'quantity'   => min($quantity, $product->stock),
+            ]);
+        }
+
+        // Vai direto pro checkout
+        return redirect()->route('checkout.index');
+    }
+
+
     public function update(Request $request, $productId)
     {
         $user = auth()->user();

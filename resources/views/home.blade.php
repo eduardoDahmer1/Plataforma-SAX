@@ -6,8 +6,8 @@
         <h2 class="mb-4"><i class="fas fa-home me-2"></i> Bem-vindo à Página Inicial</h2>
         <p class="text-muted">Confira os produtos mais recentes em nosso catálogo.</p>
 
-    {{-- Alertas --}}
-    <x-alert type="success" :message="session('success')" />
+        {{-- Alertas --}}
+        <x-alert type="success" :message="session('success')" />
 
         @php
             $highlightTitles = [
@@ -60,29 +60,31 @@
 
                                         {{-- Botão de favorito (aparece no hover) --}}
                                         @auth
-                                        @php
-                                            // Pega a quantidade do produto específico no carrinho
-                                            $currentQty = $cartItems[$item->id] ?? 0;
-                                        @endphp
-                                    
-                                        {{-- Botão de favorito --}}
-                                        <form action="{{ route('user.preferences.toggle') }}" method="POST" class="card-favorite-form d-none">
-                                            @csrf
-                                            <input type="hidden" name="product_id" value="{{ $item->id }}">
-                                            <button type="submit" class="btn btn-outline-danger">
-                                                <i class="fas fa-heart"></i>
-                                            </button>
-                                        </form>
-                                    
-                                        {{-- Botão de adicionar ao carrinho --}}
-                                        <form action="{{ route('cart.add') }}" method="POST" class="card-add-form d-none">
-                                            @csrf
-                                            <input type="hidden" name="product_id" value="{{ $item->id }}">
-                                            <button type="submit" class="btn btn-success" {{ $currentQty >= $item->stock ? 'disabled' : '' }}>
-                                                <i class="fas fa-cart-plus"></i>
-                                            </button>
-                                        </form>
-                                    @endauth                                    
+                                            @php
+                                                // Pega a quantidade do produto específico no carrinho
+                                                $currentQty = $cartItems[$item->id] ?? 0;
+                                            @endphp
+
+                                            {{-- Botão de favorito --}}
+                                            <form action="{{ route('user.preferences.toggle') }}" method="POST"
+                                                class="card-favorite-form d-none">
+                                                @csrf
+                                                <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    <i class="fas fa-heart"></i>
+                                                </button>
+                                            </form>
+
+                                            {{-- Botão de adicionar ao carrinho --}}
+                                            <form action="{{ route('cart.add') }}" method="POST" class="card-add-form d-none">
+                                                @csrf
+                                                <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                                <button type="submit" class="btn btn-success"
+                                                    {{ $currentQty >= $item->stock ? 'disabled' : '' }}>
+                                                    <i class="fas fa-cart-plus"></i>
+                                                </button>
+                                            </form>
+                                        @endauth
 
                                         <div class="card-body p-2 d-flex flex-column">
                                             <h6 class="card-title mb-2">
@@ -97,8 +99,7 @@
 
                                             {{-- Estoque --}}
                                             @if ($item->stock > 0)
-                                                <span class="badge bg-success"><i
-                                                        class="fas fa-box me-1"></i>
+                                                <span class="badge bg-success"><i class="fas fa-box me-1"></i>
                                                     {{ $item->stock }} em estoque</span>
                                             @else
                                                 <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Sem
@@ -113,8 +114,9 @@
                                                 @auth
                                                     @php $currentQty = $cartItems[$item->id] ?? 0; @endphp
                                                     @if (in_array(auth()->user()->user_type, [0, 1, 2]))
-                                                        <form action="{{ route('checkout.index') }}" method="GET"
+                                                        <form action="{{ route('cart.addAndCheckout') }}" method="POST"
                                                             class="d-flex">
+                                                            @csrf
                                                             <input type="hidden" name="product_id"
                                                                 value="{{ $item->id }}">
                                                             <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
@@ -151,30 +153,32 @@
 
                                     {{-- Botão de favorito (aparece no hover) --}}
                                     @auth
-                                    @php
-                                        // Pega a quantidade do produto específico no carrinho
-                                        $currentQty = $cartItems[$item->id] ?? 0;
-                                    @endphp
-                                
-                                    {{-- Botão de favorito --}}
-                                    <form action="{{ route('user.preferences.toggle') }}" method="POST" class="card-favorite-form d-none">
-                                        @csrf
-                                        <input type="hidden" name="product_id" value="{{ $item->id }}">
-                                        <button type="submit" class="btn btn-outline-danger">
-                                            <i class="fas fa-heart"></i>
-                                        </button>
-                                    </form>
-                                
-                                    {{-- Botão de adicionar ao carrinho --}}
-                                    <form action="{{ route('cart.add') }}" method="POST" class="card-add-form d-none">
-                                        @csrf
-                                        <input type="hidden" name="product_id" value="{{ $item->id }}">
-                                        <button type="submit" class="btn btn-success" {{ $currentQty >= $item->stock ? 'disabled' : '' }}>
-                                            <i class="fas fa-cart-plus"></i>
-                                        </button>
-                                    </form>
-                                @endauth
-                                
+                                        @php
+                                            // Pega a quantidade do produto específico no carrinho
+                                            $currentQty = $cartItems[$item->id] ?? 0;
+                                        @endphp
+
+                                        {{-- Botão de favorito --}}
+                                        <form action="{{ route('user.preferences.toggle') }}" method="POST"
+                                            class="card-favorite-form d-none">
+                                            @csrf
+                                            <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="fas fa-heart"></i>
+                                            </button>
+                                        </form>
+
+                                        {{-- Botão de adicionar ao carrinho --}}
+                                        <form action="{{ route('cart.add') }}" method="POST" class="card-add-form d-none">
+                                            @csrf
+                                            <input type="hidden" name="product_id" value="{{ $item->id }}">
+                                            <button type="submit" class="btn btn-success"
+                                                {{ $currentQty >= $item->stock ? 'disabled' : '' }}>
+                                                <i class="fas fa-cart-plus"></i>
+                                            </button>
+                                        </form>
+                                    @endauth
+
                                     <div class="card-body p-2 d-flex flex-column">
                                         <h6 class="card-title mb-2">
                                             <a href="{{ route('produto.show', $item->id) }}"
@@ -188,8 +192,7 @@
 
                                         {{-- Estoque --}}
                                         @if ($item->stock > 0)
-                                            <span class="badge bg-success"><i
-                                                    class="fas fa-box me-1"></i>
+                                            <span class="badge bg-success"><i class="fas fa-box me-1"></i>
                                                 {{ $item->stock }} em estoque</span>
                                         @else
                                             <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Sem
@@ -205,8 +208,9 @@
                                             @auth
                                                 @php $currentQty = $cartItems[$item->id] ?? 0; @endphp
                                                 @if (in_array(auth()->user()->user_type, [0, 1, 2]))
-                                                    <form action="{{ route('checkout.index') }}" method="GET"
+                                                    <form action="{{ route('cart.addAndCheckout') }}" method="POST"
                                                         class="d-flex">
+                                                        @csrf
                                                         <input type="hidden" name="product_id" value="{{ $item->id }}">
                                                         <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
                                                             <i class="fas fa-bolt me-1"></i> Comprar Agora

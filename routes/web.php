@@ -127,6 +127,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
 
+    Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
+
     // Bancard
     Route::get('/checkout/bancard/{order}', [CheckoutController::class, 'bancardCheckout'])->name('checkout.bancard');
     Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');

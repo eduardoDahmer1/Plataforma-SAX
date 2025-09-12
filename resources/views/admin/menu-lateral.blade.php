@@ -83,9 +83,6 @@
                 <button id="clearCacheBtn" class="list-group-item list-group-item-action ps-5">
                     <i class="fa-solid fa-broom me-2"></i> Limpar Cache
                 </button>
-                <a href="{{ route('admin.convert.webp') }}" class="list-group-item list-group-item-action ps-5">
-                    <i class="fa-solid fa-image me-2"></i> Converter imagens WebP
-                </a>
                 <a href="{{ route('admin.currencies.index') }}" class="list-group-item list-group-item-action ps-5">
                     <i class="fa-solid fa-coins me-2"></i> Moedas
                 </a>

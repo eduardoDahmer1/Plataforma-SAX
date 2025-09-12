@@ -15,7 +15,6 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\UploadController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\BancardController;
@@ -38,9 +37,7 @@ use App\Http\Controllers\Admin\BlogCategoryController;
 
 // Auth Controllers
 use App\Http\Controllers\Auth\UserController;
-use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ImageUploadController;
-use App\Http\Controllers\ImageConvertController;
 use App\Http\Controllers\Auth\UserPreferenceController;
 
 // --- Home ---
@@ -82,10 +79,6 @@ Route::post('/contato', [ContactController::class, 'store'])->name('contact.stor
 // Products
 Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
-
-// Uploads public
-Route::get('/uploads-publico', [UploadController::class, 'allUploads'])->name('uploads.public');
-Route::get('/uploads/{id}', [UploadController::class, 'show'])->name('uploads.show');
 
 // Produtos por categoria
 Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->name('products.byCategory');
@@ -306,11 +299,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('image-upload', [ImageUploadController::class, 'form'])->name('image.form');
     Route::post('noimage-upload', [ImageUploadController::class, 'uploadNoimage'])->name('noimage.upload');
     Route::delete('noimage-upload', [ImageUploadController::class, 'deleteNoimage'])->name('noimage.delete');
-    Route::get('convert-webp', [ImageConvertController::class, 'convertAllToWebp'])->name('convert.webp');
 });
-
-// --- Auth ---
-Auth::routes(['verify' => true]);
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 require __DIR__ . '/auth.php';

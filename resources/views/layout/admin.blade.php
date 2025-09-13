@@ -9,6 +9,13 @@
     <title>SAX - Painel Administrativo</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
+    <!-- Preconnect: otimiza carregamento de recursos externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+
     <!-- CSS -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 

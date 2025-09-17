@@ -18,6 +18,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\BancardController;
+use App\Http\Controllers\CuponUserController;
 
 
 // Admin Controllers
@@ -34,6 +35,7 @@ use App\Http\Controllers\Admin\BrandControllerAdmin;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\CuponController;
 
 // Auth Controllers
 use App\Http\Controllers\Auth\UserController;
@@ -100,7 +102,7 @@ Route::get('/produtos/{product}', [ProductController::class, 'show'])->name('pro
 // Cart
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'view'])->name('cart.view');
-Route::match(['post','put'], '/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
+Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 
 // Checkout WhatsApp
@@ -121,7 +123,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/meus-preferidos', [UserPreferenceController::class, 'index'])->name('user.preferences');
     Route::post('/user/preferences/toggle', [UserPreferenceController::class, 'toggle'])->name('user.preferences.toggle');
-    
+
     // Checkout padrão
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
@@ -129,12 +131,17 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
 
+   // Cupons do usuário
+   Route::get('cupons', [CuponUserController::class, 'index'])->name('user.cupons');
+   Route::post('cupons/apply', [CuponUserController::class, 'apply'])->name('user.cupons.apply');
+   Route::post('cupons/remove', [CuponUserController::class, 'remove'])->name('user.cupons.remove');
+
     // Bancard
     Route::get('/checkout/bancard/{order}', [CheckoutController::class, 'bancardCheckout'])->name('checkout.bancard');
     Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');
 
     // Depósito
-    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');    
+    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');
     Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
 
     Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->name('orders.deposit.submit');
@@ -143,7 +150,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/user/delete', [App\Http\Controllers\Auth\UserController::class, 'destroy'])->name('user.destroy');
 
     // Email verification
-    Route::get('/email/verify', function () { return view('auth.verify-email'); })->name('verification.notice');
+    Route::get('/email/verify', function () {
+        return view('auth.verify-email');
+    })->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
         return redirect('/home');
@@ -167,6 +176,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Adicionar moeda
     Route::post('currencies', [CurrencyControllerAdmin::class, 'store'])->name('currencies.store');
 
+    Route::resource('cupons', CuponController::class);
+
     // Editar moeda
     Route::put('currencies/{id}', [CurrencyControllerAdmin::class, 'update'])->name('currencies.update');
 
@@ -174,7 +185,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('currencies/{id}/default', [CurrencyControllerAdmin::class, 'setDefault'])->name('currencies.default');
 
     Route::patch('products/{product}/update-highlights', [ProductControllerAdmin::class, 'updateHighlights'])
-    ->name('products.updateHighlights');
+        ->name('products.updateHighlights');
 
     Route::get('maintenance', [\App\Http\Controllers\Admin\SystemController::class, 'maintenanceIndex'])->name('maintenance.index');
     Route::get('maintenance/toggle', [\App\Http\Controllers\Admin\SystemController::class, 'toggleMaintenance'])->name('maintenance.toggle');
@@ -200,10 +211,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('categories', CategoryControllerAdmin::class);
 
     // Orders Admin
-    Route::resource('orders', OrderController::class)->only(['index','show','destroy']);
+    Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
 
     // Clients Admin
-    Route::resource('clients', ClientController::class)->only(['index','show']);
+    Route::resource('clients', ClientController::class)->only(['index', 'show']);
 
     // Payments
     Route::resource('payments', PaymentMethodController::class);
@@ -225,7 +236,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('blog-categories/{category}', [BlogCategoryController::class, 'destroy'])->name('blog-categories.destroy');
 
     Route::get('admin/blog-categories/{category}', [BlogCategoryController::class, 'show'])->name('admin.blog-categories.show');
-    
+
     // Users Admin
     Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
     Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
@@ -291,7 +302,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('brands/{brand}/delete-banner', [BrandControllerAdmin::class, 'deleteBanner'])->name('brands.deleteBanner');
 
     // Contacts Admin
-    Route::resource('contatos', ContactControllerAdmin::class)->only(['index','destroy']);
+    Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);
     Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
 
     // System & Images

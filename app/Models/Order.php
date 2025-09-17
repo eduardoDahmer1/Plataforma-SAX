@@ -13,6 +13,8 @@ class Order extends Model
         'user_id',
         'status',
         'total',
+        'discount',          // novo campo para desconto do cupom
+        'cupon_id',          // novo campo para referência ao cupom
         'payment_method',
         'deposit_receipt',
         'name',
@@ -36,10 +38,16 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-    
+
     // Relacionamento com o usuário
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relacionamento com o cupom
+    public function cupon()
+    {
+        return $this->belongsTo(Cupon::class);
     }
 }

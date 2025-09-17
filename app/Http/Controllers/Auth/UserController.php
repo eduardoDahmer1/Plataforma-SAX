@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use App\Models\UserCupon;
+use App\Models\Cupon;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Mostra o painel do usuário
+    // Painel do usuário
     public function dashboard()
     {
         $user = Auth::user();
@@ -21,19 +23,16 @@ class UserController extends Controller
         return view('users.dashboard', compact('user', 'orders'));
     }
 
-    // Mostra o formulário de edição do perfil
     public function edit()
     {
         $user = Auth::user();
         return view('users.profile', compact('user'));
     }
 
-    // Atualiza o perfil do usuário
     public function update(Request $request)
     {
         $user = Auth::user();
     
-        // Validação
         $request->validate([
             'name'             => 'required|string|max:255',
             'email'            => 'required|email|max:255|unique:users,email,' . $user->id,
@@ -47,30 +46,16 @@ class UserController extends Controller
             'document'         => 'nullable|string|max:255',
         ]);
     
-        // Remove o "+" do código do país se quiser
-        $request->merge([
-            'phone_country' => str_replace('+', '', $request->phone_country),
-        ]);
+        $request->merge(['phone_country' => str_replace('+', '', $request->phone_country)]);
     
-        // Atualiza o usuário
-        $user->update([
-            'name'              => $request->name,
-            'email'             => $request->email,
-            'phone_country'     => $request->phone_country,
-            'phone_number'      => $request->phone_number,
-            'already_registered'=> $request->already_registered ?? $user->already_registered,
-            'address'           => $request->address,
-            'cep'               => $request->cep,
-            'city'              => $request->city,
-            'state'             => $request->state,
-            'additional_info'   => $request->additional_info,
-            'document'          => $request->document, 
-        ]);
-    
+        $user->update($request->only([
+            'name', 'email', 'phone_country', 'phone_number',
+            'address', 'cep', 'city', 'state', 'additional_info', 'document'
+        ]));
+
         return back()->with('success', 'Perfil atualizado com sucesso!');
     }
-      
-    // Lista todos os pedidos do usuário
+
     public function orders()
     {
         $user = Auth::user();
@@ -81,11 +66,10 @@ class UserController extends Controller
         return view('users.orders', compact('orders')); 
     }
 
-    // Mostra um pedido específico
     public function showOrder($id)
     {
         $user = Auth::user();
-        $order = Order::with('items') // carrega itens
+        $order = Order::with('items')
                       ->where('id', $id)
                       ->where('user_id', $user->id)
                       ->firstOrFail();
@@ -93,31 +77,88 @@ class UserController extends Controller
         return view('users.order', compact('order')); 
     }
 
-    // Redireciona após checkout (sucesso)
+    // Aplicar cupom no checkout
+    public function applyCupon(Request $request)
+    {
+        $request->validate(['cupon' => 'required|string']);
+        $user = Auth::user();
+    
+        $cupon = Cupon::where('codigo', $request->cupon)
+                      ->where('data_inicio', '<=', now())
+                      ->where('data_final', '>=', now())
+                      ->first();
+    
+        if (!$cupon) {
+            return back()->withErrors(['cupon' => 'Cupom inválido ou expirado.']);
+        }
+    
+        $cartTotal = session()->get('cart_total', 0);
+    
+        if ($cupon->valor_minimo && $cartTotal < $cupon->valor_minimo) {
+            return back()->withErrors(['cupon' => "O pedido deve ser mínimo de {$cupon->valor_minimo} para este cupom."]);
+        }
+    
+        if ($cupon->valor_maximo && $cartTotal > $cupon->valor_maximo) {
+            return back()->withErrors(['cupon' => "O pedido deve ser máximo de {$cupon->valor_maximo} para este cupom."]);
+        }
+    
+        // Calcula desconto
+        $discount = $cupon->tipo === 'percentual'
+            ? ($cartTotal * $cupon->montante) / 100
+            : $cupon->montante;
+    
+        // Salva na sessão (mantém compatibilidade)
+        session()->put('cupon', [
+            'id' => $cupon->id,
+            'codigo' => $cupon->codigo,
+            'discount' => $discount,
+        ]);
+    
+        // Salva também no banco para histórico
+        UserCupon::updateOrCreate(
+            ['user_id' => $user->id, 'cupon_id' => $cupon->id],
+            ['desconto' => round($discount, 2)]
+        );
+    
+        return back()->with('success', "Cupom '{$cupon->codigo}' aplicado! Desconto: {$discount}");
+    }
+
+    // Remover cupom
+    public function removeCupon()
+    {
+        session()->forget('cupon');
+        return back()->with('success', 'Cupom removido com sucesso!');
+    }
+
+    public function cupons()
+    {
+        $user = Auth::user();
+    
+        $cupons = UserCupon::with('cupon')
+                    ->where('user_id', $user->id)
+                    ->get();
+    
+        return view('users.cupon', compact('cupons'));
+    }
+
     public function checkoutSuccess(Request $request)
     {
         session()->forget('cart');
 
-        // Apenas exemplo de redirecionamento para WhatsApp
         $whatsappNumber = '595984167575';
         return redirect()->away("https://wa.me/{$whatsappNumber}?text=Pedido finalizado");
     }
 
     public function destroy(Request $request)
     {
-        $request->validate([
-            'password' => ['required'],
-        ]);
-
+        $request->validate(['password' => ['required']]);
         $user = Auth::user();
 
-        // Confirma senha
         if (!Hash::check($request->password, $user->password)) {
             return back()->withErrors(['password' => 'Senha incorreta']);
         }
 
         Auth::logout();
-
         $user->delete();
 
         $request->session()->invalidate();

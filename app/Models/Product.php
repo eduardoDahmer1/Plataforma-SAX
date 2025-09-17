@@ -124,7 +124,13 @@ class Product extends Model
     {
         return $this->belongsTo(Subcategory::class);
     }
-    
+
+    // Relação com cupons aplicáveis a este produto
+    public function cupons()
+    {
+        return $this->hasMany(Cupon::class, 'produto_id');
+    }
+
     public function childcategory()
     {
         return $this->belongsTo(Childcategory::class);

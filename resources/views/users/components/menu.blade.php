@@ -34,7 +34,7 @@
     <div class="list-group-item bg-light fw-bold mt-3">
         <i class="fa fa-gift me-2"></i> Cupons e Benefícios
     </div>
-    <a class="list-group-item list-group-item-action">
+    <a href="{{ route('user.cupons') }}" class="list-group-item list-group-item-action">
         <i class="fa fa-ticket-alt me-2"></i> Meus Cupons
     </a>
 

@@ -49,7 +49,9 @@
     <div class="collapse" id="menuSistema">
         <button id="clearCacheBtn" class="list-group-item ps-5"><i class="fa-solid fa-broom me-2"></i> Limpar Cache</button>
         <a href="{{ route('admin.currencies.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-coins me-2"></i> Moedas</a>
-        <a class="list-group-item ps-5"><i class="fa-solid fa-ticket me-2"></i> Cupons</a>
+        <a href="{{ route('admin.cupons.index') }}" class="list-group-item ps-5">
+            <i class="fa-solid fa-ticket me-2"></i> Cupons
+        </a>        
         <a href="{{ route('admin.maintenance.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-screwdriver-wrench me-2"></i> Manutenção</a>
         <a class="list-group-item ps-5"><i class="fa-solid fa-envelope me-2"></i> Email</a>
     </div>

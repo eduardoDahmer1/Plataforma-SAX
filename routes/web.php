@@ -139,7 +139,7 @@ Route::middleware('auth')->group(function () {
     ->name('user.applyCupon')
     ->middleware('auth');
 
-    Route::post('/user/cupons/apply', [UserCuponController::class, 'apply'])
+    Route::post('/user/cupons/apply', [CuponUserController::class, 'apply'])
     ->name('user.cupons.apply');
 
     // Bancard

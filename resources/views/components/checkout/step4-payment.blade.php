@@ -1,7 +1,7 @@
 {{-- STEP 4: PAGAMENTO --}}
 <div class="step" id="step4">
     <div class="checkout-box text-center mb-4">
-        <h4><i class="fa fa-credit-card"></i> Escolha o Método de Pagamento</h4>
+        {{-- <h4><i class="fa fa-credit-card"></i> Escolha o Método de Pagamento</h4> --}}
 
         <div class="d-flex justify-content-center gap-3 mt-3">
             <button type="button" class="btn btn-outline-primary btn-lg" id="btn-deposito"
@@ -13,7 +13,7 @@
                 <i class="fa fa-credit-card"></i> Bancard
             </button> --}}
         </div>
-        <p class="mt-1">Cartão ou QR Code? Chame no WhatsApp e concluímos seu pedido.</p>
+        <p class="mt-1">Estamos finalizando a implementação do nosso novo sistema de pagamento. Quer pagar com cartão ou QR Code? Chame no WhatsApp que concluímos seu pedido rapidinho!</p>
     </div>
 
     {{-- Campo oculto que guarda o método de pagamento --}}
@@ -24,13 +24,23 @@
     <div class="checkout-box mt-4">
         <h4><i class="fa fa-receipt"></i> Resumo do Pedido</h4>
         @foreach ($cart as $item)
-            <div class="border-bottom py-2">
-                <p><strong>{{ $item->product->slug ?? 'Produto' }}</strong></p>
-                <p><i class="fa fa-dollar-sign"></i> Preço: {{ currency_format($item->product->price ?? 0) }}</p>
-                <p><i class="fa fa-sort-numeric-up"></i> Quantidade: {{ $item->quantity }}</p>
-                <p><i class="fa fa-calculator"></i> Total:
-                    {{ currency_format(($item->product->price ?? 0) * $item->quantity) }}
-                </p>
+            <div class="border-bottom py-2 d-flex align-items-center gap-3">
+
+                {{-- Imagem do Produto --}}
+                <div>
+                    <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/60' }}"
+                        alt="{{ $item->product->slug }}" class="img-thumbnail rounded"
+                        style="width: 60px; height: 60px; object-fit: contain;">
+                </div>
+
+                {{-- Detalhes do Produto --}}
+                <div class="flex-grow-1">
+                    <p><strong>{{ $item->product->slug ?? 'Produto' }}</strong></p>
+                    <p><i class="fa fa-dollar-sign"></i> Preço: {{ currency_format($item->product->price ?? 0) }}</p>
+                    <p><i class="fa fa-sort-numeric-up"></i> Quantidade: {{ $item->quantity }}</p>
+                    <p><i class="fa fa-calculator"></i> Total:
+                        {{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</p>
+                </div>
             </div>
             @php $totalPedido += ($item->product->price ?? 0) * $item->quantity; @endphp
         @endforeach

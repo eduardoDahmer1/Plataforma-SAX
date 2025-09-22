@@ -131,9 +131,24 @@
         @foreach ($order->items as $item)
             <div class="col-md-6 col-lg-4">
                 <div class="card shadow-sm h-100">
+
+                    {{-- Imagem do Produto --}}
+                    <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/150' }}"
+                        alt="{{ $item->product->external_name ?? ($item->product->name ?? 'Produto') }}"
+                        class="card-img-top" style="height: 180px; object-fit: contain;">
+
                     <div class="card-body">
-                        <h6 class="card-title">{{ $item->product->external_name ?? ($item->product->name ?? 'Produto') }}
+                        {{-- Nome do Produto --}}
+                        <h6 class="card-title">
+                            {{ $item->product->external_name ?? ($item->product->name ?? 'Produto') }}
                         </h6>
+
+                        {{-- SKU / Slug --}}
+                        <p class="mb-1"><small class="text-muted">
+                                SKU: {{ $item->product->sku ?? '-' }} | Slug: {{ $item->product->slug ?? '-' }}
+                            </small></p>
+
+                        {{-- Quantidade, Preço e Subtotal --}}
                         <p><strong>Qtd:</strong> {{ $item->quantity }}</p>
                         <p><strong>Preço:</strong> {{ currency_format($item->price) }}</p>
                         <p><strong>Subtotal:</strong> {{ currency_format($item->price * $item->quantity) }}</p>

@@ -10,21 +10,36 @@
 
         <ul class="list-group mb-3">
             @foreach ($cart as $item)
+                @php
+                    $itemTotal = ($item->product->price ?? 0) * $item->quantity;
+                    $totalCarrinho += $itemTotal;
+                @endphp
+
                 <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start mb-2">
-                    <div class="mb-2 mb-md-0">
+
+                    {{-- Imagem do Produto --}}
+                    <div class="me-3 mb-2 mb-md-0">
+                        <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/80' }}"
+                            alt="{{ $item->product->external_name }}" class="img-thumbnail rounded"
+                            style="width: 80px; height: 80px; object-fit: contain;">
+                    </div>
+
+                    {{-- Detalhes do Produto --}}
+                    <div class="flex-grow-1 mb-2 mb-md-0">
                         <strong><i
                                 class="fas fa-box-open me-1"></i>{{ $item->product->external_name ?? 'Produto' }}</strong><br>
                         <small><i class="fas fa-link me-1"></i>Slug: {{ $item->product->slug ?? '-' }}</small><br>
                         <small><i class="fas fa-barcode me-1"></i>SKU: {{ $item->product->sku ?? '-' }}</small>
                     </div>
 
+                    {{-- Quantidade e Preço --}}
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <span><i class="fas fa-tag me-1"></i>{{ currency_format($item->product->price ?? 0) }}</span>
                         <span><i class="fas fa-sort-numeric-up me-1"></i>x {{ $item->quantity }}</span>
-                        <span><i
-                                class="fas fa-equals me-1"></i>{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</span>
+                        <span><i class="fas fa-equals me-1"></i>{{ currency_format($itemTotal) }}</span>
 
                         <div class="d-flex flex-column ms-2">
+                            {{-- Botões de atualizar/excluir quantidade --}}
                             <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
@@ -53,10 +68,6 @@
                         </div>
                     </div>
                 </li>
-
-                @php
-                    $totalCarrinho += ($item->product->price ?? 0) * $item->quantity;
-                @endphp
             @endforeach
         </ul>
 
@@ -91,7 +102,6 @@
         <p><i class="fas fa-info-circle me-1"></i>Seu carrinho está vazio.</p>
     @endif
 @endsection
-
 @push('scripts')
     <script>
         const cart = @json($cart->mapWithKeys(fn($item) => [$item->product_id => $item->quantity]));

@@ -1,40 +1,40 @@
 @php
-use App\Models\Cart;
-use App\Models\Currency;
+    use App\Models\Cart;
+    use App\Models\Currency;
 
-$user = auth()->user();
-$cart = $user ? Cart::with('product')->where('user_id', $user->id)->get() : collect();
-$cartCount = $cart->sum('quantity');
+    $user = auth()->user();
+    $cart = $user ? Cart::with('product')->where('user_id', $user->id)->get() : collect();
+    $cartCount = $cart->sum('quantity');
 
-// Pega a moeda da sessão
-$currencySession = session('currency');
-$currencyId = null;
+    // Pega a moeda da sessão
+    $currencySession = session('currency');
+    $currencyId = null;
 
-// Força pegar só o ID
-if (is_object($currencySession)) {
-    $currencyId = $currencySession->id ?? null;
-} elseif (is_array($currencySession)) {
-    $currencyId = $currencySession['id'] ?? $currencySession[0] ?? null;
-} else {
-    $currencyId = $currencySession;
-}
+    // Força pegar só o ID
+    if (is_object($currencySession)) {
+        $currencyId = $currencySession->id ?? null;
+    } elseif (is_array($currencySession)) {
+        $currencyId = $currencySession['id'] ?? ($currencySession[0] ?? null);
+    } else {
+        $currencyId = $currencySession;
+    }
 
-// Busca a moeda
-$currency = Currency::find($currencyId);
-if (!$currency) {
-    $currency = Currency::where('is_default', 1)->first();
-}
+    // Busca a moeda
+    $currency = Currency::find($currencyId);
+    if (!$currency) {
+        $currency = Currency::where('is_default', 1)->first();
+    }
 
-// Valores fallback
-$symbol = $currency->sign ?? 'R$';
-$decimal = $currency->decimal_separator ?? ',';
-$thousand = $currency->thousands_separator ?? '.';
-$rate = $currency->value ?? 1;
+    // Valores fallback
+    $symbol = $currency->sign ?? 'R$';
+    $decimal = $currency->decimal_separator ?? ',';
+    $thousand = $currency->thousands_separator ?? '.';
+    $rate = $currency->value ?? 1;
 @endphp
 
 <div class="d-flex justify-content-center justify-content-md-end position-relative">
     <button id="cart-button" class="btn btn-outline-dark position-relative">
-        <i class="fa fa-shopping-cart me-1"></i> 
+        <i class="fa fa-shopping-cart me-1"></i>
         <span>Carrinho</span>
         @if ($cartCount > 0)
             <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
@@ -46,7 +46,7 @@ $rate = $currency->value ?? 1;
     @if ($cartCount > 0)
         <div id="cart-modal" class="cart-popup shadow-lg bg-white text-dark rounded-4"
             style="display: none; z-index: 1055;">
-            
+
             <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                 <h6 class="fw-bold mb-0"><i class="fa fa-shopping-bag me-1"></i> Itens no carrinho</h6>
                 <button id="cart-close" class="btn btn-sm btn-outline-danger rounded-circle">&times;</button>
@@ -59,16 +59,29 @@ $rate = $currency->value ?? 1;
                         $convertedPrice = $basePrice * $rate;
                         $formattedPrice = $symbol . ' ' . number_format($convertedPrice, 2, $decimal, $thousand);
 
-                        $convertedTotal = ($basePrice * $item->quantity) * $rate;
+                        $convertedTotal = $basePrice * $item->quantity * $rate;
                         $formattedTotal = $symbol . ' ' . number_format($convertedTotal, 2, $decimal, $thousand);
                     @endphp
                     <li class="list-group-item">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <strong class="d-block">{{ $item->product->title ?? ($item->product->slug ?? 'Produto') }}</strong>
+                        <div class="d-flex justify-content-between align-items-start">
+
+                            {{-- Imagem do Produto --}}
+                            <div class="me-2">
+                                <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/60' }}"
+                                    alt="{{ $item->product->title ?? $item->product->slug }}"
+                                    class="img-thumbnail rounded"
+                                    style="width: 60px; height: 60px; object-fit: contain;">
+                            </div>
+
+                            {{-- Detalhes do Produto --}}
+                            <div class="flex-grow-1">
+                                <strong
+                                    class="d-block">{{ $item->product->title ?? ($item->product->slug ?? 'Produto') }}</strong>
                                 <small class="text-muted">Preço: {{ $formattedPrice }}</small><br>
                                 <small class="fw-semibold">Total: {{ $formattedTotal }}</small>
                             </div>
+
+                            {{-- Botão Remover --}}
                             <form action="{{ route('cart.remove', $item->product_id) }}" method="POST"
                                 onsubmit="return confirm('Remover este item?');">
                                 @csrf
@@ -79,6 +92,7 @@ $rate = $currency->value ?? 1;
                             </form>
                         </div>
 
+                        {{-- Controle de Quantidade --}}
                         <div class="d-flex align-items-center mt-2 gap-2">
                             @if ($item->quantity > 1)
                                 <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
@@ -88,7 +102,9 @@ $rate = $currency->value ?? 1;
                                     <button type="submit" class="btn btn-sm btn-outline-secondary">-</button>
                                 </form>
                             @endif
+
                             <span class="fw-bold">{{ $item->quantity }}</span>
+
                             <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
@@ -128,7 +144,7 @@ $rate = $currency->value ?? 1;
             right: 0;
             left: auto;
             transform: none;
-            width: 22em;
+            width: 30em;
         }
     }
 </style>

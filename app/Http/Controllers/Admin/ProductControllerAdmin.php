@@ -23,7 +23,7 @@ class ProductControllerAdmin extends Controller
         $categoryId = $request->get('category_id');
         $statusFilter = $request->get('status_filter');
         $highlightFilter = $request->get('highlight_filter');
-        $stockFilter = $request->get('stock_filter'); // 👈 novo filtro de estoque
+        $stockFilter = $request->get('stock_filter');
 
         $productColumns = [
             'id',
@@ -33,6 +33,7 @@ class ProductControllerAdmin extends Controller
             'price',
             'stock',
             'photo',
+            'gallery',
             'brand_id',
             'category_id',
             'subcategory_id',
@@ -42,52 +43,37 @@ class ProductControllerAdmin extends Controller
         ];
 
         $products = Product::select($productColumns)
-            ->when(
-                $search,
-                fn($q) => $q
-                    ->where('external_name', 'LIKE', "%{$search}%")
-                    ->orWhere('sku', 'LIKE', "%{$search}%")
-                    ->orWhere('slug', 'LIKE', "%{$search}%")
-            )
+            ->when($search, fn($q) => $q
+                ->where('external_name', 'LIKE', "%{$search}%")
+                ->orWhere('sku', 'LIKE', "%{$search}%")
+                ->orWhere('slug', 'LIKE', "%{$search}%"))
             ->when($brandId, fn($q) => $q->where('brand_id', $brandId))
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
-            ->when($statusFilter, function($q) use ($statusFilter) {
-                switch($statusFilter) {
+            ->when($statusFilter, function ($q) use ($statusFilter) {
+                switch ($statusFilter) {
                     case 'active':
                         $q->where('status', 1);
                         break;
                     case 'inactive':
                         $q->where('status', 0);
                         break;
-            
-                    // Filtros de imagem
                     case 'without_image':
-                        $q->where(function($q2) {
-                            $q2->where(function($q3){
-                                $q3->whereNull('photo')
-                                   ->orWhere('photo',''); // cobre string vazia
-                            })
-                            ->where(function($q4){
-                                $q4->whereNull('gallery')
-                                   ->orWhere('gallery','')
-                                   ->orWhere('gallery','[]'); // cobre galeria vazia
+                        $q->where(function ($q2) {
+                            $q2->where(function ($q3) {
+                                $q3->whereNull('photo')->orWhere('photo', '');
+                            })->where(function ($q4) {
+                                $q4->whereNull('gallery')->orWhere('gallery', '')->orWhere('gallery', '[]');
                             });
                         });
                         break;
-                    
                     case 'with_image':
-                        $q->where(function($q2){
-                            $q2->whereNotNull('photo')
-                               ->where('photo','<>','')
-                               ->orWhere(function($q3){
-                                   $q3->whereNotNull('gallery')
-                                      ->where('gallery','<>','')
-                                      ->where('gallery','<>','[]');
-                               });
+                        $q->where(function ($q2) {
+                            $q2->whereNotNull('photo')->where('photo', '<>', '')
+                                ->orWhere(function ($q3) {
+                                    $q3->whereNotNull('gallery')->where('gallery', '<>', '')->where('gallery', '<>', '[]');
+                                });
                         });
                         break;
-            
-                    // Filtros de estoque
                     case 'out_of_stock':
                         $q->where('stock', 0);
                         break;
@@ -102,18 +88,8 @@ class ProductControllerAdmin extends Controller
                         break;
                 }
             })
-            
-            
-            ->when($highlightFilter, function ($q) use ($highlightFilter) {
-                $q->whereJsonContains('highlights', [$highlightFilter => "1"]);
-            })
-            ->when($stockFilter, function ($q) use ($stockFilter) {
-                if ($stockFilter === 'in_stock') {
-                    $q->where('stock', '>', 0);
-                } elseif ($stockFilter === 'out_of_stock') {
-                    $q->where('stock', 0);
-                }
-            })
+            ->when($highlightFilter, fn($q) => $q->whereJsonContains('highlights', [$highlightFilter => "1"]))
+            ->when($stockFilter, fn($q) => $stockFilter === 'in_stock' ? $q->where('stock', '>', 0) : ($stockFilter === 'out_of_stock' ? $q->where('stock', 0) : null))
             ->orderBy('id', 'desc')
             ->paginate(10)
             ->appends($request->query());
@@ -133,6 +109,31 @@ class ProductControllerAdmin extends Controller
             'ofertas_relampago' => 'Ofertas Relâmpago',
             'navbar' => 'Navbar',
         ];
+
+        // ================== Ajuste das URLs das imagens ==================
+        $products->getCollection()->transform(function ($product) {
+            // Foto principal
+            if ($product->photo && Storage::disk('public')->exists($product->photo)) {
+                $product->imageUrl = asset('storage/' . $product->photo);
+            }
+            // Primeira imagem da galeria
+            elseif ($product->gallery) {
+                $gallery = json_decode($product->gallery, true);
+                if (!empty($gallery)) {
+                    foreach ($gallery as $img) {
+                        if (Storage::disk('public')->exists($img)) {
+                            $product->imageUrl = asset('storage/' . $img);
+                            break;
+                        }
+                    }
+                }
+            }
+            // Caso não exista nada
+            if (!isset($product->imageUrl)) {
+                $product->imageUrl = 'https://plataforma.cloudcrow.com.br/storage/uploads/noimage.webp';
+            }
+            return $product;
+        });
 
         return view('admin.products.index', compact(
             'products',

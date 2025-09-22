@@ -6,7 +6,7 @@
         <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
             <h1 class="mb-2 mb-md-0">Produtos</h1>
-            <p><strong>Exibindo:</strong> {{ $products->count() }} de {{ $products->total() }} registros </p>
+            <p><strong>Exibindo:</strong> {{ $products->count() }} de {{ $products->total() }} registros</p>
         </div>
 
         <!-- Formulário de busca e filtros -->
@@ -27,7 +27,7 @@
                         </option>
                     @endforeach
                 </select>
-            
+
                 <!-- Categorias -->
                 <select name="category_id" class="form-select">
                     <option value="">Todas as categorias</option>
@@ -37,31 +37,31 @@
                         </option>
                     @endforeach
                 </select>
-            
+
                 <!-- Status + Estoque -->
                 <select name="status_filter" class="form-select">
                     <option value="">Todos os produtos</option>
-                    <option value="active" {{ request('status_filter') == 'active' ? 'selected' : '' }}>Produtos Ativos</option>
-                    <option value="inactive" {{ request('status_filter') == 'inactive' ? 'selected' : '' }}>Produtos Inativos</option>
-                    <option value="with_image" {{ request('status_filter') == 'with_image' ? 'selected' : '' }}>Com Imagem</option>
-                    <option value="without_image" {{ request('status_filter') == 'without_image' ? 'selected' : '' }}>Sem Imagem</option>
-                    <option value="in_stock" {{ request('status_filter') == 'in_stock' ? 'selected' : '' }}>Com Estoque</option>
-                    <option value="out_of_stock" {{ request('status_filter') == 'out_of_stock' ? 'selected' : '' }}>Sem Estoque</option>
+                    <option value="active" {{ request('status_filter') == 'active' ? 'selected' : '' }}>Produtos Ativos
+                    </option>
+                    <option value="inactive" {{ request('status_filter') == 'inactive' ? 'selected' : '' }}>Produtos
+                        Inativos</option>
+                    <option value="with_image" {{ request('status_filter') == 'with_image' ? 'selected' : '' }}>Com Imagem
+                    </option>
+                    <option value="without_image" {{ request('status_filter') == 'without_image' ? 'selected' : '' }}>Sem
+                        Imagem</option>
+                    <option value="in_stock" {{ request('status_filter') == 'in_stock' ? 'selected' : '' }}>Com Estoque
+                    </option>
+                    <option value="out_of_stock" {{ request('status_filter') == 'out_of_stock' ? 'selected' : '' }}>Sem
+                        Estoque</option>
                 </select>
-            
+
                 <!-- Destaques -->
                 <select name="highlight_filter" class="form-select">
                     <option value="">Todos os destaques</option>
-                    <option value="destaque" {{ request('highlight_filter') == 'destaque' ? 'selected' : '' }}>Destaques</option>
-                    <option value="mais_vendidos" {{ request('highlight_filter') == 'mais_vendidos' ? 'selected' : '' }}>Mais Vendidos</option>
-                    <option value="melhores_avaliacoes" {{ request('highlight_filter') == 'melhores_avaliacoes' ? 'selected' : '' }}>Melhores Avaliações</option>
-                    <option value="super_desconto" {{ request('highlight_filter') == 'super_desconto' ? 'selected' : '' }}>Super Desconto</option>
-                    <option value="famosos" {{ request('highlight_filter') == 'famosos' ? 'selected' : '' }}>Famosos</option>
-                    <option value="lancamentos" {{ request('highlight_filter') == 'lancamentos' ? 'selected' : '' }}>Lançamentos</option>
-                    <option value="tendencias" {{ request('highlight_filter') == 'tendencias' ? 'selected' : '' }}>Tendências</option>
-                    <option value="promocoes" {{ request('highlight_filter') == 'promocoes' ? 'selected' : '' }}>Promoções</option>
-                    <option value="ofertas_relampago" {{ request('highlight_filter') == 'ofertas_relampago' ? 'selected' : '' }}>Ofertas Relâmpago</option>
-                    <option value="navbar" {{ request('highlight_filter') == 'navbar' ? 'selected' : '' }}>Navbar</option>
+                    @foreach ($highlights as $key => $label)
+                        <option value="{{ $key }}" {{ request('highlight_filter') == $key ? 'selected' : '' }}>
+                            {{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
         </form>
@@ -79,110 +79,129 @@
                     @foreach ($products as $product)
                         @php
                             $highlightsValues = json_decode($product->highlights ?? '{}', true);
+
+                            if ($product->photo && Storage::disk('public')->exists($product->photo)) {
+                                $imageUrl = asset('storage/' . $product->photo);
+                            } elseif ($product->gallery) {
+                                $gallery = json_decode($product->gallery, true);
+                                $imageUrl = null;
+                                foreach ($gallery as $img) {
+                                    if (Storage::disk('public')->exists($img)) {
+                                        $imageUrl = asset('storage/' . $img);
+                                        break;
+                                    }
+                                }
+                                if (!$imageUrl) {
+                                    $imageUrl = 'https://plataforma.cloudcrow.com.br/storage/uploads/noimage.webp';
+                                }
+                            } else {
+                                $imageUrl = 'https://plataforma.cloudcrow.com.br/storage/uploads/noimage.webp';
+                            }
                         @endphp
 
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="border rounded p-3 h-100 d-flex flex-column justify-content-between">
-                                <!-- Nome e SKU -->
-                                <div class="mb-2">
-                                    <h6 class="fw-bold mb-1">{{ $product->external_name }}</h6>
-                                    <p class="small text-muted mb-0">SKU: {{ $product->sku }}</p>
+                        <div class="mb-3">
+                            <div class="border rounded p-3 d-flex align-items-center gap-3">
+                                <!-- Imagem -->
+                                <div style="flex-shrink:0; width: 150px; text-align:center;">
+                                    <img src="{{ $imageUrl }}" alt="{{ $product->external_name }}"
+                                        style="max-height:150px; object-fit:scale-down; display:block; margin:auto;">
                                 </div>
 
-                                <!-- Preço -->
-                                <p class="fw-semibold text-success mb-1">
-                                    {{ currency_format($product->price) }}
-                                </p>
+                                <!-- Informações -->
+                                <div class="flex-grow-1 d-flex flex-column justify-content-between h-100">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">{{ $product->external_name }}</h6>
+                                        <p class="small text-muted mb-1">SKU: {{ $product->sku }}</p>
+                                        <p class="fw-semibold text-success mb-1">{{ currency_format($product->price) }}</p>
+                                        <p class="small {{ $product->stock > 0 ? 'text-primary' : 'text-danger' }} mb-2">
+                                            {{ $product->stock > 0 ? 'Estoque: ' . $product->stock : 'Sem estoque' }}
+                                        </p>
+                                    </div>
 
-                                <!-- Estoque -->
-                                <p class="small {{ $product->stock > 0 ? 'text-primary' : 'text-danger' }} mb-2">
-                                    {{ $product->stock > 0 ? 'Estoque: ' . $product->stock : 'Sem estoque' }}
-                                </p>
+                                    <!-- Ações -->
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <form action="{{ route('admin.products.toggleStatus', $product->id) }}"
+                                            method="POST" class="flex-grow-1">
+                                            @csrf
+                                            <button
+                                                class="btn btn-sm w-100 {{ $product->status ? 'btn-success' : 'btn-secondary' }}"
+                                                type="submit">
+                                                {{ $product->status ? 'Ativo' : 'Inativo' }}
+                                            </button>
+                                        </form>
 
-                                <!-- Status -->
-                                <form action="{{ route('admin.products.toggleStatus', $product->id) }}" method="POST"
-                                    class="mb-3">
-                                    @csrf
-                                    <button
-                                        class="btn btn-sm w-100 {{ $product->status ? 'btn-success' : 'btn-secondary' }}"
-                                        type="submit">
-                                        {{ $product->status ? 'Ativo' : 'Inativo' }}
-                                    </button>
-                                </form>
+                                        <a href="{{ route('admin.products.edit', $product->id) }}"
+                                            class="btn btn-sm btn-warning flex-grow-1">
+                                            <i class="fa fa-edit me-1"></i> Editar
+                                        </a>
 
-                                <!-- Ações -->
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a href="{{ route('admin.products.edit', $product->id) }}"
-                                        class="btn btn-sm btn-warning flex-grow-1">
-                                        <i class="fa fa-edit me-1"></i> Editar
-                                    </a>
-
-                                    <button type="button" class="btn btn-sm btn-info flex-grow-1" data-bs-toggle="modal"
-                                        data-bs-target="#highlightsModal{{ $product->id }}">
-                                        <i class="fa fa-star me-1"></i> Destaques
-                                    </button>
-
-                                    <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST"
-                                        class="flex-grow-1">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger w-100"
-                                            onclick="return confirm('Tem certeza que deseja excluir este produto?')">
-                                            <i class="fa fa-trash me-1"></i> Excluir
+                                        <button type="button" class="btn btn-sm btn-info flex-grow-1"
+                                            data-bs-toggle="modal" data-bs-target="#highlightsModal{{ $product->id }}">
+                                            <i class="fa fa-star me-1"></i> Destaques
                                         </button>
+
+                                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST"
+                                            class="flex-grow-1">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger w-100"
+                                                onclick="return confirm('Tem certeza que deseja excluir este produto?')">
+                                                <i class="fa fa-trash me-1"></i> Excluir
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal de destaques -->
+                            <div class="modal fade" id="highlightsModal{{ $product->id }}" tabindex="-1"
+                                aria-labelledby="highlightsModalLabel{{ $product->id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <form class="form-highlights"
+                                        action="{{ route('admin.products.updateHighlights', $product->id) }}"
+                                        method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Destaques do Produto</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                @php
+                                                    $highlights = [
+                                                        'destaque' => 'Destaques',
+                                                        'mais_vendidos' => 'Mais Vendidos',
+                                                        'melhores_avaliacoes' => 'Melhores Avaliações',
+                                                        'super_desconto' => 'Super Desconto',
+                                                        'famosos' => 'Famosos',
+                                                        'lancamentos' => 'Lançamentos',
+                                                        'tendencias' => 'Tendências',
+                                                        'promocoes' => 'Promoções',
+                                                        'ofertas_relampago' => 'Ofertas Relâmpago',
+                                                        'navbar' => 'Navbar',
+                                                    ];
+                                                @endphp
+                                                @foreach ($highlights as $key => $label)
+                                                    <div class="form-check text-start">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="highlights[{{ $key }}]"
+                                                            id="{{ $key }}{{ $product->id }}" value="1"
+                                                            {{ !empty($highlightsValues[$key]) ? 'checked' : '' }}>
+                                                        <label class="form-check-label"
+                                                            for="{{ $key }}{{ $product->id }}">{{ $label }}</label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Fechar</button>
+                                                <button type="submit" class="btn btn-primary">Salvar</button>
+                                            </div>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Modal de destaques -->
-                        <div class="modal fade" id="highlightsModal{{ $product->id }}" tabindex="-1"
-                            aria-labelledby="highlightsModalLabel{{ $product->id }}" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <form class="form-highlights"
-                                    action="{{ route('admin.products.updateHighlights', $product->id) }}" method="POST">
-                                    @csrf
-                                    @method('PATCH')
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Destaques do Produto</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            @php
-                                                $highlights = [
-                                                    'destaque' => 'Destaques',
-                                                    'mais_vendidos' => 'Mais Vendidos',
-                                                    'melhores_avaliacoes' => 'Melhores Avaliações',
-                                                    'super_desconto' => 'Super Desconto',
-                                                    'famosos' => 'Famosos',
-                                                    'lancamentos' => 'Lançamentos',
-                                                    'tendencias' => 'Tendências',
-                                                    'promocoes' => 'Promoções',
-                                                    'ofertas_relampago' => 'Ofertas Relâmpago',
-                                                    'navbar' => 'Navbar',
-                                                ];
-                                            @endphp
-                                            @foreach ($highlights as $key => $label)
-                                                <div class="form-check text-start">
-                                                    <input class="form-check-input" type="checkbox"
-                                                        name="highlights[{{ $key }}]"
-                                                        id="{{ $key }}{{ $product->id }}" value="1"
-                                                        {{ !empty($highlightsValues[$key]) ? 'checked' : '' }}>
-                                                    <label class="form-check-label"
-                                                        for="{{ $key }}{{ $product->id }}">{{ $label }}</label>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Fechar</button>
-                                            <button type="submit" class="btn btn-primary">Salvar</button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     @endforeach
                 </div>
             </div>

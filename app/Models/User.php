@@ -65,9 +65,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function cupons()
     {
-        return $this->belongsToMany(Cupon::class, 'user_cupons')
-                    ->withPivot('desconto')
-                    ->withTimestamps();
+        return $this->belongsToMany(
+            Cupon::class,
+            'user_cupons',
+            'user_id',
+            'cupon_id'
+        )->withPivot('desconto')->withTimestamps();
     }
 
 }

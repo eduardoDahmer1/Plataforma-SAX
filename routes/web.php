@@ -19,7 +19,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\BancardController;
 use App\Http\Controllers\CuponUserController;
-
+use App\Http\Controllers\PagoParController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\SystemController;
@@ -131,14 +131,37 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
 
-   // Cupons do usuário
-   Route::get('cupons', [CuponUserController::class, 'index'])->name('user.cupons');
-   Route::post('cupons/apply', [CuponUserController::class, 'apply'])->name('user.cupons.apply');
-   Route::post('cupons/remove', [CuponUserController::class, 'remove'])->name('user.cupons.remove');
+    // Cupons do usuário
+    Route::get('cupons', [CuponUserController::class, 'index'])->name('user.cupons');
+    Route::post('cupons/remove', [CuponUserController::class, 'remove'])->name('user.cupons.remove');
+
+    Route::post('/user/cupon/apply', [CuponUserController::class, 'applyCupon'])
+    ->name('user.applyCupon')
+    ->middleware('auth');
+
+    Route::post('/user/cupons/apply', [UserCuponController::class, 'apply'])
+    ->name('user.cupons.apply');
 
     // Bancard
-    Route::get('/checkout/bancard/{order}', [CheckoutController::class, 'bancardCheckout'])->name('checkout.bancard');
+    Route::get('/checkout/bancard/{order}', [BancardController::class, 'checkoutPage'])->name('checkout.bancard');
     Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');
+
+    // Páginas de sucesso e erro
+    Route::get('/checkout/success', function () {
+        return view('checkout.success');
+    })->name('checkout.success');
+
+    Route::get('/checkout/error', function () {
+        return view('checkout.error');
+    })->name('checkout.error');
+
+    // Checkout com Pagopar
+    Route::get('/checkout/pagopar/{order}', [PagoParController::class, 'checkoutPage'])
+    ->name('pagopar.checkout');
+
+    // Callback/retorno Pagopar
+    Route::post('/checkout/pagopar/callback', [PagoParController::class, 'callback'])
+    ->name('pagopar.callback');
 
     // Depósito
     Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');

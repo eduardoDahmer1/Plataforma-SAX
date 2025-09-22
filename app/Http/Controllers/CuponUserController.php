@@ -10,13 +10,29 @@ use Illuminate\Http\Request;
 class CuponUserController extends Controller
 {
     /**
-     * Verifica se um cupom é válido, retorna o desconto e registra para o usuário
+     * Lista os cupons do usuário autenticado
+     */
+    public function index()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Você precisa estar logado para ver seus cupons.');
+        }
+
+        $cupons = $user->cupons()->withPivot('desconto')->get();
+
+        return view('users.cupon', compact('cupons'));
+    }
+
+    /**
+     * Aplica cupom via API (usado no carrinho com JSON)
      */
     public function apply(Request $request)
     {
         $request->validate([
             'codigo' => 'required|string',
-            'cart' => 'required|array', // array de itens do carrinho [produto_id => quantidade]
+            'cart'   => 'required|array',
         ]);
 
         $user = auth()->user();
@@ -28,7 +44,7 @@ class CuponUserController extends Controller
         }
 
         $codigo = $request->input('codigo');
-        $cart = $request->input('cart');
+        $cart   = $request->input('cart');
 
         $cupon = Cupon::ativos()->where('codigo', $codigo)->first();
         if (!$cupon) {
@@ -52,19 +68,19 @@ class CuponUserController extends Controller
             $product = Product::find($productId);
             if (!$product) continue;
 
-            $aplica = match($cupon->modelo) {
+            $aplica = match ($cupon->modelo) {
                 'categoria' => $product->category_id == $cupon->categoria_id,
-                'marca' => $product->brand_id == $cupon->marca_id,
-                'produto' => $product->id == $cupon->produto_id,
-                default => true,
+                'marca'     => $product->brand_id == $cupon->marca_id,
+                'produto'   => $product->id == $cupon->produto_id,
+                default     => true,
             };
 
             if ($aplica) {
                 $precoProduto = $product->price * $qty;
-                $subtotal += $precoProduto;
+                $subtotal    += $precoProduto;
 
-                $desconto += $cupon->tipo == 'percentual' 
-                    ? ($precoProduto * $cupon->montante) / 100 
+                $desconto    += $cupon->tipo == 'percentual'
+                    ? ($precoProduto * $cupon->montante) / 100
                     : $cupon->montante;
             }
         }
@@ -80,19 +96,56 @@ class CuponUserController extends Controller
             ]);
         }
 
-        // Salva o cupom aplicado para o usuário
-        $userCupon = UserCupon::updateOrCreate(
+        UserCupon::updateOrCreate(
             ['user_id' => $user->id, 'cupon_id' => $cupon->id],
             ['desconto' => round($desconto, 2)]
         );
 
         return response()->json([
-            'success' => true,
-            'message' => 'Cupom aplicado com sucesso!',
+            'success'  => true,
+            'message'  => 'Cupom aplicado com sucesso!',
             'desconto' => round($desconto, 2),
             'subtotal' => round($subtotal, 2),
-            'total' => round($subtotal - $desconto, 2),
-            'cupon' => $cupon->codigo
+            'total'    => round($subtotal - $desconto, 2),
+            'cupon'    => $cupon->codigo
         ]);
+    }
+
+    /**
+     * Aplica cupom via formulário da view
+     */
+    public function applyCupon(Request $request)
+    {
+        $codigo = $request->input('codigo');
+
+        $cupom = Cupon::where('codigo', $codigo)
+            ->where('data_final', '>=', now())
+            ->first();
+
+        if (!$cupom) {
+            return back()->with('error', 'Cupom inválido ou expirado.');
+        }
+
+        // Salva apenas o ID na sessão
+        session(['cupom_aplicado' => $cupom->id]);
+
+        return back()->with('success', 'Cupom aplicado com sucesso!');
+    }
+
+    /**
+     * Remove cupom aplicado
+     */
+    public function remove(Request $request)
+    {
+        // Remove do banco (se existir)
+        $user = auth()->user();
+        if ($user) {
+            UserCupon::where('user_id', $user->id)->delete();
+        }
+
+        // Remove da sessão
+        session()->forget('cupom_aplicado');
+
+        return back()->with('success', 'Cupom removido com sucesso!');
     }
 }

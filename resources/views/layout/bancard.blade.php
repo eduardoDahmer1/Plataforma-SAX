@@ -18,31 +18,40 @@
     </div>
 </div>
 
-<script src="https://vpos.infonet.com.py/bancard-checkout-5.0.1.js"></script>
+<script src="{{ asset('js/bancard-checkout-5.0.1.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const processId = "{{ $process_id }}"; // enviado do backend
 
-    // Estilos do formulário Bancard
+    if(!processId) {
+        alert('Erro: process_id não gerado. Contate o suporte.');
+        return;
+    }
+
     const styles = {
-        'input-background-color' : '#FFFFFF',
+        'input-background-color': '#FFFFFF',
         'input-text-color': '#555555',
-        'input-border-color' : '#CCCCCC',
-        'input-placeholder-color' : '#999999',
-        'button-background-color' : '#5CB85C',
-        'button-text-color' : '#FFFFFF',
-        'button-border-color' : '#4CAE4C',
-        'form-background-color' : '#FFFFFF',
-        'form-border-color' : '#DDDDDD',
-        'header-background-color' : '#F5F5F5',
-        'header-text-color' : '#333333',
-        'hr-border-color' : '#EEEEEE'
+        'input-border-color': '#CCCCCC',
+        'input-placeholder-color': '#999999',
+        'button-background-color': '#5CB85C',
+        'button-text-color': '#FFFFFF',
+        'button-border-color': '#4CAE4C',
+        'form-background-color': '#FFFFFF',
+        'form-border-color': '#DDDDDD',
+        'header-background-color': '#F5F5F5',
+        'header-text-color': '#333333',
+        'hr-border-color': '#EEEEEE'
     };
 
     const options = { styles: styles };
 
     // Inicializa o iFrame do Bancard
-    Bancard.Checkout.createForm('iframe-container', processId, options);
+    try {
+        Bancard.Checkout.createForm('iframe-container', processId, options);
+    } catch(err) {
+        console.error('Erro ao inicializar o iFrame do Bancard:', err);
+        alert('Falha ao carregar o formulário de pagamento. Atualize a página e tente novamente.');
+    }
 });
 </script>
 @endsection

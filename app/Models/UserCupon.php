@@ -12,19 +12,13 @@ class UserCupon extends Model
         'desconto',
     ];
 
-    /**
-     * Relacionamento com o usuário dono do cupom
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    /**
-     * Relacionamento com o cupom aplicado
-     */
+    
     public function cupon()
     {
-        return $this->belongsTo(Cupon::class);
+        return $this->belongsTo(Cupon::class, 'cupon_id');
     }
 }

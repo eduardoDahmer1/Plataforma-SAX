@@ -13,8 +13,8 @@ class Order extends Model
         'user_id',
         'status',
         'total',
-        'discount',          // novo campo para desconto do cupom
-        'cupon_id',          // novo campo para referência ao cupom
+        'discount',
+        'cupon_id',
         'payment_method',
         'deposit_receipt',
         'name',
@@ -31,6 +31,44 @@ class Order extends Model
         'observations',
         'shipping',
         'store',
+
+        // Novos campos compatíveis com a outra plataforma
+        'order_number',
+        'txnid',
+        'charge_id',
+        'pay_id',
+        'payment_status',
+
+        'shipping_cost',
+        'packing_cost',
+        'tax',
+
+        'currency_sign',
+        'currency_value',
+
+        'shipping_name',
+        'shipping_email',
+        'shipping_phone',
+        'shipping_country',
+        'shipping_state',
+        'shipping_city',
+        'shipping_zip',
+        'shipping_address',
+        'shipping_address_number',
+        'shipping_complement',
+        'shipping_district',
+        'shipping_document',
+
+        'order_note',
+        'internal_note',
+
+        'affilate_user',
+        'affilate_charge',
+
+        'location',
+        'delivery_method',
+        'description',
+        'payment',
     ];
 
     // Relacionamento com itens do pedido

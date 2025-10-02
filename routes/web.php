@@ -196,10 +196,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Listar moedas
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
 
+    Route::get('products/search', [ProductControllerAdmin::class, 'search'])->name('products.search');
+
     // Adicionar moeda
     Route::post('currencies', [CurrencyControllerAdmin::class, 'store'])->name('currencies.store');
 
     Route::resource('cupons', CuponController::class);
+
+    Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
 
     // Editar moeda
     Route::put('currencies/{id}', [CurrencyControllerAdmin::class, 'update'])->name('currencies.update');

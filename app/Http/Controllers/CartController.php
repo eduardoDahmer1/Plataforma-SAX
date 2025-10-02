@@ -35,6 +35,11 @@ class CartController extends Controller
             return redirect()->route('login')->with('error', 'Você precisa estar logado para adicionar ao carrinho.');
         }
 
+        // 🚨 Bloqueia carrinho para user_type = 1
+        if ($user->user_type == 1) {
+            return back()->with('error', 'Seu perfil não tem permissão para adicionar produtos ao carrinho.');
+        }
+
         $productId = $request->input('product_id');
         $quantity  = (int) $request->input('quantity', 1);
 
@@ -60,6 +65,7 @@ class CartController extends Controller
 
         return back()->with('success', 'Produto adicionado ao carrinho!');
     }
+
 
     public function view()
     {

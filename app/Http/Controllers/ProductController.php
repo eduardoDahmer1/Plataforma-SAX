@@ -21,7 +21,6 @@ class ProductController extends Controller
         $cacheKey = "home_items_{$page}_" . md5($search ?? '');
 
         $items = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($search) {
-            // Uploads
             $uploads = Upload::select('id', 'title', 'description', 'file_path', 'created_at')
                 ->when($search, fn($q) => $q->where('title', 'LIKE', "%{$search}%")
                                            ->orWhere('description', 'LIKE', "%{$search}%"))
@@ -37,12 +36,11 @@ class ProductController extends Controller
                     'created_at'  => $u->created_at,
                 ]);
 
-            // Produtos
             $columns = ['id', 'external_name', 'sku', 'price', 'photo', 'brand_id', 'category_id', 'created_at'];
             $products = Product::select($columns)
                 ->when($search, fn($q) => $q->where('external_name', 'LIKE', "%{$search}%")
                                            ->orWhere('sku', 'LIKE', "%{$search}%"))
-                ->with(['cupons' => fn($q) => $q->ativos()]) // eager load cupons ativos
+                ->with(['cupons' => fn($q) => $q->ativos()])
                 ->get()
                 ->map(fn($p) => (object)[
                     'id'          => $p->id,
@@ -67,7 +65,6 @@ class ProductController extends Controller
         ]);
     }
 
-    // Página com todos os produtos
     public function index(Request $request)
     {
         $search   = $request->get('search');
@@ -86,18 +83,20 @@ class ProductController extends Controller
 
         foreach ($products as $p) {
             $p->price_final = $this->calcularPrecoComCupon($p);
+            // Garantir que color e size estão disponíveis
+            $p->color = $p->color ?? null;
+            $p->size  = $p->size ?? null;
         }
 
         return view('produtos.index', compact('products'));
     }
 
-    // Produtos por categoria
     public function byCategory(Category $category)
     {
         $products = Cache::remember("products_category_{$category->id}", now()->addMinutes(10), fn() =>
             Product::where('category_id', $category->id)
-                   ->with(['cupons' => fn($q) => $q->ativos()])
-                   ->paginate(12)
+                ->with(['cupons' => fn($q) => $q->ativos()])
+                ->paginate(12)
         );
 
         foreach ($products as $p) {
@@ -107,13 +106,12 @@ class ProductController extends Controller
         return view('produtos.index', compact('products', 'category'));
     }
 
-    // Produtos por subcategoria
     public function bySubcategory(Subcategory $subcategory)
     {
         $products = Cache::remember("products_subcategory_{$subcategory->id}", now()->addMinutes(10), fn() =>
             Product::where('subcategory_id', $subcategory->id)
-                   ->with(['cupons' => fn($q) => $q->ativos()])
-                   ->paginate(12)
+                ->with(['cupons' => fn($q) => $q->ativos()])
+                ->paginate(12)
         );
 
         foreach ($products as $p) {
@@ -123,13 +121,12 @@ class ProductController extends Controller
         return view('produtos.index', compact('products', 'subcategory'));
     }
 
-    // Produtos por childcategory
     public function byChildcategory(Childcategory $childcategory)
     {
         $products = Cache::remember("products_childcategory_{$childcategory->id}", now()->addMinutes(10), fn() =>
             Product::where('childcategory_id', $childcategory->id)
-                   ->with(['cupons' => fn($q) => $q->ativos()])
-                   ->paginate(12)
+                ->with(['cupons' => fn($q) => $q->ativos()])
+                ->paginate(12)
         );
 
         foreach ($products as $p) {
@@ -138,17 +135,42 @@ class ProductController extends Controller
 
         return view('produtos.index', compact('products', 'childcategory'));
     }
-
-    // Detalhes de um produto
+    
     public function show(Product $product)
     {
-        $product->load(['cupons' => fn($q) => $q->ativos()]);
+        $product->load([
+            'cupons' => fn($q) => $q->ativos(),
+            'children.cupons',
+            'coresRelacionadas',
+            'parent.children.cupons' // garante que os irmãos sejam carregados
+        ]);
+    
         $product->price_final = $this->calcularPrecoComCupon($product);
+        $product->color = $product->color ?? null;
+        $product->size  = $product->size ?? null;
+    
+        foreach ($product->children as $child) {
+            $child->price_final = $this->calcularPrecoComCupon($child);
+            $child->color = $child->color ?? null;
+            $child->size  = $child->size ?? null;
+        }
+    
+        foreach ($product->coresRelacionadas as $color) {
+            $color->price_final = $this->calcularPrecoComCupon($color);
+            $color->color = $color->color ?? null;
+            $color->size  = $color->size ?? null;
+        }
+    
+        // 👇 Aqui está a lógica de pai/filho
+        if ($product->product_role === 'F' && $product->parent) {
+            $siblings = $product->parent->children;
+        } else {
+            $siblings = $product->children;
+        }
+    
+        return view('produtos.show', compact('product', 'siblings'));
+    }    
 
-        return view('produtos.show', compact('product'));
-    }
-
-    // Função helper para calcular preço final com cupom
     private function calcularPrecoComCupon(Product $p)
     {
         $cupons = $p->cupons ?? collect();

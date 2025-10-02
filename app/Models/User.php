@@ -8,6 +8,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property \Illuminate\Database\Eloquent\Collection $favoriteProducts
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -57,7 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(\App\Models\Cart::class);
     }
-    // User.php
+
     public function favoriteProducts()
     {
         return $this->belongsToMany(Product::class, 'user_product_preferences')->withTimestamps();
@@ -72,5 +75,4 @@ class User extends Authenticatable implements MustVerifyEmail
             'cupon_id'
         )->withPivot('desconto')->withTimestamps();
     }
-
 }

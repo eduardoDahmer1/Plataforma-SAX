@@ -100,23 +100,37 @@
                         @endphp
 
                         <div class="mb-3">
-                            <div class="border rounded p-3 d-flex align-items-center gap-3">
+                            <div class="border rounded p-3 d-flex flex-column flex-md-row align-items-center gap-3">
                                 <!-- Imagem -->
-                                <div style="flex-shrink:0; width: 150px; text-align:center;">
+                                <div class="flex-shrink-0 text-center" style="width: 150px;">
                                     <img src="{{ $imageUrl }}" alt="{{ $product->external_name }}"
-                                        style="max-height:150px; object-fit:scale-down; display:block; margin:auto;">
+                                        class="img-fluid rounded"
+                                        style="max-height:9em; object-fit:cover; display:block; margin:auto;">
                                 </div>
 
                                 <!-- Informações -->
-                                <div class="flex-grow-1 d-flex flex-column justify-content-between h-100">
+                                <div class="flex-grow-1 d-flex flex-column justify-content-between h-100 w-100">
                                     <div>
-                                        <h6 class="fw-bold mb-1">{{ $product->external_name }}</h6>
-                                        <p class="small text-muted mb-1">SKU: {{ $product->sku }}</p>
-                                        <p class="fw-semibold text-success mb-1">{{ currency_format($product->price) }}</p>
-                                        <p class="small {{ $product->stock > 0 ? 'text-primary' : 'text-danger' }} mb-2">
+                                        <h6 class="fw-bold mb-1 text-center text-md-start">{{ $product->external_name }}
+                                        </h6>
+                                        <p class="small text-muted mb-1 text-center text-md-start">
+                                            SKU: {{ $product->sku }}
+                                        </p>
+                                        @if ($product->product_role)
+                                            <p class="small text-muted mb-1 text-center text-md-start">
+                                                Tipo: {{ $product->product_role === 'P' ? 'Pai (P)' : 'Filho (F)' }}
+                                            </p>
+                                        @endif
+
+                                        <p class="fw-semibold text-success mb-1 text-center text-md-start">
+                                            {{ currency_format($product->price) }}
+                                        </p>
+                                        <p
+                                            class="small {{ $product->stock > 0 ? 'text-primary' : 'text-danger' }} mb-2 text-center text-md-start">
                                             {{ $product->stock > 0 ? 'Estoque: ' . $product->stock : 'Sem estoque' }}
                                         </p>
                                     </div>
+
 
                                     <!-- Ações -->
                                     <div class="d-flex flex-wrap gap-2 mt-2">
@@ -206,7 +220,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Paginação -->
         <div class="d-flex justify-content-center mt-3">
             {{ $products->links() }}

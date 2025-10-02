@@ -9,7 +9,6 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Childcategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class ProductControllerAdmin extends Controller
@@ -59,32 +58,17 @@ class ProductControllerAdmin extends Controller
                         break;
                     case 'without_image':
                         $q->where(function ($q2) {
-                            $q2->where(function ($q3) {
-                                $q3->whereNull('photo')->orWhere('photo', '');
-                            })->where(function ($q4) {
-                                $q4->whereNull('gallery')->orWhere('gallery', '')->orWhere('gallery', '[]');
-                            });
+                            $q2->whereNull('photo')->orWhere('photo', '');
                         });
                         break;
                     case 'with_image':
-                        $q->where(function ($q2) {
-                            $q2->whereNotNull('photo')->where('photo', '<>', '')
-                                ->orWhere(function ($q3) {
-                                    $q3->whereNotNull('gallery')->where('gallery', '<>', '')->where('gallery', '<>', '[]');
-                                });
-                        });
+                        $q->whereNotNull('photo');
                         break;
                     case 'out_of_stock':
                         $q->where('stock', 0);
                         break;
                     case 'in_stock':
                         $q->where('stock', '>', 0);
-                        break;
-                    case 'out_of_stock_and_active':
-                        $q->where('stock', 0)->where('status', 1);
-                        break;
-                    case 'stock_and_inactive':
-                        $q->where('stock', '>', 0)->where('status', 0);
                         break;
                 }
             })
@@ -110,28 +94,9 @@ class ProductControllerAdmin extends Controller
             'navbar' => 'Navbar',
         ];
 
-        // ================== Ajuste das URLs das imagens ==================
+        // Ajuste das URLs das imagens
         $products->getCollection()->transform(function ($product) {
-            // Foto principal
-            if ($product->photo && Storage::disk('public')->exists($product->photo)) {
-                $product->imageUrl = asset('storage/' . $product->photo);
-            }
-            // Primeira imagem da galeria
-            elseif ($product->gallery) {
-                $gallery = json_decode($product->gallery, true);
-                if (!empty($gallery)) {
-                    foreach ($gallery as $img) {
-                        if (Storage::disk('public')->exists($img)) {
-                            $product->imageUrl = asset('storage/' . $img);
-                            break;
-                        }
-                    }
-                }
-            }
-            // Caso não exista nada
-            if (!isset($product->imageUrl)) {
-                $product->imageUrl = 'https://plataforma.cloudcrow.com.br/storage/uploads/noimage.webp';
-            }
+            $product->imageUrl = $product->photo_url;
             return $product;
         });
 
@@ -156,8 +121,21 @@ class ProductControllerAdmin extends Controller
         $categories = Category::all();
         $subcategories = collect();
         $childcategories = collect();
+        $products = Product::all(); // adiciona aqui também
 
-        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'childcategories'));
+        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'childcategories', 'products'));
+    }
+
+    // ProductControllerAdmin.php
+    public function search(Request $request)
+    {
+        $q = $request->get('q');
+        $products = Product::where('name', 'like', "%{$q}%")
+            ->orWhere('external_name', 'like', "%{$q}%")
+            ->limit(10)
+            ->get(['id', 'name', 'external_name']);
+
+        return response()->json($products);
     }
 
     // ================== STORE ==================
@@ -175,7 +153,12 @@ class ProductControllerAdmin extends Controller
             'childcategory_id' => 'nullable|exists:childcategories,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
-            'highlights' => 'nullable|array'
+            'highlights' => 'nullable|array',
+            'parent_id' => 'nullable|exists:products,id',
+            'color' => 'nullable|string|max:7',
+            'color_parent_id' => 'nullable|array',
+            'color_parent_id.*' => 'nullable|exists:products,id',
+            'size' => 'nullable|string|max:50'
         ]);
 
         $data = $request->only([
@@ -187,13 +170,22 @@ class ProductControllerAdmin extends Controller
             'brand_id',
             'category_id',
             'subcategory_id',
-            'childcategory_id'
+            'childcategory_id',
+            'parent_id',
+            'color',
+            'size'
         ]);
 
         $data['highlights'] = $request->input('highlights', []);
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+        }
+
+
+        // Salva a cor selecionada
+        if ($request->has('colors_values')) {
+            $data['color'] = $request->input('colors_values')[0];
         }
 
         if ($request->hasFile('gallery')) {
@@ -216,8 +208,20 @@ class ProductControllerAdmin extends Controller
         $categories = Category::all();
         $subcategories = Subcategory::where('category_id', $item->category_id)->get();
         $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
+        $products = Product::all(); // pega todos os produtos para seleção de parent/cores
 
-        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'childcategories'));
+        // Transformar parent_id e color_parent_id em arrays para o Blade
+        $item->parent_id = is_string($item->parent_id) ? explode(',', $item->parent_id) : ($item->parent_id ?? []);
+        $item->color_parent_id = is_string($item->color_parent_id) ? explode(',', $item->color_parent_id) : ($item->color_parent_id ?? []);
+
+        return view('admin.products.edit', compact(
+            'item',
+            'brands',
+            'categories',
+            'subcategories',
+            'childcategories',
+            'products'
+        ));
     }
 
     // ================== UPDATE ==================
@@ -225,6 +229,7 @@ class ProductControllerAdmin extends Controller
     {
         $product = Product::findOrFail($id);
 
+        // Validação
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'external_name' => 'required|string|max:255',
@@ -237,9 +242,16 @@ class ProductControllerAdmin extends Controller
             'childcategory_id' => 'nullable|exists:childcategories,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
-            'highlights' => 'nullable|array'
+            'highlights' => 'nullable|array',
+            'parent_id' => 'nullable|array',
+            'parent_id.*' => 'nullable|exists:products,id',
+            'color_parent_id' => 'nullable|array',
+            'color_parent_id.*' => 'nullable|exists:products,id',
+            'size' => 'nullable|string|max:50',
+            'color' => 'nullable|string|max:7', // hex da cor
         ]);
 
+        // Dados básicos
         $data = $request->only([
             'sku',
             'external_name',
@@ -249,18 +261,38 @@ class ProductControllerAdmin extends Controller
             'brand_id',
             'category_id',
             'subcategory_id',
-            'childcategory_id'
+            'childcategory_id',
+            'size',
+            'color',
         ]);
 
-        $data['highlights'] = $request->input('highlights', []);
+        // Filtra arrays para não vir [""] e bagunçar
+        $parentIds = array_filter((array) $request->input('parent_id', []));
+        $colorIds  = array_filter((array) $request->input('color_parent_id', []));
+        $data['highlights'] = json_encode($request->input('highlights', []));
 
+        // Guarda filhos atuais antes da atualização
+        $oldParentIds = $product->parent_id ? explode(',', $product->parent_id) : [];
+
+        // Foto principal
         if ($request->hasFile('photo')) {
             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
-                Storage::disk('public')->delete($product->photo);
+                $usedElsewhere = Product::where('photo', $product->photo)
+                    ->where('id', '!=', $product->id)
+                    ->exists();
+                if (!$usedElsewhere) {
+                    Storage::disk('public')->delete($product->photo);
+                }
             }
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
 
+        // Cor
+        if ($request->has('colors_values')) {
+            $data['color'] = $request->input('colors_values')[0];
+        }
+
+        // Galeria
         if ($request->hasFile('gallery')) {
             $existingGallery = $product->gallery ? json_decode($product->gallery, true) : [];
             foreach ($request->file('gallery') as $image) {
@@ -269,8 +301,95 @@ class ProductControllerAdmin extends Controller
             $data['gallery'] = json_encode($existingGallery);
         }
 
+        // Define papel do produto automaticamente
+        if (count($parentIds) === 0) {
+            // Sem parent_id => é Pai
+            $data['product_role'] = 'P';
+            $data['parent_id'] = null;
+            $data['color_parent_id'] = null;
+        } else {
+            // Tem parent_id => é Filho
+            $data['product_role'] = 'F';
+            $data['parent_id'] = implode(',', $parentIds);
+            $data['color_parent_id'] = implode(',', $colorIds);
+        }
+
         $product->update($data);
-        return redirect()->route('admin.products.index')->with('success', 'Produto atualizado com sucesso!');
+
+        // --- Remove filhos que não estão mais selecionados
+        $removedChildren = array_diff($oldParentIds, $parentIds);
+        foreach ($removedChildren as $childId) {
+            $child = Product::find($childId);
+            if ($child) {
+                $child->parent_id = null;
+                $child->product_role = 'P'; // volta a ser pai se não tiver outro
+                $child->save();
+            }
+        }
+
+        // --- Atualiza filhos
+        $parentPhoto   = $product->photo;
+        $parentGallery = $product->gallery ? json_decode($product->gallery, true) : [];
+
+        foreach ($parentIds as $childId) {
+            $child = Product::find($childId);
+            if (!$child) continue;
+
+            $child->parent_id = $product->id;
+            $child->color_parent_id = implode(',', $colorIds);
+            $child->product_role = 'F';
+
+            // Copia foto do pai
+            if ($parentPhoto && Storage::disk('public')->exists($parentPhoto)) {
+                $newPhotoPath = 'products/photo/' . uniqid() . '.webp';
+                Storage::disk('public')->copy($parentPhoto, $newPhotoPath);
+
+                if ($child->photo && Storage::disk('public')->exists($child->photo)) {
+                    $usedElsewhere = Product::where(function ($q) use ($child) {
+                        $q->where('photo', $child->photo)
+                            ->orWhere('gallery', 'like', "%{$child->photo}%");
+                    })
+                        ->where('id', '!=', $child->id)
+                        ->exists();
+                    if (!$usedElsewhere) {
+                        Storage::disk('public')->delete($child->photo);
+                    }
+                }
+
+                $child->photo = $newPhotoPath;
+            }
+
+            // Copia galeria do pai
+            if (!empty($parentGallery)) {
+                $newGallery = [];
+                foreach ($parentGallery as $pgImg) {
+                    if (Storage::disk('public')->exists($pgImg)) {
+                        $newPath = 'products/gallery/' . uniqid() . '.webp';
+                        Storage::disk('public')->copy($pgImg, $newPath);
+                        $newGallery[] = $newPath;
+                    }
+                }
+
+                $existingGallery = $child->gallery ? json_decode($child->gallery, true) : [];
+                foreach ($existingGallery as $eg) {
+                    if (Storage::disk('public')->exists($eg)) {
+                        $usedElsewhere = Product::where('gallery', 'like', "%{$eg}%")
+                            ->where('id', '!=', $child->id)
+                            ->exists();
+                        if (!$usedElsewhere) {
+                            Storage::disk('public')->delete($eg);
+                        }
+                    }
+                }
+
+                $child->gallery = json_encode($newGallery);
+            }
+
+            $child->save();
+        }
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Produto atualizado com sucesso!');
     }
 
     // ================== DELETE GALLERY IMAGE ==================

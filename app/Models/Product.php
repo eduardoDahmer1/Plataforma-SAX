@@ -78,17 +78,6 @@ class Product extends Model
         'material_qty',
         'material_price',
         'show_price',
-        'mercadolivre_name',
-        'mercadolivre_description',
-        'mercadolivre_id',
-        'mercadolivre_category_attributes',
-        'mercadolivre_listing_type_id',
-        'mercadolivre_price',
-        'mercadolivre_warranty_type_id',
-        'mercadolivre_warranty_type_name',
-        'mercadolivre_warranty_time',
-        'mercadolivre_warranty_time_unit',
-        'mercadolivre_without_warranty',
         'show_in_navbar',
         'product_size',
         'synced',
@@ -97,8 +86,21 @@ class Product extends Model
         'name',
         'description',
         'price',
+        'color',
+        'size',
         'stock',
         'brand_id',
+        'parent_id',
+        'color_parent_id', // adiciona a coluna que vai armazenar cores como array
+    ];
+
+    // Casts para JSON/array
+    protected $casts = [
+        'gallery' => 'array',
+        'parent_id' => 'array',
+        'color_parent_id' => 'array',
+        'price' => 'float',
+        'stock' => 'integer',
     ];
 
     // URL da foto do produto
@@ -125,18 +127,47 @@ class Product extends Model
         return $this->belongsTo(Subcategory::class);
     }
 
+    public function childcategory()
+    {
+        return $this->belongsTo(Childcategory::class);
+    }
+
+    // Produto Pai
+    public function parent()
+    {
+        return $this->belongsTo(Product::class, 'parent_id');
+    }
+
+    // Produtos Filhos
+    public function children()
+    {
+        return $this->hasMany(Product::class, 'parent_id');
+    }
+
     // Relação com cupons aplicáveis a este produto
     public function cupons()
     {
         return $this->hasMany(Cupon::class, 'produto_id');
     }
 
-    public function childcategory()
+    // Produto pai -> filhos
+    public function filhos()
     {
-        return $this->belongsTo(Childcategory::class);
+        return $this->hasMany(Product::class, 'parent_id', 'id');
     }
 
-    // Product.php
+    // Produto filho -> pai
+    public function pai()
+    {
+        return $this->belongsTo(Product::class, 'parent_id', 'id');
+    }
+
+    public function coresRelacionadas()
+    {
+        return $this->hasMany(Product::class, 'id', 'color_parent_id');
+    }
+
+    // Favoritado por usuários
     public function favoredByUsers()
     {
         return $this->belongsToMany(User::class, 'user_product_preferences')->withTimestamps();

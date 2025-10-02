@@ -70,25 +70,8 @@
                                     $currentQty = $cartItems[$product->id] ?? 0;
                                 @endphp
 
-                                {{-- Botão de favorito --}}
-                                <form action="{{ route('user.preferences.toggle') }}" method="POST"
-                                    class="card-favorite-form d-none">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    <button type="submit" class="btn btn-outline-danger">
-                                        <i class="fas fa-heart"></i>
-                                    </button>
-                                </form>
+                                <x-carts :item="$item" :currentQty="$currentQty" />
 
-                                {{-- Botão de adicionar ao carrinho --}}
-                                <form action="{{ route('cart.add') }}" method="POST" class="card-add-form d-none">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    <button type="submit" class="btn btn-success"
-                                        {{ $currentQty >= $product->stock ? 'disabled' : '' }}>
-                                        <i class="fas fa-cart-plus"></i>
-                                    </button>
-                                </form>
                             @endauth
 
                             <div class="card-body d-flex flex-column">

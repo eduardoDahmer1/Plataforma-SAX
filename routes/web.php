@@ -35,7 +35,9 @@ use App\Http\Controllers\Admin\BrandControllerAdmin;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\AdminHighlightController;
 use App\Http\Controllers\Admin\CuponController;
+
 
 // Auth Controllers
 use App\Http\Controllers\Auth\UserController;
@@ -197,6 +199,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
 
     Route::get('products/search', [ProductControllerAdmin::class, 'search'])->name('products.search');
+
+    Route::get('sections-home', [AdminHighlightController::class, 'index'])->name('sections_home.index');
+    Route::patch('sections-home/update', [AdminHighlightController::class, 'update'])->name('sections_home.update');
 
     // Adicionar moeda
     Route::post('currencies', [CurrencyControllerAdmin::class, 'store'])->name('currencies.store');

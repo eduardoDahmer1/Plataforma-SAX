@@ -6,53 +6,75 @@
     </a>
 
     <!-- Catálogos -->
-    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuCatalogos">
+    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+        href="#menuCatalogos">
         <span><i class="fa-solid fa-boxes-stacked me-2 text-success"></i> Catálogos</span>
         <i class="fa-solid fa-chevron-down small"></i>
     </a>
     <div class="collapse" id="menuCatalogos">
-        <a href="{{ route('admin.products.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-box me-2"></i> Produtos</a>
-        <a href="{{ route('admin.brands.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-copyright me-2"></i> Marcas</a>
-        <a href="{{ route('admin.categories.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-tags me-2"></i> Categorias</a>
-        <a href="{{ route('admin.subcategories.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-tag me-2"></i> Subcategorias</a>
-        <a href="{{ route('admin.childcategories.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-sitemap me-2"></i> Categorias Filhas</a>
+        <a href="{{ route('admin.products.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-box me-2"></i>
+            Produtos</a>
+        <a href="{{ route('admin.brands.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-copyright me-2"></i> Marcas</a>
+        <a href="{{ route('admin.categories.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-tags me-2"></i> Categorias</a>
+        <a href="{{ route('admin.subcategories.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-tag me-2"></i> Subcategorias</a>
+        <a href="{{ route('admin.childcategories.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-sitemap me-2"></i> Categorias Filhas</a>
     </div>
 
     <!-- Vendas -->
-    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuVendas">
+    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+        href="#menuVendas">
         <span><i class="fa-solid fa-cart-shopping me-2 text-warning"></i> Vendas</span>
         <i class="fa-solid fa-chevron-down small"></i>
     </a>
     <div class="collapse" id="menuVendas">
-        <a href="{{ route('admin.orders.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-receipt me-2"></i> Pedidos</a>
-        <a href="{{ route('admin.clients.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-user-tie me-2"></i> Clientes</a>
-        <a href="{{ route('admin.payments.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-credit-card me-2"></i> Métodos de Pagamento</a>
+        <a href="{{ route('admin.orders.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-receipt me-2"></i> Pedidos</a>
+        <a href="{{ route('admin.clients.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-user-tie me-2"></i> Clientes</a>
+        <a href="{{ route('admin.payments.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-credit-card me-2"></i> Métodos de Pagamento</a>
     </div>
 
     <!-- Conteúdos -->
-    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuConteudos">
+    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+        href="#menuConteudos">
         <span><i class="fa-solid fa-file-alt me-2 text-info"></i> Conteúdos</span>
         <i class="fa-solid fa-chevron-down small"></i>
     </a>
     <div class="collapse" id="menuConteudos">
-        <a href="{{ route('admin.blogs.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-blog me-2"></i> Blog</a>
-        <a href="{{ route('admin.contatos.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-envelope me-2"></i> Contato</a>
+        <a href="{{ route('admin.blogs.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-blog me-2"></i>
+            Blog</a>
+        <a href="{{ route('admin.contatos.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-envelope me-2"></i> Contato</a>
         <a class="list-group-item ps-5"><i class="fa-solid fa-circle-xmark me-2"></i> Página Não Encontrada</a>
         <a class="list-group-item ps-5"><i class="fa-solid fa-scale-balanced me-2"></i> Políticas</a>
     </div>
 
     <!-- Sistema -->
-    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#menuSistema">
+    <a class="list-group-item d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+        href="#menuSistema">
         <span><i class="fa-solid fa-gears me-2 text-danger"></i> Sistema</span>
         <i class="fa-solid fa-chevron-down small"></i>
     </a>
     <div class="collapse" id="menuSistema">
-        <button id="clearCacheBtn" class="list-group-item ps-5"><i class="fa-solid fa-broom me-2"></i> Limpar Cache</button>
-        <a href="{{ route('admin.currencies.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-coins me-2"></i> Moedas</a>
+        <a href="{{ route('admin.sections_home.index') }}" class="list-group-item ps-5"><i
+                class="fas fa-sliders-h me-2"></i> Seções da Home</a>
+        <button id="clearCacheBtn" data-url="{{ route('admin.clear-cache') }}" data-csrf="{{ csrf_token() }}"
+            class="list-group-item ps-5">
+            <i class="fa-solid fa-broom me-2"></i> Limpar Cache
+        </button>
+
+        <a href="{{ route('admin.currencies.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-coins me-2"></i> Moedas</a>
         <a href="{{ route('admin.cupons.index') }}" class="list-group-item ps-5">
             <i class="fa-solid fa-ticket me-2"></i> Cupons
-        </a>        
-        <a href="{{ route('admin.maintenance.index') }}" class="list-group-item ps-5"><i class="fa-solid fa-screwdriver-wrench me-2"></i> Manutenção</a>
+        </a>
+        <a href="{{ route('admin.maintenance.index') }}" class="list-group-item ps-5"><i
+                class="fa-solid fa-screwdriver-wrench me-2"></i> Manutenção</a>
         <a class="list-group-item ps-5"><i class="fa-solid fa-envelope me-2"></i> Email</a>
     </div>
 </div>

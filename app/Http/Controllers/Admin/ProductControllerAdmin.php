@@ -23,6 +23,7 @@ class ProductControllerAdmin extends Controller
         $statusFilter = $request->get('status_filter');
         $highlightFilter = $request->get('highlight_filter');
         $stockFilter = $request->get('stock_filter');
+        $sortBy = $request->get('sort_by');
 
         $productColumns = [
             'id',
@@ -73,9 +74,45 @@ class ProductControllerAdmin extends Controller
                 }
             })
             ->when($highlightFilter, fn($q) => $q->whereJsonContains('highlights', [$highlightFilter => "1"]))
-            ->when($stockFilter, fn($q) => $stockFilter === 'in_stock' ? $q->where('stock', '>', 0) : ($stockFilter === 'out_of_stock' ? $q->where('stock', 0) : null))
-            ->orderBy('id', 'desc')
-            ->paginate(10)
+            ->when($stockFilter, fn($q) =>
+                $stockFilter === 'in_stock'
+                    ? $q->where('stock', '>', 0)
+                    : ($stockFilter === 'out_of_stock' ? $q->where('stock', 0) : null)
+            )
+            ->when($sortBy, function ($q) use ($sortBy) {
+                switch ($sortBy) {
+                    case 'latest':
+                        $q->orderBy('created_at', 'desc');
+                        break;
+                    case 'oldest':
+                        $q->orderBy('created_at', 'asc');
+                        break;
+                    case 'recently_updated':
+                        $q->orderBy('updated_at', 'desc');
+                        break;
+                    case 'old_updated':
+                        $q->orderBy('updated_at', 'asc');
+                        break;
+                    case 'price_low':
+                        $q->orderBy('price', 'asc');
+                        break;
+                    case 'price_high':
+                        $q->orderBy('price', 'desc');
+                        break;
+                    case 'name_az':
+                        $q->orderBy('external_name', 'asc');
+                        break;
+                    case 'name_za':
+                        $q->orderBy('external_name', 'desc');
+                        break;
+                    default:
+                        $q->orderBy('id', 'desc');
+                        break;
+                }
+            }, function ($q) {
+                $q->orderBy('id', 'desc');
+            })
+            ->paginate(20)
             ->appends($request->query());
 
         $brands = Brand::all();
@@ -110,6 +147,7 @@ class ProductControllerAdmin extends Controller
             'statusFilter',
             'highlightFilter',
             'stockFilter',
+            'sortBy',
             'highlights'
         ));
     }
@@ -248,7 +286,7 @@ class ProductControllerAdmin extends Controller
             'color_parent_id' => 'nullable|array',
             'color_parent_id.*' => 'nullable|exists:products,id',
             'size' => 'nullable|string|max:50',
-            'color' => 'nullable|string|max:7', // hex da cor
+            'color' => 'nullable|string|max:7',
         ]);
 
         // Dados básicos

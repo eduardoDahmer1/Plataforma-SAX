@@ -32,8 +32,8 @@
                 <select name="category_id" class="form-select">
                     <option value="">Todas as categorias</option>
                     @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
+                        <option value="{{ $category->slug }}" {{ request('category_slug') == $category->slug ? 'selected' : '' }}>
+                            {{ $category->slug }}
                         </option>
                     @endforeach
                 </select>
@@ -54,6 +54,26 @@
                     <option value="out_of_stock" {{ request('status_filter') == 'out_of_stock' ? 'selected' : '' }}>Sem
                         Estoque</option>
                 </select>
+
+                <!-- Ordenação -->
+                <select name="sort_by" class="form-select">
+                    <option value="">Ordenar por...</option>
+                    <option value="latest" {{ request('sort_by') == 'latest' ? 'selected' : '' }}>Últimos adicionados
+                    </option>
+                    <option value="oldest" {{ request('sort_by') == 'oldest' ? 'selected' : '' }}>Primeiros adicionados
+                    </option>
+                    <option value="recently_updated" {{ request('sort_by') == 'recently_updated' ? 'selected' : '' }}>
+                        Últimos editados</option>
+                    <option value="old_updated" {{ request('sort_by') == 'old_updated' ? 'selected' : '' }}>Primeiros
+                        editados</option>
+                    <option value="price_low" {{ request('sort_by') == 'price_low' ? 'selected' : '' }}>Menor preço
+                    </option>
+                    <option value="price_high" {{ request('sort_by') == 'price_high' ? 'selected' : '' }}>Maior preço
+                    </option>
+                    <option value="name_az" {{ request('sort_by') == 'name_az' ? 'selected' : '' }}>Nome (A–Z)</option>
+                    <option value="name_za" {{ request('sort_by') == 'name_za' ? 'selected' : '' }}>Nome (Z–A)</option>
+                </select>
+
 
                 <!-- Destaques -->
                 <select name="highlight_filter" class="form-select">
@@ -179,7 +199,8 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">Destaques do Produto</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body">
                                                 @php

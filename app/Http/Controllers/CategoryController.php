@@ -10,32 +10,40 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
-    
-        $categories = Category::with(['subcategories.childcategories'])
-            ->withCount('products')
-            ->when($search, fn($q) =>
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('slug', 'like', "%{$search}%")
-            )
-            ->paginate(20)
-            ->withQueryString();
-    
+        $page   = $request->get('page', 1);
+        $search = $request->input('search', '');
+
+        $cacheKey = "categories_index_{$page}_" . md5($search);
+
+        $categories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
+            return Category::with(['subcategories.childcategories'])
+                ->withCount('products')
+                ->when($search, fn($q) =>
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('slug', 'like', "%{$search}%")
+                )
+                ->paginate(20)
+                ->withQueryString();
+        });
+
         return view('categories.index', compact('categories'));
     }
 
     public function show(Category $category)
     {
-        $cacheKey = "category_show_{$category->id}_" . request('page', 1);
-    
+        $page = request()->get('page', 1);
+        $cacheKey = "category_show_{$category->id}_{$page}";
+
         [$category, $products] = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($category) {
             $category = $category->load('subcategories.childcategories');
             $products = $category->products()->paginate(12)->withQueryString();
             return [$category, $products];
         });
-    
-        $cartItems = auth()->check() ? auth()->user()->cart()->pluck('quantity', 'product_id')->toArray() : [];
-    
+
+        $cartItems = auth()->check()
+            ? auth()->user()->cart()->pluck('quantity', 'product_id')->toArray()
+            : [];
+
         return view('categories.show', compact('category', 'products', 'cartItems'));
     }
 }

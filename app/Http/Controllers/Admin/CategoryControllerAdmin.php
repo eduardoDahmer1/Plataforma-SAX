@@ -57,38 +57,41 @@ class CategoryControllerAdmin extends Controller
         return view('admin.categories.show', compact('category'));
     }
 
-    public function edit(Category $category)
+    public function edit($id)
     {
+        $category = Category::findOrFail($id); // pega o category pelo ID
         return view('admin.categories.edit', compact('category'));
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
+        $category = Category::findOrFail($id);
+    
         $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
             'photo' => 'nullable|image|max:10240',
             'banner' => 'nullable|image|max:10240',
         ]);
-
+    
         $data = $request->only('name', 'slug');
-
+    
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             if ($category->photo && Storage::disk('public')->exists($category->photo)) {
                 Storage::disk('public')->delete($category->photo);
             }
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
-
+    
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
             if ($category->banner && Storage::disk('public')->exists($category->banner)) {
                 Storage::disk('public')->delete($category->banner);
             }
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
-
+    
         $category->update($data);
-
+    
         return redirect()->route('admin.categories.index')->with('success', 'Categoria atualizada com sucesso.');
     }
 

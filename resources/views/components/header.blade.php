@@ -8,7 +8,8 @@
             @if ($webpImage)
                 <div class="mb-2 mb-md-0 text-center w-100">
                     <a href="{{ route('home') }}">
-                        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Logo" class="img-fluid logo-header">
+                        <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Logo"
+                            class="img-fluid logo-header">
                     </a>
                 </div>
             @endif
@@ -43,9 +44,29 @@
             <a href="{{ route('contact.form') }}"><i class="fa fa-envelope me-1"></i> Contato</a>
             <a href="{{ route('blogs.index') }}"><i class="fa fa-blog me-1"></i> Blogs</a>
             <a href="{{ route('brands.index') }}"><i class="fa fa-tag me-1"></i> Marcas</a>
-            <a href="{{ route('categories.index') }}"><i class="fa fa-list me-1"></i> Categorias</a>
-            <a href="{{ route('subcategories.index') }}"><i class="fa fa-layer-group me-1"></i> Subcategorias</a>
-            <a href="{{ route('childcategories.index') }}"><i class="fa fa-sitemap me-1"></i> Categorias Filhas</a>
+            <div class="dropdown dropdown-style">
+                <a href="{{ route('categories.index') }}" class="dropdown-toggle" id="dropdownCategorias"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa fa-list me-1"></i> Categorias
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownCategorias">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('categories.index') }}">
+                            <i class="fa fa-layer-group me-1"></i> Categorias
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('subcategories.index') }}">
+                            <i class="fa fa-layer-group me-1"></i> Subcategorias
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('childcategories.index') }}">
+                            <i class="fa fa-sitemap me-1"></i> Categorias Filhas
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         {{-- Mobile Hamburger + Carrinho --}}

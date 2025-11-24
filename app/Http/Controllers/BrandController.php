@@ -13,19 +13,21 @@ class BrandController extends Controller
     {
         $page   = $request->get('page', 1);
         $search = $request->get('search', '');
-
+    
         $cacheKey = "brands_index_{$page}_".md5($search);
-
+    
         $brands = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            $query = Brand::withCount('products')->orderBy('name');
-
+            $query = Brand::withCount('products')
+                          ->orderBy('name')
+                          ->having('products_count', '>', 0); // << AQUI
+    
             if (!empty($search)) {
                 $query->where('name', 'like', "%{$search}%");
             }
-
+    
             return $query->paginate(20)->withQueryString();
         });
-
+    
         return view('brands.index', compact('brands'));
     }
 

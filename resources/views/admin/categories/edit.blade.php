@@ -15,7 +15,7 @@
                    class="form-control @error('name') is-invalid @enderror" 
                    id="name" 
                    name="name" 
-                   value="{{ old('name', $category->name) }}" 
+                   value="{{ old('name', isset($category->name) ? $category->name : '') }}" 
                    required>
             @error('name')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -29,7 +29,7 @@
                    class="form-control @error('slug') is-invalid @enderror" 
                    id="slug" 
                    name="slug" 
-                   value="{{ old('slug', $category->slug) }}" 
+                   value="{{ old('slug', isset($category->slug) ? $category->slug : '') }}" 
                    required>
             @error('slug')
                 <div class="invalid-feedback">{{ $message }}</div>

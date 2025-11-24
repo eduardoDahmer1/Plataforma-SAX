@@ -335,6 +335,15 @@ body {
     border-radius: 20px;
     transition: all 0.3s ease;
 }
+.dropdown-style{
+    background: transparent !important;
+    border: none !important;
+    color: #000000 !important;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
 .nav-links a:hover {
     background: rgb(0, 0, 0);
     color: #111 !important;
@@ -482,4 +491,13 @@ body {
 
 #backToTop:hover {
     background: #e6c200;
+}
+.border-0 img{
+    height: 19em;
+}
+.nav-links .dropdown:hover .dropdown-menu {
+    display: block;
+}
+.nav-links .dropdown-toggle::after {
+    display: none; /* tira seta feia do bootstrap */
 }

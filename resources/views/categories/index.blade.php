@@ -40,7 +40,7 @@
 
                                 @if ($category->subcategories && $category->subcategories->count())
                                     <div class="mt-2 text-start">
-                                        <strong>Subcategorias:</strong>
+                                        <strong>Subcategorias / Refinar / Seções</strong>
                                         <ul class="list-unstyled small mb-0">
                                             @foreach ($category->subcategories as $subcategory)
                                                 <li>

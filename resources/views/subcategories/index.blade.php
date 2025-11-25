@@ -3,7 +3,7 @@
 @section('content')
 <div class="container py-4">
 
-    <h1 class="mb-4 text-center fw-bold">Subcategorias</h1>
+    <h1 class="mb-4 text-center fw-bold">Subcategorias / Refinar / Seções</h1>
 
     {{-- Busca --}}
     <form method="GET" class="mb-4 mx-auto" style="max-width: 500px;">

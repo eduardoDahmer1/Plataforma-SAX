@@ -223,13 +223,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('maintenance/toggle', [\App\Http\Controllers\Admin\SystemController::class, 'toggleMaintenance'])->name('maintenance.toggle');
 
     // web.php
-    Route::get('subcategories/{category}', [ProductControllerAdmin::class, 'getSubcategories'])->name('products.getSubcategories');
-    Route::get('childcategories/{subcategory}', [ProductControllerAdmin::class, 'getChildcategories'])->name('products.getChildcategories');
-
-    // Childcategories Admin
+    Route::get('products/subcategories/{category}', [ProductControllerAdmin::class, 'getSubcategories'])->name('products.getSubcategories');
+    Route::get('products/childcategories/{subcategory}', [ProductControllerAdmin::class, 'getChildcategories'])->name('products.getChildcategories');
     Route::delete('childcategories/{childcategory}/delete-photo', [ChildcategoryControllerAdmin::class, 'deletePhoto'])->name('childcategories.deletePhoto');
     Route::delete('childcategories/{childcategory}/delete-banner', [ChildcategoryControllerAdmin::class, 'deleteBanner'])->name('childcategories.deleteBanner');
-    Route::resource('childcategories', ChildcategoryControllerAdmin::class);
+    Route::resource('childcategories', ChildcategoryControllerAdmin::class)->except(['show']);
+    Route::get('childcategorias/{slug}', [ChildcategoryControllerAdmin::class, 'show'])->name('childcategories.show');    
 
     // Subcategories Admin
     Route::delete('subcategories/{subcategory}/delete-photo', [SubcategoryControllerAdmin::class, 'deletePhoto'])->name('subcategories.deletePhoto');

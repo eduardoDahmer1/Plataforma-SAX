@@ -28,17 +28,16 @@ class SubcategoryController extends Controller
         return view('subcategories.index', compact('subcategories'));
     }
 
-    public function show($identifier)
+    public function show($slug)
     {
-        $cacheKey = "subcategory_show_{$identifier}";
-
-        $subcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($identifier) {
+        $cacheKey = "subcategory_show_{$slug}";
+    
+        $subcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
             return Subcategory::with(['category', 'childcategories'])
-                ->when(is_numeric($identifier), fn($q) => $q->where('id', $identifier))
-                ->when(!is_numeric($identifier), fn($q) => $q->where('slug', $identifier))
+                ->where('slug', $slug)
                 ->firstOrFail();
         });
-
+    
         return view('subcategories.show', compact('subcategory'));
-    }
+    }    
 }

@@ -70,7 +70,9 @@
                                     $currentQty = $cartItems[$product->id] ?? 0;
                                 @endphp
 
-                                <x-carts :item="$item" :currentQty="$currentQty" />
+                                <div class="mb-2">
+                                    <span class="badge bg-info">No carrinho: {{ $currentQty }}</span>
+                                </div>
 
                             @endauth
 

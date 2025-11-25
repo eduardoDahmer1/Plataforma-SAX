@@ -40,21 +40,26 @@ class SubcategoryControllerAdmin extends Controller
             'photo' => 'nullable|image|max:10240',
             'banner' => 'nullable|image|max:10240',
         ]);
-
+    
         $data = $request->only(['name', 'category_id']);
-
+    
+        // Slug igual ao nome
+        $data['slug'] = $request->name;
+    
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
-
+    
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
-
+    
         Subcategory::create($data);
-
-        return redirect()->route('admin.subcategories.index')->with('success', 'Subcategoria criada com sucesso.');
+    
+        return redirect()->route('admin.subcategories.index')
+                         ->with('success', 'Subcategoria criada com sucesso.');
     }
+     
 
     public function edit(Subcategory $subcategory)
     {

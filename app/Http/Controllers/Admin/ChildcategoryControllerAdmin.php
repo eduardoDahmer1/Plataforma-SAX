@@ -8,25 +8,24 @@ use App\Models\Subcategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class ChildcategoryControllerAdmin extends Controller
 {
     public function index(Request $request)
     {
         $query = Childcategory::with('subcategory');
-    
+
         if ($search = $request->input('search')) {
             $query->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('subcategory', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                  ->orWhereHas('subcategory', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
-    
+
         $childcategories = $query->paginate(18)->withQueryString();
-    
+
         return view('admin.childcategories.index', compact('childcategories'));
     }
-    
+
     public function create()
     {
         $subcategories = Subcategory::all();
@@ -35,10 +34,16 @@ class ChildcategoryControllerAdmin extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'subcategory_id' => 'required|exists:subcategories,id',
+            'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
+        ]);
+
         $data = $request->only(['name', 'subcategory_id']);
         $data['slug'] = Str::slug($request->name);
 
-        // Preenche category_id baseado na subcategory
         if (!empty($request->subcategory_id)) {
             $subcategory = Subcategory::find($request->subcategory_id);
             $data['category_id'] = $subcategory->category_id ?? null;
@@ -64,9 +69,16 @@ class ChildcategoryControllerAdmin extends Controller
 
     public function update(Request $request, Childcategory $childcategory)
     {
-        $data = $request->only(['name', 'subcategory_id']);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'subcategory_id' => 'required|exists:subcategories,id',
+            'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
+        ]);
 
-        // Atualiza category_id
+        $data = $request->only(['name', 'subcategory_id']);
+        $data['slug'] = Str::slug($request->name);
+
         if (!empty($request->subcategory_id)) {
             $subcategory = Subcategory::find($request->subcategory_id);
             $data['category_id'] = $subcategory->category_id ?? null;
@@ -112,14 +124,14 @@ class ChildcategoryControllerAdmin extends Controller
     {
         $directory = ($prefix === 'banner') ? 'childcategories/banner' : 'childcategories/photo';
         $filename = $prefix . '_' . time() . '.webp';
-    
+
         if (!Storage::disk('public')->exists($directory)) {
             Storage::disk('public')->makeDirectory($directory);
         }
-    
+
         $tempPath = $file->getRealPath();
         $extension = strtolower($file->getClientOriginalExtension());
-    
+
         switch ($extension) {
             case 'jpeg':
             case 'jpg':
@@ -139,15 +151,15 @@ class ChildcategoryControllerAdmin extends Controller
             default:
                 throw new \Exception('Formato de imagem não suportado.');
         }
-    
+
         if (!$imageResource) {
             throw new \Exception('Falha ao criar recurso de imagem.');
         }
-    
+
         $fullPath = storage_path("app/public/{$directory}/{$filename}");
         imagewebp($imageResource, $fullPath, 85);
         imagedestroy($imageResource);
-    
+
         return "{$directory}/{$filename}";
     }
 
@@ -158,8 +170,18 @@ class ChildcategoryControllerAdmin extends Controller
         }
     }
 
-    public function show(Childcategory $childcategory)
+    // Frontend show via slug ou ID
+    public function show($identifier)
     {
+        $cacheKey = "childcategory_show_{$identifier}";
+
+        $childcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($identifier) {
+            return Childcategory::with(['subcategory', 'subcategory.category'])
+                ->when(is_numeric($identifier), fn($q) => $q->where('id', $identifier))
+                ->when(!is_numeric($identifier), fn($q) => $q->where('slug', $identifier))
+                ->firstOrFail();
+        });
+
         return view('admin.childcategories.show', compact('childcategory'));
     }
 }

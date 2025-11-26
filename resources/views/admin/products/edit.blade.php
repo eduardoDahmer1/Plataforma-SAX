@@ -147,7 +147,7 @@
                                         <img src="{{ Storage::url($galleryImage) }}"
                                             class="d-block w-100 rounded slider-product"
                                             alt="Imagem {{ $index + 1 }}">
-                                        <div class="position-absolute top-0 end-0 m-2">
+                                        <div class="position-absolute top-0 end-0 m-2 z-index-button">
                                             <button type="button" class="btn btn-sm btn-danger"
                                                 onclick="document.querySelectorAll('.deleteGalleryForm')[{{ $index }}].submit()">
                                                 <i class="fas fa-times"></i>

@@ -74,7 +74,9 @@ class ProductControllerAdmin extends Controller
                 }
             })
             ->when($highlightFilter, fn($q) => $q->whereJsonContains('highlights', [$highlightFilter => "1"]))
-            ->when($stockFilter, fn($q) =>
+            ->when(
+                $stockFilter,
+                fn($q) =>
                 $stockFilter === 'in_stock'
                     ? $q->where('stock', '>', 0)
                     : ($stockFilter === 'out_of_stock' ? $q->where('stock', 0) : null)
@@ -241,14 +243,23 @@ class ProductControllerAdmin extends Controller
     // ================== EDIT ==================
     public function edit($id)
     {
-        $item = Product::findOrFail($id);
+        $item = Product::with([
+            'brand',
+            'category',
+            'subcategory',
+            'childcategory'
+        ])->findOrFail($id);
+
+        // Carrega apenas categorias e subcategorias necessárias
         $brands = Brand::all();
         $categories = Category::all();
         $subcategories = Subcategory::where('category_id', $item->category_id)->get();
         $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
-        $products = Product::all(); // pega todos os produtos para seleção de parent/cores
 
-        // Transformar parent_id e color_parent_id em arrays para o Blade
+        // Carrega somente os produtos que podem ser selecionados como parent ou cores
+        $products = Product::select('id', 'external_name')->get();
+
+        // Transformar parent_id e color_parent_id em arrays
         $item->parent_id = is_string($item->parent_id) ? explode(',', $item->parent_id) : ($item->parent_id ?? []);
         $item->color_parent_id = is_string($item->color_parent_id) ? explode(',', $item->color_parent_id) : ($item->color_parent_id ?? []);
 
@@ -355,19 +366,48 @@ class ProductControllerAdmin extends Controller
         $product->update($data);
 
         // --- Remove filhos que não estão mais selecionados
+        // --- Remove filhos que não estão mais selecionados
         $removedChildren = array_diff($oldParentIds, $parentIds);
         foreach ($removedChildren as $childId) {
             $child = Product::find($childId);
             if ($child) {
                 $child->parent_id = null;
                 $child->product_role = 'P'; // volta a ser pai se não tiver outro
+
+                // Apaga foto herdada do pai
+                if ($child->photo && Storage::disk('public')->exists($child->photo)) {
+                    $usedElsewhere = Product::where('photo', $child->photo)
+                        ->where('id', '!=', $child->id)
+                        ->exists();
+                    if (!$usedElsewhere) {
+                        Storage::disk('public')->delete($child->photo);
+                    }
+                }
+                $child->photo = null;
+
+                // Apaga galeria herdada do pai
+                if ($child->gallery) {
+                    $gallery = json_decode($child->gallery, true);
+                    foreach ($gallery as $img) {
+                        if (Storage::disk('public')->exists($img)) {
+                            $usedElsewhere = Product::where('gallery', 'like', "%{$img}%")
+                                ->where('id', '!=', $child->id)
+                                ->exists();
+                            if (!$usedElsewhere) {
+                                Storage::disk('public')->delete($img);
+                            }
+                        }
+                    }
+                }
+                $child->gallery = null;
+
                 $child->save();
             }
         }
 
         // --- Atualiza filhos
         $parentPhoto   = $product->photo;
-        $parentGallery = $product->gallery ? json_decode($product->gallery, true) : [];
+        $parentGallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
 
         foreach ($parentIds as $childId) {
             $child = Product::find($childId);
@@ -434,11 +474,14 @@ class ProductControllerAdmin extends Controller
     public function deleteGalleryImage(Request $request, $productId, $imageName)
     {
         $product = Product::findOrFail($productId);
+
         if (!$product->gallery) {
             return redirect()->back()->with('error', 'Produto não possui galeria.');
         }
 
-        $gallery = json_decode($product->gallery, true);
+        // garante que seja array
+        $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
+
         $imagePath = null;
 
         foreach ($gallery as $key => $img) {
@@ -453,7 +496,7 @@ class ProductControllerAdmin extends Controller
             Storage::disk('public')->delete($imagePath);
         }
 
-        $product->gallery = json_encode(array_values($gallery));
+        $product->gallery = $gallery; // já salva como array
         $product->save();
 
         return redirect()->back()->with('success', 'Imagem da galeria removida com sucesso!');

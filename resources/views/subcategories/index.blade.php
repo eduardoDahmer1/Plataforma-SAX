@@ -39,14 +39,14 @@
                     {{-- Categoria Pai --}}
                     <small class="text-muted d-block mb-2">
                         <i class="fas fa-layer-group me-1"></i>
-                        Categoria Pai: {{ $subcategory->category->name ?? 'N/A' }}
+                         {{ $subcategory->category->name ?? 'N/A' }}
                     </small>
 
                     {{-- Quantidade de Childcategories --}}
                     @if($subcategory->childcategories)
                         <small class="text-muted mb-2">
                             <i class="fas fa-list-ul me-1"></i>
-                            {{ $subcategory->childcategories->count() }} childcategories
+                            {{ $subcategory->childcategories->count() }} itens
                         </small>
                     @endif
 

@@ -19,17 +19,19 @@
         {{-- Listagem --}}
         <div class="row">
             @forelse ($brands as $brand)
-                @if (($brand->products_count ?? 0) > 0)
+                @php
+                    $imagemInvalida =
+                        empty($brand->image) ||
+                        str_contains($brand->image, 'noimage') ||
+                        !Storage::disk('public')->exists($brand->image);
+                @endphp
+
+                @if (($brand->products_count ?? 0) > 0 && !$imagemInvalida)
                     <div class="col-md-4 mb-4">
                         <div class="card h-100 shadow-sm border-0">
                             <div class="card-img-top text-center p-3">
-                                @if ($brand->image && Storage::disk('public')->exists($brand->image))
-                                    <img src="{{ Storage::url($brand->image) }}" alt="{{ $brand->name }}"
-                                        class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
-                                @else
-                                    <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão"
-                                        class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
-                                @endif
+                                <img src="{{ Storage::url($brand->image) }}" alt="{{ $brand->name }}"
+                                    class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
                             </div>
                             <div class="card-body text-center d-flex flex-column">
 
@@ -58,7 +60,6 @@
                     </div>
                 </div>
             @endforelse
-
         </div>
 
         {{-- Paginação --}}

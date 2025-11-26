@@ -48,8 +48,8 @@
                     {{-- Subcategoria e categoria pai --}}
                     <small class="text-muted d-block mb-2">
                         <i class="fas fa-sitemap me-1"></i>
-                        Subcategoria: {{ $child->subcategory->name ?? 'N/A' }} <br>
-                        Categoria: {{ $child->subcategory->category->name ?? 'N/A' }}
+                         {{ $child->subcategory->name ?? 'N/A' }} <br>
+                         {{ $child->subcategory->category->name ?? 'N/A' }}
                     </small>
 
                     {{-- Ação --}}

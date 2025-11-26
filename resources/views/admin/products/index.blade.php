@@ -103,7 +103,7 @@
                             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                                 $imageUrl = asset('storage/' . $product->photo);
                             } elseif ($product->gallery) {
-                                $gallery = json_decode($product->gallery, true);
+                                $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
                                 $imageUrl = null;
                                 foreach ($gallery as $img) {
                                     if (Storage::disk('public')->exists($img)) {

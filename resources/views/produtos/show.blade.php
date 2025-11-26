@@ -13,7 +13,7 @@
 
                         // Garante que $gallery seja sempre um array
                         if (is_string($product->gallery)) {
-                            $gallery = json_decode($product->gallery, true);
+                            $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
                         } elseif (is_array($product->gallery)) {
                             $gallery = $product->gallery;
                         } else {

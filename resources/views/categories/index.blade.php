@@ -38,26 +38,6 @@
                                     {{ $category->products_count }} produto(s)
                                 </p>
 
-                                @if ($category->subcategories && $category->subcategories->count())
-                                    <div class="mt-2 text-start">
-                                        <strong>Subcategorias / Refinar / Seções</strong>
-                                        <ul class="list-unstyled small mb-0">
-                                            @foreach ($category->subcategories as $subcategory)
-                                                <li>
-                                                    {{ $subcategory->name ?? $subcategory->slug }}
-                                                    @if ($subcategory->childcategories && $subcategory->childcategories->count())
-                                                        <ul class="small ms-3">
-                                                            @foreach ($subcategory->childcategories as $childcategory)
-                                                                <li>{{ $childcategory->name ?? $childcategory->slug }}</li>
-                                                            @endforeach
-                                                        </ul>
-                                                    @endif
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                @endif
-
                                 <a href="{{ route('categories.show', $category->slug) }}"
                                     class="btn btn-outline-primary btn-sm mt-auto">
                                     <i class="fas fa-eye me-1"></i> Ver detalhes

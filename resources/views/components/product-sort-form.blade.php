@@ -25,10 +25,11 @@
 
         <label for="per_page" class="ms-3 me-2 fw-bold">Mostrar:</label>
         <select name="per_page" id="per_page" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
-            <option value="25" @selected($request->per_page == 25)>25</option>
             <option value="35" @selected($request->per_page == 35)>35</option>
-            <option value="45" @selected($request->per_page == 45)>45</option>
             <option value="55" @selected($request->per_page == 55)>55</option>
+            <option value="100" @selected($request->per_page == 100)>100</option>
+            <option value="150" @selected($request->per_page == 150)>150</option>
+            <option value="300" @selected($request->per_page == 300)>300</option>
         </select>
     </div>
 </form>

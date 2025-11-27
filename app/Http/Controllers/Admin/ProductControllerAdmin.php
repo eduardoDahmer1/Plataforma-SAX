@@ -184,7 +184,7 @@ class ProductControllerAdmin extends Controller
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku',
             'external_name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'brand_id' => 'nullable|exists:brands,id',
@@ -257,7 +257,7 @@ class ProductControllerAdmin extends Controller
         $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
 
         // Carrega somente os produtos que podem ser selecionados como parent ou cores
-        $products = Product::select('id', 'external_name')->get();
+        $products = Product::select('id', 'external_name', 'name')->get(); // << name adicionado aqui
 
         // Transformar parent_id e color_parent_id em arrays
         $item->parent_id = is_string($item->parent_id) ? explode(',', $item->parent_id) : ($item->parent_id ?? []);
@@ -282,7 +282,8 @@ class ProductControllerAdmin extends Controller
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'external_name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
+            'name' => 'nullable|string|max:255', // << add
+            'description' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'brand_id' => 'nullable|exists:brands,id',
@@ -304,6 +305,7 @@ class ProductControllerAdmin extends Controller
         $data = $request->only([
             'sku',
             'external_name',
+            'name', // << add
             'description',
             'price',
             'stock',
@@ -314,6 +316,11 @@ class ProductControllerAdmin extends Controller
             'size',
             'color',
         ]);
+
+        // Se o usuário informar um name manual, ele vira o principal
+        if (!empty($data['name'])) {
+            $data['external_name'] = $data['name'];
+        }
 
         // Filtra arrays para não vir [""] e bagunçar
         $parentIds = array_filter((array) $request->input('parent_id', []));
@@ -352,12 +359,10 @@ class ProductControllerAdmin extends Controller
 
         // Define papel do produto automaticamente
         if (count($parentIds) === 0) {
-            // Sem parent_id => é Pai
             $data['product_role'] = 'P';
             $data['parent_id'] = null;
             $data['color_parent_id'] = null;
         } else {
-            // Tem parent_id => é Filho
             $data['product_role'] = 'F';
             $data['parent_id'] = implode(',', $parentIds);
             $data['color_parent_id'] = implode(',', $colorIds);
@@ -366,13 +371,12 @@ class ProductControllerAdmin extends Controller
         $product->update($data);
 
         // --- Remove filhos que não estão mais selecionados
-        // --- Remove filhos que não estão mais selecionados
         $removedChildren = array_diff($oldParentIds, $parentIds);
         foreach ($removedChildren as $childId) {
             $child = Product::find($childId);
             if ($child) {
                 $child->parent_id = null;
-                $child->product_role = 'P'; // volta a ser pai se não tiver outro
+                $child->product_role = 'P';
 
                 // Apaga foto herdada do pai
                 if ($child->photo && Storage::disk('public')->exists($child->photo)) {
@@ -417,16 +421,15 @@ class ProductControllerAdmin extends Controller
             $child->color_parent_id = implode(',', $colorIds);
             $child->product_role = 'F';
 
-            // Copia foto do pai
             if ($parentPhoto && Storage::disk('public')->exists($parentPhoto)) {
                 $newPhotoPath = 'products/photo/' . uniqid() . '.webp';
                 Storage::disk('public')->copy($parentPhoto, $newPhotoPath);
 
                 if ($child->photo && Storage::disk('public')->exists($child->photo)) {
                     $usedElsewhere = Product::where(function ($q) use ($child) {
-                        $q->where('photo', $child->photo)
+                            $q->where('photo', $child->photo)
                             ->orWhere('gallery', 'like', "%{$child->photo}%");
-                    })
+                        })
                         ->where('id', '!=', $child->id)
                         ->exists();
                     if (!$usedElsewhere) {
@@ -437,7 +440,6 @@ class ProductControllerAdmin extends Controller
                 $child->photo = $newPhotoPath;
             }
 
-            // Copia galeria do pai
             if (!empty($parentGallery)) {
                 $newGallery = [];
                 foreach ($parentGallery as $pgImg) {

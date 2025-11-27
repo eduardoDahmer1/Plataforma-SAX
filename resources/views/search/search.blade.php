@@ -20,9 +20,14 @@
         <div class="col-md-9">
             <h4 class="mb-3"><i class="fas fa-box-open me-2"></i> Produtos</h4>
 
+            
             {{-- Form de ordenar e mostrar --}}
             <x-product-sort-form :request="request()" />
-
+            
+            <div class="d-flex justify-content-center mt-4">
+                <x-pagination :links="$paginated" />
+            </div>
+            
             @if ($paginated->count())
                 <div class="row">
                     @foreach ($paginated as $item)

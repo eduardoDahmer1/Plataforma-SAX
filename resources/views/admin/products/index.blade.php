@@ -6,6 +6,9 @@
         <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
             <h1 class="mb-2 mb-md-0">Produtos</h1>
+            <a href="{{ route('admin.products.review') }}" class="btn btn-primary fw-bold">
+                Ver relatório de edições
+            </a>            
             <p><strong>Exibindo:</strong> {{ $products->count() }} de {{ $products->total() }} registros</p>
         </div>
 

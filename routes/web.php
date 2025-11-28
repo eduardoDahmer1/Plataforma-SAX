@@ -209,6 +209,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('cupons', CuponController::class);
 
     Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
+    Route::get('products/review', [ProductControllerAdmin::class, 'review'])
+    ->name('products.review');
 
     // Editar moeda
     Route::put('currencies/{id}', [CurrencyControllerAdmin::class, 'update'])->name('currencies.update');

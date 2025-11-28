@@ -277,12 +277,12 @@ class ProductControllerAdmin extends Controller
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
-
+    
         // Validação
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'external_name' => 'required|string|max:255',
-            'name' => 'nullable|string|max:255', // << add
+            'name' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -300,12 +300,11 @@ class ProductControllerAdmin extends Controller
             'size' => 'nullable|string|max:50',
             'color' => 'nullable|string|max:7',
         ]);
-
-        // Dados básicos
+    
         $data = $request->only([
             'sku',
             'external_name',
-            'name', // << add
+            'name',
             'description',
             'price',
             'stock',
@@ -316,20 +315,20 @@ class ProductControllerAdmin extends Controller
             'size',
             'color',
         ]);
-
+    
         // Se o usuário informar um name manual, ele vira o principal
         if (!empty($data['name'])) {
             $data['external_name'] = $data['name'];
         }
-
-        // Filtra arrays para não vir [""] e bagunçar
+    
+        // Filtra arrays
         $parentIds = array_filter((array) $request->input('parent_id', []));
         $colorIds  = array_filter((array) $request->input('color_parent_id', []));
         $data['highlights'] = json_encode($request->input('highlights', []));
-
+    
         // Guarda filhos atuais antes da atualização
         $oldParentIds = $product->parent_id ? explode(',', $product->parent_id) : [];
-
+    
         // Foto principal
         if ($request->hasFile('photo')) {
             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
@@ -342,12 +341,12 @@ class ProductControllerAdmin extends Controller
             }
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
-
+    
         // Cor
         if ($request->has('colors_values')) {
             $data['color'] = $request->input('colors_values')[0];
         }
-
+    
         // Galeria
         if ($request->hasFile('gallery')) {
             $existingGallery = $product->gallery ? json_decode($product->gallery, true) : [];
@@ -356,7 +355,7 @@ class ProductControllerAdmin extends Controller
             }
             $data['gallery'] = json_encode($existingGallery);
         }
-
+    
         // Define papel do produto automaticamente
         if (count($parentIds) === 0) {
             $data['product_role'] = 'P';
@@ -367,18 +366,17 @@ class ProductControllerAdmin extends Controller
             $data['parent_id'] = implode(',', $parentIds);
             $data['color_parent_id'] = implode(',', $colorIds);
         }
-
+    
         $product->update($data);
-
-        // --- Remove filhos que não estão mais selecionados
+    
+        // Remove filhos que não estão mais selecionados
         $removedChildren = array_diff($oldParentIds, $parentIds);
         foreach ($removedChildren as $childId) {
             $child = Product::find($childId);
             if ($child) {
                 $child->parent_id = null;
                 $child->product_role = 'P';
-
-                // Apaga foto herdada do pai
+    
                 if ($child->photo && Storage::disk('public')->exists($child->photo)) {
                     $usedElsewhere = Product::where('photo', $child->photo)
                         ->where('id', '!=', $child->id)
@@ -388,8 +386,7 @@ class ProductControllerAdmin extends Controller
                     }
                 }
                 $child->photo = null;
-
-                // Apaga galeria herdada do pai
+    
                 if ($child->gallery) {
                     $gallery = json_decode($child->gallery, true);
                     foreach ($gallery as $img) {
@@ -404,73 +401,59 @@ class ProductControllerAdmin extends Controller
                     }
                 }
                 $child->gallery = null;
-
                 $child->save();
             }
         }
-
-        // --- Atualiza filhos
+    
+        // Atualiza filhos
         $parentPhoto   = $product->photo;
         $parentGallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
-
+    
         foreach ($parentIds as $childId) {
             $child = Product::find($childId);
             if (!$child) continue;
-
-            $child->parent_id = $product->id;
-            $child->color_parent_id = implode(',', $colorIds);
+    
+            $child->parent_id = implode(',', $parentIds);
             $child->product_role = 'F';
-
-            if ($parentPhoto && Storage::disk('public')->exists($parentPhoto)) {
-                $newPhotoPath = 'products/photo/' . uniqid() . '.webp';
-                Storage::disk('public')->copy($parentPhoto, $newPhotoPath);
-
+    
+            if ($parentPhoto) {
                 if ($child->photo && Storage::disk('public')->exists($child->photo)) {
-                    $usedElsewhere = Product::where(function ($q) use ($child) {
-                            $q->where('photo', $child->photo)
-                            ->orWhere('gallery', 'like', "%{$child->photo}%");
-                        })
+                    $usedElsewhere = Product::where('photo', $child->photo)
                         ->where('id', '!=', $child->id)
                         ->exists();
                     if (!$usedElsewhere) {
                         Storage::disk('public')->delete($child->photo);
                     }
                 }
-
-                $child->photo = $newPhotoPath;
+                $child->photo = $parentPhoto;
             }
-
-            if (!empty($parentGallery)) {
-                $newGallery = [];
-                foreach ($parentGallery as $pgImg) {
-                    if (Storage::disk('public')->exists($pgImg)) {
-                        $newPath = 'products/gallery/' . uniqid() . '.webp';
-                        Storage::disk('public')->copy($pgImg, $newPath);
-                        $newGallery[] = $newPath;
-                    }
-                }
-
-                $existingGallery = $child->gallery ? json_decode($child->gallery, true) : [];
-                foreach ($existingGallery as $eg) {
-                    if (Storage::disk('public')->exists($eg)) {
-                        $usedElsewhere = Product::where('gallery', 'like', "%{$eg}%")
+    
+            if (is_array($parentGallery)) {
+                if ($child->gallery) {
+                    $oldGallery = json_decode($child->gallery, true);
+                    foreach ($oldGallery as $img) {
+                        $usedElsewhere = Product::where('gallery', 'like', "%{$img}%")
                             ->where('id', '!=', $child->id)
                             ->exists();
-                        if (!$usedElsewhere) {
-                            Storage::disk('public')->delete($eg);
+                        if (!$usedElsewhere && Storage::disk('public')->exists($img)) {
+                            Storage::disk('public')->delete($img);
                         }
                     }
                 }
-
-                $child->gallery = json_encode($newGallery);
+                $child->gallery = json_encode($parentGallery);
             }
-
+    
+            if ($product->color) {
+                $child->color = $product->color;
+            }
+    
             $child->save();
         }
-
-        return redirect()->route('admin.products.index')
+    
+        return redirect()
+            ->route('admin.products.index')
             ->with('success', 'Produto atualizado com sucesso!');
-    }
+    }    
 
     // ================== DELETE GALLERY IMAGE ==================
     public function deleteGalleryImage(Request $request, $productId, $imageName)
@@ -592,4 +575,16 @@ class ProductControllerAdmin extends Controller
         return redirect()->route('admin.products.index')
             ->with('success', 'Destaques atualizados com sucesso!');
     }
+
+    public function review()
+    {
+        $edicoesPorDia = Product::selectRaw('DATE(updated_at) as dia, COUNT(*) as total')
+            ->whereNotNull('updated_at')
+            ->groupBy('dia')
+            ->orderBy('dia', 'desc')
+            ->get();
+
+        return view('admin.products.review', compact('edicoesPorDia'));
+    }
+
 }

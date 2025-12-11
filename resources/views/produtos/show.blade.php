@@ -9,15 +9,16 @@
                 {{-- Imagem Principal + Galeria --}}
                 <div class="col-lg-6 p-4 bg-light d-flex flex-column justify-content-center">
                     @php
-                        $mainImage = $product->photo_url;
+                        $mainImage =
+                            $product->photo && \Storage::disk('public')->exists($product->photo)
+                                ? Storage::url($product->photo)
+                                : asset('storage/uploads/noimage.webp');
 
-                        // Garante que $gallery seja sempre um array
+                        $gallery = [];
                         if (is_string($product->gallery)) {
-                            $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
+                            $gallery = json_decode($product->gallery, true) ?: [];
                         } elseif (is_array($product->gallery)) {
                             $gallery = $product->gallery;
-                        } else {
-                            $gallery = [];
                         }
                     @endphp
 
@@ -31,9 +32,11 @@
                     @if (count($gallery))
                         <div class="d-flex gap-2 overflow-auto py-2">
                             @foreach ($gallery as $img)
-                                <img src="{{ Storage::url($img) }}" class="img-thumbnail rounded-3"
-                                    style="height: 60px; cursor: pointer;"
-                                    onclick="document.querySelector('.ratio img').src='{{ Storage::url($img) }}'">
+                                @if (\Storage::disk('public')->exists($img))
+                                    <img src="{{ Storage::url($img) }}" class="img-thumbnail rounded-3"
+                                        style="height:60px; cursor:pointer;"
+                                        onclick="document.querySelector('.ratio img').src='{{ Storage::url($img) }}'">
+                                @endif
                             @endforeach
                         </div>
                     @endif
@@ -41,7 +44,9 @@
 
                 {{-- Detalhes do Produto --}}
                 <div class="col-lg-6 p-4 d-flex flex-column justify-content-between">
+
                     <div>
+                        {{-- Nome do Produto --}}
                         <h1 class="h3 fw-bold mb-3">{{ $product->external_name }}</h1>
 
                         {{-- Marca --}}
@@ -56,21 +61,17 @@
                             @endif
                         </p>
 
-                        {{-- Breadcrumb de categorias --}}
+                        {{-- Breadcrumb --}}
                         <div class="d-flex flex-wrap align-items-center mb-3 gap-1 small">
                             @if ($product->category)
                                 <a href="{{ route('categories.show', $product->category->slug) }}"
                                     class="text-dark fw-semibold text-decoration-none">{{ $product->category->name }}</a>
-                            @else
-                                <span class="text-muted">Sem Categoria</span>
                             @endif
-
                             @if ($product->subcategory)
                                 <span class="text-dark">›</span>
-                                <a href="{{ route('subcategories.show', $product->subcategory->id) }}"
+                                <a href="{{ route('subcategories.show', $product->subcategory->slug) }}"
                                     class="text-dark fw-semibold text-decoration-none">{{ $product->subcategory->name }}</a>
                             @endif
-
                             @if ($product->childcategory)
                                 <span class="text-dark">›</span>
                                 <a href="{{ route('childcategories.show', $product->childcategory->slug) }}"
@@ -78,90 +79,102 @@
                             @endif
                         </div>
 
-                        {{-- Preparar IDs das cores --}}
+                        {{-- Informações Importantes --}}
+                        <div class="row g-3 mb-4">
+
+                            {{-- Preço --}}
+                            <div class="col-6 col-md-4">
+                                <div
+                                    class="p-3 border rounded h-100 d-flex flex-column justify-content-center text-center bg-white shadow-sm">
+                                    <small class="text-muted">Preço</small>
+                                    <span class="fs-4 fw-bold text-success mt-1">
+                                        {{ currency_format($product->price) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- Estoque --}}
+                            <div class="col-6 col-md-4">
+                                <div
+                                    class="p-3 border rounded h-100 d-flex flex-column justify-content-center text-center bg-white shadow-sm">
+                                    <small class="text-muted">Estoque</small>
+                                    <span class="mt-1 {{ $product->stock > 0 ? 'text-success' : 'text-danger' }} fw-bold">
+                                        {{ $product->stock > 0 ? $product->stock . ' disponíveis' : 'Indisponível' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- SKU --}}
+                            <div class="col-6 col-md-4">
+                                <div
+                                    class="p-3 border rounded h-100 d-flex flex-column justify-content-center text-center bg-white shadow-sm">
+                                    <small class="text-muted">SKU</small>
+                                    <span class="mt-1">{{ $product->sku ?? 'N/A' }}</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {{-- Descrição --}}
+                        @if ($product->description)
+                            <div class="mt-4">
+                                <h5 class="fw-bold mb-2">Descrição</h5>
+                                <p class="text-muted">{{ $product->description }}</p>
+                            </div>
+                        @endif
+
+                        {{-- Produtos Filhos: Tamanhos e Cores --}}
                         @php
-                            $colorIds = [];
-                            if ($product->color_parent_id) {
-                                if (is_array($product->color_parent_id)) {
-                                    $colorIds = $product->color_parent_id;
-                                } elseif (is_string($product->color_parent_id)) {
-                                    $colorIds = explode(',', $product->color_parent_id);
-                                }
-                            }
+                            $siblings = $product->children ?? collect();
+                            $colorIds = is_array($product->color_parent_id)
+                                ? $product->color_parent_id
+                                : (is_string($product->color_parent_id)
+                                    ? explode(',', $product->color_parent_id)
+                                    : []);
                         @endphp
 
-                        {{-- Produtos Relacionados --}}
-                        @if ($product->children->count() || count($colorIds))
-                            <div class="container mt-5">
+                        @if ($siblings->count() || count($colorIds))
+                            <div class="mt-4">
+
                                 {{-- Tamanhos --}}
                                 @if ($siblings->count())
-                                    <h5 class="fw-bold mb-3">Tamanhos Disponíveis</h5>
-                                    <div class="row g-3 mb-4">
+                                    <h5 class="fw-bold mb-2">Tamanhos Disponíveis</h5>
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
                                         @foreach ($siblings as $child)
-                                            <div class="col-6 col-md-2">
-                                                <a href="{{ route('produto.show', $child) }}"
-                                                    class="text-decoration-none text-dark">
-                                                    <div class="card-body p-2 border rounded text-center">
-                                                        <p class="mb-1 small">
-                                                            {{ $child->size ?? $child->external_name }}
-                                                        </p>
-                                                    </div>
-                                                </a>
-                                            </div>
+                                            <a href="{{ route('produto.show', $child) }}"
+                                                class="btn btn-outline-secondary btn-sm flex-grow-1 flex-md-grow-0">
+                                                {{ $child->size ?? $child->external_name }}
+                                            </a>
                                         @endforeach
                                     </div>
                                 @endif
 
                                 {{-- Cores --}}
                                 @if (count($colorIds))
-                                    <h5 class="fw-bold mb-3">Cores Disponíveis</h5>
-                                    <div class="row g-3">
+                                    <h5 class="fw-bold mb-2">Cores Disponíveis</h5>
+                                    <div class="d-flex flex-wrap gap-2">
                                         @foreach (App\Models\Product::whereIn('id', $colorIds)->get() as $color)
-                                            <div class="col-6 col-md-2">
-                                                <a href="{{ route('produto.show', $color->id) }}"
-                                                    class="text-decoration-none text-dark">
-                                                    <div class="card-body p-2 d-flex align-items-center gap-2">
-                                                        @if ($color->color)
-                                                            <span
-                                                                style="display:inline-block;width:16px;height:16px;background:{{ $color->color }};border:1px solid #ccc;"></span>
-                                                        @else
-                                                            {{ $color->external_name }}
-                                                        @endif
-                                                    </div>
-                                                </a>
-                                            </div>
+                                            <a href="{{ route('produto.show', $color->id) }}"
+                                                class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center gap-1"
+                                                style="min-width:50px;">
+                                                @if ($color->color)
+                                                    <span
+                                                        style="display:inline-block;width:16px;height:16px;background:{{ $color->color }};border:1px solid #ccc;"></span>
+                                                @else
+                                                    {{ $color->external_name }}
+                                                @endif
+                                            </a>
                                         @endforeach
                                     </div>
                                 @endif
+
                             </div>
                         @endif
 
-                        {{-- SKU, Estoque e Preço --}}
-                        <p class="mb-2"><strong>SKU:</strong> {{ $product->sku }}</p>
-                        <p class="mb-2"><strong>Estoque:</strong>
-                            <span class="{{ $product->stock > 0 ? 'text-success' : 'text-danger' }}">
-                                {{ $product->stock ?? 'Indisponível' }}
-                            </span>
-                        </p>
-                        <p class="mb-2"><strong>Preço:</strong>
-                            @if ($product->price)
-                                <span class="text-success fs-4 fw-bold">{{ currency_format($product->price) }}</span>
-                            @else
-                                <span class="text-muted">Não informado</span>
-                            @endif
-                        </p>
-
-                        {{-- Descrição --}}
-                        @if ($product->description)
-                            <div class="mt-4">
-                                <h6 class="fw-bold">Descrição</h6>
-                                <p class="text-muted">{{ $product->description }}</p>
-                            </div>
-                        @endif
                     </div>
 
                     {{-- Botões de Ação --}}
-                    <div class="mt-4 d-flex flex-wrap gap-2">
+                    <div class="mt-4 d-flex flex-wrap gap-2 justify-content-between">
                         @auth
                             @php
                                 $cart = session('cart', []);
@@ -169,46 +182,43 @@
                                 $isFavorite = in_array($product->id, $favoriteProductIds ?? []);
                             @endphp
 
-                            {{-- Comprar Agora --}}
-                            <form action="{{ route('checkout.index') }}" method="GET" class="d-inline">
+                            <form action="{{ route('checkout.index') }}" method="GET" class="flex-fill">
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                                <button type="submit" class="btn btn-primary w-100 w-md-auto px-4 shadow-sm">
                                     <i class="fas fa-credit-card me-1"></i> Comprar Agora
                                 </button>
                             </form>
 
-                            {{-- Adicionar ao Carrinho --}}
-                            <form action="{{ route('cart.add') }}" method="POST" class="d-inline">
+                            <form action="{{ route('cart.add') }}" method="POST" class="flex-fill">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <button type="submit" class="btn btn-success px-4 shadow-sm"
+                                <button type="submit" class="btn btn-success w-100 w-md-auto px-4 shadow-sm"
                                     {{ $product->stock <= 0 || $currentQty >= $product->stock ? 'disabled' : '' }}>
                                     <i class="fas fa-cart-plus me-1"></i> Adicionar ao Carrinho
                                 </button>
                             </form>
 
-                            {{-- Favorito --}}
-                            <form action="{{ route('user.preferences.toggle') }}" method="POST" class="d-inline">
+                            <form action="{{ route('user.preferences.toggle') }}" method="POST" class="flex-fill">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <button type="submit"
-                                    class="btn {{ $isFavorite ? 'btn-danger' : 'btn-outline-danger' }} px-4 shadow-sm">
+                                    class="btn {{ $isFavorite ? 'btn-danger' : 'btn-outline-danger' }} w-100 w-md-auto px-4 shadow-sm">
                                     <i class="fas {{ $isFavorite ? 'fa-heart-broken' : 'fa-heart' }} me-1"></i>
                                     {{ $isFavorite ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos' }}
                                 </button>
                             </form>
                         @else
-                            <a href="#" class="btn btn-warning px-4 shadow-sm" data-bs-toggle="modal"
+                            <a href="#" class="btn btn-warning w-100 w-md-auto px-4 shadow-sm" data-bs-toggle="modal"
                                 data-bs-target="#loginModal">
                                 <i class="fas fa-user-lock me-1"></i> Login para Comprar
                             </a>
                         @endauth
 
-                        {{-- Voltar --}}
-                        <a href="{{ url('/') }}" class="btn btn-outline-secondary px-4 shadow-sm">
+                        <a href="{{ url('/') }}" class="btn btn-outline-secondary w-100 w-md-auto px-4 shadow-sm">
                             <i class="fas fa-arrow-left me-1"></i> Voltar
                         </a>
                     </div>
+
                 </div>
             </div>
         </div>

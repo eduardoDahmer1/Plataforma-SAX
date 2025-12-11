@@ -28,6 +28,7 @@ class ProductControllerAdmin extends Controller
         $productColumns = [
             'id',
             'sku',
+            'name',
             'external_name',
             'slug',
             'price',
@@ -257,7 +258,7 @@ class ProductControllerAdmin extends Controller
         $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
 
         // Carrega somente os produtos que podem ser selecionados como parent ou cores
-        $products = Product::select('id', 'external_name', 'name')->get(); // << name adicionado aqui
+        $products = Product::select('id', 'name')->get(); // << name adicionado aqui
 
         // Transformar parent_id e color_parent_id em arrays
         $item->parent_id = is_string($item->parent_id) ? explode(',', $item->parent_id) : ($item->parent_id ?? []);
@@ -281,7 +282,6 @@ class ProductControllerAdmin extends Controller
         // Validação
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
-            'external_name' => 'required|string|max:255',
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
@@ -303,7 +303,6 @@ class ProductControllerAdmin extends Controller
     
         $data = $request->only([
             'sku',
-            'external_name',
             'name',
             'description',
             'price',
@@ -316,10 +315,6 @@ class ProductControllerAdmin extends Controller
             'color',
         ]);
     
-        // Se o usuário informar um name manual, ele vira o principal
-        if (!empty($data['name'])) {
-            $data['external_name'] = $data['name'];
-        }
     
         // Filtra arrays
         $parentIds = array_filter((array) $request->input('parent_id', []));
@@ -388,7 +383,7 @@ class ProductControllerAdmin extends Controller
                 $child->photo = null;
     
                 if ($child->gallery) {
-                    $gallery = json_decode($child->gallery, true);
+                    $gallery = is_string($child->gallery) ? json_decode($child->gallery, true) : (array) $child->gallery;
                     foreach ($gallery as $img) {
                         if (Storage::disk('public')->exists($img)) {
                             $usedElsewhere = Product::where('gallery', 'like', "%{$img}%")
@@ -430,7 +425,7 @@ class ProductControllerAdmin extends Controller
     
             if (is_array($parentGallery)) {
                 if ($child->gallery) {
-                    $oldGallery = json_decode($child->gallery, true);
+                    $oldGallery = is_string($child->gallery) ? json_decode($child->gallery, true) : (array) $child->gallery;
                     foreach ($oldGallery as $img) {
                         $usedElsewhere = Product::where('gallery', 'like', "%{$img}%")
                             ->where('id', '!=', $child->id)
@@ -441,7 +436,7 @@ class ProductControllerAdmin extends Controller
                     }
                 }
                 $child->gallery = json_encode($parentGallery);
-            }
+            }            
     
             if ($product->color) {
                 $child->color = $product->color;

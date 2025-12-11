@@ -59,7 +59,7 @@
                                     <div class="card h-100 shadow-sm border-0 position-relative">
                                         {{-- Imagem --}}
                                         <img src="{{ $item->photo_url }}" class="card-img-top"
-                                            alt="{{ $item->external_name }}"
+                                            alt="{{ $item->name ?? ($item->external_name ?? 'Sem nome') }}"
                                             style="max-height:150px; object-fit:scale-down;">
 
                                         {{-- Botões --}}
@@ -87,7 +87,7 @@
                                         <div class="card-body p-2 d-flex flex-column">
                                             <h6 class="card-title mb-2">
                                                 <a href="{{ route('produto.show', $item->id) }}"
-                                                    class="text-decoration-none">{{ $item->external_name }}</a>
+                                                    class="text-decoration-none">{{ $item->name ?? ($item->external_name ?? 'Sem nome') }}</a>
                                             </h6>
                                             <p class="small text-muted mb-2">
                                                 {{ $item->brand->name ?? 'Sem marca' }}<br>
@@ -137,7 +137,7 @@
                             <div class="col-6 col-md-3 mb-4">
                                 <div class="card h-100 shadow-sm border-0 position-relative">
                                     <img src="{{ $item->photo_url }}" class="card-img-top"
-                                        alt="{{ $item->external_name }}" style="max-height:150px; object-fit:scale-down;">
+                                        alt="{{ $item->name ?? ($item->external_name ?? 'Sem nome') }}" style="max-height:150px; object-fit:scale-down;">
                                     @auth
                                         @php $currentQty = $cartItems[$item->id] ?? 0; @endphp
                                         <form action="{{ route('user.preferences.toggle') }}" method="POST"
@@ -159,7 +159,7 @@
                                     <div class="card-body p-2 d-flex flex-column">
                                         <h6 class="card-title mb-2">
                                             <a href="{{ route('produto.show', $item->id) }}"
-                                                class="text-decoration-none">{{ $item->external_name }}</a>
+                                                class="text-decoration-none">{{ $item->name ?? ($item->external_name ?? 'Sem nome') }}</a>
                                         </h6>
                                         <p class="small text-muted mb-2">
                                             {{ $item->brand->name ?? 'Sem marca' }}<br>
@@ -210,50 +210,89 @@
 
         {{-- Sessão de Blogs --}}
         @if (isset($blogs) && $blogs->isNotEmpty())
-            <h4 class="mt-5 mb-3"><i class="fas fa-blog me-2"></i> Últimos Artigos do Blog</h4>
+            <h4 class="mt-5 mb-3 fw-bold d-flex align-items-center">
+                <i class="fas fa-blog me-2"></i> Últimos Artigos do Blog
+            </h4>
+
             <div class="swiper blogSwiper mb-4">
                 <div class="swiper-wrapper">
+
                     @foreach ($blogs as $blog)
                         <div class="swiper-slide">
-                            <div class="card h-100 border-0 rounded-4 shadow-sm overflow-hidden">
 
-                                <div class="ratio ratio-16x9">
-                                    @if ($blog->image && Storage::disk('public')->exists($blog->image))
-                                        <img src="{{ Storage::url($blog->image) }}" alt="{{ $blog->title }}"
-                                            class="img-fluid object-fit-cover">
-                                    @else
-                                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão"
-                                            class="img-fluid object-fit-cover">
-                                    @endif
-                                </div>
+                            <div class="card border-0 rounded-4 shadow-sm h-100 overflow-hidden blog-card">
 
-                                <div class="card-body d-flex flex-column px-3 py-3">
+                                {{-- IMG --}}
+                                <div class="position-relative">
+                                    @php
+                                        $img =
+                                            $blog->image && Storage::disk('public')->exists($blog->image)
+                                                ? Storage::url($blog->image)
+                                                : asset('storage/uploads/noimage.webp');
+                                    @endphp
 
-                                    <span class="text-uppercase small fw-semibold text-primary mb-2">
+                                    <img src="{{ $img }}" alt="{{ $blog->title }}"
+                                        class="w-100 object-fit-cover" style="height: 170px;">
+
+                                    {{-- Badge --}}
+                                    <span
+                                        class="position-absolute top-0 start-0 m-2 px-3 py-1 rounded-pill bg-dark text-white small fw-semibold">
                                         {{ $blog->category->name ?? 'Sem categoria' }}
                                     </span>
+                                </div>
 
-                                    <h5 class="card-title fw-bold mb-2" style="line-height: 1.3">
+                                {{-- Conteúdo --}}
+                                <div class="card-body d-flex flex-column p-3">
+
+                                    <h5 class="fw-bold mb-2" style="line-height: 1.3">
                                         {{ Str::limit($blog->title, 60) }}
                                     </h5>
 
-                                    <p class="card-text text-muted mb-3 flex-grow-1" style="font-size: 0.9rem;">
+                                    <p class="text-muted small flex-grow-1 mb-3">
                                         {{ Str::limit($blog->subtitle, 90) }}
                                     </p>
 
                                     <a href="{{ route('blogs.show', $blog->slug) }}"
-                                        class="btn btn-outline-primary btn-sm mt-auto fw-semibold rounded-3">
+                                        class="btn btn-primary w-100 fw-semibold py-2 rounded-3"
+                                        style="font-size: 0.85rem;">
                                         <i class="fas fa-arrow-right me-1"></i> Ler artigo
                                     </a>
+
                                 </div>
+
                             </div>
+
                         </div>
                     @endforeach
+
                 </div>
 
+                {{-- Setas --}}
                 <div class="swiper-button-prev"></div>
                 <div class="swiper-button-next"></div>
+
             </div>
         @endif
+
+        {{-- Estilo adicional --}}
+        <style>
+            .blog-card {
+                transition: .25s ease;
+            }
+
+            .blog-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.14);
+            }
+
+            .blog-card img {
+                transition: .3s ease;
+            }
+
+            .blog-card:hover img {
+                filter: brightness(0.9);
+            }
+        </style>
+
     </div>
 @endsection

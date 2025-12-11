@@ -126,7 +126,7 @@
                             <div class="border rounded p-3 d-flex flex-column flex-md-row align-items-center gap-3">
                                 <!-- Imagem -->
                                 <div class="flex-shrink-0 text-center" style="width: 150px;">
-                                    <img src="{{ $imageUrl }}" alt="{{ $product->external_name }}"
+                                    <img src="{{ $imageUrl }}" alt="{{ $product->name }}"
                                         class="img-fluid rounded"
                                         style="max-height:9em; object-fit:cover; display:block; margin:auto;">
                                 </div>
@@ -134,8 +134,8 @@
                                 <!-- Informações -->
                                 <div class="flex-grow-1 d-flex flex-column justify-content-between h-100 w-100">
                                     <div>
-                                        <h6 class="fw-bold mb-1 text-center text-md-start">{{ $product->external_name }}
-                                        </h6>
+                                        <h6 class="fw-bold mb-1 text-center text-md-start">{{ $product->name }}
+                                        <p class="small text-muted mb-1 text-center text-md-start">{{ $product->external_name }}</p>
                                         <p class="small text-muted mb-1 text-center text-md-start">
                                             SKU: {{ $product->sku }}
                                         </p>

@@ -18,7 +18,7 @@ class SearchController extends Controller
     {
         $perPage = $request->per_page ?? 12;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
-
+    
         $cacheKey = 'search_' . md5(json_encode([
             'search' => $request->search,
             'brand' => $request->brand,
@@ -31,7 +31,7 @@ class SearchController extends Controller
             'per_page' => $perPage,
             'page' => $currentPage,
         ]));
-
+    
         $paginated = Cache::remember($cacheKey, 600, function () use ($request, $perPage, $currentPage) {
             $query = Product::query()
                 ->when($request->search, fn($q) => 
@@ -46,7 +46,7 @@ class SearchController extends Controller
                 ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory))
                 ->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
                 ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
-
+    
             // Ordenação
             switch ($request->sort_by) {
                 case 'latest': $query->orderBy('created_at','desc'); break;
@@ -59,27 +59,40 @@ class SearchController extends Controller
                 default: $query->orderByRaw('(CASE WHEN photo IS NOT NULL AND photo != "" THEN 1 ELSE 0 END) DESC')
                                ->orderBy('updated_at','desc');
             }
-
-            $total = $query->count();
-            $products = $query->skip(($currentPage-1)*$perPage)->take($perPage)->get();
-
-            return new LengthAwarePaginator($products, $total, $perPage, $currentPage, ['path'=>$request->url(),'query'=>$request->query()]);
+    
+            // Pega todos os produtos e filtra os que têm foto
+            $filtered = $query->get()->filter(function($product) {
+                return $product->photo && \Storage::disk('public')->exists($product->photo);
+            });
+    
+            // Paginação manual
+            $offset = ($currentPage - 1) * $perPage;
+            $paginated = new LengthAwarePaginator(
+                $filtered->slice($offset, $perPage)->values(),
+                $filtered->count(),
+                $perPage,
+                $currentPage,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+    
+            return $paginated;
         });
-
+    
         // Filtros sidebar
         $brands = Cache::remember('search_brands', 600, fn() => Brand::orderBy('name')->get());
         $categories = Cache::remember('search_categories', 600, fn() => Category::orderBy('name')->get());
         $subcategories = Cache::remember('search_subcategories', 600, fn() => Subcategory::orderBy('name')->get());
         $childcategories = Cache::remember('search_childcategories', 600, fn() => Childcategory::orderBy('name')->get());
-
+    
         // Carrinho
         $cartItems = [];
         if ($user = $request->user()) {
             $cartItems = Cart::where('user_id',$user->id)->pluck('quantity','product_id')->toArray();
         }
-
+    
         return view('search.search', compact(
             'paginated','brands','categories','subcategories','childcategories','cartItems'
         ))->with('query',$request->search);
     }
+    
 }

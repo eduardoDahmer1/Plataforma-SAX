@@ -50,9 +50,11 @@ $currencyRate = $currentCurrency?->rate ?? 1;
                 <select name="category" class="form-select">
                     <option value="">Todas</option>
                     @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
+                        @if (!empty($category->name))
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>
@@ -63,9 +65,11 @@ $currencyRate = $currentCurrency?->rate ?? 1;
                 <select name="subcategory" class="form-select">
                     <option value="">Todas</option>
                     @foreach ($subcategories as $subcategory)
-                        <option value="{{ $subcategory->id }}" {{ request('subcategory') == $subcategory->id ? 'selected' : '' }}>
-                            {{ $subcategory->name }}
-                        </option>
+                        @if (!empty($subcategory->name))
+                            <option value="{{ $subcategory->id }}" {{ request('subcategory') == $subcategory->id ? 'selected' : '' }}>
+                                {{ $subcategory->name }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>
@@ -76,9 +80,11 @@ $currencyRate = $currentCurrency?->rate ?? 1;
                 <select name="childcategory" class="form-select">
                     <option value="">Todas</option>
                     @foreach ($childcategories as $childcategory)
-                        <option value="{{ $childcategory->id }}" {{ request('childcategory') == $childcategory->id ? 'selected' : '' }}>
-                            {{ $childcategory->name }}
-                        </option>
+                        @if (!empty($childcategory->name))
+                            <option value="{{ $childcategory->id }}" {{ request('childcategory') == $childcategory->id ? 'selected' : '' }}>
+                                {{ $childcategory->name }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>
@@ -101,7 +107,7 @@ $currencyRate = $currentCurrency?->rate ?? 1;
     </div>
 </div>
 
-{{-- Filtro lateral para desktop (mantido igual) --}}
+{{-- Filtro lateral para desktop --}}
 <div class="d-none d-md-block col-md-3 mb-4">
     <div class="card shadow-sm">
         <div class="card-header bg-light">
@@ -130,9 +136,11 @@ $currencyRate = $currentCurrency?->rate ?? 1;
                     <select name="category" class="form-select">
                         <option value="">Todas</option>
                         @foreach ($categories as $category)
-                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
+                            @if (!empty($category->name))
+                                <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endif
                         @endforeach
                     </select>
                 </div>
@@ -143,9 +151,11 @@ $currencyRate = $currentCurrency?->rate ?? 1;
                     <select name="subcategory" class="form-select">
                         <option value="">Todas</option>
                         @foreach ($subcategories as $subcategory)
-                            <option value="{{ $subcategory->id }}" {{ request('subcategory') == $subcategory->id ? 'selected' : '' }}>
-                                {{ $subcategory->name }}
-                            </option>
+                            @if (!empty($subcategory->name))
+                                <option value="{{ $subcategory->id }}" {{ request('subcategory') == $subcategory->id ? 'selected' : '' }}>
+                                    {{ $subcategory->name }}
+                                </option>
+                            @endif
                         @endforeach
                     </select>
                 </div>
@@ -156,9 +166,11 @@ $currencyRate = $currentCurrency?->rate ?? 1;
                     <select name="childcategory" class="form-select">
                         <option value="">Todas</option>
                         @foreach ($childcategories as $childcategory)
-                            <option value="{{ $childcategory->id }}" {{ request('childcategory') == $childcategory->id ? 'selected' : '' }}>
-                                {{ $childcategory->name }}
-                            </option>
+                            @if (!empty($childcategory->name))
+                                <option value="{{ $childcategory->id }}" {{ request('childcategory') == $childcategory->id ? 'selected' : '' }}>
+                                    {{ $childcategory->name }}
+                                </option>
+                            @endif
                         @endforeach
                     </select>
                 </div>

@@ -70,8 +70,8 @@
                 </li>
             @endforeach
         </ul>
-
-        {{-- Campo para aplicar cupom --}}
+{{-- 
+        Campo para aplicar cupom
         <div class="mb-3">
             <label for="cuponCodigo" class="form-label"><i class="fas fa-ticket-alt me-1"></i>Aplicar Cupom</label>
             <div class="d-flex gap-2">
@@ -81,7 +81,7 @@
             </div>
             <small id="mensagemCupon" class="mt-1 d-block"></small>
             <div id="cupomAplicado" class="mt-1 text-success"></div>
-        </div>
+        </div> --}}
 
         <h5>Subtotal: <span id="subtotal">{{ currency_format($totalCarrinho) }}</span></h5>
         <h5>Desconto: <span id="desconto">{{ currency_format(0) }}</span></h5>
@@ -101,8 +101,8 @@
     @else
         <p><i class="fas fa-info-circle me-1"></i>Seu carrinho está vazio.</p>
     @endif
-@endsection
-@push('scripts')
+ @endsection
+{{-- @push('scripts')
     <script>
         const cart = @json($cart->mapWithKeys(fn($item) => [$item->product_id => $item->quantity]));
         const currencyCode = '{{ session('currency')['code'] ?? 'BRL' }}';
@@ -172,4 +172,4 @@
                 .catch(err => console.error(err));
         });
     </script>
-@endpush
+@endpush --}}

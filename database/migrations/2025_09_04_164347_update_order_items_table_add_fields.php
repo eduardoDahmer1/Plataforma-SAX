@@ -15,7 +15,8 @@ class UpdateOrderItemsTableAddFields extends Migration
             $table->string('name')->nullable()->change();
             $table->string('external_name')->nullable()->change();
             $table->string('slug')->nullable()->change();
-            $table->string('sku')->nullable()->after('slug');
+            // A linha abaixo foi comentada pois a coluna 'sku' já existe no banco
+            // $table->string('sku')->nullable()->after('slug'); 
             $table->decimal('price', 10, 2)->nullable()->change();
             $table->integer('quantity')->default(1)->change();
         });
@@ -30,7 +31,8 @@ class UpdateOrderItemsTableAddFields extends Migration
             $table->string('name')->nullable(false)->change();
             $table->string('external_name')->nullable(false)->change();
             $table->string('slug')->nullable(false)->change();
-            $table->dropColumn('sku');
+            // Comentado para evitar erro ao reverter
+            // $table->dropColumn('sku'); 
             $table->decimal('price', 10, 2)->nullable(false)->change();
             $table->integer('quantity')->default(0)->change();
         });

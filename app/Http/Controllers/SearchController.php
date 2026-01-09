@@ -9,90 +9,98 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Childcategory;
 use App\Models\Cart;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
 class SearchController extends Controller
 {
+    /**
+     * Index de Busca Otimizada
+     * Exceções: Oculta apenas produtos sem imagem OU sem estoque.
+     */
     public function index(Request $request)
     {
-        $perPage = $request->per_page ?? 12;
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-    
-        $cacheKey = 'search_' . md5(json_encode([
-            'search' => $request->search,
-            'brand' => $request->brand,
-            'category' => $request->category,
-            'subcategory' => $request->subcategory,
-            'childcategory' => $request->childcategory,
-            'min_price' => $request->min_price,
-            'max_price' => $request->max_price,
-            'sort_by' => $request->sort_by,
-            'per_page' => $perPage,
-            'page' => $currentPage,
-        ]));
-    
-        $paginated = Cache::remember($cacheKey, 600, function () use ($request, $perPage, $currentPage) {
+        $perPage = $request->get('per_page', 12);
+        
+        // Chave de cache baseada nos filtros para máxima velocidade
+        $cacheKey = 'search_filtered_v2_' . md5(json_encode($request->all()));
+
+        $paginated = Cache::remember($cacheKey, 600, function () use ($request, $perPage) {
             $query = Product::query()
-                ->when($request->search, fn($q) => 
-                    $q->where('external_name', 'like', "%{$request->search}%")
-                      ->orWhere('sku', 'like', "%{$request->search}%")
-                      ->orWhere('name', 'like', "%{$request->search}%")
-                      ->orWhere('description', 'like', "%{$request->search}%")
-                )
-                ->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
-                ->when($request->category, fn($q) => $q->where('category_id', $request->category))
-                ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
-                ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory))
-                ->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
-                ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
-    
-            // Ordenação
-            switch ($request->sort_by) {
-                case 'latest': $query->orderBy('created_at','desc'); break;
-                case 'oldest': $query->orderBy('created_at','asc'); break;
-                case 'name_az': $query->orderBy('external_name','asc'); break;
-                case 'name_za': $query->orderBy('external_name','desc'); break;
-                case 'price_low': $query->orderBy('price','asc'); break;
-                case 'price_high': $query->orderBy('price','desc'); break;
-                case 'in_stock': $query->orderByRaw('stock>0 DESC')->orderBy('updated_at','desc'); break;
-                default: $query->orderByRaw('(CASE WHEN photo IS NOT NULL AND photo != "" THEN 1 ELSE 0 END) DESC')
-                               ->orderBy('updated_at','desc');
+                ->select(['id', 'name', 'external_name', 'sku', 'price', 'stock', 'photo', 'brand_id', 'slug', 'status'])
+                ->with(['brand:id,name']);
+
+            /**
+             * AS DUAS EXCEÇÕES SOLICITADAS:
+             * 1. Precisa ter imagem (photo não nulo e não vazio)
+             * 2. Precisa ter estoque (stock maior que zero)
+             */
+            $query->whereNotNull('photo')
+                  ->where('photo', '!=', '')
+                  ->where('stock', '>', 0);
+
+            // Filtro de Busca Textual
+            if ($request->filled('search')) {
+                $term = "%{$request->search}%";
+                $query->where(function($q) use ($term) {
+                    $q->where('external_name', 'like', $term)
+                      ->orWhere('name', 'like', $term)
+                      ->orWhere('sku', 'like', $term);
+                });
             }
-    
-            // Pega todos os produtos e filtra os que têm foto
-            $filtered = $query->get()->filter(function($product) {
-                return $product->photo && \Storage::disk('public')->exists($product->photo);
-            });
-    
-            // Paginação manual
-            $offset = ($currentPage - 1) * $perPage;
-            $paginated = new LengthAwarePaginator(
-                $filtered->slice($offset, $perPage)->values(),
-                $filtered->count(),
-                $perPage,
-                $currentPage,
-                ['path' => request()->url(), 'query' => request()->query()]
-            );
-    
-            return $paginated;
+
+            // Filtros de Sidebar
+            $query->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
+                  ->when($request->category, fn($q) => $q->where('category_id', $request->category))
+                  ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
+                  ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory));
+
+            // Filtro de Preço
+            $query->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
+                  ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
+
+            // Aplica Ordenação
+            $this->applySorting($query, $request->sort_by);
+
+            // Paginação Nativa (Rápida)
+            return $query->paginate($perPage)->withQueryString();
         });
-    
-        // Filtros sidebar
-        $brands = Cache::remember('search_brands', 600, fn() => Brand::orderBy('name')->get());
-        $categories = Cache::remember('search_categories', 600, fn() => Category::orderBy('name')->get());
-        $subcategories = Cache::remember('search_subcategories', 600, fn() => Subcategory::orderBy('name')->get());
-        $childcategories = Cache::remember('search_childcategories', 600, fn() => Childcategory::orderBy('name')->get());
-    
+
+        // Cache dos filtros da sidebar (1 hora)
+        $sidebarData = Cache::remember('search_sidebar_v2', 3600, function() {
+            return [
+                'brands'          => Brand::select('id', 'name')->orderBy('name')->get(),
+                'categories'      => Category::select('id', 'name')->orderBy('name')->get(),
+                'subcategories'   => Subcategory::select('id', 'name')->orderBy('name')->get(),
+                'childcategories' => Childcategory::select('id', 'name')->orderBy('name')->get(),
+            ];
+        });
+
         // Carrinho
         $cartItems = [];
-        if ($user = $request->user()) {
-            $cartItems = Cart::where('user_id',$user->id)->pluck('quantity','product_id')->toArray();
+        if (auth()->check()) {
+            $cartItems = Cart::where('user_id', auth()->id())->pluck('quantity', 'product_id')->toArray();
         }
-    
-        return view('search.search', compact(
-            'paginated','brands','categories','subcategories','childcategories','cartItems'
-        ))->with('query',$request->search);
+
+        return view('search.search', array_merge($sidebarData, [
+            'paginated' => $paginated,
+            'cartItems' => $cartItems,
+            'query'     => $request->search
+        ]));
     }
-    
+
+    /**
+     * Lógica de Ordenação
+     */
+    private function applySorting($query, $sortBy)
+    {
+        match ($sortBy) {
+            'latest'     => $query->orderBy('created_at', 'desc'),
+            'oldest'     => $query->orderBy('created_at', 'asc'),
+            'name_az'    => $query->orderBy('external_name', 'asc'),
+            'name_za'    => $query->orderBy('external_name', 'desc'),
+            'price_low'  => $query->orderBy('price', 'asc'),
+            'price_high' => $query->orderBy('price', 'desc'),
+            default      => $query->orderBy('updated_at', 'desc'),
+        };
+    }
 }

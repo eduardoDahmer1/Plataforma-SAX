@@ -1,117 +1,136 @@
-<footer class="bg-dark text-white pt-5 pb-3">
+<footer class="sax-footer-minimal">
     <div class="container">
-
-        {{-- Logo --}}
-        @if ($webpImage)
-            <div class="text-center mb-4">
-                <a href="{{ route('home') }}" class="d-inline-block">
-                    <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="Logo Footer" class="img-fluid"
-                         style="max-height:100px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                </a>
-            </div>
-        @endif
-
-        {{-- Links principais --}}
-        <div class="row text-center text-md-start mb-4">
-            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
-                <h5 class="fw-bold text-uppercase mb-3">Navegação</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2">
-                        <a href="{{ route('home') }}" class="text-white text-decoration-none hover-link">
-                            <i class="fa fa-home me-2"></i> Home
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{{ route('blogs.index') }}" class="text-white text-decoration-none hover-link">
-                            <i class="fa fa-blog me-2"></i> Blog
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{{ route('brands.index') }}" class="text-white text-decoration-none hover-link">
-                            <i class="fa fa-tag me-2"></i> Marcas
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{{ route('categories.index') }}" class="text-white text-decoration-none hover-link">
-                            <i class="fa fa-list me-2"></i> Categorias
-                        </a>
-                    </li>
+        <div class="row g-4 justify-content-between">
+            
+            {{-- Coluna 1: Atendimento --}}
+            <div class="col-12 col-md-3">
+                <h6 class="footer-sax-title">Atención al Cliente</h6>
+                <ul class="footer-sax-list">
+                    <li><a href="{{ route('contact.form') }}">Ayuda y contactos</a></li>
+                    <li><a href="#">Preguntas Frecuentes</a></li>
+                    <li><a href="#">Pedidos y envíos</a></li>
+                    <li><a href="#">Límites de importación</a></li>
+                    <li><a href="#">Devoluciones y reembolsos</a></li>
+                    <li><a href="#">Pagos y precios</a></li>
+                    <li><a href="#">Compromiso de S.A.X. con el Cliente</a></li>
                 </ul>
             </div>
 
-            <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
-                <h5 class="fw-bold text-uppercase mb-3">Categorias</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2">
-                        <a href="{{ route('subcategories.index') }}" class="text-white text-decoration-none hover-link">
-                            <i class="fa fa-layer-group me-2"></i> Subcategorias
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{{ route('childcategories.index') }}" class="text-white text-decoration-none hover-link">
-                            <i class="fa fa-sitemap me-2"></i> Categorias Filhas
-                        </a>
-                    </li>
-                    <li class="mb-2">
-                        <a href="{{ route('contact.form') }}" class="text-white text-decoration-none hover-link">
-                            <i class="fa fa-envelope me-2"></i> Contato
-                        </a>
-                    </li>
+            {{-- Coluna 2: Institucional --}}
+            <div class="col-12 col-md-3">
+                <h6 class="footer-sax-title">Acerca de S.A.X.</h6>
+                <ul class="footer-sax-list">
+                    <li><a href="#">Sobre nosotros</a></li>
+                    <li><a href="#">Parceros de S.A.X.</a></li>
+                    <li><a href="{{ route('contact.form') }}">Trabaja con nosotros</a></li>
+                    <li><a href="#">Publicidad de S.A.X.</a></li>
                 </ul>
             </div>
 
-            <div class="col-12 col-lg-4">
-                <h5 class="fw-bold text-uppercase mb-3">Precisa de ajuda?</h5>
-                <p class="mb-3 fs-6">
-                    Entre em contato conosco pelo WhatsApp para suporte ou dúvidas:
-                </p>
-                <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Olá, você visitou nosso site. Precisa de ajuda com algo?') }}"
-                   target="_blank"
-                   class="btn btn-success w-100 w-md-auto px-4 shadow-sm mb-2">
-                    <i class="fab fa-whatsapp me-2"></i> Fale Conosco
-                </a>
+            {{-- Coluna 3: Fidelidade e Social --}}
+            <div class="col-12 col-md-3">
+                <h6 class="footer-sax-title">Descuentos y fidelidad</h6>
+                <ul class="footer-sax-list mb-4">
+                    <li><a href="#">Programa de afiliados</a></li>
+                    <li><a href="#">Enviar a un amigo</a></li>
+                    <li><a href="#">Programa de Lealtad</a></li>
+                </ul>
 
-                {{-- Métodos de pagamento --}}
-                <div class="mt-4">
-                    <h6 class="fw-bold mb-2">Métodos de Pagamento</h6>
-                    <p class="mb-1">
-                        <i class="fa fa-university me-2"></i> Depósito Bancário
-                    </p>
-                    <p class="mb-0">
-                        <i class="fa fa-comments me-2"></i> Checkout via WhatsApp
-                    </p>
+                <h6 class="footer-sax-title mb-3">Síguenos en las redes</h6>
+                <div class="footer-sax-social">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-tiktok"></i></a>
                 </div>
             </div>
         </div>
 
-        <hr class="border-light">
-
-        {{-- Direitos autorais --}}
-        <div class="text-center fs-6 mt-3">
-            <small>&copy; {{ date('Y') }} Todos os direitos reservados. <span class="fw-bold">Sax E-commerce</span></small>
+        {{-- Copyright --}}
+        <div class="footer-sax-bottom">
+            <p>{{ date('Y') }}. Todos los derechos reservados. SAX E-commerce.</p>
         </div>
-
     </div>
-
-    {{-- CSS Inline --}}
-    <style>
-        footer {
-            font-size: 0.95rem;
-        }
-
-        .hover-link:hover {
-            color: #0d6efd !important;
-            text-decoration: underline;
-            transition: all 0.3s;
-        }
-
-        @media (max-width: 768px) {
-            footer .row > div {
-                text-align: center;
-            }
-            footer .btn {
-                width: 100% !important;
-            }
-        }
-    </style>
 </footer>
+<style>
+    /* Container Principal do Rodapé */
+.sax-footer-minimal {
+    background-color: #e0e0e0; /* Cinza claro idêntico ao exemplo */
+    color: #333;
+    padding: 60px 0 30px 0;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Títulos das Colunas */
+.footer-sax-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #000;
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+}
+
+/* Listas de Links */
+.footer-sax-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-sax-list li {
+    margin-bottom: 12px;
+}
+
+.footer-sax-list a {
+    color: #555;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.footer-sax-list a:hover {
+    color: #000;
+    text-decoration: none;
+}
+
+/* Ícones Sociais */
+.footer-sax-social {
+    display: flex;
+    gap: 15px;
+    font-size: 1.2rem;
+}
+
+.footer-sax-social a {
+    color: #333;
+    transition: transform 0.2s ease;
+}
+
+.footer-sax-social a:hover {
+    transform: translateY(-3px);
+    color: #000;
+}
+
+/* Linha de Copyright */
+.footer-sax-bottom {
+    margin-top: 50px;
+    padding-top: 20px;
+    text-align: center;
+}
+
+.footer-sax-bottom p {
+    font-size: 0.8rem;
+    color: #777;
+    letter-spacing: 0.5px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .sax-footer-minimal {
+        text-align: left;
+        padding: 40px 20px;
+    }
+    
+    .footer-sax-title {
+        margin-top: 20px;
+    }
+}
+</style>

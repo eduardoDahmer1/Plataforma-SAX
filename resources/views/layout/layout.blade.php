@@ -74,7 +74,7 @@
     {{-- Header --}}
     @include('components.header')
 
-    <main class="py-4 container">
+    <main>
         @yield('content')
     </main>
 

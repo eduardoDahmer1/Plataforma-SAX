@@ -15,7 +15,7 @@
 
         <div class="card-body d-flex flex-column">
             <h6 class="card-title mb-2">
-                <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none">
+                <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
                     <i class="fas fa-tag me-1"></i>
                     {{ $item->name ?? ($item->external_name ?? 'Sem nome') }}
                 </a>

@@ -1,85 +1,150 @@
-<div class="list-group mb-4">
+<div class="sax-sidebar-menu mb-4">
 
     {{-- 🔑 Informações Pessoais --}}
-    <div class="list-group-item bg-light fw-bold">
-        <i class="fa fa-id-card me-2"></i> Informações Pessoais
-    </div>
-    <a href="{{ route('user.profile.edit') }}" class="list-group-item list-group-item-action">
-        <i class="fa fa-user-edit me-2"></i> Editar Dados Pessoais
-    </a>
-    <a class="list-group-item list-group-item-action">
-        <i class="fa fa-lock me-2"></i> Segurança / Alterar Senha
-    </a>
-    <!-- <a class="list-group-item list-group-item-action">
-        <i class="fa fa-credit-card me-2"></i> Métodos de Pagamento
-    </a> -->
-
-    {{-- 🛒 Pedidos e Compras --}}
-    <div class="list-group-item bg-light fw-bold mt-3">
-        <i class="fa fa-shopping-bag me-2"></i> Pedidos e Compras
-    </div>
-    <a href="{{ route('user.orders') }}" class="list-group-item list-group-item-action">
-        <i class="fa fa-list me-2"></i> Histórico de Pedidos
-    </a>
-
-    {{-- ❤️ Favoritos --}}
-    <div class="list-group-item bg-light fw-bold mt-3">
-        <i class="fa fa-heart me-2"></i> Favoritos
-    </div>
-    <a href="{{ route('user.preferences') }}" class="list-group-item list-group-item-action">
-        <i class="fa fa-star me-2"></i> Lista de Desejos
-    </a>    
-
-    {{-- 🎁 Cupons e Benefícios --}}
-    {{-- <div class="list-group-item bg-light fw-bold mt-3">
-        <i class="fa fa-gift me-2"></i> Cupons e Benefícios
-    </div>
-    <a href="-{-{ route('user.cupons') }-}-" class="list-group-item list-group-item-action">
-        <i class="fa fa-ticket-alt me-2"></i> Meus Cupons
-    </a> --}}
-
-    <!-- Modal de confirmação -->
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 shadow-lg">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="confirmDeleteModalLabel"><i
-                            class="fa fa-exclamation-triangle me-2"></i>Confirmação</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.</p>
-                    <form method="POST" action="{{ route('user.destroy') }}" id="deleteAccountForm">
-                        @csrf
-                        @method('DELETE')
-                        <div class="mb-3">
-                            <input type="password" name="password" placeholder="Confirme sua senha" class="form-control"
-                                required>
-                        </div>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-danger">Sim, excluir</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <div class="sax-menu-group">
+        <span class="sax-menu-label text-uppercase letter-spacing-1">Mi Cuenta</span>
+        <div class="sax-menu-items">
+            <a href="{{ route('user.profile.edit') }}" class="sax-menu-link">
+                <i class="fa fa-user-edit"></i> Editar Datos Personales
+            </a>
+            <a href="#" class="sax-menu-link">
+                <i class="fa fa-lock"></i> Seguridad / Contraseña
+            </a>
         </div>
     </div>
 
+    {{-- 🛒 Pedidos e Compras --}}
+    <div class="sax-menu-group mt-4">
+        <span class="sax-menu-label text-uppercase letter-spacing-1">Compras</span>
+        <div class="sax-menu-items">
+            <a href="{{ route('user.orders') }}" class="sax-menu-link">
+                <i class="fa fa-list"></i> Histórico de Pedidos
+            </a>
+        </div>
+    </div>
 
-    {{-- 🚪 Logout --}}
-    <a href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();"
-        class="list-group-item list-group-item-action text-danger mt-3">
-        <i class="fa fa-sign-out-alt me-2"></i> Sair
-    </a>
-    <!-- Botão para abrir modal -->
-    <button type="button" class="list-group-item list-group-item-action text-danger" data-bs-toggle="modal"
-        data-bs-target="#confirmDeleteModal">
-        <i class="fa fa-trash-alt me-2"></i>Excluir Conta
-    </button>
+    {{-- ❤️ Favoritos --}}
+    <div class="sax-menu-group mt-4">
+        <span class="sax-menu-label text-uppercase letter-spacing-1">Preferencia</span>
+        <div class="sax-menu-items">
+            <a href="{{ route('user.preferences') }}" class="sax-menu-link">
+                <i class="fa fa-star"></i> Lista de Deseos
+            </a>
+        </div>
+    </div>
+
+    {{-- 🚪 Ações de Conta --}}
+    <div class="sax-menu-group mt-5 pt-3 border-top">
+        <div class="sax-menu-items">
+            <a href="{{ route('logout') }}" 
+               onclick="event.preventDefault();document.getElementById('logout-form').submit();"
+               class="sax-menu-link text-dark fw-bold">
+                <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+            
+            <button type="button" class="sax-menu-link border-0 bg-transparent text-danger w-100 text-start" 
+                    data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                <i class="fa fa-trash-alt"></i> Eliminar Cuenta
+            </button>
+        </div>
+    </div>
+
+    {{-- Formulário de Logout --}}
     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
         @csrf
     </form>
 </div>
+
+{{-- Modal de Confirmação Minimalista --}}
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-0">
+            <div class="modal-body p-4 text-center">
+                <h5 class="fw-bold text-uppercase letter-spacing-2 mb-3">¿Eliminar Cuenta?</h5>
+                <p class="text-muted small px-3">Esta acción es irreversible. Todos sus datos y el historial de pedidos se perderán.</p>
+                
+                <form method="POST" action="{{ route('user.destroy') }}" id="deleteAccountForm">
+                    @csrf @method('DELETE')
+                    <div class="mb-4">
+                        <input type="password" name="password" placeholder="Confirma tu contraseña" 
+                               class="form-control sax-modal-input text-center" required>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        <button type="submit" class="btn btn-dark rounded-0 py-2 text-uppercase fw-bold x-small">Confirmar Eliminación</button>
+                        <button type="button" class="btn btn-link text-muted text-decoration-none x-small" data-bs-dismiss="modal">CANCELAR</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    /* Container do Menu */
+.sax-sidebar-menu {
+    background: #fff;
+    padding: 20px 0;
+}
+
+/* Rótulos das Seções */
+.sax-menu-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #999;
+    padding: 0 15px 10px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 10px;
+}
+
+/* Itens do Menu */
+.sax-menu-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.sax-menu-link {
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none !important;
+    font-size: 0.85rem;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.sax-menu-link i {
+    width: 25px;
+    font-size: 0.9rem;
+    color: #555;
+    transition: all 0.2s ease;
+}
+
+/* Hover & Active */
+.sax-menu-link:hover {
+    background-color: #f8f8f8;
+    color: #000;
+    padding-left: 20px;
+}
+
+.sax-menu-link:hover i {
+    color: #000;
+}
+
+/* Estilo do Modal */
+.sax-modal-input {
+    border: none;
+    border-bottom: 2px solid #eee;
+    border-radius: 0;
+    font-size: 0.9rem;
+}
+
+.sax-modal-input:focus {
+    box-shadow: none;
+    border-color: #000;
+}
+
+.letter-spacing-1 { letter-spacing: 1.5px; }
+.letter-spacing-2 { letter-spacing: 3px; }
+.x-small { font-size: 0.7rem; }
+</style>

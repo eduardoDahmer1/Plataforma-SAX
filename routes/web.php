@@ -44,71 +44,53 @@ use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\Auth\UserPreferenceController;
 
-// --- Home ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.page');
 
-// --- Frontend Public Routes ---
-// Subcategories
-Route::get('/subcategorias', [SubcategoryController::class, 'index'])->name('subcategories.index');
-Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->name('subcategories.show');
+Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
+// Rota principal de detalhes (usando Slug para SEO e navegação de variações)
+Route::get('/produto/{id_or_slug}', [ProductController::class, 'show'])->name('produto.show');
 
-// Childcategories
-Route::get('/subsubcategorias', [PublicChildcategoryController::class, 'index'])->name('childcategories.index');
-Route::get('/subsubcategorias/{slug}', [PublicChildcategoryController::class, 'show'])->name('childcategories.show');
+// Listagens específicas (Filtros)
+Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->name('products.byCategory');
+Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
+Route::get('/childcategorias/{childcategory}/produtos', [ProductController::class, 'byChildcategory'])->name('products.byChildcategory');
 
-// Categories
+// Categorias
 Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
 Route::get('/categorias/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 
-// Brands
+// Subcategorias
+Route::get('/subcategorias', [SubcategoryController::class, 'index'])->name('subcategories.index');
+Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->name('subcategories.show');
+
+// Sub-Subcategorias (Child)
+Route::get('/subsubcategorias', [PublicChildcategoryController::class, 'index'])->name('childcategories.index');
+Route::get('/subsubcategorias/{slug}', [PublicChildcategoryController::class, 'show'])->name('childcategories.show');
+
+// Marcas
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
 Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('brands.show');
 
-// Currencies
-Route::post('/currency/change', [CurrencyController::class, 'change'])->name('currency.change');
-
-// Lista blogs ativos com filtro, busca e categorias
-Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
-
-// Visualizar blog específico
-Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
-
-
-Route::get('/search', [SearchController::class, 'index'])->name('search');
-
-// Contact
-Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
-Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
-
-// Products
-Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
-Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
-
-// Produtos por categoria
-Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->name('products.byCategory');
-
-// Produtos por subcategoria
-Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
-
-// Página de manutenção pública
-Route::get('/manutencao', function () {
-    return view('manutencao.index');
-})->name('maintenance.page');
-
-// Produtos por childcategory
-Route::get('/childcategorias/{childcategory}/produtos', [ProductController::class, 'byChildcategory'])->name('products.byChildcategory');
-
-// Detalhes do produto
-Route::get('/produtos/{product}', [ProductController::class, 'show'])->name('products.show');
-
-// Cart
-Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'view'])->name('cart.view');
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 
-// Checkout WhatsApp
+// Checkout via WhatsApp
 Route::get('checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->name('checkout.whatsapp');
+
+// Blog
+Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
+
+// Contato
+Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
+Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
+
+// Moeda
+Route::post('/currency/change', [CurrencyController::class, 'change'])->name('currency.change');
 
 // --- Authenticated User Routes ---
 Route::middleware('auth')->group(function () {

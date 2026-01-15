@@ -1,107 +1,251 @@
 @extends('layout.layout')
 
 @section('content')
-    <h1 class="mb-4"><i class="fas fa-shopping-cart me-2"></i>Seu Carrinho</h1>
-
-    @if ($cart->count() > 0)
-        @php
-            $totalCarrinho = 0;
-        @endphp
-
-        <ul class="list-group mb-3">
-            @foreach ($cart as $item)
-                @php
-                    $itemTotal = ($item->product->price ?? 0) * $item->quantity;
-                    $totalCarrinho += $itemTotal;
-                @endphp
-
-                <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-start mb-2">
-
-                    {{-- Imagem do Produto --}}
-                    <div class="me-3 mb-2 mb-md-0">
-                        <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/80' }}"
-                            alt="{{ $item->product->external_name }}" class="img-thumbnail rounded"
-                            style="width: 80px; height: 80px; object-fit: contain;">
-                    </div>
-
-                    {{-- Detalhes do Produto --}}
-                    <div class="flex-grow-1 mb-2 mb-md-0">
-                        <strong><i
-                                class="fas fa-box-open me-1"></i>{{ $item->product->external_name ?? 'Produto' }}</strong><br>
-                        <small><i class="fas fa-link me-1"></i>Slug: {{ $item->product->slug ?? '-' }}</small><br>
-                        <small><i class="fas fa-barcode me-1"></i>SKU: {{ $item->product->sku ?? '-' }}</small>
-                    </div>
-
-                    {{-- Quantidade e Preço --}}
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <span><i class="fas fa-tag me-1"></i>{{ currency_format($item->product->price ?? 0) }}</span>
-                        <span><i class="fas fa-sort-numeric-up me-1"></i>x {{ $item->quantity }}</span>
-                        <span><i class="fas fa-equals me-1"></i>{{ currency_format($itemTotal) }}</span>
-
-                        <div class="d-flex flex-column ms-2">
-                            {{-- Botões de atualizar/excluir quantidade --}}
-                            <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="quantity" value="{{ $item->quantity + 1 }}">
-                                <button type="submit" class="btn btn-outline-secondary btn-sm mb-1"
-                                    @if ($item->quantity >= ($item->product->stock ?? 1)) disabled @endif>
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </form>
-
-                            <form action="{{ route('cart.update', $item->product_id) }}" method="POST" class="mb-1">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="quantity" value="{{ max($item->quantity - 1, 1) }}">
-                                <button type="submit" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </form>
-
-                            <form action="{{ route('cart.remove', $item->product_id) }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm"><i
-                                        class="fas fa-trash me-1"></i>Excluir</button>
-                            </form>
-                        </div>
-                    </div>
-                </li>
-            @endforeach
-        </ul>
-{{-- 
-        Campo para aplicar cupom
-        <div class="mb-3">
-            <label for="cuponCodigo" class="form-label"><i class="fas fa-ticket-alt me-1"></i>Aplicar Cupom</label>
-            <div class="d-flex gap-2">
-                <input type="text" id="cuponCodigo" class="form-control" placeholder="Digite o código do cupom">
-                <button type="button" id="aplicarCupon" class="btn btn-primary">Aplicar</button>
-                <button type="button" id="removerCupon" class="btn btn-outline-danger">Remover</button>
-            </div>
-            <small id="mensagemCupon" class="mt-1 d-block"></small>
-            <div id="cupomAplicado" class="mt-1 text-success"></div>
-        </div> --}}
-
-        <h5>Subtotal: <span id="subtotal">{{ currency_format($totalCarrinho) }}</span></h5>
-        <h5>Desconto: <span id="desconto">{{ currency_format(0) }}</span></h5>
-        <h4>Total: <span id="totalCarrinho">{{ currency_format($totalCarrinho) }}</span></h4>
-
-        <div class="mt-3 d-flex gap-2 flex-wrap">
-            <form action="{{ route('checkout.index') }}" method="GET">
-                <button type="submit" class="btn btn-success"><i class="fas fa-credit-card me-1"></i>Finalizar
-                    Compra</button>
-            </form>
-
-            <form action="{{ route('checkout.whatsapp') }}" method="GET">
-                <button type="submit" class="btn btn-success"><i class="fab fa-whatsapp me-1"></i>Finalizar via
-                    WhatsApp</button>
-            </form>
+<div class="container mt-5 mb-5">
+    <div class="row g-4">
+        {{-- Título da Página --}}
+        <div class="col-12 border-bottom pb-3 mb-4">
+            <h1 class="display-6 fw-bold text-uppercase letter-spacing-2 m-0">
+                <i class="fas fa-shopping-bag me-2 small"></i>Sua Sacola
+            </h1>
+            <p class="text-muted small mt-2">{{ $cart->count() }} itens selecionados</p>
         </div>
-    @else
-        <p><i class="fas fa-info-circle me-1"></i>Seu carrinho está vazio.</p>
-    @endif
- @endsection
+
+        @if ($cart->count() > 0)
+            @php $totalCarrinho = 0; @endphp
+
+            {{-- Lista de Itens --}}
+            <div class="col-lg-8">
+                <div class="cart-items-container">
+                    @foreach ($cart as $item)
+                        @php
+                            $itemTotal = ($item->product->price ?? 0) * $item->quantity;
+                            $totalCarrinho += $itemTotal;
+                        @endphp
+
+                        <div class="cart-item-row shadow-sm rounded-4 mb-3 p-3 bg-white border">
+                            <div class="row align-items-center g-3">
+                                {{-- Imagem --}}
+                                <div class="col-4 col-md-2 text-center">
+                                    <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
+                                        alt="{{ $item->product->external_name }}" 
+                                        class="img-fluid rounded-3 item-img-sax">
+                                </div>
+
+                                {{-- Detalhes --}}
+                                <div class="col-8 col-md-5">
+                                    <h6 class="fw-bold text-uppercase mb-1 item-title-sax">
+                                        {{ $item->product->external_name ?? 'Produto' }}
+                                    </h6>
+                                    <p class="text-muted x-small mb-1">SKU: {{ $item->product->sku ?? '-' }}</p>
+                                    <p class="text-dark fw-bold m-0 d-md-none">{{ currency_format($item->product->price ?? 0) }}</p>
+                                </div>
+
+                                {{-- Quantidade --}}
+                                <div class="col-6 col-md-3">
+                                    <div class="quantity-control-sax">
+                                        <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
+                                            @csrf @method('PUT')
+                                            <input type="hidden" name="quantity" value="{{ max($item->quantity - 1, 1) }}">
+                                            <button type="submit" class="qty-btn-sax" {{ $item->quantity <= 1 ? 'disabled' : '' }}>-</button>
+                                        </form>
+                                        
+                                        <span class="qty-val-sax">{{ $item->quantity }}</span>
+
+                                        <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
+                                            @csrf @method('PUT')
+                                            <input type="hidden" name="quantity" value="{{ $item->quantity + 1 }}">
+                                            <button type="submit" class="qty-btn-sax" 
+                                                @if ($item->quantity >= ($item->product->stock ?? 1)) disabled @endif>+</button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                {{-- Preço Total e Excluir --}}
+                                <div class="col-6 col-md-2 text-end">
+                                    <p class="fw-bold m-0 item-price-sax">{{ currency_format($itemTotal) }}</p>
+                                    <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="mt-2">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn-remove-sax">
+                                            <i class="far fa-trash-alt me-1"></i>Remover
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                
+                <a href="{{ route('home') }}" class="btn btn-link text-dark text-decoration-none x-small fw-bold mt-3">
+                    <i class="fas fa-arrow-left me-2"></i> CONTINUAR COMPRANDO
+                </a>
+            </div>
+
+            {{-- Resumo do Pedido (Sidebar) --}}
+            <div class="col-lg-4">
+                <div class="checkout-summary-sax p-4 rounded-4 shadow-sm border bg-light sticky-top" style="top: 20px;">
+                    <h5 class="fw-bold text-uppercase mb-4">Resumo do Pedido</h5>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span class="fw-bold">{{ currency_format($totalCarrinho) }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Desconto</span>
+                        <span class="text-success fw-bold">- {{ currency_format(0) }}</span>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="h5 fw-bold">TOTAL</span>
+                        <span class="h5 fw-bold text-dark">{{ currency_format($totalCarrinho) }}</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <form action="{{ route('checkout.index') }}" method="GET">
+                            <button type="submit" class="btn btn-dark btn-lg w-100 rounded-pill py-3 fw-bold text-uppercase x-small">
+                                <i class="fas fa-lock me-2"></i> Finalizar Compra
+                            </button>
+                        </form>
+
+                        <form action="{{ route('checkout.whatsapp') }}" method="GET">
+                            <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill py-3 fw-bold text-uppercase x-small">
+                                <i class="fab fa-whatsapp me-2"></i> Checkout WhatsApp
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <img src="https://vignette.wikia.nocookie.net/logopedia/images/e/e3/Visa_2014.svg" height="20" class="me-2 opacity-50">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" height="20" class="me-2 opacity-50">
+                        <i class="fas fa-shield-alt text-muted me-1"></i> <span class="x-small text-muted">Compra 100% Segura</span>
+                    </div>
+                </div>
+            </div>
+        @else
+            {{-- Carrinho Vazio --}}
+            <div class="col-12 text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-shopping-bag fa-4x text-light"></i>
+                </div>
+                <h2 class="fw-bold">Sua sacola está vazia</h2>
+                <p class="text-muted">Parece que você ainda não escolheu seus produtos.</p>
+                <a href="{{ route('home') }}" class="btn btn-dark rounded-pill px-5 py-3 mt-3">VOLTAR PARA A LOJA</a>
+            </div>
+        @endif
+    </div>
+</div>
+@endsection
+<style>
+/* Layout Geral */
+.letter-spacing-2 { letter-spacing: 2px; }
+.x-small { font-size: 0.75rem; letter-spacing: 1px; }
+
+/* Linha do Item */
+.cart-item-row {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-item-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+}
+
+.item-img-sax {
+    max-height: 100px;
+    object-fit: contain;
+    mix-blend-mode: multiply; /* Ótimo se o fundo da imagem for branco puro */
+}
+
+.item-title-sax {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    color: #1a1a1a;
+}
+
+.item-price-sax {
+    font-size: 1.1rem;
+    color: #000;
+}
+
+/* Controle de Quantidade Minimalista */
+.quantity-control-sax {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 50px;
+    padding: 2px;
+    background: #fff;
+}
+
+.qty-btn-sax {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #000;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.qty-btn-sax:hover:not(:disabled) {
+    background: #f0f0f0;
+}
+
+.qty-val-sax {
+    padding: 0 15px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+/* Botão Remover */
+.btn-remove-sax {
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: 0.3s;
+}
+
+.btn-remove-sax:hover {
+    color: #dc3545;
+}
+
+/* Sidebar de Resumo */
+.checkout-summary-sax {
+    border: none !important;
+    background-color: #f8f9fa !important;
+}
+
+.checkout-summary-sax h5 {
+    letter-spacing: 1.5px;
+    border-bottom: 2px solid #000;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+    .item-img-sax {
+        max-height: 80px;
+    }
+    .item-title-sax {
+        font-size: 0.8rem;
+    }
+    .quantity-control-sax {
+        margin-top: 10px;
+    }
+    .checkout-summary-sax {
+        margin-top: 20px;
+    }
+}
+</style>
 {{-- @push('scripts')
     <script>
         const cart = @json($cart->mapWithKeys(fn($item) => [$item->product_id => $item->quantity]));

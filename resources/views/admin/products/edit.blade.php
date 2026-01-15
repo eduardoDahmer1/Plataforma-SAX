@@ -198,7 +198,7 @@
 
                     <!-- RELACIONAMENTO POR TAMANHO -->
                     <div class="col-12 mb-4">
-                        <label class="form-label"><i class="fas fa-link me-1"></i>Produtos Pai (Tamanho)</label>
+                        <label class="form-label"><i class="fas fa-link me-1"></i>Produtos Filho (Tamanho)</label>
                         <div class="input-group mb-2">
                             <input type="text" id="parent_search" class="form-control"
                                 placeholder="Buscar produto por tamanho..." autocomplete="off">
@@ -252,7 +252,7 @@
 
                     <!-- RELACIONAMENTO POR COR -->
                     <div class="col-12 mb-4">
-                        <label class="form-label"><i class="fas fa-palette me-1"></i>Produtos Pai (Cor)</label>
+                        <label class="form-label"><i class="fas fa-palette me-1"></i>Produtos Filho (Cor)</label>
                         <div class="input-group mb-2">
                             <input type="text" id="color_search" class="form-control"
                                 placeholder="Buscar produto por cor..." autocomplete="off">

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Upload;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Childcategory;
@@ -12,35 +11,40 @@ use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
+    /**
+     * Home: Exibe apenas produtos ativos (Role 'P')
+     */
     public function home(Request $request)
     {
         $search  = $request->get('search');
         $page    = $request->get('page', 1);
         $perPage = 40;
 
-        $cacheKey = "home_items_{$page}_" . md5($search ?? '');
+        // Cache simplificado apenas para produtos
+        $cacheKey = "home_products_{$page}_" . md5($search ?? '');
 
         $items = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($search) {
-            $uploads = Upload::select('id', 'title', 'description', 'file_path', 'created_at')
-                ->when($search, fn($q) => $q->where('title', 'LIKE', "%{$search}%")
-                                           ->orWhere('description', 'LIKE', "%{$search}%"))
-                ->get()
-                ->map(fn($u) => (object)[
-                    'id'          => $u->id,
-                    'title'       => $u->title,
-                    'description' => $u->description,
-                    'photo'       => null,
-                    'price'       => null,
-                    'price_final' => null,
-                    'type'        => 'upload',
-                    'created_at'  => $u->created_at,
-                ]);
+            $columns = [
+                'id',
+                'external_name',
+                'sku',
+                'price',
+                'photo',
+                'brand_id',
+                'category_id',
+                'created_at',
+                'slug',
+                'product_role'
+            ];
 
-            $columns = ['id', 'external_name', 'sku', 'price', 'photo', 'brand_id', 'category_id', 'created_at'];
-            $products = Product::select($columns)
-                ->when($search, fn($q) => $q->where('external_name', 'LIKE', "%{$search}%")
-                                           ->orWhere('sku', 'LIKE', "%{$search}%"))
+            return Product::select($columns)
+                ->where('product_role', 'P') // Filtra apenas produtos "Pai" para a vitrine
+                ->when($search, function ($q) use ($search) {
+                    $q->where('external_name', 'LIKE', "%{$search}%")
+                        ->orWhere('sku', 'LIKE', "%{$search}%");
+                })
                 ->with(['cupons' => fn($q) => $q->ativos()])
+                ->orderByDesc('created_at')
                 ->get()
                 ->map(fn($p) => (object)[
                     'id'          => $p->id,
@@ -49,13 +53,13 @@ class ProductController extends Controller
                     'photo'       => $p->photo,
                     'price'       => $p->price,
                     'price_final' => $this->calcularPrecoComCupon($p),
-                    'type'        => 'product',
+                    'type'        => 'product', // Mantido para compatibilidade com sua View
+                    'slug'        => $p->slug,
                     'created_at'  => $p->created_at,
                 ]);
-
-            return $uploads->merge($products)->sortByDesc('created_at')->values();
         });
 
+        // Paginação manual para manter a estrutura da sua View
         $pagedItems = $items->forPage($page, $perPage);
 
         return view('home', [
@@ -65,6 +69,9 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * Index de Produtos (Listagem Geral)
+     */
     public function index(Request $request)
     {
         $search   = $request->get('search');
@@ -74,30 +81,70 @@ class ProductController extends Controller
 
         $products = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($search, $perPage) {
             return Product::with(['cupons' => fn($q) => $q->ativos()])
+                ->where('product_role', 'P') // Apenas pais na listagem
                 ->when($search, fn($q) => $q->where('external_name', 'LIKE', "%{$search}%")
-                                           ->orWhere('sku', 'LIKE', "%{$search}%")
-                                           ->orWhere('slug', 'LIKE', "%{$search}%"))
+                    ->orWhere('sku', 'LIKE', "%{$search}%")
+                    ->orWhere('slug', 'LIKE', "%{$search}%"))
                 ->orderByDesc('id')
                 ->paginate($perPage);
         });
 
         foreach ($products as $p) {
             $p->price_final = $this->calcularPrecoComCupon($p);
-            // Garantir que color e size estão disponíveis
-            $p->color = $p->color ?? null;
-            $p->size  = $p->size ?? null;
         }
 
         return view('produtos.index', compact('products'));
     }
 
+    public function show($id_or_slug)
+    {
+        // Busca com relações para evitar N+1 queries
+        $product = Product::where('id', $id_or_slug)
+            ->orWhere('slug', $id_or_slug)
+            ->with(['brand', 'category', 'subcategory', 'childcategory'])
+            ->firstOrFail();
+
+        // 1. Lógica de Preço (Banco: price, previous_price, promotion_price)
+        // Se houver preço promocional, ele assume o lugar do preço principal
+        $product->current_price = $product->promotion_price > 0 ? $product->promotion_price : $product->price;
+        $product->has_discount = $product->previous_price > $product->current_price;
+
+        // 2. Identificar o "Pai" para listar tamanhos (Variantes de Tamanho)
+        $masterId = $product->id;
+        if ($product->product_role === 'F' && !empty($product->parent_id)) {
+            $parentIds = is_array($product->parent_id) ? $product->parent_id : explode(',', $product->parent_id);
+            $masterId = trim($parentIds[0]);
+        }
+
+        // Busca irmãos (mesmo pai) para os seletores de tamanho
+        $siblings = Product::where('parent_id', 'LIKE', "%{$masterId}%")
+            ->orWhere('id', $masterId)
+            ->where('status', 1)
+            ->get();
+
+        // 3. Busca Cores relacionadas (Baseado na sua coluna color_parent_id)
+        $colorIds = [];
+        if (!empty($product->color_parent_id)) {
+            $colorIds = is_array($product->color_parent_id) ? $product->color_parent_id : explode(',', $product->color_parent_id);
+        }
+        $coresRelacionadas = Product::whereIn('id', $colorIds)->where('status', 1)->get();
+
+        return view('produtos.show', [
+            'product'           => $product,
+            'siblings'          => $siblings,
+            'coresRelacionadas' => $coresRelacionadas
+        ]);
+    }
+
+    /**
+     * Listagem por Categorias
+     */
     public function byCategory(Category $category)
     {
-        $products = Cache::remember("products_category_{$category->id}", now()->addMinutes(10), fn() =>
-            Product::where('category_id', $category->id)
-                ->with(['cupons' => fn($q) => $q->ativos()])
-                ->paginate(12)
-        );
+        $products = Product::where('category_id', $category->id)
+            ->where('product_role', 'P')
+            ->with(['cupons' => fn($q) => $q->ativos()])
+            ->paginate(12);
 
         foreach ($products as $p) {
             $p->price_final = $this->calcularPrecoComCupon($p);
@@ -106,13 +153,15 @@ class ProductController extends Controller
         return view('produtos.index', compact('products', 'category'));
     }
 
+    /**
+     * Listagem por Subcategorias
+     */
     public function bySubcategory(Subcategory $subcategory)
     {
-        $products = Cache::remember("products_subcategory_{$subcategory->id}", now()->addMinutes(10), fn() =>
-            Product::where('subcategory_id', $subcategory->id)
-                ->with(['cupons' => fn($q) => $q->ativos()])
-                ->paginate(12)
-        );
+        $products = Product::where('subcategory_id', $subcategory->id)
+            ->where('product_role', 'P')
+            ->with(['cupons' => fn($q) => $q->ativos()])
+            ->paginate(12);
 
         foreach ($products as $p) {
             $p->price_final = $this->calcularPrecoComCupon($p);
@@ -121,13 +170,15 @@ class ProductController extends Controller
         return view('produtos.index', compact('products', 'subcategory'));
     }
 
+    /**
+     * Listagem por Childcategory
+     */
     public function byChildcategory(Childcategory $childcategory)
     {
-        $products = Cache::remember("products_childcategory_{$childcategory->id}", now()->addMinutes(10), fn() =>
-            Product::where('childcategory_id', $childcategory->id)
-                ->with(['cupons' => fn($q) => $q->ativos()])
-                ->paginate(12)
-        );
+        $products = Product::where('childcategory_id', $childcategory->id)
+            ->where('product_role', 'P')
+            ->with(['cupons' => fn($q) => $q->ativos()])
+            ->paginate(12);
 
         foreach ($products as $p) {
             $p->price_final = $this->calcularPrecoComCupon($p);
@@ -135,50 +186,21 @@ class ProductController extends Controller
 
         return view('produtos.index', compact('products', 'childcategory'));
     }
-    
-    public function show(Product $product)
-    {
-        $product->load([
-            'cupons' => fn($q) => $q->ativos(),
-            'children.cupons',
-            'coresRelacionadas',
-            'parent.children.cupons' // garante que os irmãos sejam carregados
-        ]);
-    
-        $product->price_final = $this->calcularPrecoComCupon($product);
-        $product->color = $product->color ?? null;
-        $product->size  = $product->size ?? null;
-    
-        foreach ($product->children as $child) {
-            $child->price_final = $this->calcularPrecoComCupon($child);
-            $child->color = $child->color ?? null;
-            $child->size  = $child->size ?? null;
-        }
-    
-        foreach ($product->coresRelacionadas as $color) {
-            $color->price_final = $this->calcularPrecoComCupon($color);
-            $color->color = $color->color ?? null;
-            $color->size  = $color->size ?? null;
-        }
-    
-        // 👇 Aqui está a lógica de pai/filho
-        if ($product->product_role === 'F' && $product->parent) {
-            $siblings = $product->parent->children;
-        } else {
-            $siblings = $product->children;
-        }
-    
-        return view('produtos.show', compact('product', 'siblings'));
-    }    
 
+    /**
+     * Helper: Calcula o preço considerando o melhor cupom ativo
+     */
     private function calcularPrecoComCupon(Product $p)
     {
         $cupons = $p->cupons ?? collect();
+        if ($cupons->isEmpty()) {
+            return $p->price;
+        }
 
         $descontoMax = $cupons->max(fn($c) => $c->tipo === 'percentual'
             ? $p->price * ($c->montante / 100)
             : $c->montante);
 
-        return $descontoMax ? $p->price - $descontoMax : $p->price;
+        return $descontoMax ? max(0, $p->price - $descontoMax) : $p->price;
     }
 }

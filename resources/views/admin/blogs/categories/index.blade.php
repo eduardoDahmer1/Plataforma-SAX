@@ -1,125 +1,136 @@
 @extends('layout.admin')
 
 @section('content')
-<style>
-    /* Área da imagem dentro do card */
-    .category-image-wrapper {
-        width: 100%;
-        height: 180px; /* tamanho fixo — pode ajustar */
-        overflow: hidden;
-        border-radius: 10px;
-        background: #f0f0f0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+<div class="container-fluid py-4 px-md-5">
 
-    .category-image-wrapper img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* garante padrão e sem deformar */
-        transition: transform .3s ease;
-    }
-
-    .category-image-wrapper img:hover {
-        transform: scale(1.05);
-    }
-
-    .card {
-        border: none;
-        border-radius: 14px;
-        overflow: hidden;
-        transition: transform .2s ease, box-shadow .2s ease;
-    }
-
-    .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0px 10px 28px rgba(0, 0, 0, .15);
-    }
-
-    /* Botões */
-    .card .btn {
-        border-radius: 8px;
-    }
-
-    /* Responsividade fina */
-    @media (max-width: 576px) {
-        .category-image-wrapper {
-            height: 150px;
-        }
-    }
-</style>
-
-
-<div class="container py-4">
-
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <h1 class="m-0">Gerenciar Categorias</h1>
-
-        <a href="{{ route('admin.blog-categories.create') }}" class="btn btn-success">
-            <i class="fa fa-plus me-1"></i> Nova Categoria
+    {{-- Header Minimalista --}}
+    <div class="d-flex justify-content-between align-items-end mb-5">
+        <div>
+            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Categorías de Blog</h1>
+            <p class="small text-secondary mb-0">Organización jerárquica de contenido editorial</p>
+        </div>
+        <a href="{{ route('admin.blog-categories.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
+            <i class="fa fa-plus me-2"></i> Nueva Categoria
         </a>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-dark border-0 rounded-0 small mb-4 py-3 shadow-sm d-flex justify-content-between align-items-center" role="alert">
+            <span><i class="fa fa-check me-2"></i> {{ session('success') }}</span>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
     @endif
 
     @if($categories->count())
-
     <div class="row g-4">
         @foreach($categories as $cat)
-            <div class="col-sm-6 col-lg-4">
-
-                <div class="card shadow-sm h-100">
-
-                    {{-- Imagem com tamanho padronizado --}}
-                    <div class="category-image-wrapper">
+            <div class="col-sm-6 col-lg-3">
+                <div class="sax-category-card border-0 bg-transparent h-100">
+                    
+                    {{-- Imagem em Aspect Ratio 1:1 ou 4:3 --}}
+                    <div class="category-img-container mb-3 position-relative overflow-hidden">
                         @if($cat->banner && Storage::disk('public')->exists($cat->banner))
-                            <img src="{{ Storage::url($cat->banner) }}" alt="{{ $cat->name }}">
+                            <img src="{{ Storage::url($cat->banner) }}" alt="{{ $cat->name }}" class="grayscale-hover">
                         @else
-                            <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem">
+                            <div class="no-image-placeholder x-small text-uppercase fw-bold text-muted">
+                                No Image
+                            </div>
                         @endif
-                    </div>
-
-                    <div class="card-body d-flex flex-column">
-
-                        <h5 class="card-title mt-2">{{ $cat->name }}</h5>
-
-                        <div class="mt-auto d-flex flex-column flex-sm-row gap-2">
-
-                            <a href="{{ route('admin.blog-categories.edit', $cat) }}" 
-                               class="btn btn-warning btn-sm flex-fill">
-                                <i class="fa fa-edit me-1"></i> Editar
-                            </a>
-
-                            <a href="{{ route('admin.blog-categories.show', $cat) }}" 
-                               class="btn btn-info btn-sm flex-fill">
-                                <i class="fa fa-eye me-1"></i> Ver
-                            </a>
-
-                            <form action="{{ route('admin.blog-categories.destroy', $cat) }}" 
-                                  method="POST" class="flex-fill m-0"
-                                  onsubmit="return confirm('Excluir categoria?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger btn-sm w-100">
-                                    <i class="fa fa-trash me-1"></i> Excluir
-                                </button>
-                            </form>
-
+                        
+                        {{-- Overlay de Ações (Aparece no hover) --}}
+                        <div class="category-overlay">
+                            <a href="{{ route('admin.blog-categories.edit', $cat) }}" class="btn btn-light btn-sm rounded-0 x-small fw-bold border">EDITAR</a>
                         </div>
-
                     </div>
 
+                    <div class="category-info">
+                        <h6 class="text-uppercase tracking-tighter fw-bold mb-1 fs-7">{{ $cat->name }}</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="x-small text-secondary text-uppercase tracking-wider">ID #{{ $cat->id }}</span>
+                            
+                            <div class="d-flex gap-3 align-items-center">
+                                <a href="{{ route('admin.blog-categories.show', $cat) }}" class="text-dark x-small fw-bold text-decoration-none hover-underline">VER</a>
+                                
+                                <form action="{{ route('admin.blog-categories.destroy', $cat) }}" method="POST" class="m-0" onsubmit="return confirm('¿Eliminar categoría?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">ELIMINAR</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
             </div>
         @endforeach
     </div>
 
     @else
-        <p class="text-muted">Nenhuma categoria encontrada.</p>
+        <div class="py-5 text-center border">
+            <p class="text-muted small italic mb-0">No se encontraron categorías registradas.</p>
+        </div>
     @endif
 
 </div>
+
+<style>
+    /* Minimalist Category UI */
+    .tracking-wider { letter-spacing: 0.12em; }
+    .tracking-tighter { letter-spacing: 0.05em; }
+    .x-small { font-size: 0.65rem; }
+    .fs-7 { font-size: 0.8rem; }
+    .italic { font-style: italic; }
+
+    /* Container de Imagem */
+    .category-img-container {
+        aspect-ratio: 4 / 3;
+        background: #f8f9fa;
+        border: 1px solid #eee;
+    }
+
+    .category-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease, filter 0.5s ease;
+    }
+
+    .grayscale-hover {
+        filter: grayscale(100%);
+    }
+
+    .sax-category-card:hover .grayscale-hover {
+        filter: grayscale(0%);
+        transform: scale(1.05);
+    }
+
+    /* Placeholder quando não há imagem */
+    .no-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f1f1;
+    }
+
+    /* Overlay Minimalista */
+    .category-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: 0.3s ease;
+    }
+
+    .sax-category-card:hover .category-overlay {
+        opacity: 1;
+        background: rgba(255,255,255,0.4);
+    }
+
+    /* Utilitários */
+    .btn-clean { background: none; border: none; padding: 0; cursor: pointer; }
+    .hover-underline:hover { text-decoration: underline !important; }
+</style>
 @endsection

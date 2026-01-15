@@ -1,51 +1,111 @@
 @props(['item', 'cartItems'])
 
-<div class="col-6 col-md-4 col-lg-3 mb-4">
-    <div class="card h-100 shadow-sm border-0 position-relative">
-        <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-top" alt="{{ $item->external_name }}"
-            style="max-height: 200px; object-fit: scale-down;">
+<div class="col-6 col-md- col-lg-2 mb-1 g-1"> {{-- Espaçamento 'g-1' para grid colado como na imagem --}}
+    <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none text-dark">
+        <div class="card h-100 border-0 rounded-0 jw-product-card">
+            
+            {{-- Área da Imagem com fundo cinza JW --}}
+            <div class="jw-img-container position-relative">
+                <img src="{{ $item->photo_url }}" 
+                     class="card-img-top img-fluid rounded-0" 
+                     alt="{{ $item->external_name }}">
 
-        {{-- Botões --}}
-        @auth
-            @php $currentQty = $cartItems[$item->id] ?? 0; @endphp
+                {{-- Ícone de Favorito - Estilo Outline Fino --}}
+                <div class="position-absolute top-0 end-0 p-3">
+                    @auth
+                        <x-product-favorite-button :item="$item" />
+                    @else
+                        <button class="btn-favorite-guest" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    @endauth
+                </div>
+            </div>
 
-            <x-product-favorite-button :item="$item" />
-            <x-product-cart-button :item="$item" :currentQty="$currentQty" />
-        @endauth
+            {{-- Info do Produto - Tipografia Alinhada à Esquerda --}}
+            <div class="card-body px-3 py-4">
+                {{-- Marca: Bold e Curta --}}
+                <div class="jw-brand fw-bold text-uppercase mb-1">
+                    {{ $item->brand->name ?? 'JW PEI' }}
+                </div>
 
-        <div class="card-body d-flex flex-column">
-            <h6 class="card-title mb-2">
-                <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
-                    <i class="fas fa-tag me-1"></i>
-                    {{ $item->name ?? ($item->external_name ?? 'Sem nome') }}
-                </a>
-            </h6>
+                {{-- Nome: Cinza e Regular --}}
+                <div class="jw-product-name text-muted mb-2">
+                    {{ $item->name ?? $item->external_name }}
+                </div>
 
-            <p class="card-text small text-muted mb-2">
-                <i class="fas fa-industry me-1"></i> {{ $item->brand->name ?? 'Sem marca' }}<br>
-                <i class="fas fa-barcode me-1"></i> {{ $item->sku ?? 'Sem SKU' }}<br>
-                <i class="fas fa-dollar-sign me-1"></i>
-                {{ isset($item->price) ? currency_format($item->price) : 'Não informado' }}<br>
-
-                <x-stock-badge :stock="$item->stock" />
-            </p>
-
-            <div class="mt-auto d-flex flex-column">
-                <a href="{{ route('produto.show', $item->id) }}" class="btn btn-sm btn-info mb-2">
-                    <i class="fas fa-eye me-1"></i> Ver Detalhes
-                </a>
-
-                @auth
-                    @if (in_array(auth()->user()->user_type, [0, 1, 2]))
-                        <x-product-buy-now :item="$item" />
-                    @endif
-                @else
-                    <a href="#" class="btn btn-sm btn-warning mt-2" data-bs-toggle="modal"
-                        data-bs-target="#loginModal">
-                        <i class="fas fa-sign-in-alt me-1"></i> Login para Favoritar
-                    </a>
-                @endauth
+                {{-- Preço: Bold e Direto --}}
+                <div class="jw-price fw-bold">
+                    {{ isset($item->price) ? number_format($item->price, 2, ',', '.') : '0,00' }} USD
+                </div>
             </div>
         </div>
-    </div>
+    </a>
 </div>
+
+<style>
+    /* Fundo cinza claro idêntico à imagem enviada */
+    .jw-product-card {
+        background-color: #f2f2f2 !important; 
+        transition: opacity 0.3s ease;
+    }
+
+    .jw-product-card:hover {
+        opacity: 0.9;
+    }
+
+    .jw-img-container {
+        aspect-ratio: 4 / 5; /* Proporção vertical elegante */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .jw-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Ou 'contain' se as bolsas tiverem muita margem branca */
+    }
+
+    /* Tipografia JW PEI */
+    .jw-brand {
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: #000;
+    }
+
+    .jw-product-name {
+        font-size: 0.8rem;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .jw-price {
+        font-size: 0.85rem;
+        color: #000;
+    }
+
+    /* Botão de favorito transparente */
+    .btn-favorite-guest {
+        background: transparent;
+        border: none;
+        color: #000;
+        padding: 0;
+        transition: transform 0.2s ease;
+    }
+
+    .btn-favorite-guest:hover {
+        transform: scale(1.1);
+    }
+
+    /* Ajuste para o grid colado da imagem */
+    .g-1 {
+        padding-right: 2px !important;
+        padding-left: 2px !important;
+    }
+</style>

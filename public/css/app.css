@@ -515,3 +515,113 @@ body {
 .z-index-button{
     z-index: 9999;
 }
+
+/* Estilos Base do Painel Admin */
+.sax-admin-layout {
+    background-color: #f4f7f6; /* Cinza azulado muito leve para descanso visual */
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.sax-admin-title {
+    font-size: 1.25rem;
+    color: #1a1a1a;
+}
+
+.letter-spacing-2 { letter-spacing: 2px; }
+.letter-spacing-1 { letter-spacing: 1px; }
+.x-small { font-size: 0.7rem; font-weight: 600; }
+
+/* Menu Lateral */
+.sax-sidebar-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 10px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Card Principal de Conteúdo */
+.sax-main-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.sax-card-header {
+    background: #fff;
+    padding: 20px 25px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.header-indicator {
+    width: 4px;
+    height: 18px;
+    background-color: #000;
+    border-radius: 10px;
+}
+
+.sax-card-body {
+    padding: 30px;
+}
+
+/* Botão Mobile */
+.sax-btn-mobile {
+    background: #000;
+    color: #fff;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+}
+
+.sax-btn-mobile:hover { background: #333; }
+
+/* Botão Voltar ao Topo Premium */
+.sax-back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: #000;
+    color: #fff;
+    border-radius: 50%;
+    display: none; /* Controlado via JS */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sax-back-to-top:hover {
+    background-color: #333;
+    transform: scale(1.1);
+}
+
+/* Ajustes de Tabela e Formulários no Admin */
+.table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.table tr {
+    background: #fff;
+    transition: 0.2s;
+}
+
+@media (max-width: 768px) {
+    .sax-admin-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px;
+    }
+    
+    .sax-main-card {
+        border-radius: 0;
+        margin: 0 -15px; /* Sangria mobile */
+    }
+}

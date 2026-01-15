@@ -31,40 +31,55 @@
     {{-- Header --}}
     @include('components.header')
 
-    <main class="py-4">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-3 px-3">
-                <h2 class="fw-bold">Painel Administrativo</h2>
-                <button class="btn-menu-mobile d-md-none" id="openDrawer">
-                    <i class="fa fa-bars"></i> Menu
+<main class="sax-admin-layout py-4">
+    <div class="container-fluid px-md-5">
+        {{-- Cabeçalho do Painel --}}
+        <div class="sax-admin-header d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold sax-admin-title m-0 text-uppercase letter-spacing-2">Dashboard Admin</h2>
+                <span class="text-muted x-small">Sistema de Gerenciamento Interno</span>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <a href="{{ route('home') }}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                    <i class="fa fa-external-link-alt me-1"></i> Ver Site
+                </a>
+                <button class="sax-btn-mobile d-md-none" id="openDrawer">
+                    <i class="fa fa-bars"></i>
                 </button>
             </div>
+        </div>
 
-            <div class="row">
-                {{-- Menu Desktop --}}
-                <div class="col-md-3 d-none d-md-block admin-sidebar">
+        <div class="row g-4">
+            {{-- Menu Lateral (Desktop) --}}
+            <aside class="col-md-3 d-none d-md-block">
+                <div class="sax-sidebar-card shadow-sm">
                     @include('admin.menu-lateral')
                 </div>
+            </aside>
 
-                {{-- Conteúdo principal --}}
-                <div class="col-md-9 px-3">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-dark text-white">
-                            <strong>Quadro Principal</strong>
+            {{-- Área de Conteúdo --}}
+            <main class="col-md-9">
+                <div class="sax-main-card shadow-sm border-0">
+                    <div class="sax-card-header d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="header-indicator me-3"></div>
+                            <strong class="text-uppercase small letter-spacing-1">Quadro de Trabalho</strong>
                         </div>
-                        <div class="card-body">
-                            @yield('content')
-                        </div>
+                        <i class="fas fa-thumbtack text-muted opacity-50"></i>
+                    </div>
+                    <div class="sax-card-body">
+                        @yield('content')
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
-    </main>
+    </div>
+</main>
 
-    <!-- Botão Voltar ao Topo -->
-    <button id="backToTop" class="btn position-fixed" style="bottom:30px; right:1em; display:none; width:3em;">
-        <i class="fa fa-arrow-up"></i>
-    </button>
+<button id="backToTop" class="sax-back-to-top shadow-lg border-0" title="Voltar ao topo">
+    <i class="fa fa-chevron-up"></i>
+</button>
 
     {{-- Drawer Mobile --}}
     <div class="drawer-overlay" id="drawerOverlay"></div>

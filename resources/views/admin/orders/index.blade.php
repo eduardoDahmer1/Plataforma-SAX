@@ -1,111 +1,175 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container mt-4">
-    <h2 class="mb-3">Pedidos dos Clientes</h2>
+<div class="container-fluid py-4 px-md-5">
+    {{-- Header Minimalista --}}
+    <div class="d-flex justify-content-between align-items-end mb-5">
+        <div>
+            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Órdenes</h1>
+            <p class="small text-secondary mb-0">{{ $orders->total() }} transacciones registradas</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-dark border-0 rounded-0 text-uppercase fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                <i class="fa fa-sliders-h me-2"></i> Filtros
+            </button>
+        </div>
+    </div>
 
-    <!-- Filtros -->
-    <form method="GET" action="{{ route('admin.orders.index') }}" class="mb-4">
-        <div class="row g-2">
-            <div class="col-12 col-md-2">
-                <select name="payment_method" class="form-select">
-                    <option value="">Todos os Pagamentos</option>
+    {{-- Filtros em Colapso (Para manter o visual limpo) --}}
+    <div class="collapse {{ request()->anyFilled(['payment_method', 'status', 'user_name']) ? 'show' : '' }} mb-5" id="filterCollapse">
+        <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 border-bottom pb-4">
+            <div class="col-md-2">
+                <select name="payment_method" class="form-select border-0 bg-light-subtle small rounded-0">
+                    <option value="">Método de Pago</option>
                     <option value="bancard" {{ request('payment_method') == 'bancard' ? 'selected' : '' }}>Bancard</option>
                     <option value="deposito" {{ request('payment_method') == 'deposito' ? 'selected' : '' }}>Depósito</option>
                     <option value="whatsapp" {{ request('payment_method') == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
                 </select>
             </div>
-            <div class="col-12 col-md-2">
-                <select name="status" class="form-select">
-                    <option value="">Todos os Status</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendente</option>
-                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Processando</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Concluído</option>
-                    <option value="canceled" {{ request('status') == 'canceled' ? 'selected' : '' }}>Cancelado</option>
+            <div class="col-md-2">
+                <select name="status" class="form-select border-0 bg-light-subtle small rounded-0">
+                    <option value="">Estado</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendiente</option>
+                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Procesando</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completado</option>
                 </select>
             </div>
-            <div class="col-12 col-md-2">
-                <input type="text" name="user_name" class="form-control" placeholder="Nome do Cliente" value="{{ request('user_name') }}">
+            <div class="col-md-3">
+                <input type="text" name="user_name" class="form-control border-0 bg-light-subtle small rounded-0" placeholder="Nombre del cliente" value="{{ request('user_name') }}">
             </div>
-            <div class="col-12 col-md-2">
-                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-dark btn-sm px-4 rounded-0">Aplicar</button>
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-light btn-sm px-4 rounded-0 border">Limpiar</a>
             </div>
-            <div class="col-12 col-md-2">
-                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-            </div>
-            <div class="col-12 col-md-2 d-flex gap-2 flex-wrap">
-                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
-                    <i class="fa fa-filter me-1"></i> Filtrar
-                </button>
-                <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary btn-sm flex-grow-1">
-                    <i class="fa fa-refresh me-1"></i> Limpar
-                </a>
-            </div>
-        </div>
-    </form>
-
-    {{-- Lista de pedidos --}}
-    <div class="row g-3">
-        @forelse($orders as $order)
-        @php
-            $total = $order->items->sum(fn($item) => $item->price * $item->quantity);
-            $statusColors = ['pending'=>'warning','processing'=>'info','completed'=>'success','canceled'=>'danger'];
-        @endphp
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="row align-items-center gy-2">
-                        <div class="col-6 col-md-1 fw-bold">#{{ $order->id }}</div>
-                        <div class="col-6 col-md-3 text-truncate">{{ $order->user->name ?? 'Cliente não encontrado' }}</div>
-                        <div class="col-6 col-md-2">{{ $order->created_at->format('d/m/Y H:i') }}</div>
-                        <div class="col-6 col-md-1">
-                            <span class="badge bg-{{ $statusColors[$order->status] ?? 'secondary' }}">
-                                {{ ucfirst($order->status) }}
-                            </span>
-                        </div>
-                        <div class="col-6 col-md-2">
-                            @switch($order->payment_method)
-                                @case('bancard') <span class="badge bg-success"><i class="fa fa-credit-card me-1"></i>Bancard</span> @break
-                                @case('deposito') <span class="badge bg-info text-dark"><i class="fa fa-university me-1"></i>Depósito</span> @break
-                                @case('whatsapp') <span class="badge bg-warning text-dark"><i class="fa fa-whatsapp me-1"></i>WhatsApp</span> @break
-                                @default <span class="badge bg-secondary">Não informado</span>
-                            @endswitch
-                        </div>
-                        <div class="col-6 col-md-2 fw-bold">R$ {{ number_format($total, 2, ',', '.') }}</div>
-                        <div class="col-12 col-md-1 d-flex gap-1 flex-wrap">
-                            <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-primary w-100">
-                                <i class="fa fa-eye me-1"></i> Ver
-                            </a>
-                            <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" class="w-100 m-0" onsubmit="return confirm('Tem certeza que deseja excluir este pedido?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger w-100">
-                                    <i class="fa fa-trash me-1"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @empty
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                Nenhum pedido encontrado.
-            </div>
-        </div>
-        @endforelse
+        </form>
     </div>
 
-    {{-- Paginação --}}
-    <div class="d-flex justify-content-center mt-4">
-        {{ $orders->links() }}
+    {{-- Tabela Estilo "Lista Limpa" --}}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle border-top">
+            <thead class="bg-white">
+                <tr class="text-uppercase x-small tracking-wider text-secondary">
+                    <th class="py-3 border-0 fw-bold" style="width: 80px;">ID</th>
+                    <th class="py-3 border-0 fw-bold">Cliente</th>
+                    <th class="py-3 border-0 fw-bold">Fecha</th>
+                    <th class="py-3 border-0 fw-bold">Estado</th>
+                    <th class="py-3 border-0 fw-bold">Método</th>
+                    <th class="py-3 border-0 fw-bold text-end">Monto Total</th>
+                    <th class="py-3 border-0 fw-bold text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                @forelse($orders as $order)
+                @php
+                    $total = $order->items->sum(fn($item) => $item->price * $item->quantity);
+                @endphp
+                <tr class="border-bottom clickable-row">
+                    <td class="py-4 text-dark fw-medium">#{{ $order->id }}</td>
+                    <td class="py-4">
+                        <span class="d-block fw-bold text-dark">{{ $order->user->name ?? 'Anónimo' }}</span>
+                        <span class="x-small text-muted text-lowercase">{{ $order->user->email ?? '' }}</span>
+                    </td>
+                    <td class="py-4 text-secondary small">
+                        {{ $order->created_at->format('d/m/Y') }}
+                    </td>
+                    <td class="py-4">
+                        <span class="status-dot {{ $order->status }}"></span>
+                        <span class="x-small text-uppercase fw-bold text-secondary">{{ $order->status }}</span>
+                    </td>
+                    <td class="py-4 text-secondary small">
+                        {{ ucfirst($order->payment_method) }}
+                    </td>
+                    <td class="py-4 text-end fw-bold text-dark">
+                        {{ number_format($total, 0, '.', '.') }} <span class="x-small fw-normal">Gs.</span>
+                    </td>
+                    <td class="py-4 text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-link text-dark p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fa fa-ellipsis-h"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border shadow-sm rounded-0">
+                                <li><a class="dropdown-item small" href="{{ route('admin.orders.show', $order->id) }}">Ver detalles</a></li>
+                                <li>
+                                    <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" onsubmit="return confirm('¿Eliminar?');">
+                                        @csrf @method('DELETE')
+                                        <button class="dropdown-item small text-danger">Eliminar registro</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted small">No hay órdenes para mostrar.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="x-small text-muted text-uppercase tracking-wider">
+            Página {{ $orders->currentPage() }} de {{ $orders->lastPage() }}
+        </div>
+        {{ $orders->links('pagination::bootstrap-4') }}
     </div>
 </div>
-
-<style>
-.card { border-radius: 12px; }
-.card-body { font-size: 0.95rem; line-height: 1.5; }
-.fw-bold { font-weight: 600; }
-</style>
 @endsection
+<style>
+    /* Tipografia e Espaçamento */
+.tracking-wider { letter-spacing: 0.1em; }
+.x-small { font-size: 0.7rem; }
+.fs-7 { font-size: 0.8rem; }
+.fw-bold { font-weight: 700; }
+
+/* Status Dot (Substitui os badges grandes) */
+.status-dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    background-color: #dee2e6; /* Default */
+}
+.status-dot.pending { background-color: #f59e0b; }
+.status-dot.processing { background-color: #3b82f6; }
+.status-dot.completed { background-color: #10b981; }
+.status-dot.canceled { background-color: #ef4444; }
+
+/* Tabela e Inputs */
+.table td {
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.clickable-row:hover {
+    background-color: #fafafa !important;
+}
+
+.form-select, .form-control {
+    box-shadow: none !important;
+    border: 1px solid transparent;
+}
+
+.form-select:focus, .form-control:focus {
+    background-color: #fff;
+    border-color: #000;
+}
+
+/* Paginação Customizada Minimal */
+.pagination {
+    --bs-pagination-border-radius: 0;
+    --bs-pagination-color: #000;
+    --bs-pagination-active-bg: #000;
+    --bs-pagination-active-border-color: #000;
+}
+
+.dropdown-item:active {
+    background-color: #000;
+}
+
+.dropdown-menu {
+    --bs-dropdown-min-width: 160px;
+    padding: 8px 0;
+}
+</style>

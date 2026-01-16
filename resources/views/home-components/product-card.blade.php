@@ -1,77 +1,118 @@
-{{-- Componente de Card de Produto - Layout Original --}}
 @php 
-    // Recupera a quantidade atual no carrinho para validar estoque
     $currentQty = $cartItems[$item->id] ?? 0; 
+    $isOutOfStock = $item->stock <= 0;
 @endphp
 
-<div class="card h-100 shadow-sm border-0 position-relative">
-    {{-- Imagem do Produto --}}
-    <img src="{{ $item->photo_url }}" class="card-img-top"
-        alt="{{ $item->name ?? ($item->external_name ?? 'Sem nome') }}"
-        style="max-height:150px; object-fit:scale-down;">
-
-    {{-- Botões Ocultos (Favoritos e Adicionar ao Carrinho via JS/Externo) --}}
-    @auth
-        <form action="{{ route('user.preferences.toggle') }}" method="POST"
-            class="card-favorite-form d-none">
-            @csrf
-            <input type="hidden" name="product_id" value="{{ $item->id }}">
-            <button type="submit" class="btn btn-outline-danger"><i class="fas fa-heart"></i></button>
-        </form>
-
-        <form action="{{ route('cart.add') }}" method="POST" class="card-add-form d-none">
-            @csrf
-            <input type="hidden" name="product_id" value="{{ $item->id }}">
-            <button type="submit" class="btn btn-success"
-                {{ $currentQty >= $item->stock ? 'disabled' : '' }}>
-                <i class="fas fa-cart-plus"></i>
-            </button>
-        </form>
-    @endauth
-
-    <div class="card-body p-2 d-flex flex-column">
-        {{-- Título --}}
-        <h6 class="card-title mb-2">
-            <a href="{{ route('produto.show', $item->id) }}"
-                class="text-decoration-none">{{ $item->name ?? ($item->external_name ?? 'Sem nome') }}</a>
-        </h6>
-
-        {{-- Informações Técnicas e Preço --}}
-        <p class="small text-muted mb-2">
-            {{ $item->brand->name ?? 'Sem marca' }}<br>
-            SKU: {{ $item->sku ?? 'N/A' }}<br>
-            {{ isset($item->price) ? currency_format((float) $item->price) : 'Não informado' }}
-        </p>
-
-        {{-- Status de Estoque --}}
-        @if ($item->stock > 0)
-            <span class="badge bg-success"><i
-                    class="fas fa-box me-1"></i>{{ $item->stock }} em estoque</span>
-        @else
-            <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Sem
-                estoque</span>
-        @endif
-
-        {{-- Ações Inferiores --}}
-        <div class="mt-auto d-flex flex-column">
-            <a href="{{ route('produto.show', $item->id) }}"
-                class="btn btn-sm btn-info mt-2 mb-2">
-                <i class="fas fa-eye me-1"></i> Ver Detalhes
-            </a>
+<div class="sax-grid-item">
+    <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none text-dark">
+        <div class="card h-100 border-0 rounded-0 sax-product-card {{ $isOutOfStock ? 'sax-out-of-stock' : '' }}">
             
-            @auth
-                @if (in_array(auth()->user()->user_type, [0, 1, 2]))
-                    <form action="{{ route('cart.addAndCheckout') }}" method="POST"
-                        class="d-flex">
-                        @csrf
-                        <input type="hidden" name="product_id"
-                            value="{{ $item->id }}">
-                        <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
-                            <i class="fas fa-bolt me-1"></i> Comprar Agora
-                        </button>
-                    </form>
+            <div class="sax-img-container position-relative">
+                {{-- Prioriza photo_url, se vazio usa placeholder --}}
+                <img src="{{ $item->photo_url ?? 'https://placehold.co/400x533/f5f5f5/999?text=SAX' }}" 
+                     class="card-img-top img-fluid rounded-0" 
+                     alt="{{ $item->name ?? $item->external_name }}"
+                     onerror="this.src='https://placehold.co/400x533/f5f5f5/999?text=No+Image'">
+
+                @if($isOutOfStock)
+                    <div class="sax-stock-overlay">AGOTADO</div>
                 @endif
-            @endauth
+
+                <div class="position-absolute top-0 end-0 p-2">
+                    @auth
+                        <x-product-favorite-button :item="$item" />
+                    @else
+                        <button class="sax-btn-favorite-guest" data-bs-toggle="modal" data-bs-target="#loginModal" onclick="event.preventDefault();">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    @endauth
+                </div>
+            </div>
+
+            <div class="card-body px-2 py-3">
+                <div class="sax-brand fw-bold text-uppercase mb-1">
+                    {{ $item->brand->name ?? 'SAX EXCLUSIVE' }}
+                </div>
+
+                <div class="sax-product-name text-muted mb-2">
+                    {{ $item->name ?? $item->external_name }}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="sax-price fw-bold">
+                        {{ isset($item->price) ? number_format($item->price, 2, ',', '.') : '0,00' }} USD
+                    </div>
+                    <div class="sax-sku d-none d-lg-block">
+                        SKU: {{ $item->sku ?? 'N/A' }}
+                    </div>
+                </div>
+
+                @auth
+                    @if (!$isOutOfStock && in_array(auth()->user()->user_type, [0, 1, 2]))
+                        <form action="{{ route('cart.addAndCheckout') }}" method="POST" class="mt-3 sax-quick-buy">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $item->id }}">
+                            <button type="submit" class="btn btn-dark btn-sm w-100 rounded-0 py-2">
+                                COMPRAR AGORA
+                            </button>
+                        </form>
+                    @endif
+                @endauth
+            </div>
         </div>
-    </div>
+    </a>
 </div>
+
+<style>
+    /* Grade Flexível e Firme */
+    .sax-product-grid {
+        display: grid;
+        gap: 10px; 
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 768px) { .sax-product-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 992px) { .sax-product-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 1400px) { .sax-product-grid { grid-template-columns: repeat(5, 1fr); } }
+
+    /* Estilo do Card */
+    .sax-product-card {
+        background-color: #f5f5f5 !important;
+        transition: transform 0.2s ease;
+    }
+    
+    .sax-img-container {
+        aspect-ratio: 3 / 4;
+        background-color: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sax-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Não corta o produto */
+        padding: 15px;
+    }
+
+    .sax-product-name {
+        font-size: 0.75rem;
+        height: 2.5em; /* Garante que todos os nomes ocupem o mesmo espaço */
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .sax-quick-buy {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .sax-product-card:hover .sax-quick-buy { opacity: 1; }
+    
+    @media (max-width: 991px) { .sax-quick-buy { opacity: 1; } }
+</style>

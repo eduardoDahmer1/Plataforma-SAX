@@ -340,15 +340,7 @@
                                                 @php
                                                     $highlights = [
                                                         'destaque' => 'Destaques',
-                                                        'mais_vendidos' => 'Mais Vendidos',
-                                                        'melhores_avaliacoes' => 'Melhores Avaliações',
-                                                        'super_desconto' => 'Super Desconto',
-                                                        'famosos' => 'Famosos',
                                                         'lancamentos' => 'Lançamentos',
-                                                        'tendencias' => 'Tendências',
-                                                        'promocoes' => 'Promoções',
-                                                        'ofertas_relampago' => 'Ofertas Relâmpago',
-                                                        'navbar' => 'Navbar',
                                                     ];
                                                 @endphp
                                                 <div class="row">

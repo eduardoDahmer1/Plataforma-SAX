@@ -1,126 +1,177 @@
 @extends('layout.layout')
 
 @section('content')
-<style>
-    .blog-header {
-        animation: fadeIn 0.6s ease-in-out;
-    }
-
-    .blog-title {
-        font-size: 2.6rem;
-        font-weight: 800;
-        letter-spacing: -1px;
-    }
-
-    .blog-subtitle {
-        font-size: 1.15rem;
-    }
-
-    .blog-image img {
-        transition: transform .4s ease, box-shadow .4s ease;
-    }
-
-    .blog-image img:hover {
-        transform: scale(1.02);
-        box-shadow: 0px 10px 28px rgba(0,0,0,0.25);
-    }
-
-    article {
-        background: #fff;
-        border-radius: 18px;
-        padding: 35px;
-        box-shadow: 0px 10px 25px rgba(0,0,0,0.06);
-        animation: fadeUp .6s ease;
-    }
-
-    @keyframes fadeIn {
-        from {opacity: 0; transform: translateY(-10px);}
-        to {opacity: 1; transform: translateY(0);}
-    }
-
-    @keyframes fadeUp {
-        from {opacity: 0; transform: translateY(15px);}
-        to {opacity: 1; transform: translateY(0);}
-    }
-
-    .back-btn {
-        transition: background .3s, color .3s, transform .2s;
-    }
-
-    .back-btn:hover {
-        transform: translateX(-3px);
-    }
-
-</style>
-
-
-<div class="container py-5">
-
-    {{-- Voltar --}}
-    <a href="{{ route('blogs.index') }}" class="btn btn-outline-secondary mb-4 back-btn">
-        <i class="fas fa-arrow-left me-1"></i> Ver Blogs
-    </a>
-
-    {{-- Cabeçalho --}}
-    <div class="mb-5 text-center blog-header">
-        <h1 class="blog-title mb-2">{{ $blog->title }}</h1>
-
-        @if($blog->subtitle)
-            <h5 class="blog-subtitle text-muted mb-3">
-                {{ $blog->subtitle }}
-            </h5>
-        @endif
-
-        @if($blog->category)
-            <span class="badge bg-gradient-primary px-3 py-2" 
-                  style="background: linear-gradient(45deg, #007bff, #00a2ff); border-radius: 12px;">
-                <i class="fas fa-folder me-1"></i> {{ $blog->category->name }}
-            </span>
-        @endif
-    </div>
-
-    {{-- Imagem --}}
-    <div class="text-center mb-5 blog-image">
-        <div class="ratio ratio-16x9 mx-auto" style="max-width: 900px;">
-            @if($blog->image && Storage::disk('public')->exists($blog->image))
-                <img src="{{ Storage::url($blog->image) }}" alt="{{ $blog->title }}" 
-                     class="img-fluid rounded-4 object-fit-coverr">
-            @elseif(Storage::disk('public')->exists('uploads/noimage.webp'))
-                <img src="{{ asset('storage/uploads/noimage.webp') }}" 
-                     alt="Imagem padrão" class="img-fluid rounded-4 object-fit-coverr">
-            @else
-                <img src="{{ asset('storage/uploads/noimage.webp') }}" 
-                     alt="Imagem padrão" class="img-fluid rounded-4 object-fit-coverr">
-            @endif
-        </div>
-    </div>
-
-    {{-- Conteúdo --}}
-    <article class="mb-5">
-        <div class="fs-5 lh-lg">
-            {!! $blog->content !!}
+<div class="sax-article-wrapper py-5">
+    <div class="container">
+        
+        {{-- Navegação Superior Discreta --}}
+        <div class="mb-5">
+            <a href="{{ route('blogs.index') }}" class="sax-back-link">
+                <i class="fas fa-long-arrow-alt-left me-2"></i> VOLVER A #SAXNEWS
+            </a>
         </div>
 
-        {{-- Autor e data --}}
-        <div class="mt-4 text-end text-muted">
-            @if($blog->author)
-                <small><i class="fas fa-user-edit me-1"></i> {{ $blog->author }}</small><br>
+        {{-- Cabeçalho do Artigo --}}
+        <header class="text-center mb-5 blog-header-sax">
+            @if($blog->category)
+                <div class="sax-category-eyebrow mb-3">
+                    {{ strtoupper($blog->category->name) }}
+                </div>
             @endif
 
-            @if($blog->published_at)
-                <small><i class="fas fa-calendar me-1"></i> 
-                    {{ \Carbon\Carbon::parse($blog->published_at)->format('d/m/Y') }}
-                </small>
+            <h1 class="sax-article-title mb-4">{{ $blog->title }}</h1>
+
+            @if($blog->subtitle)
+                <p class="sax-article-subtitle text-muted mx-auto">
+                    {{ $blog->subtitle }}
+                </p>
             @endif
+
+            <div class="sax-meta-info mt-4">
+                @if($blog->author)
+                    <span class="me-3">POR <strong>{{ strtoupper($blog->author) }}</strong></span>
+                @endif
+                @if($blog->published_at)
+                    <span>{{ \Carbon\Carbon::parse($blog->published_at)->translatedFormat('d \d\e F, Y') }}</span>
+                @endif
+            </div>
+        </header>
+
+        {{-- Imagem de Capa Imponente --}}
+        <div class="sax-main-image-container mb-5">
+            @php
+                $imagePath = ($blog->image && Storage::disk('public')->exists($blog->image))
+                    ? Storage::url($blog->image)
+                    : asset('storage/uploads/noimage.webp');
+            @endphp
+            <img src="{{ $imagePath }}" alt="{{ $blog->title }}" class="img-fluid w-100">
         </div>
-    </article>
 
-    {{-- Voltar --}}
-    <div class="text-center">
-        <a href="{{ route('blogs.index') }}" class="btn btn-outline-secondary back-btn">
-            <i class="fas fa-arrow-left me-1"></i> Voltar
-        </a>
+        {{-- Corpo do Texto --}}
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <article class="sax-article-body">
+                    <div class="content-rich-text">
+                        {!! $blog->content !!}
+                    </div>
+                </article>
+
+                {{-- Rodapé do Artigo --}}
+                <div class="sax-article-footer border-top pt-4 mt-5 d-flex justify-content-between align-items-center">
+                    <div class="share-links">
+                        <span class="small fw-bold me-3">COMPARTIR:</span>
+                        <a href="#" class="me-2 text-dark"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="me-2 text-dark"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-dark"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                    <a href="{{ route('blogs.index') }}" class="sax-btn-dark">VOLVER</a>
+                </div>
+            </div>
+        </div>
     </div>
-
 </div>
 @endsection
+
+<style>
+    /* Container Principal */
+.sax-article-wrapper {
+    background-color: #fff;
+    color: #000;
+}
+
+/* Link Voltar */
+.sax-back-link {
+    color: #999;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    transition: color 0.3s;
+}
+.sax-back-link:hover {
+    color: #000;
+}
+
+/* Tipografia de Título */
+.sax-article-title {
+    font-family: 'Playfair Display', serif; /* Ou Helvetica Neue Bold */
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sax-article-subtitle {
+    font-size: 1.25rem;
+    max-width: 700px;
+    line-height: 1.6;
+}
+
+.sax-category-eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #b2945e; /* Dourado SAX */
+}
+
+.sax-meta-info {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #666;
+}
+
+/* Imagem Central */
+.sax-main-image-container img {
+    max-height: 600px;
+    object-fit: cover;
+    border-radius: 0; /* Luxo usa linhas retas */
+}
+
+/* Corpo do Artigo */
+.sax-article-body {
+    font-family: 'Georgia', serif; /* Estilo editorial para leitura longa */
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: #222;
+}
+
+/* Estilização para imagens ou elementos dentro do content do banco */
+.content-rich-text img {
+    max-width: 100%;
+    height: auto;
+    margin: 2rem 0;
+}
+
+.content-rich-text h2, .content-rich-text h3 {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    margin-top: 2rem;
+}
+
+/* Botão Estilo SAX */
+.sax-btn-dark {
+    background: #000;
+    color: #fff;
+    padding: 10px 30px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: opacity 0.3s;
+}
+.sax-btn-dark:hover {
+    color: #fff;
+    opacity: 0.8;
+}
+
+/* Responsividade */
+@media (max-width: 991px) {
+    .sax-article-title {
+        font-size: 2.2rem;
+        letter-spacing: -1px;
+    }
+}
+</style>

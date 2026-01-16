@@ -88,7 +88,7 @@
                     @if (Auth::check())
                         <div class="dropdown">
                             <a href="#" class="dropdown-toggle text-uppercase fw-bold" data-bs-toggle="dropdown">
-                                {{ Auth::user()->name }}
+                                {{ explode(' ', auth()->user()->name)[0] }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 @if (auth()->user()->user_type == 1)
@@ -141,7 +141,7 @@
                 <li class="list-inline-item"><a href="#" class="text-bridal">BRIDAL</a></li>
                 <li class="list-inline-item"><a href="#" class="text-palace">PALACE</a></li>
                 <li class="list-inline-item"><a href="#">CAFÉ & BISTRÓ</a></li>
-                <li class="list-inline-item"><a href="#" class="text-muted">#SAXNEWS</a></li>
+                <li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">#SAXNEWS</a></li>
             </ul>
         </div>
     </nav>

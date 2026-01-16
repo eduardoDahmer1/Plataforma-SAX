@@ -625,3 +625,7 @@ body {
         margin: 0 -15px; /* Sangria mobile */
     }
 }
+.swiper-horizontal>.swiper-pagination-bullets, .swiper-pagination-bullets.swiper-pagination-horizontal,
+.swiper-horizontal>.swiper-pagination-bullets, .swiper-pagination-bullets.swiper-pagination-horizontal{
+    display:none !important;
+}

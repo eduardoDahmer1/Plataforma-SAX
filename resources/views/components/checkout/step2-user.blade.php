@@ -1,23 +1,32 @@
-{{-- STEP 2: DADOS PESSOAIS --}}
 <div class="step" id="step2">
-    <div class="checkout-box">
-        <h4><i class="fa fa-user"></i> Dados Pessoais</h4>
-        <label>Nome Completo *</label>
-        <input type="text" name="name" class="form-control" value="{{ old('name') ?? auth()->user()->name }}">
+    <div class="sax-checkout-box">
+        <h4 class="sax-step-title"><span class="step-number">02</span> Dados Pessoais</h4>
+        
+        <div class="row g-4">
+            <div class="col-md-6 sax-input-group">
+                <label>Nome Completo *</label>
+                <input type="text" name="name" class="sax-form-control" value="{{ old('name') ?? auth()->user()->name }}">
+            </div>
 
-        <label>Documento *</label>
-        <input type="text" name="document" class="form-control"
-            value="{{ old('document') ?? auth()->user()->document }}">
+            <div class="col-md-6 sax-input-group">
+                <label>Documento (RUC/CI/CPF) *</label>
+                <input type="text" name="document" class="sax-form-control" value="{{ old('document') ?? auth()->user()->document }}">
+            </div>
 
-        <label>Email *</label>
-        <input type="email" name="email" class="form-control" value="{{ old('email') ?? auth()->user()->email }}">
+            <div class="col-md-6 sax-input-group">
+                <label>Email *</label>
+                <input type="email" name="email" class="sax-form-control" value="{{ old('email') ?? auth()->user()->email }}">
+            </div>
 
-        <label>Telefone *</label>
-        <input type="text" name="phone" class="form-control"
-            value="{{ old('phone') ?? auth()->user()->phone_number }}">
+            <div class="col-md-6 sax-input-group">
+                <label>Telefone *</label>
+                <input type="text" name="phone" class="sax-form-control" value="{{ old('phone') ?? auth()->user()->phone_number }}">
+            </div>
+        </div>
     </div>
-    <button type="button" class="btn btn-secondary" onclick="prevStep(1)"><i class="fa fa-arrow-left"></i>
-        Voltar</button>
-    <button type="button" class="btn btn-primary" onclick="nextStep(2)"><i class="fa fa-arrow-right"></i>
-        Seguir</button>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="sax-btn-prev" onclick="prevStep(1)">Voltar</button>
+        <button type="button" class="sax-btn-next" onclick="nextStep(2)">Continuar Envio</button>
+    </div>
 </div>

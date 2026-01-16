@@ -1,36 +1,41 @@
-{{-- STEP 1: CARRINHO --}}
 <div class="step active" id="step1">
-    <div class="checkout-box">
-        <h4><i class="fa fa-shopping-cart"></i> Itens no Carrinho</h4>
-        @php $totalCarrinho = 0; @endphp
-        @foreach ($cart as $item)
-            <div class="cart-item d-flex align-items-center gap-3 mb-3">
-                
-                {{-- Imagem do Produto --}}
-                <div>
-                    <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/80' }}" 
-                         alt="{{ $item->product->external_name }}" 
-                         class="img-thumbnail rounded" 
-                         style="width: 80px; height: 80px; object-fit: contain;">
-                </div>
+    <div class="sax-checkout-box">
+        <h4 class="sax-step-title"><span class="step-number">01</span> Itens no Carrinho</h4>
+        
+        <div class="sax-cart-list">
+            @php $totalCarrinho = 0; @endphp
+            @foreach ($cart as $item)
+                <div class="sax-cart-item d-flex align-items-center gap-4 py-3 border-bottom">
+                    <div class="sax-cart-img-wrapper">
+                        <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/100' }}" 
+                             alt="{{ $item->product->external_name }}" 
+                             class="img-fluid">
+                    </div>
 
-                {{-- Detalhes do Produto --}}
-                <div class="flex-grow-1">
-                    <p><strong>{{ $item->product->external_name ?? 'Produto' }}</strong></p>
-                    <p><i class="fa fa-dollar-sign"></i> {{ currency_format($item->product->price ?? 0) }}</p>
-                    <p><i class="fa fa-sort-numeric-up"></i> Quantidade: {{ $item->quantity }}</p>
-                    <p><i class="fa fa-calculator"></i> Total: {{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</p>
-                </div>
-            </div>
-            @php $totalCarrinho += ($item->product->price ?? 0) * $item->quantity; @endphp
-        @endforeach
+                    <div class="flex-grow-1">
+                        <span class="sax-item-brand">{{ $item->product->brand->name ?? 'SAX EXCLUSIVE' }}</span>
+                        <h5 class="sax-item-name">{{ $item->product->external_name ?? 'Produto' }}</h5>
+                        <div class="sax-item-meta">
+                            <span>Qtd: <strong>{{ $item->quantity }}</strong></span>
+                            <span class="ms-3">Preço: <strong>{{ currency_format($item->product->price ?? 0) }}</strong></span>
+                        </div>
+                    </div>
 
-        <div class="total-carrinho">
-            <h5>Total do Carrinho: {{ currency_format($totalCarrinho) }}</h5>
+                    <div class="text-end">
+                        <span class="sax-item-subtotal">{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</span>
+                    </div>
+                </div>
+                @php $totalCarrinho += ($item->product->price ?? 0) * $item->quantity; @endphp
+            @endforeach
         </div>
 
-        <button type="button" class="btn btn-primary mt-3" onclick="nextStep(1)">
-            <i class="fa fa-arrow-right"></i> Seguir
+        <div class="sax-total-section d-flex justify-content-between align-items-center mt-4">
+            <span class="total-label">Subtotal</span>
+            <span class="total-value">{{ currency_format($totalCarrinho) }}</span>
+        </div>
+
+        <button type="button" class="sax-btn-next mt-4" onclick="nextStep(1)">
+            Seguir para Identificação <i class="fa fa-chevron-right ms-2"></i>
         </button>
     </div>
 </div>

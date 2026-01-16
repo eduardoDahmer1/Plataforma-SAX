@@ -1,59 +1,72 @@
 {{-- STEP 4: PAGAMENTO --}}
 <div class="step" id="step4">
-    <div class="checkout-box text-center mb-4">
-        {{-- <h4><i class="fa fa-credit-card"></i> Escolha o Método de Pagamento</h4> --}}
+    {{-- Cálculo do Total dentro do componente --}}
+    @php 
+        $totalPedido = 0;
+        foreach ($cart as $item) {
+            $totalPedido += ($item->product->price ?? 0) * $item->quantity;
+        }
+    @endphp
 
-        <div class="d-flex justify-content-center gap-3 mt-3">
-            <button type="button" class="btn btn-outline-primary btn-lg" id="btn-deposito"
-                onclick="selectPayment('deposito')">
-                <i class="fa fa-university"></i> Depósito Bancário
+    <div class="sax-checkout-box text-center py-5">
+        <h5 class="mb-4 text-uppercase tracking-wider">Forma de Pagamento</h5>
+        <div class="d-flex justify-content-center gap-3">
+            <button type="button" class="sax-payment-method active" id="btn-deposito" onclick="selectPayment('deposito')">
+                <i class="fa fa-university mb-2 d-block"></i>
+                DEPÓSITO / TRANSFERÊNCIA
             </button>
-            {{-- <button type="button" class="btn btn-outline-success btn-lg" id="btn-bancard"
-                onclick="selectPayment('bancard')">
-                <i class="fa fa-credit-card"></i> Bancard
-            </button> --}}
         </div>
-        <p class="mt-1">Estamos finalizando a implementação do nosso novo sistema de pagamento. Quer pagar com cartão ou QR Code? Chame no WhatsApp que concluímos seu pedido rapidinho!</p>
+        <p class="sax-payment-notice mt-4">
+            Estamos finalizando a implementação do nosso novo sistema de pagamento. Quer pagar com cartão ou QR Code? Chame no WhatsApp que concluímos seu pedido rapidinho!
+        </p>
     </div>
 
     {{-- Campo oculto que guarda o método de pagamento --}}
     <input type="hidden" name="payment_method" id="payment_method" value="deposito">
 
-    {{-- Resumo do Pedido --}}
-    @php $totalPedido = 0; @endphp
-    <div class="checkout-box mt-4">
-        <h4><i class="fa fa-receipt"></i> Resumo do Pedido</h4>
-        @foreach ($cart as $item)
-            <div class="border-bottom py-2 d-flex align-items-center gap-3">
-
-                {{-- Imagem do Produto --}}
-                <div>
-                    <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/60' }}"
-                        alt="{{ $item->product->slug }}" class="img-thumbnail rounded"
-                        style="width: 60px; height: 60px; object-fit: contain;">
+    <div class="sax-checkout-box mt-4">
+        <h4 class="sax-step-title">Resumo Final</h4>
+        
+        {{-- Listagem de itens no resumo final --}}
+        <div class="sax-cart-list mb-4">
+            @foreach ($cart as $item)
+                <div class="d-flex align-items-center gap-3 mb-2 border-bottom pb-2">
+                    <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/60' }}" 
+                         style="width: 50px; height: 50px; object-fit: contain; background: #f5f5f5;">
+                    <div class="flex-grow-1">
+                        <small class="d-block fw-bold">{{ $item->product->external_name ?? 'Produto' }}</small>
+                        <small class="text-muted">{{ $item->quantity }}x {{ currency_format($item->product->price ?? 0) }}</small>
+                    </div>
+                    <div>
+                        <small class="fw-bold">{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</small>
+                    </div>
                 </div>
+            @endforeach
+        </div>
 
-                {{-- Detalhes do Produto --}}
-                <div class="flex-grow-1">
-                    <p><strong>{{ $item->product->slug ?? 'Produto' }}</strong></p>
-                    <p><i class="fa fa-dollar-sign"></i> Preço: {{ currency_format($item->product->price ?? 0) }}</p>
-                    <p><i class="fa fa-sort-numeric-up"></i> Quantidade: {{ $item->quantity }}</p>
-                    <p><i class="fa fa-calculator"></i> Total:
-                        {{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</p>
-                </div>
+        <div class="sax-summary-total">
+            <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal</span>
+                <span>{{ currency_format($totalPedido) }}</span>
             </div>
-            @php $totalPedido += ($item->product->price ?? 0) * $item->quantity; @endphp
-        @endforeach
-        <hr>
-        <h5><i class="fa fa-money-bill-wave"></i> Total do Pedido: {{ currency_format($totalPedido) }}</h5>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Envio</span>
+                <span class="text-success fw-bold">A COMBINAR</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center total-row">
+                <strong>TOTAL</strong>
+                <strong style="font-size: 1.5rem;">{{ currency_format($totalPedido) }}</strong>
+            </div>
+        </div>
     </div>
 
-    <div class="d-flex justify-content-between mt-3">
-        <button type="button" class="btn btn-secondary" onclick="prevStep(3)">
-            <i class="fa fa-arrow-left"></i> Voltar
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="sax-btn-prev" onclick="prevStep(3)">
+            <i class="fa fa-arrow-left me-2"></i> Voltar
         </button>
-        <button type="submit" class="btn btn-success" id="checkoutSubmit">
-            <i class="fa fa-check"></i> Finalizar Compra
+        <button type="submit" class="sax-btn-finish" id="checkoutSubmit">
+            <i class="fa fa-check me-2"></i> FINALIZAR COMPRA
         </button>
     </div>
 </div>

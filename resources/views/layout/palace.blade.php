@@ -280,7 +280,13 @@
         <div class="container d-flex justify-content-between align-items-center">
             <div class="logo">
                 <a href="/">
-                    <img src="{{ asset('images/logo-sax-white.png') }}" alt="SAX Palace" height="45">
+                    @if(isset($attributes) && $attributes->logo_palace)
+                        {{-- Carrega a logo enviada pelo painel --}}
+                        <img src="{{ asset('storage/uploads/' . $attributes->logo_palace) }}" alt="SAX Palace" height="45">
+                    @else
+                        {{-- Fallback: Caso não tenha imagem no banco, mantém a padrão --}}
+                        <img src="{{ asset('images/logo-sax-white.png') }}" alt="SAX Palace" height="45">
+                    @endif
                 </a>
             </div>
             
@@ -288,9 +294,10 @@
                 <ul class="nav">
                     <li class="nav-item"><a href="#" class="nav-link">Institucional</a></li>
                     <li class="nav-item"><a href="#" class="nav-link">SAX Bridal</a></li>
+                    <li class="nav-item"><a href="/" class="nav-link">Loja</a></li>
                     <li class="nav-item"><a href="#" class="nav-link">Bodega</a></li>
                     <li class="nav-item"><a href="#" class="nav-link">Eventos</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link">Contato</a></li>
+                    <li class="nav-item"><a href="{{ route('contact.form') }}" class="nav-link">Contato</a></li>
                 </ul>
             </nav>
 
@@ -337,10 +344,15 @@
                     </div>
                     <div class="col-lg-7 mt-5 mt-lg-0" data-aos="zoom-in">
                         <div class="position-relative">
-                            <img src="https://images.unsplash.com/photo-1533619239233-62815d2214b5" class="img-fluid rounded shadow-lg" alt="Noite Árabe SAX">
-                            <div class="position-absolute bottom-0 end-0 bg-gold p-4 d-none d-md-block" style="background: var(--palace-gold); transform: translate(20px, 20px);">
-                                <h4 class="text-black mb-0">24 U$</h4>
-                                <small class="text-black text-uppercase fw-bold">Por Pessoa</small>
+                            <img src="https://images.pexels.com/photos/3850607/pexels-photo-3850607.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
+                                class="img-fluid rounded shadow-lg" 
+                                alt="Noite Árabe SAX Palace" 
+                                style="min-height: 450px; width: 100%; object-fit: cover;">
+                                
+                            <div class="position-absolute bottom-0 end-0 p-4 d-none d-md-block" 
+                                style="background: var(--palace-gold, #D4AF37); transform: translate(20px, 20px); border: 2px solid #000; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);">
+                                <h4 class="text-black mb-0 fw-bold" style="font-size: 1.8rem;">24 U$</h4>
+                                <small class="text-black text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Por Pessoa</small>
                             </div>
                         </div>
                     </div>
@@ -372,7 +384,7 @@
                 </div>
                 <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
                     <div class="ratio ratio-16x9 rounded overflow-hidden shadow">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m12!1m3!1d3600.6322!2d-54.6105!3d-25.5126!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94f6908a7985834b%3A0x6e266185854743c!2sSAX%20Department%20Store!5e0!3m2!1spt-BR!2spy!4v1700000000000" allowfullscreen="" loading="lazy"></iframe>
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3601.4286694602526!2d-54.6110903!3d-25.5074218!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94f6904609800001%3A0x6a0f6d8309e3e78a!2sSAX%20Department%20Store!5e0!3m2!1spt-BR!2spy!4v1700000000000" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                     </div>
                 </div>
             </div>
@@ -384,8 +396,15 @@
             <div class="row g-5">
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-logo">
-                        <img src="{{ asset('images/logo-sax-white.png') }}" alt="SAX Logo">
+                        @if(isset($attributes) && $attributes->logo_palace)
+                            {{-- Logo dinâmica enviada pelo painel --}}
+                            <img src="{{ asset('storage/uploads/' . $attributes->logo_palace) }}" alt="SAX Logo">
+                        @else
+                            {{-- Fallback: Logo padrão caso o banco esteja vazio --}}
+                            <img src="{{ asset('images/logo-sax-white.png') }}" alt="SAX Logo">
+                        @endif
                     </div>
+                    
                     <p class="text-secondary pe-lg-5">
                         O SAX Palace redefine o conceito de luxo e sofisticação em Ciudad del Este, 
                         proporcionando momentos inesquecíveis em um ambiente exclusivo no 11º andar.
@@ -420,12 +439,6 @@
                 <div class="col-lg-4 col-md-6">
                     <h5 class="mb-4 font-serif">Newsletter</h5>
                     <p class="text-secondary small mb-4">Receba convites exclusivos para nossas noites temáticas.</p>
-                    <form class="position-relative">
-                        <input type="email" class="form-control bg-transparent border-secondary text-white rounded-0 py-3" placeholder="Seu e-mail profissional">
-                        <button class="btn btn-link position-absolute end-0 top-50 translate-middle-y gold-text pe-3">
-                            <i class="fa fa-paper-plane"></i>
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>

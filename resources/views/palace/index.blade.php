@@ -63,18 +63,21 @@
                 <div class="row g-4 mb-5">
                     <div class="col-6">
                         <h4 class="font-serif gold-text mb-0">1000+</h4>
-                        <small class="text-uppercase text-muted">Rótulos de Vinhos</small>
+                        <small class="text-uppercase text-secondary">Rótulos de Vinhos</small>
                     </div>
                     <div class="col-6">
                         <h4 class="font-serif gold-text mb-0">Piso 11</h4>
-                        <small class="text-uppercase text-muted">Localização Prime</small>
+                        <small class="text-uppercase text-secondary">Localização Prime</small>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6" data-aos="fade-left">
                 <div class="position-relative p-5">
                     <div class="img-border-box"></div>
-                    <img src="https://images.unsplash.com/photo-1550966841-3ee3ad359051" class="img-fluid position-relative z-index-2 rounded shadow-24" alt="Interior SAX Palace">
+                    <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=1200&auto=format&fit=crop" 
+                        class="img-fluid position-relative z-index-2 rounded shadow-24" 
+                        alt="Interior SAX Palace" 
+                        style="min-height: 450px; width: 100%; object-fit: cover;">
                 </div>
             </div>
         </div>
@@ -146,19 +149,19 @@
                     <div class="col-md-4">
                         <div class="p-4 border border-gold-subtle">
                             <h5 class="text-white">Buffet Livre</h5>
-                            <p class="small text-muted mb-0">Sabores do Oriente Médio</p>
+                            <p class="small text-secondary mb-0">Sabores do Oriente Médio</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="p-4 border border-gold-subtle">
                             <h5 class="text-white">Show ao Vivo</h5>
-                            <p class="small text-muted mb-0">Dança do Ventre Profissional</p>
+                            <p class="small text-secondary mb-0">Dança do Ventre Profissional</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="p-4 border border-gold">
                             <h5 class="gold-text">24 U$</h5>
-                            <p class="small text-muted mb-0">Por Pessoa</p>
+                            <p class="small text-secondary mb-0">Por Pessoa</p>
                         </div>
                     </div>
                 </div>
@@ -184,14 +187,14 @@
                         <div class="icon-circle-gold me-3"><i class="bi bi-pentagon-fill"></i></div>
                         <div>
                             <h5 class="text-white mb-1">Vinhos Selecionados</h5>
-                            <p class="small text-muted">América do Sul, Europa e Velho Mundo.</p>
+                            <p class="small text-secondary">América do Sul, Europa e Velho Mundo.</p>
                         </div>
                     </div>
                     <div class="d-flex mb-4">
                         <div class="icon-circle-gold me-3"><i class="bi bi-cup-straw"></i></div>
                         <div>
                             <h5 class="text-white mb-1">Mixologia Autoral</h5>
-                            <p class="small text-muted">Drinks exclusivos preparados por barmans premiados.</p>
+                            <p class="small text-secondary">Drinks exclusivos preparados por barmans premiados.</p>
                         </div>
                     </div>
                 </div>
@@ -203,8 +206,14 @@
                         <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187" class="img-fluid rounded-3" alt="Drink">
                     </div>
                     <div class="col-6 pt-5">
-                        <img src="https://images.unsplash.com/photo-1569919650474-602414cb94a3" class="img-fluid rounded-3 mb-3" alt="Bodega">
-                        <img src="https://images.unsplash.com/photo-1541344999736-83eca872977a" class="img-fluid rounded-3" alt="Whisky">
+                        <img src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=800&auto=format&fit=crop" 
+                            class="img-fluid rounded-3 mb-3 shadow" 
+                            alt="Bodega SAX Palace" 
+                            style="aspect-ratio: 1/1; object-fit: cover;">
+                        <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=800&auto=format&fit=crop" 
+                            class="img-fluid rounded-3 shadow" 
+                            alt="Whisky SAX Palace" 
+                            style="aspect-ratio: 1/1; object-fit: cover;">
                     </div>
                 </div>
             </div>

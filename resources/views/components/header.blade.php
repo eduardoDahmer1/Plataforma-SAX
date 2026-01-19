@@ -61,7 +61,7 @@
             <ul class="list-inline m-0">
                 <li class="list-inline-item"><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                 <li class="list-inline-item border-start ps-3"><a href="#">GIFT CARDS</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="#">SERVICIOS SAX PALACE</a></li>
+                <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">SERVICIOS SAX PALACE</a></li>
                 <li class="list-inline-item border-start ps-3"><a href="#">NUESTROS EVENTOS</a></li>
             </ul>
         </div>
@@ -142,8 +142,8 @@
                         </a>
                     </li>
                 @endforeach
-                <li class="list-inline-item"><a href="#" class="text-bridal">BRIDAL</a></li>
-                <li class="list-inline-item"><a href="#" class="text-palace">PALACE</a></li>
+                <li class="list-inline-item"><a href="{{ route('bridal.index') }}" class="text-bridal">BRIDAL</a></li>
+                <li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">PALACE</a></li>
                 <li class="list-inline-item"><a href="#">CAFÉ & BISTRÓ</a></li>
                 <li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">#SAXNEWS</a></li>
             </ul>

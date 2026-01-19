@@ -49,10 +49,13 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.page');
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
+// Rota para a página de Bridal (Noivas)
+Route::get('/bridal', [App\Http\Controllers\BridalController::class, 'index'])->name('bridal.index');
 
 Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 // Rota principal de detalhes (usando Slug para SEO e navegação de variações)
 Route::get('/produto/{id_or_slug}', [ProductController::class, 'show'])->name('produto.show');
+
 
 // Listagens específicas (Filtros)
 Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->name('products.byCategory');

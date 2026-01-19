@@ -13,6 +13,7 @@ class ImageUploadController extends Controller
     {
         $attribute = Attribute::first();
         $webpImage = $attribute?->header_image;
+        $logoPalace = $attribute?->logo_palace;
         $noimage = $attribute?->noimage;
         $banners = [
             'banner1' => $attribute?->banner1,
@@ -27,7 +28,8 @@ class ImageUploadController extends Controller
             'banner10' => $attribute?->banner10,
         ];
 
-        return view('admin.admin', compact('webpImage', 'noimage', 'banners'));
+        // Adicionado 'logoPalace' ao compact
+        return view('admin.admin', compact('webpImage', 'logoPalace', 'noimage', 'banners'));
     }
 
     private function processImageUpload($file, $filename)
@@ -83,14 +85,14 @@ class ImageUploadController extends Controller
             $processed = $this->processImageUpload($file, $filename);
 
             if (!$processed) {
-                return redirect()->route('admin.index')->with('error', 'Formato de imagem não suportado.');
+                return back()->with('error', 'Formato de imagem não suportado.');
             }
 
             DB::table('attributes')->where('id', 1)->update([$field => $filename]);
-            return redirect()->route('admin.index')->with('success', ucfirst($field) . ' enviada com sucesso!');
+            return back()->with('success', ucfirst(str_replace('_', ' ', $field)) . ' enviada com sucesso!');
         }
 
-        return redirect()->route('admin.index')->with('error', 'Nenhuma imagem válida enviada.');
+        return back()->with('error', 'Nenhuma imagem válida enviada.');
     }
 
     private function deleteImage($field)
@@ -100,46 +102,35 @@ class ImageUploadController extends Controller
         if ($filename && Storage::disk('public')->exists("uploads/{$filename}")) {
             Storage::disk('public')->delete("uploads/{$filename}");
             DB::table('attributes')->where('id', 1)->update([$field => null]);
-            return redirect()->route('admin.index')->with('success', ucfirst($field) . ' excluída com sucesso!');
+            return back()->with('success', ucfirst(str_replace('_', ' ', $field)) . ' excluída com sucesso!');
         }
 
-        return redirect()->route('admin.index')->with('error', 'Nenhuma ' . $field . ' para excluir.');
+        return back()->with('error', 'Nenhuma imagem para excluir.');
     }
 
+    // --- Métodos Específicos para Header ---
     public function uploadHeader(Request $request)
     {
-        $request->validate([
-            'header_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-    
-        $path = $request->file('header_image')->storeAs(
-            'uploads',
-            'header_image.webp',
-            'public'
-        );
-    
-        DB::table('attributes')->where('id', 1)->update([
-            'header_image' => basename($path)
-        ]);
-    
-        return back()->with('success', 'Header atualizado com sucesso!');
+        return $this->uploadImage($request, 'header_image', 'header_image.webp');
     }
     
     public function deleteHeader()
     {
-        $filename = DB::table('attributes')->where('id', 1)->value('header_image');
-    
-        if ($filename && Storage::disk('public')->exists("uploads/{$filename}")) {
-            Storage::disk('public')->delete("uploads/{$filename}");
-        }
-    
-        DB::table('attributes')->where('id', 1)->update([
-            'header_image' => null
-        ]);
-    
-        return back()->with('success', 'Header removido com sucesso!');
+        return $this->deleteImage('header_image');
     }    
 
+    // --- MÉTODOS PARA LOGO PALACE ---
+    public function uploadLogoPalace(Request $request) 
+    { 
+        return $this->uploadImage($request, 'logo_palace', 'logo_palace.webp'); 
+    }
+    
+    public function deleteLogoPalace() 
+    { 
+        return $this->deleteImage('logo_palace'); 
+    }
+
+    // --- Outros Métodos ---
     public function uploadNoimage(Request $request) { return $this->uploadImage($request, 'noimage', 'noimage.webp'); }
     public function deleteNoimage() { return $this->deleteImage('noimage'); }
 

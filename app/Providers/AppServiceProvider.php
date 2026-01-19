@@ -34,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with([
                 'webpImage' => $attribute?->header_image ?? null,
                 'banner1'   => $attribute?->banner1 ?? null,
+                'logo_palace'   => $attribute?->logo_palace ?? null,
                 'banner2'   => $attribute?->banner2 ?? null,
                 'banner3'   => $attribute?->banner3 ?? null,
                 'banner4'   => $attribute?->banner4 ?? null,

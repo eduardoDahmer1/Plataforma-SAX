@@ -20,6 +20,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\BancardController;
 use App\Http\Controllers\CuponUserController;
 use App\Http\Controllers\PagoParController;
+use App\Http\Controllers\PalaceController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\SystemController;
@@ -47,6 +48,7 @@ use App\Http\Controllers\Auth\UserPreferenceController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.page');
+Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
 
 Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 // Rota principal de detalhes (usando Slug para SEO e navegação de variações)
@@ -289,6 +291,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Banner 6
     Route::post('banner6/upload', [ImageUploadController::class, 'uploadBanner6'])->name('banner6.upload');
     Route::delete('banner6/delete', [ImageUploadController::class, 'deleteBanner6'])->name('banner6.delete');
+
+    // Procure o grupo de rotas do Admin e adicione:
+    Route::post('/logopalace/upload', [App\Http\Controllers\ImageUploadController::class, 'uploadLogoPalace'])->name('logopalace.upload');
+    Route::delete('logopalace/delete', [App\Http\Controllers\ImageUploadController::class, 'deleteLogoPalace'])->name('logopalace.delete');
 
     // Banner 7
     Route::post('banner7/upload', [ImageUploadController::class, 'uploadBanner7'])->name('banner7.upload');

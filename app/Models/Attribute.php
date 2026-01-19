@@ -13,6 +13,7 @@ class Attribute extends Model
     protected $fillable = [
         'header_image',
         'noimage',
+        'logo_palace',
         'banner1',
         'banner2',
         'banner3',

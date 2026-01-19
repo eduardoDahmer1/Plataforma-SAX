@@ -34,17 +34,18 @@
         @php
             $images = [
                 ['field' => 'header_image', 'title' => 'Logo Header', 'category' => 'Identidad', 'file' => $webpImage, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
+                ['field' => 'logo_palace', 'title' => 'Logo SAX Palace', 'category' => 'Identidad', 'file' => $logoPalace, 'routeUpload' => 'admin.logopalace.upload', 'routeDelete' => 'admin.logopalace.delete'],
                 ['field' => 'noimage', 'title' => 'Noimage Default', 'category' => 'Sistema', 'file' => $noimage, 'routeUpload' => 'admin.noimage.upload', 'routeDelete' => 'admin.noimage.delete'],
-                ['field' => 'banner1', 'title' => 'Banner Principal 01', 'category' => 'Home', 'file' => $banner1, 'routeUpload' => 'admin.banner1.upload', 'routeDelete' => 'admin.banner1.delete'],
-                ['field' => 'banner2', 'title' => 'Banner Principal 02', 'category' => 'Home', 'file' => $banner2, 'routeUpload' => 'admin.banner2.upload', 'routeDelete' => 'admin.banner2.delete'],
-                ['field' => 'banner3', 'title' => 'Banner Principal 03', 'category' => 'Home', 'file' => $banner3, 'routeUpload' => 'admin.banner3.upload', 'routeDelete' => 'admin.banner3.delete'],
-                ['field' => 'banner4', 'title' => 'Banner Principal 04', 'category' => 'Home', 'file' => $banner4, 'routeUpload' => 'admin.banner4.upload', 'routeDelete' => 'admin.banner4.delete'],
-                ['field' => 'banner5', 'title' => 'Banner Principal 05', 'category' => 'Home', 'file' => $banner5, 'routeUpload' => 'admin.banner5.upload', 'routeDelete' => 'admin.banner5.delete'],
-                ['field' => 'banner6', 'title' => 'Banner Principal 06', 'category' => 'Home', 'file' => $banner6, 'routeUpload' => 'admin.banner6.upload', 'routeDelete' => 'admin.banner6.delete'],
-                ['field' => 'banner7', 'title' => 'Banner Principal 07', 'category' => 'Home', 'file' => $banner7, 'routeUpload' => 'admin.banner7.upload', 'routeDelete' => 'admin.banner7.delete'],
-                ['field' => 'banner8', 'title' => 'Banner Principal 08', 'category' => 'Home', 'file' => $banner8, 'routeUpload' => 'admin.banner8.upload', 'routeDelete' => 'admin.banner8.delete'],
-                ['field' => 'banner9', 'title' => 'Banner Principal 09', 'category' => 'Home', 'file' => $banner9, 'routeUpload' => 'admin.banner9.upload', 'routeDelete' => 'admin.banner9.delete'],
-                ['field' => 'banner10', 'title' => 'Banner Principal 10', 'category' => 'Home', 'file' => $banner10, 'routeUpload' => 'admin.banner10.upload', 'routeDelete' => 'admin.banner10.delete'],
+                ['field' => 'banner1', 'title' => 'Banner Principal 01', 'category' => 'Home', 'file' => $banners['banner1'] ?? null, 'routeUpload' => 'admin.banner1.upload', 'routeDelete' => 'admin.banner1.delete'],
+                ['field' => 'banner2', 'title' => 'Banner Principal 02', 'category' => 'Home', 'file' => $banners['banner2'] ?? null, 'routeUpload' => 'admin.banner2.upload', 'routeDelete' => 'admin.banner2.delete'],
+                ['field' => 'banner3', 'title' => 'Banner Principal 03', 'category' => 'Home', 'file' => $banners['banner3'] ?? null, 'routeUpload' => 'admin.banner3.upload', 'routeDelete' => 'admin.banner3.delete'],
+                ['field' => 'banner4', 'title' => 'Banner Principal 04', 'category' => 'Home', 'file' => $banners['banner4'] ?? null, 'routeUpload' => 'admin.banner4.upload', 'routeDelete' => 'admin.banner4.delete'],
+                ['field' => 'banner5', 'title' => 'Banner Principal 05', 'category' => 'Home', 'file' => $banners['banner5'] ?? null, 'routeUpload' => 'admin.banner5.upload', 'routeDelete' => 'admin.banner5.delete'],
+                ['field' => 'banner6', 'title' => 'Banner Principal 06', 'category' => 'Home', 'file' => $banners['banner6'] ?? null, 'routeUpload' => 'admin.banner6.upload', 'routeDelete' => 'admin.banner6.delete'],
+                ['field' => 'banner7', 'title' => 'Banner Principal 07', 'category' => 'Home', 'file' => $banners['banner7'] ?? null, 'routeUpload' => 'admin.banner7.upload', 'routeDelete' => 'admin.banner7.delete'],
+                ['field' => 'banner8', 'title' => 'Banner Principal 08', 'category' => 'Home', 'file' => $banners['banner8'] ?? null, 'routeUpload' => 'admin.banner8.upload', 'routeDelete' => 'admin.banner8.delete'],
+                ['field' => 'banner9', 'title' => 'Banner Principal 09', 'category' => 'Home', 'file' => $banners['banner9'] ?? null, 'routeUpload' => 'admin.banner9.upload', 'routeDelete' => 'admin.banner9.delete'],
+                ['field' => 'banner10', 'title' => 'Banner Principal 10', 'category' => 'Home', 'file' => $banners['banner10'] ?? null, 'routeUpload' => 'admin.banner10.upload', 'routeDelete' => 'admin.banner10.delete'],
             ];
         @endphp
 

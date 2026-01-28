@@ -99,13 +99,15 @@
 
                     {{-- Botões de Compra --}}
                     <div class="d-grid gap-2 mt-4">
-                        <form action="{{ route('cart.add') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <button type="submit" class="btn btn-dark btn-lg w-100 py-3 rounded-0 text-uppercase fw-bold btn-buy" {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                                {{ $product->stock > 0 ? 'Adicionar à Sacola' : 'Esgotado' }}
-                            </button>
-                        </form>
+                        @if (Auth::check())
+                            <form action="{{ route('cart.add') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                <button type="submit" class="btn btn-dark btn-lg w-100 py-3 rounded-0 text-uppercase fw-bold btn-buy" {{ $product->stock <= 0 ? 'disabled' : '' }}>
+                                    {{ $product->stock > 0 ? 'Adicionar à Sacola' : 'Esgotado' }}
+                                </button>
+                            </form>
+                        @endif
                     </div>
 
                     {{-- Accordion: Detalhes Técnicos e Atributos --}}

@@ -104,6 +104,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [UserController::class, 'edit'])->name('user.profile.edit');
     Route::put('/profile', [UserController::class, 'update'])->name('user.profile.update');
 
+    // Rota para exibir os detalhes do produto
+    Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+
     // Pedidos do usuário
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');

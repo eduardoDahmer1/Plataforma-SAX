@@ -19,7 +19,7 @@ class SearchController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 12);
+        $perPage = $request->get('per_page', 35);
         
         // Chave de cache baseada nos filtros para máxima velocidade
         $cacheKey = 'search_filtered_v2_' . md5(json_encode($request->all()));

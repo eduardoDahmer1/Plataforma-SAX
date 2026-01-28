@@ -14,49 +14,61 @@
         </div>
     @endif
 
-    @if ($favoriteProducts->count() == 0)
-        <div class="empty-wishlist text-center py-5">
+    @if ($favoriteProducts->isEmpty())
+        <div class="empty-wishlist text-center py-5 border">
             <i class="far fa-heart fa-3x mb-3 opacity-25"></i>
             <p class="text-muted text-uppercase letter-spacing-1 small">Tu lista está vacía.</p>
-            <a href="{{ route('home') }}" class="btn btn-outline-dark rounded-0 px-4 mt-3 x-small fw-bold">EXPLORAR PRODUCTOS</a>
+            <a href="{{ route('home') }}" class="btn btn-dark rounded-0 px-5 mt-3 x-small fw-bold letter-spacing-2">
+                EXPLORAR PRODUCTOS
+            </a>
         </div>
     @else
-        <div class="row g-4">
+        {{-- Grid Ajustado --}}
+        <div class="row g-2"> {{-- g-2 para manter o visual de grid colado --}}
             @foreach ($favoriteProducts as $product)
-                <div class="col-6 col-md-4 col-lg-3">
-                    <div class="sax-product-card">
-                        {{-- Imagem do Produto --}}
-                        <div class="product-img-wrapper">
-                            <a href="{{ route('products.show', $product->id) }}">
-                                <img src="{{ $product->photo ? asset('storage/' . $product->photo) : asset('storage/uploads/noimage.webp') }}"
-                                    alt="{{ $product->external_name }}" class="img-fluid">
+                <div class="col-6 col-md-4 col-lg-3 mb-3" id="product-{{ $product->id }}">
+                    <div class="card h-100 border-0 rounded-0 jw-product-card">
+                        
+                        {{-- Área da Imagem --}}
+                        <div class="jw-img-container position-relative">
+                            <a href="{{ route('products.show', $product->id) }}" class="w-100 h-100">
+                                <img src="{{ $product->photo ? asset('storage/' . $product->photo) : asset('storage/uploads/noimage.webp') }}" 
+                                     class="card-img-top img-fluid rounded-0" 
+                                     alt="{{ $product->external_name }}">
                             </a>
-                            
-                            {{-- Botão de Remover (Ícone Flutuante) --}}
-                            <form action="{{ route('user.preferences.toggle') }}" method="POST" class="remove-fav-form">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <button type="submit" class="btn-remove-wish" title="Remover">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </form>
+
+                            {{-- Botão de Remover (X) - Estilo Minimalista --}}
+                            <div class="position-absolute top-0 end-0 p-3">
+                                <form action="{{ route('user.preferences.toggle') }}" method="POST" class="remove-fav-form">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                    <button type="submit" class="btn-remove-jw" title="Remover">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                                            <path d="M18 6L6 18M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
-                        {{-- Detalhes --}}
-                        <div class="product-info mt-3">
-                            <span class="product-sku text-muted">SKU: {{ $product->sku }}</span>
-                            <h6 class="product-name">
-                                <a href="{{ route('products.show', $product->id) }}">
+                        {{-- Info do Produto --}}
+                        <div class="card-body px-3 py-4">
+                            {{-- Marca (Se houver no objeto, senão fixo SAX ou marca do produto) --}}
+                            <div class="jw-brand fw-bold text-uppercase mb-1">
+                                {{ $product->brand->name ?? 'SAX' }}
+                            </div>
+
+                            {{-- Nome --}}
+                            <div class="jw-product-name text-muted mb-2">
+                                <a href="{{ route('products.show', $product->id) }}" class="text-decoration-none text-muted">
                                     {{ $product->external_name }}
                                 </a>
-                            </h6>
-                            <div class="product-price fw-bold">
+                            </div>
+
+                            {{-- Preço --}}
+                            <div class="jw-price fw-bold">
                                 {{ currency_format($product->price) }}
                             </div>
-                            
-                            <a href="{{ route('products.show', $product->id) }}" class="btn btn-dark w-100 rounded-0 mt-3 x-small fw-bold letter-spacing-1 py-2">
-                                VER PRODUCTO
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -64,115 +76,79 @@
         </div>
 
         <div class="d-flex justify-content-center mt-5">
-            {{ $favoriteProducts->links('pagination::bootstrap-4') }}
+            {{ $favoriteProducts->links() }}
         </div>
     @endif
 </div>
 @endsection
+
 <style>
     /* Estilo Base */
-.sax-wishlist-wrapper { font-family: 'Inter', sans-serif; }
-.sax-divider-dark { width: 40px; height: 3px; background: #000; margin-top: 10px; }
-.x-small { font-size: 0.7rem; }
-.letter-spacing-1 { letter-spacing: 1.5px; }
-.letter-spacing-2 { letter-spacing: 3px; }
+    .sax-wishlist-wrapper { font-family: 'Inter', sans-serif; }
+    .sax-divider-dark { width: 40px; height: 3px; background: #000; margin-top: 10px; }
 
-/* Product Card */
-.sax-product-card {
-    transition: all 0.3s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
+    /* Card JW Style */
+    .jw-product-card {
+        background-color: #f2f2f2 !important; 
+        transition: opacity 0.3s ease;
+    }
 
-.product-img-wrapper {
-    position: relative;
-    background: #f9f9f9;
-    padding: 20px;
-    overflow: hidden;
-}
+    .jw-product-card:hover {
+        opacity: 0.9;
+    }
 
-.product-img-wrapper img {
-    mix-blend-mode: multiply; /* Ótimo para remover fundos brancos de fotos */
-    transition: transform 0.5s ease;
-}
+    .jw-img-container {
+        aspect-ratio: 4 / 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #f2f2f2;
+    }
 
-.sax-product-card:hover .product-img-wrapper img {
-    transform: scale(1.08);
-}
+    .jw-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* 'contain' para bolsas/produtos com fundo limpo */
+        mix-blend-mode: multiply;
+    }
 
-/* Botão de Remover Flutuante */
-.btn-remove-wish {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: #fff;
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transition: all 0.3s;
-    opacity: 0;
-    transform: translateY(-10px);
-}
+    /* Tipografia */
+    .jw-brand {
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: #000;
+    }
 
-.sax-product-card:hover .btn-remove-wish {
-    opacity: 1;
-    transform: translateY(0);
-}
+    .jw-product-name {
+        font-size: 0.8rem;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-.btn-remove-wish:hover {
-    background: #000;
-    color: #fff;
-}
+    .jw-price {
+        font-size: 0.85rem;
+        color: #000;
+    }
 
-/* Informações do Produto */
-.product-sku {
-    font-size: 0.6rem;
-    letter-spacing: 1px;
-    display: block;
-    margin-bottom: 5px;
-}
+    /* Botão de Remover */
+    .btn-remove-jw {
+        background: transparent;
+        border: none;
+        color: #000;
+        padding: 0;
+        transition: transform 0.2s ease, opacity 0.2s;
+        opacity: 0.6;
+    }
 
-.product-name a {
-    text-decoration: none;
-    color: #333;
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    height: 40px;
-    line-height: 1.2;
-}
+    .btn-remove-jw:hover {
+        transform: scale(1.2);
+        opacity: 1;
+    }
 
-.product-price {
-    font-size: 1rem;
-    color: #000;
-    margin-top: 10px;
-}
-
-/* Paginação Customizada */
-.pagination {
-    gap: 5px;
-}
-
-.pagination .page-link {
-    border: none;
-    color: #000;
-    font-weight: bold;
-    font-size: 0.8rem;
-}
-
-.pagination .page-item.active .page-link {
-    background-color: #000;
-    border-color: #000;
-}
+    /* Utilitários */
+    .letter-spacing-2 { letter-spacing: 3px; }
+    .x-small { font-size: 0.7rem; }
 </style>

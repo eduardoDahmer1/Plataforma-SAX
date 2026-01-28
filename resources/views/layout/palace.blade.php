@@ -293,7 +293,7 @@
             <nav class="d-none d-lg-block">
                 <ul class="nav">
                     <li class="nav-item"><a href="#" class="nav-link">Institucional</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link">SAX Bridal</a></li>
+                    <li class="nav-item"><a href="{{ route('bridal.index') }}" class="nav-link">SAX Bridal</a></li>
                     <li class="nav-item"><a href="/" class="nav-link">Loja</a></li>
                     <li class="nav-item"><a href="#" class="nav-link">Bodega</a></li>
                     <li class="nav-item"><a href="#" class="nav-link">Eventos</a></li>

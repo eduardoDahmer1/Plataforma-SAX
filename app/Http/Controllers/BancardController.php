@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
+use App\Models\Cart;
 use App\Models\PaymentMethod;
 
 class BancardController extends Controller
@@ -17,157 +18,108 @@ class BancardController extends Controller
 
     public function __construct()
     {
-        // Define base URL de acordo com o modo
         $this->baseUrl = (env('BANCARD_MODE', 'sandbox') === 'sandbox')
             ? 'https://vpos.infonet.com.py:8888'
             : 'https://vpos.infonet.com.py';
 
         $this->apiUrl = "{$this->baseUrl}/vpos/api/0.3";
 
-        // Pega as credenciais do banco
         $bancard = PaymentMethod::where('type', 'gateway')
-                    ->where('name', 'Bancard')
-                    ->where('active', 1)
-                    ->first();
+            ->where('name', 'Bancard')
+            ->where('active', 1)
+            ->first();
 
         if ($bancard && $bancard->credentials) {
             $creds = json_decode($bancard->credentials, true);
-            $this->publicKey  = $creds['public_key'] ?? '';
-            $this->privateKey = $creds['private_key'] ?? '';
+            $this->publicKey  = trim($creds['public_key'] ?? '');
+            // Armazenamos a chave bruta para evitar interpretação de caracteres especiais
+            $this->privateKey = trim($creds['private_key'] ?? '');
         }
     }
 
     public function checkoutPage(Order $order)
     {
         try {
-            Log::info('Bancard - Iniciando checkout', [
-                'order_id' => $order->id ?? null,
-                'user_id'  => auth()->id()
-            ]);
-
             $user = auth()->user();
-            if ($order->user_id !== $user->id) {
-                abort(403, 'Acesso negado ao pedido.');
-            }
+            if ($order->user_id !== $user->id) abort(403);
 
-            $shopProcessId = $order->id . '-' . time();
+            $shopProcessId = (string) $order->id . time();
 
-            // País do pedido e moeda
-            $country  = $order->country === 'BR' ? 'BR' : 'PY';
-            $currency = $country === 'BR' ? 'BRL' : 'PYG';
+            /**
+             * AJUSTE DE CONVERSÃO:
+             * Seu carrinho está em USD (3.65), mas o Bancard em produção no Paraguai 
+             * costuma exigir PYG. Vamos converter para garantir que o 'amount' não seja muito baixo.
+             * Se sua conta for USD, remova a multiplicação por 7500.
+             */
+            $isPyg = true; // Altere para false se sua conta Bancard for especificamente USD
+            $currency = $isPyg ? 'PYG' : 'USD';
+            $factor = $isPyg ? 7500 : 1; // Cotação aproximada do Guaraní
+            
+            $amount = (int) round($order->total * $factor);
 
-            // Telefone internacional correto
-            $phone = preg_replace('/\D/', '', $order->phone);
-            if ($country === 'PY' && substr($phone, 0, 3) !== '595') {
-                $phone = '595' . $phone;
-            } elseif ($country === 'BR' && substr($phone, 0, 2) !== '55') {
-                $phone = '55' . $phone;
-            }
-
-            // Endereço e cidade válidos
-            $address = $order->street ?: ($order->address ?? 'Desconhecido');
-            $city    = $order->city ?: 'Desconhecido';
-
-            // Valor em inteiro
-            $amount = intval(round($order->total));
-            if ($currency === 'BRL') $amount *= 100;
+            // GERAÇÃO DO TOKEN BLINDADA
+            // Usamos concatenação com aspas simples para garantir que o PHP não processe o '$' da chave
+            $token = md5($this->privateKey . $shopProcessId . $amount . $currency);
 
             $payload = [
-                "shop_process_id" => $shopProcessId,
-                "amount" => $amount,
-                "currency" => $currency,
-                "description" => "Compra na loja SAX",
-                "return_url" => route('bancard.callback'),
-                "first_name" => $order->name,
-                "last_name" => $order->surname ?: $order->name,
-                "email" => $order->email,
-                "phone" => $phone,
-                "address" => $address,
-                "city" => $city,
-                "country" => $country,
-                "items" => $order->items->map(function($item) use ($currency) {
-                    $price = intval(round($item->price));
-                    if ($currency === 'BRL') $price *= 100;
-                    return [
-                        "name" => $item->name,
-                        "quantity" => intval($item->quantity),
-                        "price" => max(1000, $price),
-                    ];
-                })->toArray()
+                "public_key" => $this->publicKey,
+                "operation" => [
+                    "token" => $token,
+                    "shop_process_id" => $shopProcessId,
+                    "amount" => (string) $amount,
+                    "currency" => $currency,
+                    "description" => "SAX Pedido #{$order->id}",
+                    "return_url" => route('bancard.callback'),
+                    "cancel_url" => route('checkout.index'),
+                ],
+                "customer" => [
+                    "first_name" => substr($order->name, 0, 30),
+                    "last_name" => substr($order->surname ?: $order->name, 0, 30),
+                    "email" => $order->email,
+                    "phone" => preg_replace('/\D/', '', $order->phone),
+                    "address" => "Av San Blas", 
+                    "city" => "Ciudad del Este",
+                    "country" => "PY"
+                ]
             ];
 
-            Log::info('Bancard - Requisição enviada', [
-                'order_id' => $order->id,
-                'shop_process_id' => $shopProcessId,
-                'payload' => $payload,
-                'credentials' => [
-                    'public_key_set' => !empty($this->publicKey),
-                    'private_key_set' => !empty($this->privateKey),
-                ]
+            Log::info("Bancard - Tentativa Final {$currency}", [
+                'amount' => $amount,
+                'token' => $token
             ]);
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Basic ' . base64_encode($this->publicKey . ':' . $this->privateKey),
-                'Accept' => 'application/json',
-            ])->timeout(10)
-              ->post("{$this->apiUrl}/single_buy", $payload);
-
+            $response = Http::timeout(20)->post("{$this->apiUrl}/single_buy", $payload);
             $data = $response->json();
 
-            Log::info('Bancard - Resposta recebida', [
-                'status' => $response->status(),
-                'body' => $data,
-            ]);
-
-            if (!isset($data['process_id'])) {
-                Log::error('Bancard - process_id não gerado', $data);
-                return redirect()->route('checkout.error')
-                    ->with('error', 'Erro ao iniciar pagamento Bancard');
+            if ($response->successful() && isset($data['process_id'])) {
+                $order->update(['shop_process_id' => $data['process_id']]);
+                return view('layout.bancard', ['process_id' => $data['process_id'], 'order' => $order]);
             }
 
-            $order->shop_process_id = $data['process_id'];
-            $order->save();
+            Log::error('Bancard - Erro Producao', ['data' => $data]);
+            return redirect()->route('checkout.index')->with('error', 'Erro Bancard: ' . ($data['messages'][0]['dsc'] ?? 'Verifique as credenciais'));
 
-            return view('layout.bancard', [
-                'process_id' => $data['process_id'],
-                'order'      => $order
-            ]);
-
-        } catch (\Throwable $e) {
-            Log::error('Erro checkout Bancard', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'order_id' => $order->id,
-            ]);
-            return redirect()->route('checkout.error')
-                ->with('error', 'Erro ao processar pagamento: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Bancard - Exception', ['msg' => $e->getMessage()]);
+            return redirect()->route('checkout.index')->with('error', 'Erro interno.');
         }
     }
 
     public function bancardCallback(Request $request)
     {
         $data = $request->all();
-        Log::info('Retorno Bancard:', $data);
+        $processId = $data['process_id'] ?? null;
+        if (!$processId) return redirect()->route('checkout.index');
 
-        if (!isset($data['shop_process_id'])) {
-            return redirect()->route('checkout.error')
-                ->with('error', 'shop_process_id ausente');
+        $order = Order::where('shop_process_id', $processId)->first();
+        if (!$order) return redirect()->route('home');
+
+        if (($data['status'] ?? '') === 'success' || ($data['response'] ?? '') === 'S') {
+            $order->update(['status' => 'paid']);
+            Cart::where('user_id', $order->user_id)->delete();
+            return redirect()->route('checkout.success');
         }
 
-        $order = Order::where('shop_process_id', $data['shop_process_id'])->first();
-        if (!$order) {
-            Log::error('Pedido Bancard não encontrado', $data);
-            return redirect()->route('checkout.error')
-                ->with('error', 'Pedido não encontrado');
-        }
-
-        $order->status = (isset($data['status']) && $data['status'] === 'success') ? 'paid' : 'failed';
-        $order->save();
-
-        $route = ($order->status === 'paid') ? 'checkout.success' : 'checkout.error';
-
-        return redirect()->route($route)
-                 ->with($order->status === 'paid' ? 'success' : 'error',
-                        $order->status === 'paid' ? 'Pagamento realizado com sucesso!' : 'Pagamento falhou.');
+        return redirect()->route('checkout.index')->with('error', 'Pagamento não concluído.');
     }
 }

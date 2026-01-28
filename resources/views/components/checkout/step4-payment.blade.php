@@ -10,24 +10,32 @@
 
     <div class="sax-checkout-box text-center py-5">
         <h5 class="mb-4 text-uppercase tracking-wider">Forma de Pagamento</h5>
-        <div class="d-flex justify-content-center gap-3">
+        
+        <div class="d-flex justify-content-center flex-wrap gap-3">
+            {{-- Opção: Depósito --}}
             <button type="button" class="sax-payment-method active" id="btn-deposito" onclick="selectPayment('deposito')">
                 <i class="fa fa-university mb-2 d-block"></i>
                 DEPÓSITO / TRANSFERÊNCIA
             </button>
+
+            {{-- Opção: Bancard --}}
+            {{-- <button type="button" class="sax-payment-method" id="btn-bancard" onclick="selectPayment('bancard')">
+                <i class="fa fa-credit-card mb-2 d-block"></i>
+                CARTÃO / QR (BANCARD)
+            </button> --}}
         </div>
-        <p class="sax-payment-notice mt-4">
-            Estamos finalizando a implementação do nosso novo sistema de pagamento. Quer pagar com cartão ou QR Code? Chame no WhatsApp que concluímos seu pedido rapidinho!
+
+        <p class="sax-payment-notice mt-4" id="payment-instruction">
+            Após finalizar, você verá os dados bancários para transferência e envio do comprovante.
         </p>
     </div>
 
-    {{-- Campo oculto que guarda o método de pagamento --}}
+    {{-- Campo oculto essencial que envia o método escolhido para o CheckoutController --}}
     <input type="hidden" name="payment_method" id="payment_method" value="deposito">
 
     <div class="sax-checkout-box mt-4">
         <h4 class="sax-step-title">Resumo Final</h4>
         
-        {{-- Listagem de itens no resumo final --}}
         <div class="sax-cart-list mb-4">
             @foreach ($cart as $item)
                 <div class="d-flex align-items-center gap-3 mb-2 border-bottom pb-2">
@@ -70,3 +78,27 @@
         </button>
     </div>
 </div>
+
+<script>
+    /**
+     * Gerencia a seleção visual e lógica do método de pagamento
+     */
+    function selectPayment(method) {
+        // 1. Atualiza o input que será enviado ao PHP
+        document.getElementById('payment_method').value = method;
+
+        // 2. Atualiza a interface visual (botões)
+        document.querySelectorAll('.sax-payment-method').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById('btn-' + method).classList.add('active');
+
+        // 3. Atualiza o texto de instrução para o usuário
+        const instruction = document.getElementById('payment-instruction');
+        if (method === 'bancard') {
+            instruction.innerText = "Você será redirecionado para o checkout seguro do Bancard para pagar com Cartão ou QR Code.";
+        } else {
+            instruction.innerText = "Após finalizar, você verá os dados bancários para transferência e envio do comprovante.";
+        }
+    }
+</script>

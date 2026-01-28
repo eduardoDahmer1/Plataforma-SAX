@@ -125,8 +125,10 @@
                             class="fw-bold">INICIAR SESIÓN</a>
                     @endif
                 </div>
-                <a href="#" class="d-none d-sm-inline fs-5 color-black"><i class="fa-regular fa-heart"></i></a>
+                @if (Auth::check())
+                    <a href="{{ route('user.preferences') }}" class="d-none d-sm-inline fs-5 color-black"><i class="fa-regular fa-heart"></i></a>
                 <x-carrinho-header />
+                @endif
             </div>
         </div>
     </div>
@@ -214,7 +216,6 @@
 </script>
 
 <style>
-    /* O CSS permanece o mesmo que você já tem, pois as classes não mudaram */
     .sax-header { background-color: #fff; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #000; }
     .sax-top-promo { background-color: #000; color: #fff; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
     .sax-aux-nav { font-size: 11px; font-weight: 600; }

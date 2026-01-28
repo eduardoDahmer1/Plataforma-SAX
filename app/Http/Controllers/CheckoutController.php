@@ -44,7 +44,7 @@ class CheckoutController extends Controller
             'email'           => 'required|email',
             'phone'           => 'required|string',
             'shipping'        => 'required|in:1,2,3',
-            'payment_method'  => 'required|in:deposito,bancard,pagopar,whatsapp',
+            'payment_method'  => 'required|in:deposito,bancard,whatsapp',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street'          => 'required_if:shipping,2',
             'number'          => 'required_if:shipping,2',
@@ -179,15 +179,15 @@ class CheckoutController extends Controller
             return back()->with('error', 'Erro ao processar pedido: ' . $e->getMessage());
         }
 
-        // Se não for gateway, limpa carrinho
-        if (!in_array($paymentMethod, ['bancard', 'pagopar'])) {
+        // Se for gateway (Bancard), não limpa o carrinho ainda (limpar no retorno com sucesso)
+        if ($paymentMethod !== 'bancard') {
             Cart::where('user_id', $user->id)->delete();
             session()->forget('applied_cupon');
         }
 
         // Redireciona por método
         return match ($paymentMethod) {
-            'bancard', 'pagopar' => $this->redirectGateway($order),
+            'bancard'            => $this->redirectGateway($order),
             'deposito'           => redirect()->route('checkout.deposito', ['order' => $order->id])
                                         ->with('success', 'Pedido criado com sucesso!'),
             'whatsapp'           => $this->whatsapp($request),
@@ -196,16 +196,11 @@ class CheckoutController extends Controller
         };
     }
 
-    // Decide gateway por país
+    // Decide gateway (Apenas Bancard conforme solicitado)
     protected function redirectGateway(Order $order)
     {
-        if ($order->country === 'PY') {
-            return app(\App\Http\Controllers\BancardController::class)->checkoutPage($order);
-        }
-        if ($order->country === 'BR') {
-            return app(\App\Http\Controllers\PagoParController::class)->checkoutPage($order);
-        }
-        return redirect()->route('checkout.success')->with('success', 'Pedido criado com sucesso!');
+        // Encaminha sempre para o Bancard se o método de pagamento for bancard
+        return app(\App\Http\Controllers\BancardController::class)->checkoutPage($order);
     }
 
     // WhatsApp

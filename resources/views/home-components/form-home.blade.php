@@ -1,176 +1,199 @@
-    <div class="container help-cards-container mb-3">
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="help-card shadow-sm">
-                    <i class="fas fa-tshirt card-icon"></i>
-                    <h6>CÓMO REALIZAR UNA COMPRA</h6>
-                    <p>Tu guia para hacer pedidos</p>
-                </div>
+<div class="sax-wrapper">
+    <section class="help-section">
+        <div class="help-grid">
+            <div class="help-card">
+                <div class="icon">👕</div>
+                <h3>CÓMO REALIZAR UNA COMPRA</h3>
+                <p>Tu guía para hacer pedidos</p>
             </div>
-            <div class="col-md-4">
-                <div class="help-card shadow-sm">
-                    <i class="far fa-question-circle card-icon"></i>
-                    <h6>PREGUNTAS FRECUENTES</h6>
-                    <p>¡Respondemos tus preguntas!</p>
-                </div>
+            <div class="help-card">
+                <div class="icon red-icon">?</div>
+                <h3>PREGUNTAS FRECUENTES</h3>
+                <p>¡Respondemos tus preguntas!</p>
             </div>
-            <div class="col-md-4">
-                <div class="help-card shadow-sm">
-                    <i class="fas fa-info-circle card-icon"></i>
-                    <h6>¿NECESITAS AYUDA?</h6>
-                    <p>Contacta a nuestro equipo de Atención al Cliente</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <section class="sax-help-newsletter">
-        {{-- Parte Inferior: Newsletter com Background --}}
-        <div class="newsletter-bg-section" style="background-image: url('{{ asset('images/sax-store-bg.jpg') }}');">
-            <div class="overlay"></div>
-            <div class="container newsletter-content">
-                <div class="row justify-content-center">
-                    <div class="col-lg-8 text-center text-white">
-                        <h2 class="display-6 fw-bold mb-3">No te pierdas de nada</h2>
-                        <p class="mb-4">Regístrate para recibir promociones, novedades personalizadas, actualizaciones
-                            de inventario y mucho más, directamente en su correo.</p>
-
-                        <form action="#" method="POST"
-                            class="newsletter-form d-flex gap-2 justify-content-center flex-wrap">
-                            @csrf
-                            <input type="email" name="email" class="form-control sax-input-light"
-                                placeholder="Tu correo electrónico" required>
-                            <button type="submit" class="btn btn-sax-dark">SUBSCRÍBETE</button>
-                        </form>
-
-                        <p class="x-small mt-4 opacity-75">
-                            Al registrarte, aceptas recibir comunicaciones de marketing por email y reconoces que leíste
-                            nuestra Política de Privacidad. Puedes darte de baja en cualquier momento.
-                        </p>
-                    </div>
-                </div>
+            <div class="help-card">
+                <div class="icon">ⓘ</div>
+                <h3>¿NECESITAS AYUDA?</h3>
+                <p>Contacta a nuestro equipo de Atención al Cliente</p>
             </div>
         </div>
     </section>
-    <style>
-        /* Container Geral */
-        .sax-help-newsletter {
-            position: relative;
-            padding-top: 50px;
-        }
 
-        /* Cards de Ajuda */
-        .help-cards-container {
-            position: relative;
-            z-index: 10;
-            margin-bottom: -60px;
-            /* Faz os cards sobreporem a imagem */
-        }
+    <section class="newsletter-section">
+        <div class="newsletter-container">
+            <h2>No te pierdas de nada</h2>
+            <p class="subtitle">Regístrate para recibir promociones, novedades personalizadas, actualizaciones de inventario y mucho más, directamente en su correo.</p>
+            
+            <div class="form-wrapper">
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Tu correo electrónico" required>
+                    <button type="submit">SUBSCRÍBETE</button>
+                </form>
+                <p class="legal-text">
+                    Al registrarte, aceptas recibir comunicaciones de marketing por email y reconoces que leíste nuestra Política de Privacidad. Puedes darte de baja en cualquier momento en la parte inferior de nuestros emails.
+                </p>
+            </div>
+        </div>
+    </section>
+</div>
 
-        .help-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 30px 20px;
-            text-align: center;
-            border: 1px solid #eee;
-            height: 100%;
-            transition: transform 0.3s ease;
-        }
+<style>
+/* Reset e Base */
+.sax-wrapper {
+    font-family: 'Helvetica', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #fff;
+    width: 100%;
+}
 
-        .help-card:hover {
-            transform: translateY(-5px);
-        }
+.sax-wrapper *, .sax-wrapper *::before, .sax-wrapper *::after {
+    box-sizing: inherit;
+}
 
-        .card-icon {
-            font-size: 2rem;
-            margin-bottom: 15px;
-            color: #333;
-        }
+/* --- SEÇÃO DE CARDS --- */
+.help-section {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
 
-        .help-card h6 {
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
 
-        .help-card p {
-            font-size: 0.8rem;
-            color: #666;
-            margin: 0;
-        }
+.help-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: left;
+}
 
-        /* Seção Newsletter */
-        .newsletter-bg-section {
-            position: relative;
-            background-size: cover;
-            background-position: center;
-            padding: 120px 0 80px 0;
-            /* Espaço para compensar a sobreposição */
-            min-height: 450px;
-            display: flex;
-            align-items: center;
-        }
+.help-card .icon {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
 
-        .newsletter-bg-section .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            /* Escurece a imagem para o texto ler bem */
-        }
+.help-card .red-icon {
+    color: #d9534f;
+    font-weight: bold;
+}
 
-        .newsletter-content {
-            position: relative;
-            z-index: 5;
-        }
+.help-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #000;
+}
 
-        /* Formulário Newsletter */
-        .sax-input-light {
-            max-width: 400px;
-            height: 55px;
-            border-radius: 4px;
-            border: none;
-            padding: 0 20px;
-            font-size: 0.9rem;
-        }
+.help-card p {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+}
 
-        .btn-sax-dark {
-            background: #1a1a1a;
-            color: #fff;
-            border: 1px solid #333;
-            padding: 0 30px;
-            height: 55px;
-            border-radius: 4px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            transition: 0.3s;
-        }
+/* --- SEÇÃO NEWSLETTER --- */
+.newsletter-section {
+    background-color: #939393;
+    padding: 80px 20px;
+    color: white;
+    display: flex;
+    justify-content: center;
+}
 
-        .btn-sax-dark:hover {
-            background: #000;
-            color: #fff;
-        }
+.newsletter-container {
+    max-width: 800px; /* Reduzi para focar o conteúdo */
+    width: 100%;
+}
 
-        .x-small {
-            font-size: 0.7rem;
-            line-height: 1.4;
-        }
+.newsletter-container h2 {
+    font-size: 32px;
+    margin-bottom: 15px;
+    font-weight: 400;
+}
 
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .help-cards-container {
-                margin-bottom: 20px;
-            }
+.newsletter-container .subtitle {
+    font-size: 15px;
+    margin: 0 auto 30px auto;
+    line-height: 1.5;
+    opacity: 0.9;
+}
 
-            .newsletter-bg-section {
-                padding: 60px 0;
-            }
+/* Wrapper centralizado, mas com conteúdo alinhado à esquerda */
+.form-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Alinha o texto legal com o início do input */
+}
 
-            .sax-input-light {
-                width: 100%;
-            }
-        }
-    </style>
+.newsletter-form {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.newsletter-form input {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.newsletter-form button {
+    background-color: #1a1a1a;
+    color: #fff;
+    border: none;
+    padding: 0 35px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.legal-text {
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: left; /* Alinhado com a borda do input */
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 992px) {
+    .help-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .help-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .newsletter-form {
+        flex-direction: column;
+    }
+
+    .newsletter-form button {
+        padding: 15px;
+    }
+
+    .newsletter-container h2 {
+        font-size: 26px;
+    }
+
+    .form-wrapper {
+        align-items: center; /* Centraliza no mobile para melhor estética */
+    }
+
+    .legal-text {
+    }
+}
+</style>

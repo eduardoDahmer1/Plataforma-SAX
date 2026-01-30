@@ -50,10 +50,15 @@
             <div class="sax-section-container py-4">
                 <div class="container-fluid px-lg-5">
                     <h2 class="sax-section-title mb-4">{{ $highlightTitles[$keyLanc] }}</h2>
-                    <div class="sax-product-grid">
-                        @foreach ($productsLanc as $item)
-                            @include('home-components.product-card', ['item' => $item])
-                        @endforeach
+                    
+                    <div class="swiper mySwiper">
+                        <div class="swiper-wrapper">
+                            @foreach ($productsLanc as $item)
+                                @include('home-components.product-card', ['item' => $item])
+                            @endforeach
+                        </div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
                     </div>
                 </div>
             </div>
@@ -87,51 +92,81 @@
             <div class="sax-section-container py-4">
                 <div class="container-fluid px-lg-5">
                     <h2 class="sax-section-title mb-4">{{ $highlightTitles[$keyDest] }}</h2>
-                    <div class="sax-product-grid">
-                        @foreach ($productsDest as $item)
-                            @include('home-components.product-card', ['item' => $item])
-                        @endforeach
+                    
+                    <div class="swiper mySwiper">
+                        <div class="swiper-wrapper">
+                            @foreach ($productsDest as $item)
+                                @include('home-components.product-card', ['item' => $item])
+                            @endforeach
+                        </div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
                     </div>
                 </div>
             </div>
         @endif
 
-        {{-- 7. Slider de Marcas --}}
-        @if(isset($brands) && $brands->count() > 0)
-            <div class="sax-brands-promo-full my-5">
-                <div class="py-5 bg-black text-white text-center">
-                    <h2 class="sax-brands-title">TUS MARCAS RECOMENDADAS</h2>
-                </div>
-                @include('home-components.brands-grid')
-            </div>
-        @endif
-
+        @include('home-components.brands-grid')
         @include('home-components.form-home')
     </div>
+
+    {{-- SCRIPTS DE INICIALIZAÇÃO DO SLIDER --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const swiper = new Swiper(".mySwiper", {
+                slidesPerView: 2,      // Padrão Mobile
+                spaceBetween: 10,
+                grabCursor: true,
+                navigation: {
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                },
+                breakpoints: {
+                    // Quando a tela for >= 768px (Tablet): 3 cards
+                    768: {
+                        slidesPerView: 3,
+                        spaceBetween: 15
+                    },
+                    // Quando a tela for >= 1024px (Notebook): 4 cards
+                    1024: {
+                        slidesPerView: 4,
+                        spaceBetween: 20
+                    },
+                    // Quando a tela for >= 1400px (Desktop Grande): 5 cards
+                    1400: {
+                        slidesPerView: 5,
+                        spaceBetween: 20
+                    }
+                }
+            });
+        });
+    </script>
 
     <style>
         .sax-home-wrapper { background-color: #fff; overflow-x: hidden; }
         
-        /* GRADE DE PRODUTOS (Resolve o erro da imagem) */
-        .sax-product-grid {
-            display: grid;
-            gap: 10px; /* Pequeno espaço entre cards */
-            grid-template-columns: repeat(2, 1fr); /* Mobile: 2 cards */
+        /* Ajustes Swiper */
+        .mySwiper {
+            padding-bottom: 50px !important;
+            width: 100%;
         }
 
-        @media (min-width: 768px) {
-            .sax-product-grid { grid-template-columns: repeat(3, 1fr); }
+        .swiper-button-next, .swiper-button-prev {
+            color: #000 !important;
+            background: rgba(255,255,255,0.9);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            top: 40%; /* Centraliza melhor verticalmente na imagem */
+        }
+        
+        .swiper-button-next:after, .swiper-button-prev:after {
+            font-size: 18px;
+            font-weight: bold;
         }
 
-        @media (min-width: 992px) {
-            .sax-product-grid { grid-template-columns: repeat(4, 1fr); }
-        }
-
-        @media (min-width: 1400px) {
-            .sax-product-grid { grid-template-columns: repeat(5, 1fr); }
-        }
-
-        /* Títulos */
+        /* Títulos das Seções */
         .sax-section-title {
             font-size: 1.4rem;
             font-weight: 500;
@@ -143,7 +178,6 @@
             margin-bottom: 30px;
         }
 
-        .sax-brands-promo-full { background-color: #000; width: 100%; }
         .sax-brands-title {
             font-size: 2.2rem;
             font-weight: 400;
@@ -151,18 +185,19 @@
             text-transform: uppercase;
         }
 
-        /* Banners */
+        /* Banners Triplos */
         .sax-triple-banners img {
             height: 450px;
             object-fit: cover;
             transition: transform 0.6s ease;
         }
-        .sax-triple-banners img:hover { transform: scale(1.03); }
+        .sax-triple-banners img:hover { transform: scale(1.02); }
 
         @media (max-width: 768px) {
             .sax-section-title { font-size: 1.1rem; text-align: center; }
             .sax-brands-title { font-size: 1.4rem; }
             .sax-triple-banners img { height: auto; }
+            .swiper-button-next, .swiper-button-prev { display: none; } /* Esconde setas no mobile para focar no touch */
         }
     </style>
 @endsection

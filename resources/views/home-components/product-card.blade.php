@@ -3,12 +3,11 @@
     $isOutOfStock = $item->stock <= 0;
 @endphp
 
-<div class="sax-grid-item">
-    <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none text-dark">
+<div class="swiper-slide h-auto">
+    <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none text-dark d-block h-100">
         <div class="card h-100 border-0 rounded-0 sax-product-card {{ $isOutOfStock ? 'sax-out-of-stock' : '' }}">
             
             <div class="sax-img-container position-relative">
-                {{-- Prioriza photo_url, se vazio usa placeholder --}}
                 <img src="{{ $item->photo_url ?? 'https://placehold.co/400x533/f5f5f5/999?text=SAX' }}" 
                      class="card-img-top img-fluid rounded-0" 
                      alt="{{ $item->name ?? $item->external_name }}"
@@ -18,63 +17,39 @@
                     <div class="sax-stock-overlay">AGOTADO</div>
                 @endif
 
-                <div class="position-absolute top-0 end-0 p-2 ">
+                <div class="position-absolute top-0 end-0 p-2">
                     @auth
                         <x-product-favorite-button :item="$item" />
                     @endauth
                 </div>
             </div>
 
-            <div class="card-body px-2 py-3">
+            <div class="card-body px-2 py-3 d-flex flex-column">
                 <div class="sax-brand fw-bold text-uppercase mb-1">
-                    {{ $item->brand->name ?? 'SAX EXCLUSIVE' }}
+                    {{ $item->brand->name ?? 'BRAND NAME' }}
                 </div>
 
-                <div class="sax-product-name text-muted mb-2">
+                <div class="sax-product-name text-muted mb-3">
                     {{ $item->name ?? $item->external_name }}
                 </div>
 
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="sax-price fw-bold">
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <div class="sax-price fw-bold text-dark">
                         {{ isset($item->price) ? number_format($item->price, 2, ',', '.') : '0,00' }} USD
                     </div>
-                    <div class="sax-sku d-none d-lg-block">
+                    <div class="sax-sku text-muted">
                         SKU: {{ $item->sku ?? 'N/A' }}
                     </div>
                 </div>
-
-                @auth
-                    @if (!$isOutOfStock && in_array(auth()->user()->user_type, [0, 1, 2]))
-                        <form action="{{ route('cart.addAndCheckout') }}" method="POST" class="mt-3 sax-quick-buy">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $item->id }}">
-                            {{-- <button type="submit" class="btn btn-dark btn-sm w-100 rounded-0 py-2">
-                                COMPRAR AGORA
-                            </button> --}}
-                        </form>
-                    @endif
-                @endauth
             </div>
         </div>
     </a>
 </div>
 
 <style>
-    /* Grade Flexível e Firme */
-    .sax-product-grid {
-        display: grid;
-        gap: 10px; 
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (min-width: 768px) { .sax-product-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 992px) { .sax-product-grid { grid-template-columns: repeat(4, 1fr); } }
-    @media (min-width: 1400px) { .sax-product-grid { grid-template-columns: repeat(5, 1fr); } }
-
-    /* Estilo do Card */
     .sax-product-card {
-        background-color: #f5f5f5 !important;
-        transition: transform 0.2s ease;
+        background-color: transparent !important;
+        height: 100%;
     }
     
     .sax-img-container {
@@ -83,30 +58,53 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .card-body{
+        background-color: #f5f5f5;
     }
 
     .sax-img-container img {
         width: 100%;
         height: 100%;
-        object-fit: contain; /* Não corta o produto */
-        padding: 15px;
+        object-fit: contain;
+        transition: transform 0.5s ease;
+    }
+
+    .sax-product-card:hover img {
+        transform: scale(1.05);
+    }
+
+    .sax-brand {
+        font-size: 0.8rem;
+        color: #000;
+        letter-spacing: 0.5px;
     }
 
     .sax-product-name {
-        font-size: 0.75rem;
-        height: 2.5em; /* Garante que todos os nomes ocupem o mesmo espaço */
+        font-size: 0.7rem;
+        height: 2.4em;
+        line-height: 1.2;
         overflow: hidden;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
+        text-transform: uppercase;
     }
 
-    .sax-quick-buy {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
+    .sax-price { font-size: 0.9rem; }
+    .sax-sku { font-size: 0.6rem; }
 
-    .sax-product-card:hover .sax-quick-buy { opacity: 1; }
-    
-    @media (max-width: 991px) { .sax-quick-buy { opacity: 1; } }
+    .sax-stock-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        z-index: 2;
+    }
 </style>

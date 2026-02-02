@@ -32,19 +32,18 @@ class CheckoutController extends Controller
         return view('checkout.index', compact('paymentMethods', 'cart'));
     }
 
-    // Criação de pedido
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        // Validações
+        // 1. Validações (Bancard adicionado às opções permitidas)
         $request->validate([
             'name'            => 'required|string|max:255',
             'document'        => 'required|string|max:50',
             'email'           => 'required|email',
             'phone'           => 'required|string',
             'shipping'        => 'required|in:1,2,3',
-            'payment_method'  => 'required|in:deposito,bancard,whatsapp',
+            'payment_method'  => 'required|in:deposito,bancard,whatsapp', // Bancard validado aqui
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street'          => 'required_if:shipping,2',
             'number'          => 'required_if:shipping,2',
@@ -65,7 +64,7 @@ class CheckoutController extends Controller
         $cupon         = null;
         $desconto      = 0;
 
-        // Cupom só se for depósito
+        // 2. Lógica de Cupom (Mantida apenas para depósito conforme seu código)
         if ($request->filled('cupon') && $paymentMethod === 'deposito') {
             $cupon = Cupon::where('codigo', $request->input('cupon'))
                 ->where('data_inicio', '<=', now())
@@ -94,24 +93,24 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
-            // Nome / sobrenome
+            // Separação Nome / Sobrenome
             $nameParts = explode(' ', trim($request->input('name')));
             $firstName = array_shift($nameParts);
             $lastName  = implode(' ', $nameParts) ?: $firstName;
 
-            // Observações
+            // Observações baseadas no frete
             $observations = match ($request->shipping) {
                 '1', '2' => $request->input('observations') ?? '',
-                '3'     => $request->input('observations_store') ?? '',
-                default => ''
+                '3'      => $request->input('observations_store') ?? '',
+                default  => ''
             };
 
-            // Criar pedido
+            // 3. Criar pedido (Status 'pending' inicial)
             $order = Order::create([
                 'user_id'       => $user->id,
                 'status'        => 'pending',
                 'total'         => $total,
-                'payment_method'=> $paymentMethod,
+                'payment_method' => $paymentMethod,
                 'cupon_id'      => $cupon->id ?? null,
                 'discount'      => $desconto,
                 'name'          => $firstName,
@@ -123,9 +122,9 @@ class CheckoutController extends Controller
                 'shipping'      => $request->input('shipping'),
             ]);
 
-            // Endereço / loja
+            // 4. Lógica de Endereço/Loja (Mantida intacta)
             switch ($request->shipping) {
-                case '1': // Endereço cadastrado
+                case '1':
                     $order->update([
                         'street'  => $user->street,
                         'number'  => $user->number,
@@ -135,7 +134,7 @@ class CheckoutController extends Controller
                         'country' => $user->country == 'paraguai' ? 'PY' : 'BR',
                     ]);
                     break;
-                case '2': // Endereço alternativo
+                case '2':
                     $order->update([
                         'street'  => $request->input('street'),
                         'number'  => $request->input('number'),
@@ -145,12 +144,12 @@ class CheckoutController extends Controller
                         'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
                     ]);
                     break;
-                case '3': // Retirar na loja
+                case '3':
                     $order->update(['store' => $request->input('store')]);
                     break;
             }
 
-            // Itens
+            // 5. Salvar itens do pedido
             foreach ($cart as $cartItem) {
                 OrderItem::create([
                     'order_id'      => $order->id,
@@ -164,35 +163,40 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // Upload depósito
+            // Upload de comprovante se for depósito imediato
             if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
                 $file = $request->file('deposit_receipt');
                 $filename = time() . '_' . $file->getClientOriginalName();
                 $file->storeAs('deposits', $filename, 'public');
-                $order->deposit_receipt = $filename;
-                $order->save();
+                $order->update(['deposit_receipt' => $filename]);
             }
 
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error("Erro no checkout: " . $e->getMessage());
             return back()->with('error', 'Erro ao processar pedido: ' . $e->getMessage());
         }
 
-        // Se for gateway (Bancard), não limpa o carrinho ainda (limpar no retorno com sucesso)
+        // 6. Finalização do Carrinho
+        // No Bancard, só deletamos o carrinho APÓS a confirmação de sucesso no callback.
         if ($paymentMethod !== 'bancard') {
             Cart::where('user_id', $user->id)->delete();
             session()->forget('applied_cupon');
         }
 
-        // Redireciona por método
+        // 7. Redirecionamento Final
         return match ($paymentMethod) {
-            'bancard'            => $this->redirectGateway($order),
-            'deposito'           => redirect()->route('checkout.deposito', ['order' => $order->id])
-                                        ->with('success', 'Pedido criado com sucesso!'),
-            'whatsapp'           => $this->whatsapp($request),
-            default              => redirect()->route('checkout.success')
-                                        ->with('success', 'Pedido criado com sucesso!'),
+            // Redireciona para o controller do Bancard que você já tem pronto
+            'bancard'  => redirect()->action([BancardController::class, 'checkoutPage'], ['order' => $order->id]),
+
+            'deposito' => redirect()->route('checkout.deposito', ['order' => $order->id])
+                ->with('success', 'Pedido criado com sucesso!'),
+
+            'whatsapp' => $this->whatsapp($request), // Certifique-se que este método existe no controller
+
+            default    => redirect()->route('checkout.success')
+                ->with('success', 'Pedido criado com sucesso!'),
         };
     }
 
@@ -218,7 +222,7 @@ class CheckoutController extends Controller
                 'user_id'       => $user->id,
                 'status'        => 'pending',
                 'total'         => $total,
-                'payment_method'=> 'whatsapp',
+                'payment_method' => 'whatsapp',
                 'name'          => $user->name,
                 'document'      => $user->document ?? '',
                 'email'         => $user->email,

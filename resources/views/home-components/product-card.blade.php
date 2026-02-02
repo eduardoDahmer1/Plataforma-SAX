@@ -1,24 +1,22 @@
-@php 
-    $currentQty = $cartItems[$item->id] ?? 0; 
+@php
+    $currentQty = $cartItems[$item->id] ?? 0;
     $isOutOfStock = $item->stock <= 0;
 @endphp
 
 <div class="swiper-slide h-auto">
     <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none text-dark d-block h-100">
         <div class="card h-100 border-0 rounded-0 sax-product-card {{ $isOutOfStock ? 'sax-out-of-stock' : '' }}">
-            
-            <div class="sax-img-container position-relative">
-                <img src="{{ $item->photo_url ?? 'https://placehold.co/400x533/f5f5f5/999?text=SAX' }}" 
-                     class="card-img-top img-fluid rounded-0" 
-                     alt="{{ $item->name ?? $item->external_name }}"
-                     onerror="this.src='https://placehold.co/400x533/f5f5f5/999?text=No+Image'">
 
-                @if($isOutOfStock)
+            <div class="sax-img-container position-relative">
+                <img src="{{ $item->photo_url ?? 'https://placehold.co/400x533/f5f5f5/999?text=SAX' }}"
+                    class="card-img-top img-fluid rounded-0" alt="{{ $item->name ?? $item->external_name }}"
+                    onerror="this.src='https://placehold.co/400x533/f5f5f5/999?text=No+Image'">
+
+                @if ($isOutOfStock)
                     <div class="sax-stock-overlay">AGOTADO</div>
                 @endif
 
-                <div class="position-absolute top-0 end-0 p-2">
-                    @auth
+                <div class="position-absolute top-0 end-0 p-3"> @auth
                         <x-product-favorite-button :item="$item" />
                     @endauth
                 </div>
@@ -51,7 +49,7 @@
         background-color: transparent !important;
         height: 100%;
     }
-    
+
     .sax-img-container {
         aspect-ratio: 3 / 4;
         background-color: #f5f5f5;
@@ -62,7 +60,7 @@
         width: 100%;
     }
 
-    .card-body{
+    .card-body {
         background-color: #f5f5f5;
     }
 
@@ -94,8 +92,13 @@
         text-transform: uppercase;
     }
 
-    .sax-price { font-size: 0.9rem; }
-    .sax-sku { font-size: 0.6rem; }
+    .sax-price {
+        font-size: 0.9rem;
+    }
+
+    .sax-sku {
+        font-size: 0.6rem;
+    }
 
     .sax-stock-overlay {
         position: absolute;

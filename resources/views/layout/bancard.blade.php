@@ -8,7 +8,7 @@
     </div>
 
     <div class="card shadow-sm mb-4">
-        <div class="card-body d-flex justify-content-center" style="min-height: 400px; background: #fdfdfd;">
+        <div class="card-body d-flex justify-content-center" style="min-height: 450px; background: #fdfdfd;">
             {{-- O Bancard injetará o formulário aqui --}}
             <div id="iframe-container" class="w-100"></div>
         </div>
@@ -21,32 +21,48 @@
     </div>
 </div>
 
-{{-- Carrega o script oficial do Bancard conforme o ambiente --}}
-<script src="{{ env('BANCARD_MODE') === 'sandbox' ? 'https://vpos.infonet.com.py:8888/checkout/resources/js/vpos.js' : 'https://vpos.infonet.com.py/checkout/resources/js/vpos.js' }}"></script>
+{{-- Carrega o script oficial do Bancard conforme o ambiente (Sandbox ou Produção) --}}
+@php
+    $isSandbox = env('BANCARD_MODE') === 'sandbox';
+    $scriptUrl = $isSandbox 
+        ? 'https://vpos.infonet.com.py:8888/checkout/v2/lib/bancard-checkout.js' 
+        : 'https://vpos.infonet.com.py/checkout/v2/lib/bancard-checkout.js';
+@endphp
+
+<script src="{{ $scriptUrl }}"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const processId = "{{ $process_id }}";
 
-    if(!processId) {
-        console.error('Process ID ausente');
+    if (!processId || processId === "") {
+        console.error('Bancard: Process ID ausente ou inválido.');
+        alert('Erro ao carregar o checkout. Por favor, tente novamente.');
         return;
     }
 
-    // Inicializa o Checkout
+    // Configurações de estilo para o iframe
+    const options = {
+        styles: {
+            'form-background-color': '#fdfdfd',
+            'button-background-color': '#000000',
+            'button-text-color': '#ffffff',
+            'input-border-color': '#cccccc',
+            'header-background-color': '#fdfdfd',
+            'input-text-color': '#333333'
+        }
+    };
+
     try {
-        Bancard.Checkout.createCheckout(processId, {
-            onPaymentSuccess: function(data) {
-                // Redireciona para o callback de sucesso
-                window.location.href = "{{ route('bancard.callback') }}?process_id=" + processId + "&status=success";
-            },
-            onPaymentError: function(data) {
-                // Redireciona informando a falha
-                window.location.href = "{{ route('bancard.callback') }}?process_id=" + processId + "&status=failed";
-            }
-        });
-    } catch(err) {
-        console.error('Erro Bancard:', err);
+        /**
+         * Inicializa o formulário de pagamento.
+         * Para pagamentos simples (single_buy), utiliza-se Bancard.Checkout.createForm.
+         */
+        Bancard.Checkout.createForm('iframe-container', processId, options);
+        
+        console.log('Bancard: Checkout iniciado com sucesso para o Process ID:', processId);
+    } catch (err) {
+        console.error('Bancard: Erro crítico na inicialização do formulário:', err);
     }
 });
 </script>

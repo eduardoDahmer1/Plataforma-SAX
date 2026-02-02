@@ -19,7 +19,8 @@
         </div>
     </section>
 
-    <section class="newsletter-section">
+    <section class="newsletter-section" 
+         style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ asset('storage/uploads/' . $banner1) }}');">
         <div class="newsletter-container">
             <h2>No te pierdas de nada</h2>
             <p class="subtitle">Regístrate para recibir promociones, novedades personalizadas, actualizaciones de inventario y mucho más, directamente en su correo.</p>
@@ -30,7 +31,7 @@
                     <button type="submit">SUBSCRÍBETE</button>
                 </form>
                 <p class="legal-text">
-                    Al registrarte, aceptas recibir comunicaciones de marketing por email y reconoces que leíste nuestra Política de Privacidad. Puedes darte de baja en cualquier momento en la parte inferior de nuestros emails.
+                    Al registrarte, aceptas recibir comunicaciones de marketing por email y reconoces que leíste nuestra Política de Privacidad. Puedes darte de baja en cualquier momento en la parte inferior de nossos emails.
                 </p>
             </div>
         </div>
@@ -70,6 +71,12 @@
     border-radius: 8px;
     padding: 30px;
     text-align: left;
+    background: #fff;
+    transition: transform 0.3s ease;
+}
+
+.help-card:hover {
+    transform: translateY(-5px);
 }
 
 .help-card .icon {
@@ -87,6 +94,7 @@
     font-weight: 700;
     margin-bottom: 8px;
     color: #000;
+    letter-spacing: 0.5px;
 }
 
 .help-card p {
@@ -95,74 +103,94 @@
     margin: 0;
 }
 
-/* --- SEÇÃO NEWSLETTER --- */
+/* --- SEÇÃO NEWSLETTER (ESTILIZADA COM BANNER) --- */
 .newsletter-section {
-    background-color: #939393;
-    padding: 80px 20px;
+    min-height: 450px; /* Aumentado para dar mais destaque ao banner */
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    padding: 100px 20px;
     color: white;
     display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
+    /* Cor de fundo caso o banner falhe */
+    background-color: #333; 
 }
 
 .newsletter-container {
-    max-width: 800px; /* Reduzi para focar o conteúdo */
+    max-width: 800px;
     width: 100%;
+    text-align: left;
 }
 
 .newsletter-container h2 {
-    font-size: 32px;
+    font-size: 36px;
     margin-bottom: 15px;
     font-weight: 400;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .newsletter-container .subtitle {
-    font-size: 15px;
-    margin: 0 auto 30px auto;
-    line-height: 1.5;
-    opacity: 0.9;
+    font-size: 16px;
+    margin-bottom: 35px;
+    line-height: 1.6;
+    opacity: 0.95;
 }
 
-/* Wrapper centralizado, mas com conteúdo alinhado à esquerda */
 .form-wrapper {
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Alinha o texto legal com o início do input */
+    align-items: flex-start;
 }
 
 .newsletter-form {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .newsletter-form input {
     flex: 1;
-    padding: 15px 20px;
-    border: none;
+    padding: 16px 20px;
+    border: 1px solid rgba(255,255,255,0.3);
     border-radius: 4px;
     font-size: 14px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    outline: none;
 }
 
 .newsletter-form button {
-    background-color: #1a1a1a;
+    background-color: #000;
     color: #fff;
-    border: none;
-    padding: 0 35px;
+    border: 1px solid #000;
+    padding: 0 45px;
     border-radius: 4px;
-    font-weight: bold;
-    font-size: 14px;
+    font-weight: 700;
+    font-size: 13px;
     cursor: pointer;
     text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form button:hover {
+    background-color: #333;
+    border-color: #333;
 }
 
 .legal-text {
-    font-size: 11px;
-    line-height: 1.4;
-    text-align: left; /* Alinhado com a borda do input */
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: left;
     margin: 0;
     opacity: 0.8;
+    max-width: 90%;
 }
 
 /* --- RESPONSIVIDADE --- */
@@ -177,23 +205,30 @@
         grid-template-columns: 1fr;
     }
 
+    .newsletter-section {
+        padding: 60px 20px;
+        min-height: auto;
+    }
+
     .newsletter-form {
         flex-direction: column;
     }
 
     .newsletter-form button {
-        padding: 15px;
+        padding: 18px;
     }
 
     .newsletter-container h2 {
-        font-size: 26px;
+        font-size: 28px;
     }
 
     .form-wrapper {
-        align-items: center; /* Centraliza no mobile para melhor estética */
+        align-items: center;
+        text-align: center;
     }
-
+    
     .legal-text {
+        text-align: center;
     }
 }
 </style>

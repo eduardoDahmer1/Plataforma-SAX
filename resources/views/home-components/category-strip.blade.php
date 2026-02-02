@@ -2,25 +2,34 @@
     <div class="container-fluid px-lg-5">
         <div class="category-wrapper">
             @foreach($categories as $cat)
-                <a href="{{ url('category/' . $cat->slug) }}" class="category-item">
+                @php
+                    // 1. Mapeamento de Tradução Visual (De Slugs do Banco para Nomes SAX)
+                    $displayName = $cat->name;
+                    if($cat->slug == 'feminino')  $displayName = 'MUJER';
+                    if($cat->slug == 'masculino') $displayName = 'HOMBRE';
+                    if($cat->slug == 'infantil')  $displayName = 'NIÑOS';
+                    if($cat->slug == 'optico')    $displayName = 'LENTES';
+                    if($cat->slug == 'casa')      $displayName = 'HOGAR';
+
+                    $photoPath = ltrim($cat->photo, '/');
+                    
+                    // Se a foto existir no banco, montamos a URL via storage
+                    if (!empty($photoPath)) {
+                        $imagePath = asset('storage/' . $photoPath);
+                    } else {
+                        // Placeholder se o campo estiver vazio ou 0
+                        $imagePath = "https://placehold.co/400x400/f2f2f2/a3a3a3?text=SAX";
+                    }
+                @endphp
+
+                <a href="{{ url('categorias/' . $cat->slug) }}" class="category-item">
                     <div class="category-img-box">
-                        @php
-                            // Lógica Robusta: Verifica se o arquivo existe na pasta storage
-                            $internalPath = 'storage/uploads/' . $cat->image;
-                            if ($cat->image && file_exists(public_path($internalPath))) {
-                                $imagePath = asset($internalPath);
-                            } else {
-                                // Se não existir, usa um placeholder externo (evita erro 404 no console)
-                                $imagePath = "https://placehold.co/400x400/f2f2f2/a3a3a3?text=SAX";
-                            }
-                        @endphp
-                        
                         <img src="{{ $imagePath }}" 
-                             alt="{{ $cat->name }}"
+                             alt="{{ $displayName }}"
                              loading="lazy"
-                             onerror="this.src='https://placehold.co/400x400/f2f2f2/a3a3a3?text={{ urlencode($cat->name) }}'">
+                             onerror="this.src='https://placehold.co/400x400/f2f2f2/a3a3a3?text={{ urlencode($displayName) }}'">
                     </div>
-                    <span class="category-name">{{ $cat->name }}</span>
+                    <span class="category-name">{{ $displayName }}</span>
                 </a>
             @endforeach
         </div>
@@ -28,14 +37,15 @@
 </section>
 
 <style>
+    /* Estilos preservados conforme solicitado */
     .sax-category-strip { background-color: #fff; padding-bottom: 2rem !important; }
 
     .category-wrapper {
         display: flex;
         justify-content: center;
         gap: 20px;
-        flex-wrap: nowrap; /* Mantém em linha no desktop como na imagem */
-        overflow-x: auto; /* Permite scroll no mobile se necessário */
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
 
     .category-item {
@@ -43,7 +53,7 @@
         flex-direction: column;
         align-items: center;
         text-decoration: none !important;
-        flex: 0 0 18%; /* 5 itens por linha */
+        flex: 0 0 18%; 
         max-width: 220px;
     }
 
@@ -71,7 +81,7 @@
 
     .category-name {
         font-size: 0.8rem;
-        font-weight: 700; /* Bold como na imagem */
+        font-weight: 700;
         color: #000;
         text-transform: uppercase;
         letter-spacing: 1.5px;
@@ -79,7 +89,6 @@
         margin-top: 5px;
     }
 
-    /* Scrollbar invisível para o wrapper no mobile */
     .category-wrapper::-webkit-scrollbar { display: none; }
     
     @media (max-width: 991px) {

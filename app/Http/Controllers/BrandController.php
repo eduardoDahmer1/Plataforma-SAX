@@ -36,23 +36,22 @@ class BrandController extends Controller
         $page = $request->get('page', 1);
         $cacheKey = "brand_show_{$slug}_page_{$page}";
 
-        // 1. Busca a marca com cache
+        // 1. Busca a marca com cache (O campo 'banner' virá automaticamente aqui)
         $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
             return Brand::where('slug', $slug)->firstOrFail();
         });
 
-        // 2. Busca produtos que possuem foto válida diretamente no banco (mais rápido)
+        // 2. Busca produtos...
         $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand) {
             return $brand->products()
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
-                ->with(['brand', 'category']) // Eager loading para evitar N+1
+                ->with(['brand', 'category'])
                 ->latest()
                 ->paginate(12)
                 ->withQueryString();
         });
 
-        // 3. Retorna a view (Certifique-se de que a view usa o componente de card estilo SAX)
         return view('brands.show', compact('brand', 'products'));
     }
 }

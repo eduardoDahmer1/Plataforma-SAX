@@ -15,18 +15,21 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        // Limpa caches antigos de imagens que deram erro (opcional, remova após testar)
-        // Cache::forget('categories_home_strip');
-        // Cache::forget('home_brands_3d');
-
         // 1. Configurações Gerais
         $settings = Cache::remember('general_settings', 600, fn() => Generalsetting::first());
 
         // 2. Tipos de destaques
         $highlightTypes = [
-            'destaque', 'mais_vendidos', 'melhores_avaliacoes', 'super_desconto',
-            'famosos', 'lancamentos', 'tendencias', 'promocoes', 
-            'ofertas_relampago', 'navbar'
+            'destaque',
+            'mais_vendidos',
+            'melhores_avaliacoes',
+            'super_desconto',
+            'famosos',
+            'lancamentos',
+            'tendencias',
+            'promocoes',
+            'ofertas_relampago',
+            'navbar'
         ];
 
         // 3. Busca produtos destacados
@@ -40,26 +43,30 @@ class HomeController extends Controller
             });
         }
 
-        // 4. Categorias para o "Category Strip" (Ajustado para pegar as 5 principais)
-        $categoriesStrip = Cache::remember('categories_home_strip', 600, function () {
-            // Removido o whereNotNull para debugar; se não tiver imagem, o Blade tratará
-            return Category::select('id', 'name', 'slug', 'image')
-                ->whereHas('products')
-                ->orderBy('id', 'desc') // Pega as mais recentes ou ajuste conforme preferir
-                ->take(5)
+        // 4. Categorias para o "Category Strip" (Mapeado com Slugs e Coluna PHOTO)
+        $categoriesStrip = Cache::remember('categories_home_strip_v4', 600, function () {
+            // Slugs identificados no seu banco de dados
+            $targetSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
+
+            return Category::select('id', 'name', 'slug', 'photo')
+                ->whereIn('slug', $targetSlugs)
+                ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'optico', 'casa')")
                 ->get();
         });
 
         // 5. Marcas para o "Slider 3D"
         $brands = Cache::remember('home_brands_3d', 600, function () {
-            return Brand::select('id', 'name', 'slug', 'image')
+            return Brand::select('id', 'name', 'slug', 'image', 'banner')
                 ->whereHas('products')
                 ->take(10)
                 ->get();
         });
 
         // 6. Dados para Filtros e Menus
-        $allCategories = Cache::remember('categories_all', 600, fn() =>
+        $allCategories = Cache::remember(
+            'categories_all',
+            600,
+            fn() =>
             Category::selectRaw("id, COALESCE(NULLIF(name,''),slug) as name, slug")->orderBy('name')->get()
         );
 

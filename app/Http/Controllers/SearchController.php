@@ -15,61 +15,56 @@ class SearchController extends Controller
 {
     /**
      * Index de Busca Otimizada
-     * Exceções: Oculta apenas produtos sem imagem OU sem estoque.
      */
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 35);
         
-        // Chave de cache baseada nos filtros para máxima velocidade
-        $cacheKey = 'search_filtered_v2_' . md5(json_encode($request->all()));
+        // Iniciamos a query filtrando apenas o que é ATIVO e tem ESTOQUE/FOTO
+        $query = Product::query()
+            ->select(['id', 'name', 'external_name', 'sku', 'price', 'stock', 'photo', 'brand_id', 'category_id', 'slug', 'status'])
+            ->with(['brand:id,name'])
+            ->where('status', 1)            // Apenas produtos ativos
+            ->where('stock', '>', 0)        // Com estoque
+            ->whereNotNull('photo')         // Com foto
+            ->where('photo', '!=', '');
 
-        $paginated = Cache::remember($cacheKey, 600, function () use ($request, $perPage) {
-            $query = Product::query()
-                ->select(['id', 'name', 'external_name', 'sku', 'price', 'stock', 'photo', 'brand_id', 'slug', 'status'])
-                ->with(['brand:id,name']);
+        // Filtro de Busca Textual
+        if ($request->filled('search')) {
+            $term = "%{$request->search}%";
+            $query->where(function($q) use ($term) {
+                $q->where('external_name', 'like', $term)
+                  ->orWhere('name', 'like', $term)
+                  ->orWhere('sku', 'like', $term);
+            });
+        }
 
-            /**
-             * AS DUAS EXCEÇÕES SOLICITADAS:
-             * 1. Precisa ter imagem (photo não nulo e não vazio)
-             * 2. Precisa ter estoque (stock maior que zero)
-             */
-            $query->whereNotNull('photo')
-                  ->where('photo', '!=', '')
-                  ->where('stock', '>', 0);
+        // Filtros de Sidebar
+        $query->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
+              ->when($request->category, fn($q) => $q->where('category_id', $request->category))
+              ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
+              ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory));
 
-            // Filtro de Busca Textual
-            if ($request->filled('search')) {
-                $term = "%{$request->search}%";
-                $query->where(function($q) use ($term) {
-                    $q->where('external_name', 'like', $term)
-                      ->orWhere('name', 'like', $term)
-                      ->orWhere('sku', 'like', $term);
-                });
-            }
+        // Filtro de Preço
+        $query->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
+              ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
 
-            // Filtros de Sidebar
-            $query->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
-                  ->when($request->category, fn($q) => $q->where('category_id', $request->category))
-                  ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
-                  ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory));
+        // Aplica Ordenação
+        $this->applySorting($query, $request->sort_by);
 
-            // Filtro de Preço
-            $query->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
-                  ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
+        // Paginação Nativa - withQueryString preserva os filtros ao trocar de página
+        $paginated = $query->paginate($perPage)->withQueryString();
 
-            // Aplica Ordenação
-            $this->applySorting($query, $request->sort_by);
-
-            // Paginação Nativa (Rápida)
-            return $query->paginate($perPage)->withQueryString();
-        });
-
-        // Cache dos filtros da sidebar (1 hora)
-        $sidebarData = Cache::remember('search_sidebar_v2', 3600, function() {
+        // Dados da Sidebar (Cache de 1 hora, mas filtrando as categorias permitidas)
+        $sidebarData = Cache::remember('search_sidebar_v3', 3600, function() {
+            $allowedCategoryIds = [91, 115, 139, 140, 141, 143, 144, 146, 149, 150, 152, 168, 169, 170, 158];
+            
             return [
                 'brands'          => Brand::select('id', 'name')->orderBy('name')->get(),
-                'categories'      => Category::select('id', 'name')->orderBy('name')->get(),
+                'categories'      => Category::select('id', 'name', 'slug')
+                                        ->whereIn('id', $allowedCategoryIds)
+                                        ->orderBy('name')
+                                        ->get(),
                 'subcategories'   => Subcategory::select('id', 'name')->orderBy('name')->get(),
                 'childcategories' => Childcategory::select('id', 'name')->orderBy('name')->get(),
             ];
@@ -84,6 +79,7 @@ class SearchController extends Controller
         return view('search.search', array_merge($sidebarData, [
             'paginated' => $paginated,
             'cartItems' => $cartItems,
+            'request'   => $request, // Passamos o request completo para o componente
             'query'     => $request->search
         ]));
     }
@@ -100,7 +96,7 @@ class SearchController extends Controller
             'name_za'    => $query->orderBy('external_name', 'desc'),
             'price_low'  => $query->orderBy('price', 'asc'),
             'price_high' => $query->orderBy('price', 'desc'),
-            default      => $query->orderBy('updated_at', 'desc'),
+            default      => $query->orderBy('id', 'desc'), // Ordenação padrão por ID para evitar duplicados
         };
     }
 }

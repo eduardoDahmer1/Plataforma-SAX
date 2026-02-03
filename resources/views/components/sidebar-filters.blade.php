@@ -1,23 +1,22 @@
-@props([
-    'request',
-    'brands' => [],
-    'categories' => [],
-    'subcategories' => [],
-    'childcategories' => []
-])
+@props(['request', 'brands' => [], 'categories' => [], 'subcategories' => [], 'childcategories' => []])
 
 @php
-use App\Models\Currency;
-$currentCurrencyId = session('currency', Currency::where('is_default', 1)->first()?->id);
-$currentCurrency = Currency::find($currentCurrencyId);
-$currencySign = $currentCurrency?->sign ?? '$';
-$currencyRate = $currentCurrency?->rate ?? 1;
+    use App\Models\Currency;
+    $currentCurrencyId = session('currency', Currency::where('is_default', 1)->first()?->id);
+    $currentCurrency = Currency::find($currentCurrencyId);
+    $currencySign = $currentCurrency?->sign ?? '$';
+    $currencyRate = $currentCurrency?->rate ?? 1;
 @endphp
 
 <style>
-    .tracking-widest { letter-spacing: 0.15em; }
-    .x-small { font-size: 0.65rem; }
-    
+    .tracking-widest {
+        letter-spacing: 0.15em;
+    }
+
+    .x-small {
+        font-size: 0.65rem;
+    }
+
     /* Botão de Filtro Estilo Figma */
     .btn-filter-trigger {
         border: 1px solid #000;
@@ -33,7 +32,11 @@ $currencyRate = $currentCurrency?->rate ?? 1;
         color: #000;
         text-decoration: none;
     }
-    .btn-filter-trigger:hover { background: #000; color: #fff; }
+
+    .btn-filter-trigger:hover {
+        background: #000;
+        color: #fff;
+    }
 
     /* Estilo dos Selects na Toolbar */
     .toolbar-label {
@@ -62,16 +65,20 @@ $currencyRate = $currentCurrency?->rate ?? 1;
         padding: 12px;
         text-transform: uppercase;
     }
-    .offcanvas-filter { width: 350px !important; border-left: 1px solid #000; }
+
+    .offcanvas-filter {
+        width: 350px !important;
+        border-left: 1px solid #000;
+    }
 </style>
 
 <div class="d-flex justify-content-between align-items-center px-0 py-3 border-bottom border-top mb-4">
-    
+
     <div class="col-auto">
         <button class="btn-filter-trigger" type="button" data-bs-toggle="offcanvas" data-bs-target="#modalFiltros">
             <span class="fw-bold text-uppercase x-small tracking-widest">Todos los filtros</span>
             <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 1H18M0 6H12M0 11H18" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M0 1H18M0 6H12M0 11H18" stroke="currentColor" stroke-width="1.5" />
             </svg>
         </button>
     </div>
@@ -100,7 +107,8 @@ $currencyRate = $currentCurrency?->rate ?? 1;
             {{-- Mostrar --}}
             <div class="d-flex align-items-center gap-2 border-start ps-3 ps-md-4">
                 <label class="toolbar-label d-none d-md-block mb-0">Mostrar:</label>
-                <select name="per_page" class="form-select toolbar-select" style="width: 80px;" onchange="this.form.submit()">
+                <select name="per_page" class="form-select toolbar-select" style="width: 80px;"
+                    onchange="this.form.submit()">
                     <option value="35" @selected($request->per_page == 35)>35</option>
                     <option value="70" @selected($request->per_page == 70)>70</option>
                     <option value="100" @selected($request->per_page == 100)>100</option>
@@ -137,8 +145,34 @@ $currencyRate = $currentCurrency?->rate ?? 1;
                 <label class="toolbar-label d-block mb-2">Categoría</label>
                 <select name="category" class="form-select sax-filter-input">
                     <option value="">Todas</option>
+                    @php
+                        // Lista de IDs permitidos conforme sua solicitação
+                        $allowedCategoryIds = [
+                            91,
+                            115,
+                            139,
+                            140,
+                            141,
+                            143,
+                            144,
+                            146,
+                            149,
+                            150,
+                            152,
+                            168,
+                            169,
+                            170,
+                            158,
+                        ];
+                    @endphp
+
                     @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" @selected($request->category == $category->id)>{{ $category->name }}</option>
+                        {{-- Verifica se o ID da categoria atual está na lista permitida --}}
+                        @if (in_array($category->id, $allowedCategoryIds))
+                            <option value="{{ $category->id }}" @selected($request->category == $category->id)>
+                                {{ $category->name ?? $category->slug }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>
@@ -146,16 +180,20 @@ $currencyRate = $currentCurrency?->rate ?? 1;
             <div class="mb-4">
                 <label class="toolbar-label d-block mb-2">Precio ({{ $currencySign }})</label>
                 <div class="d-flex align-items-center gap-2">
-                    <input type="number" name="min_price" class="form-control sax-filter-input" placeholder="Min" value="{{ $request->min_price }}">
-                    <input type="number" name="max_price" class="form-control sax-filter-input" placeholder="Max" value="{{ $request->max_price }}">
+                    <input type="number" name="min_price" class="form-control sax-filter-input" placeholder="Min"
+                        value="{{ $request->min_price }}">
+                    <input type="number" name="max_price" class="form-control sax-filter-input" placeholder="Max"
+                        value="{{ $request->max_price }}">
                 </div>
             </div>
 
             <div class="d-grid gap-2 mt-5">
-                <button type="submit" class="btn btn-dark rounded-0 py-3 text-uppercase fw-bold x-small tracking-widest">
+                <button type="submit"
+                    class="btn btn-dark rounded-0 py-3 text-uppercase fw-bold x-small tracking-widest">
                     Aplicar Filtros
                 </button>
-                <a href="{{ route('search', ['search' => $request->search]) }}" class="btn btn-link text-dark text-decoration-none text-center x-small fw-bold text-uppercase mt-2">
+                <a href="{{ route('search', ['search' => $request->search]) }}"
+                    class="btn btn-link text-dark text-decoration-none text-center x-small fw-bold text-uppercase mt-2">
                     Limpiar todo
                 </a>
             </div>

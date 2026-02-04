@@ -40,7 +40,6 @@
                                 {{-- Info Centralizada e Minimalista --}}
                                 <div class="category-info">
                                     <h5 class="category-name">{{ $category->name ?? $category->slug }}</h5>
-                                    <span class="product-count">{{ $category->products_count }} artículos</span>
                                 </div>
                             </a>
                         </div>

@@ -39,7 +39,6 @@
                                 </div>
                                 <div class="brand-info">
                                     <h5 class="brand-name">{{ $brand->name ?? $brand->slug }}</h5>
-                                    <span class="product-count">{{ $brand->products_count }} articulos</span>
                                 </div>
                             </a>
                         </div>

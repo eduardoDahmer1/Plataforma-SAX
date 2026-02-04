@@ -31,6 +31,7 @@
         height: 42px;
         color: #000;
         text-decoration: none;
+        white-space: nowrap; /* Evita que o texto quebre dentro do botão */
     }
 
     .btn-filter-trigger:hover {
@@ -44,6 +45,7 @@
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        white-space: nowrap;
     }
 
     .toolbar-select {
@@ -52,9 +54,10 @@
         font-size: 0.75rem !important;
         text-transform: uppercase;
         font-weight: 700;
-        padding: 8px 30px 8px 12px !important;
+        padding: 8px 24px 8px 10px !important; /* Ajuste fino de padding para mobile */
         height: 42px;
         background-color: #fff;
+        min-width: 80px;
     }
 
     /* Modal / Offcanvas */
@@ -68,13 +71,34 @@
 
     .offcanvas-filter {
         width: 350px !important;
+        max-width: 90vw; /* Garante que em celulares muito pequenos não passe da tela */
         border-left: 1px solid #000;
+    }
+
+    /* Ajuste de responsividade para a barra de ferramentas */
+    @media (max-width: 576px) {
+        .toolbar-container {
+            flex-wrap: wrap; /* Permite quebrar linha se não couber */
+            gap: 10px;
+            justify-content: center !important; /* Centraliza no mobile */
+        }
+        
+        .btn-filter-trigger {
+            padding: 10px 12px;
+            font-size: 0.6rem;
+        }
+
+        .toolbar-select {
+            padding: 8px 20px 8px 8px !important;
+        }
     }
 </style>
 
-<div class="d-flex justify-content-between align-items-center px-0 py-3 border-bottom border-top mb-4">
+{{-- Container principal com Flex Wrap para não quebrar o layout --}}
+<div class="toolbar-container d-flex justify-content-between align-items-center px-2 py-3 border-bottom border-top mb-4">
 
-    <div class="col-auto">
+    {{-- Filtro (Esquerda) --}}
+    <div class="flex-shrink-0">
         <button class="btn-filter-trigger" type="button" data-bs-toggle="offcanvas" data-bs-target="#modalFiltros">
             <span class="fw-bold text-uppercase x-small tracking-widest">Todos los filtros</span>
             <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,9 +107,9 @@
         </button>
     </div>
 
-    <div class="col-auto">
-        <form id="sortForm" method="GET" class="d-flex align-items-center gap-3 gap-md-4">
-            {{-- Preservar os valores dos filtros do Modal no envio do Sort --}}
+    {{-- Sort e Per Page (Direita) --}}
+    <div class="flex-shrink-0">
+        <form id="sortForm" method="GET" class="d-flex align-items-center gap-2 gap-md-4">
             <input type="hidden" name="search" value="{{ $request->search }}">
             <input type="hidden" name="brand" value="{{ $request->brand }}">
             <input type="hidden" name="category" value="{{ $request->category }}">
@@ -93,8 +117,8 @@
             <input type="hidden" name="max_price" value="{{ $request->max_price }}">
 
             {{-- Ordenar por --}}
-            <div class="d-flex align-items-center gap-2">
-                <label class="toolbar-label d-none d-md-block mb-0">Ordenar por:</label>
+            <div class="d-flex align-items-center gap-1 gap-md-2">
+                <label class="toolbar-label d-none d-lg-block mb-0">Ordenar por:</label>
                 <select name="sort_by" class="form-select toolbar-select" onchange="this.form.submit()">
                     <option value="">Padrão</option>
                     <option value="latest" @selected($request->sort_by == 'latest')>Último</option>
@@ -105,9 +129,9 @@
             </div>
 
             {{-- Mostrar --}}
-            <div class="d-flex align-items-center gap-2 border-start ps-3 ps-md-4">
-                <label class="toolbar-label d-none d-md-block mb-0">Mostrar:</label>
-                <select name="per_page" class="form-select toolbar-select" style="width: 80px;"
+            <div class="d-flex align-items-center gap-1 gap-md-2 border-start ps-2 ps-md-4">
+                <label class="toolbar-label d-none d-lg-block mb-0">Mostrar:</label>
+                <select name="per_page" class="form-select toolbar-select" style="width: 70px;"
                     onchange="this.form.submit()">
                     <option value="35" @selected($request->per_page == 35)>35</option>
                     <option value="70" @selected($request->per_page == 70)>70</option>
@@ -118,6 +142,7 @@
     </div>
 </div>
 
+{{-- Offcanvas de Filtros --}}
 <div class="offcanvas offcanvas-end offcanvas-filter" tabindex="-1" id="modalFiltros">
     <div class="offcanvas-header border-bottom px-4 py-4">
         <h5 class="offcanvas-title text-uppercase fw-bold tracking-widest small">Filtrar por</h5>
@@ -126,7 +151,6 @@
 
     <div class="offcanvas-body px-4 py-4">
         <form action="{{ route('search') }}" method="GET">
-            {{-- Preservar o termo de busca e ordenação atual no modal --}}
             <input type="hidden" name="search" value="{{ $request->search }}">
             <input type="hidden" name="sort_by" value="{{ $request->sort_by }}">
             <input type="hidden" name="per_page" value="{{ $request->per_page }}">
@@ -146,28 +170,10 @@
                 <select name="category" class="form-select sax-filter-input">
                     <option value="">Todas</option>
                     @php
-                        // Lista de IDs permitidos conforme sua solicitação
-                        $allowedCategoryIds = [
-                            91,
-                            115,
-                            139,
-                            140,
-                            141,
-                            143,
-                            144,
-                            146,
-                            149,
-                            150,
-                            152,
-                            168,
-                            169,
-                            170,
-                            158,
-                        ];
+                        $allowedCategoryIds = [91, 115, 139, 140, 141, 143, 144, 146, 149, 150, 152, 168, 169, 170, 158];
                     @endphp
 
                     @foreach ($categories as $category)
-                        {{-- Verifica se o ID da categoria atual está na lista permitida --}}
                         @if (in_array($category->id, $allowedCategoryIds))
                             <option value="{{ $category->id }}" @selected($request->category == $category->id)>
                                 {{ $category->name ?? $category->slug }}

@@ -114,7 +114,7 @@
         }
 
         .sax-item.n2 {
-            transform: translate3d(180%, 0, -250px) rotateY(-45deg);
+            transform: translate3d(180%, 0, -250px);
             z-index: 2;
             opacity: 0.2;
         }
@@ -217,7 +217,7 @@
                 : `{{ asset('storage') }}/${imgFile}`;
 
             div.innerHTML = `
-                <a href="{{ url('brand') }}/${brand.slug || brand.id}">
+                <a href="{{ url('marcas') }}/${brand.slug || brand.id}">
                     <img src="${imgPath}" alt="${brand.name}" 
                          onerror="this.src='https://placehold.co/320x480/222/fff?text=${brand.name.replace(/\s/g, '+')}'">
                 </a>

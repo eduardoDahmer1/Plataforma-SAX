@@ -327,6 +327,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('brands', BrandControllerAdmin::class);
     Route::delete('brands/{brand}/delete-logo', [BrandControllerAdmin::class, 'deleteLogo'])->name('brands.deleteLogo');
     Route::delete('brands/{brand}/delete-banner', [BrandControllerAdmin::class, 'deleteBanner'])->name('brands.deleteBanner');
+    Route::delete('admin/brands/{brand}/delete-internal-banner', [BrandControllerAdmin::class, 'deleteInternalBanner'])->name('admin.brands.deleteInternalBanner');
 
     // Contacts Admin
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);

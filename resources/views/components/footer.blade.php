@@ -1,39 +1,56 @@
 <footer class="sax-footer-minimal">
     <div class="container">
+        @php
+            // Reutilizando a lógica do header para manter consistência
+            $menuSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
+            $footerCategories = \App\Models\Category::whereIn('slug', $menuSlugs)
+                ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'optico', 'casa')")
+                ->get();
+
+            $labelMap = [
+                'feminino'  => 'MUJER',
+                'masculino' => 'HOMBRE',
+                'infantil'  => 'NIÑOS',
+                'optico'    => 'LENTES',
+                'casa'      => 'HOGAR'
+            ];
+        @endphp
+
         <div class="row g-4 justify-content-between">
             
-            {{-- Coluna 1: Atendimento --}}
+            {{-- Coluna 1: Categorias (Extraídas do Header) --}}
+            <div class="col-12 col-md-3">
+                <h6 class="footer-sax-title">Categorías</h6>
+                <ul class="footer-sax-list">
+                    @foreach($footerCategories as $cat)
+                        <li>
+                            <a href="{{ url('categorias/' . $cat->slug) }}">
+                                {{ $labelMap[$cat->slug] ?? strtoupper($cat->name) }}
+                            </a>
+                        </li>
+                    @endforeach
+                    <li><a href="{{ route('bridal.index') }}">BRIDAL</a></li>
+                    <li><a href="{{ route('palace.index') }}">PALACE</a></li>
+                    <li><a href="{{ route('categories.index') }}">TODAS LAS CATEGORÍAS</a></li>
+                </ul>
+            </div>
+
+            {{-- Coluna 2: Institucional e Marcas --}}
+            <div class="col-12 col-md-3">
+                <h6 class="footer-sax-title">Sobre S.A.X.</h6>
+                <ul class="footer-sax-list">
+                    <li><a href="{{ route('brands.index') }}">Nuestras Marcas</a></li>
+                    <li><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
+                    <li><a href="{{ route('palace.index') }}">Servicios SAX Palace</a></li>
+                    <li><a href="{{ route('contact.form') }}">Trabaja con nosotros</a></li>
+                </ul>
+            </div>
+
+            {{-- Coluna 3: Atendimento e Contato --}}
             <div class="col-12 col-md-3">
                 <h6 class="footer-sax-title">Atención al Cliente</h6>
-                <ul class="footer-sax-list">
-                    <li><a href="{{ route('contact.form') }}">Ayuda y contactos</a></li>
-                    <li><a href="#">Preguntas Frecuentes</a></li>
-                    <li><a href="#">Pedidos y envíos</a></li>
-                    <li><a href="#">Límites de importación</a></li>
-                    <li><a href="#">Devoluciones y reembolsos</a></li>
-                    <li><a href="#">Pagos y precios</a></li>
-                    <li><a href="#">Compromiso de S.A.X. con el Cliente</a></li>
-                </ul>
-            </div>
-
-            {{-- Coluna 2: Institucional --}}
-            <div class="col-12 col-md-3">
-                <h6 class="footer-sax-title">Acerca de S.A.X.</h6>
-                <ul class="footer-sax-list">
-                    <li><a href="#">Sobre nosotros</a></li>
-                    <li><a href="#">Parceros de S.A.X.</a></li>
-                    <li><a href="{{ route('contact.form') }}">Trabaja con nosotros</a></li>
-                    <li><a href="#">Publicidad de S.A.X.</a></li>
-                </ul>
-            </div>
-
-            {{-- Coluna 3: Fidelidade e Social --}}
-            <div class="col-12 col-md-3">
-                <h6 class="footer-sax-title">Descuentos y fidelidad</h6>
                 <ul class="footer-sax-list mb-4">
-                    <li><a href="#">Programa de afiliados</a></li>
-                    <li><a href="#">Enviar a un amigo</a></li>
-                    <li><a href="#">Programa de Lealtad</a></li>
+                    <li><a href="{{ route('contact.form') }}">Ayuda y contacto</a></li>
                 </ul>
 
                 <h6 class="footer-sax-title mb-3">Síguenos en las redes</h6>

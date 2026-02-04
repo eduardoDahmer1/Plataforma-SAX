@@ -3,13 +3,14 @@
 @section('content')
     <div class="brand-detail-wrapper">
         {{-- Header da Marca --}}
-        <div class="brand-hero py-5 border-bottom">
+        <div class="brand-header pt-4">
             <div class="container text-center">
                 <a href="{{ route('brands.index') }}" class="back-link">
                     <i class="fas fa-chevron-left me-1"></i> VOLVER
                 </a>
                 
-                <div class="brand-logo-main my-4">
+                {{-- Logo Centralizada --}}
+                <div class="brand-logo-main mt-3 mb-4">
                     @if ($brand->image && Storage::disk('public')->exists($brand->image))
                         <img src="{{ Storage::url($brand->image) }}" alt="{{ $brand->name }}" class="main-logo-img">
                     @else
@@ -17,23 +18,39 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Banner 100% Width e Height Ajustado --}}
+            @if($brand->internal_banner || $brand->banner)
+                <div class="brand-banner-fullwidth">
+                    {{-- Desktop: Prioriza Internal Banner --}}
+                    <div class="d-none d-md-block">
+                        <img src="{{ Storage::url($brand->internal_banner ?? $brand->banner) }}" 
+                             class="banner-img-render" alt="{{ $brand->name }}">
+                    </div>
+
+                    {{-- Mobile: Prioriza Banner Normal --}}
+                    <div class="d-block d-md-none">
+                        <img src="{{ Storage::url($brand->banner ?? $brand->internal_banner) }}" 
+                             class="banner-img-render" alt="{{ $brand->name }}">
+                    </div>
+                </div>
+            @endif
         </div>
 
-        <div class="container-fluid px-2 py-5"> {{-- container-fluid para ocupar mais espaço como na busca --}}
+        {{-- Seção de Produtos --}}
+        <div class="container-fluid px-1 py-4">
             @if ($products->count())
-                <div class="row g-1"> {{-- g-1 para o grid colado idêntico à imagem --}}
+                <div class="row g-1">
                     @foreach ($products as $item)
                         <div class="col-6 col-md-4 col-lg-2">
                             <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none">
                                 <div class="card h-100 border-0 rounded-0 jw-product-card">
                                     
-                                    {{-- Área da Imagem --}}
                                     <div class="jw-img-container position-relative">
                                         <img src="{{ $item->photo_url }}" 
                                              class="card-img-top img-fluid rounded-0" 
                                              alt="{{ $item->external_name }}">
 
-                                        {{-- Favorito --}}
                                         <div class="position-absolute top-0 end-0 p-3">
                                             @auth
                                                 <x-product-favorite-button :item="$item" />
@@ -41,7 +58,6 @@
                                         </div>
                                     </div>
 
-                                    {{-- Info do Produto --}}
                                     <div class="card-body px-3 py-4">
                                         <div class="jw-brand fw-bold text-uppercase mb-1">
                                             {{ $brand->name }}
@@ -59,94 +75,88 @@
                     @endforeach
                 </div>
 
-                {{-- Paginação --}}
                 <div class="d-flex justify-content-center mt-5">
                     {{ $products->links() }}
                 </div>
             @else
-                <div class="alert alert-light text-center py-5">
-                    No se encontraron productos para esta marca.
+                <div class="text-center py-5">
+                    <p class="text-muted">No se encontraron productos para esta marca.</p>
                 </div>
             @endif
         </div>
     </div>
 @endsection
+
 <style>
-    /* Container de Marca */
-.brand-detail-wrapper { background-color: #fff; }
+    .brand-detail-wrapper { background-color: #fff; overflow-x: hidden; }
 
-.main-logo-img { max-height: 60px; width: auto; object-fit: contain; }
+    /* Logo Ajustes */
+    .main-logo-img { max-height: 7em; width: auto; object-fit: contain; }
+    .back-link {
+        color: #888;
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
 
-.back-link {
-    color: #888;
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    text-decoration: none;
-    text-transform: uppercase;
-}
+    /* BANNER AJUSTADO: 100% largura e Altura Controlada */
+    .brand-banner-fullwidth {
+        width: 100% !important;
+        margin: 0;
+        padding: 0;
+        line-height: 0; /* Remove espaços fantasmas abaixo da imagem */
+    }
 
-/* Card JW Estilo */
-.jw-product-card {
-    background-color: #f2f2f2 !important; /* Fundo cinza da imagem */
-    transition: opacity 0.3s ease;
-}
+    .banner-img-render {
+        width: 100% !important;
+        height: 350px !important; /* Ajuste aqui a altura desejada para desktop */
+        object-fit: cover; /* Faz a imagem preencher o espaço sem esticar */
+        object-position: center; /* Centraliza o foco da imagem */
+        display: block;
+    }
 
-.jw-product-card:hover { opacity: 0.9; }
+    /* Grid de Produtos estilo "Colado" */
+    .container-fluid {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
 
-.jw-img-container {
-    aspect-ratio: 4 / 5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    background-color: #f2f2f2;
-}
+    .jw-product-card {
+        background-color: #f8f8f8 !important;
+        transition: opacity 0.3s;
+    }
 
-.jw-img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+    .jw-product-card:hover { opacity: 0.9; }
 
-/* Tipografia */
-.jw-brand {
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    color: #000;
-}
+    .jw-img-container {
+        aspect-ratio: 3 / 4;
+        background-color: #f8f8f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
 
-.jw-product-name {
-    font-size: 0.8rem;
-    letter-spacing: 0.02em;
-    color: #666 !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+    .jw-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
-.jw-price {
-    font-size: 0.85rem;
-    color: #000;
-}
+    /* Tipografia */
+    .jw-brand { font-size: 0.7rem; letter-spacing: 1px; color: #000; }
+    .jw-product-name { font-size: 0.75rem; color: #666 !important; }
+    .jw-price { font-size: 0.85rem; color: #000; margin-top: 4px; }
 
-/* Botão Favorito */
-.btn-favorite-sax {
-    background: transparent;
-    border: none;
-    color: #000;
-    padding: 0;
-    transition: transform 0.2s ease;
-}
-
-.btn-favorite-sax:hover { transform: scale(1.1); }
-
-/* Ajuste de Grid */
-.g-1 {
-    margin-right: -2px;
-    margin-left: -2px;
-}
-.g-1 > [class*="col-"] {
-    padding-right: 2px;
-    padding-left: 2px;
-}
+    /* Responsividade para Mobile */
+    @media (max-width: 768px) {
+        .banner-img-render {
+            height: 200px !important; /* Altura menor no celular */
+        }
+        
+        .g-1 > div {
+            padding: 1px !important; /* Espaçamento mínimo entre cards no mobile */
+        }
+    }
 </style>

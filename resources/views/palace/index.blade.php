@@ -221,45 +221,60 @@
     </div>
 </section>
 
-<section class="section-padding bg-palace-soft border-top border-dark">
-    <div class="container text-center">
+<section class="section-padding bg-palace-soft border-top border-dark py-5">
+    <div class="container">
         <div class="row justify-content-center mb-5" data-aos="fade-up">
-            <div class="col-lg-8">
+            <div class="col-lg-8 text-center">
                 <h2 class="display-4 font-serif">Celebre Conosco</h2>
                 <p class="text-secondary">Transformamos seus sonhos em eventos memoráveis, com infraestrutura completa e buffet personalizado.</p>
             </div>
         </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="100">
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-sm-6 col-lg-3" data-aos="zoom-in" data-aos-delay="100">
                 <div class="event-card">
-                    <img src="https://images.unsplash.com/photo-1519741497674-611481863552" class="event-img">
+                    <img src="https://images.unsplash.com/photo-1519741497674-611481863552" class="event-img" alt="Casamentos">
                     <div class="event-overlay">
-                        <h4 class="font-serif">Boda (Casamentos)</h4>
-                        <p class="small">Decorações românticas exclusivas sem custo adicional para o casal.</p>
+                        <h4 class="font-serif h5">Boda (Casamentos)</h4>
+                        <p class="small">Decorações românticas exclusivas sem custo adicional.</p>
                         <hr class="border-gold w-25 mx-auto">
-                        <a href="#" class="btn-palace btn-sm py-2">Solicitar Orçamento</a>
+                        <a href="#" class="btn-palace btn-sm py-2 px-3 border border-white text-white text-decoration-none">Solicitar Orçamento</a>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="200">
+
+            <div class="col-sm-6 col-lg-3" data-aos="zoom-in" data-aos-delay="200">
                 <div class="event-card">
-                    <img src="https://images.unsplash.com/photo-1511578314322-379afb476865" class="event-img">
+                    <img src="https://images.unsplash.com/photo-1511578314322-379afb476865" class="event-img" alt="Corporativo">
                     <div class="event-overlay">
-                        <h4 class="font-serif">Corporativo</h4>
-                        <p class="small">Lançamentos de marcas, palestras e confraternizações em alto estilo.</p>
+                        <h4 class="font-serif h5">Corporativo</h4>
+                        <p class="small">Lançamentos de marcas e confraternizações em alto estilo.</p>
                         <hr class="border-gold w-25 mx-auto">
-                        <a href="#" class="btn-palace btn-sm py-2">Ver Espaços</a>
+                        <a href="#" class="btn-palace btn-sm py-2 px-3 border border-white text-white text-decoration-none">Ver Espaços</a>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-4" data-aos="zoom-in" data-aos-delay="300">
+
+            <div class="col-sm-6 col-lg-3" data-aos="zoom-in" data-aos-delay="300">
                 <div class="event-card">
-                    <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176" class="event-img">
+                    <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176" class="event-img" alt="Celebrações">
                     <div class="event-overlay">
-                        <h4 class="font-serif">Datas Especiais</h4>
-                        <p class="small">Aniversários, noivados e celebrações íntimas personalizadas.</p>
+                        <h4 class="font-serif h5">Datas Especiais</h4>
+                        <p class="small">Aniversários, noivados e celebrações íntimas.</p>
                         <hr class="border-gold w-25 mx-auto">
-                        <a href="#" class="btn-palace btn-sm py-2">Reservar Data</a>
+                        <a href="#" class="btn-palace btn-sm py-2 px-3 border border-white text-white text-decoration-none">Reservar Data</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3" data-aos="zoom-in" data-aos-delay="400">
+                <div class="event-card">
+                    <img src="https://images.unsplash.com/photo-1549417229-aa67d3263c09" class="event-img" alt="15 Anos">
+                    <div class="event-overlay">
+                        <h4 class="font-serif h5">Debutantes</h4>
+                        <p class="small">O brilho e a magia dos 15 anos em uma festa inesquecível.</p>
+                        <hr class="border-gold w-25 mx-auto">
+                        <a href="#" class="btn-palace btn-sm py-2 px-3 border border-white text-white text-decoration-none">Saiba Mais</a>
                     </div>
                 </div>
             </div>

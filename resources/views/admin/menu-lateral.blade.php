@@ -73,6 +73,9 @@
                 </button>
                 <a href="{{ route('admin.currencies.index') }}" class="submenu-link"><i class="fa-solid fa-coins"></i> Moedas</a>
                 <a href="{{ route('admin.cupons.index') }}" class="submenu-link"><i class="fa-solid fa-ticket"></i> Cupons</a>
+                <a href="{{ route('admin.activate.index') }}" class="submenu-link">
+                    <i class="fa-solid fa-toggle-on"></i> Ativar Marcas/Categorias
+                </a>
             </div>
         </div>
     </nav>

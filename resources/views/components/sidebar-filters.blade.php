@@ -31,7 +31,8 @@
         height: 42px;
         color: #000;
         text-decoration: none;
-        white-space: nowrap; /* Evita que o texto quebre dentro do botão */
+        white-space: nowrap;
+        /* Evita que o texto quebre dentro do botão */
     }
 
     .btn-filter-trigger:hover {
@@ -54,7 +55,8 @@
         font-size: 0.75rem !important;
         text-transform: uppercase;
         font-weight: 700;
-        padding: 8px 24px 8px 10px !important; /* Ajuste fino de padding para mobile */
+        padding: 8px 24px 8px 10px !important;
+        /* Ajuste fino de padding para mobile */
         height: 42px;
         background-color: #fff;
         min-width: 80px;
@@ -71,18 +73,21 @@
 
     .offcanvas-filter {
         width: 350px !important;
-        max-width: 90vw; /* Garante que em celulares muito pequenos não passe da tela */
+        max-width: 90vw;
+        /* Garante que em celulares muito pequenos não passe da tela */
         border-left: 1px solid #000;
     }
 
     /* Ajuste de responsividade para a barra de ferramentas */
     @media (max-width: 576px) {
         .toolbar-container {
-            flex-wrap: wrap; /* Permite quebrar linha se não couber */
+            flex-wrap: wrap;
+            /* Permite quebrar linha se não couber */
             gap: 10px;
-            justify-content: center !important; /* Centraliza no mobile */
+            justify-content: center !important;
+            /* Centraliza no mobile */
         }
-        
+
         .btn-filter-trigger {
             padding: 10px 12px;
             font-size: 0.6rem;
@@ -169,16 +174,11 @@
                 <label class="toolbar-label d-block mb-2">Categoría</label>
                 <select name="category" class="form-select sax-filter-input">
                     <option value="">Todas</option>
-                    @php
-                        $allowedCategoryIds = [91, 115, 139, 140, 141, 143, 144, 146, 149, 150, 152, 168, 169, 170, 158];
-                    @endphp
 
                     @foreach ($categories as $category)
-                        @if (in_array($category->id, $allowedCategoryIds))
-                            <option value="{{ $category->id }}" @selected($request->category == $category->id)>
-                                {{ $category->name ?? $category->slug }}
-                            </option>
-                        @endif
+                        <option value="{{ $category->id }}" @selected($request->category == $category->id)>
+                            {{ $category->name ?? $category->slug }}
+                        </option>
                     @endforeach
                 </select>
             </div>

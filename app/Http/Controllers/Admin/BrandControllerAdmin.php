@@ -12,10 +12,17 @@ class BrandControllerAdmin extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $brands = Brand::when($search, fn($q) => 
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('id', $search)
-        )->orderBy('name')->paginate(18);
+        $brands = Brand::where('status', 1) // Adicionado: Filtra apenas as ativas
+            ->when(
+                $search,
+                fn($q) =>
+                $q->where(function ($sub) use ($search) { // Agrupado para não quebrar o status
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('id', $search);
+                })
+            )
+            ->orderBy('name')
+            ->paginate(18);
 
         return view('admin.brands.index', compact('brands'));
     }
@@ -121,10 +128,10 @@ class BrandControllerAdmin extends Controller
     {
         // Aumenta memória para processar banners grandes
         ini_set('memory_limit', '512M');
-        
+
         $tempPath = $image->getRealPath();
         $extension = strtolower($image->getClientOriginalExtension());
-        
+
         // Define o diretório baseado no tipo (Adicionado internal_banner)
         $directory = match ($type) {
             'banner' => 'brands/banner/',
@@ -144,7 +151,7 @@ class BrandControllerAdmin extends Controller
             Storage::disk('public')->putFileAs($directory, $image, $filename);
             return "{$directory}{$filename}";
         }
-    
+
         // Cria recurso de imagem conforme extensão
         $imageResource = match ($extension) {
             'jpeg', 'jpg' => imagecreatefromjpeg($tempPath),
@@ -152,7 +159,7 @@ class BrandControllerAdmin extends Controller
             'gif' => imagecreatefromgif($tempPath),
             default => null,
         };
-    
+
         if (!$imageResource) {
             // Fallback: se não conseguir converter, salva o original
             $origFilename = uniqid() . '.' . $extension;
@@ -164,14 +171,14 @@ class BrandControllerAdmin extends Controller
         imagepalettetotruecolor($imageResource);
         imagealphablending($imageResource, true);
         imagesavealpha($imageResource, true);
-    
+
         // Salva direto no disco (mais rápido e seguro que ob_start)
         imagewebp($imageResource, $fullPath, 80);
         imagedestroy($imageResource);
-    
+
         return "{$directory}{$filename}";
     }
-    
+
     public function show($id)
     {
         $brand = Brand::findOrFail($id);
@@ -187,7 +194,7 @@ class BrandControllerAdmin extends Controller
         $brand->save();
         return redirect()->back()->with('success', 'Logo excluída.');
     }
-    
+
     public function deleteBanner(Brand $brand)
     {
         if ($brand->banner && Storage::disk('public')->exists($brand->banner)) {

@@ -118,8 +118,8 @@ class ProductControllerAdmin extends Controller
             ->paginate(20)
             ->appends($request->query());
 
-        $brands = Brand::all();
-        $categories = Category::all();
+    $brands = Brand::where('status', 1)->orderBy('name')->get();
+    $categories = Category::where('status', 1)->orderBy('name')->get();
 
         $highlights = [
             'destaque' => 'Destaques',
@@ -159,12 +159,14 @@ class ProductControllerAdmin extends Controller
         return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'childcategories', 'products'));
     }
 
-    // ProductControllerAdmin.php
     public function search(Request $request)
     {
         $q = $request->get('q');
-        $products = Product::where('name', 'like', "%{$q}%")
-            ->orWhere('external_name', 'like', "%{$q}%")
+        $products = Product::where('status', 1) // Garante que o produto esteja ativo
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('external_name', 'like', "%{$q}%");
+            })
             ->limit(10)
             ->get(['id', 'name', 'external_name']);
 
@@ -265,11 +267,11 @@ class ProductControllerAdmin extends Controller
             'products'
         ));
     }
-// ================== UPDATE ==================
+    // ================== UPDATE ==================
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
-    
+
         // Validação
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
@@ -291,21 +293,29 @@ class ProductControllerAdmin extends Controller
             'size' => 'nullable|string|max:50',
             'color' => 'nullable|string|max:7',
         ]);
-    
+
         $data = $request->only([
-            'sku', 'name', 'description', 'price', 'stock', 
-            'brand_id', 'category_id', 'subcategory_id', 
-            'childcategory_id', 'size', 'color',
+            'sku',
+            'name',
+            'description',
+            'price',
+            'stock',
+            'brand_id',
+            'category_id',
+            'subcategory_id',
+            'childcategory_id',
+            'size',
+            'color',
         ]);
-    
+
         // Filtra IDs e prepara Highlights
         $parentIds = array_filter((array) $request->input('parent_id', []));
         $colorIds  = array_filter((array) $request->input('color_parent_id', []));
         $data['highlights'] = json_encode($request->input('highlights', []));
-    
+
         // Guarda IDs dos filhos atuais antes da mudança para comparar
         $oldParentIds = $product->parent_id ? explode(',', $product->parent_id) : [];
-    
+
         // Foto principal do Pai
         if ($request->hasFile('photo')) {
             // Deleta foto antiga se não estiver em uso
@@ -317,7 +327,7 @@ class ProductControllerAdmin extends Controller
             }
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
-    
+
         // Galeria do Pai
         if ($request->hasFile('gallery')) {
             $existingGallery = $product->gallery ? json_decode($product->gallery, true) : [];
@@ -337,10 +347,10 @@ class ProductControllerAdmin extends Controller
             $data['parent_id'] = implode(',', $parentIds);
             $data['color_parent_id'] = implode(',', $colorIds);
         }
-    
+
         // Atualiza o produto principal
         $product->update($data);
-    
+
         // --- LOGICA DE DESVINCULAÇÃO (Ex-filhos) ---
         $removedChildren = array_diff($oldParentIds, $parentIds);
         foreach ($removedChildren as $childId) {
@@ -354,13 +364,13 @@ class ProductControllerAdmin extends Controller
 
                 // Limpa Foto e Galeria do filho (Deletando arquivos se necessário)
                 $this->deleteProductImages($child);
-                
+
                 $child->photo = null;
                 $child->gallery = null;
                 $child->save();
             }
         }
-    
+
         // --- LOGICA DE VINCULAÇÃO / ATUALIZAÇÃO (Filhos atuais) ---
         $parentPhoto       = $product->photo;
         $parentGallery     = $product->gallery; // Já está em JSON
@@ -369,19 +379,19 @@ class ProductControllerAdmin extends Controller
         foreach ($parentIds as $childId) {
             $child = Product::find($childId);
             if (!$child) continue;
-    
+
             $child->parent_id = implode(',', $parentIds);
             $child->product_role = 'F';
             $child->description = $parentDescription; // Sincroniza descrição
             $child->photo = $parentPhoto;
             $child->gallery = $parentGallery;
-            
+
             if ($product->color) {
                 $child->color = $product->color;
             }
             $child->save();
         }
-    
+
         return redirect()->route('admin.products.index')->with('success', 'Produto e dependências atualizados!');
     }
 
@@ -411,7 +421,7 @@ class ProductControllerAdmin extends Controller
             }
         }
     }
-    
+
     // ================== DELETE GALLERY IMAGE ==================
     public function deleteGalleryImage(Request $request, $productId, $imageName)
     {
@@ -543,5 +553,4 @@ class ProductControllerAdmin extends Controller
 
         return view('admin.products.review', compact('edicoesPorDia'));
     }
-
 }

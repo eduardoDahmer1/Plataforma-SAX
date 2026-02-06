@@ -38,7 +38,7 @@ use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\AdminHighlightController;
 use App\Http\Controllers\Admin\CuponController;
-
+use App\Http\Controllers\Admin\ActivateBrandsAndCategoriesController;
 
 // Auth Controllers
 use App\Http\Controllers\Auth\UserController;
@@ -187,6 +187,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // Listar moedas
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
+
+    // Rotas para Ativar/Desativar Marcas e Categorias
+    Route::get('activate-control', [ActivateBrandsAndCategoriesController::class, 'index'])->name('activate.index');
+    Route::post('activate-toggle/{type}/{id}', [ActivateBrandsAndCategoriesController::class, 'toggleStatus'])->name('activate.toggle');
 
     Route::get('products/search', [ProductControllerAdmin::class, 'search'])->name('products.search');
 

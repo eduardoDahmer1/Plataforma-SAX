@@ -13,9 +13,13 @@ class CategoryControllerAdmin extends Controller
     {
         $search = $request->get('search');
 
-        $categories = Category::when($search, function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('slug', 'like', "%{$search}%");
+        // BUSCA DIRETA DO BANCO (Sem Cache::remember)
+        $categories = Category::where('status', 1)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%");
+                });
             })
             ->orderBy('name')
             ->paginate(18);
@@ -66,32 +70,32 @@ class CategoryControllerAdmin extends Controller
     public function update(Request $request, $id)
     {
         $category = Category::findOrFail($id);
-    
+
         $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
             'photo' => 'nullable|image|max:10240',
             'banner' => 'nullable|image|max:10240',
         ]);
-    
+
         $data = $request->only('name', 'slug');
-    
+
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             if ($category->photo && Storage::disk('public')->exists($category->photo)) {
                 Storage::disk('public')->delete($category->photo);
             }
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
-    
+
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
             if ($category->banner && Storage::disk('public')->exists($category->banner)) {
                 Storage::disk('public')->delete($category->banner);
             }
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
-    
+
         $category->update($data);
-    
+
         return redirect()->route('admin.categories.index')->with('success', 'Categoria atualizada com sucesso.');
     }
 
@@ -113,7 +117,7 @@ class CategoryControllerAdmin extends Controller
     {
         $tempPath = $image->getRealPath();
         $extension = strtolower($image->getClientOriginalExtension());
-    
+
         switch ($extension) {
             case 'jpeg':
             case 'jpg':
@@ -135,28 +139,28 @@ class CategoryControllerAdmin extends Controller
             default:
                 throw new \Exception('Formato de imagem não suportado.');
         }
-    
+
         if (!$imageResource) {
             throw new \Exception('Falha ao criar recurso de imagem.');
         }
-    
+
         ob_start();
         imagewebp($imageResource, null, 85); // qualidade 45
         $webpData = ob_get_clean();
         imagedestroy($imageResource);
-    
+
         $directory = ($type === 'banner') ? 'categories/banner/' : 'categories/photo/';
         $filename = uniqid() . '.webp';
-    
+
         if (!Storage::disk('public')->exists($directory)) {
             Storage::disk('public')->makeDirectory($directory);
         }
-    
+
         Storage::disk('public')->put("{$directory}{$filename}", $webpData);
-    
+
         return "{$directory}{$filename}";
     }
-    
+
 
     public function deletePhoto($id)
     {
@@ -169,7 +173,6 @@ class CategoryControllerAdmin extends Controller
         }
 
         return back()->with('success', 'Imagem removida com sucesso.');
-
     }
 
     public function deleteBanner($id)
@@ -184,5 +187,4 @@ class CategoryControllerAdmin extends Controller
 
         return back()->with('success', 'Imagem removida com sucesso.');
     }
-
 }

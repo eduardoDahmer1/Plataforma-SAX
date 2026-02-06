@@ -18,11 +18,13 @@ class BrandController extends Controller
         $page   = $request->get('page', 1);
         $search = $request->get('search', '');
 
-        // Chave de cache única por busca e página
         $cacheKey = "brands_index_{$page}_" . md5($search);
 
         $brands = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            $query = Brand::withCount('products')
+            $query = Brand::where('status', 1) // Adicionado: Somente marcas ativas
+                ->withCount(['products' => function ($q) {
+                    $q->where('status', 1); // Opcional: contar apenas produtos ativos também
+                }])
                 ->orderBy('name')
                 ->having('products_count', '>', 0);
 
@@ -45,10 +47,10 @@ class BrandController extends Controller
         $page = $request->get('page', 1);
         $cacheKey = "brand_show_{$slug}_page_{$page}";
 
-        // 1. Busca a marca com cache. 
-        // O campo 'internal_banner' agora faz parte da model recuperada.
         $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
-            return Brand::where('slug', $slug)->firstOrFail();
+            return Brand::where('slug', $slug)
+                ->where('status', 1) // Adicionado: Garante que marca inativa dê 404
+                ->firstOrFail();
         });
 
         // 2. Busca produtos da marca

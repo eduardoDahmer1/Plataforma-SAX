@@ -52,17 +52,17 @@ class SearchController extends Controller
         // Aplica Ordenação
         $this->applySorting($query, $request->sort_by);
 
-        // Paginação Nativa - withQueryString preserva os filtros ao trocar de página
         $paginated = $query->paginate($perPage)->withQueryString();
 
-        // Dados da Sidebar (Cache de 1 hora, mas filtrando as categorias permitidas)
+        // Dados da Sidebar - Agora filtrando apenas ATIVOS (Status 1)
         $sidebarData = Cache::remember('search_sidebar_v3', 3600, function() {
-            $allowedCategoryIds = [91, 115, 139, 140, 141, 143, 144, 146, 149, 150, 152, 168, 169, 170, 158];
-            
             return [
-                'brands'          => Brand::select('id', 'name')->orderBy('name')->get(),
+                'brands'          => Brand::select('id', 'name')
+                                        ->where('status', 1) // Apenas marcas ativas
+                                        ->orderBy('name')
+                                        ->get(),
                 'categories'      => Category::select('id', 'name', 'slug')
-                                        ->whereIn('id', $allowedCategoryIds)
+                                        ->where('status', 1) // Apenas categorias ativas (sem restrição de ID fixo)
                                         ->orderBy('name')
                                         ->get(),
                 'subcategories'   => Subcategory::select('id', 'name')->orderBy('name')->get(),
@@ -79,7 +79,7 @@ class SearchController extends Controller
         return view('search.search', array_merge($sidebarData, [
             'paginated' => $paginated,
             'cartItems' => $cartItems,
-            'request'   => $request, // Passamos o request completo para o componente
+            'request'   => $request,
             'query'     => $request->search
         ]));
     }
@@ -96,7 +96,7 @@ class SearchController extends Controller
             'name_za'    => $query->orderBy('external_name', 'desc'),
             'price_low'  => $query->orderBy('price', 'asc'),
             'price_high' => $query->orderBy('price', 'desc'),
-            default      => $query->orderBy('id', 'desc'), // Ordenação padrão por ID para evitar duplicados
+            default      => $query->orderBy('id', 'desc'), 
         };
     }
 }

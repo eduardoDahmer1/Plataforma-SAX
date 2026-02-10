@@ -4,7 +4,8 @@
 <div class="container mt-5 mb-5">
     <div class="text-center mb-4">
         <h2 class="fw-bold"><i class="fa fa-credit-card"></i> Pagamento Seguro</h2>
-        <p class="text-muted">Pedido #{{ $order->id }} - Finalize o pagamento abaixo.</p>
+        {{-- Adicionado o operador nulo ?? para garantir que a página carregue mesmo se o ID falhar --}}
+        <p class="text-muted">Pedido #{{ $order->id ?? 'N/A' }} - Finalize o pagamento abaixo.</p>
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -15,13 +16,14 @@
     </div>
 
     <div class="text-center">
+        {{-- Rota de retorno caso o usuário desista --}}
         <a href="{{ route('checkout.index') }}" class="btn btn-link text-decoration-none text-muted">
             <i class="fa fa-arrow-left"></i> Voltar e alterar forma de pagamento
         </a>
     </div>
 </div>
 
-{{-- Carrega o script oficial do Bancard conforme o ambiente (Sandbox ou Produção) --}}
+{{-- Seleção dinâmica do script baseada no ambiente --}}
 @php
     $isSandbox = env('BANCARD_MODE') === 'sandbox';
     $scriptUrl = $isSandbox 
@@ -33,6 +35,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // O processId vem da sua BancardController
     const processId = "{{ $process_id }}";
 
     if (!processId || processId === "") {
@@ -41,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
-    // Configurações de estilo para o iframe
+    // Mantive suas configurações de estilo personalizadas
     const options = {
         styles: {
             'form-background-color': '#fdfdfd',
@@ -55,12 +58,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     try {
         /**
-         * Inicializa o formulário de pagamento.
-         * Para pagamentos simples (single_buy), utiliza-se Bancard.Checkout.createForm.
+         * Inicializa o iframe oficial da Bancard.
          */
         Bancard.Checkout.createForm('iframe-container', processId, options);
-        
-        console.log('Bancard: Checkout iniciado com sucesso para o Process ID:', processId);
+        console.log('Bancard: Checkout iniciado com sucesso.');
     } catch (err) {
         console.error('Bancard: Erro crítico na inicialização do formulário:', err);
     }

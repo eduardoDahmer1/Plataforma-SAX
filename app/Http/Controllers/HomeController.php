@@ -20,16 +20,9 @@ class HomeController extends Controller
 
         // 2. Tipos de destaques
         $highlightTypes = [
-            'destaque',
-            'mais_vendidos',
-            'melhores_avaliacoes',
-            'super_desconto',
-            'famosos',
-            'lancamentos',
-            'tendencias',
-            'promocoes',
-            'ofertas_relampago',
-            'navbar'
+            'destaque', 'mais_vendidos', 'melhores_avaliacoes', 'super_desconto',
+            'famosos', 'lancamentos', 'tendencias', 'promocoes',
+            'ofertas_relampago', 'navbar'
         ];
 
         // 3. Busca produtos destacados
@@ -43,22 +36,36 @@ class HomeController extends Controller
             });
         }
 
-        // 4. Categorias para o "Category Strip" (Mapeado com Slugs e Coluna PHOTO)
+        // 4. Categorias para o "Category Strip"
         $categoriesStrip = Cache::remember('categories_home_strip_v4', 600, function () {
-            // Slugs identificados no seu banco de dados
             $targetSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
-
             return Category::select('id', 'name', 'slug', 'photo')
                 ->whereIn('slug', $targetSlugs)
                 ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'optico', 'casa')")
                 ->get();
         });
 
-        // 5. Marcas para o "Slider 3D"
-        $brands = Cache::remember('home_brands_3d', 600, function () {
+        // 5. CORREÇÃO: Marcas específicas para o "Slider 3D" (Baseado na sua imagem)
+        // Mudei o nome da chave do cache para 'home_brands_3d_v2' para forçar a atualização
+        $brandsSlider = Cache::remember('home_brands_3d_v2', 600, function () {
+            // Nomes exatos conforme sua pasta de imagens
+            $selectedNames = [
+                'Baccarat',
+                'Boss',
+                'Celine',
+                'JW-PEI',
+                'Paul & Shark',
+                'Stokke',
+                'Valentino',
+                'Veja',
+                'Vilebrequin',
+                'Zadig&Voltaire'
+            ];
+
             return Brand::select('id', 'name', 'slug', 'image', 'banner')
-                ->whereHas('products')
-                ->take(10)
+                ->whereIn('name', $selectedNames)
+                ->where('status', 1)
+                ->orderByRaw("FIELD(name, '".implode("','", $selectedNames)."')")
                 ->get();
         });
 
@@ -83,7 +90,7 @@ class HomeController extends Controller
             'highlights'      => $highlights,
             'categories'      => $categoriesStrip,
             'allCategories'   => $allCategories,
-            'brands'          => $brands,
+            'brands'          => $brandsSlider, // Enviando as marcas filtradas
             'blogs'           => $blogs,
             'cartItems'       => $cartItems,
             'banner1'         => $settings->banner1 ?? null,

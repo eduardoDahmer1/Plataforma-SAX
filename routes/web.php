@@ -99,6 +99,18 @@ Route::post('/currency/change', [CurrencyController::class, 'change'])->name('cu
 
 // --- Authenticated User Routes ---
 Route::middleware('auth')->group(function () {
+
+        // --- GRUPO BANCARD ---
+    // 1. A página que gera o pagamento (A que você acessa no navegador)
+    Route::get('/checkout/bancard/{id}', [BancardController::class, 'checkoutPage'])->name('bancard.checkout');
+
+    // 2. A página para onde o usuário volta (GET)
+    Route::get('/checkout/bancard/return', [BancardController::class, 'returnPage'])->name('bancard.return');
+
+    // 3. O Webhook que recebe a confirmação (POST)
+    // Nota: Removi de dentro do auth se for o Bancard chamando, mas como você definiu bancardCallback, mantenha o nome correto:
+    Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');
+
     // Dashboard e Perfil
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
     Route::get('/profile', [UserController::class, 'edit'])->name('user.profile.edit');

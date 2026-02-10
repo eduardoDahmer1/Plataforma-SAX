@@ -23,9 +23,9 @@ class BlogController extends Controller
             $categories = BlogCategory::orderBy('name')->get();
 
             $query = Blog::with('category')
-                         ->where('is_active', true)
-                         ->whereNotNull('published_at')
-                         ->latest();
+                ->where('is_active', true)
+                ->whereNotNull('published_at')
+                ->latest();
 
             if ($category) {
                 $query->where('category_id', $category);
@@ -55,9 +55,9 @@ class BlogController extends Controller
             'categories' => $data['categories'],
             'currentCategory' => $category,
             'search' => $search,
-            'blogBanner' => $blogBanner, // já como URL completa
+            'blogBanner' => $blogBanner,
         ]);
-    } 
+    }
 
     // Mostra blog específico com cache
     public function show($slug)
@@ -66,9 +66,9 @@ class BlogController extends Controller
 
         $blog = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
             return Blog::with('category')
-                       ->where('slug', $slug)
-                       ->where('is_active', true)
-                       ->firstOrFail();
+                ->where('slug', $slug)
+                ->where('is_active', true)
+                ->firstOrFail();
         });
 
         return view('blogs.show', compact('blog'));

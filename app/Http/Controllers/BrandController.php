@@ -49,7 +49,7 @@ class BrandController extends Controller
 
         $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
             return Brand::where('slug', $slug)
-                ->where('status', 1) // Adicionado: Garante que marca inativa dê 404
+                ->where('status', 1)
                 ->firstOrFail();
         });
 

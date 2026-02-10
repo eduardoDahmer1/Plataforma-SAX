@@ -53,7 +53,7 @@ class ProductController extends Controller
                     'photo'       => $p->photo,
                     'price'       => $p->price,
                     'price_final' => $this->calcularPrecoComCupon($p),
-                    'type'        => 'product', // Mantido para compatibilidade com sua View
+                    'type'        => 'product',
                     'slug'        => $p->slug,
                     'created_at'  => $p->created_at,
                 ]);

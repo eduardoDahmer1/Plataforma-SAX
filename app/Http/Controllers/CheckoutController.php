@@ -9,6 +9,7 @@ use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
 use App\Models\Cupon;
+use App\Http\Controllers\BancardController; // IMPORTANTE: Importar a controller do Bancard
 
 class CheckoutController extends Controller
 {
@@ -36,14 +37,14 @@ class CheckoutController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Validações (Bancard adicionado às opções permitidas)
+        // 1. Validações (Mantidas exatamente como as suas)
         $request->validate([
             'name'            => 'required|string|max:255',
             'document'        => 'required|string|max:50',
             'email'           => 'required|email',
             'phone'           => 'required|string',
             'shipping'        => 'required|in:1,2,3',
-            'payment_method'  => 'required|in:deposito,bancard,whatsapp', // Bancard validado aqui
+            'payment_method'  => 'required|in:deposito,bancard,whatsapp',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street'          => 'required_if:shipping,2',
             'number'          => 'required_if:shipping,2',
@@ -57,14 +58,14 @@ class CheckoutController extends Controller
         ]);
 
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
-        if ($cart->isEmpty()) return back()->with('error', 'Carrinho vazio');
+        if ($cart->isEmpty()) return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
 
         $total         = $cart->sum(fn($item) => $item->quantity * $item->product->price);
         $paymentMethod = $request->input('payment_method');
         $cupon         = null;
         $desconto      = 0;
 
-        // 2. Lógica de Cupom (Mantida apenas para depósito conforme seu código)
+        // 2. Lógica de Cupom (Mantida conforme seu código original)
         if ($request->filled('cupon') && $paymentMethod === 'deposito') {
             $cupon = Cupon::where('codigo', $request->input('cupon'))
                 ->where('data_inicio', '<=', now())
@@ -93,7 +94,7 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
-            // Separação Nome / Sobrenome
+            // Separação Nome / Sobrenome para Gateways
             $nameParts = explode(' ', trim($request->input('name')));
             $firstName = array_shift($nameParts);
             $lastName  = implode(' ', $nameParts) ?: $firstName;
@@ -107,19 +108,19 @@ class CheckoutController extends Controller
 
             // 3. Criar pedido (Status 'pending' inicial)
             $order = Order::create([
-                'user_id'       => $user->id,
-                'status'        => 'pending',
-                'total'         => $total,
+                'user_id'        => $user->id,
+                'status'         => 'pending',
+                'total'          => $total,
                 'payment_method' => $paymentMethod,
-                'cupon_id'      => $cupon->id ?? null,
-                'discount'      => $desconto,
-                'name'          => $firstName,
-                'surname'       => $lastName,
-                'document'      => $request->input('document'),
-                'email'         => $request->input('email'),
-                'phone'         => $request->input('phone'),
-                'observations'  => $observations,
-                'shipping'      => $request->input('shipping'),
+                'cupon_id'       => $cupon->id ?? null,
+                'discount'       => $desconto,
+                'name'           => $firstName,
+                'surname'        => $lastName,
+                'document'       => $request->input('document'),
+                'email'          => $request->input('email'),
+                'phone'          => $request->input('phone'),
+                'observations'   => $observations,
+                'shipping'       => $request->input('shipping'),
             ]);
 
             // 4. Lógica de Endereço/Loja (Mantida intacta)
@@ -163,7 +164,7 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // Upload de comprovante se for depósito imediato
+            // Upload de comprovante para Depósito
             if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
                 $file = $request->file('deposit_receipt');
                 $filename = time() . '_' . $file->getClientOriginalName();
@@ -172,32 +173,33 @@ class CheckoutController extends Controller
             }
 
             DB::commit();
+
+            // 6. Limpeza de Carrinho (Apenas se NÃO for Bancard)
+            if ($paymentMethod !== 'bancard') {
+                Cart::where('user_id', $user->id)->delete();
+                session()->forget('applied_cupon');
+            }
+
+            // 7. Redirecionamento Final
+            if ($paymentMethod === 'bancard') {
+                return redirect()->route('bancard.checkout', ['id' => $order->id]);
+            }
+
+            if ($paymentMethod === 'deposito') {
+                return redirect()->route('checkout.deposito', ['order' => $order->id])
+                    ->with('success', 'Pedido criado com sucesso!');
+            }
+
+            if ($paymentMethod === 'whatsapp') {
+                return $this->whatsapp($request);
+            }
+
+            return redirect()->route('checkout.success')->with('success', 'Pedido concluído!');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error("Erro no checkout: " . $e->getMessage());
-            return back()->with('error', 'Erro ao processar pedido: ' . $e->getMessage());
+            \Log::error("Erro crítico no checkout: " . $e->getMessage());
+            return back()->with('error', 'Erro ao processar pedido: ' . $e->getMessage())->withInput();
         }
-
-        // 6. Finalização do Carrinho
-        // No Bancard, só deletamos o carrinho APÓS a confirmação de sucesso no callback.
-        if ($paymentMethod !== 'bancard') {
-            Cart::where('user_id', $user->id)->delete();
-            session()->forget('applied_cupon');
-        }
-
-        // 7. Redirecionamento Final
-        return match ($paymentMethod) {
-            // Redireciona para o controller do Bancard que você já tem pronto
-            'bancard'  => redirect()->action([BancardController::class, 'checkoutPage'], ['order' => $order->id]),
-
-            'deposito' => redirect()->route('checkout.deposito', ['order' => $order->id])
-                ->with('success', 'Pedido criado com sucesso!'),
-
-            'whatsapp' => $this->whatsapp($request), // Certifique-se que este método existe no controller
-
-            default    => redirect()->route('checkout.success')
-                ->with('success', 'Pedido criado com sucesso!'),
-        };
     }
 
     // Decide gateway (Apenas Bancard conforme solicitado)

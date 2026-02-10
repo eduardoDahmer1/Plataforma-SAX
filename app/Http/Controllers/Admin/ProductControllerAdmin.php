@@ -118,8 +118,8 @@ class ProductControllerAdmin extends Controller
             ->paginate(20)
             ->appends($request->query());
 
-    $brands = Brand::where('status', 1)->orderBy('name')->get();
-    $categories = Category::where('status', 1)->orderBy('name')->get();
+        $brands = Brand::where('status', 1)->orderBy('name')->get();
+        $categories = Category::where('status', 1)->orderBy('name')->get();
 
         $highlights = [
             'destaque' => 'Destaques',
@@ -311,14 +311,15 @@ class ProductControllerAdmin extends Controller
         // Filtra IDs e prepara Highlights
         $parentIds = array_filter((array) $request->input('parent_id', []));
         $colorIds  = array_filter((array) $request->input('color_parent_id', []));
+
+        // Garantimos que highlights seja enviado como JSON para o banco
         $data['highlights'] = json_encode($request->input('highlights', []));
 
-        // Guarda IDs dos filhos atuais antes da mudança para comparar
+        // Guarda IDs dos filhos atuais antes da mudança
         $oldParentIds = $product->parent_id ? explode(',', $product->parent_id) : [];
 
-        // Foto principal do Pai
+        // --- FOTO PRINCIPAL ---
         if ($request->hasFile('photo')) {
-            // Deleta foto antiga se não estiver em uso
             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                 $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
                 if (!$usedElsewhere) {
@@ -328,12 +329,18 @@ class ProductControllerAdmin extends Controller
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
 
-        // Galeria do Pai
+        // --- GALERIA (Onde estava o erro) ---
         if ($request->hasFile('gallery')) {
-            $existingGallery = $product->gallery ? json_decode($product->gallery, true) : [];
+            // CORREÇÃO: Verificamos se já é array ou se precisa decodificar
+            $existingGallery = $product->gallery;
+            if (!is_array($existingGallery)) {
+                $existingGallery = $existingGallery ? json_decode($existingGallery, true) : [];
+            }
+
             foreach ($request->file('gallery') as $image) {
                 $existingGallery[] = $this->convertToWebp($image, 'gallery');
             }
+            // Salvamos como JSON string
             $data['gallery'] = json_encode($existingGallery);
         }
 
@@ -356,24 +363,19 @@ class ProductControllerAdmin extends Controller
         foreach ($removedChildren as $childId) {
             $child = Product::find($childId);
             if ($child) {
-                // Ao remover o vínculo, ele volta a ser Pai ('P') e limpa dados herdados
                 $child->parent_id = null;
                 $child->color_parent_id = null;
                 $child->product_role = 'P';
-                $child->description = null; // Limpa descrição herdada
-
-                // Limpa Foto e Galeria do filho (Deletando arquivos se necessário)
+                $child->description = null;
                 $this->deleteProductImages($child);
-
                 $child->photo = null;
                 $child->gallery = null;
                 $child->save();
             }
         }
 
-        // --- LOGICA DE VINCULAÇÃO / ATUALIZAÇÃO (Filhos atuais) ---
         $parentPhoto       = $product->photo;
-        $parentGallery     = $product->gallery; // Já está em JSON
+        $parentGallery     = $product->gallery;
         $parentDescription = $product->description;
 
         foreach ($parentIds as $childId) {
@@ -382,9 +384,10 @@ class ProductControllerAdmin extends Controller
 
             $child->parent_id = implode(',', $parentIds);
             $child->product_role = 'F';
-            $child->description = $parentDescription; // Sincroniza descrição
+            $child->description = $parentDescription;
             $child->photo = $parentPhoto;
-            $child->gallery = $parentGallery;
+
+            $child->gallery = is_array($parentGallery) ? json_encode($parentGallery) : $parentGallery;
 
             if ($product->color) {
                 $child->color = $product->color;

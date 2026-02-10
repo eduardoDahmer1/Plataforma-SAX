@@ -19,7 +19,7 @@ class SearchController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 35);
-        
+
         // Iniciamos a query filtrando apenas o que é ATIVO e tem ESTOQUE/FOTO
         $query = Product::query()
             ->select(['id', 'name', 'external_name', 'sku', 'price', 'stock', 'photo', 'brand_id', 'category_id', 'slug', 'status'])
@@ -32,22 +32,22 @@ class SearchController extends Controller
         // Filtro de Busca Textual
         if ($request->filled('search')) {
             $term = "%{$request->search}%";
-            $query->where(function($q) use ($term) {
+            $query->where(function ($q) use ($term) {
                 $q->where('external_name', 'like', $term)
-                  ->orWhere('name', 'like', $term)
-                  ->orWhere('sku', 'like', $term);
+                    ->orWhere('name', 'like', $term)
+                    ->orWhere('sku', 'like', $term);
             });
         }
 
         // Filtros de Sidebar
         $query->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
-              ->when($request->category, fn($q) => $q->where('category_id', $request->category))
-              ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
-              ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory));
+            ->when($request->category, fn($q) => $q->where('category_id', $request->category))
+            ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
+            ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory));
 
         // Filtro de Preço
         $query->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
-              ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
+            ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
 
         // Aplica Ordenação
         $this->applySorting($query, $request->sort_by);
@@ -55,16 +55,16 @@ class SearchController extends Controller
         $paginated = $query->paginate($perPage)->withQueryString();
 
         // Dados da Sidebar - Agora filtrando apenas ATIVOS (Status 1)
-        $sidebarData = Cache::remember('search_sidebar_v3', 3600, function() {
+        $sidebarData = Cache::remember('search_sidebar_v3', 3600, function () {
             return [
                 'brands'          => Brand::select('id', 'name')
-                                        ->where('status', 1) // Apenas marcas ativas
-                                        ->orderBy('name')
-                                        ->get(),
+                    ->where('status', 1) // Apenas marcas ativas
+                    ->orderBy('name')
+                    ->get(),
                 'categories'      => Category::select('id', 'name', 'slug')
-                                        ->where('status', 1) // Apenas categorias ativas (sem restrição de ID fixo)
-                                        ->orderBy('name')
-                                        ->get(),
+                    ->where('status', 1) // Apenas categorias ativas (sem restrição de ID fixo)
+                    ->orderBy('name')
+                    ->get(),
                 'subcategories'   => Subcategory::select('id', 'name')->orderBy('name')->get(),
                 'childcategories' => Childcategory::select('id', 'name')->orderBy('name')->get(),
             ];
@@ -96,7 +96,7 @@ class SearchController extends Controller
             'name_za'    => $query->orderBy('external_name', 'desc'),
             'price_low'  => $query->orderBy('price', 'asc'),
             'price_high' => $query->orderBy('price', 'desc'),
-            default      => $query->orderBy('id', 'desc'), 
+            default      => $query->orderBy('id', 'desc'),
         };
     }
 }

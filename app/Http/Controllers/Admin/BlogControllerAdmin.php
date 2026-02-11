@@ -96,7 +96,7 @@ class BlogControllerAdmin extends Controller
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'subtitle' => 'nullable|string',
+            'subtitle' => 'nullable|string|max:2000',
             'slug' => 'nullable|unique:blogs,slug' . ($id ? ",$id" : ''),
             'image' => 'nullable|image',
             'content' => 'required|string',

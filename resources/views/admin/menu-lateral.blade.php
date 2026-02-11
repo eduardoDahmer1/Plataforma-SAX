@@ -72,6 +72,7 @@
                     <i class="fa-solid fa-broom"></i> Limpar Cache
                 </button>
                 <a href="{{ route('admin.currencies.index') }}" class="submenu-link"><i class="fa-solid fa-coins"></i> Moedas</a>
+                <a href="{{ route('admin.palace.index') }}" class="submenu-link"><i class="fas fa-hotel"></i> Conteúdo Palace</a>
                 <a href="{{ route('admin.cupons.index') }}" class="submenu-link"><i class="fa-solid fa-ticket"></i> Cupons</a>
                 <a href="{{ route('admin.activate.index') }}" class="submenu-link">
                     <i class="fa-solid fa-toggle-on"></i> Ativar Marcas/Categorias

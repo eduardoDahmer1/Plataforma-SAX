@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\AdminHighlightController;
 use App\Http\Controllers\Admin\CuponController;
+use App\Http\Controllers\Admin\PalaceAdminController;
 use App\Http\Controllers\Admin\ActivateBrandsAndCategoriesController;
 
 // Auth Controllers
@@ -194,6 +195,8 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
+
+    Route::resource('palace', PalaceAdminController::class);
 
     Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
 

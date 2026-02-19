@@ -6,7 +6,7 @@
         <div class="category-hero py-5 border-bottom">
             <div class="container text-center">
                 <a href="{{ route('categories.index') }}" class="back-link">
-                    <i class="fas fa-chevron-left me-1"></i> VOLVER
+                    <i class="fas fa-chevron-left me-1"></i> Ver Categorias
                 </a>
 
                 <div class="category-logo-main my-4">

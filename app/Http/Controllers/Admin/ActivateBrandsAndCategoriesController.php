@@ -32,4 +32,26 @@ class ActivateBrandsAndCategoriesController extends Controller
 
         return back()->with('success', "{$label} {$statusTexto} com sucesso!");
     }
+
+    public function updateAll(Request $request)
+    {
+        // Recebe os arrays de status (id => status)
+        $categories = $request->input('categories', []);
+        $brands = $request->input('brands', []);
+
+        // Atualiza Categorias
+        foreach ($categories as $id => $status) {
+            \App\Models\Category::where('id', $id)->update(['status' => $status]);
+        }
+
+        // Atualiza Marcas
+        foreach ($brands as $id => $status) {
+            \App\Models\Brand::where('id', $id)->update(['status' => $status]);
+        }
+
+        // Limpa o cache uma única vez ao final
+        \Illuminate\Support\Facades\Cache::flush();
+
+        return back()->with('success', "Alterações aplicadas com sucesso!");
+    }
 }

@@ -149,7 +149,6 @@
     max-width: 85%;
     max-height: 85%;
     object-fit: contain;
-    filter: grayscale(100%); /* Efeito Premium unificado */
     transition: all 0.4s ease;
 }
 

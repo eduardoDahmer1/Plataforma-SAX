@@ -198,6 +198,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::resource('palace', PalaceAdminController::class);
 
+    Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');
+
     Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
 
     // Listar moedas

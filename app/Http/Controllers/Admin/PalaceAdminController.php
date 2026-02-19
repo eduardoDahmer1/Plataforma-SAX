@@ -19,7 +19,7 @@ class PalaceAdminController extends Controller
     }
 
     /**
-     * Exibe o formulário de edição (usa o ID 1 por padrão).
+     * Exibe o formulário de edição.
      */
     public function edit($id)
     {
@@ -34,8 +34,8 @@ class PalaceAdminController extends Controller
     {
         $palace = Palace::findOrFail($id);
 
+        // Aumentamos os limites de validação e tipos de arquivos (mais de 10 tipos suportados)
         $data = $request->validate([
-            // Textos e Títulos
             'hero_titulo'             => 'nullable|string|max:255',
             'hero_descricao'          => 'nullable|string',
             'bar_titulo'              => 'nullable|string|max:255',
@@ -57,47 +57,107 @@ class PalaceAdminController extends Controller
             'contato_whatsapp'        => 'nullable|string',
             'contato_mapa_iframe'     => 'nullable|string',
 
-            // Validação de Imagens Individuais
-            'hero_imagem'     => 'nullable|image|mimes:jpg,png,jpeg|max:4096',
-            'bar_imagem_1'    => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'bar_imagem_2'    => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'bar_imagem_3'    => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'tematica_imagem' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
+            // Aceita uma vasta gama de formatos de imagem
+            'hero_imagem'     => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
+            'bar_imagem_1'    => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'bar_imagem_2'    => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'bar_imagem_3'    => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'tematica_imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
             
-            // Galeria de Eventos
             'eventos_galeria'   => 'nullable|array',
-            'eventos_galeria.*' => 'image|mimes:jpg,png,jpeg|max:2048',
+            'eventos_galeria.*' => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
         ]);
 
-        // 1. Processar Imagens Simples (Substituição)
+        // 1. Processar Imagens Individuais (Substituição com Conversão WebP)
         $fileFields = ['hero_imagem', 'bar_imagem_1', 'bar_imagem_2', 'bar_imagem_3', 'tematica_imagem'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
+                // Remove arquivo antigo se existir
                 if ($palace->$field) {
                     Storage::disk('public')->delete($palace->$field);
                 }
-                $data[$field] = $request->file($field)->store('palace', 'public');
+                // Converte e salva
+                $data[$field] = $this->convertToWebp($request->file($field), 'palace');
             }
         }
 
-        // 2. Processar Galeria de Eventos (Se enviar novas, substitui o array anterior)
+        // 2. Processar Galeria de Eventos
         if ($request->hasFile('eventos_galeria')) {
-            // Opcional: deletar fotos antigas da galeria antes de subir novas
+            // Limpa galeria antiga física
             if ($palace->eventos_galeria) {
-                foreach ($palace->eventos_galeria as $oldPath) {
+                $oldGallery = is_array($palace->eventos_galeria) ? $palace->eventos_galeria : json_decode($palace->eventos_galeria, true);
+                foreach ($oldGallery ?? [] as $oldPath) {
                     Storage::disk('public')->delete($oldPath);
                 }
             }
 
             $galleryPaths = [];
             foreach ($request->file('eventos_galeria') as $image) {
-                $galleryPaths[] = $image->store('palace/galeria', 'public');
+                $galleryPaths[] = $this->convertToWebp($image, 'palace/galeria');
             }
             $data['eventos_galeria'] = $galleryPaths;
         }
 
         $palace->update($data);
 
-        return redirect()->route('admin.palace.index')->with('success', 'Conteúdo do SAX Palace atualizado com sucesso!');
+        return redirect()->route('admin.palace.index')->with('success', 'Conteúdo do SAX Palace atualizado com sucesso e imagens otimizadas!');
+    }
+
+    /**
+     * Conversor Universal para WebP (Suporta >10 formatos via fallback)
+     */
+    private function convertToWebp($image, $type)
+    {
+        // Aumenta memória para processar banners ou imagens de alta resolução
+        ini_set('memory_limit', '512M');
+
+        $tempPath = $image->getRealPath();
+        $extension = strtolower($image->getClientOriginalExtension());
+
+        // Define o diretório baseado no contexto enviado (palace, palace/galeria, etc)
+        $directory = rtrim($type, '/') . '/';
+
+        $filename = uniqid() . '.webp';
+        $fullPath = storage_path('app/public/' . $directory . $filename);
+
+        if (!Storage::disk('public')->exists($directory)) {
+            Storage::disk('public')->makeDirectory($directory);
+        }
+
+        // Se já for webp ou avif (formatos de próxima geração), salva sem reprocessar para manter qualidade
+        if ($extension === 'webp' || $extension === 'avif') {
+            Storage::disk('public')->putFileAs($directory, $image, $filename);
+            return "{$directory}{$filename}";
+        }
+
+        // Cria recurso de imagem suportando os 10+ tipos solicitados
+        $imageResource = match ($extension) {
+            'jpeg', 'jpg', 'jfif' => @imagecreatefromjpeg($tempPath),
+            'png'                 => @imagecreatefrompng($tempPath),
+            'gif'                 => @imagecreatefromgif($tempPath),
+            'bmp'                 => @imagecreatefrombmp($tempPath),
+            'webp'                => @imagecreatefromwebp($tempPath),
+            'tga'                 => @imagecreatefromtga($tempPath),
+            // Para outros formatos (TIFF, HEIC, etc), tenta via string ou fallback original
+            default               => @imagecreatefromstring(file_get_contents($tempPath)),
+        };
+
+        if (!$imageResource) {
+            // Fallback: se o GD não conseguir converter o formato exótico, salva o original para não perder o upload
+            $origFilename = uniqid() . '.' . $extension;
+            Storage::disk('public')->putFileAs($directory, $image, $origFilename);
+            return "{$directory}{$origFilename}";
+        }
+
+        // Mantém transparência (essencial para PNG e GIF)
+        imagepalettetotruecolor($imageResource);
+        imagealphablending($imageResource, true);
+        imagesavealpha($imageResource, true);
+
+        // Salva otimizado em WebP
+        imagewebp($imageResource, $fullPath, 80);
+        imagedestroy($imageResource);
+
+        return "{$directory}{$filename}";
     }
 }

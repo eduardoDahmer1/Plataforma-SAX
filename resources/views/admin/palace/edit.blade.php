@@ -7,14 +7,14 @@
         @method('PUT')
 
         {{-- Header Estilo Dashboard Marcas --}}
-        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5 sticky-header px-4 py-3 bg-white border-bottom">
+        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5 sticky-header px-4 py-3 bg-white border-bottom shadow-sm">
             <div>
                 <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Editar SAX Palace</h2>
                 <div class="sax-divider-gold"></div>
                 <span class="text-muted x-small">Última atualização: {{ $palace->updated_at->format('d/m H:i') }}</span>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.palace.index') }}" class="btn-back-minimal me-3 d-none d-md-flex">
+                <a href="{{ route('admin.palace.index') }}" class="btn-back-minimal me-3 d-none d-md-flex align-items-center">
                     <i class="fas fa-times me-1"></i> CANCELAR
                 </a>
                 <button type="submit" class="btn btn-dark-gold rounded-pill px-4 shadow-sm transition fw-bold">
@@ -23,12 +23,6 @@
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-modern alert-success slide-in-top mb-4 mx-4">
-                <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
-            </div>
-        @endif
-
         <div class="row px-3 g-4">
             {{-- Coluna Principal --}}
             <div class="col-lg-8">
@@ -36,63 +30,77 @@
                 {{-- 1. SEÇÃO HERO --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">01. Identificación & Hero</h6>
-                    
                     <div class="mb-4">
                         <label class="sax-form-label">Título de Impacto (Hero)</label>
                         <input type="text" name="hero_titulo" class="form-control sax-input" value="{{ $palace->hero_titulo }}">
                     </div>
-
                     <div class="mb-0">
                         <label class="sax-form-label">Descripción de Bienvenida</label>
                         <textarea name="hero_descricao" class="form-control sax-input" rows="4">{{ $palace->hero_descricao }}</textarea>
                     </div>
                 </div>
 
-                {{-- 2. GASTRONOMIA --}}
+                {{-- 2. BAR & BODEGA (IMAGENS QUE FALTAVAM) --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
-                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">02. Gastronomía & Menús</h6>
-                    
-                    <div class="mb-4">
-                        <label class="sax-form-label text-primary">Título de la Sección</label>
-                        <input type="text" name="gastronomia_titulo" class="form-control sax-input border-primary-soft" value="{{ $palace->gastronomia_titulo }}">
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="x-small fw-bold text-warning text-uppercase letter-spacing-1">Café da Manhã</label>
-                            <textarea name="gastronomia_cafe_desc" class="form-control sax-input bg-light-soft small" rows="4">{{ $palace->gastronomia_cafe_desc }}</textarea>
+                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">02. Bar & Bodega (Fotos)</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="sax-form-label">Título do Bar</label>
+                            <input type="text" name="bar_titulo" class="form-control sax-input mb-3" value="{{ $palace->bar_titulo }}">
+                            <label class="sax-form-label">Descrição do Bar</label>
+                            <textarea name="bar_descricao" class="form-control sax-input" rows="3">{{ $palace->bar_descricao }}</textarea>
                         </div>
-                        <div class="col-md-4">
-                            <label class="x-small fw-bold text-primary text-uppercase letter-spacing-1">Almuerzo</label>
-                            <textarea name="gastronomia_almoco_desc" class="form-control sax-input bg-light-soft small" rows="4">{{ $palace->gastronomia_almoco_desc }}</textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="x-small fw-bold text-danger text-uppercase letter-spacing-1">Cena</label>
-                            <textarea name="gastronomia_jantar_desc" class="form-control sax-input bg-light-soft small" rows="4">{{ $palace->gastronomia_jantar_desc }}</textarea>
+                        <div class="col-md-6">
+                            <div class="row g-2">
+                                @for($i=1; $i<=3; $i++)
+                                @php $field = "bar_imagem_$i"; @endphp
+                                <div class="col-4">
+                                    <div class="preview-box-sm mb-2 rounded border overflow-hidden" style="height: 80px;">
+                                        <img id="preview-bar-{{$i}}" src="{{ $palace->$field ? asset('storage/'.$palace->$field) : 'https://placehold.co/200x200' }}" class="w-100 h-100 object-fit-cover">
+                                    </div>
+                                    <div class="asset-upload-zone p-1 py-2">
+                                        <input type="file" name="bar_imagem_{{$i}}" class="sax-input-file img-input" data-preview="preview-bar-{{$i}}">
+                                        <i class="fas fa-camera fa-xs opacity-50"></i>
+                                        <span style="font-size: 8px;" class="fw-bold">FOTO {{$i}}</span>
+                                    </div>
+                                </div>
+                                @endfor
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- 3. GALERIA --}}
+                {{-- 3. GASTRONOMIA --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
-                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">03. Galería de Eventos</h6>
-                    
-                    <div class="mb-4">
-                        <label class="sax-form-label">Título de Galería</label>
-                        <input type="text" name="eventos_titulo" class="form-control sax-input" value="{{ $palace->eventos_titulo }}">
+                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">03. Gastronomía & Menús</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="x-small fw-bold text-warning text-uppercase">Café da Manhã</label>
+                            <textarea name="gastronomia_cafe_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_cafe_desc }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="x-small fw-bold text-primary text-uppercase">Almuerzo</label>
+                            <textarea name="gastronomia_almoco_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_almoco_desc }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="x-small fw-bold text-danger text-uppercase">Cena</label>
+                            <textarea name="gastronomia_jantar_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_jantar_desc }}</textarea>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="asset-upload-zone mb-3" style="min-height: 150px;">
+                {{-- 4. GALERIA --}}
+                <div class="sax-premium-card p-4 mb-4 shadow-sm">
+                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">04. Galería de Eventos</h6>
+                    <div class="asset-upload-zone mb-3" style="min-height: 120px;">
                         <i class="fas fa-images mb-2 opacity-25 fa-2x"></i>
                         <input type="file" name="eventos_galeria[]" class="sax-input-file" multiple>
                         <p class="sax-form-label m-0">Arrastre o haga clic para subir nuevas fotos</p>
-                        <span class="x-small text-muted">Nota: Esto reemplazará la galería actual</span>
                     </div>
-
                     <div class="gallery-preview-grid mt-3">
                         @php $fotos = is_array($palace->eventos_galeria) ? $palace->eventos_galeria : json_decode($palace->eventos_galeria, true); @endphp
                         @foreach($fotos ?? [] as $foto)
-                            <div class="gallery-preview-item shadow-sm">
+                            <div class="gallery-preview-item shadow-sm border">
                                 <img src="{{ asset('storage/'.$foto) }}">
                             </div>
                         @endforeach
@@ -105,55 +113,62 @@
                 
                 {{-- BANNER PRINCIPAL --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="sax-label m-0 text-dark text-uppercase letter-spacing-1">Imagen Hero</h6>
-                        @if($palace->hero_imagem)
-                            <span class="badge-success-soft"><i class="fas fa-check"></i> ON</span>
-                        @endif
-                    </div>
-                    <div class="preview-box mb-3 shadow-sm border rounded">
-                        <img id="preview-hero" src="{{ $palace->hero_imagem ? asset('storage/'.$palace->hero_imagem) : 'https://placehold.co/600x400' }}" class="img-fluid">
+                    <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">Imagen Hero</h6>
+                    <div class="preview-box mb-3 shadow-sm border rounded overflow-hidden">
+                        <img id="preview-hero" src="{{ $palace->hero_imagem ? asset('storage/'.$palace->hero_imagem) : 'https://placehold.co/600x400' }}" class="img-fluid w-100">
                     </div>
                     <div class="asset-upload-zone py-3">
-                        <i class="fas fa-cloud-upload-alt mb-1 opacity-50"></i>
                         <input type="file" name="hero_imagem" class="sax-input-file img-input" data-preview="preview-hero">
-                        <p class="x-small fw-bold m-0">CAMBIAR IMAGEN</p>
+                        <p class="x-small fw-bold m-0"><i class="fas fa-sync-alt me-1"></i> CAMBIAR IMAGEN</p>
                     </div>
                 </div>
 
                 {{-- EXPERIÊNCIA TEMÁTICA --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm bg-dark text-white">
-                    <h6 class="sax-label mb-4 text-gold border-bottom border-secondary pb-2 text-uppercase letter-spacing-1">Noche Árabe</h6>
-                    
+                    <h6 class="sax-label mb-3 text-gold border-bottom border-secondary pb-2 text-uppercase letter-spacing-1">Noche Árabe</h6>
                     <div class="mb-3">
                         <label class="x-small text-uppercase opacity-7 fw-bold">Título</label>
                         <input type="text" name="tematica_titulo" class="form-control sax-input bg-transparent text-white border-secondary small" value="{{ $palace->tematica_titulo }}">
                     </div>
-
                     <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="x-small text-uppercase opacity-7 fw-bold">Etiqueta</label>
-                            <input type="text" name="tematica_tag" class="form-control sax-input bg-transparent text-white border-secondary small" value="{{ $palace->tematica_tag }}">
-                        </div>
                         <div class="col-6">
                             <label class="x-small text-uppercase opacity-7 fw-bold">Precio</label>
                             <input type="text" name="tematica_preco" class="form-control sax-input bg-transparent text-gold border-secondary small" value="{{ $palace->tematica_preco }}">
                         </div>
+                        <div class="col-6">
+                             <label class="x-small text-uppercase opacity-7 fw-bold">Etiqueta</label>
+                            <input type="text" name="tematica_tag" class="form-control sax-input bg-transparent text-white border-secondary small" value="{{ $palace->tematica_tag }}">
+                        </div>
                     </div>
-
-                    <div class="asset-upload-zone py-3 bg-white-10 border-secondary">
-                        <i class="fas fa-star mb-1 text-gold"></i>
+                    <div class="asset-upload-zone py-3 bg-white-10 border-secondary mb-3">
                         <input type="file" name="tematica_imagem" class="sax-input-file img-input" data-preview="preview-tematica">
-                        <p class="x-small fw-bold m-0 text-white">CAMBIAR FOTO EVENTO</p>
+                        <p class="x-small fw-bold m-0 text-white">CAMBIAR FOTO</p>
                     </div>
-                    <div class="preview-box-sm mt-3 rounded overflow-hidden shadow-sm" style="height: 100px;">
+                    <div class="preview-box-sm rounded overflow-hidden" style="height: 120px;">
                         <img id="preview-tematica" src="{{ $palace->tematica_imagem ? asset('storage/'.$palace->tematica_imagem) : 'https://placehold.co/600x400' }}" class="w-100 h-100 object-fit-cover">
+                    </div>
+                </div>
+
+                {{-- HORÁRIOS (FALTAVA NO FORM) --}}
+                <div class="sax-premium-card p-4 mb-4 shadow-sm">
+                    <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">Horarios de Atención</h6>
+                    <div class="mb-2">
+                        <label class="x-small fw-bold">Lunes</label>
+                        <input type="text" name="contato_horario_segunda" class="form-control sax-input py-1" value="{{ $palace->contato_horario_segunda }}">
+                    </div>
+                    <div class="mb-2">
+                        <label class="x-small fw-bold">Martes a Sábado</label>
+                        <input type="text" name="contato_horario_sabado" class="form-control sax-input py-1" value="{{ $palace->contato_horario_sabado }}">
+                    </div>
+                    <div class="mb-0">
+                        <label class="x-small fw-bold">Domingo</label>
+                        <input type="text" name="contato_horario_domingo" class="form-control sax-input py-1" value="{{ $palace->contato_horario_domingo }}">
                     </div>
                 </div>
 
                 {{-- CONTATO --}}
                 <div class="sax-premium-card p-4 shadow-sm">
-                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">Contacto</h6>
+                    <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">Ubicación & Mapa</h6>
                     <div class="mb-3">
                         <label class="sax-form-label">WhatsApp</label>
                         <input type="text" name="contato_whatsapp" class="form-control sax-input border-success-soft" value="{{ $palace->contato_whatsapp }}">
@@ -176,85 +191,33 @@
 </div>
 
 <style>
-    :root {
-        --gold: #D4AF37;
-        --gold-light: #fdf8e6;
-        --sax-dark: #121212;
-    }
-
+    :root { --gold: #D4AF37; --sax-dark: #121212; }
     .bg-white-soft { background-color: #f8fafc; }
-    .bg-light-soft { background-color: #f1f5f9; }
     .bg-white-10 { background: rgba(255,255,255,0.05); }
     .text-gold { color: var(--gold) !important; }
-
-    /* Estilo Marcas Refinado */
     .sax-title { font-size: 1.4rem; font-weight: 900; color: var(--sax-dark); }
     .sax-divider-gold { width: 45px; height: 4px; background: var(--gold); margin: 8px 0; border-radius: 2px; }
     .letter-spacing-2 { letter-spacing: 2px; }
     .letter-spacing-1 { letter-spacing: 1px; }
-
     .sax-premium-card { background: #fff; border-radius: 20px; border: 1px solid #eef2f7; }
-    
-    .sax-label { font-size: 0.85rem; font-weight: 800; }
-    .sax-form-label { font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 8px; text-uppercase: uppercase; }
-
-    /* Inputs Estilo Marcas */
-    .sax-input {
-        border: 1px solid #e2e8f0;
-        padding: 12px 16px;
-        border-radius: 12px;
-        font-size: 0.9rem;
-        transition: all 0.2s;
-    }
-    .sax-input:focus {
-        border-color: var(--gold);
-        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.1);
-        outline: none;
-    }
-
-    /* Zonas de Upload (Igual a Marcas) */
-    .asset-upload-zone {
-        border: 2px dashed #e2e8f0;
-        border-radius: 15px;
-        padding: 15px;
-        text-align: center;
-        background: #fbfbfb;
-        position: relative;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
+    .sax-form-label { font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+    .sax-input { border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.85rem; }
+    .sax-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+    .asset-upload-zone { border: 2px dashed #e2e8f0; border-radius: 15px; text-align: center; position: relative; transition: all 0.3s; cursor: pointer; }
     .asset-upload-zone:hover { border-color: var(--gold); background: #fff; }
     .sax-input-file { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 5; }
-
-    /* Galeria Preview */
-    .gallery-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
-    .gallery-preview-item { aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid #fff; }
+    .gallery-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
+    .gallery-preview-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; }
     .gallery-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* Badges & Botões */
-    .badge-success-soft { background: #ecfdf5; color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 900; }
     .btn-dark-gold { background: var(--sax-dark); color: var(--gold); border: none; font-size: 0.8rem; letter-spacing: 1px; }
-    .btn-dark-gold:hover { background: #000; color: #fff; transform: translateY(-2px); }
-    .btn-back-minimal { color: #94a3b8; font-weight: 700; font-size: 0.7rem; text-decoration: none; display: flex; align-items: center; }
-
-    .sticky-header { position: sticky; top: 0; z-index: 1020; backdrop-filter: blur(10px); background: rgba(255,255,255,0.9) !important; }
+    .sticky-header { position: sticky; top: 0; z-index: 1020; }
     .x-small { font-size: 0.65rem; }
-    .border-primary-soft { border-color: #dbeafe !important; }
-
-    @media (max-width: 768px) {
-        .sax-admin-container { padding-bottom: 100px; }
-        .sticky-header { border-radius: 0; }
-    }
 </style>
 @endsection
 
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Preview Real-time (SAX Standard)
         $('.img-input').change(function() {
             const input = this;
             const previewId = $(this).data('preview');

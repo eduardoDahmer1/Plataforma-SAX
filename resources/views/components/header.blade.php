@@ -172,7 +172,6 @@
                 </li>
                 <li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">PALACE</a>
                 </li>
-                <li class="list-inline-item"><a href="#">CAFÉ & BISTRÓ</a></li>
                 <li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">#SAXNEWS</a>
                 </li>
             </ul>

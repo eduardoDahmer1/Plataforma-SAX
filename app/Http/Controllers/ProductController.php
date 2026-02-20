@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
-use App\Models\Childcategory;
+use App\Models\CategoriasFilhas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -101,7 +101,7 @@ class ProductController extends Controller
         // Busca com relações para evitar N+1 queries
         $product = Product::where('id', $id_or_slug)
             ->orWhere('slug', $id_or_slug)
-            ->with(['brand', 'category', 'subcategory', 'childcategory'])
+            ->with(['brand', 'category', 'subcategory', 'categoriasfilhas'])
             ->firstOrFail();
 
         // 1. Lógica de Preço (Banco: price, previous_price, promotion_price)
@@ -171,11 +171,11 @@ class ProductController extends Controller
     }
 
     /**
-     * Listagem por Childcategory
+     * Listagem por CategoriasFilhas
      */
-    public function byChildcategory(Childcategory $childcategory)
+    public function byCategoriasFilhas(CategoriasFilhas $CategoriasFilhas)
     {
-        $products = Product::where('childcategory_id', $childcategory->id)
+        $products = Product::where('categorias_filhas_id', $CategoriasFilhas->id)
             ->where('product_role', 'P')
             ->with(['cupons' => fn($q) => $q->ativos()])
             ->paginate(12);
@@ -184,7 +184,7 @@ class ProductController extends Controller
             $p->price_final = $this->calcularPrecoComCupon($p);
         }
 
-        return view('produtos.index', compact('products', 'childcategory'));
+        return view('produtos.index', compact('products', 'categoriasfilhas'));
     }
 
     /**

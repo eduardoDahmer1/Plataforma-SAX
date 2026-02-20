@@ -5,38 +5,39 @@
         {{-- Header Minimalista --}}
         <div class="child-hero py-5 border-bottom">
             <div class="container text-center">
-                <a href="{{ route('childcategories.index') }}" class="back-link">
+                <a href="{{ route('categorias-filhas.index') }}" class="back-link">
                     <i class="fas fa-chevron-left me-1"></i> VOLVER
                 </a>
 
                 <div class="child-logo-main my-4">
-                    @if ($childcategory->photo && Storage::disk('public')->exists($childcategory->photo))
-                        <img src="{{ Storage::url($childcategory->photo) }}" alt="{{ $childcategory->name }}"
+                    @if ($categoriasfilhas->photo && Storage::disk('public')->exists($categoriasfilhas->photo))
+                        <img src="{{ Storage::url($categoriasfilhas->photo) }}" alt="{{ $categoriasfilhas->name }}"
                             class="main-child-img">
                     @else
-                        <h1 class="sax-child-title">{{ $childcategory->name }}</h1>
+                        <h1 class="sax-child-title">{{ $categoriasfilhas->name }}</h1>
                     @endif
                 </div>
 
                 {{-- Breadcrumb de luxo discreto --}}
                 <div class="child-breadcrumb">
-                    <span>{{ $childcategory->subcategory->category->name ?? '' }}</span>
+                    <span>{{ $categoriasfilhas->subcategory->category->name ?? '' }}</span>
                     <i class="fas fa-chevron-right mx-2"></i>
-                    <span>{{ $childcategory->subcategory->name ?? '' }}</span>
+                    <span>{{ $categoriasfilhas->subcategory->name ?? '' }}</span>
                 </div>
             </div>
         </div>
 
         <div class="container-fluid px-2 py-5">
-            @if ($childcategory->products && $childcategory->products->count())
+            {{-- Alterado para percorrer a variável $products paginada --}}
+            @if (isset($products) && $products->count())
                 <div class="row g-1"> {{-- Grid colado JW PEI Style --}}
-                    @foreach ($childcategory->products as $product)
+                    @foreach ($products as $product)
                         <div class="col-6 col-md-4 col-lg-2">
-                            <a href="{{ route('products.show', $product->id) }}" class="text-decoration-none">
-                                <div class="card h-100 border-0 rounded-0 jw-product-card">
+                            <div class="card h-100 border-0 rounded-0 jw-product-card">
 
-                                    {{-- Área da Imagem com fundo cinza --}}
-                                    <div class="jw-img-container position-relative">
+                                {{-- Área da Imagem com fundo cinza --}}
+                                <div class="jw-img-container position-relative">
+                                    <a href="{{ route('products.show', $product->id) }}" class="w-100 h-100">
                                         @php
                                             $photoUrl =
                                                 $product->photo_url ??
@@ -46,16 +47,18 @@
                                         @endphp
                                         <img src="{{ $photoUrl }}" class="card-img-top img-fluid rounded-0"
                                             alt="{{ $product->name }}">
+                                    </a>
 
-                                        {{-- Botão de Favorito Estilo Minimal --}}
-                                        <div class="position-absolute top-0 end-0 p-3">
-                                            @auth
-                                                <x-product-favorite-button :item="$item" />
-                                            @endauth
-                                        </div>
+                                    {{-- Botão de Favorito Estilo Minimal --}}
+                                    <div class="position-absolute top-0 end-0 p-3" style="z-index: 10;">
+                                        @auth
+                                            <x-product-favorite-button :item="$product" />
+                                        @endauth
                                     </div>
+                                </div>
 
-                                    {{-- Info do Produto --}}
+                                {{-- Info do Produto --}}
+                                <a href="{{ route('products.show', $product->id) }}" class="text-decoration-none">
                                     <div class="card-body px-3 py-4">
                                         <div class="jw-brand fw-bold text-uppercase mb-1">
                                             {{ $product->brand->name ?? 'EXCLUSIVO' }}
@@ -67,11 +70,17 @@
                                             {{ isset($product->price) ? currency_format($product->price) : '0,00' }}
                                         </div>
                                     </div>
-                                </div>
-                            </a>
+                                </a>
+                            </div>
                         </div>
                     @endforeach
                 </div>
+
+                {{-- Bloco de Paginação --}}
+                <div class="d-flex justify-content-center mt-5 pagination-minimal">
+                    {!! $products->links() !!}
+                </div>
+
             @else
                 <div class="text-center py-5">
                     <p class="text-muted text-uppercase tracking-widest">No hay productos disponibles en este momento.</p>
@@ -79,17 +88,18 @@
             @endif
 
             {{-- Banner Opcional --}}
-            @if ($childcategory->banner && Storage::disk('public')->exists($childcategory->banner))
+            @if ($categoriasfilhas->banner && Storage::disk('public')->exists($categoriasfilhas->banner))
                 <div class="mt-5 container">
-                    <img src="{{ Storage::url($childcategory->banner) }}" class="img-fluid w-100 shadow-sm"
+                    <img src="{{ Storage::url($categoriasfilhas->banner) }}" class="img-fluid w-100 shadow-sm"
                         style="max-height: 400px; object-fit: cover;">
                 </div>
             @endif
         </div>
     </div>
 @endsection
+
 <style>
-    <style>.child-detail-wrapper {
+    .child-detail-wrapper {
         background-color: #fff;
     }
 
@@ -169,12 +179,23 @@
         color: #000;
     }
 
-    .btn-favorite-sax {
-        background: transparent;
-        border: none;
+    /* Estilo da Paginação */
+    .pagination-minimal .pagination {
+        gap: 5px;
+    }
+
+    .pagination-minimal .page-link {
         color: #000;
-        padding: 0;
-        transition: transform 0.2s ease;
+        border: none;
+        background: transparent;
+        font-size: 0.8rem;
+    }
+
+    .pagination-minimal .page-item.active .page-link {
+        background-color: transparent;
+        color: #000;
+        font-weight: bold;
+        text-decoration: underline;
     }
 
     /* Grid colado */
@@ -187,5 +208,4 @@
         padding-right: 2px;
         padding-left: 2px;
     }
-</style>
 </style>

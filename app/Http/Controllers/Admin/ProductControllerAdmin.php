@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Subcategory;
-use App\Models\Childcategory;
+use App\Models\CategoriasFilhas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -153,10 +153,10 @@ class ProductControllerAdmin extends Controller
         $brands = Brand::all();
         $categories = Category::all();
         $subcategories = collect();
-        $childcategories = collect();
+        $categoriasfilhas = collect();
         $products = Product::all(); // adiciona aqui também
 
-        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'childcategories', 'products'));
+        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'categorias-filhas', 'products'));
     }
 
     public function search(Request $request)
@@ -185,7 +185,7 @@ class ProductControllerAdmin extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'childcategory_id' => 'nullable|exists:childcategories,id',
+            'childcategory_id' => 'nullable|exists:categorias-filhas,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
@@ -242,14 +242,14 @@ class ProductControllerAdmin extends Controller
             'brand',
             'category',
             'subcategory',
-            'childcategory'
+            'categoriasfilhas'
         ])->findOrFail($id);
 
         // Carrega apenas categorias e subcategorias necessárias
         $brands = Brand::all();
         $categories = Category::all();
         $subcategories = Subcategory::where('category_id', $item->category_id)->get();
-        $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
+        $categoriasfilhas = CategoriasFilhas::where('subcategory_id', $item->subcategory_id)->get();
 
         // Carrega somente os produtos que podem ser selecionados como parent ou cores
         $products = Product::select('id', 'name')->get(); // << name adicionado aqui
@@ -263,7 +263,7 @@ class ProductControllerAdmin extends Controller
             'brands',
             'categories',
             'subcategories',
-            'childcategories',
+            'categoriasfilhas',
             'products'
         ));
     }
@@ -282,7 +282,7 @@ class ProductControllerAdmin extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'childcategory_id' => 'nullable|exists:childcategories,id',
+            'childcategory_id' => 'nullable|exists:categoriasfilhas,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
@@ -522,7 +522,7 @@ class ProductControllerAdmin extends Controller
 
     public function getChildcategories($subcategoryId)
     {
-        return Childcategory::where('subcategory_id', $subcategoryId)->get();
+        return CategoriasFilhas::where('subcategory_id', $subcategoryId)->get();
     }
 
     public function toggleStatus($id)

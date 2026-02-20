@@ -43,10 +43,10 @@
                     </small>
 
                     {{-- Quantidade de Childcategories --}}
-                    @if($subcategory->childcategories)
+                    @if($subcategory->categoriasfilhas)
                         <small class="text-muted mb-2">
                             <i class="fas fa-list-ul me-1"></i>
-                            {{ $subcategory->childcategories->count() }} itens
+                            {{ $subcategory->categoriasfilhas->count() }} itens
                         </small>
                     @endif
 

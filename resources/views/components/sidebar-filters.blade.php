@@ -1,4 +1,4 @@
-@props(['request', 'brands' => [], 'categories' => [], 'subcategories' => [], 'childcategories' => []])
+@props(['request', 'brands' => [], 'categories' => [], 'subcategories' => [], 'categorias-filhas' => []])
 
 @php
     use App\Models\Currency;

@@ -12,7 +12,7 @@
             <div class="col-md-12">
                 <h4 class="mb-3"><i class="fas fa-box-open me-2"></i> Produtos</h4>
 
-                <x-sidebar-filters :request="request()" :brands="$brands" :categories="$categories" :subcategories="$subcategories" :childcategories="$childcategories" />
+                <x-sidebar-filters :request="request()" :brands="$brands" :categories="$categories" :subcategories="$subcategories" :categorias-filhas="$categoriasfilhas" />
 
                 @if ($paginated->count())
                     <div class="row">

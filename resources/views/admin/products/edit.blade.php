@@ -50,7 +50,7 @@
                         </select>
                     </div>
 
-                    <!-- Categoria / Subcategoria / Childcategory -->
+                    <!-- Categoria / Subcategoria / CategoriasFilhas -->
                     <div class="col-md-4">
                         <label for="category_id" class="form-label"><i class="fas fa-folder me-1"></i>Categoria</label>
                         <select name="category_id" id="category_id" class="form-select">
@@ -79,14 +79,14 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label for="childcategory_id" class="form-label"><i
-                                class="fas fa-sitemap me-1"></i>Childcategory</label>
-                        <select name="childcategory_id" id="childcategory_id" class="form-select">
-                            <option value="">Selecione uma childcategory</option>
-                            @foreach ($childcategories as $childcategory)
-                                <option value="{{ $childcategory->id }}"
-                                    {{ $item->childcategory_id === $childcategory->id ? 'selected' : '' }}>
-                                    {{ $childcategory->name ?: $childcategory->slug }}
+                        <label for="categoriasfilhas_id" class="form-label"><i
+                                class="fas fa-sitemap me-1"></i>Categorias Filhas</label>
+                        <select name="categoriasfilhas_id" id="categoriasfilhas_id" class="form-select">
+                            <option value="">Selecione uma categorias filhas</option>
+                            @foreach ($categoriasfilhas as $categoriasfilhas)
+                                <option value="{{ $categoriasfilhas->id }}"
+                                    {{ $item->categoriasfilhas_id === $categoriasfilhas->id ? 'selected' : '' }}>
+                                    {{ $categoriasfilhas->name ?: $categoriasfilhas->slug }}
                                 </option>
                             @endforeach
                         </select>

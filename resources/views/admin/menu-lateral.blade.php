@@ -24,7 +24,7 @@
                 <a href="{{ route('admin.brands.index') }}" class="submenu-link"><i class="fa-solid fa-copyright"></i> Marcas</a>
                 <a href="{{ route('admin.categories.index') }}" class="submenu-link"><i class="fa-solid fa-tags"></i> Categorias</a>
                 <a href="{{ route('admin.subcategories.index') }}" class="submenu-link"><i class="fa-solid fa-tag"></i> Subcategorias</a>
-                <a href="{{ route('admin.childcategories.index') }}" class="submenu-link"><i class="fa-solid fa-sitemap"></i> Filhas</a>
+                <a href="{{ route('admin.categorias-filhas.index') }}" class="submenu-link"><i class="fa-solid fa-sitemap"></i> Filhas</a>
             </div>
         </div>
 

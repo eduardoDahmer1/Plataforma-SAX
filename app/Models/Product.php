@@ -127,9 +127,9 @@ class Product extends Model
         return $this->belongsTo(Subcategory::class);
     }
 
-    public function childcategory()
+    public function categoriasFilhas()
     {
-        return $this->belongsTo(Childcategory::class);
+        return $this->belongsTo(CategoriasFilhas::class);
     }
 
     // Produto Pai

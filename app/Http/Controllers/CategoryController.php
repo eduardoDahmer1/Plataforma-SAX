@@ -17,7 +17,7 @@ class CategoryController extends Controller
 
         $categories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
             return Category::where('status', 1) // Somente categorias ativas
-                ->with(['subcategories.childcategories'])
+                ->with(['subcategories.categorias-filhas'])
                 ->withCount(['products' => function ($q) {
                     $q->where('status', 1); // Conta apenas produtos ativos
                 }])
@@ -49,7 +49,7 @@ class CategoryController extends Controller
         // 2. Busca com Cache
         [$category, $products] = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($category) {
             // REMOVIDO o filtro de status da subcategory pois a coluna não existe no seu banco
-            $category = $category->load(['subcategories.childcategories']);
+            $category = $category->load(['subcategories.categoriasfilhas']);
 
             // Mantemos o filtro nos produtos (assumindo que a tabela products tem status)
             $products = $category->products()

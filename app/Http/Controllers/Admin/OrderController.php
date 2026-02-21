@@ -53,10 +53,25 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,completed,canceled,paid,failed',
         ]);
 
+        // Se o Admin marcar como pago manualmente
+        if ($request->status === 'paid' || $request->status === 'completed') {
+            $order->payment_status = 'completed';
+        }
+
+        // Se o Admin cancelar, devolvemos o estoque (opcional, mas recomendado)
+        if ($request->status === 'canceled' && $order->status !== 'canceled') {
+            foreach ($order->items as $item) {
+                $product = $item->product;
+                if ($product) {
+                    $product->increment('stock', $item->quantity);
+                }
+            }
+        }
+
         $order->status = $request->status;
         $order->save();
 
-        return redirect()->back()->with('success', 'Status do pedido atualizado!');
+        return redirect()->back()->with('success', 'Pedido atualizado com sucesso!');
     }
 
     // Mostra detalhes do pedido

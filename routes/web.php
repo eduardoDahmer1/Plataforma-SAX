@@ -17,7 +17,6 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CurrencyController;
-use App\Http\Controllers\BancardController;
 use App\Http\Controllers\CuponUserController;
 use App\Http\Controllers\PagoParController;
 use App\Http\Controllers\PalaceController;
@@ -83,8 +82,6 @@ Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 
-Route::get('checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->name('checkout.whatsapp');
-
 // Blog
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
@@ -97,10 +94,6 @@ Route::post('/currency/change', [CurrencyController::class, 'change'])->name('cu
 
 // --- Authenticated User Routes ---
 Route::middleware('auth')->group(function () {
-    // Bancard
-    Route::get('/checkout/bancard/return', [BancardController::class, 'returnPage'])->name('bancard.return');
-    Route::post('/checkout/bancard/callback', [BancardController::class, 'bancardCallback'])->name('bancard.callback');
-    Route::get('/checkout/bancard/{id}', [BancardController::class, 'checkoutPage'])->name('bancard.checkout');
 
     // Dashboard e Perfil
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
@@ -118,25 +111,30 @@ Route::middleware('auth')->group(function () {
     Route::get('/meus-preferidos', [UserPreferenceController::class, 'index'])->name('user.preferences');
     Route::post('/user/preferences/toggle', [UserPreferenceController::class, 'toggle'])->name('user.preferences.toggle');
 
-    // Checkout
+    // --- Fluxo de Checkout Unificado ---
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
+    Route::get('/checkout/error', fn() => view('checkout.error'))->name('checkout.error');
     Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
+    
+    // PagoPar (Bancard / Pix / Outros)
+    Route::prefix('pagopar')->group(function () {
+        Route::get('/finish', [PagoParController::class, 'finish'])->name('pagopar.finish');
+        Route::post('/callback', [PagoParController::class, 'callback'])->name('pagopar.callback');
+    });
+
+    // Métodos Offline
+    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');
+    Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
+    Route::get('/checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->name('checkout.whatsapp');
+    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->name('orders.deposit.submit');
 
     // Cupons
     Route::get('cupons', [CuponUserController::class, 'index'])->name('user.cupons');
     Route::post('cupons/remove', [CuponUserController::class, 'remove'])->name('user.cupons.remove');
     Route::post('/user/cupon/apply', [CuponUserController::class, 'applyCupon'])->name('user.applyCupon');
     Route::post('/user/cupons/apply', [CuponUserController::class, 'apply'])->name('user.cupons.apply');
-
-    // Checkout Extra
-    Route::get('/checkout/error', fn() => view('checkout.error'))->name('checkout.error');
-    Route::get('/checkout/pagopar/{order}', [PagoParController::class, 'checkoutPage'])->name('pagopar.checkout');
-    Route::post('/checkout/pagopar/callback', [PagoParController::class, 'callback'])->name('pagopar.callback');
-    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');
-    Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
-    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->name('orders.deposit.submit');
 
     Route::delete('/user/delete', [UserController::class, 'destroy'])->name('user.destroy');
 

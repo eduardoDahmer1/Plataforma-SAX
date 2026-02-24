@@ -31,7 +31,7 @@
                 <div class="row g-1"> {{-- Grid colado igual JW PEI --}}
                     @foreach ($products as $item)
                         <div class="col-6 col-md-4 col-lg-2">
-                            <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none">
+                            <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
                                 <div class="card h-100 border-0 rounded-0 jw-product-card">
 
                                     {{-- Área da Imagem com fundo cinza --}}

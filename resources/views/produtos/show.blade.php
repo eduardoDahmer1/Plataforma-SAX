@@ -1,194 +1,540 @@
 @extends('layout.layout')
 
 @section('content')
-<div class="product-page-wrapper bg-white">
-    <div class="container-fluid p-0">
-        <div class="row g-0">
-            
-            {{-- LADO ESQUERDO: Galeria Vertical --}}
-            <div class="col-lg-7 col-xl-8 bg-light">
-                @php
-                    $mainImage = $product->photo ? Storage::url($product->photo) : asset('storage/uploads/noimage.webp');
-                    $gallery = is_string($product->gallery) ? json_decode($product->gallery, true) : ($product->gallery ?: []);
-                @endphp
+    <div class="product-page-wrapper">
+        <div class="container-fluid px-lg-5 py-4">
+            {{-- Breadcrumb minimalista --}}
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb x-small text-uppercase">
+                    <li class="breadcrumb-item"><a href="/" class="text-muted">Home</a></li>
+                    <li class="breadcrumb-item active text-dark">{{ $product->external_name }}</li>
+                </ol>
+            </nav>
 
-                <div class="product-gallery-vertical">
-                    <div class="gallery-item mb-2 shadow-sm">
-                        <img src="{{ $mainImage }}" class="img-fluid w-100 main-img-zoom" alt="{{ $product->external_name }}">
-                    </div>
+            <div class="row g-5">
+                {{-- COLUNA ESQUERDA: Galeria de Imagens --}}
+                <div class="col-lg-7">
+                    <div class="row g-2">
+                        @php
+                            $mainImage = $product->photo
+                                ? Storage::url($product->photo)
+                                : asset('storage/uploads/noimage.webp');
+                            $gallery = is_string($product->gallery)
+                                ? json_decode($product->gallery, true)
+                                : ($product->gallery ?:
+                                []);
+                        @endphp
 
-                    @foreach ($gallery as $img)
-                        <div class="gallery-item mb-2">
-                            <img src="{{ Storage::url($img) }}" class="img-fluid w-100" alt="Vista detalhada">
+                        {{-- Imagem Principal --}}
+                        <div class="col-12 mb-2">
+                            <div class="gallery-frame">
+                                <img src="{{ $mainImage }}" class="img-fluid w-100" alt="{{ $product->external_name }}">
+                            </div>
                         </div>
-                    @endforeach
+
+                        {{-- Grid de Galeria (2 colunas) --}}
+                        @foreach ($gallery as $img)
+                            <div class="col-6">
+                                <div class="gallery-frame">
+                                    <img src="{{ Storage::url($img) }}" class="img-fluid w-100" alt="Detail">
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
 
-            {{-- LADO DIREITO: Informações Fixas --}}
-            <div class="col-lg-5 col-xl-4">
-                <div class="product-info-sidebar p-4 p-md-5 sticky-top">
-                    
-                    <div class="mb-4">
-                        <nav aria-label="breadcrumb" class="mb-2">
-                            <ol class="breadcrumb x-small text-uppercase p-0 bg-transparent">
-                                <li class="breadcrumb-item"><a href="/" class="text-muted">Home</a></li>
-                                @if($product->category) <li class="breadcrumb-item active">{{ $product->category->name }}</li> @endif
-                                @if($product->subcategory) <li class="breadcrumb-item active text-muted">{{ $product->subcategory->name }}</li> @endif
-                            </ol>
-                        </nav>
-                        <h4 class="text-uppercase fw-light letter-spacing-2 mb-1 text-muted">{{ $product->brand->name ?? 'Luxury' }}</h4>
-                        <h1 class="h2 fw-bold text-uppercase">{{ $product->external_name }}</h1>
-                        <div class="d-flex gap-3 x-small text-muted mt-2">
-                            <span>REF: {{ $product->ref_code ?? $product->sku }}</span>
-                            <span>SKU: {{ $product->sku }}</span>
+                {{-- COLUNA DIREITA: Informações e Compra --}}
+                <div class="col-lg-5">
+                    <div class="product-sticky-info">
+                        <div class="brand-name">{{ $product->brand->name ?? 'Luxury Brand' }}</div>
+                        <h1 class="product-title text-uppercase">{{ $product->external_name }}</h1>
+
+                        <div class="product-price mb-4">
+                            {{ currency_format($product->price) }} <span class="currency">USD</span>
                         </div>
-                    </div>
 
-                    {{-- Preço e Badge de Desconto --}}
-                    <div class="mb-4 border-top border-bottom py-3">
-                        @if($product->previous_price > $product->price)
-                            <span class="text-decoration-line-through text-muted small d-block">De: {{ currency_format($product->previous_price) }}</span>
-                        @endif
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="h3 fw-bold m-0">Por: {{ currency_format($product->price) }}</span>
-                            @if($product->previous_price > $product->price)
-                                <span class="badge bg-danger rounded-0">-{{ round((1 - ($product->price / $product->previous_price)) * 100) }}%</span>
+                        {{-- Seleção de Tamanhos Dinâmica --}}
+                        <div class="size-selection-wrapper mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="section-label">GUIA TALLAS</span>
+                            </div>
+                            <div class="size-grid">
+                                @if (isset($siblings) && $siblings->count() > 0)
+                                    @foreach ($siblings as $sib)
+                                        <a href="{{ route('produto.show', $sib->slug ?? $sib->id) }}"
+                                            class="size-box text-decoration-none {{ $product->id == $sib->id ? 'active' : '' }}">
+                                            {{ $sib->size ?? 'U' }}
+                                        </a>
+                                    @endforeach
+                                @else
+                                    <div class="size-box active">{{ $product->size ?? 'U' }}</div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Ações de Compra --}}
+                        <div class="actions-wrapper mb-5">
+                            <div class="d-flex gap-2">
+                                @if (Auth::check())
+                                    <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1">
+                                        @csrf
+                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                        <button type="submit" class="btn btn-dark btn-add-bag w-100"
+                                            {{ $product->stock <= 0 ? 'disabled' : '' }}>
+                                            {{ $product->stock > 0 ? 'AÑADIR A LA BOLSA' : 'AGOTADO' }}
+                                        </button>
+                                    </form>
+                                @else
+                                    <a href="{{ route('login') }}"
+                                        class="btn btn-dark btn-add-bag flex-grow-1 text-center">LOGIN PARA COMPRAR</a>
+                                @endif
+
+                                <button class="btn btn-outline-dark btn-wishlist">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                            <a href="#" class="btn-guia-tallas d-block mt-2">GUIA DE TALLAS</a>
+                        </div>
+
+                        {{-- Accordion de Informações --}}
+                        <div class="product-details-accordion">
+                            <div class="accordion-item-sax">
+                                <div class="accordion-trigger">DESCRIPCIÓN DE PRODUCTO <i class="fas fa-plus small"></i>
+                                </div>
+                                <div class="accordion-content show">
+                                    <p>{!! nl2br(e($product->description)) !!}</p>
+                                </div>
+                            </div>
+
+                            @if ($product->attributes)
+                                <div class="accordion-item-sax">
+                                    <div class="accordion-trigger">DETALLES TÉCNICOS <i class="fas fa-plus small"></i></div>
+                                    <div class="accordion-content">
+                                        <table class="table table-sm table-borderless m-0 x-small">
+                                            @foreach (json_decode($product->attributes, true) as $key => $value)
+                                                <tr>
+                                                    <td class="ps-0 fw-bold text-uppercase">{{ $key }}:</td>
+                                                    <td class="text-end pe-0">{{ $value }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </table>
+                                    </div>
+                                </div>
                             @endif
-                        </div>
-                        <p class="x-small text-success mt-2 fw-bold"><i class="fas fa-truck me-1"></i> Disponível para envio imediato</p>
-                    </div>
 
-                    {{-- Seletor de Cores --}}
-                    <div class="mb-4">
-                        <label class="x-small fw-bold text-uppercase mb-3 d-block">Cor Selecionada</label>
-                        <div class="d-flex flex-wrap gap-3">
-                            {{-- Cor Atual --}}
-                            <div class="color-swatch active" style="background-color: {{ $product->color ?? '#000' }}; shadow: inset 0 0 5px rgba(0,0,0,0.2);"></div>
-                            
-                            {{-- Outras cores (Cores Relacionadas) --}}
-                            @isset($coresRelacionadas)
-                                @foreach($coresRelacionadas as $corProd)
-                                    @if($corProd->id != $product->id)
-                                        <a href="{{ route('produto.show', $corProd->slug ?? $corProd->id) }}" 
-                                           class="color-swatch" style="background-color: {{ $corProd->color ?? '#eee' }};"></a>
-                                    @endif
-                                @endforeach
-                            @endisset
-                        </div>
-                    </div>
-
-                    {{-- Seletor de Tamanhos --}}
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between x-small fw-bold text-uppercase mb-3">
-                            <span>Tamanho: {{ $product->size ?? 'U' }}</span>
-                        </div>
-                        @isset($siblings)
-                        <div class="row g-2">
-                            @foreach($siblings as $sib)
-                                <div class="col-3">
-                                    <a href="{{ route('produto.show', $sib->slug ?? $sib->id) }}" 
-                                       class="size-option {{ $product->id == $sib->id ? 'active' : '' }}">
-                                        {{ $sib->size ?? 'U' }}
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                        @endisset
-                    </div>
-
-                    {{-- Botões de Compra --}}
-                    <div class="d-grid gap-2 mt-4">
-                        @if (Auth::check())
-                            <form action="{{ route('cart.add') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <button type="submit" class="btn btn-dark btn-lg w-100 py-3 rounded-0 text-uppercase fw-bold btn-buy" {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                                    {{ $product->stock > 0 ? 'Adicionar à Sacola' : 'Esgotado' }}
-                                </button>
-                            </form>
-                        @endif
-                    </div>
-
-                    {{-- Accordion: Detalhes Técnicos e Atributos --}}
-                    <div class="accordion accordion-flush mt-5 border-top" id="productSpecs">
-                        {{-- Descrição --}}
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed text-uppercase x-small fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#descContent">
-                                    Descrição e Detalhes
-                                </button>
-                            </h2>
-                            <div id="descContent" class="accordion-collapse collapse show" data-bs-parent="#productSpecs">
-                                <div class="accordion-body x-small text-muted lh-base">
-                                    {!! nl2br(e($product->description)) !!}
+                            <div class="accordion-item-sax">
+                                <div class="accordion-trigger">ENVÍOS Y DEVOLUCIONES <i class="fas fa-plus small"></i></div>
+                                <div class="accordion-content">
+                                    <p>Consulte nuestros plazos de entrega y políticas de devolución en el checkout.</p>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Atributos dinâmicos do Banco --}}
-                        @if($product->attributes)
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed text-uppercase x-small fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#attrContent">
-                                    Especificações Técnicas
-                                </button>
-                            </h2>
-                            <div id="attrContent" class="accordion-collapse collapse" data-bs-parent="#productSpecs">
-                                <div class="accordion-body p-0">
-                                    <table class="table table-sm table-borderless x-small m-0">
-                                        @foreach(json_decode($product->attributes, true) as $key => $value)
-                                            <tr class="border-bottom">
-                                                <td class="fw-bold text-uppercase py-2">{{ $key }}</td>
-                                                <td class="text-end text-muted py-2">{{ $value }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </table>
-                                </div>
+                        {{-- Disponibilidade em Loja --}}
+                        <div class="store-availability mt-5 pt-4 border-top">
+                            <div class="section-label mb-3 text-uppercase">
+                                <i class="fas fa-map-marker-alt me-2"></i> Disponible para retirar en tienda
                             </div>
+                            <ul class="list-unstyled store-list">
+                                <li><i class="far fa-check-circle text-success"></i> Asunción</li>
+                                <li><i class="far fa-check-circle text-success"></i> Ciudad Del Este</li>
+                                <li><i class="far fa-times-circle text-muted"></i> Pedro Juan Caballero</li>
+                            </ul>
                         </div>
-                        @endif
 
-                        {{-- Tags --}}
-                        @if($product->tags)
-                        <div class="mt-4">
-                            <label class="x-small fw-bold text-uppercase d-block mb-2">Tags</label>
-                            <div class="d-flex flex-wrap gap-1">
-                                @foreach(explode(',', $product->tags) as $tag)
-                                    <span class="badge border text-dark fw-light x-small">{{ trim($tag) }}</span>
-                                @endforeach
-                            </div>
-                        </div>
-                        @endif
+                        <a href="https://wa.me/seu-numero" class="whatsapp-link mt-4">
+                            <i class="fab fa-whatsapp"></i> Compra a través de WhatsApp
+                        </a>
                     </div>
-
                 </div>
             </div>
         </div>
+
+        {{-- SEÇÕES DE DESTAQUE DINÂMICAS --}}
+        @php
+            $highlightTitles = [
+                'lancamentos' => 'RECIÉN LLEGADOS',
+                'destaque' => 'ARTÍCULOS SIMILARES',
+            ];
+        @endphp
+
+        @foreach (['destaque', 'lancamentos'] as $key)
+            @php
+                $prods = $highlights[$key] ?? collect();
+                $show = $settings->{'show_highlight_' . $key} ?? 1;
+            @endphp
+
+            @if ($show && $prods->isNotEmpty())
+                <section class="sax-section-container py-5 border-top {{ $key == 'lancamentos' ? 'bg-light' : '' }}">
+                    <div class="container-fluid px-lg-5">
+                        <h2 class="sax-section-title mb-4">{{ $highlightTitles[$key] }}</h2>
+                        <div class="swiper productSwiper">
+                            <div class="swiper-wrapper">
+                                @foreach ($prods as $item)
+                                    <div class="swiper-slide">
+                                        @include('home-components.product-card', ['item' => $item])
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="swiper-button-next"></div>
+                            <div class="swiper-button-prev"></div>
+                        </div>
+                    </div>
+                </section>
+            @endif
+        @endforeach
+        <section class="help-section">
+            <div class="help-grid">
+                {{-- CARD: GUÍA DE COMPRA (Ícone Cabide) --}}
+                <div class="help-card">
+                    <div class="icon">
+                        @if ($attribute && $attribute->icon_cabide)
+                            <img src="{{ asset('storage/uploads/' . $attribute->icon_cabide) }}" alt="Compra"
+                                width="30">
+                        @else
+                            👕
+                        @endif
+                    </div>
+                    <h3>CÓMO REALIZAR UNA COMPRA</h3>
+                    <p>Tu guía para hacer pedidos</p>
+                </div>
+
+                {{-- CARD: PREGUNTAS FRECUENTES (Ícone Ajuda/Dúvida) --}}
+                <div class="help-card">
+                    <div class="icon">
+                        @if ($attribute && $attribute->icon_help)
+                            <img src="{{ asset('storage/uploads/' . $attribute->icon_help) }}" alt="FAQ"
+                                width="30">
+                        @else
+                            <span class="red-icon">?</span>
+                        @endif
+                    </div>
+                    <h3>PREGUNTAS FRECUENTES</h3>
+                    <p>¡Respondemos tus preguntas!</p>
+                </div>
+
+                {{-- CARD: NECESITAS AYUDA (Ícone Info/Relógio) --}}
+                <div class="help-card">
+                    <div class="icon">
+                        @if ($attribute && $attribute->icon_info)
+                            <img src="{{ asset('storage/uploads/' . $attribute->icon_info) }}" alt="Ayuda"
+                                width="30">
+                        @else
+                            ⓘ
+                        @endif
+                    </div>
+                    <h3>¿NECESITAS AYUDA?</h3>
+                    <p>Contacta a nuestro equipo de Atención al Cliente</p>
+                </div>
+            </div>
+        </section>
     </div>
-</div>
 
-<style>
-/* Estilização Extra para Refinamento SAX */
-.x-small { font-size: 0.7rem; letter-spacing: 0.8px; }
-.letter-spacing-2 { letter-spacing: 2px; }
+    {{-- Swiper JS e Lógica Accordion --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializa Swiper para os destaques
+            new Swiper(".productSwiper", {
+                slidesPerView: 2,
+                spaceBetween: 20,
+                navigation: {
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                },
+                breakpoints: {
+                    768: {
+                        slidesPerView: 3
+                    },
+                    1024: {
+                        slidesPerView: 5
+                    }
+                }
+            });
 
-@media (min-width: 992px) {
-    .product-info-sidebar { height: 100vh; overflow-y: auto; scrollbar-width: none; }
-    .product-info-sidebar::-webkit-scrollbar { display: none; }
-}
+            // Toggle Accordion SAX Style
+            document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+                trigger.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('i');
 
-.color-swatch { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #eee; transition: 0.3s; cursor: pointer; position: relative; }
-.color-swatch.active::after { content: ''; position: absolute; top: -4px; left: -4px; right: -4px; bottom: -4px; border: 1px solid #000; border-radius: 50%; }
+                    content.classList.toggle('show');
 
-.size-option { display: block; text-align: center; padding: 12px; border: 1px solid #eee; color: #333; font-size: 0.8rem; transition: 0.3s; text-decoration: none; }
-.size-option:hover { border-color: #000; }
-.size-option.active { background: #000; color: #fff; border-color: #000; }
+                    // Muda o ícone de + para -
+                    if (content.classList.contains('show')) {
+                        icon.classList.replace('fa-plus', 'fa-minus');
+                    } else {
+                        icon.classList.replace('fa-minus', 'fa-plus');
+                    }
+                });
+            });
+        });
+    </script>
 
-.btn-buy { letter-spacing: 2px; transition: 0.4s; }
-.btn-buy:hover { background-color: #333; transform: translateY(-2px); }
+    <style>
+        /* Estrutura Geral */
+        .product-page-wrapper {
+            background-color: #fff;
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
 
-.accordion-button:not(.collapsed) { background-color: transparent; color: #000; box-shadow: none; }
-.accordion-button::after { background-size: 10px; }
-</style>
+        .x-small {
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .help-section {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        /* Galeria */
+        .gallery-frame {
+            background-color: #f9f9f9;
+            transition: 0.3s;
+        }
+
+        .gallery-frame img {
+            mix-blend-mode: multiply;
+        }
+
+        /* Info do Produto */
+        .product-sticky-info {
+            position: sticky;
+            top: 100px;
+        }
+
+        .brand-name {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .product-title {
+            font-size: 20px;
+            font-weight: 300;
+            color: #666;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .product-price {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .currency {
+            font-size: 14px;
+            color: #999;
+            margin-left: 5px;
+        }
+
+        /* Seleção de Tamanhos */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: 1.5px;
+        }
+
+        .size-grid {
+            display: flex;
+            flex-wrap: wrap;
+            border: 1px solid #eee;
+            margin-top: 10px;
+        }
+
+        .size-box {
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
+            padding: 12px 5px;
+            border-right: 1px solid #eee;
+            cursor: pointer;
+            color: #1a1a1a;
+            font-size: 12px;
+            transition: 0.2s;
+            border-bottom: 1px solid #eee;
+        }
+
+        .size-box:hover {
+            background: #f8f8f8;
+        }
+
+        .size-box.active {
+            background: #999;
+            color: #fff;
+            border-color: #999;
+        }
+
+        /* Botões */
+        .btn-add-bag {
+            background: #1a1a1a;
+            border: none;
+            border-radius: 0;
+            padding: 18px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            font-size: 13px;
+        }
+
+        .btn-wishlist {
+            border-radius: 0;
+            width: 60px;
+            border-color: #eee;
+            color: #333;
+        }
+
+        .btn-wishlist:hover {
+            background: #f8f8f8;
+            border-color: #333;
+        }
+
+        .btn-guia-tallas {
+            font-size: 10px;
+            text-decoration: underline;
+            color: #1a1a1a;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* Accordion Custom */
+        .accordion-item-sax {
+            border-top: 1px solid #eee;
+        }
+
+        .accordion-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #1a1a1a;
+            letter-spacing: 1px;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: 0.4s ease;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .accordion-content.show {
+            max-height: 1000px;
+            padding-bottom: 20px;
+        }
+
+        .help-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: left;
+            background: #fff;
+            transition: transform 0.3s ease;
+        }
+
+        .help-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .help-card .icon {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .help-card .red-icon {
+            color: #d9534f;
+            font-weight: bold;
+        }
+
+        .help-card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #000;
+            letter-spacing: 0.5px;
+        }
+
+        .help-card p {
+            font-size: 13px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Loja e WhatsApp */
+        .store-list li {
+            font-size: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .whatsapp-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #1a1a1a;
+            text-decoration: underline;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Seções Inferiores */
+        .sax-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: #000 !important;
+            transform: scale(0.7);
+        }
+
+        @media (max-width: 991px) {
+            .product-sticky-info {
+                position: static;
+                margin-top: 30px;
+            }
+
+            .brand-name {
+                font-size: 20px;
+            }
+        }
+
+        /* --- RESPONSIVIDADE --- */
+        @media (max-width: 992px) {
+            .help-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .help-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 @endsection

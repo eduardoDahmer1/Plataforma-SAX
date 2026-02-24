@@ -4,7 +4,7 @@
 @endphp
 
 <div class="swiper-slide h-auto">
-    <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none text-dark d-block h-100">
+    <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none text-dark d-block h-100">
         <div class="card h-100 border-0 rounded-0 sax-product-card {{ $isOutOfStock ? 'sax-out-of-stock' : '' }}">
 
             <div class="sax-img-container position-relative">

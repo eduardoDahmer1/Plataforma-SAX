@@ -17,7 +17,7 @@ class CategoryController extends Controller
 
         $categories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
             return Category::where('status', 1) // Somente categorias ativas
-                ->with(['subcategories.categorias-filhas'])
+                ->with(['subcategories.categoriasfilhas'])
                 ->withCount(['products' => function ($q) {
                     $q->where('status', 1); // Conta apenas produtos ativos
                 }])

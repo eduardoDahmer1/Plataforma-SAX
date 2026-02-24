@@ -117,7 +117,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
     Route::get('/checkout/error', fn() => view('checkout.error'))->name('checkout.error');
     Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
-    
+
     // PagoPar (Bancard / Pix / Outros)
     Route::prefix('pagopar')->group(function () {
         Route::get('/finish', [PagoParController::class, 'finish'])->name('pagopar.finish');
@@ -181,10 +181,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // AJUSTE CATEGORIAS FILHAS ADMIN
     Route::get('products/subcategories/{category}', [ProductControllerAdmin::class, 'getSubcategories'])->name('products.getSubcategories');
     Route::get('products/categorias-filhas/{subcategory}', [ProductControllerAdmin::class, 'getCategoriasFilhas'])->name('products.getcategorias-filhas');
-    
+
     Route::delete('categorias-filhas/{categorias_filha}/delete-photo', [CategoriasFilhasControllerAdmin::class, 'deletePhoto'])->name('categorias-filhas.deletePhoto');
     Route::delete('categorias-filhas/{categorias_filha}/delete-banner', [CategoriasFilhasControllerAdmin::class, 'deleteBanner'])->name('categorias-filhas.deleteBanner');
-    
+
     // Resource unificado com parâmetro corrigido para o Controller
     Route::resource('categorias-filhas', CategoriasFilhasControllerAdmin::class)->parameters([
         'categorias-filhas' => 'categorias_filha'
@@ -221,11 +221,19 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('header/delete', [ImageUploadController::class, 'deleteHeader'])->name('header.delete');
     Route::post('noimage/upload', [ImageUploadController::class, 'uploadNoimage'])->name('noimage.upload');
     Route::delete('noimage/delete', [ImageUploadController::class, 'deleteNoimage'])->name('noimage.delete');
-    
+
     // Banners 1 a 10
-    foreach(range(1, 10) as $i) {
+    foreach (range(1, 10) as $i) {
         Route::post("banner{$i}/upload", [ImageUploadController::class, "uploadBanner{$i}"])->name("banner{$i}.upload");
         Route::delete("banner{$i}/delete", [ImageUploadController::class, "deleteBanner{$i}"])->name("banner{$i}.delete");
+    }
+
+    // Novos Ícones de Atributos (Sistema)
+    $iconTypes = ['icon_info', 'icon_cabide', 'icon_help'];
+
+    foreach ($iconTypes as $icon) {
+        Route::post("{$icon}/upload", [ImageUploadController::class, "upload" . Str::studly($icon)])->name("{$icon}.upload");
+        Route::delete("{$icon}/delete", [ImageUploadController::class, "delete" . Str::studly($icon)])->name("{$icon}.delete");
     }
 
     Route::post('/logopalace/upload', [ImageUploadController::class, 'uploadLogoPalace'])->name('logopalace.upload');

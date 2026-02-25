@@ -16,97 +16,109 @@ class PagoParController extends Controller
 
     public function __construct()
     {
-        // Puxa as credenciais de config/services.php ou .env
         $this->publicKey  = config('services.pagopar.public_key');
         $this->privateKey = config('services.pagopar.private_key');
-        
-        // URL da API v2.0 conforme documentação
-        $this->apiUrl = 'https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion';
+        $this->apiUrl     = 'https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion';
     }
 
     /**
-     * Inicia a transação no PagoPAR (inclui Bancard via ID 9)
+     * Inicia a transação no PagoPAR (Configurada para Bancard via ID 9)
      */
     public function payment(Order $order)
     {
-        if (!$this->publicKey || !$this->privateKey) {
-            Log::error('PagoPAR - Erro: Chaves não configuradas no ambiente.');
+        // Limpeza de chaves para evitar espaços em branco vindos do .env
+        $pubKey  = trim($this->publicKey);
+        $privKey = trim($this->privateKey);
+
+        if (!$pubKey || !$privKey) {
+            Log::error('PagoPAR - Erro: Chaves não localizadas. Verifique o .env e config/services.php');
             return redirect()->route('checkout.index')->with('error', 'Erro de configuração no gateway.');
         }
 
-        // Valor total formatado para float (importante para o hash)
-        $totalAmount = floatval($order->total);
-        
-        // Geração do Token de segurança (Privada + ID Pedido + Montante)
-        $token = sha1($this->privateKey . $order->id . strval($totalAmount));
+        // 1. O PagoPAR exige que o valor seja inteiro para Moeda Guarani (PYG).
+        // Se sua loja usa centavos/USD, garanta que o arredondamento seja idêntico ao do Token.
+        $totalAmount = (int) round($order->total);
 
+        // 2. Geração do Token (Ordem: Privada + ID Pedido + Montante)
+        // Forçamos strings para garantir a concatenação correta antes do sha1
+        $stringParaHash = $privKey . (string)$order->id . (string)$totalAmount;
+        $token = sha1($stringParaHash);
+
+        // Payload seguindo estritamente a documentação v2.0
         $payload = [
             "token"               => $token,
-            "public_key"          => $this->publicKey,
+            "public_key"          => $pubKey,
             "monto_total"         => $totalAmount,
             "tipo_pedido"         => "VENTA-COMERCIO",
             "merchant_order_id"   => (string) $order->id,
             "summary_description" => "Compra Loja SAX #" . $order->id,
-            "payment_method"      => 9, // <--- AQUI: 9 força o redirecionamento Bancard via PagoPAR
+            "payment_method"      => 9, // Força redirecionamento para Bancard
             "buyer" => [
-                "ruc"           => $order->document ?? '', 
+                "ruc"           => $order->document ?? '88888888', // RUC genérico se vazio
                 "email"         => $order->email,
-                "city"          => 1, 
-                "name"          => $order->name . ' ' . ($order->surname ?? ''),
-                "phone"         => $order->phone,
+                "city"          => 1,
+                "name"          => substr($order->name . ' ' . ($order->surname ?? ''), 0, 50),
+                "phone"         => substr(preg_replace('/\D/', '', $order->phone), 0, 20),
                 "address"       => $order->street ?? 'N/A',
-                "document"      => $order->document ?? '',
-                "document_type" => "CI", 
+                "document"      => $order->document ?? '88888888',
+                "document_type" => "CI",
             ],
-            "compras_items" => $order->items->map(function ($item) {
+            "compras_items" => $order->items->map(function ($item) use ($pubKey) {
                 return [
-                    "cidade"        => "1",
-                    "nome"          => $item->name,
-                    "quantidade"    => intval($item->quantity),
-                    "categoria"     => "909", 
-                    "chave_pública" => $this->publicKey,
-                    "preço_total"   => intval($item->price * $item->quantity),
-                    "id_produto"    => (string) $item->product_id,
-                    "url_imagem"    => "",
-                    "descrição"     => $item->name,
+                    "ciudad"         => "1",
+                    "nombre"         => substr($item->name, 0, 100),
+                    "cantidad"       => (int) $item->quantity,
+                    "categoria"      => "909",
+                    "public_key"     => $pubKey,
+                    "precio_total"   => (int) round($item->price * $item->quantity),
+                    "id_produto"     => (string) $item->product_id,
+                    "url_imagem"     => "",
+                    "descripcion"    => substr($item->name, 0, 100),
                 ];
             })->toArray()
         ];
 
         try {
+            // Log do payload para conferência (Cuidado: removemos dados sensíveis em produção se necessário)
+            Log::info("PagoPAR - Enviando Pedido #{$order->id}", ['string_hash' => $stringParaHash, 'token' => $token]);
+
             $response = Http::post($this->apiUrl, $payload);
             $json = $response->json();
 
-            if ($response->successful() && ($json['resposta'] ?? false)) {
-                // O hash retornado identifica a transação no PagoPAR
-                $hash = $json['resultado'][0]['dados'];
+            if ($response->successful() && isset($json['respuesta']) && $json['respuesta'] === true) {
+                // O hash retornado ('dados') identifica a sessão de pagamento
+                $hashTransacao = $json['resultado'][0]['dados'];
 
-                // Atualizamos o pedido com o hash (shop_process_id)
                 $order->update([
-                    'shop_process_id' => $hash,
+                    'shop_process_id' => $hashTransacao,
                     'status'          => 'pending'
                 ]);
 
-                // Redireciona o cliente para a URL de pagamento do PagoPAR
-                return redirect()->away("https://www.pagopar.com/pagos/{$hash}");
+                // Redireciona o cliente para a tela de pagamento (Bancard)
+                return redirect()->away("https://www.pagopar.com/pagos/{$hashTransacao}");
             }
 
-            Log::error('PagoPAR - Resposta de erro da API', ['response' => $json]);
-            return redirect()->route('checkout.index')->with('error', 'Não foi possível iniciar o pagamento.');
+            // Se chegou aqui, a API retornou erro (ex: Token no coincide)
+            Log::error('PagoPAR - Erro na API', [
+                'status'   => $response->status(),
+                'response' => $json,
+                'payload'  => $payload
+            ]);
 
+            $msgErro = $json['resultado'] ?? 'Erro desconhecido na API.';
+            return redirect()->route('checkout.index')->with('error', "PagoPAR: {$msgErro}");
         } catch (\Exception $e) {
-            Log::error('PagoPAR - Exceção no pagamento', ['error' => $e->getMessage()]);
-            return redirect()->route('checkout.index')->with('error', 'Erro interno ao processar pagamento.');
+            Log::error('PagoPAR - Falha crítica na requisição', ['msg' => $e->getMessage()]);
+            return redirect()->route('checkout.index')->with('error', 'Erro interno ao conectar com o meio de pagamento.');
         }
     }
 
     /**
-     * Webhook (Callback) - PagoPAR chama este método para avisar que pagou
+     * Webhook (Callback)
      */
     public function callback(Request $request)
     {
         $data = $request->all();
-        Log::info('PagoPAR - Webhook recebido', $data);
 
         if (!isset($data['resultado'][0])) {
             return response()->json(['error' => 'Invalid structure'], 400);
@@ -116,11 +128,11 @@ class PagoParController extends Controller
         $hashPedido = $res['hash_do_pedido'];
         $tokenEnviado = $res['token'];
 
-        // Validação de segurança: sha1(chave_privada + hash_do_pedido)
+        // Validação: sha1(chave_privada + hash_do_pedido)
         $tokenValidacao = sha1($this->privateKey . $hashPedido);
 
         if ($tokenEnviado !== $tokenValidacao) {
-            Log::alert('PagoPAR - Token de callback inválido (Fraude?)', ['hash' => $hashPedido]);
+            Log::alert('PagoPAR - Token de callback inválido', ['received' => $tokenEnviado, 'expected' => $tokenValidacao]);
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -129,7 +141,7 @@ class PagoParController extends Controller
         if ($order) {
             if ($res['pago'] === true) {
                 $order->update(['status' => 'paid']);
-                Log::info("PagoPAR - Pedido #{$order->id} marcado como PAGO.");
+                Log::info("PagoPAR - Pedido #{$order->id} PAGO.");
             } elseif ($res['cancelado'] === true) {
                 $order->update(['status' => 'cancelled']);
             }
@@ -139,7 +151,7 @@ class PagoParController extends Controller
     }
 
     /**
-     * Finish - Para onde o cliente volta após fechar a janela do PagoPAR
+     * Retorno do Cliente (Finish)
      */
     public function finish(Request $request)
     {
@@ -150,16 +162,15 @@ class PagoParController extends Controller
             return redirect()->route('checkout.index')->with('error', 'Pedido não localizado.');
         }
 
-        // Se chegou aqui, o processo terminou. Limpamos o carrinho do usuário.
+        // Limpa o carrinho apenas no final bem-sucedido
         Cart::where('user_id', $order->user_id)->delete();
         session()->forget('applied_cupon');
 
         if ($order->status === 'paid') {
-            return redirect()->route('checkout.success')->with('success', 'Pagamento processado com sucesso!');
+            return redirect()->route('checkout.success')->with('success', 'Pagamento confirmado!');
         }
 
-        // Se ainda estiver pendente, pode ser que o webhook demore alguns segundos
         return redirect()->route('user.orders.show', $order->id)
-            ->with('info', 'Seu pagamento está sendo processado. Verifique o status em instantes.');
+            ->with('info', 'Estamos aguardando a confirmação do pagamento.');
     }
 }

@@ -176,8 +176,6 @@
                                     </div>
                                 @endforeach
                             </div>
-                            <div class="swiper-button-next"></div>
-                            <div class="swiper-button-prev"></div>
                         </div>
                     </div>
                 </section>
@@ -505,12 +503,6 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 15px;
             text-transform: uppercase;
-        }
-
-        .swiper-button-next,
-        .swiper-button-prev {
-            color: #000 !important;
-            transform: scale(0.7);
         }
 
         @media (max-width: 991px) {

@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\AdminHighlightController;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\PalaceAdminController;
+use App\Http\Controllers\Admin\BridalAdminController;
 use App\Http\Controllers\Admin\ActivateBrandsAndCategoriesController;
 
 // Auth Controllers
@@ -156,7 +157,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::resource('palace', PalaceAdminController::class);
-    Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');
+    Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');    Route::resource('bridal', BridalAdminController::class);
+
     Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
 

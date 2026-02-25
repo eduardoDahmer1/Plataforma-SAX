@@ -12,87 +12,85 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bridals', function (Blueprint $table) {
-           $table->id();
-            
+            $table->id();
+
             // ========================================
             // CAMPOS BÁSICOS DE PÁGINA
             // ========================================
             $table->string('title')->default('SAX Bridal');
-            $table->string('subtitle')->nullable();
-            $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            
+
             // ========================================
-            // SEO (Muy importante!)
+            // SEO
             // ========================================
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
-            $table->string('og_image')->nullable(); // Para compartir en redes sociales
-            
+
             // ========================================
-            // SECCIÓN 01: HERO / Slider principal
+            // SECCIÓN 01: HERO
             // ========================================
             $table->string('hero_title')->nullable();
-            $table->text('hero_subtitle')->nullable();
-            $table->string('hero_image')->nullable(); // Ruta: "bridal/hero/imagen.jpg"
-            $table->string('hero_button_text')->nullable();
-            $table->string('hero_button_link')->nullable();
-            
-            // ========================================
-            // SECCIÓN 02: BANNERS / CTA
-            // ========================================
-            $table->json('banners')->nullable(); 
-            $table->json('gallery_images')->nullable();
+            $table->string('hero_subtitle')->nullable();
+            $table->text('hero_description')->nullable();
+            $table->string('hero_image')->nullable();
 
-            // formato: [{"image":"path","title":"texto","link":"url"}, ...]
-            
             // ========================================
-            // SECCIÓN 03: INTRO / Presentación
+            // SECCIÓN 02: BRAND TICKER (marcas)
             // ========================================
-            $table->string('intro_title')->nullable();
-            $table->text('intro_text')->nullable();
-            
+            // formato: [{"nombre":"ELIE SAAB","logo_imagen":null}, ...]
+            $table->json('brands')->nullable();
+
             // ========================================
-            // SECCIÓN 04: Servicios
+            // SECCIÓN 03: PROMO CAROUSEL
             // ========================================
-            $table->json('services')->nullable(); 
-            // formato: [{"icon":"icono","title":"texto","description":"texto"}, ...]
-            
+            // formato: [{"image":"url","title":"texto","subtitle":"texto","button":"texto","link":"url"}, ...]
+            $table->json('promos')->nullable();
+
             // ========================================
-            // SECCIÓN 05: Testimonios / Novias Reales
+            // SECCIÓN 04: SERVICIOS
             // ========================================
-            $table->json('testimonials')->nullable(); 
-            // formato: [{"name":"nombre","surname":"apellido","photo":"path","date":"Y-m-d","message":"texto"}]
-            
+            $table->string('services_label')->nullable();
+            $table->string('services_title')->nullable();
+            $table->string('services_cta_text')->nullable();
+            $table->string('services_cta_link')->nullable();
+            // formato: [{"image":"path/imagen","title":"texto","description":"texto"}, ...]
+            $table->json('services')->nullable();
+
             // ========================================
-            // SECCIÓN 06: Blog / Noticias
+            // SECCIÓN 05: PALACE BANNER
             // ========================================
-            $table->json('blog_posts')->nullable();
-            // formato: [{"title":"titulo","excerpt":"resumen","image":"path","link":"url"}]
-            
+            $table->string('palace_image')->nullable();
+            $table->string('palace_subtitle')->nullable();
+            $table->string('palace_title')->nullable();
+            $table->text('palace_description')->nullable();
+            $table->string('palace_link')->nullable();
+
             // ========================================
-            // SECCIÓN 07: Frase / Quote
+            // SECCIÓN 06: TESTIMONIOS
             // ========================================
-            $table->string('quote')->nullable();
-            $table->string('quote_author')->nullable(); 
-            
+            $table->string('testimonials_label')->nullable();
+            $table->string('testimonials_title')->nullable();
+            // formato: [{"quote":"texto","author":"nombre","foto":"url","ubicacion":"ciudad"}, ...]
+            $table->json('testimonials')->nullable();
+
             // ========================================
-            // SECCIÓN 08: Contacto / Localización
-            // ========================================
-            $table->string('contact_address')->nullable();
-            $table->string('contact_phone')->nullable(); 
-            $table->string('contact_whatsapp')->nullable();
-            $table->string('contact_email')->nullable();
-            $table->text('contact_map_iframe')->nullable();
-            
-            // ========================================
-            // REDES SOCIALES (importante para bridal!)
+            // SECCIÓN 07: INSTAGRAM CTA
             // ========================================
             $table->string('social_instagram')->nullable();
-            $table->string('social_facebook')->nullable();
-            
-            
-           
+
+            // ========================================
+            // SECCIÓN 08: CONTACTO / SUCURSALES
+            // ========================================
+            $table->string('branch_asuncion_name')->nullable();
+            $table->string('branch_asuncion_address')->nullable();
+            $table->string('branch_asuncion_phone')->nullable();
+            $table->string('branch_asuncion_image')->nullable();
+
+            $table->string('branch_cde_name')->nullable();
+            $table->string('branch_cde_address')->nullable();
+            $table->string('branch_cde_phone')->nullable();
+            $table->string('branch_cde_image')->nullable();
+
             $table->timestamps();
         });
     }

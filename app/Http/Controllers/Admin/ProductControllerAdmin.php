@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Subcategory;
-use App\Models\Childcategory;
+use App\Models\CategoriasFilhas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -153,10 +153,10 @@ class ProductControllerAdmin extends Controller
         $brands = Brand::all();
         $categories = Category::all();
         $subcategories = collect();
-        $childcategories = collect();
+        $categoriasfilhas = collect();
         $products = Product::all(); // adiciona aqui também
 
-        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'childcategories', 'products'));
+        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'categorias-filhas', 'products'));
     }
 
     public function search(Request $request)
@@ -185,7 +185,7 @@ class ProductControllerAdmin extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'childcategory_id' => 'nullable|exists:childcategories,id',
+            'childcategory_id' => 'nullable|exists:categorias-filhas,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
@@ -242,14 +242,14 @@ class ProductControllerAdmin extends Controller
             'brand',
             'category',
             'subcategory',
-            'childcategory'
+            'categoriasfilhas'
         ])->findOrFail($id);
 
         // Carrega apenas categorias e subcategorias necessárias
         $brands = Brand::all();
         $categories = Category::all();
         $subcategories = Subcategory::where('category_id', $item->category_id)->get();
-        $childcategories = Childcategory::where('subcategory_id', $item->subcategory_id)->get();
+        $categoriasfilhas = CategoriasFilhas::where('subcategory_id', $item->subcategory_id)->get();
 
         // Carrega somente os produtos que podem ser selecionados como parent ou cores
         $products = Product::select('id', 'name')->get(); // << name adicionado aqui
@@ -263,7 +263,7 @@ class ProductControllerAdmin extends Controller
             'brands',
             'categories',
             'subcategories',
-            'childcategories',
+            'categoriasfilhas',
             'products'
         ));
     }
@@ -282,11 +282,11 @@ class ProductControllerAdmin extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'childcategory_id' => 'nullable|exists:childcategories,id',
+            'childcategory_id' => 'nullable|exists:categoriasfilhas,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
-            'parent_id' => 'nullable|array',
+            'parent_id' => 'nullable|array', // IDs dos produtos selecionados para serem FILHOS
             'parent_id.*' => 'nullable|exists:products,id',
             'color_parent_id' => 'nullable|array',
             'color_parent_id.*' => 'nullable|exists:products,id',
@@ -308,17 +308,19 @@ class ProductControllerAdmin extends Controller
             'color',
         ]);
 
-        // Filtra IDs e prepara Highlights
-        $parentIds = array_filter((array) $request->input('parent_id', []));
-        $colorIds  = array_filter((array) $request->input('color_parent_id', []));
+        // IDs selecionados no formulário para serem filhos deste produto
+        $selectedChildrenIds = array_filter((array) $request->input('parent_id', []));
 
-        // Garantimos que highlights seja enviado como JSON para o banco
+        // Highlights como JSON
         $data['highlights'] = json_encode($request->input('highlights', []));
 
-        // Guarda IDs dos filhos atuais antes da mudança
-        $oldParentIds = $product->parent_id ? explode(',', $product->parent_id) : [];
+        // O produto sendo editado agora é garantido como PAI (P)
+        // A menos que você queira que ele mesmo seja filho de outro, 
+        // mas conforme sua regra, estamos definindo a estrutura a partir do pai.
+        $data['product_role'] = 'P';
+        $data['parent_id'] = null;
 
-        // --- FOTO PRINCIPAL ---
+        // --- TRATAMENTO DE IMAGEM PRINCIPAL ---
         if ($request->hasFile('photo')) {
             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                 $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
@@ -329,9 +331,8 @@ class ProductControllerAdmin extends Controller
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
 
-        // --- GALERIA (Onde estava o erro) ---
+        // --- TRATAMENTO DE GALERIA ---
         if ($request->hasFile('gallery')) {
-            // CORREÇÃO: Verificamos se já é array ou se precisa decodificar
             $existingGallery = $product->gallery;
             if (!is_array($existingGallery)) {
                 $existingGallery = $existingGallery ? json_decode($existingGallery, true) : [];
@@ -340,62 +341,49 @@ class ProductControllerAdmin extends Controller
             foreach ($request->file('gallery') as $image) {
                 $existingGallery[] = $this->convertToWebp($image, 'gallery');
             }
-            // Salvamos como JSON string
             $data['gallery'] = json_encode($existingGallery);
         }
 
-        // Define se o produto editado é Pai ou Filho
-        if (count($parentIds) === 0) {
-            $data['product_role'] = 'P';
-            $data['parent_id'] = null;
-            $data['color_parent_id'] = null;
-        } else {
-            $data['product_role'] = 'F';
-            $data['parent_id'] = implode(',', $parentIds);
-            $data['color_parent_id'] = implode(',', $colorIds);
-        }
+        // Pega os IDs dos filhos que este pai já tinha antes da atualização
+        $oldChildrenIds = Product::where('parent_id', $product->id)->pluck('id')->toArray();
 
-        // Atualiza o produto principal
+        // Atualiza o produto Pai
         $product->update($data);
 
-        // --- LOGICA DE DESVINCULAÇÃO (Ex-filhos) ---
-        $removedChildren = array_diff($oldParentIds, $parentIds);
+        // --- LÓGICA PARA OS PRODUTOS FILHOS SELECIONADOS ---
+
+        // 1. Desvincular quem foi removido da lista
+        $removedChildren = array_diff($oldChildrenIds, $selectedChildrenIds);
         foreach ($removedChildren as $childId) {
             $child = Product::find($childId);
             if ($child) {
-                $child->parent_id = null;
-                $child->color_parent_id = null;
-                $child->product_role = 'P';
-                $child->description = null;
-                $this->deleteProductImages($child);
-                $child->photo = null;
-                $child->gallery = null;
-                $child->save();
+                $child->update([
+                    'parent_id' => null,
+                    'product_role' => 'P', // Volta a ser pai/independente
+                    'color_parent_id' => null
+                ]);
             }
         }
 
-        $parentPhoto       = $product->photo;
-        $parentGallery     = $product->gallery;
-        $parentDescription = $product->description;
-
-        foreach ($parentIds as $childId) {
+        // 2. Atualizar/Vincular novos filhos
+        foreach ($selectedChildrenIds as $childId) {
             $child = Product::find($childId);
-            if (!$child) continue;
-
-            $child->parent_id = implode(',', $parentIds);
-            $child->product_role = 'F';
-            $child->description = $parentDescription;
-            $child->photo = $parentPhoto;
-
-            $child->gallery = is_array($parentGallery) ? json_encode($parentGallery) : $parentGallery;
-
-            if ($product->color) {
-                $child->color = $product->color;
+            if ($child && $child->id != $product->id) { // Evita auto-referência
+                $child->update([
+                    'parent_id' => $product->id,    // ID do pai que estamos editando
+                    'product_role' => 'F',          // Define como filho
+                    'description' => $product->description,
+                    'photo' => $product->photo,
+                    'gallery' => is_array($product->gallery) ? json_encode($product->gallery) : $product->gallery,
+                    'brand_id' => $product->brand_id,
+                    'category_id' => $product->category_id,
+                    'subcategory_id' => $product->subcategory_id,
+                    'status' => $product->status
+                ]);
             }
-            $child->save();
         }
 
-        return redirect()->route('admin.products.index')->with('success', 'Produto e dependências atualizados!');
+        return redirect()->route('admin.products.index')->with('success', 'Produto Pai e seus filhos foram atualizados com sucesso!');
     }
 
     /**
@@ -522,7 +510,7 @@ class ProductControllerAdmin extends Controller
 
     public function getChildcategories($subcategoryId)
     {
-        return Childcategory::where('subcategory_id', $subcategoryId)->get();
+        return CategoriasFilhas::where('subcategory_id', $subcategoryId)->get();
     }
 
     public function toggleStatus($id)

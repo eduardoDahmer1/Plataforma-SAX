@@ -38,13 +38,13 @@ setFormType(1);
 document.addEventListener('DOMContentLoaded', function () {
     const categorySelect = document.getElementById('category_id');
     const subcategorySelect = document.getElementById('subcategory_id');
-    const childcategorySelect = document.getElementById('childcategory_id');
+    const categoriasfilhasSelect = document.getElementById('categoriasfilhas_id');
 
-    if (!categorySelect || !subcategorySelect || !childcategorySelect) return;
+    if (!categorySelect || !subcategorySelect || !categoriasfilhasSelect) return;
 
     const categories = JSON.parse(categorySelect.dataset.categories || '[]');
     const subcategories = JSON.parse(subcategorySelect.dataset.subcategories || '[]');
-    const childcategories = JSON.parse(childcategorySelect.dataset.childcategories || '[]');
+    const categoriasfilhas = JSON.parse(categoriasfilhasSelect.dataset.categoriasfilhas || '[]');
 
     function clearOptions(select) {
         select.innerHTML = '<option value="">Selecione uma opção</option>';
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function populateSubcategories(categoryId) {
         clearOptions(subcategorySelect);
-        clearOptions(childcategorySelect);
+        clearOptions(categoriasfilhasSelect);
         if (!categoryId) return;
         subcategories.filter(s => s.category_id == categoryId).forEach(sub => {
             const option = document.createElement('option');
@@ -62,23 +62,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function populateChildcategories(subcategoryId) {
-        clearOptions(childcategorySelect);
+    function populateCategoriasFilhas(subcategoryId) {
+        clearOptions(categoriasfilhasSelect);
         if (!subcategoryId) return;
-        childcategories.filter(c => c.subcategory_id == subcategoryId).forEach(child => {
+        categoriasfilhas.filter(c => c.subcategory_id == subcategoryId).forEach(child => {
             const option = document.createElement('option');
             option.value = child.id;
             option.text = child.name || child.slug;
-            childcategorySelect.appendChild(option);
+            categoriasfilhasSelect.appendChild(option);
         });
     }
 
     categorySelect.addEventListener('change', () => populateSubcategories(categorySelect.value));
-    subcategorySelect.addEventListener('change', () => populateChildcategories(subcategorySelect.value));
+    subcategorySelect.addEventListener('change', () => populateCategoriasFilhas(subcategorySelect.value));
 
     if (categorySelect.value) {
         populateSubcategories(categorySelect.value);
-        if (subcategorySelect.value) populateChildcategories(subcategorySelect.value);
+        if (subcategorySelect.value) populateCategoriasFilhas(subcategorySelect.value);
     }
 });
 

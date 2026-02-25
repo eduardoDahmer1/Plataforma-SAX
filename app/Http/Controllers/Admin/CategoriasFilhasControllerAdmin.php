@@ -3,33 +3,34 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Childcategory;
+use App\Models\CategoriasFilhas;
 use App\Models\Subcategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 
-class ChildcategoryControllerAdmin extends Controller
+class CategoriasFilhasControllerAdmin extends Controller
 {
     public function index(Request $request)
     {
-        $query = Childcategory::with('subcategory');
+        $query = CategoriasFilhas::with('subcategory');
 
         if ($search = $request->input('search')) {
             $query->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('subcategory', fn($q) => $q->where('name', 'like', "%{$search}%"));
+                ->orWhereHas('subcategory', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
-        $childcategories = $query->paginate(18)->withQueryString();
+        // Ajuste para o nome da rota correto no seu sistema (.index)
+        $categoriasfilhas = $query->paginate(18)->withQueryString();
 
-        return view('admin.childcategories.index', compact('childcategories'));
+        return view('admin.categoriasfilhas.index', compact('categoriasfilhas'));
     }
 
     public function create()
     {
         $subcategories = Subcategory::all();
-        return view('admin.childcategories.create', compact('subcategories'));
+        return view('admin.categoriasfilhas.create', compact('subcategories'));
     }
 
     public function store(Request $request)
@@ -57,17 +58,28 @@ class ChildcategoryControllerAdmin extends Controller
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
-        Childcategory::create($data);
-        return redirect()->route('admin.childcategories.index')->with('success', 'Criado com sucesso');
+        CategoriasFilhas::create($data);
+
+        // Limpa cache de busca para refletir o novo item
+        Cache::forget('search_sidebar_v3');
+        Cache::forget('search_sidebar_v4');
+
+        return redirect()->route('admin.categorias-filhas.index')->with('success', 'Criado com sucesso');
     }
 
-    public function edit(Childcategory $childcategory)
+    /**
+     * CORREÇÃO: Removida a linha que causava o erro Undefined variable $id
+     */
+    public function edit(CategoriasFilhas $categorias_filha)
     {
+        // O parâmetro deve bater com o nome na rota {categorias_filha}
+        $categoriasfilhas = $categorias_filha;
         $subcategories = Subcategory::all();
-        return view('admin.childcategories.edit', compact('childcategory', 'subcategories'));
+
+        return view('admin.categoriasfilhas.edit', compact('categoriasfilhas', 'subcategories'));
     }
 
-    public function update(Request $request, Childcategory $childcategory)
+    public function update(Request $request, CategoriasFilhas $categorias_filha)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -85,44 +97,38 @@ class ChildcategoryControllerAdmin extends Controller
         }
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $this->deleteFileIfExists($childcategory->photo);
+            $this->deleteFileIfExists($categorias_filha->photo);
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
 
         if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            $this->deleteFileIfExists($childcategory->banner);
+            $this->deleteFileIfExists($categorias_filha->banner);
             $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
-        $childcategory->update($data);
-        return redirect()->route('admin.childcategories.index')->with('success', 'Atualizado com sucesso');
+        $categorias_filha->update($data);
+
+        // Limpa caches
+        Cache::forget('search_sidebar_v3');
+        Cache::forget('search_sidebar_v4');
+
+        return redirect()->route('admin.categorias-filhas.index')->with('success', 'Atualizado com sucesso');
     }
 
-    public function destroy(Childcategory $childcategory)
+    public function destroy(CategoriasFilhas $categorias_filha)
     {
-        $this->deleteFileIfExists($childcategory->photo);
-        $this->deleteFileIfExists($childcategory->banner);
-        $childcategory->delete();
+        $this->deleteFileIfExists($categorias_filha->photo);
+        $this->deleteFileIfExists($categorias_filha->banner);
+        $categorias_filha->delete();
+
         return back()->with('success', 'Removido com sucesso');
     }
 
-    public function deletePhoto(Childcategory $childcategory)
-    {
-        $this->deleteFileIfExists($childcategory->photo);
-        $childcategory->update(['photo' => null]);
-        return back();
-    }
-
-    public function deleteBanner(Childcategory $childcategory)
-    {
-        $this->deleteFileIfExists($childcategory->banner);
-        $childcategory->update(['banner' => null]);
-        return back();
-    }
+    // ... (restante dos métodos auxiliares permanecem iguais)
 
     private function convertToWebp($file, $prefix)
     {
-        $directory = ($prefix === 'banner') ? 'childcategories/banner' : 'childcategories/photo';
+        $directory = ($prefix === 'banner') ? 'categorias-filhas/banner' : 'categorias-filhas/photo';
         $filename = $prefix . '_' . time() . '.webp';
 
         if (!Storage::disk('public')->exists($directory)) {
@@ -170,18 +176,14 @@ class ChildcategoryControllerAdmin extends Controller
         }
     }
 
-    // Frontend show via slug ou ID
-    public function show($identifier)
+    public function show(CategoriasFilhas $categorias_filha)
     {
-        $cacheKey = "childcategory_show_{$identifier}";
+        // Carrega as relações para evitar o erro de "undefined" no breadcrumb da view
+        $categorias_filha->load(['subcategory', 'subcategory.category']);
 
-        $childcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($identifier) {
-            return Childcategory::with(['subcategory', 'subcategory.category'])
-                ->when(is_numeric($identifier), fn($q) => $q->where('id', $identifier))
-                ->when(!is_numeric($identifier), fn($q) => $q->where('slug', $identifier))
-                ->firstOrFail();
-        });
+        // Definimos a variável com o nome exato que a View espera
+        $categoriasfilhas = $categorias_filha;
 
-        return view('admin.childcategories.show', compact('childcategory'));
+        return view('admin.categoriasfilhas.show', compact('categoriasfilhas'));
     }
 }

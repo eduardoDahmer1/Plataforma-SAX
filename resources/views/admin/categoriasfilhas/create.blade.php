@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <h2 class="mb-4"><i class="fas fa-plus me-2"></i>Criar Sub-Subcategoria</h2>
 
-    <form action="{{ route('admin.childcategories.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.categoriasfilhas.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-3">

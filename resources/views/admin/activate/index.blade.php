@@ -2,119 +2,101 @@
 
 @section('content')
 <style>
-    /* Botões mais compactos */
+    /* Estilos anteriores mantidos com melhorias */
+    .sections-wrapper { display: flex; flex-direction: column; gap: 25px; padding: 15px; margin-bottom: 80px; }
+    .card-sax { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 20px; }
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #fcfcfc; border: 1px solid #eee; border-radius: 6px; }
+    
+    .list-item span { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+
+    /* Botões */
     .status-badge {
-        padding: 4px 10px;
-        border-radius: 4px;
-        color: white;
-        font-weight: 600;
-        font-size: 0.75rem; /* Fonte menor */
-        display: inline-flex;
-        align-items: center;
-        border: none;
-        cursor: pointer;
-        transition: 0.2s;
-        min-width: 80px;
-        justify-content: center;
+        padding: 5px 8px; border-radius: 4px; color: white; font-weight: 700; font-size: 0.7rem;
+        text-transform: uppercase; display: inline-flex; align-items: center; justify-content: center;
+        border: none; cursor: pointer; min-width: 75px; gap: 4px; transition: 0.3s;
     }
     .status-active { background-color: #198754; } 
-    .status-inactive { background-color: #212529; } 
-    .status-badge:hover { opacity: 0.85; }
+    .status-inactive { background-color: #212529; }
 
-    /* Container Principal */
-    .sections-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 25px;
-        padding: 15px;
+    /* Botão Salvar Flutuante */
+    .footer-actions {
+        position: fixed; bottom: 0; left: 0; right: 0; 
+        background: rgba(255,255,255,0.9); padding: 15px;
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        display: flex; justify-content: center; z-index: 1000;
+        backdrop-filter: blur(5px);
     }
-
-    .card-sax {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        padding: 15px;
+    .btn-save-all {
+        background: #dc3545; color: white; border: none; padding: 12px 40px;
+        border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
     }
-
-    .card-sax h2 { 
-        font-size: 1.1rem; /* Título menor */
-        color: #333;
-        border-bottom: 2px solid #f8d7da;
-        padding-bottom: 8px;
-        margin-bottom: 15px;
-    }
-
-    /* Grid de 4 colunas responsiva */
-    .items-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr); /* Força 4 colunas */
-        gap: 15px;
-    }
-
-    /* Item individual */
-    .list-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px;
-        background: #fcfcfc;
-        border: 1px solid #eee;
-        border-radius: 5px;
-    }
-
-    .list-item span {
-        font-size: 0.85rem; /* Fonte do nome menor */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-right: 5px;
-    }
-
-    /* Ajuste para telas menores */
-    @media (max-width: 1200px) { .items-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 992px) { .items-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 576px) { .items-grid { grid-template-columns: 1fr; } }
+    .btn-save-all:hover { transform: translateY(-2px); background: #bb2d3b; }
 </style>
 
-<div class="container-fluid">
-    <div class="sections-wrapper">
-        
-        <div class="card-sax">
-            <h2><i class="fa-solid fa-layer-group"></i> Categorias</h2>
-            <div class="items-grid">
-                @foreach($categories as $category)
-                <div class="list-item">
-                    <span title="{{ $category->name }}"><strong>{{ $category->name }}</strong></span>
-                    <form action="{{ route('admin.activate.toggle', ['category', $category->id]) }}" method="POST" style="margin:0;">
-                        @csrf
-                        <button type="submit" class="status-badge {{ $category->status == 1 ? 'status-active' : 'status-inactive' }}">
+<form action="{{ route('admin.activate.updateAll') }}" method="POST">
+    @csrf
+    <div class="container-fluid">
+        <div class="sections-wrapper">
+            
+            {{-- Categorias --}}
+            <div class="card-sax">
+                <h2><i class="fa-solid fa-layer-group"></i> Categorias</h2>
+                <div class="items-grid">
+                    @foreach($categories as $category)
+                    <div class="list-item">
+                        <span title="{{ $category->name }}">{{ $category->name }}</span>
+                        <input type="hidden" name="categories[{{ $category->id }}]" value="{{ $category->status }}" class="status-input">
+                        <button type="button" class="status-badge {{ $category->status == 1 ? 'status-active' : 'status-inactive' }}" onclick="toggleUI(this)">
                             {{ $category->status == 1 ? 'Ativo' : 'Inativo' }}
-                            <span style="margin-left: 5px;">{{ $category->status == 1 ? '▴' : '▾' }}</span>
+                            <span>{{ $category->status == 1 ? '▴' : '▾' }}</span>
                         </button>
-                    </form>
+                    </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
-        </div>
 
-        <div class="card-sax">
-            <h2><i class="fa-solid fa-tag"></i> Marcas</h2>
-            <div class="items-grid">
-                @foreach($brands as $brand)
-                <div class="list-item">
-                    <span title="{{ $brand->name }}"><strong>{{ $brand->name }}</strong></span>
-                    <form action="{{ route('admin.activate.toggle', ['brand', $brand->id]) }}" method="POST" style="margin:0;">
-                        @csrf
-                        <button type="submit" class="status-badge {{ $brand->status == 1 ? 'status-active' : 'status-inactive' }}">
+            {{-- Marcas --}}
+            <div class="card-sax">
+                <h2><i class="fa-solid fa-tag"></i> Marcas</h2>
+                <div class="items-grid">
+                    @foreach($brands as $brand)
+                    <div class="list-item">
+                        <span title="{{ $brand->name }}">{{ $brand->name }}</span>
+                        <input type="hidden" name="brands[{{ $brand->id }}]" value="{{ $brand->status }}" class="status-input">
+                        <button type="button" class="status-badge {{ $brand->status == 1 ? 'status-active' : 'status-inactive' }}" onclick="toggleUI(this)">
                             {{ $brand->status == 1 ? 'Ativo' : 'Inativo' }}
-                            <span style="margin-left: 5px;">{{ $brand->status == 1 ? '▴' : '▾' }}</span>
+                            <span>{{ $brand->status == 1 ? '▴' : '▾' }}</span>
                         </button>
-                    </form>
+                    </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
         </div>
-
     </div>
-</div>
+
+    <div class="footer-actions">
+        <button type="submit" class="btn-save-all">
+            <i class="fa-solid fa-cloud-arrow-up"></i> SALVAR TODAS AS ALTERAÇÕES
+        </button>
+    </div>
+</form>
+
+<script>
+function toggleUI(btn) {
+    const input = btn.previousElementSibling; // Pega o input hidden
+    const isActivating = input.value == "2"; // Se era 2 (inativo), vira 1 (ativo)
+    
+    if (isActivating) {
+        input.value = "1";
+        btn.className = "status-badge status-active";
+        btn.innerHTML = 'Ativo <span>▴</span>';
+    } else {
+        input.value = "2";
+        btn.className = "status-badge status-inactive";
+        btn.innerHTML = 'Inativo <span>▾</span>';
+    }
+}
+</script>
 @endsection

@@ -24,9 +24,9 @@
 
             {{-- Listagem em Grid de Luxo (Padrão Marcas) --}}
             <div class="row g-4">
-                @forelse ($childcategories as $child)
+                @forelse ($categoriasfilhas as $child)
                     <div class="col-6 col-md-4 col-lg-3">
-                        <a href="{{ route('childcategories.show', $child->slug) }}" class="sax-luxury-card">
+                        <a href="{{ route('categorias-filhas.show', $child->slug) }}" class="sax-luxury-card">
                             {{-- Área da Imagem com efeito Grayscale --}}
                             <div class="card-img-box">
                                 @if($child->photo && Storage::disk('public')->exists($child->photo))
@@ -58,7 +58,7 @@
 
             {{-- Paginação Customizada --}}
             <div class="sax-pagination mt-5">
-                {{ $childcategories->appends(request()->input())->links() }}
+                {{ $categoriasfilhas->appends(request()->input())->links() }}
             </div>
         </div>
     </div>

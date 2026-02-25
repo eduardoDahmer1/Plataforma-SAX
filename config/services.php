@@ -26,7 +26,8 @@ return [
     ],
 
     'pagopar' => [
-        'credentials' => env('PAGOPAR_CREDENTIALS', '{}'),
+        'public_key' => env('PAGOPAR_PUBLIC_KEY'),
+        'private_key' => env('PAGOPAR_PRIVATE_KEY'),
     ],
 
 ];

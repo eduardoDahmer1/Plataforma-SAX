@@ -57,8 +57,6 @@
                                 @include('home-components.product-card', ['item' => $item])
                             @endforeach
                         </div>
-                        <div class="swiper-button-next"></div>
-                        <div class="swiper-button-prev"></div>
                     </div>
                 </div>
             </div>
@@ -99,8 +97,6 @@
                                 @include('home-components.product-card', ['item' => $item])
                             @endforeach
                         </div>
-                        <div class="swiper-button-next"></div>
-                        <div class="swiper-button-prev"></div>
                     </div>
                 </div>
             </div>
@@ -151,21 +147,6 @@
             width: 100%;
         }
 
-        .swiper-button-next, .swiper-button-prev {
-            color: #000 !important;
-            background: rgba(255,255,255,0.9);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            top: 40%; /* Centraliza melhor verticalmente na imagem */
-        }
-        
-        .swiper-button-next:after, .swiper-button-prev:after {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
         /* Títulos das Seções */
         .sax-section-title {
             font-size: 1.4rem;
@@ -197,7 +178,6 @@
             .sax-section-title { font-size: 1.1rem; text-align: center; }
             .sax-brands-title { font-size: 1.4rem; }
             .sax-triple-banners img { height: auto; }
-            .swiper-button-next, .swiper-button-prev { display: none; } /* Esconde setas no mobile para focar no touch */
         }
     </style>
 @endsection

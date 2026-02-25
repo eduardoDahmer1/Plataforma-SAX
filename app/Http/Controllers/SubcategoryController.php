@@ -33,7 +33,7 @@ class SubcategoryController extends Controller
         $cacheKey = "subcategory_show_{$slug}";
     
         $subcategory = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
-            return Subcategory::with(['category', 'childcategories'])
+            return Subcategory::with(['category', 'categorias-filhas'])
                 ->where('slug', $slug)
                 ->firstOrFail();
         });

@@ -34,10 +34,10 @@
             <div class="card-body">
                 <p><strong>Categoria Pai:</strong> {{ $subcategory->category->name ?? 'N/A' }}</p>
 
-                @if ($subcategory->childcategories && $subcategory->childcategories->count())
-                    <p><strong>Childcategories:</strong></p>
+                @if ($subcategory->categoriasfilhas && $subcategory->categoriasfilhas->count())
+                    <p><strong>Categorias Filhas:</strong></p>
                     <ul>
-                        @foreach ($subcategory->childcategories as $child)
+                        @foreach ($subcategory->categoriasfilhas as $child)
                             <li>{{ $child->name ?? $child->slug }}</li>
                         @endforeach
                     </ul>

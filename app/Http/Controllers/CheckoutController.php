@@ -9,7 +9,8 @@ use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
 use App\Models\Cupon;
-use App\Http\Controllers\BancardController; // IMPORTANTE: Importar a controller do Bancard
+use App\Http\Controllers\PagoParController;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -37,14 +38,14 @@ class CheckoutController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Validações (Mantidas exatamente como as suas)
+        // 1. Validações (Ajustado para aceitar bancard e pagopar no mesmo fluxo)
         $request->validate([
             'name'            => 'required|string|max:255',
             'document'        => 'required|string|max:50',
             'email'           => 'required|email',
             'phone'           => 'required|string',
             'shipping'        => 'required|in:1,2,3',
-            'payment_method'  => 'required|in:deposito,bancard,whatsapp',
+            'payment_method'  => 'required|in:deposito,bancard,whatsapp,pagopar',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street'          => 'required_if:shipping,2',
             'number'          => 'required_if:shipping,2',
@@ -65,8 +66,8 @@ class CheckoutController extends Controller
         $cupon         = null;
         $desconto      = 0;
 
-        // 2. Lógica de Cupom (Mantida conforme seu código original)
-        if ($request->filled('cupon') && $paymentMethod === 'deposito') {
+        // 2. Lógica de Cupom (Habilitado para Depósito e Gateway Pagopar)
+        if ($request->filled('cupon') && in_array($paymentMethod, ['deposito', 'pagopar', 'bancard'])) {
             $cupon = Cupon::where('codigo', $request->input('cupon'))
                 ->where('data_inicio', '<=', now())
                 ->where('data_final', '>=', now())
@@ -94,19 +95,18 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
-            // Separação Nome / Sobrenome para Gateways
+            // Separação Nome / Sobrenome
             $nameParts = explode(' ', trim($request->input('name')));
             $firstName = array_shift($nameParts);
             $lastName  = implode(' ', $nameParts) ?: $firstName;
 
-            // Observações baseadas no frete
             $observations = match ($request->shipping) {
                 '1', '2' => $request->input('observations') ?? '',
                 '3'      => $request->input('observations_store') ?? '',
                 default  => ''
             };
 
-            // 3. Criar pedido (Status 'pending' inicial)
+            // 3. Criar pedido
             $order = Order::create([
                 'user_id'        => $user->id,
                 'status'         => 'pending',
@@ -123,7 +123,7 @@ class CheckoutController extends Controller
                 'shipping'       => $request->input('shipping'),
             ]);
 
-            // 4. Lógica de Endereço/Loja (Mantida intacta)
+            // 4. Lógica de Endereço/Loja (Mantida original)
             switch ($request->shipping) {
                 case '1':
                     $order->update([
@@ -164,7 +164,6 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // Upload de comprovante para Depósito
             if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
                 $file = $request->file('deposit_receipt');
                 $filename = time() . '_' . $file->getClientOriginalName();
@@ -174,15 +173,16 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            // 6. Limpeza de Carrinho (Apenas se NÃO for Bancard)
-            if ($paymentMethod !== 'bancard') {
+            // 6. Limpeza de Carrinho (Gateway Externo NÃO limpa agora para evitar perda de dados se falhar)
+            if (!in_array($paymentMethod, ['bancard', 'pagopar'])) {
                 Cart::where('user_id', $user->id)->delete();
                 session()->forget('applied_cupon');
             }
 
-            // 7. Redirecionamento Final
-            if ($paymentMethod === 'bancard') {
-                return redirect()->route('bancard.checkout', ['id' => $order->id]);
+            // 7. Redirecionamento Final (Dica do Victor: Bancard dentro do Pagopar)
+            if (in_array($paymentMethod, ['pagopar', 'bancard'])) {
+                // Chama a controller do Pagopar para ambos os casos
+                return app(PagoParController::class)->payment($order);
             }
 
             if ($paymentMethod === 'deposito') {
@@ -197,19 +197,11 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.success')->with('success', 'Pedido concluído!');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error("Erro crítico no checkout: " . $e->getMessage());
+            Log::error("Erro crítico no checkout: " . $e->getMessage());
             return back()->with('error', 'Erro ao processar pedido: ' . $e->getMessage())->withInput();
         }
     }
 
-    // Decide gateway (Apenas Bancard conforme solicitado)
-    protected function redirectGateway(Order $order)
-    {
-        // Encaminha sempre para o Bancard se o método de pagamento for bancard
-        return app(\App\Http\Controllers\BancardController::class)->checkoutPage($order);
-    }
-
-    // WhatsApp
     public function whatsapp(Request $request)
     {
         $user = auth()->user();
@@ -238,9 +230,6 @@ class CheckoutController extends Controller
                     'quantity'      => $cartItem->quantity,
                     'price'         => $cartItem->product->price,
                     'name'          => $cartItem->product->name,
-                    'external_name' => $cartItem->product->external_name,
-                    'slug'          => $cartItem->product->slug,
-                    'sku'           => $cartItem->product->sku,
                 ]);
             }
 

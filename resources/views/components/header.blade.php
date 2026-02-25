@@ -56,10 +56,9 @@
         <div class="container text-center py-2">
             <ul class="list-inline m-0">
                 <li class="list-inline-item"><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="#">GIFT CARDS</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">SERVICIOS SAX
-                        PALACE</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="#">NUESTROS EVENTOS</a></li>
+                <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">SAX PALACE</a></li>
+                <li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">CONTATO</a></li>
+                <li class="list-inline-item border-start ps-3"><a href="{{ route('categories.index') }}">CATEGORÍAS</a></li>
             </ul>
         </div>
     </div>

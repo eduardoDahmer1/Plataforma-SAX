@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Subcategory;
-use App\Models\Childcategory;
+use App\Models\CategoriasFilhas;
 use App\Models\Cart;
 use Illuminate\Support\Facades\Cache;
 
@@ -43,7 +43,7 @@ class SearchController extends Controller
         $query->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
             ->when($request->category, fn($q) => $q->where('category_id', $request->category))
             ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
-            ->when($request->childcategory, fn($q) => $q->where('childcategory_id', $request->childcategory));
+            ->when($request->categoriasfilhas, fn($q) => $q->where('categoriasfilhas_id', $request->categoriasfilhas));
 
         // Filtro de Preço
         $query->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
@@ -66,7 +66,7 @@ class SearchController extends Controller
                     ->orderBy('name')
                     ->get(),
                 'subcategories'   => Subcategory::select('id', 'name')->orderBy('name')->get(),
-                'childcategories' => Childcategory::select('id', 'name')->orderBy('name')->get(),
+                'categoriasfilhas' => CategoriasFilhas::select('id', 'name')->orderBy('name')->get(),
             ];
         });
 
@@ -76,12 +76,17 @@ class SearchController extends Controller
             $cartItems = Cart::where('user_id', auth()->id())->pluck('quantity', 'product_id')->toArray();
         }
 
-        return view('search.search', array_merge($sidebarData, [
-            'paginated' => $paginated,
-            'cartItems' => $cartItems,
-            'request'   => $request,
-            'query'     => $request->search
-        ]));
+        // Por isso (Mais seguro e explícito):
+        return view('search.search', [
+            'brands'           => $sidebarData['brands'],
+            'categories'       => $sidebarData['categories'],
+            'subcategories'    => $sidebarData['subcategories'],
+            'categoriasfilhas' => $sidebarData['categoriasfilhas'], // Linha vital
+            'paginated'        => $paginated,
+            'cartItems'        => $cartItems,
+            'request'          => $request,
+            'query'            => $request->search
+        ]);
     }
 
     /**

@@ -6,7 +6,7 @@
         <div class="category-hero py-5 border-bottom">
             <div class="container text-center">
                 <a href="{{ route('categories.index') }}" class="back-link">
-                    <i class="fas fa-chevron-left me-1"></i> VOLVER
+                    <i class="fas fa-chevron-left me-1"></i> Ver Categorias
                 </a>
 
                 <div class="category-logo-main my-4">
@@ -31,7 +31,7 @@
                 <div class="row g-1"> {{-- Grid colado igual JW PEI --}}
                     @foreach ($products as $item)
                         <div class="col-6 col-md-4 col-lg-2">
-                            <a href="{{ route('produto.show', $item->id) }}" class="text-decoration-none">
+                            <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
                                 <div class="card h-100 border-0 rounded-0 jw-product-card">
 
                                     {{-- Área da Imagem com fundo cinza --}}

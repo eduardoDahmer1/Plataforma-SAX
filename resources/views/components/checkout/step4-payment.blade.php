@@ -18,11 +18,11 @@
                 DEPÓSITO / TRANSFERÊNCIA
             </button>
 
-            {{-- Opção: Bancard --}}
+            {{-- Opção: Bancard
             <button type="button" class="sax-payment-method" id="btn-bancard" onclick="selectPayment('bancard')">
                 <i class="fa fa-credit-card mb-2 d-block"></i>
                 CARTÃO / QR (BANCARD)
-            </button>
+            </button> --}}
         </div>
 
         <p class="sax-payment-notice mt-4" id="payment-instruction">

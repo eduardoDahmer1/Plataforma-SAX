@@ -11,7 +11,8 @@
                     <div class="swiper-slide">
                         <div class="promo-card" data-reveal="up">
                             <div class="promo-img-wrap">
-                                <img src="{{ asset('storage/' . $promo['image']) }}" alt="{{ $promo['title'] }}" class="promo-img">
+                                <img src="{{ asset('storage/' . $promo['image']) }}" alt="{{ $promo['title'] }}" class="promo-img"
+                                     loading="lazy" decoding="async" >
                             </div>
                             <div class="promo-body">
                                 <h3 class="promo-title">{{ $promo['title'] }}</h3>
@@ -39,11 +40,15 @@
         background: var(--bridal-cream);
         border-radius: 2px;
         overflow: hidden;
-        transition: transform 0.4s ease;
     }
 
-    .promo-card:hover {
-        transform: translateY(-6px);
+    @media (hover: hover) {
+        .promo-card {
+            transition: transform 0.4s ease;
+        }
+        .promo-card:hover {
+            transform: translateY(-6px);
+        }
     }
 
     .promo-img-wrap {
@@ -55,15 +60,19 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 1.2s ease;
     }
 
-    .promo-card:hover .promo-img {
-        transform: scale(1.06);
+    @media (hover: hover) {
+        .promo-img {
+            transition: transform 1.2s ease;
+        }
+        .promo-card:hover .promo-img {
+            transform: scale(1.06);
+        }
     }
 
     .promo-body {
-        padding: 28px 24px 32px;
+        padding: 1.75rem 1.5rem 2rem;
         text-align: center;
     }
 
@@ -71,14 +80,14 @@
         font-family: var(--font-serif);
         font-size: 1.3rem;
         color: var(--bridal-dark);
-        margin-bottom: 8px;
+        margin-bottom: 0.5rem;
         font-weight: 400;
     }
 
     .promo-subtitle {
         font-size: 0.85rem;
         color: #888;
-        margin-bottom: 16px;
+        margin-bottom: 1rem;
         line-height: 1.6;
     }
 
@@ -100,16 +109,16 @@
     .promo-pagination .swiper-pagination-bullet {
         background: var(--bridal-gold);
         opacity: 0.3;
-        width: 8px;
-        height: 8px;
-        border-radius: 4px;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 0.25rem;
         transition: all 0.35s ease;
     }
 
     .promo-pagination .swiper-pagination-bullet-active {
         opacity: 1;
-        width: 28px;
-        border-radius: 4px;
+        width: 1.75rem;
+        border-radius: 0.25rem;
     }
 </style>
 @endpush

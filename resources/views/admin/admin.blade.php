@@ -35,7 +35,9 @@
             $images = [
                 ['field' => 'header_image', 'title' => 'Logo Header', 'category' => 'Identidad', 'file' => $webpImage, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
                 ['field' => 'logo_palace', 'title' => 'Logo SAX Palace', 'category' => 'Identidad', 'file' => $logoPalace, 'routeUpload' => 'admin.logopalace.upload', 'routeDelete' => 'admin.logopalace.delete'],
-                
+                ['field' => 'logo_bridal', 'title' => 'Logo SAX Bridal', 'category' => 'Identidad', 'file' => $logoBridal, 'routeUpload' => 'admin.logobridal.upload', 'routeDelete' => 'admin.logobridal.delete'],
+                ['field' => 'banner_horizontal', 'title' => 'Banner Horizontal', 'category' => 'Identidad', 'file' => $bannerHorizontal, 'routeUpload' => 'admin.bannerhorizontal.upload', 'routeDelete' => 'admin.bannerhorizontal.delete'],
+
                 // Novos campos de Ícones
                 ['field' => 'icon_info', 'title' => 'Ícone Info/Relógio', 'category' => 'Sistema', 'file' => $attribute->icon_info ?? null, 'routeUpload' => 'admin.icon_info.upload', 'routeDelete' => 'admin.icon_info.delete'],
                 ['field' => 'icon_cabide', 'title' => 'Ícone Cabide (Guia)', 'category' => 'Sistema', 'file' => $attribute->icon_cabide ?? null, 'routeUpload' => 'admin.icon_cabide.upload', 'routeDelete' => 'admin.icon_cabide.delete'],

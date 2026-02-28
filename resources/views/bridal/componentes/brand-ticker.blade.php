@@ -2,19 +2,30 @@
 <div class="brand-ticker">
     <div class="ticker-track">
         @foreach($brands as $brand)
-            @if(!empty($brand['logo_imagen']))
-                <span class="ticker-item">
-                    <img src="{{ asset('storage/' . $brand['logo_imagen']) }}" alt="{{ $brand['nombre'] }}" class="ticker-logo">
-                </span>
-            @endif
+            <span class="ticker-item">
+                @if(!empty($brand->image))
+                    <img src="{{ asset('storage/' . $brand->image) }}"
+                         alt="{{ $brand->name }}"
+                         class="ticker-logo"
+                         loading="lazy" decoding="async">
+                @else
+                    <span class="ticker-text">{{ $brand->name }}</span>
+                @endif
+            </span>
         @endforeach
+
         {{-- Duplicate for seamless infinite loop --}}
         @foreach($brands as $brand)
-            @if(!empty($brand['logo_imagen']))
-                <span class="ticker-item">
-                    <img src="{{ asset('storage/' . $brand['logo_imagen']) }}" alt="{{ $brand['nombre'] }}" class="ticker-logo">
-                </span>
-            @endif
+            <span class="ticker-item">
+                @if(!empty($brand->image))
+                    <img src="{{ asset('storage/' . $brand->image) }}"
+                         alt="{{ $brand->name }}"
+                         class="ticker-logo"
+                         loading="lazy" decoding="async">
+                @else
+                    <span class="ticker-text">{{ $brand->name }}</span>
+                @endif
+            </span>
         @endforeach
     </div>
 </div>
@@ -23,7 +34,7 @@
 <style>
     .brand-ticker {
         background: #ffffff;
-        padding: 30px 0;
+        padding: 1rem 0;
         border-top: 1px solid #f0ece6;
         border-bottom: 1px solid #f0ece6;
         overflow: hidden;
@@ -41,7 +52,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0 40px;
+        padding: 0 2.5rem;
     }
 
     .ticker-text {
@@ -53,10 +64,9 @@
     }
 
     .ticker-logo {
-        height: auto;
+        max-height: 4rem;
         width: auto;
-        max-height: 36px;
-        max-width: 140px;
+        max-width: 12rem;
         object-fit: contain;
         filter: grayscale(100%) opacity(0.5);
         transition: filter 0.3s ease;
@@ -73,20 +83,24 @@
 
     @media (max-width: 768px) {
         .brand-ticker {
-            padding: 24px 0;
+            padding: 0.75rem 0;
         }
 
         .ticker-item {
-            padding: 0 24px;
+            padding: 0 1.5rem;
         }
 
         .ticker-text {
             font-size: 0.65rem;
         }
 
+        .ticker-track {
+            animation-duration: 18s;
+        }
+
         .ticker-logo {
-            max-height: 28px;
-            max-width: 100px;
+            max-height: 3.25rem;
+            max-width: 10rem;
         }
     }
 </style>

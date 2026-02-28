@@ -1,9 +1,13 @@
 {{-- SAX Bridal — Hero Section --}}
 <section class="hero-bridal">
     {{-- Background image --}}
-    <img src="{{ $backgroundImage }}" class="hero-bg" alt="SAX Bridal Hero">
+    <img src="{{ $backgroundImage }}" class="hero-bg" alt="SAX Bridal Hero"
+         fetchpriority="high" decoding="async">
 
-    {{-- Gradient overlay for readability --}}
+    {{-- Top gradient: darkens only the navbar strip for legibility --}}
+    <div class="hero-top-gradient"></div>
+
+    {{-- Dark overlay for text contrast --}}
     <div class="hero-overlay"></div>
 
     {{-- Content --}}
@@ -44,77 +48,82 @@
         z-index: 1;
     }
 
+    .hero-top-gradient {
+        position: absolute;
+        inset: 0;
+        height: 40vh;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.40) 0%, transparent 100%);
+        z-index: 2;
+    }
+
     .hero-overlay {
         position: absolute;
         inset: 0;
         z-index: 2;
-        background: linear-gradient(
-            70deg,
-            rgba(0, 0, 0, 0.55) 0%,
-            rgba(0, 0, 0, 0.25) 45%,
-            rgba(0, 0, 0, 0.05) 70%
-        );
+        background: rgba(0, 0, 0, 0.25);
     }
 
     .hero-body {
         position: relative;
         z-index: 3;
         width: 100%;
-        padding-bottom: 60px;
-        padding-top: 100px;
+        padding-bottom: 3.75rem;
+        padding-top: 6.25rem;
     }
 
     .hero-label {
         display: inline-block;
         font-family: var(--font-display);
-        font-size: 0.72rem;
-        letter-spacing: 4px;
-        color: var(--bridal-gold-light);
+        font-size: 0.68rem;
+        letter-spacing: 6px;
+        color: #C6A76E;
         text-transform: uppercase;
-        margin-bottom: 14px;
+        margin-bottom: 0.875rem;
+        font-weight: 300;
+        opacity: 0.95;
+        text-shadow: 0px 2px 12px rgba(0, 0, 0, 0.18);
     }
 
     .hero-heading {
         font-family: var(--font-serif);
-        font-size: clamp(3rem, 5.5vw, 5rem);
+        font-size: clamp(3.5rem, 6.5vw, 6.5rem);
         font-weight: 400;
-        color: #fff;
-        line-height: 1.15;
-        margin-bottom: 18px;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        color: #F4F1EA;
+        line-height: 1.1;
+        margin-bottom: 1.25rem;
+        text-shadow: 0px 4px 18px rgba(0, 0, 0, 0.25);
     }
 
     .hero-description {
         font-size: 0.92rem;
-        color: rgba(255, 255, 255, 0.85);
-        max-width: 480px;
-        margin-bottom: 28px;
+        color: rgba(250, 247, 242, 0.80);
+        max-width: 30rem;
+        margin-bottom: 1.75rem;
         line-height: 1.7;
     }
 
-    /* Hero button overrides for light-on-dark */
+    /* Hero buttons */
     .hero-bridal .btn-sax {
-        background: rgba(255, 255, 255, 0.95);
-        color: var(--bridal-dark);
-        font-size: 0.85rem;
-        padding: 16px 44px;
+        background: #1C1C1C;
+        color: #FAF7F2;
+        padding: 1rem 2.75rem;
     }
 
     .hero-bridal .btn-sax:hover {
-        background: var(--bridal-gold);
+        background: #C6A76E;
         color: #fff;
     }
 
     .hero-bridal .btn-sax-outline {
-        border-color: rgba(255, 255, 255, 0.6);
-        color: #fff;
-        font-size: 0.85rem;
-        padding: 15px 42px;
+        background: transparent;
+        border-color: #C6A76E;
+        color: #FAF7F2;
+        padding: 1rem 2.75rem;
     }
 
     .hero-bridal .btn-sax-outline:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: #fff;
+        background: #C6A76E;
+        border-color: #C6A76E;
         color: #fff;
     }
 
@@ -125,8 +134,8 @@
         }
 
         .hero-body {
-            padding-top: 80px;
-            padding-bottom: 40px;
+            padding-top: 5rem;
+            padding-bottom: 2.5rem;
         }
     }
 
@@ -137,7 +146,7 @@
         }
 
         .hero-heading {
-            font-size: 2.4rem;
+            font-size: 2.8rem;
         }
 
         .hero-description {
@@ -146,8 +155,7 @@
 
         .hero-bridal .btn-sax,
         .hero-bridal .btn-sax-outline {
-            padding: 13px 28px;
-            font-size: 0.78rem;
+            padding: 0.8125rem 1.75rem;
         }
     }
 </style>

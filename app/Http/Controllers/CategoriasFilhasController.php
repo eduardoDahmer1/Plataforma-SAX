@@ -33,24 +33,27 @@ class CategoriasFilhasController extends Controller
         $page = $request->get('page', 1);
         $cacheKey = "categoriasfilhas_show_{$slug}_page_{$page}";
 
-        // Buscamos a categoria e os produtos paginados dentro do cache
+        // Capturamos os dados garantindo que os relacionamentos necessários existam
         $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($slug) {
             $categoriasfilhas = CategoriasFilhas::with(['subcategory.category'])
                 ->where('slug', $slug)
                 ->firstOrFail();
 
-            // Pagina os produtos relacionados
-            $products = $categoriasfilhas->products()->paginate(24)->withQueryString();
+            // IMPORTANTE: Adicionado with('brand') para o layout de cards funcionar
+            $products = $categoriasfilhas->products()
+                ->with('brand') 
+                ->paginate(24) 
+                ->withQueryString();
 
             return [
                 'categoriasfilhas' => $categoriasfilhas,
-                'products' => $products
+                'products'         => $products
             ];
         });
 
         return view('categoriasfilhas.show', [
             'categoriasfilhas' => $data['categoriasfilhas'],
-            'products'      => $data['products']
+            'products'         => $data['products']
         ]);
     }
 }

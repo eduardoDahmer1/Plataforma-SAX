@@ -2,128 +2,219 @@
 
 @section('content')
     <div class="category-detail-wrapper">
-        {{-- Header / Banner da Categoria --}}
-        <div class="category-hero py-5 border-bottom">
-            <div class="container text-center">
-                <a href="{{ route('categories.index') }}" class="back-link">
-                    <i class="fas fa-chevron-left me-1"></i> Ver Categorias
-                </a>
 
-                <div class="category-logo-main my-4">
+        @php
+            $bannerUrl = null;
+
+            // 1. Tenta o banner específico da categoria (no Storage)
+            if ($category->banner && Storage::disk('public')->exists($category->banner)) {
+                $bannerUrl = Storage::url($category->banner);
+            }
+            // 2. Fallback para o banner global da tabela attributes
+            // O nome no seu banco é 'banner_horizontal' (confirmado pelo print do PHPMyAdmin)
+            elseif (!empty($banner_horizontal)) {
+                // Se a imagem estiver na pasta public/img/, use asset().
+                // Se estiver no storage, use Storage::url(). Ajustei para asset('img/...') que é o comum para esses banners fixos.
+                $bannerUrl = asset('img/' . $banner_horizontal);
+            }
+        @endphp
+
+        @if ($bannerUrl)
+            <div class="category-hero-fullwidth">
+                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $category->name }}">
+                <div class="hero-overlay-soft"></div>
+            </div>
+        @else
+            <div class="py-3"></div>
+        @endif
+
+        {{-- 2. ILHA DE IDENTIDADE (Transição Minimalista) --}}
+        <div class="category-identity-section py-4 border-bottom bg-white">
+            <div class="container text-center">
+                <a href="{{ route('categories.index') }}" class="back-link-minimal">
+                    <i class="fas fa-chevron-left me-1"></i> VOLVER A CATEGORIAS
+                </a>
+                <div class="category-logo-container mt-3">
                     @if ($category->photo && Storage::disk('public')->exists($category->photo))
-                        <img src="{{ Storage::url($category->photo) }}" alt="{{ $category->name }}" class="main-cat-img">
+                        <img src="{{ Storage::url($category->photo) }}" alt="{{ $category->name }}"
+                            class="category-main-logo">
                     @else
-                        <h1 class="sax-category-title">{{ $category->name }}</h1>
+                        <h1 class="category-name-text">{{ $category->name }}</h1>
                     @endif
                 </div>
-
-                @if ($category->banner && Storage::disk('public')->exists($category->banner))
-                    <div class="category-banner-container mt-4 px-3">
-                        <img src="{{ Storage::url($category->banner) }}" class="img-fluid rounded-0 shadow-sm"
-                            style="max-height: 300px; width: 100%; object-fit: cover;">
-                    </div>
-                @endif
             </div>
         </div>
 
-        <div class="container-fluid px-2 py-5">
-            @if ($products->count())
-                <div class="row g-1"> {{-- Grid colado igual JW PEI --}}
-                    @foreach ($products as $item)
-                        <div class="col-6 col-md-4 col-lg-2">
-                            <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
-                                <div class="card h-100 border-0 rounded-0 jw-product-card">
+        {{-- 3. ÁREA DE CONTEÚDO (Banner Lateral + Grid de Produtos) --}}
+        <div class="container-fluid px-1 px-md-4 py-4 bg-white">
+            <div class="row g-1">
 
-                                    {{-- Área da Imagem com fundo cinza --}}
-                                    <div class="jw-img-container position-relative">
-                                        <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-0"
-                                            alt="{{ $item->external_name }}">
-
-                                        {{-- Botão de Favorito --}}
-                                        <div class="position-absolute top-0 end-0 p-3">
-                                            @auth
-                                                <x-product-favorite-button :item="$item" />
-                                            @endauth
-                                        </div>
-                                    </div>
-
-                                    {{-- Info do Produto --}}
-                                    <div class="card-body px-3 py-4">
-                                        <div class="jw-brand fw-bold text-uppercase mb-1">
-                                            {{ $item->brand->name ?? 'EXCLUSIVO' }}
-                                        </div>
-                                        <div class="jw-product-name text-muted mb-2">
-                                            {{ Str::limit($item->external_name, 35) }}
-                                        </div>
-                                        <div class="jw-price fw-bold text-dark">
-                                            {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
+                {{-- BANNER LATERAL (Aparece apenas em Desktop - Ocupa 3 colunas) --}}
+                {{-- Nota: Usei o campo 'photo' ou outro campo de imagem que você destinar ao banner vertical --}}
+                @if (isset($category->image) && Storage::disk('public')->exists($category->image))
+                    <div class="col-12 col-lg-3 d-none d-lg-block">
+                        <div class="sticky-banner-lateral">
+                            <img src="{{ Storage::url($category->image) }}" class="img-fluid banner-v-render"
+                                alt="{{ $category->name }} Promo">
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endif
 
-                {{-- Paginação --}}
-                <div class="d-flex justify-content-center mt-5">
-                    {{ $products->links() }}
+                {{-- GRID DE PRODUTOS (Ajusta a largura caso exista banner lateral) --}}
+                <div
+                    class="col-12 {{ isset($category->image) && Storage::disk('public')->exists($category->image) ? 'col-lg-9' : '' }}">
+                    @if ($products->count())
+                        <div class="row g-1">
+                            @foreach ($products as $item)
+                                <div
+                                    class="col-6 col-md-4 {{ isset($category->image) && Storage::disk('public')->exists($category->image) ? 'col-xl-3' : 'col-xl-2' }}">
+                                    <a href="{{ route('produto.show', $item->slug) }}"
+                                        class="text-decoration-none jw-product-link">
+                                        <div class="card h-100 border-0 rounded-0 jw-product-card bg-transparent">
+
+                                            {{-- Imagem do Produto --}}
+                                            <div class="jw-img-container position-relative bg-light">
+                                                <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-0"
+                                                    alt="{{ $item->external_name }}">
+                                                <div class="position-absolute top-0 end-0 p-3 z-index-2">
+                                                    @auth <x-product-favorite-button :item="$item" /> @endauth
+                                                </div>
+                                            </div>
+
+                                            {{-- Info do Produto --}}
+                                            <div class="card-body px-1 py-4 text-center">
+                                                <div class="jw-brand fw-bold text-uppercase mb-1">
+                                                    {{ $item->brand->name ?? 'EXCLUSIVO' }}</div>
+                                                <div class="jw-product-name text-muted mb-2">
+                                                    {{ Str::limit($item->external_name, 40) }}</div>
+                                                <div class="jw-price fw-bold text-dark">
+                                                    {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Paginação --}}
+                        <div class="d-flex justify-content-center mt-5 pagination-sax">
+                            {{ $products->links() }}
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <p class="text-muted text-uppercase tracking-widest small">No se encontraron productos en esta
+                                categoría.</p>
+                        </div>
+                    @endif
                 </div>
-            @else
-                <div class="text-center py-5">
-                    <p class="text-muted text-uppercase tracking-widest">No se encontraron productos en esta categoría.</p>
-                </div>
-            @endif
+            </div>
         </div>
     </div>
 @endsection
-
 <style>
-    /* Reaproveitamento do CSS Luxury Pattern */
+    /* Reset e Global */
     .category-detail-wrapper {
         background-color: #fff;
+        overflow-x: hidden;
     }
 
-    .category-hero {
-        background-color: #fcfcfc;
+    .tracking-widest {
+        letter-spacing: 0.2em;
     }
 
-    .main-cat-img {
-        max-height: 70px;
+    /* 1. Banner Horizontal Hero */
+    .category-hero-fullwidth {
+        width: 100vw;
+        height: 45vh;
+        min-height: 300px;
+        position: relative;
+        overflow: hidden;
+        margin-left: calc(-50vw + 50%);
+    }
+
+    .hero-img-render {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .hero-overlay-soft {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    /* 2. Seção de Identidade */
+    .category-main-logo {
+        max-height: 60px;
         width: auto;
         object-fit: contain;
     }
 
-    .sax-category-title {
+    .category-name-text {
         font-weight: 300;
         text-transform: uppercase;
         letter-spacing: 5px;
         color: #000;
     }
 
-    .back-link {
-        color: #888;
-        font-size: 0.7rem;
+    .back-link-minimal {
+        color: #999;
+        font-size: 0.65rem;
         letter-spacing: 2px;
         text-decoration: none;
         text-transform: uppercase;
+        transition: color 0.2s;
     }
 
-    /* Card JW Style - Padrão Unificado */
+    .back-link-minimal:hover {
+        color: #000;
+    }
+
+    /* 3. Banner Lateral Sticky */
+    .sticky-banner-lateral {
+        position: sticky;
+        top: 100px;
+        /* Ajuste conforme a altura do seu menu fixo */
+        height: fit-content;
+        padding-right: 10px;
+    }
+
+    .banner-v-render {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+        border: 1px solid #f0f0f0;
+    }
+
+    /* 4. Grid de Produtos (JW PEI Style) */
+    .g-1 {
+        margin-right: -4px;
+        margin-left: -4px;
+    }
+
+    .g-1>[class*="col-"] {
+        padding-right: 4px;
+        padding-left: 4px;
+        margin-bottom: 10px;
+    }
+
     .jw-product-card {
-        background-color: #f2f2f2 !important;
         transition: opacity 0.3s ease;
     }
 
-    .jw-product-card:hover {
-        opacity: 0.9;
+    .jw-product-link:hover .jw-product-card {
+        opacity: 0.8;
     }
 
     .jw-img-container {
-        aspect-ratio: 4 / 5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        aspect-ratio: 3 / 4;
+        background-color: #fcfcfc;
         overflow: hidden;
     }
 
@@ -134,17 +225,16 @@
     }
 
     .jw-brand {
-        font-size: 0.75rem;
-        letter-spacing: 0.05em;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
         color: #000;
     }
 
     .jw-product-name {
-        font-size: 0.8rem;
-        color: #666 !important;
-        white-space: nowrap;
+        font-size: 0.75rem;
+        color: #777 !important;
+        height: 2.2rem;
         overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .jw-price {
@@ -152,21 +242,30 @@
         color: #000;
     }
 
-    .btn-favorite-sax {
-        background: transparent;
-        border: none;
+    /* Paginação */
+    .pagination-sax .page-link {
         color: #000;
-        padding: 0;
-        transition: transform 0.2s ease;
+        border: none;
+        background: transparent;
+        font-size: 0.8rem;
     }
 
-    .g-1 {
-        margin-right: -2px;
-        margin-left: -2px;
+    .pagination-sax .page-item.active .page-link {
+        background: none;
+        text-decoration: underline;
+        font-weight: bold;
     }
 
-    .g-1>[class*="col-"] {
-        padding-right: 2px;
-        padding-left: 2px;
+    /* Mobile */
+    @media (max-width: 991px) {
+        .category-hero-fullwidth {
+            height: 35vh;
+        }
+
+        .col-lg-3 {
+            display: none;
+        }
+
+        /* Oculta banner lateral no mobile */
     }
 </style>

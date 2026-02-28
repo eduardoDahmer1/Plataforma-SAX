@@ -6,6 +6,7 @@
     $promos       = is_array($bridal->promos)       ? $bridal->promos       : (json_decode($bridal->promos, true)       ?? []);
     $brands       = is_array($bridal->brands)       ? $bridal->brands       : (json_decode($bridal->brands, true)       ?? []);
     $testimonials = is_array($bridal->testimonials) ? $bridal->testimonials : (json_decode($bridal->testimonials, true) ?? []);
+    $locations    = is_array($bridal->locations)    ? $bridal->locations    : (json_decode($bridal->locations, true)    ?? []);
 
     // Rellenar slots fijos
     for ($i = count($services);     $i < 4; $i++) $services[]     = ['image' => '', 'title' => '', 'description' => ''];
@@ -100,55 +101,7 @@
         </div>
 
         {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 02. MARCAS (Brands — dinámico)                            --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        <div class="sax-premium-card shadow-sm">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-gold"><i class="fas fa-tags"></i></div>
-                <div class="flex-grow-1">
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">02 — Marcas</p>
-                    <p class="x-small text-muted mb-0">Ticker de logos (cantidad libre)</p>
-                </div>
-                <button type="button" id="btn-add-brand" class="btn btn-sm btn-outline-dark rounded-pill x-small fw-bold px-3">
-                    <i class="fas fa-plus me-1"></i> AÑADIR MARCA
-                </button>
-            </div>
-            <div class="p-4">
-                <div id="brands-container" class="row g-3">
-                    @forelse($brands as $i => $brand)
-                        <div class="col-md-3 brand-item">
-                            <div class="border rounded-3 p-3 bg-light position-relative">
-                                <button type="button" class="btn-remove-brand position-absolute top-0 end-0 m-2 btn btn-sm btn-light border rounded-circle">
-                                    <i class="fas fa-times x-small"></i>
-                                </button>
-                                <div class="brand-logo-preview mb-2 rounded-2 overflow-hidden border" style="height:60px; background:#fff;">
-                                    <img class="brand-prev w-100 h-100 object-fit-contain p-1"
-                                         src="{{ !empty($brand['logo_imagen']) ? asset('storage/'.$brand['logo_imagen']) : 'https://placehold.co/160x60/f8fafc/ccc?text=Logo' }}">
-                                </div>
-                                <div class="upload-zone py-2 mb-2">
-                                    <input type="file" name="brands_items[{{ $i }}][logo_imagen]"
-                                           class="upload-input brand-logo-trigger" accept="image/*">
-                                    <p class="x-small text-muted m-0">Subir logo</p>
-                                </div>
-                                <input type="hidden" name="brands_items[{{ $i }}][logo_path]"
-                                       value="{{ $brand['logo_imagen'] ?? '' }}">
-                                <label class="sax-form-label">Nombre</label>
-                                <input type="text" name="brands_items[{{ $i }}][nombre]"
-                                       class="form-control sax-input"
-                                       value="{{ old("brands_items.$i.nombre", $brand['nombre'] ?? '') }}">
-                            </div>
-                        </div>
-                    @empty
-                        <div class="col-12 text-center py-3 text-muted x-small" id="brands-empty">
-                            No hay marcas. Haga clic en "Añadir Marca".
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 03. PROMOS (3 slots fijos)                                --}}
+        {{-- 02. PROMOS (3 slots fijos)                                --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm">
             <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -470,85 +423,64 @@
         </div>
 
         {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 08. SUCURSALES                                            --}}
+        {{-- 07. SUCURSALES (dinámico)                                 --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
-        <div class="sax-premium-card shadow-sm overflow-hidden">
+        <div class="sax-premium-card shadow-sm">
             <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
                 <div class="icon-circle-gold"><i class="fas fa-map-marker-alt"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">08 — Sucursales</p>
-                    <p class="x-small text-muted mb-0">Información de las dos tiendas</p>
+                <div class="flex-grow-1">
+                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">07 — Sucursales</p>
+                    <p class="x-small text-muted mb-0">Locales y contacto (cantidad libre)</p>
                 </div>
+                <button type="button" id="btn-add-location" class="btn btn-sm btn-outline-dark rounded-pill x-small fw-bold px-3">
+                    <i class="fas fa-plus me-1"></i> AÑADIR SUCURSAL
+                </button>
             </div>
-            <div class="row g-0">
-                {{-- Asunción --}}
-                <div class="col-lg-6 p-4" style="border-right: 1px solid #eef2f7;">
-                    <div class="d-flex align-items-center gap-2 mb-4">
-                        <span class="badge-gold-soft text-uppercase">Asunción</span>
-                        <i class="fas fa-map-pin text-gold x-small"></i>
-                    </div>
-
-                    <div class="img-preview-box mb-2 rounded-3 overflow-hidden border" style="height:140px;">
-                        <img id="prev-asuncion"
-                             src="{{ $bridal->branch_asuncion_image ? asset('storage/'.$bridal->branch_asuncion_image) : 'https://placehold.co/600x300/121212/D4AF37?text=Asunci%C3%B3n' }}"
-                             class="w-100 h-100 object-fit-cover">
-                    </div>
-                    <div class="upload-zone py-2 mb-4">
-                        <input type="file" name="branch_asuncion_image" class="upload-input img-trigger"
-                               data-prev="prev-asuncion" accept="image/*">
-                        <p class="x-small text-muted m-0">Cambiar imagen de sucursal</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="sax-form-label">Nombre de la Sucursal</label>
-                        <input type="text" name="branch_asuncion_name" class="form-control sax-input"
-                               value="{{ old('branch_asuncion_name', $bridal->branch_asuncion_name) }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="sax-form-label">Dirección</label>
-                        <input type="text" name="branch_asuncion_address" class="form-control sax-input"
-                               value="{{ old('branch_asuncion_address', $bridal->branch_asuncion_address) }}">
-                    </div>
-                    <div class="mb-0">
-                        <label class="sax-form-label">Teléfono</label>
-                        <input type="text" name="branch_asuncion_phone" class="form-control sax-input"
-                               value="{{ old('branch_asuncion_phone', $bridal->branch_asuncion_phone) }}">
-                    </div>
-                </div>
-
-                {{-- Ciudad del Este --}}
-                <div class="col-lg-6 p-4">
-                    <div class="d-flex align-items-center gap-2 mb-4">
-                        <span class="badge-gold-soft text-uppercase">Ciudad del Este</span>
-                        <i class="fas fa-map-pin text-gold x-small"></i>
-                    </div>
-
-                    <div class="img-preview-box mb-2 rounded-3 overflow-hidden border" style="height:140px;">
-                        <img id="prev-cde"
-                             src="{{ $bridal->branch_cde_image ? asset('storage/'.$bridal->branch_cde_image) : 'https://placehold.co/600x300/121212/D4AF37?text=CDE' }}"
-                             class="w-100 h-100 object-fit-cover">
-                    </div>
-                    <div class="upload-zone py-2 mb-4">
-                        <input type="file" name="branch_cde_image" class="upload-input img-trigger"
-                               data-prev="prev-cde" accept="image/*">
-                        <p class="x-small text-muted m-0">Cambiar imagen de sucursal</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="sax-form-label">Nombre de la Sucursal</label>
-                        <input type="text" name="branch_cde_name" class="form-control sax-input"
-                               value="{{ old('branch_cde_name', $bridal->branch_cde_name) }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="sax-form-label">Dirección</label>
-                        <input type="text" name="branch_cde_address" class="form-control sax-input"
-                               value="{{ old('branch_cde_address', $bridal->branch_cde_address) }}">
-                    </div>
-                    <div class="mb-0">
-                        <label class="sax-form-label">Teléfono</label>
-                        <input type="text" name="branch_cde_phone" class="form-control sax-input"
-                               value="{{ old('branch_cde_phone', $bridal->branch_cde_phone) }}">
-                    </div>
+            <div class="p-4">
+                <div id="locations-container" class="row g-3">
+                    @forelse($locations as $i => $loc)
+                        <div class="col-md-4 location-item">
+                            <div class="border rounded-3 p-3 bg-light position-relative">
+                                <button type="button" class="btn-remove-location position-absolute top-0 end-0 m-2 btn btn-sm btn-light border rounded-circle">
+                                    <i class="fas fa-times x-small"></i>
+                                </button>
+                                <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:120px;">
+                                    <img class="loc-prev w-100 h-100 object-fit-cover"
+                                         src="{{ !empty($loc['image']) ? asset('storage/'.$loc['image']) : 'https://placehold.co/400x200/121212/D4AF37?text=Sucursal' }}">
+                                </div>
+                                <div class="upload-zone py-2 mb-2">
+                                    <input type="file" name="locations_items[{{ $i }}][image]"
+                                           class="upload-input loc-img-trigger" accept="image/*">
+                                    <p class="x-small text-muted m-0">Subir imagen</p>
+                                </div>
+                                <input type="hidden" name="locations_items[{{ $i }}][image_path]"
+                                       value="{{ $loc['image'] ?? '' }}">
+                                <div class="mb-2">
+                                    <label class="sax-form-label">Nombre</label>
+                                    <input type="text" name="locations_items[{{ $i }}][name]"
+                                           class="form-control sax-input"
+                                           value="{{ old("locations_items.$i.name", $loc['name'] ?? '') }}">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="sax-form-label">Dirección</label>
+                                    <input type="text" name="locations_items[{{ $i }}][address]"
+                                           class="form-control sax-input"
+                                           value="{{ old("locations_items.$i.address", $loc['address'] ?? '') }}">
+                                </div>
+                                <div class="mb-0">
+                                    <label class="sax-form-label">Teléfono (WhatsApp)</label>
+                                    <input type="text" name="locations_items[{{ $i }}][phone]"
+                                           class="form-control sax-input"
+                                           value="{{ old("locations_items.$i.phone", '') }}"
+                                           placeholder="+595 XXX XXX XXX">
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-12 text-center py-3 text-muted x-small" id="locations-empty">
+                            No hay sucursales. Haga clic en "Añadir Sucursal".
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -742,53 +674,65 @@ document.querySelectorAll('.img-trigger').forEach(function(input) {
     });
 });
 
-// ── Brand logo preview (inline within brand card) ─────────────
+// ── Location image preview (inline within location card) ──────
 document.addEventListener('change', function(e) {
-    if (!e.target.classList.contains('brand-logo-trigger')) return;
+    if (!e.target.classList.contains('loc-img-trigger')) return;
     const input = e.target;
     if (!input.files || !input.files[0]) return;
-    const img   = input.closest('.brand-item').querySelector('.brand-prev');
+    const img = input.closest('.location-item').querySelector('.loc-prev');
     const reader = new FileReader();
     reader.onload = ev => img.src = ev.target.result;
     reader.readAsDataURL(input.files[0]);
 });
 
-// ── Brands: anhadir fila  ───────────────────────────────────────────
-let brandIndex = {{ count($brands) }};
+// ── Locations: añadir fila ────────────────────────────────────
+let locIndex = {{ count($locations) }};
 
-document.getElementById('btn-add-brand').addEventListener('click', function() {
-    const empty = document.getElementById('brands-empty');
+document.getElementById('btn-add-location').addEventListener('click', function() {
+    const empty = document.getElementById('locations-empty');
     if (empty) empty.remove();
 
-    const i   = brandIndex++;
+    const i   = locIndex++;
     const col = document.createElement('div');
-    col.className = 'col-md-3 brand-item';
+    col.className = 'col-md-4 location-item';
     col.innerHTML = `
         <div class="border rounded-3 p-3 bg-light position-relative">
-            <button type="button" class="btn-remove-brand position-absolute top-0 end-0 m-2 btn btn-sm btn-light border rounded-circle">
+            <button type="button" class="btn-remove-location position-absolute top-0 end-0 m-2 btn btn-sm btn-light border rounded-circle">
                 <i class="fas fa-times x-small"></i>
             </button>
-            <div class="brand-logo-preview mb-2 rounded-2 overflow-hidden border" style="height:60px;background:#fff;">
-                <img class="brand-prev w-100 h-100 object-fit-contain p-1"
-                     src="https://placehold.co/160x60/f8fafc/ccc?text=Logo">
+            <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:120px;">
+                <img class="loc-prev w-100 h-100 object-fit-cover"
+                     src="https://placehold.co/400x200/121212/D4AF37?text=Sucursal">
             </div>
             <div class="upload-zone py-2 mb-2">
-                <input type="file" name="brands_items[${i}][logo_imagen]"
-                       class="upload-input brand-logo-trigger" accept="image/*">
-                <p class="x-small text-muted m-0">Subir logo</p>
+                <input type="file" name="locations_items[${i}][image]"
+                       class="upload-input loc-img-trigger" accept="image/*">
+                <p class="x-small text-muted m-0">Subir imagen</p>
             </div>
-            <input type="hidden" name="brands_items[${i}][logo_path]" value="">
-            <label class="sax-form-label">Nombre</label>
-            <input type="text" name="brands_items[${i}][nombre]"
-                   class="form-control sax-input" placeholder="Nombre de la marca">
+            <input type="hidden" name="locations_items[${i}][image_path]" value="">
+            <div class="mb-2">
+                <label class="sax-form-label">Nombre</label>
+                <input type="text" name="locations_items[${i}][name]"
+                       class="form-control sax-input" placeholder="Nombre de la sucursal">
+            </div>
+            <div class="mb-2">
+                <label class="sax-form-label">Dirección</label>
+                <input type="text" name="locations_items[${i}][address]"
+                       class="form-control sax-input" placeholder="Dirección completa">
+            </div>
+            <div class="mb-0">
+                <label class="sax-form-label">Teléfono (WhatsApp)</label>
+                <input type="text" name="locations_items[${i}][phone]"
+                       class="form-control sax-input" placeholder="+595 XXX XXX XXX">
+            </div>
         </div>`;
-    document.getElementById('brands-container').appendChild(col);
+    document.getElementById('locations-container').appendChild(col);
 });
 
-// ── Brands: remove row ────────────────────────────────────────
+// ── Locations: remove row ─────────────────────────────────────
 document.addEventListener('click', function(e) {
-    if (e.target.closest('.btn-remove-brand')) {
-        e.target.closest('.brand-item').remove();
+    if (e.target.closest('.btn-remove-location')) {
+        e.target.closest('.location-item').remove();
     }
 });
 </script>

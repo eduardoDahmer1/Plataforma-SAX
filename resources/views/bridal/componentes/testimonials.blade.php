@@ -19,6 +19,7 @@
                                             src="{{ asset('storage/' . $testimonial['foto']) }}"
                                             alt="{{ $testimonial['author'] }}"
                                             class="tq-polaroid-img"
+                                            loading="lazy" decoding="async"
                                         >
                                     @else
                                         <div class="tq-polaroid-placeholder">
@@ -59,26 +60,26 @@
 <style>
     .testimonials-section {
         background: var(--bridal-white);
+        padding: 3rem 0;
     }
 
     .testimonial-card {
         display: flex;
         align-items: flex-start;
-        gap: 40px;
-        padding: 40px;
+        gap: 2.5rem;
+        padding: 2.5rem;
         background: var(--bridal-cream);
         border-radius: 2px;
         box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04);
-        min-height: 320px;
+        min-height: 20rem;
     }
 
     /* — Polaroid — */
     .tq-polaroid {
         flex-shrink: 0;
         background: #fff;
-        padding: 10px 10px 40px;
+        padding: 0.625rem 0.625rem 2.5rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
     }
 
     .tq-rotate-left {
@@ -89,19 +90,24 @@
         transform: rotate(2deg);
     }
 
-    .tq-polaroid:hover {
-        transform: rotate(0deg) scale(1.02);
+    @media (hover: hover) {
+        .tq-polaroid {
+            transition: transform 0.3s ease;
+        }
+        .tq-polaroid:hover {
+            transform: rotate(0deg) scale(1.02);
+        }
     }
 
     .tq-polaroid-img {
-        width: 220px;
+        width: 13.75rem;
         aspect-ratio: 4 / 5;
         object-fit: cover;
         display: block;
     }
 
     .tq-polaroid-placeholder {
-        width: 220px;
+        width: 13.75rem;
         aspect-ratio: 4 / 5;
         background: #f0ece6;
         display: flex;
@@ -114,10 +120,11 @@
     .tq-polaroid-caption {
         display: block;
         text-align: center;
-        font-family: 'Dancing Script', 'Segoe Script', cursive;
-        font-size: 1rem;
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-size: 0.9rem;
         color: var(--bridal-dark);
-        margin-top: 10px;
+        margin-top: 0.625rem;
         opacity: 0.7;
     }
 
@@ -132,7 +139,7 @@
         font-size: 3.5rem;
         color: var(--bridal-gold);
         line-height: 1;
-        margin-bottom: 12px;
+        margin-bottom: 0.75rem;
         opacity: 0.35;
     }
 
@@ -141,7 +148,7 @@
         font-size: 0.95rem;
         color: var(--bridal-dark);
         font-style: italic;
-        margin-bottom: 24px;
+        margin-bottom: 1.5rem;
         line-height: 1.6;
     }
 
@@ -151,7 +158,7 @@
         font-weight: 500;
         letter-spacing: 2px;
         text-transform: uppercase;
-        margin-bottom: 4px;
+        margin-bottom: 0.25rem;
     }
 
     .tq-location {
@@ -163,22 +170,22 @@
     /* Swiper pagination — pill activo */
     .testimonial-pagination {
         position: relative;
-        margin-top: 28px;
+        margin-top: 1.75rem;
     }
 
     .testimonial-pagination .swiper-pagination-bullet {
         background: var(--bridal-gold);
         opacity: 0.3;
-        width: 8px;
-        height: 8px;
-        border-radius: 4px;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 0.25rem;
         transition: all 0.35s ease;
     }
 
     .testimonial-pagination .swiper-pagination-bullet-active {
         opacity: 1;
-        width: 28px;
-        border-radius: 4px;
+        width: 1.75rem;
+        border-radius: 0.25rem;
     }
 
     /* — Flechas de navegación — */
@@ -190,8 +197,8 @@
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        width: 44px;
-        height: 44px;
+        width: 2.75rem;
+        height: 2.75rem;
         border-radius: 50%;
         border: 1px solid var(--bridal-gold-light);
         background: rgba(255, 255, 255, 0.9);
@@ -214,25 +221,25 @@
     }
 
     .tq-nav-prev {
-        left: -22px;
+        left: -1.375rem;
     }
 
     .tq-nav-next {
-        right: -22px;
+        right: -1.375rem;
     }
 
     @media (max-width: 991px) {
         .testimonial-card {
             flex-direction: column;
             align-items: center;
-            padding: 20px 16px 24px;
-            gap: 16px;
+            padding: 1.25rem 1rem 1.5rem;
+            gap: 1rem;
         }
 
         .tq-polaroid {
-            padding: 8px 8px 28px;
+            padding: 0.5rem 0.5rem 1.75rem;
             width: 60%;
-            max-width: 200px;
+            max-width: 12.5rem;
         }
 
         .tq-polaroid-img,
@@ -247,26 +254,26 @@
 
         .tq-mark {
             font-size: 2rem;
-            margin-bottom: 6px;
+            margin-bottom: 0.375rem;
         }
 
         .tq-quote {
             font-size: 0.88rem;
-            margin-bottom: 14px;
+            margin-bottom: 0.875rem;
         }
 
         .tq-nav {
-            width: 36px;
-            height: 36px;
+            width: 2.25rem;
+            height: 2.25rem;
             font-size: 0.75rem;
         }
 
         .tq-nav-prev {
-            left: -8px;
+            left: -0.5rem;
         }
 
         .tq-nav-next {
-            right: -8px;
+            right: -0.5rem;
         }
     }
 </style>

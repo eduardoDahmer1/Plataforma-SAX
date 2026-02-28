@@ -14,6 +14,8 @@ class Attribute extends Model
         'header_image',
         'noimage',
         'logo_palace',
+        'logo_bridal',
+        'BannerHorizontal',
         'banner1',
         'banner2',
         'banner3',

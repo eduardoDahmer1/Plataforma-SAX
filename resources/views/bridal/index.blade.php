@@ -18,7 +18,7 @@
 
     {{-- Brand Ticker --}}
     @include('bridal.componentes.brand-ticker', [
-        'brands' => $bridal->brands ?? []
+        'brands' => $brands
     ])
 
     {{-- Promo Carousel --}}
@@ -45,23 +45,15 @@
 
     {{-- Instagram CTA --}}
     @include('bridal.componentes.instagram-cta', [
-        'instagramUrl' => $bridal->social_instagram ?? '#',
+        'instagramUrl' => $bridal->social_instagram ? 'https://instagram.com/' . ltrim($bridal->social_instagram, '@') : '#',
     ])
 
     
     {{-- Contacto / Sucursales --}}
     @include('bridal.componentes.contato', [
-        'sectionLabel'     => 'ENCUÉNTRANOS',
-        'sectionTitle'     => 'Nuestras Sucursales',
-        'asuncion_name'    => $bridal->branch_asuncion_name    ?? 'Asunción',
-        'asuncion_address' => $bridal->branch_asuncion_address ?? null,
-        'asuncion_phone'   => $bridal->branch_asuncion_phone   ?? null,
-        'asuncion_image'   => $bridal->branch_asuncion_image   ?? null,
-        'cde_name'         => $bridal->branch_cde_name         ?? 'Ciudad del Este',
-        'cde_address'      => $bridal->branch_cde_address      ?? null,
-        'cde_phone'        => $bridal->branch_cde_phone        ?? null,
-        'cde_image'        => $bridal->branch_cde_image        ?? null,
+    'locations' => $bridal->locations ?? [],
     ])
+
 
 @endsection
 

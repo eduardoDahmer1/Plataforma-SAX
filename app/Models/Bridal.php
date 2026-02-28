@@ -41,10 +41,7 @@ class Bridal extends Model
         'social_instagram',
 
         // Sección 08: Contacto / Sucursales
-        'branch_asuncion_name', 'branch_asuncion_address',
-        'branch_asuncion_phone', 'branch_asuncion_image',
-        'branch_cde_name', 'branch_cde_address',
-        'branch_cde_phone', 'branch_cde_image',
+        'locations', 
     ];
 
     protected $casts = [
@@ -53,6 +50,7 @@ class Bridal extends Model
         'promos'       => 'array',
         'services'     => 'array',
         'testimonials' => 'array',
+        'locations'    => 'array',
         'created_at'   => 'datetime',
         'updated_at'   => 'datetime',
     ];

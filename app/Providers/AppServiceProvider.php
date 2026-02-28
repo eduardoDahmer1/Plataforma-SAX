@@ -18,6 +18,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
+        view()->share('attributes', \App\Models\Attribute::first());
+
         // Carrega helper de moeda
         require_once app_path('Helpers/CurrencyHelper.php');
         
@@ -35,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
                 'webpImage' => $attribute?->header_image ?? null,
                 'banner1'   => $attribute?->banner1 ?? null,
                 'logo_palace'   => $attribute?->logo_palace ?? null,
+                'logo_bridal'   => $attribute?->logo_bridal ?? null,
+                'banner_horizontal'   => $attribute?->banner_horizontal ?? null,
                 'banner2'   => $attribute?->banner2 ?? null,
                 'banner3'   => $attribute?->banner3 ?? null,
                 'banner4'   => $attribute?->banner4 ?? null,

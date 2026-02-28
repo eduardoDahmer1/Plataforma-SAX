@@ -25,6 +25,12 @@
     }
 
     .footer-brand-v2 span { font-weight: 200; }
+
+    .footer-brand-v2 img { 
+        height: 2.5em;
+        width: auto;
+    }
+
     .footer-brand-v2:hover { color: var(--bridal-gold); }
 
     .footer-desc-v2 {
@@ -40,35 +46,23 @@
     }
 
     .footer-social-link {
-        font-size: 0.65rem;
-        font-weight: 700;
-        letter-spacing: 1.5px;
+        font-size: 1.2rem;
         color: var(--bridal-gold);
         text-decoration: none;
-        position: relative;
-        transition: opacity 0.3s;
+        transition: opacity 0.3s, transform 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .footer-social-link::after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 1px;
-        bottom: -2px;
-        left: 0;
-        background: var(--bridal-gold);
-        transition: width 0.3s;
-    }
-
-    .footer-social-link:hover::after { width: 100%; }
-    .footer-social-link:hover { opacity: 0.75; color: var(--bridal-gold); }
+    .footer-social-link:hover { opacity: 0.75; color: var(--bridal-gold); transform: translateY(-2px); }
 
     .footer-col-title {
         font-family: var(--font-sans);
         font-size: 0.65rem;
         text-transform: uppercase;
         letter-spacing: 3px;
-        font-weight: 700;
+        font-weight: 600;
         color: var(--bridal-dark);
         margin-bottom: 20px;
     }
@@ -146,7 +140,7 @@
 
     .footer-made-by span {
         color: var(--bridal-dark);
-        font-weight: 700;
+        font-weight: 600;
     }
 
     @media (max-width: 991px) {
@@ -162,16 +156,28 @@
 
             {{-- Columna 1: Marca + descripción + redes --}}
             <div class="col-lg-4 col-md-12">
-                <a href="/" class="footer-brand-v2">
-                    SAX <span>BRIDAL</span>
-                </a>
+            <a href="/" class="footer-brand-v2">
+             @if(isset($attributes) && $attributes->logo_bridal)
+                <img src="{{ asset('storage/uploads/' . $attributes->logo_bridal) }}" alt="SAX Bridal"
+                     loading="lazy" decoding="async">
+            @else
+                SAX <span>BRIDAL</span>
+            @endif
+            </a>
+    
                 <p class="footer-desc-v2">
                     {{ $bridal->descripcion ?? 'La mayor selección de alta costura nupcial, donde cada detalle es una invitación al sueño.' }}
                 </p>
                 <div class="footer-social-v2">
-                    <a href="{{ $bridal->instagram ?? 'https://www.instagram.com/saxbridal' }}" target="_blank" rel="noopener" class="footer-social-link">INSTAGRAM</a>
-                    <a href="#" class="footer-social-link">FACEBOOK</a>
-                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $bridal->whatsapp ?? '1234567890') }}" target="_blank" rel="noopener" class="footer-social-link">WHATSAPP</a>
+                    <a href="{{ $bridal->instagram ?? 'https://www.instagram.com/saxbridal' }}" target="_blank" rel="noopener" class="footer-social-link" title="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="footer-social-link" title="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $bridal->whatsapp ?? '1234567890') }}" target="_blank" rel="noopener" class="footer-social-link" title="WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
                 </div>
             </div>
 

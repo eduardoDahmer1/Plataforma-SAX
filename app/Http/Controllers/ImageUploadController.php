@@ -14,6 +14,8 @@ class ImageUploadController extends Controller
         $attribute = Attribute::first();
         $webpImage = $attribute?->header_image;
         $logoPalace = $attribute?->logo_palace;
+        $logoBridal = $attribute?->logo_bridal;
+        $bannerHorizontal = $attribute?->banner_horizontal;
         $noimage = $attribute?->noimage;
         $banners = [
             'banner1' => $attribute?->banner1,
@@ -29,7 +31,7 @@ class ImageUploadController extends Controller
         ];
 
         // Passando $attribute para que os novos ícones funcionem no seu array do Blade
-        return view('admin.admin', compact('webpImage', 'logoPalace', 'noimage', 'banners', 'attribute'));
+        return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal','bannerHorizontal', 'noimage', 'banners', 'attribute'));
     }
 
     private function processImageUpload($file, $filename)
@@ -123,6 +125,13 @@ class ImageUploadController extends Controller
     // --- Métodos Logo Palace ---
     public function uploadLogoPalace(Request $request) { return $this->uploadImage($request, 'logo_palace', 'logo_palace.webp'); }
     public function deleteLogoPalace() { return $this->deleteImage('logo_palace'); }
+
+    // --- Métodos Logo Bridal ---
+    public function uploadLogoBridal(Request $request) { return $this->uploadImage($request, 'logo_bridal', 'logo_bridal.webp'); }
+    public function deleteLogoBridal() { return $this->deleteImage('logo_bridal'); }
+
+    public function uploadBannerHorizontal(Request $request) { return $this->uploadImage($request, 'banner_horizontal', 'banner_horizontal.webp'); }
+    public function deleteBannerHorizontal() { return $this->deleteImage('banner_horizontal'); }
 
     // --- MÉTODOS PARA OS NOVOS ÍCONES ---
     public function uploadIconInfo(Request $request) { return $this->uploadImage($request, 'icon_info', 'icon_info.webp'); }

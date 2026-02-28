@@ -45,7 +45,7 @@
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="subcategory-tag">Subnivel #{{ $subcategory->id }}</span>
-                        <a href="{{ route('subcategories.show', $subcategory->id) }}" target="_blank" class="text-muted hover-dark transition-all">
+                        <a href="{{ route('subcategories.show', $subcategory->slug) }}" target="_blank" class="text-muted hover-dark transition-all">
                             <i class="fa fa-external-link-alt small"></i>
                         </a>
                     </div>

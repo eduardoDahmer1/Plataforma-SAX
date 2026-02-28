@@ -13,7 +13,7 @@ class Subcategory extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function categoriasfilhas()
+    public function categoriasfilhas() // <--- Aqui
     {
         return $this->hasMany(CategoriasFilhas::class);
     }
@@ -23,4 +23,3 @@ class Subcategory extends Model
         return $this->hasMany(Product::class);
     }
 }
-

@@ -6,24 +6,19 @@
             <h2 class="section-title">{!! $sectionTitle !!}</h2>
         </div>
 
-        @php
-            $stockServices = [
-                'https://images.unsplash.com/photo-1594552072238-b8a33785b6cd?w=800&q=80&fit=crop',
-                'https://images.unsplash.com/photo-1519741497674-4c45ba9ff7a2?w=800&q=80&fit=crop',
-                'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80&fit=crop',
-                'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&q=80&fit=crop',
-            ];
-        @endphp
-
         @foreach($services as $i => $service)
             <div class="sv-block {{ $i % 2 !== 0 ? 'sv-block--reverse' : '' }}" data-reveal="up" style="transition-delay: {{ $i * 0.08 }}s">
 
                 {{-- Imagen --}}
                 <div class="sv-img-col">
                     @if(!empty($service['image']))
-                        <img src="{{ asset('storage/' . $service['image']) }}" alt="{{ $service['title'] }}" class="sv-img">
+                        <img src="{{ asset('storage/' . $service['image']) }}" alt="{{ $service['title'] }}" class="sv-img"
+                             loading="lazy" decoding="async" >
                     @else
-                        <img src="{{ $stockServices[$i % count($stockServices)] }}" alt="{{ $service['title'] }}" class="sv-img">
+                        <div class="sv-img sv-img-placeholder">
+                            <i class="fas fa-concierge-bell"></i>
+                            <span>{{ $service['title'] }}</span>
+                        </div>
                     @endif
                 </div>
 
@@ -50,15 +45,15 @@
 <style>
     .sv-editorial {
         background: var(--bridal-white);
-        padding: 60px 0;
+        padding: 3.75rem 0;
     }
 
     .sv-block {
         display: grid;
         grid-template-columns: 2fr 3fr;
-        gap: 56px;
+        gap: 3.5rem;
         align-items: center;
-        margin-bottom: 64px;
+        margin-bottom: 4rem;
     }
 
     .sv-block:last-of-type {
@@ -85,22 +80,49 @@
         width: 100%;
         aspect-ratio: 4 / 5;
         height: auto;
-        max-height: 500px;
+        max-height: 31.25rem;
         object-fit: cover;
         display: block;
         border-radius: 4px;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18), 0 6px 16px rgba(0, 0, 0, 0.1);
         filter: brightness(1.02) saturate(1.05);
-        transition: transform 0.6s ease, box-shadow 0.6s ease;
     }
 
-    .sv-img:hover {
-        transform: scale(1.02);
-        box-shadow: 0 28px 60px rgba(0, 0, 0, 0.22), 0 8px 20px rgba(0, 0, 0, 0.12);
+    @media (hover: hover) {
+        .sv-img {
+            transition: transform 0.6s ease, box-shadow 0.6s ease;
+        }
+        .sv-img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 28px 60px rgba(0, 0, 0, 0.22), 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+    }
+
+    .sv-img-placeholder {
+        background: var(--bridal-cream);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        color: var(--bridal-gold-light);
+    }
+
+    .sv-img-placeholder i {
+        font-size: 2.5rem;
+        opacity: 0.5;
+    }
+
+    .sv-img-placeholder span {
+        font-family: var(--font-display);
+        font-size: 0.7rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        opacity: 0.6;
     }
 
     .sv-text-col {
-        padding: 12px 0;
+        padding: 0.75rem 0;
     }
 
     .sv-num {
@@ -109,7 +131,7 @@
         color: var(--bridal-gold);
         letter-spacing: 2px;
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: 0.25rem;
         opacity: 0.7;
     }
 
@@ -121,7 +143,7 @@
         letter-spacing: 3px;
         color: var(--bridal-dark);
         line-height: 1.3;
-        margin-bottom: 18px;
+        margin-bottom: 1.125rem;
     }
 
     .sv-desc {
@@ -139,14 +161,14 @@
 
     @media (max-width: 767px) {
         .sv-editorial {
-            padding: 48px 0;
+            padding: 3rem 0;
         }
 
         .sv-block,
         .sv-block--reverse {
             grid-template-columns: 1fr;
-            gap: 24px;
-            margin-bottom: 48px;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
         }
 
         .sv-block--reverse .sv-img-col,

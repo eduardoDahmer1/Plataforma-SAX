@@ -68,18 +68,16 @@ class BridalAdminController extends Controller
             'meta_description' => 'nullable|string',
 
             // Imágenes simples
-            'hero_image'            => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
-            'palace_image'          => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'branch_asuncion_image' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'branch_cde_image'      => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'hero_image'   => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
+            'palace_image' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
 
-            // Sucursales (texto)
-            'branch_asuncion_name'    => 'nullable|string|max:255',
-            'branch_asuncion_address' => 'nullable|string|max:255',
-            'branch_asuncion_phone'   => 'nullable|string|max:255',
-            'branch_cde_name'         => 'nullable|string|max:255',
-            'branch_cde_address'      => 'nullable|string|max:255',
-            'branch_cde_phone'        => 'nullable|string|max:255',
+            // Locations (N dinámico, con imagen)
+            'locations_items'                => 'nullable|array',
+            'locations_items.*.name'         => 'nullable|string|max:255',
+            'locations_items.*.address'      => 'nullable|string|max:255',
+            'locations_items.*.phone'        => 'nullable|string|max:255',
+            'locations_items.*.image_path'   => 'nullable|string',
+            'locations_items.*.image'        => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
 
             // Services (4 bloques fijos, con imagen)
             'services_items'               => 'nullable|array|max:4',
@@ -113,7 +111,7 @@ class BridalAdminController extends Controller
         ]);
 
         // 1. Procesar imágenes individuales (con conversión WebP)
-        $fileFields = ['hero_image', 'palace_image', 'branch_asuncion_image', 'branch_cde_image'];
+        $fileFields = ['hero_image', 'palace_image'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
                 if ($bridal->$field) {
@@ -193,7 +191,38 @@ class BridalAdminController extends Controller
         }
         unset($data['brands_items']);
 
-        // 5. Construir JSON de testimonials (4 bloques fijos, con foto opcional)
+        // 5. Construir JSON de locations (N dinámico, con imagen)
+        if ($request->has('locations_items')) {
+            $locations = [];    
+            foreach ($request->input('locations_items', []) as $index => $item) {
+                $imagePath = $item['image_path'] ?? null;
+                if ($request->hasFile("locations_items.$index.image")) {
+                    $imagePath = $this->convertToWebp(
+                        $request->file("locations_items.$index.image"),
+                        'bridal/locations'
+                    );
+                }
+                if (!empty($item['name'])) {
+                    $phone = $item['phone'] ?? null;
+                    $whatsappUrl = null;
+                    if ($phone) {
+                        $clean = preg_replace('/[^0-9]/', '', $phone);
+                        $whatsappUrl = 'https://wa.me/' . $clean;
+                    }
+
+                    $locations[] = [
+                        'name'         => $item['name'],
+                        'address'      => $item['address'] ?? '',
+                        'whatsapp_url' => $whatsappUrl,
+                        'image'        => $imagePath,
+                    ];
+                }
+            }
+            $data['locations'] = $locations;
+        }
+        unset($data['locations_items']);
+
+        // 6. Construir JSON de testimonials (4 bloques fijos, con foto opcional)
         if ($request->has('testimonials_items')) {
             $testimonials = [];
             foreach ($request->input('testimonials_items', []) as $index => $item) {

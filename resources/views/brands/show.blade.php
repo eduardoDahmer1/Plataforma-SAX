@@ -2,161 +2,157 @@
 
 @section('content')
     <div class="brand-detail-wrapper">
-        {{-- Header da Marca --}}
-        <div class="brand-header pt-4">
+        
+        {{-- 1. HEADER HERO (Banner Horizontal - Edge to Edge) --}}
+        @if ($brand->internal_banner && Storage::disk('public')->exists($brand->internal_banner))
+            <div class="brand-hero-fullwidth">
+                <img src="{{ Storage::url($brand->internal_banner) }}" class="hero-img-render" alt="{{ $brand->name }}">
+                <div class="hero-overlay-soft"></div>
+            </div>
+        @endif
+
+        {{-- 2. ILHA DA LOGO (Transição Minimalista) --}}
+        <div class="brand-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
-                <a href="{{ route('brands.index') }}" class="back-link">
-                    <i class="fas fa-chevron-left me-1"></i> VOLVER
+                <a href="{{ route('brands.index') }}" class="back-link-minimal">
+                    <i class="fas fa-chevron-left me-1"></i> VOLVER A MARCAS
                 </a>
-                
-                {{-- Logo Centralizada --}}
-                <div class="brand-logo-main mt-3 mb-4">
+                <div class="brand-logo-container mt-3">
                     @if ($brand->image && Storage::disk('public')->exists($brand->image))
-                        <img src="{{ Storage::url($brand->image) }}" alt="{{ $brand->name }}" class="main-logo-img">
+                        <img src="{{ Storage::url($brand->image) }}" alt="{{ $brand->name }}" class="brand-main-logo">
                     @else
-                        <h1 class="sax-brand-title">{{ $brand->name }}</h1>
+                        <h1 class="brand-name-text">{{ $brand->name }}</h1>
                     @endif
                 </div>
             </div>
-
-            {{-- Banner 100% Width e Height Ajustado --}}
-            @if($brand->internal_banner || $brand->banner)
-                <div class="brand-banner-fullwidth">
-                    {{-- Desktop: Prioriza Internal Banner --}}
-                    <div class="d-none d-md-block">
-                        <img src="{{ Storage::url($brand->internal_banner ?? $brand->banner) }}" 
-                             class="banner-img-render" alt="{{ $brand->name }}">
-                    </div>
-
-                    {{-- Mobile: Prioriza Banner Normal --}}
-                    <div class="d-block d-md-none">
-                        <img src="{{ Storage::url($brand->banner ?? $brand->internal_banner) }}" 
-                             class="banner-img-render" alt="{{ $brand->name }}">
-                    </div>
-                </div>
-            @endif
         </div>
 
-        {{-- Seção de Produtos --}}
-        <div class="container-fluid px-1 py-4">
-            @if ($products->count())
-                <div class="row g-1">
-                    @foreach ($products as $item)
-                        <div class="col-6 col-md-4 col-lg-2">
-                            <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
-                                <div class="card h-100 border-0 rounded-0 jw-product-card">
-                                    
-                                    <div class="jw-img-container position-relative">
-                                        <img src="{{ $item->photo_url }}" 
-                                             class="card-img-top img-fluid rounded-0" 
-                                             alt="{{ $item->external_name }}">
-
-                                        <div class="position-absolute top-0 end-0 p-3">
-                                            @auth
-                                                <x-product-favorite-button :item="$item" />
-                                            @endauth
-                                        </div>
-                                    </div>
-
-                                    <div class="card-body px-3 py-4">
-                                        <div class="jw-brand fw-bold text-uppercase mb-1">
-                                            {{ $brand->name }}
-                                        </div>
-                                        <div class="jw-product-name text-muted mb-2">
-                                            {{ Str::limit($item->external_name, 35) }}
-                                        </div>
-                                        <div class="jw-price fw-bold text-dark">
-                                            {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
+        {{-- 3. ÁREA DE CONTEÚDO (Banner Lateral + Grid) --}}
+        <div class="container-fluid px-1 px-md-4 py-4">
+            <div class="row g-1">
+                
+                {{-- BANNER LATERAL (Estilo 515x1255 que você pediu) --}}
+                @if($brand->banner && Storage::disk('public')->exists($brand->banner))
+                    <div class="col-12 col-lg-3 d-none d-lg-block">
+                        <div class="sticky-banner-lateral">
+                            <img src="{{ Storage::url($brand->banner) }}" class="img-fluid banner-v-render" alt="Promo {{ $brand->name }}">
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endif
 
-                <div class="d-flex justify-content-center mt-5">
-                    {{ $products->links() }}
+                {{-- GRID DE PRODUTOS --}}
+                <div class="col-12 {{ $brand->banner ? 'col-lg-9' : '' }}">
+                    <div class="row g-1">
+                        @foreach ($products as $item)
+                            <div class="col-6 col-md-4 {{ $brand->banner ? 'col-xl-3' : 'col-xl-2' }}">
+                                <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
+                                    <div class="card h-100 border-0 rounded-0 jw-product-card bg-light">
+                                        <div class="jw-img-container position-relative">
+                                            <img src="{{ $item->photo_url }}" class="card-img-top img-fluid" alt="{{ $item->external_name }}">
+                                            <div class="position-absolute top-0 end-0 p-2">
+                                                @auth <x-product-favorite-button :item="$item" /> @endauth
+                                            </div>
+                                        </div>
+                                        <div class="card-body px-2 py-3 text-center bg-white">
+                                            <div class="jw-brand fw-bold text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 1px;">
+                                                {{ $brand->name }}
+                                            </div>
+                                            <div class="jw-product-name text-muted small mb-2 text-truncate">
+                                                {{ $item->external_name }}
+                                            </div>
+                                            <div class="jw-price fw-bold text-dark small">
+                                                {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Paginação --}}
+                    <div class="d-flex justify-content-center mt-5">
+                        {{ $products->links() }}
+                    </div>
                 </div>
-            @else
-                <div class="text-center py-5">
-                    <p class="text-muted">No se encontraron productos para esta marca.</p>
-                </div>
-            @endif
+            </div>
         </div>
     </div>
 @endsection
-
 <style>
-    .brand-detail-wrapper { background-color: #fff; overflow-x: hidden; }
+    .brand-detail-wrapper { background-color: #fff; }
 
-    /* Logo Ajustes */
-    .main-logo-img { max-height: 7em; width: auto; object-fit: contain; }
-    .back-link {
-        color: #888;
+    /* 1. Banner Horizontal (Edge to Edge) */
+    .brand-hero-fullwidth {
+        width: 100vw;
+        height: 45vh;
+        min-height: 300px;
+        position: relative;
+        overflow: hidden;
+        margin-left: calc(-50vw + 50%);
+    }
+    .hero-img-render {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .hero-overlay-soft {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.05);
+    }
+
+    /* 2. Identidade da Marca */
+    .brand-main-logo {
+        max-height: 60px;
+        width: auto;
+        object-fit: contain;
+    }
+    .back-link-minimal {
+        color: #999;
         font-size: 0.65rem;
         letter-spacing: 2px;
         text-decoration: none;
         text-transform: uppercase;
     }
-
-    /* BANNER AJUSTADO: 100% largura e Altura Controlada */
-    .brand-banner-fullwidth {
-        width: 100% !important;
-        margin: 0;
-        padding: 0;
-        line-height: 0; /* Remove espaços fantasmas abaixo da imagem */
+    .brand-name-text {
+        font-weight: 300;
+        text-transform: uppercase;
+        letter-spacing: 4px;
     }
 
-    .banner-img-render {
-        width: 100% !important;
-        height: 350px !important; /* Ajuste aqui a altura desejada para desktop */
-        object-fit: cover; /* Faz a imagem preencher o espaço sem esticar */
-        object-position: center; /* Centraliza o foco da imagem */
-        display: block;
+    /* 3. Banner Lateral (Vertical) */
+    .sticky-banner-lateral {
+        position: sticky;
+        top: 20px; /* Faz o banner lateral acompanhar o scroll */
+        height: fit-content;
+    }
+    .banner-v-render {
+        width: 100%;
+        object-fit: cover;
+        border: 1px solid #f0f0f0;
     }
 
-    /* Grid de Produtos estilo "Colado" */
-    .container-fluid {
-        padding-left: 2px !important;
-        padding-right: 2px !important;
-    }
-
+    /* 4. Grid de Produtos (Igual Categorias) */
     .jw-product-card {
-        background-color: #f8f8f8 !important;
-        transition: opacity 0.3s;
+        transition: opacity 0.3s ease;
+        border: 1px solid #f8f8f8 !important;
     }
-
-    .jw-product-card:hover { opacity: 0.9; }
-
+    .jw-product-card:hover { opacity: 0.85; }
+    
     .jw-img-container {
         aspect-ratio: 3 / 4;
-        background-color: #f8f8f8;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
+        background-color: #fcfcfc;
     }
-
     .jw-img-container img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
 
-    /* Tipografia */
-    .jw-brand { font-size: 0.7rem; letter-spacing: 1px; color: #000; }
-    .jw-product-name { font-size: 0.75rem; color: #666 !important; }
-    .jw-price { font-size: 0.85rem; color: #000; margin-top: 4px; }
-
-    /* Responsividade para Mobile */
-    @media (max-width: 768px) {
-        .banner-img-render {
-            height: 200px !important; /* Altura menor no celular */
-        }
-        
-        .g-1 > div {
-            padding: 1px !important; /* Espaçamento mínimo entre cards no mobile */
-        }
+    /* Ajustes Mobile */
+    @media (max-width: 991px) {
+        .brand-hero-fullwidth { height: 30vh; }
+        .col-lg-3 { display: none; } /* Esconde o banner vertical no mobile para não poluir */
     }
 </style>

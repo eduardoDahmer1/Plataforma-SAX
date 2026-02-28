@@ -1,6 +1,6 @@
 {{-- SAX Bridal — Vendor Scripts & Custom JS --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -49,6 +49,27 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             pagination: {
                 el: '.promo-pagination',
+                clickable: true,
+            },
+            breakpoints: {
+                768: { slidesPerView: 2, spaceBetween: 24 },
+                1200: { slidesPerView: 3, spaceBetween: 30 },
+            }
+        });
+    }
+
+    // --- Swiper: Locations Carousel ---
+    if (document.querySelector('.locationSwiper')) {
+        new Swiper('.locationSwiper', {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: '.location-pagination',
                 clickable: true,
             },
             breakpoints: {

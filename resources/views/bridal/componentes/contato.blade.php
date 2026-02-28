@@ -1,192 +1,173 @@
-{{-- SAX Bridal — Sucursales / Contacto --}}
-<section class="branches-section section-padding" id="contact">
+{{-- SAX Bridal — Sucursales / Contacto (Swiper Carousel) --}}
+<section class="locations-section section-padding" id="contact">
     <div class="container">
 
         <div class="text-center mb-5" data-reveal="up">
-            <span class="title-gold">{{ $sectionLabel }}</span>
-            <h2 class="section-title">{!! $sectionTitle !!}</h2>
+            <span class="title-gold">ENCUÉNTRANOS</span>
+            <h2 class="section-title">Nuestras Sucursales</h2>
         </div>
 
-        <div class="row g-4 justify-content-center">
-
-            {{-- Tarjeta Ciudad del Este --}}
-            <div class="col-12 col-md-6 col-lg-5" data-reveal="right">
-                <div class="branch-card">
-                    <div class="branch-img-wrap">
-                        @if(!empty($cde_image))
-                            <img src="{{ asset('storage/' . $cde_image) }}" alt="Sucursal {{ $cde_name }}" class="branch-img">
-                        @else
-                            <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80&fit=crop" alt="Sucursal {{ $cde_name }}" class="branch-img">
-                        @endif
+        <div class="swiper locationSwiper">
+            <div class="swiper-wrapper">
+                @foreach($locations as $location)
+                    <div class="swiper-slide">
+                        <div class="location-card" data-reveal="up">
+                            <div class="location-img-wrap">
+                                @if(!empty($location['image']))
+                                    <img src="{{ asset('storage/' . $location['image']) }}"
+                                         alt="Sucursal {{ $location['name'] }}"
+                                         class="location-img"
+                                         loading="lazy" decoding="async">
+                                @endif
+                            </div>
+                            <div class="location-body">
+                                <h3 class="location-name">{{ $location['name'] }}</h3>
+                                <div class="location-divider"></div>
+                                @if(!empty($location['address']))
+                                    <p class="location-info">
+                                        <i class="fas fa-map-marker-alt location-icon"></i>
+                                        {{ $location['address'] }}
+                                    </p>
+                                @endif
+                                @if(!empty($location['whatsapp_url']))
+                                    <a href="{{ $location['whatsapp_url'] }}" target="_blank" rel="noopener" class="location-wa-btn">
+                                        <i class="fab fa-whatsapp"></i>
+                                        Escribinos por WhatsApp
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    <div class="branch-body">
-                        <h3 class="branch-name">{{ $cde_name }}</h3>
-                        <div class="branch-divider"></div>
-                        @if(!empty($cde_address))
-                        <p class="branch-info">
-                            <i class="fas fa-map-marker-alt branch-icon"></i>
-                            {{ $cde_address }}
-                        </p>
-                        @endif
-                        @if(!empty($cde_phone))
-                        <p class="branch-info">
-                            <i class="fas fa-phone branch-icon"></i>
-                            {{ $cde_phone }}
-                        </p>
-                        @endif
-                        <a href="{{ route('contact.form') }}" class="btn-sax branch-btn">
-                            Ir a Contacto
-                        </a>
-                    </div>
-                </div>
+                @endforeach
             </div>
-
-            {{-- Tarjeta Asunción --}}
-            <div class="col-12 col-md-6 col-lg-5" data-reveal="left">
-                <div class="branch-card">
-                    <div class="branch-img-wrap">
-                        @if(!empty($asuncion_image))
-                            <img src="{{ asset('storage/' . $asuncion_image) }}" alt="Sucursal {{ $asuncion_name }}" class="branch-img">
-                        @else
-                            <img src="https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800&q=80&fit=crop" alt="Sucursal {{ $asuncion_name }}" class="branch-img">
-                        @endif
-                    </div>
-                    <div class="branch-body">
-                        <h3 class="branch-name">{{ $asuncion_name }}</h3>
-                        <div class="branch-divider"></div>
-                        @if(!empty($asuncion_address))
-                        <p class="branch-info">
-                            <i class="fas fa-map-marker-alt branch-icon"></i>
-                            {{ $asuncion_address }}
-                        </p>
-                        @endif
-                        @if(!empty($asuncion_phone))
-                        <p class="branch-info">
-                            <i class="fas fa-phone branch-icon"></i>
-                            {{ $asuncion_phone }}
-                        </p>
-                        @endif
-                        <a href="{{ route('contact.form') }}" class="btn-sax branch-btn">
-                            Ir a Contacto
-                        </a>
-                    </div>
-                </div>
-            </div>
-
+            <div class="location-pagination swiper-pagination mt-4"></div>
         </div>
+
     </div>
 </section>
 
 @push('styles')
 <style>
-    .branches-section {
+    .locations-section {
         background: var(--bridal-white);
     }
 
-    .branch-card {
-        display: flex;
-        flex-direction: column;
-        border: 1px solid #f0ece6;
-        height: 100%;
-        transition: box-shadow 0.4s ease, transform 0.4s ease;
-    }
-
-    .branch-card:hover {
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.07);
-        transform: translateY(-4px);
-    }
-
-    /* Imagen fachada */
-    .branch-img-wrap {
-        width: 100%;
-        height: 280px;
+    .location-card {
+        background: var(--bridal-cream);
+        border-radius: 2px;
         overflow: hidden;
-        flex-shrink: 0;
     }
 
-    .branch-img {
+    @media (hover: hover) {
+        .location-card {
+            transition: transform 0.4s ease;
+        }
+        .location-card:hover {
+            transform: translateY(-6px);
+        }
+    }
+
+    .location-img-wrap {
+        overflow: hidden;
+        aspect-ratio: 4 / 5;
+    }
+
+    .location-img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        display: block;
-        transition: transform 0.7s ease;
     }
 
-    .branch-card:hover .branch-img {
-        transform: scale(1.04);
+    @media (hover: hover) {
+        .location-img {
+            transition: transform 1.2s ease;
+        }
+        .location-card:hover .location-img {
+            transform: scale(1.06);
+        }
     }
 
-    .branch-img-placeholder {
-        width: 100%;
-        height: 100%;
-        background: var(--bridal-cream);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .branch-placeholder-name {
-        font-family: var(--font-display);
-        font-size: 1.4rem;
-        letter-spacing: 4px;
-        color: var(--bridal-gold-light);
-        text-transform: uppercase;
-    }
-
-    /* Cuerpo de la tarjeta */
-    .branch-body {
-        padding: 32px 28px 28px;
+    .location-body {
+        padding: 1.75rem 1.5rem 2rem;
+        text-align: center;
         display: flex;
         flex-direction: column;
-        flex: 1;
+        align-items: center;
     }
 
-    .branch-name {
+    .location-name {
         font-family: var(--font-serif);
-        font-size: 1.5rem;
-        font-weight: 400;
+        font-size: 1.3rem;
         color: var(--bridal-dark);
-        margin-bottom: 12px;
+        margin-bottom: 0.5rem;
+        font-weight: 400;
     }
 
-    .branch-divider {
-        width: 30px;
+    .location-divider {
+        width: 1.875rem;
         height: 2px;
         background: var(--bridal-gold);
-        margin-bottom: 20px;
+        margin-bottom: 1.25rem;
     }
 
-    .branch-info {
+    .location-info {
         font-size: 0.85rem;
         color: #888;
-        margin-bottom: 10px;
+        margin-bottom: 0.625rem;
         display: flex;
         align-items: flex-start;
-        gap: 10px;
+        gap: 0.35rem;
         line-height: 1.6;
     }
 
-    .branch-icon {
+    .location-icon {
         color: var(--bridal-gold);
-        margin-top: 3px;
+        margin-top: 0.1875rem;
         flex-shrink: 0;
         font-size: 0.8rem;
     }
 
-    .branch-btn {
-        margin-top: auto;
-        padding-top: 20px;
-        align-self: flex-start;
+    .location-wa-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+        padding: 0.75rem 1.75rem;
+        background: var(--bridal-gold);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        text-decoration: none;
+        border-radius: 2px;
+        transition: background 0.3s ease, transform 0.3s ease;
     }
 
-    @media (max-width: 767px) {
-        .branch-img-wrap {
-            height: 220px;
-        }
+    .location-wa-btn i {
+        font-size: 1.1rem;
+    }
 
-        .branch-body {
-            padding: 24px 20px 20px;
-        }
+    .location-wa-btn:hover {
+        background: var(--bridal-dark);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    /* Pagination — mismo estilo que promos */
+    .location-pagination .swiper-pagination-bullet {
+        background: var(--bridal-gold);
+        opacity: 0.3;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 0.25rem;
+        transition: all 0.35s ease;
+    }
+
+    .location-pagination .swiper-pagination-bullet-active {
+        opacity: 1;
+        width: 1.75rem;
+        border-radius: 0.25rem;
     }
 </style>
 @endpush

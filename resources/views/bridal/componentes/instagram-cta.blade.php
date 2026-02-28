@@ -19,12 +19,13 @@
     }
 
     .instagram-cta-text {
-        font-family: var(--font-serif);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 300;
         font-size: 0.95rem;
         color: var(--bridal-dark);
         font-style: italic;
         line-height: 1.6;
-        margin-bottom: 24px;
+        margin-bottom: 1.5rem;
         opacity: 0.8;
     }
 

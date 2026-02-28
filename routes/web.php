@@ -241,6 +241,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('/logopalace/upload', [ImageUploadController::class, 'uploadLogoPalace'])->name('logopalace.upload');
     Route::delete('logopalace/delete', [ImageUploadController::class, 'deleteLogoPalace'])->name('logopalace.delete');
 
+    Route::post('/logobridal/upload', [ImageUploadController::class, 'uploadLogoBridal'])->name('logobridal.upload');
+    Route::delete('logobridal/delete', [ImageUploadController::class, 'deleteLogoBridal'])->name('logobridal.delete');
+
+    Route::post('/bannerhorizontal/upload', [ImageUploadController::class, 'uploadBannerHorizontal'])->name('bannerhorizontal.upload');
+    Route::delete('/bannerhorizontal/delete', [ImageUploadController::class, 'deleteBannerHorizontal'])->name('bannerhorizontal.delete');
+
     Route::resource('products', ProductControllerAdmin::class);
     Route::delete('products/{id}/photo', [ProductControllerAdmin::class, 'deletePhoto'])->name('products.deletePhoto');
     Route::delete('products/{id}/gallery/{image}', [ProductControllerAdmin::class, 'deleteGalleryImage'])->name('products.deleteGalleryImage');

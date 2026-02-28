@@ -1,158 +1,139 @@
 @extends('layout.layout')
 
 @section('content')
-    <div class="container py-4">
+    <div class="category-detail-wrapper">
 
-        {{-- Voltar --}}
-        <a href="{{ route('subcategories.index') }}" class="btn btn-outline-secondary mb-3">
-            <i class="fas fa-arrow-left me-1"></i> Voltar
-        </a>
+        @php
+            $bannerUrl = null;
+            if ($subcategory->banner && Storage::disk('public')->exists($subcategory->banner)) {
+                $bannerUrl = Storage::url($subcategory->banner);
+            } elseif (!empty($banner_horizontal)) {
+                $bannerUrl = asset('img/' . $banner_horizontal);
+            }
+        @endphp
 
-        {{-- Título --}}
-        <div class="text-center mb-4">
-            <h1 class="fw-bold">{{ $subcategory->name }}</h1>
-            <p class="text-muted">
-                ID: {{ $subcategory->id }} | Slug: {{ $subcategory->slug ?? 'N/A' }}
-            </p>
-        </div>
-
-        {{-- Foto da Subcategoria --}}
-        <div class="text-center mb-4">
-            <div class="ratio ratio-16x9 mx-auto" style="max-width: 600px;">
-                @if ($subcategory->photo && Storage::disk('public')->exists($subcategory->photo))
-                    <img src="{{ Storage::url($subcategory->photo) }}" alt="{{ $subcategory->name }}"
-                        class="img-fluid rounded-3 shadow-sm object-fit-contain">
-                @else
-                    <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Imagem padrão"
-                        class="img-fluid rounded-3 shadow-sm object-fit-contain">
-                @endif
-            </div>
-        </div>
-
-        {{-- Infos --}}
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body">
-                <p><strong>Categoria Pai:</strong> {{ $subcategory->category->name ?? 'N/A' }}</p>
-
-                @if ($subcategory->categoriasfilhas && $subcategory->categoriasfilhas->count())
-                    <p><strong>Categorias Filhas:</strong></p>
-                    <ul>
-                        @foreach ($subcategory->categoriasfilhas as $child)
-                            <li>{{ $child->name ?? $child->slug }}</li>
-                        @endforeach
-                    </ul>
-                @endif
-            </div>
-        </div>
-
-        {{-- Produtos --}}
-        @if ($subcategory->products && $subcategory->products->count())
-            <h3 class="mb-3 fw-semibold">Produtos desta Subcategoria</h3>
-            <div class="row">
-                @foreach ($subcategory->products as $product)
-                    <div class="col-6 col-md-4 col-lg-3 mb-4">
-                        <div class="card h-100 shadow-sm border-0 position-relative">
-
-                            {{-- Imagem --}}
-                            <div class="card-img-top text-center p-3">
-                                @if ($product->photo && Storage::disk('public')->exists($product->photo))
-                                    <img src="{{ Storage::url($product->photo) }}" alt="{{ $product->name }}"
-                                        class="img-fluid rounded-3" style="max-height: 150px; object-fit: scale-down;">
-                                @else
-                                    <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem"
-                                        class="img-fluid rounded-3" style="max-height: 150px; object-fit: scale-down;">
-                                @endif
-                            </div>
-
-                            @auth
-                                @php
-                                    // Pega a quantidade do produto específico no carrinho
-                                    $currentQty = $cartItems[$product->id] ?? 0;
-                                @endphp
-
-                                <div class="mb-2">
-                                    <span class="badge bg-info">No carrinho: {{ $currentQty }}</span>
-                                </div>
-
-                            @endauth
-
-                            <div class="card-body d-flex flex-column">
-                                {{-- Nome --}}
-                                <h6 class="card-title mb-2">
-                                    <a href="{{ route('products.show', $product->id) }}" class="text-decoration-none">
-                                        <i class="fas fa-tag me-1"></i> {{ $product->name ?? $product->slug }}
-                                    </a>
-                                </h6>
-
-                                {{-- Preço --}}
-                                <p class="text-success fw-semibold mb-1">
-                                    {{ isset($product->price) ? currency_format($product->price) : 'Não informado' }}
-                                </p>
-
-                                {{-- Estoque --}}
-                                <p class="mb-2">
-                                    @if ($product->stock > 0)
-                                        <span class="badge bg-success"><i class="fas fa-box me-1"></i>
-                                            {{ $product->stock }} em estoque
-                                        </span>
-                                    @else
-                                        <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> Sem
-                                            estoque</span>
-                                    @endif
-                                </p>
-
-                                {{-- Botões --}}
-                                <div class="mt-auto d-flex flex-column gap-2">
-                                    <a href="{{ route('products.show', $product->id) }}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye me-1"></i> Ver Produto
-                                    </a>
-
-                                    @auth
-                                        @php $currentQty = $cartItems[$product->id] ?? 0; @endphp
-
-                                        @if (in_array(auth()->user()->user_type, [0, 1, 2]))
-                                            <form action="{{ route('cart.addAndCheckout') }}" method="POST" class="d-flex">
-                                                @csrf
-                                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                                <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
-                                                    <i class="fas fa-bolt me-1"></i> Comprar Agora
-                                                </button>
-                                            </form>
-                                        @endif
-                                    @else
-                                        <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal"
-                                            data-bs-target="#loginModal">
-                                            <i class="fas fa-sign-in-alt me-1"></i> Login para Favoritar
-                                        </a>
-                                    @endauth
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
+        @if ($bannerUrl)
+            <div class="category-hero-fullwidth">
+                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $subcategory->name }}">
+                <div class="hero-overlay-soft"></div>
             </div>
         @else
-            <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle me-1"></i> Nenhum produto encontrado nesta subcategoria.
-            </div>
+            <div class="py-3"></div>
         @endif
 
-        {{-- Banner --}}
-        @if ($subcategory->banner && Storage::disk('public')->exists($subcategory->banner))
-            <div class="text-center mt-4">
-                <div class="ratio ratio-21x9 mx-auto" style="max-width: 900px;">
-                    <img src="{{ Storage::url($subcategory->banner) }}" alt="Banner da Subcategoria"
-                        class="img-fluid rounded-3 shadow-sm object-fit-cover">
+        {{-- 2. ILHA DE IDENTIDADE --}}
+        <div class="category-identity-section py-4 border-bottom bg-white">
+            <div class="container text-center">
+                <a href="{{ route('subcategories.index') }}" class="back-link-minimal">
+                    <i class="fas fa-chevron-left me-1"></i> VOLVER A SUBCATEGORIAS
+                </a>
+                <div class="category-logo-container mt-3">
+                    @if ($subcategory->photo && Storage::disk('public')->exists($subcategory->photo))
+                        <img src="{{ Storage::url($subcategory->photo) }}" alt="{{ $subcategory->name }}"
+                            class="category-main-logo">
+                    @else
+                        <h1 class="category-name-text">{{ $subcategory->name }}</h1>
+                    @endif
                 </div>
             </div>
-        @endif
-
-        {{-- Voltar --}}
-        <div class="text-center mt-4">
-            <a href="{{ route('subcategories.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Voltar
-            </a>
         </div>
 
+        {{-- 3. ÁREA DE CONTEÚDO --}}
+        <div class="container-fluid px-1 px-md-4 py-4 bg-white">
+            <div class="row g-1">
+
+                {{-- BANNER LATERAL --}}
+                @if (isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image))
+                    <div class="col-12 col-lg-3 d-none d-lg-block">
+                        <div class="sticky-banner-lateral">
+                            <img src="{{ Storage::url($subcategory->image) }}" class="img-fluid banner-v-render"
+                                alt="{{ $subcategory->name }} Promo">
+                        </div>
+                    </div>
+                @endif
+
+                {{-- GRID DE PRODUTOS --}}
+                <div class="col-12 {{ isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image) ? 'col-lg-9' : '' }}">
+                    @if ($products->count())
+                        <div class="row g-1">
+                            @foreach ($products as $item)
+                                <div class="col-6 col-md-4 {{ isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image) ? 'col-xl-3' : 'col-xl-2' }}">
+                                    <a href="{{ route('produto.show', $item->slug ?? $item->id) }}"
+                                        class="text-decoration-none jw-product-link">
+                                        <div class="card h-100 border-0 rounded-0 jw-product-card bg-transparent">
+
+                                            <div class="jw-img-container position-relative bg-light">
+                                                @if($item->photo && Storage::disk('public')->exists($item->photo))
+                                                    <img src="{{ Storage::url($item->photo) }}" class="card-img-top img-fluid rounded-0" alt="{{ $item->name }}">
+                                                @else
+                                                    <img src="{{ asset('storage/uploads/noimage.webp') }}" class="card-img-top img-fluid rounded-0" alt="No image">
+                                                @endif
+                                                
+                                                <div class="position-absolute top-0 end-0 p-3 z-index-2">
+                                                    @auth <x-product-favorite-button :item="$item" /> @endauth
+                                                </div>
+                                            </div>
+
+                                            <div class="card-body px-1 py-4 text-center">
+                                                <div class="jw-brand fw-bold text-uppercase mb-1">
+                                                    {{ $item->brand->name ?? 'EXCLUSIVO' }}
+                                                </div>
+                                                <div class="jw-product-name text-muted mb-2">
+                                                    {{ Str::limit($item->name, 40) }}
+                                                </div>
+                                                <div class="jw-price fw-bold text-dark">
+                                                    {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- PAGINAÇÃO --}}
+                        <div class="d-flex justify-content-center mt-5 pagination-sax">
+                            {{ $products->links() }}
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <p class="text-muted text-uppercase tracking-widest small">No se encontraron productos en esta subcategoría.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
+
+<style>
+    .category-detail-wrapper { background-color: #fff; overflow-x: hidden; }
+    .tracking-widest { letter-spacing: 0.2em; }
+    .category-hero-fullwidth { width: 100vw; height: 45vh; min-height: 300px; position: relative; overflow: hidden; margin-left: calc(-50vw + 50%); }
+    .hero-img-render { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+    .hero-overlay-soft { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.03); }
+    .category-main-logo { max-height: 60px; width: auto; object-fit: contain; }
+    .category-name-text { font-weight: 300; text-transform: uppercase; letter-spacing: 5px; color: #000; }
+    .back-link-minimal { color: #999; font-size: 0.65rem; letter-spacing: 2px; text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+    .back-link-minimal:hover { color: #000; }
+    .sticky-banner-lateral { position: sticky; top: 100px; height: fit-content; padding-right: 10px; }
+    .banner-v-render { width: 100%; height: auto; object-fit: cover; border: 1px solid #f0f0f0; }
+    .g-1 { margin-right: -4px; margin-left: -4px; }
+    .g-1 > [class*="col-"] { padding-right: 4px; padding-left: 4px; margin-bottom: 10px; }
+    .jw-product-card { transition: opacity 0.3s ease; }
+    .jw-product-link:hover .jw-product-card { opacity: 0.8; }
+    .jw-img-container { aspect-ratio: 3 / 4; background-color: #fcfcfc; overflow: hidden; }
+    .jw-img-container img { width: 100%; height: 100%; object-fit: cover; }
+    .jw-brand { font-size: 0.7rem; letter-spacing: 1px; color: #000; }
+    .jw-product-name { font-size: 0.75rem; color: #777 !important; height: 2.2rem; overflow: hidden; }
+    .jw-price { font-size: 0.85rem; color: #000; }
+    
+    .pagination-sax .page-link { color: #000; border: none; background: transparent; font-size: 0.8rem; padding: 5px 10px; }
+    .pagination-sax .page-item.active .page-link { background: none; text-decoration: underline; font-weight: bold; color: #000; }
+    .pagination-sax .page-item.disabled .page-link { color: #ccc; }
+
+    @media (max-width: 991px) {
+        .category-hero-fullwidth { height: 35vh; }
+        .col-lg-3 { display: none; }
+    }
+</style>

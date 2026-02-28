@@ -2,20 +2,19 @@
 
 @section('content')
 @php
-    $brands       = is_array($bridal->brands)       ? $bridal->brands       : (json_decode($bridal->brands, true) ?? []);
     $promos       = is_array($bridal->promos)       ? $bridal->promos       : (json_decode($bridal->promos, true) ?? []);
     $services     = is_array($bridal->services)     ? $bridal->services     : (json_decode($bridal->services, true) ?? []);
     $testimonials = is_array($bridal->testimonials) ? $bridal->testimonials : (json_decode($bridal->testimonials, true) ?? []);
+    $locations    = is_array($bridal->locations)    ? $bridal->locations    : (json_decode($bridal->locations, true)    ?? []);
 
     $sections = [
         'hero'         => !empty($bridal->hero_title),
-        'brands'       => count($brands) > 0,
         'promos'       => count($promos) > 0,
         'services'     => count($services) > 0,
         'palace'       => !empty($bridal->palace_title),
         'testimonials' => count($testimonials) > 0,
         'instagram'    => !empty($bridal->social_instagram),
-        'branches'     => !empty($bridal->branch_asuncion_name) || !empty($bridal->branch_cde_name),
+        'locations'    => count($locations) > 0,
     ];
     $completedCount = count(array_filter($sections));
 
@@ -60,7 +59,7 @@
         <div class="status-divider"></div>
         <div class="x-small text-muted">
             <i class="fas fa-layer-group me-1 opacity-50"></i>
-            <span class="fw-bold text-dark">{{ $completedCount }}</span> / 8 secciones configuradas
+            <span class="fw-bold text-dark">{{ $completedCount }}</span> / 7 secciones configuradas
         </div>
         <div class="ms-auto d-flex gap-1 align-items-center">
             @foreach($sections as $key => $done)
@@ -114,49 +113,8 @@
         {{-- 02. BRANDS | 03. PROMOS | 04. SERVICES                    --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
 
-        {{-- 02. BRANDS --}}
-        <div class="col-lg-6 align-self-start">
-            <div class="sax-premium-card p-0 shadow-sm bg-white">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fas fa-tags"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 02 — Marcas</p>
-                        <p class="x-small text-muted mb-0">Ticker de logos de marcas</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['brands']) !!}</div>
-                </div>
-                <div class="p-4">
-                    @if(count($brands) > 0)
-                        <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
-                            @foreach($brands as $brand)
-                                <div class="brand-chip" title="{{ $brand['nombre'] ?? '' }}">
-                                    @if(!empty($brand['logo_imagen']))
-                                        <img src="{{ asset('storage/'.$brand['logo_imagen']) }}"
-                                             alt="{{ $brand['nombre'] ?? '' }}" class="brand-logo">
-                                    @else
-                                        <span class="badge bg-light border text-dark x-small fw-semibold px-2 py-1">
-                                            {{ $brand['nombre'] ?? '—' }}
-                                        </span>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                        <p class="x-small text-muted mb-0">
-                            <i class="fas fa-info-circle me-1 opacity-50"></i>
-                            {{ count($brands) }} marca(s) configurada(s)
-                        </p>
-                    @else
-                        <div class="empty-state-mini">
-                            <i class="fas fa-tags empty-icon d-block"></i>
-                            <p class="x-small text-muted mb-0">Sin marcas configuradas</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- 03. PROMOS --}}
-        <div class="col-lg-6 align-self-start">
+        {{-- 02. PROMOS --}}
+        <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
                     <div class="icon-circle-gold"><i class="fas fa-percent"></i></div>
@@ -363,52 +321,52 @@
             </div>
         </div>
 
-        {{-- 08. SUCURSALES --}}
+        {{-- 07. SUCURSALES --}}
         <div class="col-lg-8">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100 overflow-hidden">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
                     <div class="icon-circle-gold"><i class="fas fa-map-marker-alt"></i></div>
                     <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 08 — Sucursales</p>
-                        <p class="x-small text-muted mb-0">Asunción y Ciudad del Este</p>
+                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 07 — Sucursales</p>
+                        <p class="x-small text-muted mb-0">Locales y contacto</p>
                     </div>
-                    <div class="ms-auto">{!! $badge($sections['branches']) !!}</div>
+                    <div class="ms-auto">{!! $badge($sections['locations']) !!}</div>
                 </div>
-                <div class="row g-0">
-                    {{-- Asunción --}}
-                    <div class="col-md-6" style="border-right: 1px solid #eef2f7;">
-                        <div class="branch-thumb">
-                            <img src="{{ $bridal->branch_asuncion_image ? asset('storage/'.$bridal->branch_asuncion_image) : 'https://placehold.co/500x160/121212/D4AF37?text=Asunci%C3%B3n' }}"
-                                 class="w-100 h-100 object-fit-cover" alt="Asunción">
+                <div class="p-4">
+                    @if(count($locations) > 0)
+                        <div class="row g-2">
+                            @foreach($locations as $loc)
+                                <div class="col-md-4">
+                                    <div class="border rounded-3 overflow-hidden" style="background:#fafafa;">
+                                        <div class="branch-thumb">
+                                            <img src="{{ !empty($loc['image']) ? asset('storage/'.$loc['image']) : 'https://placehold.co/400x130/121212/D4AF37?text=Sucursal' }}"
+                                                 class="w-100 h-100 object-fit-cover" alt="">
+                                        </div>
+                                        <div class="p-3">
+                                            <p class="fw-bold mb-1 small">{{ $loc['name'] ?? '—' }}</p>
+                                            <p class="x-small text-muted mb-1">
+                                                <i class="fas fa-map-pin me-1 opacity-50"></i>{{ $loc['address'] ?? '—' }}
+                                            </p>
+                                            @if(!empty($loc['whatsapp_url']))
+                                                <p class="x-small text-muted mb-0">
+                                                    <i class="fab fa-whatsapp me-1 opacity-50"></i>WhatsApp
+                                                </p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        <div class="p-4">
-                            <span class="badge-gold-soft x-small text-uppercase mb-2 d-inline-block">Asunción</span>
-                            <p class="fw-bold mb-1 small">{{ $bridal->branch_asuncion_name ?? '—' }}</p>
-                            <p class="x-small text-muted mb-1">
-                                <i class="fas fa-map-pin me-1 opacity-50"></i>{{ $bridal->branch_asuncion_address ?? '—' }}
-                            </p>
-                            <p class="x-small text-muted mb-0">
-                                <i class="fas fa-phone me-1 opacity-50"></i>{{ $bridal->branch_asuncion_phone ?? '—' }}
-                            </p>
+                        <p class="x-small text-muted mb-0 mt-3">
+                            <i class="fas fa-info-circle me-1 opacity-50"></i>
+                            {{ count($locations) }} sucursal(es) configurada(s)
+                        </p>
+                    @else
+                        <div class="empty-state-mini">
+                            <i class="fas fa-map-marker-alt empty-icon d-block"></i>
+                            <p class="x-small text-muted mb-0">Sin sucursales configuradas</p>
                         </div>
-                    </div>
-                    {{-- Ciudad del Este --}}
-                    <div class="col-md-6">
-                        <div class="branch-thumb">
-                            <img src="{{ $bridal->branch_cde_image ? asset('storage/'.$bridal->branch_cde_image) : 'https://placehold.co/500x160/121212/D4AF37?text=Ciudad+del+Este' }}"
-                                 class="w-100 h-100 object-fit-cover" alt="CDE">
-                        </div>
-                        <div class="p-4">
-                            <span class="badge-gold-soft x-small text-uppercase mb-2 d-inline-block">Ciudad del Este</span>
-                            <p class="fw-bold mb-1 small">{{ $bridal->branch_cde_name ?? '—' }}</p>
-                            <p class="x-small text-muted mb-1">
-                                <i class="fas fa-map-pin me-1 opacity-50"></i>{{ $bridal->branch_cde_address ?? '—' }}
-                            </p>
-                            <p class="x-small text-muted mb-0">
-                                <i class="fas fa-phone me-1 opacity-50"></i>{{ $bridal->branch_cde_phone ?? '—' }}
-                            </p>
-                        </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>

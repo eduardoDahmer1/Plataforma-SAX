@@ -38,6 +38,7 @@
                 <div class="column-content">
                     <h6 class="footer-title">Sobre S.A.X..</h6>
                     <ul class="footer-links">
+                        <li><a href="{{ route('all-categories.index') }}">Categorías Gerais</a></li>
                         <li><a href="{{ route('brands.index') }}">Nuestras Marcas</a></li>
                         <li><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                         <li><a href="{{ route('palace.index') }}">SAX Palace</a></li>

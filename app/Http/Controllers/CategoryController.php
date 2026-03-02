@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Attribute; // Certifique-se de que o Model Attribute existe
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -15,44 +16,44 @@ class CategoryController extends Controller
 
         $cacheKey = "categories_index_{$page}_" . md5($search);
 
+        // Buscamos os atributos globais (banners, logos, etc)
+        $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
+            return \DB::table('attributes')->first(); 
+        });
+
         $categories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            return Category::where('status', 1) // Somente categorias ativas
+            return Category::where('status', 1)
                 ->with(['subcategories.categoriasfilhas'])
                 ->withCount(['products' => function ($q) {
-                    $q->where('status', 1); // Conta apenas produtos ativos
+                    $q->where('status', 1);
                 }])
-                ->when(
-                    $search,
-                    fn($q) =>
-                    $q->where(function ($sub) use ($search) {
-                        $sub->where('name', 'like', "%{$search}%")
-                            ->orWhere('slug', 'like', "%{$search}%");
-                    })
-                )
+                ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
                 ->paginate(20)
                 ->withQueryString();
         });
 
-        return view('categories.index', compact('categories'));
+        return view('categories.index', compact('categories', 'attribute'));
     }
 
     public function show(Category $category)
     {
-        // 1. Verificação de Segurança
         if ($category->status != 1) {
-            abort(404, 'Categoria não encontrada ou inativa.');
+            abort(404);
         }
 
         $page = request()->get('page', 1);
         $cacheKey = "category_show_{$category->id}_{$page}";
 
-        // 2. Busca com Cache
-        [$category, $products] = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($category) {
-            // REMOVIDO o filtro de status da subcategory pois a coluna não existe no seu banco
-            $category = $category->load(['subcategories.categoriasfilhas']);
+        // 1. Buscamos o atributo global para os banners de fallback
+        $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
+            return \DB::table('attributes')->first();
+        });
 
-            // Mantemos o filtro nos produtos (assumindo que a tabela products tem status)
+        // 2. Busca Categoria e Produtos
+        [$category, $products] = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($category) {
+            $category = $category->load(['subcategories.categoriasfilhas']);
             $products = $category->products()
+                ->with('brand') // Adicionado para evitar erro no layout novo
                 ->where('status', 1)
                 ->paginate(12)
                 ->withQueryString();
@@ -60,11 +61,11 @@ class CategoryController extends Controller
             return [$category, $products];
         });
 
-        // 3. Itens do carrinho
         $cartItems = auth()->check()
             ? auth()->user()->cart()->pluck('quantity', 'product_id')->toArray()
             : [];
 
-        return view('categories.show', compact('category', 'products', 'cartItems'));
+        // Passamos o 'attribute' para a view
+        return view('categories.show', compact('category', 'products', 'cartItems', 'attribute'));
     }
 }

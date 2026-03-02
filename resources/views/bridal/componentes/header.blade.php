@@ -52,7 +52,7 @@
 
     .brand-bridal:hover { color: var(--bridal-gold-light); }
 
-    .navbar-bridal.scrolled .brand-bridal { color: #1C1C1C; }
+    .navbar-bridal.scrolled .brand-bridal { color: #C6A76E; }
     .navbar-bridal.scrolled .brand-bridal:hover { color: #C6A76E; }
 
     .nav-link-bridal {
@@ -67,7 +67,7 @@
         transition: color 0.3s ease;
     }
 
-    .navbar-bridal.scrolled .nav-link-bridal { color: #1C1C1C; }
+    .navbar-bridal.scrolled .nav-link-bridal { color: #C6A76E; }
     .navbar-bridal.scrolled .nav-link-bridal:hover { color: #C6A76E; }
     #bridalMobileNav .nav-link-bridal { color: var(--bridal-dark); }
 

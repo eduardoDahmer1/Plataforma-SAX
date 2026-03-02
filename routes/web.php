@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 // Frontend Controllers
+use App\Http\Controllers\AllCategoriesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\BrandController;
@@ -52,6 +53,8 @@ Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.page');
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
 Route::get('/bridal', [App\Http\Controllers\BridalController::class, 'index'])->name('bridal.index');
+
+Route::get('/categorias-gerais', [App\Http\Controllers\AllCategoriesController::class, 'index'])->name('all-categories.index');
 
 Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
 Route::get('/produto/{id_or_slug}', [ProductController::class, 'show'])->name('produto.show');
@@ -259,7 +262,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);
     Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
 
-    Route::get('clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
+    // Verifique se está dentro de um grupo de prefixo 'admin'
+    Route::post('clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
     Route::post('image-upload', [ImageUploadController::class, 'upload'])->name('image.upload');
     Route::delete('image-upload', [ImageUploadController::class, 'delete'])->name('image.delete');
     Route::get('image-upload', [ImageUploadController::class, 'form'])->name('image.form');

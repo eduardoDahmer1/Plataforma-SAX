@@ -82,23 +82,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-// ======== Clear Cache Button ========
-const clearCacheBtn = document.getElementById('clearCacheBtn');
-if (clearCacheBtn) {
-    clearCacheBtn.addEventListener('click', function () {
-        fetch(clearCacheBtn.dataset.url, { 
-            method: 'POST',
-            headers: { 
-                'X-CSRF-TOKEN': clearCacheBtn.dataset.csrf,
-                'Accept': 'application/json'
-            } 
-        })
-        .then(res => res.json())
-        .then(data => alert(data.message))
-        .catch(() => alert('Erro ao limpar o cache'));
-    });
-}
-
 
 // ======== Trumbowyg Editors (jQuery) ========
 if (window.jQuery) {

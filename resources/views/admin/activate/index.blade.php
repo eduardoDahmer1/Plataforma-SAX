@@ -40,13 +40,14 @@
     <div class="container-fluid">
         <div class="sections-wrapper">
             
-            {{-- Categorias --}}
+            {{-- Seção de Categorias --}}
             <div class="card-sax">
                 <h2><i class="fa-solid fa-layer-group"></i> Categorias</h2>
                 <div class="items-grid">
                     @foreach($categories as $category)
                     <div class="list-item">
                         <span title="{{ $category->name }}">{{ $category->name }}</span>
+                        {{-- O nome do input cria um array associativo no PHP: categories[id] = status --}}
                         <input type="hidden" name="categories[{{ $category->id }}]" value="{{ $category->status }}" class="status-input">
                         <button type="button" class="status-badge {{ $category->status == 1 ? 'status-active' : 'status-inactive' }}" onclick="toggleUI(this)">
                             {{ $category->status == 1 ? 'Ativo' : 'Inativo' }}
@@ -57,7 +58,7 @@
                 </div>
             </div>
 
-            {{-- Marcas --}}
+            {{-- Seção de Marcas --}}
             <div class="card-sax">
                 <h2><i class="fa-solid fa-tag"></i> Marcas</h2>
                 <div class="items-grid">
@@ -84,18 +85,24 @@
 </form>
 
 <script>
+/**
+ * Alterna a interface visual e o valor real do input hidden
+ * @param {HTMLElement} btn - O botão clicado
+ */
 function toggleUI(btn) {
-    const input = btn.previousElementSibling; // Pega o input hidden
-    const isActivating = input.value == "2"; // Se era 2 (inativo), vira 1 (ativo)
+    const input = btn.previousElementSibling; // O input hidden está logo antes do botão
+    const isCurrentlyActive = input.value == "1"; 
     
-    if (isActivating) {
-        input.value = "1";
-        btn.className = "status-badge status-active";
-        btn.innerHTML = 'Ativo <span>▴</span>';
-    } else {
+    if (isCurrentlyActive) {
+        // Se estava ativo, desativa
         input.value = "2";
         btn.className = "status-badge status-inactive";
         btn.innerHTML = 'Inativo <span>▾</span>';
+    } else {
+        // Se estava inativo, ativa
+        input.value = "1";
+        btn.className = "status-badge status-active";
+        btn.innerHTML = 'Ativo <span>▴</span>';
     }
 }
 </script>

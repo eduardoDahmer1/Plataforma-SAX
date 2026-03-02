@@ -5,16 +5,27 @@
 
         @php
             $bannerUrl = null;
-            if ($subcategory->banner && Storage::disk('public')->exists($subcategory->banner)) {
-                $bannerUrl = Storage::url($subcategory->banner);
-            } elseif (!empty($banner_horizontal)) {
+
+            // 1. Tenta o banner específico da subcategoria (Pasta uploads)
+            if ($subcategory->banner && Storage::disk('public')->exists('uploads/' . $subcategory->banner)) {
+                $bannerUrl = asset('storage/uploads/' . $subcategory->banner);
+            }
+            // 2. Se vazio, tenta o banner10 global (Atributos)
+            elseif (isset($attribute->banner10) && $attribute->banner10) {
+                if (Storage::disk('public')->exists('uploads/' . $attribute->banner10)) {
+                    $bannerUrl = asset('storage/uploads/' . $attribute->banner10);
+                }
+            }
+            
+            // 3. Fallback final para o banner_horizontal global
+            if (!$bannerUrl && !empty($banner_horizontal)) {
                 $bannerUrl = asset('img/' . $banner_horizontal);
             }
         @endphp
 
         @if ($bannerUrl)
             <div class="category-hero-fullwidth">
-                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $subcategory->name }}">
+                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $subcategory->name }}" onerror="this.src='{{ asset('img/banner_horizontal.webp') }}'">
                 <div class="hero-overlay-soft"></div>
             </div>
         @else
@@ -28,17 +39,20 @@
                     <i class="fas fa-chevron-left me-1"></i> VOLVER A SUBCATEGORIAS
                 </a>
                 <div class="category-logo-container mt-3">
-                    @if ($subcategory->photo && Storage::disk('public')->exists($subcategory->photo))
-                        <img src="{{ Storage::url($subcategory->photo) }}" alt="{{ $subcategory->name }}"
+                    @if ($subcategory->photo && Storage::disk('public')->exists('uploads/' . $subcategory->photo))
+                        <img src="{{ asset('storage/uploads/' . $subcategory->photo) }}" alt="{{ $subcategory->name }}"
                             class="category-main-logo">
                     @else
                         <h1 class="category-name-text">{{ $subcategory->name }}</h1>
                     @endif
                 </div>
+                {{-- Breadcrumb para Subcategoria --}}
+                <div class="child-breadcrumb mt-2">
+                    <span class="opacity-50">{{ $subcategory->category->name ?? '' }}</span>
+                </div>
             </div>
         </div>
 
-        {{-- 3. ÁREA DE CONTEÚDO --}}
         <div class="container-fluid px-1 px-md-4 py-4 bg-white">
             <div class="row g-1">
 

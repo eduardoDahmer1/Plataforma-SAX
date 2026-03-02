@@ -52,7 +52,7 @@
         position: absolute;
         inset: 0;
         height: 40vh;
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.40) 0%, transparent 100%);
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, transparent 100%);
         z-index: 2;
     }
 
@@ -60,7 +60,11 @@
         position: absolute;
         inset: 0;
         z-index: 2;
-        background: rgba(0, 0, 0, 0.25);
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.15) 0%,
+            rgba(0, 0, 0, 0.55) 100%
+        );
     }
 
     .hero-body {
@@ -74,57 +78,61 @@
     .hero-label {
         display: inline-block;
         font-family: var(--font-display);
-        font-size: 0.68rem;
+        font-size: 0.75rem;
         letter-spacing: 6px;
-        color: #C6A76E;
+        color: #e2c991;
         text-transform: uppercase;
         margin-bottom: 0.875rem;
-        font-weight: 300;
-        opacity: 0.95;
-        text-shadow: 0px 2px 12px rgba(0, 0, 0, 0.18);
+        font-weight: 500;
+        text-shadow: 0px 2px 12px rgba(0, 0, 0, 0.4);
     }
 
     .hero-heading {
         font-family: var(--font-serif);
         font-size: clamp(3.5rem, 6.5vw, 6.5rem);
         font-weight: 400;
-        color: #F4F1EA;
+        color: #FFFFFF;
         line-height: 1.1;
         margin-bottom: 1.25rem;
-        text-shadow: 0px 4px 18px rgba(0, 0, 0, 0.25);
+        text-shadow: 0px 4px 24px rgba(0, 0, 0, 0.45);
     }
 
     .hero-description {
         font-size: 0.92rem;
-        color: rgba(250, 247, 242, 0.80);
+        color: rgba(255, 255, 255, 0.92);
         max-width: 30rem;
         margin-bottom: 1.75rem;
         line-height: 1.7;
+        text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.3);
     }
 
     /* Hero buttons */
     .hero-bridal .btn-sax {
-        background: #1C1C1C;
-        color: #FAF7F2;
+        background: #C6A76E;
+        color: bridal-white;
         padding: 1rem 2.75rem;
+        font-weight: 600;
+        box-shadow: 0 4px 16px rgba(198, 167, 110, 0.35);
     }
 
     .hero-bridal .btn-sax:hover {
-        background: #C6A76E;
-        color: #fff;
+        background: #d4b87e;
+        color: bridal-white;
+        box-shadow: 0 6px 24px rgba(198, 167, 110, 0.45);
     }
 
     .hero-bridal .btn-sax-outline {
-        background: transparent;
-        border-color: #C6A76E;
-        color: #FAF7F2;
+        border: 2px solid rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.08);
+        color: #FFFFFF;
         padding: 1rem 2.75rem;
+        backdrop-filter: blur(4px);
     }
 
     .hero-bridal .btn-sax-outline:hover {
-        background: #C6A76E;
-        border-color: #C6A76E;
-        color: #fff;
+        background: rgba(255, 255, 255, 0.18);
+        border-color: #FFFFFF;
+        color: #FFFFFF;
     }
 
     @media (max-width: 991px) {

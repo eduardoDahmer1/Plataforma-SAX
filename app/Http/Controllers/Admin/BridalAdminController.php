@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Bridal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class BridalAdminController extends Controller
@@ -247,8 +248,9 @@ class BridalAdminController extends Controller
         unset($data['testimonials_items']);
 
         $bridal->update($data);
+        Cache::forget('bridal_data');
 
-        return redirect()->route('admin.bridal.edit', $id)->with('success', 'Contenido de SAX Bridal actualizado con éxito.');
+        return redirect()->route('admin.bridal.index', $id)->with('success', 'Contenido de SAX Bridal actualizado con éxito.');
     }
 
     /**

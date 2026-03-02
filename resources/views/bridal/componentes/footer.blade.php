@@ -47,7 +47,7 @@
 
     .footer-social-link {
         font-size: 1.2rem;
-        color: var(--bridal-gold);
+        color: #888;
         text-decoration: none;
         transition: opacity 0.3s, transform 0.3s;
         display: inline-flex;
@@ -55,7 +55,7 @@
         justify-content: center;
     }
 
-    .footer-social-link:hover { opacity: 0.75; color: var(--bridal-gold); transform: translateY(-2px); }
+    .footer-social-link:hover { opacity: 0.75; color: var(--bridal-dark); transform: translateY(-2px); }
 
     .footer-col-title {
         font-family: var(--font-sans);
@@ -65,6 +65,27 @@
         font-weight: 600;
         color: var(--bridal-dark);
         margin-bottom: 20px;
+    }
+
+    .footer-links-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-links-list li {
+        margin-bottom: 12px;
+    }
+
+    .footer-link {
+        font-size: 0.83rem;
+        color: #888;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .footer-link:hover {
+        color: var(--bridal-gold);
     }
 
     .footer-hours { font-size: 0.82rem; }
@@ -113,34 +134,17 @@
 
     .footer-contact-phone:hover { color: var(--bridal-gold); }
 
-    .footer-bottom-v2 {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 60px;
-        padding-top: 28px;
+    .footer-copyright {
+        margin-top: 80px;
+        padding-top: 30px;
+        text-align: center;
         border-top: 1px solid #f0ece6;
     }
 
-    .footer-copy-v2 {
-        font-size: 0.65rem;
-        letter-spacing: 2px;
-        color: #bbb;
+    .footer-copyright p {
+        font-size: 0.83rem;
+        color: #888;
         margin: 0;
-        text-transform: uppercase;
-    }
-
-    .footer-made-by {
-        font-size: 0.65rem;
-        letter-spacing: 2px;
-        color: #bbb;
-        margin: 0;
-        text-transform: uppercase;
-    }
-
-    .footer-made-by span {
-        color: var(--bridal-dark);
-        font-weight: 600;
     }
 
     @media (max-width: 991px) {
@@ -172,10 +176,10 @@
                     <a href="{{ $bridal->instagram ?? 'https://www.instagram.com/saxbridal' }}" target="_blank" rel="noopener" class="footer-social-link" title="Instagram">
                         <i class="fab fa-instagram"></i>
                     </a>
-                    <a href="#" class="footer-social-link" title="Facebook">
+                    <a href="https://www.facebook.com/profile.php?id=61553961935895" class="footer-social-link" title="Facebook">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $bridal->whatsapp ?? '1234567890') }}" target="_blank" rel="noopener" class="footer-social-link" title="WhatsApp">
+                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $bridal->whatsapp ?? '595981527848') }}" target="_blank" rel="noopener" class="footer-social-link" title="WhatsApp">
                         <i class="fab fa-whatsapp"></i>
                     </a>
                 </div>
@@ -186,44 +190,33 @@
                 <h6 class="footer-col-title">Horarios</h6>
                 <div class="footer-hours">
                     <div class="footer-hours-row">
-                        <span>Lunes</span>
-                        <span>{{ $bridal->horario_lunes ?? '08:30 a 17:00' }}</span>
-                    </div>
-                    <div class="footer-hours-row">
-                        <span>Martes – Sábado</span>
-                        <span>{{ $bridal->horario_semana ?? '10:00 – 19:00' }}</span>
+                        <span>Lunes – Sábado</span>
+                        <span>{{ $bridal->horario_semana ?? '08:30 – 17:00' }}</span>
                     </div>
                     <div class="footer-hours-row last">
                         <span>Domingo</span>
-                        <span>{{ $bridal->horario_domingo ?? '09:00 a 16:00' }}</span>
+                        <span>{{ $bridal->horario_domingo ?? '09:00 a 13:00' }}</span>
                     </div>
                 </div>
             </div>
 
-            {{-- Columna 3: Ubicación + contacto --}}
+            {{-- Columna 3: Enlaces --}}
             <div class="col-lg-3 col-md-6">
-                <h6 class="footer-col-title">Ubicación</h6>
-                <p class="footer-address">
-                    {{ $bridal->direccion ?? 'Calle del Lujo 123, Bogotá, Colombia' }}
-                </p>
-                <div class="footer-contact-box">
-                    <span class="footer-contact-label">Reservas directas</span>
-                    <a href="tel:{{ $bridal->telefono ?? '+5712345678' }}" class="footer-contact-phone">
-                        {{ $bridal->telefono ?? '+57 (1) 234-5678' }}
-                    </a>
-                </div>
+                <h6 class="footer-col-title">Sobre S.A.X</h6>
+                <ul class="footer-links-list">
+                    <li><a href="{{ route('brands.index') }}" class="footer-link">Nuestras Marcas</a></li>
+                    <li><a href="{{ route('blogs.index') }}" class="footer-link">#SAXNEWS</a></li>
+                    <li><a href="{{ route('palace.index') }}" class="footer-link">SAX Palace</a></li>
+                    <li><a href="{{ route('bridal.index') }}" class="footer-link">SAX Bridal</a></li>
+                    <li><a href="{{ route('contact.form') }}" class="footer-link">Trabaja con nosotros</a></li>
+                </ul>
             </div>
 
         </div>
 
         {{-- Bottom bar --}}
-        <div class="footer-bottom-v2">
-            <p class="footer-copy-v2">
-                &copy; {{ date('Y') }} SAX GROUP &mdash; LA DEFINICI&Oacute;N DEL LUJO.
-            </p>
-            <p class="footer-made-by">
-                MADE BY <span>SAX FULL SERVICE</span>
-            </p>
+        <div class="footer-copyright">
+            <p>{{ date('Y') }}. Todos los derechos reservados. SAX E-commerce.</p>
         </div>
     </div>
 </footer>

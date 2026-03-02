@@ -228,7 +228,7 @@
         right: -1.375rem;
     }
 
-    @media (max-width: 991px) {
+    @media (max-width: 1199px) {
         .testimonial-card {
             flex-direction: column;
             align-items: center;

@@ -7,7 +7,8 @@
             <h2 class="section-title">Nuestras Sucursales</h2>
         </div>
 
-        <div class="swiper locationSwiper">
+        <div class="position-relative locations-swiper-wrap">
+            <div class="swiper locationSwiper">
             <div class="swiper-wrapper">
                 @foreach($locations as $location)
                     <div class="swiper-slide">
@@ -43,6 +44,8 @@
             <div class="location-pagination swiper-pagination mt-4"></div>
         </div>
 
+        </div>
+
     </div>
 </section>
 
@@ -50,6 +53,7 @@
 <style>
     .locations-section {
         background: var(--bridal-white);
+        position: relative; /* Importante para que las flechas no se escapen */
     }
 
     .location-card {
@@ -132,29 +136,30 @@
         align-items: center;
         gap: 0.5rem;
         margin-top: 1.25rem;
-        padding: 0.75rem 1.75rem;
-        background: var(--bridal-gold);
-        color: #fff;
-        font-size: 0.8rem;
-        font-weight: 500;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
+        color: var(--bridal-gold);
         text-decoration: none;
-        border-radius: 2px;
-        transition: background 0.3s ease, transform 0.3s ease;
+        font-size: 0.72rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 500;
+        transition: color 0.3s ease;
     }
 
     .location-wa-btn i {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .location-wa-btn:hover {
-        background: var(--bridal-dark);
-        color: #fff;
-        transform: translateY(-2px);
+        color: var(--bridal-dark);
     }
 
-    /* Pagination — mismo estilo que promos */
+    /* --- Pagination --- */
+    .location-pagination {
+        position: relative;
+        margin-top: 2rem;
+        text-align: center;
+    }
+
     .location-pagination .swiper-pagination-bullet {
         background: var(--bridal-gold);
         opacity: 0.3;
@@ -169,5 +174,6 @@
         width: 1.75rem;
         border-radius: 0.25rem;
     }
+
 </style>
 @endpush

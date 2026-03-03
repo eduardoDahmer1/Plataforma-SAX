@@ -16,11 +16,11 @@
             ->get();
 
         $labelMap = [
-            'feminino' => 'MUJER',
-            'masculino' => 'HOMBRE',
-            'infantil' => 'NIÑOS',
-            'optico' => 'LENTES',
-            'casa' => 'HOGAR',
+            'feminino' => 'MULHER',
+            'masculino' => 'HOMEM',
+            'infantil' => 'CRIANÇAS',
+            'optico' => 'LENTE',
+            'casa' => 'CASA',
         ];
     @endphp
 
@@ -44,7 +44,7 @@
 
                 <div class="col-12 col-lg-6 text-center">
                     <p class="m-0 sax-promo-text">
-                        <strong>UENO BANK.</strong> Hasta <strong>12 Cuotas sin intereses</strong> comprando
+                        <strong>UENO BANK.</strong> Compra em até <strong>12x sem juros</strong>
                         <strong>$1.000</strong> o más.
                     </p>
                 </div>
@@ -151,22 +151,22 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item"
-                                        href="{{ auth()->user()->user_type == 1 ? route('admin.index') : route('user.dashboard') }}">MI
-                                        PANEL</a></li>
+                                        href="{{ auth()->user()->user_type == 1 ? route('admin.index') : route('user.dashboard') }}">MEU
+                                        PAINEL</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="dropdown-item text-danger">SALIR</button>
+                                        <button type="submit" class="dropdown-item text-danger">SAIR</button>
                                     </form>
                                 </li>
                             </ul>
                         </div>
                     @else
                         <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#loginModal"
-                            class="fw-bold uppercase small tracking-1">INICIAR SESIÓN</a>
+                            class="fw-bold uppercase small tracking-1">INICIAR SESÃO</a>
                     @endif
                 </div>
                 @if (Auth::check())
@@ -211,20 +211,20 @@
                 @if (Auth::check())
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="fa-regular fa-user"></i>
-                        <span class="fw-bold small">HOLA, {{ explode(' ', Auth::user()->name)[0] }}</span>
+                        <span class="fw-bold small">OLÁ, {{ explode(' ', Auth::user()->name)[0] }}</span>
                     </div>
                     <div class="d-grid gap-2">
                         <a href="{{ auth()->user()->user_type == 1 ? route('admin.index') : route('user.dashboard') }}"
-                            class="btn btn-dark btn-sm rounded-0">MI PANEL</a>
+                            class="btn btn-dark btn-sm rounded-0">MEU PAINEL</a>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit"
-                                class="btn btn-outline-danger btn-sm w-100 rounded-0">SALIR</button>
+                                class="btn btn-outline-danger btn-sm w-100 rounded-0">SAIR</button>
                         </form>
                     </div>
                 @else
                     <button class="btn btn-dark btn-sm w-100 rounded-0 py-2 tracking-1" data-bs-toggle="modal"
-                        data-bs-target="#loginModal">INICIAR SESIÓN</button>
+                        data-bs-target="#loginModal">INICIAR SESÃO</button>
                 @endif
             </div>
 

@@ -2,37 +2,44 @@
 
 @section('content')
     <div class="brand-detail-wrapper">
-
         @php
             $bannerUrl = null;
+            $storagePath = 'uploads/';
 
             if ($brand->internal_banner && Storage::disk('public')->exists($brand->internal_banner)) {
                 $bannerUrl = Storage::url($brand->internal_banner);
-            }
-
-            elseif (isset($banner10) && $banner10) {
-                if (Storage::disk('public')->exists('uploads/' . $banner10)) {
-                    $bannerUrl = asset('storage/uploads/' . $banner10);
-                }
+            } elseif (isset($banner10) && $banner10 && Storage::disk('public')->exists($storagePath . $banner10)) {
+                $bannerUrl = Storage::url($storagePath . $banner10);
             }
 
             if (!$bannerUrl && !empty($banner_horizontal)) {
-                $bannerUrl = asset('img/' . $banner_horizontal);
+                $bannerUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
+                    ? Storage::url($storagePath . $banner_horizontal) 
+                    : null;
             }
+
+            $bannerLateralUrl = null;
+            if ($brand->banner && Storage::disk('public')->exists($brand->banner)) {
+                $bannerLateralUrl = Storage::url($brand->banner);
+            } elseif (!empty($banner_horizontal)) {
+                $bannerLateralUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
+                    ? Storage::url($storagePath . $banner_horizontal) 
+                    : null;
+            }
+
+            $fallbackImg = asset('storage/uploads/banner_horizontal.webp');
         @endphp
 
         @if ($bannerUrl)
             <div class="brand-hero-fullwidth">
                 <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $brand->name }}"
-                    onerror="this.src='{{ asset('img/banner_horizontal.webp') }}'">
+                    onerror="this.src='{{ $fallbackImg }}'">
                 <div class="hero-overlay-soft"></div>
             </div>
         @else
-            {{-- Espaçamento caso não haja banner nenhum --}}
             <div class="py-4"></div>
         @endif
 
-        {{-- 2. ILHA DA LOGO (Transição Minimalista) --}}
         <div class="brand-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
                 <a href="{{ route('brands.index') }}" class="back-link-minimal">
@@ -48,25 +55,22 @@
             </div>
         </div>
 
-        {{-- 3. ÁREA DE CONTEÚDO (Banner Lateral + Grid) --}}
         <div class="container-fluid px-1 px-md-4 py-4">
             <div class="row g-1">
-
-                {{-- BANNER LATERAL (Estilo 515x1255 que você pediu) --}}
-                @if ($brand->banner && Storage::disk('public')->exists($brand->banner))
+                @if ($bannerLateralUrl)
                     <div class="col-12 col-lg-3 d-none d-lg-block">
                         <div class="sticky-banner-lateral">
-                            <img src="{{ Storage::url($brand->banner) }}" class="img-fluid banner-v-render"
-                                alt="Promo {{ $brand->name }}">
+                            <img src="{{ $bannerLateralUrl }}" class="img-fluid banner-v-render"
+                                alt="Promo {{ $brand->name }}"
+                                onerror="this.src='{{ $fallbackImg }}'">
                         </div>
                     </div>
                 @endif
 
-                {{-- GRID DE PRODUTOS --}}
-                <div class="col-12 {{ $brand->banner ? 'col-lg-9' : '' }}">
+                <div class="col-12 {{ $bannerLateralUrl ? 'col-lg-9' : 'col-lg-12' }}">
                     <div class="row g-1">
                         @foreach ($products as $item)
-                            <div class="col-6 col-md-4 {{ $brand->banner ? 'col-xl-3' : 'col-xl-2' }}">
+                            <div class="col-6 col-md-4 {{ $bannerLateralUrl ? 'col-xl-3' : 'col-xl-2' }}">
                                 <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none">
                                     <div class="card h-100 border-0 rounded-0 jw-product-card bg-light">
                                         <div class="jw-img-container position-relative">
@@ -85,7 +89,7 @@
                                                 {{ $item->external_name }}
                                             </div>
                                             <div class="jw-price fw-bold text-dark small">
-                                                {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
+                                                {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
                                             </div>
                                         </div>
                                     </div>
@@ -94,7 +98,6 @@
                         @endforeach
                     </div>
 
-                    {{-- Paginação --}}
                     <div class="d-flex justify-content-center mt-5">
                         {{ $products->links() }}
                     </div>
@@ -182,7 +185,6 @@
 
     .jw-img-container img {
         width: 100%;
-        height: 100%;
         object-fit: cover;
     }
 

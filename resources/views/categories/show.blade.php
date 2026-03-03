@@ -2,33 +2,44 @@
 
 @section('content')
     <div class="category-detail-wrapper">
-
         @php
+            $storagePath = 'uploads/';
             $bannerUrl = null;
 
-            // 1. Tenta o banner específico da categoria (no Storage)
             if ($category->banner && Storage::disk('public')->exists($category->banner)) {
                 $bannerUrl = Storage::url($category->banner);
+            } elseif (isset($banner10) && $banner10 && Storage::disk('public')->exists($storagePath . $banner10)) {
+                $bannerUrl = Storage::url($storagePath . $banner10);
             }
-            // 2. Fallback para o banner global da tabela attributes
-            // O nome no seu banco é 'banner_horizontal' (confirmado pelo print do PHPMyAdmin)
-            elseif (!empty($banner_horizontal)) {
-                // Se a imagem estiver na pasta public/img/, use asset().
-                // Se estiver no storage, use Storage::url(). Ajustei para asset('img/...') que é o comum para esses banners fixos.
-                $bannerUrl = asset('img/' . $banner_horizontal);
+
+            if (!$bannerUrl && !empty($banner_horizontal)) {
+                $bannerUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
+                    ? Storage::url($storagePath . $banner_horizontal) 
+                    : null;
             }
+
+            $bannerLateralUrl = null;
+            if (isset($category->image) && Storage::disk('public')->exists($category->image)) {
+                $bannerLateralUrl = Storage::url($category->image);
+            } elseif (!empty($banner_horizontal)) {
+                $bannerLateralUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
+                    ? Storage::url($storagePath . $banner_horizontal) 
+                    : null;
+            }
+
+            $fallbackImg = asset('storage/uploads/banner_horizontal.webp');
         @endphp
 
         @if ($bannerUrl)
             <div class="category-hero-fullwidth">
-                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $category->name }}">
+                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $category->name }}"
+                    onerror="this.src='{{ $fallbackImg }}'">
                 <div class="hero-overlay-soft"></div>
             </div>
         @else
             <div class="py-3"></div>
         @endif
 
-        {{-- 2. ILHA DE IDENTIDADE (Transição Minimalista) --}}
         <div class="category-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
                 <a href="{{ route('categories.index') }}" class="back-link-minimal">
@@ -45,34 +56,26 @@
             </div>
         </div>
 
-        {{-- 3. ÁREA DE CONTEÚDO (Banner Lateral + Grid de Produtos) --}}
         <div class="container-fluid px-1 px-md-4 py-4 bg-white">
             <div class="row g-1">
-
-                {{-- BANNER LATERAL (Aparece apenas em Desktop - Ocupa 3 colunas) --}}
-                {{-- Nota: Usei o campo 'photo' ou outro campo de imagem que você destinar ao banner vertical --}}
-                @if (isset($category->image) && Storage::disk('public')->exists($category->image))
+                @if ($bannerLateralUrl)
                     <div class="col-12 col-lg-3 d-none d-lg-block">
                         <div class="sticky-banner-lateral">
-                            <img src="{{ Storage::url($category->image) }}" class="img-fluid banner-v-render"
-                                alt="{{ $category->name }} Promo">
+                            <img src="{{ $bannerLateralUrl }}" class="img-fluid banner-v-render"
+                                alt="{{ $category->name }} Promo"
+                                onerror="this.src='{{ $fallbackImg }}'">
                         </div>
                     </div>
                 @endif
 
-                {{-- GRID DE PRODUTOS (Ajusta a largura caso exista banner lateral) --}}
-                <div
-                    class="col-12 {{ isset($category->image) && Storage::disk('public')->exists($category->image) ? 'col-lg-9' : '' }}">
+                <div class="col-12 {{ $bannerLateralUrl ? 'col-lg-9' : 'col-lg-12' }}">
                     @if ($products->count())
                         <div class="row g-1">
                             @foreach ($products as $item)
-                                <div
-                                    class="col-6 col-md-4 {{ isset($category->image) && Storage::disk('public')->exists($category->image) ? 'col-xl-3' : 'col-xl-2' }}">
+                                <div class="col-6 col-md-4 {{ $bannerLateralUrl ? 'col-xl-3' : 'col-xl-2' }}">
                                     <a href="{{ route('produto.show', $item->slug) }}"
                                         class="text-decoration-none jw-product-link">
                                         <div class="card h-100 border-0 rounded-0 jw-product-card bg-transparent">
-
-                                            {{-- Imagem do Produto --}}
                                             <div class="jw-img-container position-relative bg-light">
                                                 <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-0"
                                                     alt="{{ $item->external_name }}">
@@ -81,14 +84,13 @@
                                                 </div>
                                             </div>
 
-                                            {{-- Info do Produto --}}
                                             <div class="card-body px-1 py-4 text-center">
                                                 <div class="jw-brand fw-bold text-uppercase mb-1">
                                                     {{ $item->brand->name ?? 'EXCLUSIVO' }}</div>
                                                 <div class="jw-product-name text-muted mb-2">
                                                     {{ Str::limit($item->external_name, 40) }}</div>
                                                 <div class="jw-price fw-bold text-dark">
-                                                    {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
+                                                    {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -97,14 +99,12 @@
                             @endforeach
                         </div>
 
-                        {{-- Paginação --}}
                         <div class="d-flex justify-content-center mt-5 pagination-sax">
                             {{ $products->links() }}
                         </div>
                     @else
                         <div class="text-center py-5">
-                            <p class="text-muted text-uppercase tracking-widest small">No se encontraron productos en esta
-                                categoría.</p>
+                            <p class="text-muted text-uppercase tracking-widest small">No se encontraron productos en esta categoría.</p>
                         </div>
                     @endif
                 </div>
@@ -218,7 +218,6 @@
 
     .jw-img-container img {
         width: 100%;
-        height: 100%;
         object-fit: cover;
     }
 

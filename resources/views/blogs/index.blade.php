@@ -6,7 +6,7 @@
         
         {{-- Cabeçalho Minimalista --}}
         <div class="text-center mb-5 pb-4">
-            <h1 class="sax-editorial-title">SAX <span class="thin">JOURNAL</span></h1>
+            <h1 class="sax-editorial-title">SAX <span class="thin">News</span></h1>
             <p class="sax-subtitle">CURADORIA DE ESTILO, LUXO E LIFESTYLE</p>
         </div>
 
@@ -82,7 +82,7 @@
                 </div>
             @empty
                 <div class="col-12 text-center py-5">
-                    <h4 class="text-muted thin">No se encontraron artículos.</h4>
+                    <h4 class="text-muted thin">Nenhum item encontrado.</h4>
                 </div>
             @endforelse
         </div>

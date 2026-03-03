@@ -1,65 +1,60 @@
 <div class="sax-wrapper">
     <section class="help-section">
         <div class="help-grid">
-            {{-- CARD: GUÍA DE COMPRA (Ícone Cabide) --}}
+            {{-- CARD: GUIA DE COMPRA --}}
             <div class="help-card">
                 <div class="icon">
-                    @if ($attribute && $attribute->icon_cabide)
-                        <img src="{{ asset('storage/uploads/' . $attribute->icon_cabide) }}" alt="Compra" width="30">
+                    @if ($attribute && $attribute->icon_cabide && Storage::disk('public')->exists('uploads/' . $attribute->icon_cabide))
+                        <img src="{{ asset('storage/uploads/' . $attribute->icon_cabide) }}" alt="Como Comprar" width="30">
                     @else
                         👕
                     @endif
                 </div>
-                <h3>CÓMO REALIZAR UNA COMPRA</h3>
-                <p>Tu guía para hacer pedidos</p>
+                <h3>COMO REALIZAR UMA COMPRA</h3>
+                <p>Seu guia para fazer pedidos</p>
             </div>
 
-            {{-- CARD: PREGUNTAS FRECUENTES (Ícone Ajuda/Dúvida) --}}
+            {{-- CARD: PERGUNTAS FREQUENTES --}}
             <div class="help-card">
                 <div class="icon">
-                    @if ($attribute && $attribute->icon_help)
-                        <img src="{{ asset('storage/uploads/' . $attribute->icon_help) }}" alt="FAQ"
-                            width="30">
+                    @if ($attribute && $attribute->icon_help && Storage::disk('public')->exists('uploads/' . $attribute->icon_help))
+                        <img src="{{ asset('storage/uploads/' . $attribute->icon_help) }}" alt="FAQ" width="30">
                     @else
                         <span class="red-icon">?</span>
                     @endif
                 </div>
-                <h3>PREGUNTAS FRECUENTES</h3>
-                <p>¡Respondemos tus preguntas!</p>
+                <h3>PERGUNTAS FREQUENTES</h3>
+                <p>Respondemos suas dúvidas!</p>
             </div>
 
-            {{-- CARD: NECESITAS AYUDA (Ícone Info/Relógio) --}}
+            {{-- CARD: PRECISA DE AJUDA --}}
             <div class="help-card">
                 <div class="icon">
-                    @if ($attribute && $attribute->icon_info)
-                        <img src="{{ asset('storage/uploads/' . $attribute->icon_info) }}" alt="Ayuda"
-                            width="30">
+                    @if ($attribute && $attribute->icon_info && Storage::disk('public')->exists('uploads/' . $attribute->icon_info))
+                        <img src="{{ asset('storage/uploads/' . $attribute->icon_info) }}" alt="Ajuda" width="30">
                     @else
                         ⓘ
                     @endif
                 </div>
-                <h3>¿NECESITAS AYUDA?</h3>
-                <p>Contacta a nuestro equipo de Atención al Cliente</p>
+                <h3>PRECISA DE AJUDA?</h3>
+                <p>Fale com nossa equipe de Atendimento ao Cliente</p>
             </div>
         </div>
     </section>
 
     <section class="newsletter-section"
-        style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ asset('storage/uploads/' . $banner1) }}');">
+        style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ asset('storage/uploads/' . ($banner1 ?? 'banner1.webp')) }}');">
         <div class="newsletter-container">
-            <h2>No te pierdas de nada</h2>
-            <p class="subtitle">Regístrate para recibir promociones, novedades personalizadas, actualizaciones de
-                inventario y mucho más, directamente en su correo.</p>
+            <h2>Não perca nenhuma novidade</h2>
+            <p class="subtitle">Registre-se para receber promoções, novidades personalizadas, atualizações de estoque e muito mais, diretamente no seu e-mail.</p>
 
             <div class="form-wrapper">
                 <form class="newsletter-form">
-                    <input type="email" placeholder="Tu correo electrónico" required>
-                    <button type="submit">SUBSCRÍBETE</button>
+                    <input type="email" placeholder="Seu e-mail" required>
+                    <button type="submit">INSCREVER-SE</button>
                 </form>
                 <p class="legal-text">
-                    Al registrarte, aceptas recibir comunicaciones de marketing por email y reconoces que leíste nuestra
-                    Política de Privacidad. Puedes darte de baja en cualquier momento en la parte inferior de nossos
-                    emails.
+                    Consulte nossos prazos de entrega e políticas de devolução no checkout. Oferecemos até 7 dias para trocas ou devoluções de produtos em perfeitas condições e com nota fiscal, tanto no Brasil quanto no Paraguai. Ao se registrar, você aceita nossa Política de Privacidade.
                 </p>
             </div>
         </div>

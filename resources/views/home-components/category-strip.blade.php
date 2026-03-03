@@ -3,21 +3,17 @@
         <div class="category-wrapper">
             @foreach($categories as $cat)
                 @php
-                    // 1. Mapeamento de Tradução Visual (De Slugs do Banco para Nomes SAX)
                     $displayName = $cat->name;
-                    if($cat->slug == 'feminino')  $displayName = 'MUJER';
-                    if($cat->slug == 'masculino') $displayName = 'HOMBRE';
-                    if($cat->slug == 'infantil')  $displayName = 'NIÑOS';
-                    if($cat->slug == 'optico')    $displayName = 'LENTES';
-                    if($cat->slug == 'casa')      $displayName = 'HOGAR';
-
+                    if($cat->slug == 'feminino')  $displayName = 'MULHER';
+                    if($cat->slug == 'masculino') $displayName = 'HOMEM';
+                    if($cat->slug == 'infantil')  $displayName = 'CRIANÇAS';
+                    if($cat->slug == 'optico')    $displayName = 'LENTE';
+                    if($cat->slug == 'casa')      $displayName = 'CASA';
                     $photoPath = ltrim($cat->photo, '/');
                     
-                    // Se a foto existir no banco, montamos a URL via storage
                     if (!empty($photoPath)) {
                         $imagePath = asset('storage/' . $photoPath);
                     } else {
-                        // Placeholder se o campo estiver vazio ou 0
                         $imagePath = "https://placehold.co/400x400/f2f2f2/a3a3a3?text=SAX";
                     }
                 @endphp

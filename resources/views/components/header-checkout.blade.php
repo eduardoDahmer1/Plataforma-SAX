@@ -48,15 +48,15 @@
 
         {{-- Menu de navegação (Estilo Abas) --}}
         <div class="sax-nav-wrapper d-flex flex-wrap justify-content-center border-top border-bottom">
-            <a href="{{ route('home') }}" class="sax-nav-item">MUJER</a>
-            <a href="{{ route('home') }}" class="sax-nav-item">HOMBRE</a>
-            <a href="{{ route('home') }}" class="sax-nav-item">NIÑOS</a>
+            <a href="{{ route('home') }}" class="sax-nav-item">MULHER</a>
+            <a href="{{ route('home') }}" class="sax-nav-item">HOMEM</a>
+            <a href="{{ route('home') }}" class="sax-nav-item">CRIANÇAS</a>
             
             @if(auth()->check())
                 @if(auth()->user()->user_type == 1)
                     <a href="{{ route('admin.index') }}" class="sax-nav-item sax-gold">ADMIN</a>
                 @else
-                    <a href="{{ route('user.dashboard') }}" class="sax-nav-item sax-gold">MI PANEL</a>
+                    <a href="{{ route('user.dashboard') }}" class="sax-nav-item sax-gold">MEU PAINEL</a>
                 @endif
             @endif
         </div>

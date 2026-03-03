@@ -1,6 +1,6 @@
 @if (isset($brands) && $brands->count() > 0)
     <section class="sax-brands-section">
-        <h2 class="sax-main-title">TUS MARCAS RECOMENDADAS</h2>
+        <h2 class="sax-main-title">SUAS MARCAS RECOMENDADAS</h2>
 
         <div class="sax-carousel-master">
             <div class="sax-carousel-3d" id="brandsCarousel">

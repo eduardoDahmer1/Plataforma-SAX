@@ -2,51 +2,57 @@
 
 @section('content')
     <div class="category-detail-wrapper">
-
         @php
+            $storagePath = 'uploads/';
             $bannerUrl = null;
 
-            // 1. Tenta o banner específico da subcategoria (Pasta uploads)
-            if ($subcategory->banner && Storage::disk('public')->exists('uploads/' . $subcategory->banner)) {
-                $bannerUrl = asset('storage/uploads/' . $subcategory->banner);
+            if ($subcategory->banner && Storage::disk('public')->exists($storagePath . $subcategory->banner)) {
+                $bannerUrl = Storage::url($storagePath . $subcategory->banner);
+            } elseif (isset($banner10) && $banner10 && Storage::disk('public')->exists($storagePath . $banner10)) {
+                $bannerUrl = Storage::url($storagePath . $banner10);
             }
-            // 2. Se vazio, tenta o banner10 global (Atributos)
-            elseif (isset($attribute->banner10) && $attribute->banner10) {
-                if (Storage::disk('public')->exists('uploads/' . $attribute->banner10)) {
-                    $bannerUrl = asset('storage/uploads/' . $attribute->banner10);
-                }
-            }
-            
-            // 3. Fallback final para o banner_horizontal global
+
             if (!$bannerUrl && !empty($banner_horizontal)) {
-                $bannerUrl = asset('img/' . $banner_horizontal);
+                $bannerUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
+                    ? Storage::url($storagePath . $banner_horizontal) 
+                    : null;
             }
+
+            $bannerLateralUrl = null;
+            if (isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image)) {
+                $bannerLateralUrl = Storage::url($subcategory->image);
+            } elseif (!empty($banner_horizontal)) {
+                $bannerLateralUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
+                    ? Storage::url($storagePath . $banner_horizontal) 
+                    : null;
+            }
+
+            $fallbackImg = asset('storage/uploads/banner_horizontal.webp');
         @endphp
 
         @if ($bannerUrl)
             <div class="category-hero-fullwidth">
-                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $subcategory->name }}" onerror="this.src='{{ asset('img/banner_horizontal.webp') }}'">
+                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $subcategory->name }}"
+                    onerror="this.src='{{ $fallbackImg }}'">
                 <div class="hero-overlay-soft"></div>
             </div>
         @else
             <div class="py-3"></div>
         @endif
 
-        {{-- 2. ILHA DE IDENTIDADE --}}
         <div class="category-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
                 <a href="{{ route('subcategories.index') }}" class="back-link-minimal">
                     <i class="fas fa-chevron-left me-1"></i> VOLVER A SUBCATEGORIAS
                 </a>
                 <div class="category-logo-container mt-3">
-                    @if ($subcategory->photo && Storage::disk('public')->exists('uploads/' . $subcategory->photo))
-                        <img src="{{ asset('storage/uploads/' . $subcategory->photo) }}" alt="{{ $subcategory->name }}"
+                    @if ($subcategory->photo && Storage::disk('public')->exists($storagePath . $subcategory->photo))
+                        <img src="{{ Storage::url($storagePath . $subcategory->photo) }}" alt="{{ $subcategory->name }}"
                             class="category-main-logo">
                     @else
                         <h1 class="category-name-text">{{ $subcategory->name }}</h1>
                     @endif
                 </div>
-                {{-- Breadcrumb para Subcategoria --}}
                 <div class="child-breadcrumb mt-2">
                     <span class="opacity-50">{{ $subcategory->category->name ?? '' }}</span>
                 </div>
@@ -55,34 +61,30 @@
 
         <div class="container-fluid px-1 px-md-4 py-4 bg-white">
             <div class="row g-1">
-
-                {{-- BANNER LATERAL --}}
-                @if (isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image))
+                @if ($bannerLateralUrl)
                     <div class="col-12 col-lg-3 d-none d-lg-block">
                         <div class="sticky-banner-lateral">
-                            <img src="{{ Storage::url($subcategory->image) }}" class="img-fluid banner-v-render"
-                                alt="{{ $subcategory->name }} Promo">
+                            <img src="{{ $bannerLateralUrl }}" class="img-fluid banner-v-render"
+                                alt="{{ $subcategory->name }} Promo"
+                                onerror="this.src='{{ $fallbackImg }}'">
                         </div>
                     </div>
                 @endif
 
-                {{-- GRID DE PRODUTOS --}}
-                <div class="col-12 {{ isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image) ? 'col-lg-9' : '' }}">
+                <div class="col-12 {{ $bannerLateralUrl ? 'col-lg-9' : 'col-lg-12' }}">
                     @if ($products->count())
                         <div class="row g-1">
                             @foreach ($products as $item)
-                                <div class="col-6 col-md-4 {{ isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image) ? 'col-xl-3' : 'col-xl-2' }}">
+                                <div class="col-6 col-md-4 {{ $bannerLateralUrl ? 'col-xl-3' : 'col-xl-2' }}">
                                     <a href="{{ route('produto.show', $item->slug ?? $item->id) }}"
                                         class="text-decoration-none jw-product-link">
                                         <div class="card h-100 border-0 rounded-0 jw-product-card bg-transparent">
-
                                             <div class="jw-img-container position-relative bg-light">
                                                 @if($item->photo && Storage::disk('public')->exists($item->photo))
                                                     <img src="{{ Storage::url($item->photo) }}" class="card-img-top img-fluid rounded-0" alt="{{ $item->name }}">
                                                 @else
                                                     <img src="{{ asset('storage/uploads/noimage.webp') }}" class="card-img-top img-fluid rounded-0" alt="No image">
                                                 @endif
-                                                
                                                 <div class="position-absolute top-0 end-0 p-3 z-index-2">
                                                     @auth <x-product-favorite-button :item="$item" /> @endauth
                                                 </div>
@@ -96,7 +98,7 @@
                                                     {{ Str::limit($item->name, 40) }}
                                                 </div>
                                                 <div class="jw-price fw-bold text-dark">
-                                                    {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
+                                                    {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -105,7 +107,6 @@
                             @endforeach
                         </div>
 
-                        {{-- PAGINAÇÃO --}}
                         <div class="d-flex justify-content-center mt-5 pagination-sax">
                             {{ $products->links() }}
                         </div>
@@ -137,7 +138,7 @@
     .jw-product-card { transition: opacity 0.3s ease; }
     .jw-product-link:hover .jw-product-card { opacity: 0.8; }
     .jw-img-container { aspect-ratio: 3 / 4; background-color: #fcfcfc; overflow: hidden; }
-    .jw-img-container img { width: 100%; height: 100%; object-fit: cover; }
+    .jw-img-container img { width: 100%; object-fit: cover; }
     .jw-brand { font-size: 0.7rem; letter-spacing: 1px; color: #000; }
     .jw-product-name { font-size: 0.75rem; color: #777 !important; height: 2.2rem; overflow: hidden; }
     .jw-price { font-size: 0.85rem; color: #000; }

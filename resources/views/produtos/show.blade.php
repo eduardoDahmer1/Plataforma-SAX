@@ -13,7 +13,7 @@
 
             <div class="row g-5">
                 {{-- COLUNA ESQUERDA: Galeria de Imagens --}}
-                <div class="col-lg-7">
+                <div class="col-lg-6">
                     <div class="row g-2">
                         @php
                             $mainImage = $product->photo
@@ -44,10 +44,11 @@
                 </div>
 
                 {{-- COLUNA DIREITA: Informações e Compra --}}
-                <div class="col-lg-5">
+                <div class="col-lg-6">
                     <div class="product-sticky-info">
                         <div class="brand-name">{{ $product->brand->name ?? 'Luxury Brand' }}</div>
                         <h1 class="product-title text-uppercase">{{ $product->external_name }}</h1>
+                        <p class="product-title text-uppercase">SKU: {{ $product->sku }}</p>
 
                         <div class="product-price mb-4">
                             {{ currency_format($product->price) }}
@@ -56,7 +57,7 @@
                         {{-- Seleção de Tamanhos Dinâmica --}}
                         <div class="size-selection-wrapper mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="section-label">GUIA TALLAS</span>
+                                <span class="section-label">GUIA DE TAMANHOS</span>
                             </div>
                             <div class="size-grid">
                                 @if (isset($siblings) && $siblings->count() > 0)
@@ -84,9 +85,9 @@
                                             {{ $product->stock > 0 ? 'AÑADIR A LA BOLSA' : 'AGOTADO' }}
                                         </button>
                                     </form>
-                                                                    <button class="btn btn-outline-dark btn-wishlist">
-                                    <i class="far fa-heart"></i>
-                                </button>
+                                    <button class="btn btn-outline-dark btn-wishlist">
+                                        <i class="far fa-heart"></i>
+                                    </button>
                                 @else
                                     <a href="{{ route('login') }}"
                                         class="btn btn-dark btn-add-bag flex-grow-1 text-center">LOGIN PARA COMPRAR</a>
@@ -99,7 +100,7 @@
                         {{-- Accordion de Informações --}}
                         <div class="product-details-accordion">
                             <div class="accordion-item-sax">
-                                <div class="accordion-trigger">DESCRIPCIÓN DE PRODUCTO <i class="fas fa-plus small"></i>
+                                <div class="accordion-trigger">DESCRIÇÃO DO PRODUTO <i class="fas fa-plus small"></i>
                                 </div>
                                 <div class="accordion-content show">
                                     <div class="rich-text-content">
@@ -110,7 +111,7 @@
 
                             @if ($product->attributes)
                                 <div class="accordion-item-sax">
-                                    <div class="accordion-trigger">DETALLES TÉCNICOS <i class="fas fa-plus small"></i></div>
+                                    <div class="accordion-trigger">DETALHES TÉCNICOS <i class="fas fa-plus small"></i></div>
                                     <div class="accordion-content">
                                         <table class="table table-sm table-borderless m-0 x-small">
                                             @foreach (json_decode($product->attributes, true) as $key => $value)
@@ -125,9 +126,11 @@
                             @endif
 
                             <div class="accordion-item-sax">
-                                <div class="accordion-trigger">ENVÍOS Y DEVOLUCIONES <i class="fas fa-plus small"></i></div>
+                                <div class="accordion-trigger">ENVIOS E DEVOLUÇÕES <i class="fas fa-plus small"></i></div>
                                 <div class="accordion-content">
-                                    <p>Consulte nuestros plazos de entrega y políticas de devolución en el checkout.</p>
+                                    <p>Consulte nossos prazos de entrega e políticas de devolução no checkout. Garantimos
+                                        até 7 dias para trocas ou devoluções de produtos em perfeitas condições e com nota
+                                        fiscal, válido para Brasil e Paraguai</p>
                                 </div>
                             </div>
                         </div>
@@ -136,7 +139,7 @@
                         <div class="store-availability mt-5 pt-4 border-top">
                             <div class="section-label mb-3 text-uppercase fw-bold tracking-wider"
                                 style="font-size: 0.75rem; color: #1a1a1a;">
-                                <i class="fas fa-map-marker-alt me-2"></i> Disponible para retirar en tienda
+                                <i class="fas fa-map-marker-alt me-2"></i> Disponível para retirada na loja
                             </div>
 
                             @php
@@ -172,8 +175,8 @@
         {{-- SEÇÕES DE DESTAQUE DINÂMICAS --}}
         @php
             $highlightTitles = [
-                'lancamentos' => 'RECIÉN LLEGADOS',
-                'destaque' => 'ARTÍCULOS SIMILARES',
+                'lancamentos' => 'Recem Chegados',
+                'destaque' => 'Artigos Similares',
             ];
         @endphp
 
@@ -202,46 +205,46 @@
         @endforeach
         <section class="help-section">
             <div class="help-grid">
-                {{-- CARD: GUÍA DE COMPRA (Ícone Cabide) --}}
+                {{-- CARD: GUIA DE COMPRA (Ícone Cabide) --}}
                 <div class="help-card">
                     <div class="icon">
-                        @if ($attribute && $attribute->icon_cabide)
-                            <img src="{{ asset('storage/uploads/' . $attribute->icon_cabide) }}" alt="Compra"
+                        @if ($attribute && $attribute->icon_cabide && Storage::disk('public')->exists('uploads/' . $attribute->icon_cabide))
+                            <img src="{{ asset('storage/uploads/' . $attribute->icon_cabide) }}" alt="Guia de Compra"
                                 width="30">
                         @else
                             👕
                         @endif
                     </div>
-                    <h3>CÓMO REALIZAR UNA COMPRA</h3>
-                    <p>Tu guía para hacer pedidos</p>
+                    <h3>COMO REALIZAR UMA COMPRA</h3>
+                    <p>Seu guia para fazer pedidos</p>
                 </div>
 
-                {{-- CARD: PREGUNTAS FRECUENTES (Ícone Ajuda/Dúvida) --}}
+                {{-- CARD: PERGUNTAS FREQUENTES (Ícone Ajuda/Dúvida) --}}
                 <div class="help-card">
                     <div class="icon">
-                        @if ($attribute && $attribute->icon_help)
+                        @if ($attribute && $attribute->icon_help && Storage::disk('public')->exists('uploads/' . $attribute->icon_help))
                             <img src="{{ asset('storage/uploads/' . $attribute->icon_help) }}" alt="FAQ"
                                 width="30">
                         @else
                             <span class="red-icon">?</span>
                         @endif
                     </div>
-                    <h3>PREGUNTAS FRECUENTES</h3>
-                    <p>¡Respondemos tus preguntas!</p>
+                    <h3>PERGUNTAS FREQUENTES</h3>
+                    <p>Respondemos suas dúvidas!</p>
                 </div>
 
-                {{-- CARD: NECESITAS AYUDA (Ícone Info/Relógio) --}}
+                {{-- CARD: PRECISA DE AJUDA (Ícone Info/Relógio) --}}
                 <div class="help-card">
                     <div class="icon">
-                        @if ($attribute && $attribute->icon_info)
-                            <img src="{{ asset('storage/uploads/' . $attribute->icon_info) }}" alt="Ayuda"
+                        @if ($attribute && $attribute->icon_info && Storage::disk('public')->exists('uploads/' . $attribute->icon_info))
+                            <img src="{{ asset('storage/uploads/' . $attribute->icon_info) }}" alt="Ajuda"
                                 width="30">
                         @else
                             ⓘ
                         @endif
                     </div>
-                    <h3>¿NECESITAS AYUDA?</h3>
-                    <p>Contacta a nuestro equipo de Atención al Cliente</p>
+                    <h3>PRECISA DE AJUDA?</h3>
+                    <p>Fale com nossa equipe de Atendimento ao Cliente</p>
                 </div>
             </div>
         </section>

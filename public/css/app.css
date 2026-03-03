@@ -492,9 +492,6 @@ body {
 #backToTop:hover {
     background: #e6c200;
 }
-.border-0 img{
-    height: 19em;
-}
 .nav-links .dropdown:hover .dropdown-menu {
     display: block;
 }
@@ -628,4 +625,8 @@ body {
 .swiper-horizontal>.swiper-pagination-bullets, .swiper-pagination-bullets.swiper-pagination-horizontal,
 .swiper-horizontal>.swiper-pagination-bullets, .swiper-pagination-bullets.swiper-pagination-horizontal{
     display:none !important;
+}
+.sax-img-container img,
+.jw-img-container img{
+        mix-blend-mode: multiply !important;
 }

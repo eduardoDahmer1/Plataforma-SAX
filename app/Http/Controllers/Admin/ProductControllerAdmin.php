@@ -291,6 +291,8 @@ class ProductControllerAdmin extends Controller
             'color_parent_id' => 'nullable|array',
             'color_parent_id.*' => 'nullable|exists:products,id',
             'size' => 'nullable|string|max:50',
+            'stores' => 'nullable|array',
+            'stores.*' => 'string|in:asuncion,cde,pjc', // Valida se os valores são os permitidos
             'color' => 'nullable|string|max:7',
         ]);
 
@@ -301,6 +303,7 @@ class ProductControllerAdmin extends Controller
             'price',
             'stock',
             'brand_id',
+            'stores',
             'category_id',
             'subcategory_id',
             'childcategory_id',
@@ -319,6 +322,7 @@ class ProductControllerAdmin extends Controller
         // mas conforme sua regra, estamos definindo a estrutura a partir do pai.
         $data['product_role'] = 'P';
         $data['parent_id'] = null;
+        $data['stores'] = $request->input('stores', []);
 
         // --- TRATAMENTO DE IMAGEM PRINCIPAL ---
         if ($request->hasFile('photo')) {
@@ -378,7 +382,8 @@ class ProductControllerAdmin extends Controller
                     'brand_id' => $product->brand_id,
                     'category_id' => $product->category_id,
                     'subcategory_id' => $product->subcategory_id,
-                    'status' => $product->status
+                    'status' => $product->status,
+                    'stores' => $product->stores
                 ]);
             }
         }

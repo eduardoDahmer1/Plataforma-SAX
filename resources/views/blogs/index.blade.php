@@ -4,248 +4,224 @@
 <div class="sax-blog-container py-5">
     <div class="container">
         
-        {{-- Título Editorial --}}
-        <div class="text-center mb-5">
-            <h1 class="sax-blog-title">#SAXNEWS</h1>
-            <div class="sax-divider mx-auto"></div>
-            <p class="text-muted mt-2 small text-uppercase letter-spacing-2">Tendências, Estilo e Lifestyle</p>
+        {{-- Cabeçalho Minimalista --}}
+        <div class="text-center mb-5 pb-4">
+            <h1 class="sax-editorial-title">SAX <span class="thin">JOURNAL</span></h1>
+            <p class="sax-subtitle">CURADORIA DE ESTILO, LUXO E LIFESTYLE</p>
         </div>
 
-        {{-- Filtros e Busca --}}
-        <div class="row mb-5 align-items-center">
-            <div class="col-lg-8 order-2 order-lg-1">
-                <div class="sax-categories-filter d-flex flex-wrap gap-3">
-                    <a href="{{ route('blogs.index') }}"
-                       class="sax-filter-link {{ request('category') == '' ? 'active' : '' }}">
-                        TODOS
-                    </a>
+        {{-- Navegação de Categorias & Busca --}}
+        <div class="row mb-5 pb-3 border-bottom align-items-center">
+            <div class="col-md-8">
+                <div class="sax-nav-wrapper">
+                    <a href="{{ route('blogs.index') }}" class="sax-nav-item {{ !request('category') ? 'active' : '' }}">TODOS</a>
                     @foreach($categories as $cat)
-                        <a href="{{ route('blogs.index', array_merge(request()->all(), ['category' => $cat->id])) }}"
-                           class="sax-filter-link {{ request('category') == $cat->id ? 'active' : '' }}">
+                        <a href="{{ route('blogs.index', ['category' => $cat->id]) }}" 
+                           class="sax-nav-item {{ request('category') == $cat->id ? 'active' : '' }}">
                            {{ strtoupper($cat->name) }}
                         </a>
                     @endforeach
                 </div>
             </div>
-            <div class="col-lg-4 order-1 order-lg-2 mb-4 mb-lg-0">
-                <form method="GET" class="sax-blog-search">
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control"
-                               placeholder="BUSCAR NO BLOG..."
-                               value="{{ request('search') }}">
-                        <button class="btn border-0"><i class="fas fa-search"></i></button>
-                    </div>
-                    @if(request('category'))
-                        <input type="hidden" name="category" value="{{ request('category') }}">
-                    @endif
+            <div class="col-md-4">
+                <form method="GET" class="sax-search-minimal">
+                    <input type="text" name="search" placeholder="BUSCAR..." value="{{ request('search') }}">
+                    <button type="submit"><i class="fas fa-search"></i></button>
                 </form>
             </div>
         </div>
 
-        {{-- Banner da categoria --}}
-        @if(request('category'))
-            @php $selectedCategory = $categories->firstWhere('id', request('category')); @endphp
-            @if($selectedCategory && $selectedCategory->banner)
-                <div class="sax-category-banner mb-5 overflow-hidden">
-                    <img src="{{ Storage::url($selectedCategory->banner) }}" alt="{{ $selectedCategory->name }}" class="w-100">
-                    <div class="banner-overlay text-white">
-                        <h2 class="m-0">{{ strtoupper($selectedCategory->name) }}</h2>
+        {{-- SEÇÃO DE DESTAQUE (Apenas se não houver busca/filtro ativa) --}}
+        @if(!request('search') && !request('category'))
+            @php $featured = $blogs->where('featured', true)->first() ?? $blogs->first(); @endphp
+            @if($featured)
+                <section class="sax-featured-section mb-5">
+                    <div class="row g-0 align-items-center bg-light">
+                        <div class="col-lg-8">
+                            <div class="featured-img-container">
+                                <img src="{{ $featured->image ? Storage::url($featured->image) : asset('storage/uploads/noimage.webp') }}" alt="{{ $featured->title }}">
+                            </div>
+                        </div>
+                        <div class="col-lg-4 p-5">
+                            <span class="sax-badge-gold">DESTACADO</span>
+                            <h2 class="featured-title mt-3">{{ $featured->title }}</h2>
+                            <p class="featured-excerpt text-muted mt-3">{{ Str::limit($featured->subtitle, 150) }}</p>
+                            <a href="{{ route('blogs.show', $featured->slug) }}" class="sax-btn-link mt-4">LEER ARTÍCULO</a>
+                        </div>
                     </div>
-                </div>
+                </section>
             @endif
         @endif
 
-        {{-- Lista de Blogs --}}
-        <div class="row g-5">
+        {{-- GRID DE POSTS --}}
+        <div class="row g-4">
             @forelse ($blogs as $blog)
-            <div class="col-md-6 col-lg-4">
-                <article class="sax-post-card">
-                    <a href="{{ route('blogs.show', $blog->slug) }}" class="text-decoration-none">
-                        <div class="post-img-wrapper mb-3">
-                            @php
-                                $imagePath = ($blog->image && Storage::disk('public')->exists($blog->image))
-                                    ? Storage::url($blog->image)
-                                    : asset('storage/uploads/noimage.webp');
-                            @endphp
-                            <img src="{{ $imagePath }}" class="img-fluid" alt="{{ $blog->title }}">
-                            <span class="post-category-tag">{{ $blog->category->name ?? 'STYLE' }}</span>
-                        </div>
-                        
-                        <div class="post-content">
-                            <h3 class="post-title">{{ $blog->title }}</h3>
-                            <p class="post-excerpt text-muted">
-                                {{ Str::limit($blog->subtitle, 100) }}
-                            </p>
-                            <span class="sax-read-more">CONTINUAR LENDO <i class="fas fa-arrow-right ms-2"></i></span>
-                        </div>
-                    </a>
-                </article>
-            </div>
+                {{-- Pula o post que já apareceu no destaque se for a primeira página --}}
+                @if(!request('search') && !request('category') && isset($featured) && $blog->id == $featured->id) @continue @endif
+
+                <div class="col-md-6 col-lg-4">
+                    <article class="sax-card-v2">
+                        <a href="{{ route('blogs.show', $blog->slug) }}" class="text-decoration-none">
+                            <div class="sax-card-img">
+                                <img src="{{ $blog->image ? Storage::url($blog->image) : asset('storage/uploads/noimage.webp') }}" alt="{{ $blog->title }}">
+                                <div class="sax-card-cat">{{ $blog->category->name ?? 'STYLE' }}</div>
+                            </div>
+                            <div class="sax-card-body mt-3">
+                                <div class="sax-card-meta">
+                                    <span>{{ \Carbon\Carbon::parse($blog->published_at)->format('d.m.Y') }}</span>
+                                    @if($blog->read_time)
+                                        <span class="mx-2">•</span>
+                                        <span>{{ $blog->read_time }} MIN LEITURA</span>
+                                    @endif
+                                </div>
+                                <h3 class="sax-card-title">{{ $blog->title }}</h3>
+                                <p class="sax-card-text">{{ Str::limit($blog->subtitle, 100) }}</p>
+                            </div>
+                        </a>
+                    </article>
+                </div>
             @empty
                 <div class="col-12 text-center py-5">
-                    <p class="text-muted">Nenhum artigo encontrado para esta busca.</p>
+                    <h4 class="text-muted thin">No se encontraron artículos.</h4>
                 </div>
             @endforelse
         </div>
 
-        {{-- Paginação SAX Style --}}
-        <div class="d-flex justify-content-center mt-5">
-            {{ $blogs->links('pagination::bootstrap-5') }}
+        {{-- PAGINAÇÃO --}}
+        <div class="d-flex justify-content-center mt-5 pt-4">
+            {{ $blogs->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
     </div>
 </div>
 @endsection
+
 <style>
-    /* Container Geral */
-.sax-blog-container {
-    background-color: #fff;
-    color: #000;
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;700&display=swap');
+
+:root {
+    --sax-gold: #b2945e;
+    --sax-black: #000;
 }
 
-/* Tipografia */
-.sax-blog-title {
-    font-family: 'Playfair Display', serif; /* Opcional, ou Helvetica bold */
+/* Tipografia Editorial */
+.sax-editorial-title {
+    font-family: 'Playfair Display', serif;
     font-weight: 900;
-    font-size: 3rem;
-    letter-spacing: -1px;
-    margin-bottom: 0;
+    font-size: 3.5rem;
+    letter-spacing: 5px;
+    color: var(--sax-black);
+}
+.sax-editorial-title .thin { font-weight: 400; }
+.sax-subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #888;
 }
 
-.letter-spacing-2 { letter-spacing: 2px; }
-
-.sax-divider {
-    width: 60px;
-    height: 3px;
-    background-color: #000;
-}
-
-/* Busca */
-.sax-blog-search {
-    border-bottom: 1px solid #000;
-}
-.sax-blog-search .form-control {
-    border: none !important;
-    background: transparent !important;
-    font-size: 12px;
-    font-weight: 600;
-    padding-left: 0;
-}
-.sax-blog-search .form-control:focus { box-shadow: none; }
-
-/* Filtros */
-.sax-filter-link {
-    text-decoration: none;
-    color: #999;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    transition: all 0.3s ease;
-    border-bottom: 2px solid transparent;
+/* Navegação e Busca */
+.sax-nav-wrapper {
+    display: flex;
+    gap: 25px;
+    overflow-x: auto;
     padding-bottom: 5px;
 }
-.sax-filter-link:hover, .sax-filter-link.active {
-    color: #000;
-    border-bottom-color: #000;
+.sax-nav-item {
+    text-decoration: none !important;
+    color: #999;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    transition: 0.3s;
 }
+.sax-nav-item.active, .sax-nav-item:hover { color: var(--sax-black); }
 
-/* Banner de Categoria */
-.sax-category-banner {
-    position: relative;
-    max-height: 350px;
-}
-.banner-overlay {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.3);
+.sax-search-minimal {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
 }
-.banner-overlay h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: 4px;
+.sax-search-minimal input {
+    border: none;
+    outline: none;
+    font-size: 11px;
+    letter-spacing: 1px;
+    width: 100%;
 }
+.sax-search-minimal button { border: none; background: none; font-size: 12px; }
 
-/* Card de Postagem */
-.sax-post-card {
-    transition: all 0.4s ease;
-}
-
-.post-img-wrapper {
-    position: relative;
+/* Destaque (Featured) */
+.featured-img-container {
+    height: 500px;
     overflow: hidden;
 }
-
-.post-img-wrapper img {
-    width: 100%;
-    height: 280px;
-    object-fit: cover;
-    transition: transform 0.8s ease;
+.featured-img-container img {
+    width: 100%; height: 100%; object-fit: cover;
 }
-
-.sax-post-card:hover img {
-    transform: scale(1.05);
-}
-
-.post-category-tag {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    background: #000;
-    color: #fff;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 5px 15px;
-    text-transform: uppercase;
-}
-
-.post-title {
-    font-size: 18px;
+.featured-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
     font-weight: 700;
-    margin: 15px 0 10px;
-    color: #000;
-    line-height: 1.3;
+    line-height: 1.1;
+}
+.sax-badge-gold {
+    color: var(--sax-gold);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
 }
 
-.post-excerpt {
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 15px;
-}
-
-.sax-read-more {
-    font-size: 11px;
-    font-weight: 800;
-    color: #000;
-    letter-spacing: 1px;
+/* Card V2 (Grid) */
+.sax-card-v2 { transition: transform 0.3s; }
+.sax-card-img {
     position: relative;
+    height: 350px;
+    overflow: hidden;
 }
-
-.sax-read-more::after {
-    content: "";
+.sax-card-img img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.6s;
+}
+.sax-card-v2:hover .sax-card-img img { transform: scale(1.08); }
+.sax-card-cat {
     position: absolute;
-    width: 0;
-    height: 1px;
-    bottom: -2px;
-    left: 0;
-    background: #000;
-    transition: width 0.3s ease;
+    top: 20px; left: 20px;
+    background: #fff;
+    padding: 5px 12px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
-
-.sax-post-card:hover .sax-read-more::after {
-    width: 100%;
+.sax-card-meta {
+    font-size: 10px;
+    color: #aaa;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
 }
-
-/* Customização Paginação (Bootstrap 5) */
-.pagination .page-link {
-    border: none;
+.sax-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
     color: #000;
-    font-weight: bold;
-    margin: 0 5px;
+    line-height: 1.2;
 }
-.pagination .page-item.active .page-link {
-    background-color: #000;
-    border-radius: 50%;
+.sax-card-text { font-size: 13px; color: #666; line-height: 1.5; }
+
+/* Botões */
+.sax-btn-link {
+    display: inline-block;
+    padding: 10px 25px;
+    border: 1px solid #000;
+    color: #000;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: 0.3s;
+}
+.sax-btn-link:hover { background: #000; color: #fff; }
+
+@media (max-width: 991px) {
+    .featured-img-container { height: 300px; }
 }
 </style>

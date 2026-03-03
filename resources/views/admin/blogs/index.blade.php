@@ -3,119 +3,123 @@
 @section('content')
 <div class="container-fluid py-4 px-md-5">
     
-    {{-- Header Minimalista --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
+    {{-- Header com Estilo SAX Admin --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Contenido Editorial</h1>
-            <p class="small text-secondary mb-0">Gestión de artículos y noticias del blog</p>
+            <h1 class="h3 fw-bold text-uppercase tracking-tighter mb-0">Contenido Editorial</h1>
+            <p class="small text-muted mb-0">Gestión de artículos y noticias del blog</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-outline-dark btn-sm rounded-0 px-3 text-uppercase fw-bold x-small tracking-wider">
-                Categorías
+            <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-white border rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
+                CATEGORÍAS
             </a>
-            <a href="{{ route('admin.blogs.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
-                <i class="fa fa-plus me-2"></i> Nuevo Artículo
+            <a href="{{ route('admin.blogs.create') }}" class="btn btn-dark rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
+                <i class="fa fa-plus me-1"></i> NUEVO ARTÍCULO
             </a>
         </div>
     </div>
 
-    {{-- Tabela de Blogs --}}
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead class="bg-white">
-                <tr class="text-uppercase x-small tracking-wider text-secondary">
-                    <th class="py-3 border-0 fw-bold">Título del Artículo</th>
-                    <th class="py-3 border-0 fw-bold">Estado</th>
-                    <th class="py-3 border-0 fw-bold">Fecha de Publicación</th>
-                    <th class="py-3 border-0 fw-bold text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="border-top-0">
-                @forelse($blogs as $blog)
-                <tr class="border-bottom clickable-row">
-                    <td class="py-4">
-                        <div class="d-flex align-items-center">
-                            {{-- Miniatura discreta ou ícone --}}
-                            <div class="blog-icon-box me-3">
-                                <i class="far fa-file-alt text-muted"></i>
-                            </div>
-                            <div>
-                                <span class="d-block fw-bold text-dark text-uppercase small tracking-tighter">{{ $blog->title }}</span>
-                                <span class="x-small text-muted italic">slug: {{ $blog->slug }}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="py-4">
-                        <div class="d-flex align-items-center">
-                            <span class="status-dot {{ $blog->published_at ? 'published' : 'draft' }}"></span>
-                            <span class="x-small text-uppercase fw-bold {{ $blog->published_at ? 'text-dark' : 'text-muted' }}">
-                                {{ $blog->published_at ? 'Publicado' : 'Borrador' }}
-                            </span>
-                        </div>
-                    </td>
-                    <td class="py-4">
-                        <span class="x-small text-secondary">
-                            {{ $blog->published_at ? $blog->published_at->format('d M, Y') : '—' }}
-                        </span>
-                    </td>
-                    <td class="py-4 text-end">
-                        <div class="d-flex justify-content-end gap-3 align-items-center">
-                            <a href="{{ route('blogs.show', $blog->slug) }}" target="_blank" class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                                VISTA PREVIA
-                            </a>
-                            <a href="{{ route('admin.blogs.edit', $blog) }}" class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                                EDITAR
-                            </a>
-                            <form action="{{ route('admin.blogs.destroy', $blog) }}" method="POST" onsubmit="return confirm('¿Eliminar artículo?')" class="m-0">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">
-                                    ELIMINAR
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" class="text-center py-5 text-muted small italic">No hay artículos redactados todavía.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+    {{-- Abas de Filtro --}}
+    <div class="d-flex gap-4 mb-4 border-bottom pb-2">
+        <a href="#" class="filter-tab active">TODOS ({{ $blogs->total() }})</a>
+        <a href="#" class="filter-tab">PUBLICADOS</a>
+        <a href="#" class="filter-tab">BORRADORES</a>
     </div>
 
-    <div class="mt-5 d-flex justify-content-center">
+    {{-- Lista de Cards --}}
+    <div class="sax-admin-list">
+        @forelse($blogs as $blog)
+        <div class="sax-admin-card mb-3">
+            <div class="row align-items-center g-0">
+                {{-- Imagem --}}
+                <div class="col-auto">
+                    <div class="sax-card-img-box">
+                        <img src="{{ $blog->image ? Storage::url($blog->image) : asset('storage/uploads/noimage.webp') }}" alt="">
+                    </div>
+                </div>
+
+                {{-- Conteúdo --}}
+                <div class="col ps-3">
+                    <div class="mb-1">
+                        <span class="badge bg-light text-muted border rounded-0 x-small-7 fw-bold">{{ $blog->category->name ?? 'STYLE' }}</span>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-uppercase small tracking-tight">{{ $blog->title }}</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="x-small text-muted italic">/{{ $blog->slug }}</span>
+                        <span class="status-pill {{ $blog->is_active ? 'active' : 'draft' }}">
+                            {{ $blog->is_active ? 'PUBLICADO' : 'BORRADOR' }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Data --}}
+                <div class="col-auto px-4 d-none d-lg-block border-start h-100">
+                    <div class="text-center">
+                        <span class="d-block x-small-7 text-muted fw-bold tracking-wider">PUBLICACIÓN</span>
+                        <span class="d-block small fw-bold">{{ $blog->published_at ? $blog->published_at->format('d M, Y') : '—' }}</span>
+                    </div>
+                </div>
+
+                {{-- Ações --}}
+                <div class="col-auto px-4 border-start">
+                    <div class="d-flex gap-3">
+                        <a href="{{ route('blogs.show', $blog->slug) }}" target="_blank" class="action-icon" title="Vista Previa">
+                            <i class="far fa-eye"></i>
+                        </a>
+                        <a href="{{ route('admin.blogs.edit', $blog) }}" class="action-icon" title="Editar">
+                            <i class="far fa-edit"></i>
+                        </a>
+                        <form action="{{ route('admin.blogs.destroy', $blog) }}" method="POST" onsubmit="return confirm('¿Eliminar?')" class="m-0">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="action-icon text-danger">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="bg-white border p-5 text-center">
+            <p class="text-muted mb-0">No hay artículos para mostrar.</p>
+        </div>
+        @endforelse
+    </div>
+
+    <div class="mt-4">
         {{ $blogs->links('pagination::bootstrap-4') }}
     </div>
 </div>
 
 <style>
-    /* Editorial Minimalist UI */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .tracking-tighter { letter-spacing: 0.05em; }
+    /* Admin Editorial UI Overrides */
     .x-small { font-size: 0.65rem; }
+    .x-small-7 { font-size: 0.6rem; }
+    .tracking-wider { letter-spacing: 0.1em; }
     .italic { font-style: italic; }
     
-    .blog-icon-box {
-        width: 40px; height: 40px;
-        background: #f8f9fa;
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 2px;
-    }
+    /* Tabs */
+    .filter-tab { font-size: 0.65rem; font-weight: 800; text-decoration: none; color: #999; letter-spacing: 1px; padding-bottom: 8px; border-bottom: 2px solid transparent; transition: 0.3s; }
+    .filter-tab:hover, .filter-tab.active { color: #000; border-bottom-color: #000; }
 
-    /* Status Dots */
-    .status-dot { height: 6px; width: 6px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-    .status-dot.published { background: #10b981; } /* Emerald */
-    .status-dot.draft { background: #dee2e6; }     /* Grey */
+    /* Card Styling */
+    .sax-admin-card { background: #fff; border: 1px solid #eee; transition: 0.2s; }
+    .sax-admin-card:hover { border-color: #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 
-    /* Buttons and Links */
-    .btn-clean { background: none; border: none; padding: 0; cursor: pointer; }
-    .hover-underline:hover { text-decoration: underline !important; }
-    
-    .table td { border-bottom: 1px solid #f1f1f1; transition: 0.2s; }
-    .clickable-row:hover td { background-color: #fafafa; }
+    .sax-card-img-box { width: 80px; height: 80px; overflow: hidden; }
+    .sax-card-img-box img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Custom Pagination Overrides */
-    .pagination { --bs-pagination-border-radius: 0; --bs-pagination-color: #000; --bs-pagination-active-bg: #000; --bs-pagination-active-border-color: #000; }
+    /* Pill */
+    .status-pill { font-size: 0.55rem; font-weight: 900; padding: 2px 8px; border-radius: 50px; }
+    .status-pill.active { background: #dcfce7; color: #15803d; }
+    .status-pill.draft { background: #f3f4f6; color: #6b7280; }
+
+    /* Icons */
+    .action-icon { color: #888; text-decoration: none; font-size: 0.9rem; transition: 0.2s; background: none; border: none; padding: 0; }
+    .action-icon:hover { color: #000; }
+    .action-icon.text-danger:hover { color: #dc3545; }
+
+    /* Pagination */
+    .pagination { --bs-pagination-border-radius: 0; --bs-pagination-color: #000; --bs-pagination-active-bg: #000; }
 </style>
 @endsection

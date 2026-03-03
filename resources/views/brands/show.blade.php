@@ -85,7 +85,7 @@
                                                 {{ $item->external_name }}
                                             </div>
                                             <div class="jw-price fw-bold text-dark small">
-                                                {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
+                                                {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
                                             </div>
                                         </div>
                                     </div>

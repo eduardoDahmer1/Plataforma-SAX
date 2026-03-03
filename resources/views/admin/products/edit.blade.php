@@ -79,8 +79,8 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label for="categoriasfilhas_id" class="form-label"><i
-                                class="fas fa-sitemap me-1"></i>Categorias Filhas</label>
+                        <label for="categoriasfilhas_id" class="form-label"><i class="fas fa-sitemap me-1"></i>Categorias
+                            Filhas</label>
                         <select name="categoriasfilhas_id" id="categoriasfilhas_id" class="form-select">
                             <option value="">Selecione uma categorias filhas</option>
                             @foreach ($categoriasfilhas as $categoriasfilhas)
@@ -191,9 +191,52 @@
 
                     <!-- Descrição -->
                     <div class="col-12">
-                        <label for="description" class="form-label"><i
+                        <label for="editor-product" class="sax-label"><i
                                 class="fas fa-align-left me-1"></i>Descrição</label>
-                        <textarea name="description" id="editor" class="form-control" rows="5">{{ old('description', $item->description ?? '') }}</textarea>
+                        <div class="editor-rich-wrapper">
+                            <textarea name="description" id="editor-product" class="form-control" rows="5">{{ old('description', $item->description ?? '') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mb-4">
+                        <label class="sax-label mb-3">
+                            <i class="fas fa-map-marker-alt me-1"></i> Disponible para retirar en tienda
+                        </label>
+
+                        <div class="d-flex flex-column gap-2 bg-light p-3 border">
+                            {{-- Loja Asunción --}}
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input sax-checkbox me-2" type="checkbox" name="stores[]"
+                                    value="asuncion" id="store_asuncion"
+                                    {{ isset($item) && is_array($item->stores) && in_array('asuncion', $item->stores) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold x-small tracking-wider text-uppercase"
+                                    for="store_asuncion">
+                                    Asunción
+                                </label>
+                            </div>
+
+                            {{-- Loja Ciudad Del Este --}}
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input sax-checkbox me-2" type="checkbox" name="stores[]"
+                                    value="cde" id="store_cde"
+                                    {{ isset($item) && is_array($item->stores) && in_array('cde', $item->stores) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold x-small tracking-wider text-uppercase"
+                                    for="store_cde">
+                                    Ciudad Del Este
+                                </label>
+                            </div>
+
+                            {{-- Loja Pedro Juan Caballero --}}
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input sax-checkbox me-2" type="checkbox" name="stores[]"
+                                    value="pjc" id="store_pjc"
+                                    {{ isset($item) && is_array($item->stores) && in_array('pjc', $item->stores) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold x-small tracking-wider text-uppercase"
+                                    for="store_pjc">
+                                    Pedro Juan Caballero
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- RELACIONAMENTO POR TAMANHO -->
@@ -332,6 +375,33 @@
         @endforeach
     @endif
 
+    {{-- Script do TinyMCE --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            tinymce.init({
+                selector: '#editor-product', // Alvo do ID acima
+                height: 400,
+                menubar: false,
+                branding: false,
+                statusbar: true,
+                plugins: [
+                    'advlist autolink lists link image charmap print preview anchor',
+                    'searchreplace visualblocks code fullscreen',
+                    'insertdatetime media table paste code help wordcount'
+                ],
+                toolbar: 'formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | link image | code fullscreen',
+                content_style: 'body { font-family: -apple-system, sans-serif; font-size: 14px; }',
+                setup: function(editor) {
+                    editor.on('change', function() {
+                        editor.save();
+                    });
+                }
+            });
+        });
+    </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -369,9 +439,9 @@
                                                 <div class="card-body p-2">
                                                     <p class="card-text m-0 fw-bold">${product.name || product.external_name}</p>
                                                     ${product.color ? `<div class="d-flex align-items-center mt-1">
-                                                                <span style="display:inline-block;width:16px;height:16px;background:${product.color};border:1px solid #ccc;margin-right:5px;"></span>
-                                                                <small>${product.color}</small>
-                                                            </div>` : ''}
+                                                                            <span style="display:inline-block;width:16px;height:16px;background:${product.color};border:1px solid #ccc;margin-right:5px;"></span>
+                                                                            <small>${product.color}</small>
+                                                                        </div>` : ''}
                                                     ${product.size ? `<div class="mt-1"><small class="text-muted">Tamanho: ${product.size}</small></div>` : ''}
                                                 </div>
                                             </div>
@@ -416,9 +486,9 @@
                             <div class="card-body p-2">
                                 <p class="card-text m-0 fw-bold">${name}</p>
                                 ${color ? `<div class="d-flex align-items-center mt-1">
-                                            <span style="display:inline-block;width:16px;height:16px;background:${color};border:1px solid #ccc;margin-right:5px;"></span>
-                                            <small>${color}</small>
-                                        </div>` : ''}
+                                                        <span style="display:inline-block;width:16px;height:16px;background:${color};border:1px solid #ccc;margin-right:5px;"></span>
+                                                        <small>${color}</small>
+                                                    </div>` : ''}
                                 ${size ? `<div class="mt-1"><small class="text-muted">Tamanho: ${size}</small></div>` : ''}
                                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-item">
                                     <i class="fas fa-times"></i>
@@ -460,6 +530,54 @@
             padding: 0;
             border: 1px solid #ccc;
             cursor: pointer;
+        }
+
+        /* Estilo do Label Superior */
+        .sax-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #444;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+            letter-spacing: 0.12em;
+        }
+
+        /* Remove arredondamento e ajusta borda do Editor */
+        .tox-tinymce {
+            border-radius: 0 !important;
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+
+        /* Ajuste na barra de ferramentas do editor */
+        .tox .tox-toolbar__group {
+            padding: 0 5px !important;
+        }
+
+        .editor-rich-wrapper {
+            margin-top: 5px;
+        }
+
+        /* Estilo para os checkboxes da SAX */
+        .sax-checkbox {
+            border-radius: 0 !important;
+            /* Bordas retas */
+            border: 1px solid #000 !important;
+            cursor: pointer;
+            width: 1.2em;
+            height: 1.2em;
+        }
+
+        .sax-checkbox:checked {
+            background-color: #000 !important;
+            /* Cor preta ao selecionar */
+            border-color: #000 !important;
+        }
+
+        /* Ajuste para o container cinza claro no fundo */
+        .bg-light {
+            background-color: #f9f9f9 !important;
         }
     </style>
 

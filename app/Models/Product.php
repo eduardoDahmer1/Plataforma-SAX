@@ -89,6 +89,7 @@ class Product extends Model
         'color',
         'size',
         'stock',
+        'stores',
         'brand_id',
         'parent_id',
         'color_parent_id', // adiciona a coluna que vai armazenar cores como array
@@ -100,6 +101,7 @@ class Product extends Model
         'parent_id' => 'array',
         'color_parent_id' => 'array',
         'price' => 'float',
+        'stores' => 'array',
         'stock' => 'integer',
     ];
 

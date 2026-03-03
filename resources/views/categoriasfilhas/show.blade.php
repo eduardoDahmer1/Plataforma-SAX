@@ -91,7 +91,7 @@
                                                     {{ Str::limit($item->name ?? $item->external_name, 40) }}
                                                 </div>
                                                 <div class="jw-price fw-bold text-dark">
-                                                    {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
+                                                    {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
                                                 </div>
                                             </div>
                                         </div>

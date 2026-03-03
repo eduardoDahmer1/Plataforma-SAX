@@ -67,7 +67,7 @@
 
                             {{-- Preço --}}
                             <div class="jw-price fw-bold">
-                                {{ currency_format($product->price) }}
+                                {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
                             </div>
                         </div>
                     </div>

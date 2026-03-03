@@ -33,7 +33,7 @@
 
                 <div class="d-flex justify-content-between align-items-center mt-auto">
                     <div class="sax-price fw-bold text-dark">
-                        {{ isset($item->price) ? number_format($item->price, 2, ',', '.') : '0,00' }} USD
+                        {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
                     </div>
                     <div class="sax-sku text-muted">
                         SKU: {{ $item->sku ?? 'N/A' }}

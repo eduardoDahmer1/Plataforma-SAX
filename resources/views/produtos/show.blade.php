@@ -50,7 +50,7 @@
                         <h1 class="product-title text-uppercase">{{ $product->external_name }}</h1>
 
                         <div class="product-price mb-4">
-                            {{ currency_format($product->price) }} <span class="currency">USD</span>
+                            {{ currency_format($product->price) }}
                         </div>
 
                         {{-- Seleção de Tamanhos Dinâmica --}}
@@ -84,16 +84,16 @@
                                             {{ $product->stock > 0 ? 'AÑADIR A LA BOLSA' : 'AGOTADO' }}
                                         </button>
                                     </form>
+                                                                    <button class="btn btn-outline-dark btn-wishlist">
+                                    <i class="far fa-heart"></i>
+                                </button>
                                 @else
                                     <a href="{{ route('login') }}"
                                         class="btn btn-dark btn-add-bag flex-grow-1 text-center">LOGIN PARA COMPRAR</a>
                                 @endif
 
-                                <button class="btn btn-outline-dark btn-wishlist">
-                                    <i class="far fa-heart"></i>
-                                </button>
+
                             </div>
-                            <a href="#" class="btn-guia-tallas d-block mt-2">GUIA DE TALLAS</a>
                         </div>
 
                         {{-- Accordion de Informações --}}
@@ -102,7 +102,9 @@
                                 <div class="accordion-trigger">DESCRIPCIÓN DE PRODUCTO <i class="fas fa-plus small"></i>
                                 </div>
                                 <div class="accordion-content show">
-                                    <p>{!! nl2br(e($product->description)) !!}</p>
+                                    <div class="rich-text-content">
+                                        {!! $product->description !!}
+                                    </div>
                                 </div>
                             </div>
 
@@ -132,19 +134,36 @@
 
                         {{-- Disponibilidade em Loja --}}
                         <div class="store-availability mt-5 pt-4 border-top">
-                            <div class="section-label mb-3 text-uppercase">
+                            <div class="section-label mb-3 text-uppercase fw-bold tracking-wider"
+                                style="font-size: 0.75rem; color: #1a1a1a;">
                                 <i class="fas fa-map-marker-alt me-2"></i> Disponible para retirar en tienda
                             </div>
+
+                            @php
+                                // Garante que stores seja um array, mesmo que venha nulo do banco
+                                $selectedStores = is_array($product->stores) ? $product->stores : [];
+
+                                $allStores = [
+                                    'asuncion' => 'Asunción',
+                                    'cde' => 'Ciudad Del Este',
+                                    'pjc' => 'Pedro Juan Caballero',
+                                ];
+                            @endphp
+
                             <ul class="list-unstyled store-list">
-                                <li><i class="far fa-check-circle text-success"></i> Asunción</li>
-                                <li><i class="far fa-check-circle text-success"></i> Ciudad Del Este</li>
-                                <li><i class="far fa-times-circle text-muted"></i> Pedro Juan Caballero</li>
+                                @foreach ($allStores as $key => $label)
+                                    <li class="mb-2 d-flex align-items-center" style="font-size: 0.9rem; color: #444;">
+                                        @if (in_array($key, $selectedStores))
+                                            <i class="far fa-check-circle text-success me-2"></i>
+                                            <span>{{ $label }}</span>
+                                        @else
+                                            <i class="far fa-times-circle text-muted me-2" style="opacity: 0.5;"></i>
+                                            <span class="text-muted">{{ $label }}</span>
+                                        @endif
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
-
-                        <a href="https://wa.me/seu-numero" class="whatsapp-link mt-4">
-                            <i class="fab fa-whatsapp"></i> Compra a través de WhatsApp
-                        </a>
                     </div>
                 </div>
             </div>
@@ -269,6 +288,26 @@
     </script>
 
     <style>
+        .store-availability .section-label {
+            letter-spacing: 0.1em;
+            font-family: 'Montserrat', sans-serif;
+            /* Ou a fonte principal do seu site */
+        }
+
+        .store-list li {
+            transition: all 0.2s ease;
+        }
+
+        /* Estilo para o ícone de "X" (Indisponível) */
+        .text-muted {
+            color: #999 !important;
+        }
+
+        /* Estilo para o ícone de "Check" (Disponível) */
+        .text-success {
+            color: #28a745 !important;
+        }
+
         /* Estrutura Geral */
         .product-page-wrapper {
             background-color: #fff;

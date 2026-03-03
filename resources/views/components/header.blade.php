@@ -272,8 +272,8 @@
                 <div class="p-3 bg-light small fw-bold tracking-1">INSTITUCIONAL</div>
                 <li><a href="{{ route('blogs.index') }}"
                         class="p-3 d-block text-dark text-decoration-none small border-bottom">#SAXNEWS</a></li>
-                <li><a href="{{ route('palace.index') }}"
-                        class="p-3 d-block text-dark text-decoration-none small border-bottom">SAX PALACE</a></li>
+                <li><a href="{{ route('bridal.index') }}"
+                        class="p-3 d-block text-dark text-decoration-none small border-bottom">SAX BRIDAL</a></li>
                 <li><a href="{{ route('contact.form') }}"
                         class="p-3 d-block text-dark text-decoration-none small border-bottom">CONTATO</a></li>
                         <li><a href="{{ route('palace.index') }}"

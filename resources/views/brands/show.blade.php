@@ -111,7 +111,6 @@
     /* 1. Banner Horizontal (Edge to Edge) */
     .brand-hero-fullwidth {
         width: 100vw;
-        height: 45vh;
         min-height: 300px;
         position: relative;
         overflow: hidden;
@@ -120,7 +119,6 @@
 
     .hero-img-render {
         width: 100%;
-        height: 100%;
         object-fit: cover;
     }
 
@@ -129,7 +127,6 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 100%;
         background: rgba(0, 0, 0, 0.05);
     }
 
@@ -191,10 +188,6 @@
 
     /* Ajustes Mobile */
     @media (max-width: 991px) {
-        .brand-hero-fullwidth {
-            height: 30vh;
-        }
-
         .col-lg-3 {
             display: none;
         }

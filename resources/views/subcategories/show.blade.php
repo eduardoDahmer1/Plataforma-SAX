@@ -124,8 +124,8 @@
     .category-detail-wrapper { background-color: #fff; overflow-x: hidden; }
     .tracking-widest { letter-spacing: 0.2em; }
     .category-hero-fullwidth { width: 100vw; height: 45vh; min-height: 300px; position: relative; overflow: hidden; margin-left: calc(-50vw + 50%); }
-    .hero-img-render { width: 100%; height: 100%; object-fit: cover; object-position: center; }
-    .hero-overlay-soft { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.03); }
+    .hero-img-render { width: 100%; object-fit: cover; object-position: center; }
+    .hero-overlay-soft { position: absolute; top: 0; left: 0; width: 100%; background: rgba(0, 0, 0, 0.03); }
     .category-main-logo { max-height: 60px; width: auto; object-fit: contain; }
     .category-name-text { font-weight: 300; text-transform: uppercase; letter-spacing: 5px; color: #000; }
     .back-link-minimal { color: #999; font-size: 0.65rem; letter-spacing: 2px; text-decoration: none; text-transform: uppercase; transition: color 0.2s; }

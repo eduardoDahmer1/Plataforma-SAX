@@ -6,11 +6,11 @@
     {{-- Header Minimalista --}}
     <div class="d-flex justify-content-between align-items-end mb-5">
         <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Directorio de Usuarios</h1>
-            <p class="small text-secondary mb-0">Total: <span class="text-dark fw-bold">{{ $userCount }}</span> registros activos</p>
+            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Diretório de usuários</h1>
+            <p class="small text-secondary mb-0">Total: <span class="text-dark fw-bold">{{ $userCount }}</span> Registros ativos</p>
         </div>
         <a href="{{ route('admin.users.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
-            Nuevo Usuario
+            Novo Usuario
         </a>
     </div>
 
@@ -26,7 +26,7 @@
         <div class="d-flex align-items-center gap-3">
             <label class="x-small fw-bold text-uppercase text-secondary tracking-tighter">Filtrar por tipo:</label>
             <select id="filterUserType" class="form-select form-select-sm border-0 bg-light-subtle rounded-0 px-3" style="width: 180px;">
-                <option value="all">Todos los niveles</option>
+                <option value="all">Todos os níveis</option>
                 <option value="1">Admin Master</option>
                 <option value="2">Usuario Común</option>
                 <option value="3">Usuario Curso</option>
@@ -41,9 +41,9 @@
                 <tr class="text-uppercase x-small tracking-wider text-secondary">
                     <th class="py-3 border-0 fw-bold" style="width: 60px;">ID</th>
                     <th class="py-3 border-0 fw-bold">Usuario</th>
-                    <th class="py-3 border-0 fw-bold">Nivel de Acceso</th>
+                    <th class="py-3 border-0 fw-bold">Nivel de Acesso</th>
                     <th class="py-3 border-0 fw-bold">Registro</th>
-                    <th class="py-3 border-0 fw-bold text-end">Acciones</th>
+                    <th class="py-3 border-0 fw-bold text-end">Ações</th>
                 </tr>
             </thead>
             <tbody class="border-top-0">
@@ -76,7 +76,7 @@
                     <td class="py-4 text-end">
                         <div class="d-flex justify-content-end gap-3">
                             <a href="{{ route('admin.clients.show', $user->id) }}" class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                                DETALLES
+                                DETALHES
                             </a>
                             <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('¿Eliminar usuario?')" class="m-0">
                                 @csrf @method('DELETE')
@@ -89,7 +89,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted small italic">No se encontraron usuarios en la base de datos.</td>
+                    <td colspan="5" class="text-center py-5 text-muted small italic">Nenhum usuário encontrado na base de dados.</td>
                 </tr>
                 @endforelse
             </tbody>

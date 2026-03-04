@@ -6,24 +6,17 @@
     {{-- Header com Estilo SAX Admin --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 fw-bold text-uppercase tracking-tighter mb-0">Contenido Editorial</h1>
-            <p class="small text-muted mb-0">Gestión de artículos y noticias del blog</p>
+            <h1 class="h3 fw-bold text-uppercase tracking-tighter mb-0">Conteudo Editorial</h1>
+            <p class="small text-muted mb-0">Gestão de artigos e notícias do blog</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-white border rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
                 CATEGORÍAS
             </a>
             <a href="{{ route('admin.blogs.create') }}" class="btn btn-dark rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
-                <i class="fa fa-plus me-1"></i> NUEVO ARTÍCULO
+                <i class="fa fa-plus me-1"></i> NOVO ARTIGO
             </a>
         </div>
-    </div>
-
-    {{-- Abas de Filtro --}}
-    <div class="d-flex gap-4 mb-4 border-bottom pb-2">
-        <a href="#" class="filter-tab active">TODOS ({{ $blogs->total() }})</a>
-        <a href="#" class="filter-tab">PUBLICADOS</a>
-        <a href="#" class="filter-tab">BORRADORES</a>
     </div>
 
     {{-- Lista de Cards --}}
@@ -55,7 +48,7 @@
                 {{-- Data --}}
                 <div class="col-auto px-4 d-none d-lg-block border-start h-100">
                     <div class="text-center">
-                        <span class="d-block x-small-7 text-muted fw-bold tracking-wider">PUBLICACIÓN</span>
+                        <span class="d-block x-small-7 text-muted fw-bold tracking-wider">PUBLICAÇÃO</span>
                         <span class="d-block small fw-bold">{{ $blog->published_at ? $blog->published_at->format('d M, Y') : '—' }}</span>
                     </div>
                 </div>
@@ -81,7 +74,7 @@
         </div>
         @empty
         <div class="bg-white border p-5 text-center">
-            <p class="text-muted mb-0">No hay artículos para mostrar.</p>
+            <p class="text-muted mb-0">Não há artigos para mostrar.</p>
         </div>
         @endforelse
     </div>

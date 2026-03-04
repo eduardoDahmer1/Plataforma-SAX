@@ -5,8 +5,8 @@
     {{-- Header Minimalista --}}
     <div class="d-flex justify-content-between align-items-end mb-5">
         <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Órdenes</h1>
-            <p class="small text-secondary mb-0">{{ $orders->total() }} transacciones registradas</p>
+            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Pedidos</h1>
+            <p class="small text-secondary mb-0">{{ $orders->total() }} transações registradas</p>
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-sm btn-outline-dark border-0 rounded-0 text-uppercase fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
@@ -20,7 +20,7 @@
         <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 border-bottom pb-4">
             <div class="col-md-2">
                 <select name="payment_method" class="form-select border-0 bg-light-subtle small rounded-0">
-                    <option value="">Método de Pago</option>
+                    <option value="">Método de pagamento</option>
                     <option value="bancard" {{ request('payment_method') == 'bancard' ? 'selected' : '' }}>Bancard</option>
                     <option value="deposito" {{ request('payment_method') == 'deposito' ? 'selected' : '' }}>Depósito</option>
                     <option value="whatsapp" {{ request('payment_method') == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
@@ -29,9 +29,9 @@
             <div class="col-md-2">
                 <select name="status" class="form-select border-0 bg-light-subtle small rounded-0">
                     <option value="">Estado</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendiente</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pendente</option>
                     <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Procesando</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completado</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completo</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -51,11 +51,11 @@
                 <tr class="text-uppercase x-small tracking-wider text-secondary">
                     <th class="py-3 border-0 fw-bold" style="width: 80px;">ID</th>
                     <th class="py-3 border-0 fw-bold">Cliente</th>
-                    <th class="py-3 border-0 fw-bold">Fecha</th>
+                    <th class="py-3 border-0 fw-bold">Data</th>
                     <th class="py-3 border-0 fw-bold">Estado</th>
                     <th class="py-3 border-0 fw-bold">Método</th>
-                    <th class="py-3 border-0 fw-bold text-end">Monto Total</th>
-                    <th class="py-3 border-0 fw-bold text-end">Acciones</th>
+                    <th class="py-3 border-0 fw-bold text-end">Total</th>
+                    <th class="py-3 border-0 fw-bold text-end">Ações</th>
                 </tr>
             </thead>
             <tbody class="border-top-0">
@@ -92,7 +92,7 @@
                                 <li>
                                     <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" onsubmit="return confirm('¿Eliminar?');">
                                         @csrf @method('DELETE')
-                                        <button class="dropdown-item small text-danger">Eliminar registro</button>
+                                        <button class="dropdown-item small text-danger">Eliminar Registro</button>
                                     </form>
                                 </li>
                             </ul>
@@ -101,7 +101,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center py-5 text-muted small">No hay órdenes para mostrar.</td>
+                    <td colspan="7" class="text-center py-5 text-muted small">Não há pedidos para mostrar.</td>
                 </tr>
                 @endforelse
             </tbody>

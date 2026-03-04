@@ -6,11 +6,11 @@
     {{-- Header Minimalista --}}
     <div class="d-flex justify-content-between align-items-end mb-5">
         <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Pasarelas de Pago</h1>
-            <p class="small text-secondary mb-0">Configure los métodos de transacción disponibles en el checkout</p>
+            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Gateways de pagamento</h1>
+            <p class="small text-secondary mb-0">Configure os métodos de transação disponíveis na finalização da compra</p>
         </div>
         <a href="{{ route('admin.payments.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
-            <i class="fa fa-plus me-2"></i> Nuevo Método
+            <i class="fa fa-plus me-2"></i> Novo Método
         </a>
     </div>
 
@@ -23,7 +23,7 @@
                     <th class="py-3 border-0 fw-bold">Tipo</th>
                     <th class="py-3 border-0 fw-bold">Estado</th>
                     <th class="py-3 border-0 fw-bold text-center" style="width: 100px;">Visibilidad</th>
-                    <th class="py-3 border-0 fw-bold text-end">Gestión</th>
+                    <th class="py-3 border-0 fw-bold text-end">Gestão</th>
                 </tr>
             </thead>
             <tbody class="border-top-0">
@@ -70,7 +70,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted small italic">No hay pasarelas de pago configuradas.</td>
+                    <td colspan="5" class="text-center py-5 text-muted small italic">Não há gateways de pagamento configurados.</td>
                 </tr>
                 @endforelse
             </tbody>

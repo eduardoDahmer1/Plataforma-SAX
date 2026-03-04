@@ -7,10 +7,10 @@
     <div class="d-flex justify-content-between align-items-end mb-5">
         <div>
             <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Categorías de Blog</h1>
-            <p class="small text-secondary mb-0">Organización jerárquica de contenido editorial</p>
+            <p class="small text-secondary mb-0">Organização hierárquica do conteúdo editorial</p>
         </div>
         <a href="{{ route('admin.blog-categories.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
-            <i class="fa fa-plus me-2"></i> Nueva Categoria
+            <i class="fa fa-plus me-2"></i> Nova Categoria
         </a>
     </div>
 

@@ -35,15 +35,8 @@
     <div class="container-fluid px-md-5">
         {{-- Cabeçalho do Painel --}}
         <div class="sax-admin-header d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold sax-admin-title m-0 text-uppercase letter-spacing-2">Dashboard Admin</h2>
-                <span class="text-muted x-small">Sistema de Gerenciamento Interno</span>
-            </div>
             
             <div class="d-flex gap-2">
-                <a href="{{ route('home') }}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
-                    <i class="fa fa-external-link-alt me-1"></i> Ver Site
-                </a>
                 <button class="sax-btn-mobile d-md-none" id="openDrawer">
                     <i class="fa fa-bars"></i>
                 </button>
@@ -66,7 +59,6 @@
                             <div class="header-indicator me-3"></div>
                             <strong class="text-uppercase small letter-spacing-1">Quadro de Trabalho</strong>
                         </div>
-                        <i class="fas fa-thumbtack text-muted opacity-50"></i>
                     </div>
                     <div class="sax-card-body">
                         @yield('content')

@@ -6,10 +6,10 @@
     {{-- Navegação e Título --}}
     <div class="mb-5">
         <a href="{{ route('admin.payments.index') }}" class="text-decoration-none x-small fw-bold text-uppercase text-secondary tracking-wider">
-            <i class="fa fa-chevron-left me-1"></i> Volver a métodos
+            <i class="fa fa-chevron-left me-1"></i> Voltar aos métodos
         </a>
         <h1 class="h4 fw-light mt-2 mb-0 text-uppercase tracking-wider">
-            {{ isset($method) ? 'Configurar Pasarela' : 'Nueva Pasarela de Pago' }}
+            {{ isset($method) ? 'Configurar gateway' : 'Novo gateway de pagamento' }}
         </h1>
         <div class="sax-divider-dark mt-3"></div>
     </div>
@@ -22,16 +22,16 @@
 
                 {{-- Seção: Definição Básica --}}
                 <section class="mb-5">
-                    <h6 class="x-small fw-bold text-uppercase text-secondary tracking-tighter mb-4">Definición General</h6>
+                    <h6 class="x-small fw-bold text-uppercase text-secondary tracking-tighter mb-4">Definição General</h6>
                     <div class="row g-4">
                         <div class="col-md-7">
-                            <label for="name" class="sax-form-label">Nombre del Método</label>
+                            <label for="name" class="sax-form-label">Nome do método</label>
                             <input type="text" name="name" id="name" class="form-control sax-input" 
                                    placeholder="Ej: Bancard, Transferencia..." value="{{ $method->name ?? '' }}" required>
                         </div>
 
                         <div class="col-md-5">
-                            <label for="type" class="sax-form-label">Tipo de Conexión</label>
+                            <label for="type" class="sax-form-label">Tipo de conexão</label>
                             <select name="type" id="type" class="form-select sax-input" required>
                                 <option value="bank" {{ (isset($method) && $method->type == 'bank') ? 'selected' : '' }}>Depósito / Transferencia</option>
                                 <option value="gateway" {{ (isset($method) && $method->type == 'gateway') ? 'selected' : '' }}>Gateway Automático</option>
@@ -45,17 +45,17 @@
                     <h6 class="x-small fw-bold text-uppercase text-secondary tracking-tighter mb-4">Datos para Transferencia</h6>
                     <div class="row">
                         <div class="col-12">
-                            <label for="bank_details" class="sax-form-label">Instrucciones de Pago</label>
+                            <label for="bank_details" class="sax-form-label">Instruções de pagamento</label>
                             <textarea name="bank_details" id="bank_details" class="form-control sax-input" rows="5" 
                                       placeholder="Incluya: Banco, Tipo de cuenta, RUC, etc.">{{ $method->bank_details ?? '' }}</textarea>
-                            <small class="text-muted x-small mt-2 d-block italic">Estos datos se mostrarán al cliente al finalizar la compra.</small>
+                            <small class="text-muted x-small mt-2 d-block italic">Estes dados serão exibidos ao cliente ao finalizar a compra.</small>
                         </div>
                     </div>
                 </section>
 
                 {{-- Seção Dinâmica: Credenciais Gateway --}}
                 <section class="mb-5 gateway-only border-start border-3 border-dark ps-4" style="{{ isset($method) && $method->type === 'gateway' ? '' : 'display:none' }}">
-                    <h6 class="x-small fw-bold text-uppercase text-dark tracking-tighter mb-4">Credenciales de API</h6>
+                    <h6 class="x-small fw-bold text-uppercase text-dark tracking-tighter mb-4">Credenciais de API</h6>
                     <div class="row g-4">
                         <div class="col-md-6">
                             <label for="public_key" class="sax-form-label">Public Key</label>
@@ -76,7 +76,7 @@
                         <input type="checkbox" name="active" value="1" class="form-check-input cursor-pointer" id="active" 
                                {{ (isset($method) && $method->active) ? 'checked' : '' }}>
                         <label class="form-check-label x-small fw-bold text-uppercase ms-2 cursor-pointer" for="active">
-                            Habilitar método en el checkout
+                            Habilitar método na finalização da compra
                         </label>
                     </div>
 

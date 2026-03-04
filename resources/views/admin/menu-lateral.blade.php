@@ -1,8 +1,4 @@
 <div class="sax-admin-sidebar">
-    <div class="sidebar-header-label mb-3">
-        <span class="text-uppercase letter-spacing-2 x-small fw-bold text-muted">Navegação Principal</span>
-    </div>
-
     <nav class="sax-nav-container">
         <a href="{{ route('admin.index') }}" class="sax-nav-item {{ request()->routeIs('admin.index') ? 'active' : '' }}">
             <div class="nav-icon-box bg-soft-warning">

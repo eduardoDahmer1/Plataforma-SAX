@@ -6,11 +6,11 @@
     {{-- Header Minimalista --}}
     <div class="d-flex justify-content-between align-items-end mb-5">
         <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Divisas y Cambios</h1>
-            <p class="small text-secondary mb-0">Gestión de tipos de cambio y formatos de moneda</p>
+            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Moedas e câmbios</h1>
+            <p class="small text-secondary mb-0">Gestão de tipos de câmbio e formatos de moeda</p>
         </div>
         <button class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider" data-bs-toggle="modal" data-bs-target="#addCurrencyModal">
-            <i class="fas fa-plus me-2"></i> Nueva Divisa
+            <i class="fas fa-plus me-2"></i> Nova Moeda
         </button>
     </div>
 
@@ -42,7 +42,7 @@
                         
                         @if(!$currency->is_default)
                         <a href="{{ route('admin.currencies.default', $currency->id) }}" class="text-primary text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                            ESTABLECER COMO BASE
+                            ESTABELECER COMO BASE
                         </a>
                         @endif
                     </div>
@@ -56,7 +56,7 @@
                 <form action="{{ route('admin.currencies.update', $currency->id) }}" method="POST" class="modal-content rounded-0 border-0 shadow-lg">
                     @csrf @method('PUT')
                     <div class="modal-header border-bottom py-3 px-4">
-                        <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small">Configuración de Divisa: {{ $currency->name }}</h6>
+                        <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small">Configuração de Moeda: {{ $currency->name }}</h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4">
@@ -70,11 +70,11 @@
                                 <input type="text" name="sign" class="form-control sax-input" value="{{ $currency->sign }}" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Tasa de Cambio</label>
+                                <label class="sax-label">Taixa de Cambio</label>
                                 <input type="number" step="0.0001" name="value" class="form-control sax-input font-monospace" value="{{ $currency->value }}" required>
                             </div>
                             <div class="col-12">
-                                <label class="sax-label">Descripción</label>
+                                <label class="sax-label">Descrição</label>
                                 <input type="text" name="description" class="form-control sax-input" value="{{ $currency->description }}" required>
                             </div>
                             <div class="col-md-4">
@@ -93,7 +93,7 @@
                     </div>
                     <div class="modal-footer border-top-0 p-4 pt-0">
                         <button type="button" class="btn btn-outline-secondary btn-sm rounded-0 px-4 x-small fw-bold text-uppercase" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">Actualizar Divisa</button>
+                        <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">Atualizar Moeda</button>
                     </div>
                 </form>
             </div>
@@ -123,17 +123,17 @@
                         <input type="text" name="sign" class="form-control sax-input" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="sax-label">Tasa Inicial</label>
+                        <label class="sax-label">Taixa Inicial</label>
                         <input type="number" step="0.0001" name="value" class="form-control sax-input font-monospace" required>
                     </div>
                     <div class="col-12">
-                        <label class="sax-label">Descripción Extendida</label>
+                        <label class="sax-label">Descrição Extendida</label>
                         <input type="text" name="description" class="form-control sax-input" required>
                     </div>
                 </div>
             </div>
             <div class="modal-footer border-top-0 p-4 pt-0">
-                <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">Guardar Nueva Divisa</button>
+                <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">Guardar Nova Moeda</button>
             </div>
         </form>
     </div>

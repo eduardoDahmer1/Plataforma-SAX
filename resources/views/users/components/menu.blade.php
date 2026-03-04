@@ -2,13 +2,13 @@
 
     {{-- 🔑 Informações Pessoais --}}
     <div class="sax-menu-group">
-        <span class="sax-menu-label text-uppercase letter-spacing-1">Mi Cuenta</span>
+        <span class="sax-menu-label text-uppercase letter-spacing-1">Minha conta</span>
         <div class="sax-menu-items">
             <a href="{{ route('user.profile.edit') }}" class="sax-menu-link">
-                <i class="fa fa-user-edit"></i> Editar Datos Personales
+                <i class="fa fa-user-edit"></i> Editar dados pessoais
             </a>
             <a href="#" class="sax-menu-link">
-                <i class="fa fa-lock"></i> Seguridad / Contraseña
+                <i class="fa fa-lock"></i> Segurança / Senha
             </a>
         </div>
     </div>
@@ -28,7 +28,7 @@
         <span class="sax-menu-label text-uppercase letter-spacing-1">Preferencia</span>
         <div class="sax-menu-items">
             <a href="{{ route('user.preferences') }}" class="sax-menu-link">
-                <i class="fa fa-star"></i> Lista de Deseos
+                <i class="fa fa-star"></i> Lista de Desejos
             </a>
         </div>
     </div>
@@ -39,12 +39,12 @@
             <a href="{{ route('logout') }}" 
                onclick="event.preventDefault();document.getElementById('logout-form').submit();"
                class="sax-menu-link text-dark fw-bold">
-                <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
+                <i class="fa fa-sign-out-alt"></i> Sair
             </a>
             
             <button type="button" class="sax-menu-link border-0 bg-transparent text-danger w-100 text-start" 
                     data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                <i class="fa fa-trash-alt"></i> Eliminar Cuenta
+                <i class="fa fa-trash-alt"></i> Excluir conta
             </button>
         </div>
     </div>
@@ -60,8 +60,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-0">
             <div class="modal-body p-4 text-center">
-                <h5 class="fw-bold text-uppercase letter-spacing-2 mb-3">¿Eliminar Cuenta?</h5>
-                <p class="text-muted small px-3">Esta acción es irreversible. Todos sus datos y el historial de pedidos se perderán.</p>
+                <h5 class="fw-bold text-uppercase letter-spacing-2 mb-3">Excluir conta?</h5>
+                <p class="text-muted small px-3">Esta ação é irreversível. Todos os seus dados e histórico de pedidos serão perdidos.</p>
                 
                 <form method="POST" action="{{ route('user.destroy') }}" id="deleteAccountForm">
                     @csrf @method('DELETE')
@@ -70,8 +70,8 @@
                                class="form-control sax-modal-input text-center" required>
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <button type="submit" class="btn btn-dark rounded-0 py-2 text-uppercase fw-bold x-small">Confirmar Eliminación</button>
-                        <button type="button" class="btn btn-link text-muted text-decoration-none x-small" data-bs-dismiss="modal">CANCELAR</button>
+                        <button type="submit" class="btn btn-dark rounded-0 py-2 text-uppercase fw-bold x-small">Confirmar exclusão</button>
+                        <button type="button" class="btn btn-link text-muted text-decoration-none x-small" data-bs-dismiss="modal">Cancelar</button>
                     </div>
                 </form>
             </div>

@@ -19,6 +19,8 @@ class BridalController extends Controller
         $bridalProducts = Product::with('brand')
             ->whereIn('brand_id', $idbrands)
             ->latest()
+            ->whereNotNull('photo')
+            ->where('photo', '!=', '')
             ->take(10)
             ->get(); 
         return view('bridal.index', compact('bridal', 'brands', 'bridalProducts'));

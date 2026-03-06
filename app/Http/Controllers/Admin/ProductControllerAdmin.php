@@ -245,16 +245,19 @@ class ProductControllerAdmin extends Controller
             'categoriasfilhas'
         ])->findOrFail($id);
 
-        // Carrega apenas categorias e subcategorias necessárias
-        $brands = Brand::all();
-        $categories = Category::all();
+        $brands = Brand::where('status', 1)
+            ->orWhere('id', $item->brand_id)
+            ->get();
+
+        $categories = Category::where('status', 1)
+            ->orWhere('id', $item->category_id)
+            ->get();
+
         $subcategories = Subcategory::where('category_id', $item->category_id)->get();
         $categoriasfilhas = CategoriasFilhas::where('subcategory_id', $item->subcategory_id)->get();
 
-        // Carrega somente os produtos que podem ser selecionados como parent ou cores
-        $products = Product::select('id', 'name')->get(); // << name adicionado aqui
+        $products = Product::select('id', 'name')->get();
 
-        // Transformar parent_id e color_parent_id em arrays
         $item->parent_id = is_string($item->parent_id) ? explode(',', $item->parent_id) : ($item->parent_id ?? []);
         $item->color_parent_id = is_string($item->color_parent_id) ? explode(',', $item->color_parent_id) : ($item->color_parent_id ?? []);
 
@@ -267,32 +270,32 @@ class ProductControllerAdmin extends Controller
             'products'
         ));
     }
+
     // ================== UPDATE ==================
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
 
-        // Validação
         $request->validate([
             'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'brand_id' => 'nullable|exists:brands,id',
-            'category_id' => 'nullable|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id,status,1',
+            'category_id' => 'nullable|exists:categories,id,status,1',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'childcategory_id' => 'nullable|exists:categoriasfilhas,id',
+            'childcategory_id' => 'nullable|exists:childcategories,id', // Corrigido para childcategories
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
-            'parent_id' => 'nullable|array', // IDs dos produtos selecionados para serem FILHOS
+            'parent_id' => 'nullable|array',
             'parent_id.*' => 'nullable|exists:products,id',
             'color_parent_id' => 'nullable|array',
             'color_parent_id.*' => 'nullable|exists:products,id',
             'size' => 'nullable|string|max:50',
             'stores' => 'nullable|array',
-            'stores.*' => 'string|in:asuncion,cde,pjc', // Valida se os valores são os permitidos
+            'stores.*' => 'string|in:asuncion,cde,pjc',
             'color' => 'nullable|string|max:7',
         ]);
 
@@ -308,21 +311,8 @@ class ProductControllerAdmin extends Controller
             'subcategory_id',
             'childcategory_id',
             'size',
-            'color',
+            'color'
         ]);
-
-        // IDs selecionados no formulário para serem filhos deste produto
-        $selectedChildrenIds = array_filter((array) $request->input('parent_id', []));
-
-        // Highlights como JSON
-        $data['highlights'] = json_encode($request->input('highlights', []));
-
-        // O produto sendo editado agora é garantido como PAI (P)
-        // A menos que você queira que ele mesmo seja filho de outro, 
-        // mas conforme sua regra, estamos definindo a estrutura a partir do pai.
-        $data['product_role'] = 'P';
-        $data['parent_id'] = null;
-        $data['stores'] = $request->input('stores', []);
 
         // --- TRATAMENTO DE IMAGEM PRINCIPAL ---
         if ($request->hasFile('photo')) {
@@ -336,49 +326,73 @@ class ProductControllerAdmin extends Controller
         }
 
         // --- TRATAMENTO DE GALERIA ---
-        if ($request->hasFile('gallery')) {
-            $existingGallery = $product->gallery;
-            if (!is_array($existingGallery)) {
-                $existingGallery = $existingGallery ? json_decode($existingGallery, true) : [];
-            }
-
-            foreach ($request->file('gallery') as $image) {
-                $existingGallery[] = $this->convertToWebp($image, 'gallery');
-            }
-            $data['gallery'] = json_encode($existingGallery);
+        // Começamos com a galeria atual do banco
+        $currentGallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
+        if (!is_array($currentGallery)) {
+            $currentGallery = [];
         }
 
-        // Pega os IDs dos filhos que este pai já tinha antes da atualização
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $image) {
+                $currentGallery[] = $this->convertToWebp($image, 'gallery');
+            }
+        }
+        // Reindexa e prepara para salvar
+        $data['gallery'] = array_values($currentGallery);
+
+        // No Controller update...
+        // --- LÓGICA DE ATIVAÇÃO AUTOMÁTICA ---
+        $hasMainPhoto = !empty($data['photo']) || (!empty($product->photo) && !isset($data['photo']));
+
+        // Importante: count($data['gallery']) verifica a galeria JÁ ATUALIZADA no banco
+        $hasGalleryImages = count($currentGallery) > 0;
+
+        if (
+            ($hasMainPhoto || $hasGalleryImages) &&
+            !empty($data['name']) &&
+            !empty($data['description']) &&
+            $data['stock'] > 0 &&
+            $data['price'] > 5
+        ) {
+            $data['status'] = 1; // Ativo
+        } else {
+            $data['status'] = 0; // Inativo (Requisitos não preenchidos)
+        }
+
+        // --- CONFIGURAÇÕES ADICIONAIS ---
+        $selectedChildrenIds = array_filter((array) $request->input('parent_id', []));
+        $data['highlights'] = json_encode($request->input('highlights', []));
+        $data['product_role'] = 'P';
+        $data['parent_id'] = null;
+        $data['stores'] = $request->input('stores', []);
+
+        // Garante que a galeria seja salva como JSON no banco se o seu Model não fizer cast automático
+        $data['gallery'] = json_encode($data['gallery']);
+
+        // Pega os IDs dos filhos antigos antes da atualização
         $oldChildrenIds = Product::where('parent_id', $product->id)->pluck('id')->toArray();
 
         // Atualiza o produto Pai
         $product->update($data);
 
-        // --- LÓGICA PARA OS PRODUTOS FILHOS SELECIONADOS ---
-
-        // 1. Desvincular quem foi removido da lista
+        // --- ATUALIZAR FILHOS ---
         $removedChildren = array_diff($oldChildrenIds, $selectedChildrenIds);
         foreach ($removedChildren as $childId) {
             $child = Product::find($childId);
             if ($child) {
-                $child->update([
-                    'parent_id' => null,
-                    'product_role' => 'P', // Volta a ser pai/independente
-                    'color_parent_id' => null
-                ]);
+                $child->update(['parent_id' => null, 'product_role' => 'P', 'color_parent_id' => null]);
             }
         }
 
-        // 2. Atualizar/Vincular novos filhos
         foreach ($selectedChildrenIds as $childId) {
             $child = Product::find($childId);
-            if ($child && $child->id != $product->id) { // Evita auto-referência
+            if ($child && $child->id != $product->id) {
                 $child->update([
-                    'parent_id' => $product->id,    // ID do pai que estamos editando
-                    'product_role' => 'F',          // Define como filho
+                    'parent_id' => $product->id,
+                    'product_role' => 'F',
                     'description' => $product->description,
                     'photo' => $product->photo,
-                    'gallery' => is_array($product->gallery) ? json_encode($product->gallery) : $product->gallery,
+                    'gallery' => $product->gallery,
                     'brand_id' => $product->brand_id,
                     'category_id' => $product->category_id,
                     'subcategory_id' => $product->subcategory_id,
@@ -388,7 +402,11 @@ class ProductControllerAdmin extends Controller
             }
         }
 
-        return redirect()->route('admin.products.index')->with('success', 'Produto Pai e seus filhos foram atualizados com sucesso!');
+        $msg = $product->status == 1
+            ? 'Produto atualizado e ATIVADO automaticamente!'
+            : 'Produto atualizado, mas permanece INATIVO (falta completar requisitos ou imagens).';
+
+        return redirect()->route('admin.products.index')->with('success', $msg);
     }
 
     /**
@@ -427,11 +445,15 @@ class ProductControllerAdmin extends Controller
             return redirect()->back()->with('error', 'Produto não possui galeria.');
         }
 
-        // garante que seja array
+        // Garante que seja array
         $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
 
-        $imagePath = null;
+        // Segurança caso o decode falhe
+        if (!is_array($gallery)) {
+            $gallery = [];
+        }
 
+        $imagePath = null;
         foreach ($gallery as $key => $img) {
             if (basename($img) === $imageName) {
                 $imagePath = $img;
@@ -444,10 +466,36 @@ class ProductControllerAdmin extends Controller
             Storage::disk('public')->delete($imagePath);
         }
 
-        $product->gallery = $gallery; // já salva como array
+        // IMPORTANTE: array_values reindexa [0, 1, 2] evitando chaves puladas no JSON
+        $product->gallery = array_values($gallery);
         $product->save();
 
         return redirect()->back()->with('success', 'Imagem da galeria removida com sucesso!');
+    }
+
+    public function multiDeleteGalleryImage(Request $request, $productId)
+    {
+        $product = Product::findOrFail($productId);
+        $imagesToDelete = explode(',', $request->image_names); // Recebe nomes separados por vírgula
+
+        $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
+        if (!is_array($gallery)) return redirect()->back();
+
+        $newGallery = [];
+        foreach ($gallery as $img) {
+            if (in_array(basename($img), $imagesToDelete)) {
+                if (Storage::disk('public')->exists($img)) {
+                    Storage::disk('public')->delete($img);
+                }
+            } else {
+                $newGallery[] = $img;
+            }
+        }
+
+        $product->gallery = array_values($newGallery);
+        $product->save();
+
+        return redirect()->back()->with('success', count($imagesToDelete) . ' imagens removidas.');
     }
 
     // ================== DELETE MAIN PHOTO ==================

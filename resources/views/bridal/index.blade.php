@@ -21,6 +21,14 @@
         'brands' => $brands
     ])
 
+    {{-- Products Carousel --}}
+    @include('bridal.componentes.products-carousel', [
+        'sectionLabel' => 'Colección',
+        'sectionTitle' => 'Nuestros Productos',
+        'products'     => $bridalProducts,
+    ])
+
+
     {{-- Promo Carousel --}}
     @include('bridal.componentes.promo-carousel', [
         'promos' => $bridal->promos ?? []

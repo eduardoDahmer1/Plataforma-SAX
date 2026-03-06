@@ -36,8 +36,6 @@
             </div>
         </div>
 
-        <div class="products-swiper-pagination swiper-pagination mt-4"></div>
-
     </div>
 </section>
 
@@ -127,19 +125,6 @@
         color: #fff;
     }
 
-    .products-swiper-pagination .swiper-pagination-bullet {
-        background: var(--bridal-gold);
-        opacity: 0.3;
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 0.25rem;
-        transition: all 0.35s ease;
-    }
-
-    .products-swiper-pagination .swiper-pagination-bullet-active {
-        opacity: 1;
-        width: 1.75rem;
-        border-radius: 0.25rem;
-    }
+    
 </style>
 @endpush

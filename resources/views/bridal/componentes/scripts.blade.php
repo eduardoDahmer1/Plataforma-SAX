@@ -37,6 +37,22 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Products Carousel — múltiples instancias
+    document.querySelectorAll('[data-products-swiper]').forEach(function (el) {
+    var section = el.closest('.bridal-products-section');
+     new Swiper(el, {
+        slidesPerView: 2,
+        spaceBetween: 16,
+        loop: true,
+        autoplay: { delay: 5000, disableOnInteraction: false },
+        breakpoints: {
+            768: { slidesPerView: 3, spaceBetween: 24 },
+            1200: { slidesPerView: 4, spaceBetween: 30 },
+        },
+        });
+    });
+
+
     // --- Swiper: Promo Carousel ---
     if (document.querySelector('.promoSwiper')) {
         new Swiper('.promoSwiper', {

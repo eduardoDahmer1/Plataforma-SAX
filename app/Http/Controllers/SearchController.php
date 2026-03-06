@@ -18,7 +18,7 @@ class SearchController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 35);
+        $perPage = $request->get('per_page', 36);
 
         // Iniciamos a query filtrando apenas o que é ATIVO e tem ESTOQUE/FOTO
         $query = Product::query()

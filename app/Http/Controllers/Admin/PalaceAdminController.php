@@ -99,7 +99,6 @@ class PalaceAdminController extends Controller
         }
 
         $palace->update($data);
-        Cache::forget('palace_data');
 
         return redirect()->route('admin.palace.index')->with('success', 'Conteúdo do SAX Palace atualizado com sucesso e imagens otimizadas!');
     }

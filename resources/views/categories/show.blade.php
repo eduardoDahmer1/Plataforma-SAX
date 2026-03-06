@@ -13,8 +13,8 @@
             }
 
             if (!$bannerUrl && !empty($banner_horizontal)) {
-                $bannerUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
-                    ? Storage::url($storagePath . $banner_horizontal) 
+                $bannerUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal)
+                    ? Storage::url($storagePath . $banner_horizontal)
                     : null;
             }
 
@@ -22,8 +22,8 @@
             if (isset($category->image) && Storage::disk('public')->exists($category->image)) {
                 $bannerLateralUrl = Storage::url($category->image);
             } elseif (!empty($banner_horizontal)) {
-                $bannerLateralUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal) 
-                    ? Storage::url($storagePath . $banner_horizontal) 
+                $bannerLateralUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal)
+                    ? Storage::url($storagePath . $banner_horizontal)
                     : null;
             }
 
@@ -62,8 +62,7 @@
                     <div class="col-12 col-lg-3 d-none d-lg-block">
                         <div class="sticky-banner-lateral">
                             <img src="{{ $bannerLateralUrl }}" class="img-fluid banner-v-render"
-                                alt="{{ $category->name }} Promo"
-                                onerror="this.src='{{ $fallbackImg }}'">
+                                alt="{{ $category->name }} Promo" onerror="this.src='{{ $fallbackImg }}'">
                         </div>
                     </div>
                 @endif
@@ -84,13 +83,22 @@
                                                 </div>
                                             </div>
 
-                                            <div class="card-body px-1 py-4 text-center">
-                                                <div class="jw-brand fw-bold text-uppercase mb-1">
-                                                    {{ $item->brand->name ?? 'EXCLUSIVO' }}</div>
-                                                <div class="jw-product-name text-muted mb-2">
-                                                    {{ Str::limit($item->external_name, 40) }}</div>
-                                                <div class="jw-price fw-bold text-dark">
-                                                    {{ isset($item->price) ? currency_format($item->price) : '0,00' }}
+                                            <div class="card-body px-2 py-3 d-flex flex-column">
+                                                <div class="sax-brand fw-bold text-uppercase mb-1">
+                                                    {{ $item->brand->name ?? 'BRAND NAME' }}
+                                                </div>
+
+                                                <div class="sax-product-name text-muted mb-3">
+                                                    {{ $item->name ?? $item->external_name }}
+                                                </div>
+
+                                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                                    <div class="sax-price fw-bold text-dark">
+                                                        {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
+                                                    </div>
+                                                    <div class="sax-sku text-muted">
+                                                        SKU: {{ $item->sku ?? 'N/A' }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -104,7 +112,8 @@
                         </div>
                     @else
                         <div class="text-center py-5">
-                            <p class="text-muted text-uppercase tracking-widest small">No se encontraron productos en esta categoría.</p>
+                            <p class="text-muted text-uppercase tracking-widest small">No se encontraron productos en esta
+                                categoría.</p>
                         </div>
                     @endif
                 </div>

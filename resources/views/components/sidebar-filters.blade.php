@@ -138,9 +138,9 @@
                 <label class="toolbar-label d-none d-lg-block mb-0">Mostrar:</label>
                 <select name="per_page" class="form-select toolbar-select" style="width: 70px;"
                     onchange="this.form.submit()">
-                    <option value="35" @selected($request->per_page == 35)>35</option>
-                    <option value="70" @selected($request->per_page == 70)>70</option>
-                    <option value="100" @selected($request->per_page == 100)>100</option>
+                    <option value="36" @selected($request->per_page == 36)>35</option>
+                    <option value="72" @selected($request->per_page == 72)>70</option>
+                    <option value="102" @selected($request->per_page == 102)>100</option>
                 </select>
             </div>
         </form>

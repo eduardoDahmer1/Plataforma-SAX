@@ -160,7 +160,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::resource('palace', PalaceAdminController::class);
-    Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');    Route::resource('bridal', BridalAdminController::class);
+    Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');
+    Route::resource('bridal', BridalAdminController::class);
 
     Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
@@ -189,6 +190,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::delete('categorias-filhas/{categorias_filha}/delete-photo', [CategoriasFilhasControllerAdmin::class, 'deletePhoto'])->name('categorias-filhas.deletePhoto');
     Route::delete('categorias-filhas/{categorias_filha}/delete-banner', [CategoriasFilhasControllerAdmin::class, 'deleteBanner'])->name('categorias-filhas.deleteBanner');
+
+    // Rota para o "X" individual (Exclui uma por uma)
+    Route::delete('products/{product}/gallery/{imageName}', [ProductControllerAdmin::class, 'deleteGalleryImage'])
+        ->name('products.gallery.delete');
+
+    // Rota para o Modal (Multi-delete)
+    Route::delete('products/{product}/gallery-multi', [ProductControllerAdmin::class, 'multiDeleteGalleryImage'])
+        ->name('products.gallery.multiDelete');
 
     // Resource unificado com parâmetro corrigido para o Controller
     Route::resource('categorias-filhas', CategoriasFilhasControllerAdmin::class)->parameters([

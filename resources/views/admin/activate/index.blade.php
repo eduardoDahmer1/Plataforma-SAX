@@ -85,12 +85,8 @@
 </form>
 
 <script>
-/**
- * Alterna a interface visual e o valor real do input hidden
- * @param {HTMLElement} btn - O botão clicado
- */
 function toggleUI(btn) {
-    const input = btn.previousElementSibling; // O input hidden está logo antes do botão
+    const input = btn.previousElementSibling;
     const isCurrentlyActive = input.value == "1"; 
     
     if (isCurrentlyActive) {

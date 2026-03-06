@@ -1,6 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
+
+@section('content')
+    @php
+        // Isso garante que a variável exista para o restante da página
+        $galleryImages = [];
+        if (isset($item->gallery)) {
+            $galleryImages = is_array($item->gallery) ? $item->gallery : json_decode($item->gallery, true);
+            $galleryImages = is_array($galleryImages) ? array_values($galleryImages) : [];
+        }
+    @endphp
     @php
         $type = $type ?? 'product';
     @endphp
@@ -105,68 +115,90 @@
                             value="{{ old('stock', $item->stock ?? 0) }}">
                     </div>
 
-                    <!-- Foto Principal -->
-                    <div class="col-md-6">
-                        <label for="photo" class="form-label"><i class="fas fa-image me-1"></i>Foto Principal</label>
-                        <input type="file" name="photo" class="form-control" id="photoInput">
-                        @if ($item->photo)
-                            <div class="mt-2 position-relative">
-                                <img src="{{ Storage::url($item->photo) }}" class="slider-product">
-                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0"
-                                    onclick="document.getElementById('deletePhotoForm').submit()">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                    {{-- 2. INTERFACE --}}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="photo" class="form-label text-bold">
+                                <i class="fas fa-image me-1"></i>Foto Principal
+                            </label>
+                            <div class="d-flex align-items-start gap-2">
+                                <input type="file" name="photo" class="form-control" id="photoInput">
+                                @if ($item->photo)
+                                    <div class="position-relative border rounded p-1 bg-white"
+                                        style="width: 80px; height: 50px;">
+                                        <img src="{{ Storage::url($item->photo) }}" class="w-100 h-100"
+                                            style="object-fit: cover;">
+                                        <button type="button"
+                                            class="btn btn-danger btn-xs position-absolute top-0 end-0 m-n1 shadow-sm"
+                                            style="padding: 2px 5px; font-size: 10px;"
+                                            onclick="if(confirm('Excluir foto principal?')) document.getElementById('deletePhotoForm').submit();">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-bold">
+                                <i class="fas fa-images me-1"></i>Galeria de Imagens
+                            </label>
+                            <div class="d-flex flex-column gap-2">
+                                <input type="file" name="gallery[]" class="form-control" multiple id="galleryInput">
+                                @if (!empty($galleryImages))
+                                    <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal"
+                                        data-bs-target="#modalGerenciarGaleria">
+                                        <i class="fas fa-tasks me-1"></i> Gerenciar Galeria ({{ count($galleryImages) }}
+                                        fotos)
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Galeria -->
-                    <div class="col-md-6">
-                        <label for="gallery" class="form-label">
-                            <i class="fas fa-images me-1"></i>Galeria
-                        </label>
-                        <input type="file" name="gallery[]" class="form-control" multiple id="galleryInput">
-
-                        <div id="galleryCarousel" class="carousel slide mt-2" data-bs-ride="carousel">
-                            <div class="carousel-inner">
-                                @php
-                                    $galleryImages = [];
-
-                                    if ($item->gallery) {
-                                        if (is_array($item->gallery)) {
-                                            $galleryImages = $item->gallery;
-                                        } elseif (is_string($item->gallery)) {
-                                            $decoded = json_decode($item->gallery, true);
-                                            $galleryImages = is_array($decoded) ? $decoded : [];
-                                        }
-                                    }
-                                @endphp
-
-                                @foreach ($galleryImages as $index => $galleryImage)
-                                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                                        <img src="{{ Storage::url($galleryImage) }}"
-                                            class="d-block w-100 rounded slider-product"
-                                            alt="Imagem {{ $index + 1 }}">
-                                        <div class="position-absolute top-0 end-0 m-2 z-index-button">
-                                            <button type="button" class="btn btn-sm btn-danger"
-                                                onclick="document.querySelectorAll('.deleteGalleryForm')[{{ $index }}].submit()">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
+                    {{-- 3. MODAL --}}
+                    <div class="modal fade" id="modalGerenciarGaleria" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-light">
+                                    <h5 class="modal-title"><i class="fas fa-images me-2"></i>Gerenciar Galeria</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="alert alert-info py-2" style="font-size: 13px;">
+                                        <i class="fas fa-info-circle me-1"></i> Selecione as imagens que deseja remover.
                                     </div>
-                                @endforeach
-                            </div>
 
-                            @if (count($galleryImages) > 1)
-                                <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel"
-                                    data-bs-slide="prev">
-                                    <span class="carousel-control-prev-icon"></span>
-                                </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel"
-                                    data-bs-slide="next">
-                                    <span class="carousel-control-next-icon"></span>
-                                </button>
-                            @endif
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            onclick="toggleSelectAll()">
+                                            <i class="fas fa-check-double me-1"></i> Selecionar Todas
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm"
+                                            onclick="deleteSelectedImages()">
+                                            <i class="fas fa-trash-alt me-1"></i> Excluir Selecionadas
+                                        </button>
+                                    </div>
+
+                                    <div class="row g-2 overflow-auto" style="max-height: 400px;">
+                                        @foreach ($galleryImages as $idx => $img)
+                                            <div class="col-4 col-sm-3 col-md-2 position-relative gallery-item">
+                                                <label class="d-block border rounded p-1 bg-white cursor-pointer h-100">
+                                                    <input type="checkbox" value="{{ basename($img) }}"
+                                                        class="gallery-checkbox position-absolute top-0 start-0 m-2">
+                                                    <img src="{{ Storage::url($img) }}" class="w-100 rounded"
+                                                        style="aspect-ratio: 1/1; object-fit: cover;">
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -353,30 +385,68 @@
                 Alterações</button>
         </form>
     </div>
-
-    {{-- Forms para deletar fotos --}}
+    {{-- 1. FORMULÁRIOS DE APOIO (Apenas uma vez aqui) --}}
     @if ($item->photo)
-        <form
-            action="{{ $type === 'product' ? route('admin.products.deletePhoto', $item->id) : route('admin.uploads.deletePhoto', $item->id) }}"
-            method="POST" style="display:none;" id="deletePhotoForm">
+        <form action="{{ route('admin.products.deletePhoto', $item->id) }}" method="POST" style="display:none;"
+            id="deletePhotoForm">
             @csrf
             @method('DELETE')
         </form>
     @endif
 
-    @if (!empty($galleryImages))
-        @foreach ($galleryImages as $galleryImage)
-            <form
-                action="{{ $type === 'product' ? route('admin.products.deleteGalleryImage', [$item->id, basename($galleryImage)]) : route('admin.uploads.deleteGalleryImage', [$item->id, basename($galleryImage)]) }}"
-                method="POST" style="display:none;" class="deleteGalleryForm">
-                @csrf
-                @method('DELETE')
-            </form>
-        @endforeach
-    @endif
+    @php
+        $galleryImages = is_array($item->gallery) ? $item->gallery : json_decode($item->gallery, true);
+        $galleryImages = is_array($galleryImages) ? array_values($galleryImages) : [];
+    @endphp
+
+    @foreach ($galleryImages as $galleryImage)
+        <form action="{{ route('admin.products.gallery.delete', [$item->id, basename($galleryImage)]) }}" method="POST"
+            style="display:none;" class="deleteGalleryForm">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
+
+    {{-- ESTE É O ÚNICO QUE DEVE EXISTIR --}}
+    <form id="formMultiDeleteGallery" action="{{ route('admin.products.gallery.multiDelete', $item->id) }}"
+        method="POST" style="display:none !important;">
+        @csrf
+        @method('DELETE')
+        <input type="hidden" name="image_names" id="inputImageNames">
+    </form>
 
     {{-- Script do TinyMCE --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>
+
+    <script>
+        function deleteSelectedImages() {
+            const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
+            const selectedNames = Array.from(checkboxes).map(cb => cb.value);
+
+            if (selectedNames.length === 0) {
+                alert('Selecione pelo menos uma imagem.');
+                return;
+            }
+
+            if (confirm(`Excluir ${selectedNames.length} imagens selecionadas?`)) {
+                const form = document.getElementById('formMultiDeleteGallery');
+                const input = document.getElementById('inputImageNames');
+
+                if (form && input) {
+                    input.value = selectedNames.join(',');
+                    form.submit();
+                } else {
+                    console.error("Formulário de exclusão múltipla não encontrado ou ID duplicado!");
+                }
+            }
+        }
+
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.gallery-checkbox');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+        }
+    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -439,9 +509,9 @@
                                                 <div class="card-body p-2">
                                                     <p class="card-text m-0 fw-bold">${product.name || product.external_name}</p>
                                                     ${product.color ? `<div class="d-flex align-items-center mt-1">
-                                                                            <span style="display:inline-block;width:16px;height:16px;background:${product.color};border:1px solid #ccc;margin-right:5px;"></span>
-                                                                            <small>${product.color}</small>
-                                                                        </div>` : ''}
+                                                                                                                                <span style="display:inline-block;width:16px;height:16px;background:${product.color};border:1px solid #ccc;margin-right:5px;"></span>
+                                                                                                                                <small>${product.color}</small>
+                                                                                                                            </div>` : ''}
                                                     ${product.size ? `<div class="mt-1"><small class="text-muted">Tamanho: ${product.size}</small></div>` : ''}
                                                 </div>
                                             </div>
@@ -486,9 +556,9 @@
                             <div class="card-body p-2">
                                 <p class="card-text m-0 fw-bold">${name}</p>
                                 ${color ? `<div class="d-flex align-items-center mt-1">
-                                                        <span style="display:inline-block;width:16px;height:16px;background:${color};border:1px solid #ccc;margin-right:5px;"></span>
-                                                        <small>${color}</small>
-                                                    </div>` : ''}
+                                                                                                            <span style="display:inline-block;width:16px;height:16px;background:${color};border:1px solid #ccc;margin-right:5px;"></span>
+                                                                                                            <small>${color}</small>
+                                                                                                        </div>` : ''}
                                 ${size ? `<div class="mt-1"><small class="text-muted">Tamanho: ${size}</small></div>` : ''}
                                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-item">
                                     <i class="fas fa-times"></i>

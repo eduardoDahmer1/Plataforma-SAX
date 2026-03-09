@@ -88,6 +88,27 @@
         font-family: 'Inter', sans-serif;
     }
 
+    .sax-sku {
+        font-size: 0.6rem;
+    }
+
+    .sax-product-name {
+        font-size: 0.7rem;
+        height: 2.4em;
+        line-height: 1.2;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        text-transform: uppercase;
+    }
+
+    .sax-brand {
+        font-size: 0.8rem;
+        color: #000;
+        letter-spacing: 0.5px;
+    }
+
     .sax-divider-dark {
         width: 40px;
         height: 3px;

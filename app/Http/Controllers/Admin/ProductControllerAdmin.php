@@ -354,9 +354,9 @@ class ProductControllerAdmin extends Controller
             $data['stock'] > 0 &&
             $data['price'] > 5
         ) {
-            $data['status'] = 1; // Ativo
+            $data['status'] = 1;
         } else {
-            $data['status'] = 0; // Inativo (Requisitos não preenchidos)
+            $data['status'] = 0;
         }
 
         // --- CONFIGURAÇÕES ADICIONAIS ---
@@ -366,13 +366,10 @@ class ProductControllerAdmin extends Controller
         $data['parent_id'] = null;
         $data['stores'] = $request->input('stores', []);
 
-        // Garante que a galeria seja salva como JSON no banco se o seu Model não fizer cast automático
         $data['gallery'] = json_encode($data['gallery']);
 
-        // Pega os IDs dos filhos antigos antes da atualização
         $oldChildrenIds = Product::where('parent_id', $product->id)->pluck('id')->toArray();
 
-        // Atualiza o produto Pai
         $product->update($data);
 
         // --- ATUALIZAR FILHOS ---
@@ -589,12 +586,21 @@ class ProductControllerAdmin extends Controller
 
     public function review()
     {
+        // Dados para os Cards (o que você já tinha)
         $edicoesPorDia = Product::selectRaw('DATE(updated_at) as dia, COUNT(*) as total')
             ->whereNotNull('updated_at')
             ->groupBy('dia')
             ->orderBy('dia', 'desc')
             ->get();
 
-        return view('admin.products.review', compact('edicoesPorDia'));
+        // Dados para os Modais (Busca os detalhes dos produtos editados nos últimos dias)
+        // Limitamos a busca para não pesar o carregamento inicial
+        $detalhesProdutos = Product::whereNotNull('updated_at')
+            ->where('updated_at', '>=', now()->subDays(30)) // Pega os últimos 30 dias por segurança
+            ->selectRaw('DATE(updated_at) as dia, name, sku, ref_code')
+            ->get()
+            ->groupBy('dia'); // Agrupa por data para o JS encontrar fácil
+
+        return view('admin.products.review', compact('edicoesPorDia', 'detalhesProdutos'));
     }
 }

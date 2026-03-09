@@ -50,6 +50,27 @@
         opacity: 0.9;
     }
 
+    .sax-sku {
+        font-size: 0.6rem;
+    }
+
+    .sax-brand {
+        font-size: 0.8rem;
+        color: #000;
+        letter-spacing: 0.5px;
+    }
+
+    .sax-product-name {
+        font-size: 0.7rem;
+        height: 2.4em;
+        line-height: 1.2;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        text-transform: uppercase;
+    }
+
     .jw-img-container {
         aspect-ratio: 4 / 5;
         /* Proporção vertical elegante */

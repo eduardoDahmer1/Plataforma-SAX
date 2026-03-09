@@ -21,6 +21,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CuponUserController;
 use App\Http\Controllers\PagoParController;
 use App\Http\Controllers\PalaceController;
+use App\Http\Controllers\BridalController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\SystemController;
@@ -52,7 +53,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.page');
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
-Route::get('/bridal', [App\Http\Controllers\BridalController::class, 'index'])->name('bridal.index');
+Route::get('/bridal', [BridalController::class, 'index'])->name('bridal.index');
+Route::get('/cafe-bistro', fn() => view('cafe_bistro.index'))->name('cafe_bistro');
 
 Route::get('/categorias-gerais', [App\Http\Controllers\AllCategoriesController::class, 'index'])->name('all-categories.index');
 

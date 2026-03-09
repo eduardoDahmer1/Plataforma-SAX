@@ -60,6 +60,17 @@
         width: 100%;
     }
 
+    .sax-brand {
+        font-size: 0.8rem;
+        color: #000;
+        letter-spacing: 0.5px;
+    }
+
+    .sax-sku {
+        font-size: 0.6rem;
+    }
+
+
     .card-body {
         background-color: #f5f5f5;
     }

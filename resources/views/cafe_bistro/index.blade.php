@@ -8,5 +8,4 @@
     @include('cafe_bistro.componentes.carta')
     @include('cafe_bistro.componentes.eventos')
     @include('cafe_bistro.componentes.horarios')
-    @include('cafe_bistro.componentes.cta-contato')
 @endsection

@@ -129,26 +129,4 @@
         </div>
     </div>
 </section>
-
-<style>
-    :root {
-        --palace-gold: #c5a059;
-    }
-    .text-gold { color: var(--palace-gold); }
-    .bg-gold { background-color: var(--palace-gold); }
-    .btn-gold { background-color: var(--palace-gold); color: #fff; border: none; }
-    .btn-gold:hover { background-color: #b08d4a; color: #fff; }
-    .border-gold { border-color: var(--palace-gold) !important; }
-    
-    .font-serif { font-family: 'Playfair Display', serif; }
-    .tracking-widest { letter-spacing: 0.2rem; }
-    
-    .transition-scale { transition: transform 0.5s ease; }
-    .group:hover .transition-scale { transform: scale(1.05); }
-    
-    @media (max-width: 768px) {
-        .display-2 { font-size: 3rem; }
-        .py-lg-10 { padding-top: 3rem; padding-bottom: 3rem; }
-    }
-</style>
 @endsection

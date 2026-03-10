@@ -1,60 +1,37 @@
+/* --- BASE & TIPOGRAFIA --- */
 body {
     font-family: "Roboto", sans-serif;
     overflow-x: hidden;
 }
 
-.text-home {
-    margin-top: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.slider-product{
+/* --- SLIDERS & CAROUSELS (Unificados) --- */
+.slider-product {
     width: 100% !important;
     height: 13em !important;
     object-fit: cover;
 }
-.slider-section {
-    margin: 60px auto;
-}
-.background-header {
-    background-color: rgb(231 231 231) !important;
-}
-.btn-primary {
-    --bs-btn-color: #fff;
-    --bs-btn-bg: #696969 !important;
-    --bs-btn-border-color: #696969 !important;
-    --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #0b5ed7;
-    --bs-btn-hover-border-color: #0a58ca;
-    --bs-btn-focus-shadow-rgb: 49, 132, 253;
-    --bs-btn-active-color: #fff;
-    --bs-btn-active-bg: #0a58ca;
-    --bs-btn-active-border-color: #0a53be;
-    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-    --bs-btn-disabled-color: #fff;
-    --bs-btn-disabled-bg: #0d6efd;
-    --bs-btn-disabled-border-color: #0d6efd;
-}
-.swiper,
-.splide,
-.glide,
-.flickity-carousel,
-#lightgallery {
+
+.slider-section { margin: 60px auto; }
+
+.swiper, .splide, .glide, .flickity-carousel, #lightgallery {
     margin: auto;
 }
-.list-group-item a {
-    color: white !important;
-}
-.swiper-slide img,
-.splide__slide img,
-.glide__slide img,
-.flickity-carousel img,
-#lightgallery a img {
+
+.swiper-slide img, .splide__slide img, .glide__slide img, 
+.flickity-carousel img, #lightgallery a img {
     width: 100%;
     border-radius: 10px;
 }
-/* Estilos para a página de produto */
+
+.blogSwiper .swiper-slide { width: auto; }
+
+.custom-arrow {
+    background-color: black !important;
+    background-size: 50%, 50%;
+    border-radius: 50%;
+}
+
+/* --- COMPONENTES DE PRODUTO --- */
 .product-card {
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -62,399 +39,145 @@ body {
     padding: 20px;
     background-color: #fff;
 }
-.input-group {
-    position: relative;
-    display: flex;
-    flex-wrap: nowrap !important;
-    align-items: stretch;
-    width: 100%;
-}
+
 .product-card-header {
     border-bottom: 2px solid #f0f0f0;
     padding-bottom: 20px;
     margin-bottom: 20px;
 }
 
-.product-card-header h1 {
-    font-size: 2.5rem;
-    color: #333;
-}
+.product-card-header h1 { font-size: 2.5rem; color: #333; }
 
-.product-card-body {
-    display: flex;
-    flex-wrap: wrap;
-}
-.format-header-mobile {
-    display: flex;
-    justify-content: center;
-    gap: 11px;
-}
-.product-card-body .row {
-    margin-bottom: 20px;
-}
+.product-card-body { display: flex; flex-wrap: wrap; }
+.product-card-body .row { margin-bottom: 20px; }
+.product-card-body p { font-size: 1.1rem; color: #555; }
+.product-card-body .product-images img { max-width: 100%; border-radius: 8px; }
 
-.product-card-body p {
-    font-size: 1.1rem;
-    color: #555;
-}
-.object-fit-coverr {
-    -o-object-fit: cover !important;
-    object-fit: scale-down !important;
-}
 .object-fit-contain {
     -o-object-fit: contain !important;
     object-fit: scale-down !important;
 }
-.product-card-body .product-images img {
-    max-width: 100%;
-    border-radius: 8px;
+
+/* --- BOTÕES & ESTILOS DE INTERAÇÃO --- */
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #696969 !important;
+    --bs-btn-border-color: #696969 !important;
 }
 
-.product-card-footer {
-    text-align: center;
-    margin-top: 30px;
-}
-
-.product-card-footer .btn {
-    font-size: 1rem;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: #fff;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.3s;
-}
-
-.product-card-footer .btn:hover {
-    background-color: #0056b3;
-}
-
-.product-card-footer .btn:focus {
-    outline: none;
-}
-
-.list-group-item {
-    font-size: 1rem;
-}
-
-.list-group-item a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.list-group-item a:hover {
-    text-decoration: underline;
-}
 .custom-btn {
     background-color: #d4d4d4 !important;
-    color: #000000 !important;
+    color: #000 !important;
     border: none !important;
     transition: background-color 0.3s ease !important;
 }
 
-.custom-btn:hover {
+.custom-btn:hover, .card-checkout .btn-secondary:hover {
     background-color: #5a6268 !important;
     color: #fff !important;
 }
-/* Container do card */
-.card-checkout {
-    max-width: 600px;
-    margin: 40px auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
 
-/* Título do checkout */
-.card-checkout h2 {
-    text-align: center;
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-}
-
-/* Botões */
-.card-checkout .btn {
-    display: inline-block;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 600;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    margin: 8px 4px;
-    white-space: nowrap;
-}
-
-.card-checkout .btn-primary {
-    background-color: #007bff;
-    color: #fff;
-}
-
-.card-checkout .btn-primary:hover {
-    background-color: #0069d9;
-}
-
-.card-checkout .btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
-}
-.mt-4 .shadow-sm {
-    width: 100% !important;
-}
-.text-center .shadow-sm {
-    width: 10em;
-}
-.card-checkout .btn-secondary:hover {
-    background-color: #5a6268;
-}
-/* Responsivo */
-@media (max-width: 768px) {
-    .card-checkout {
-        margin: 20px 15px;
-        padding: 15px;
-    }
-
-    .card-checkout h2 {
-        font-size: 1.5rem;
-    }
-
-    .card-checkout .btn {
-        width: 100%;
-        margin: 6px 0;
-    }
-    .input-group > .form-control {
-        width: 100% !important;
-    }
-}
-/* Mostrar os botões ao passar o mouse sobre o card */
-.card:hover .card-add-form {
-    display: flex !important;
-    flex-direction: row; /* lado a lado */
-    gap: 5px; /* espaço entre os botões */
-    position: absolute;
-    top: 42px;
-    right: 8px;
-}
-
+/* Botões Flutuantes no Card */
+.card:hover .card-add-form, 
 .card:hover .card-favorite-form {
     display: flex !important;
-    flex-direction: row; /* lado a lado */
-    gap: 5px; /* espaço entre os botões */
+    gap: 5px;
     position: absolute;
-    top: 8px;
     right: 8px;
 }
+.card:hover .card-add-form { top: 42px; }
+.card:hover .card-favorite-form { top: 8px; }
 
-/* Estilo dos botões redondos */
-.card-favorite-form button,
-.card-add-form button {
+.card-favorite-form button, .card-add-form button {
     border-radius: 50%;
     width: 32px;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
     font-size: 16px;
-}
-/* Ajuste para o swiper-slide do blog */
-.blogSwiper .swiper-slide {
-    width: auto;
-}
-.custom-arrow {
-    background-color: black !important;
-    background-size: 50%, 50%;
-    border-radius: 50%;
+    padding: 0;
 }
 
-.banner-img {
-    width: 100%;
-    max-height: 300px;
-    object-fit: cover;
+/* --- LISTAS & LINKS --- */
+.list-group-item { font-size: 1rem; }
+.list-group-item a {
+    color: #007bff !important; /* Corrigido de white para azul conforme hover abaixo */
+    text-decoration: none;
 }
+.list-group-item a:hover { text-decoration: underline; }
 
-.login-container .form-control {
-    padding: 0.75rem;
-    font-size: 0.95rem;
-    border-radius: 0.5rem;
-}
-.login-form .btn {
-    border-radius: 0.5rem;
-}
-.modal-header {
-    font-weight: 600;
-    font-size: 1.1rem;
-}
-.position-relative .btn {
-    font-size: 0.75rem;
-}
-.input-group>:not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback){
-    margin-bottom: 0 !important;
-}
-.input-group:not(.has-validation)>.dropdown-toggle:nth-last-child(n+3), .input-group:not(.has-validation)>.form-floating:not(:last-child)>.form-control, .input-group:not(.has-validation)>.form-floating:not(:last-child)>.form-select, .input-group:not(.has-validation)>:not(:last-child):not(.dropdown-toggle):not(.dropdown-menu):not(.form-floating) {
-    margin-bottom: 0 !important;
-}
-/* Fundo elegante */
-.background-header {
-    background: #111;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-}
+/* --- HEADER, LOGIN & NAV --- */
+.logo-header { max-height: 80px; transition: transform 0.3s ease; }
+.logo-header:hover { transform: scale(1.05); }
 
-/* Logo */
-.logo-header {
-    max-height: 80px;
-    transition: transform 0.3s ease;
-}
-.logo-header:hover {
-    transform: scale(1.05);
-}
-
-/* Botões login/logout */
-.btn-auth {
-    background: transparent;
-    font-weight: 500;
-    padding: 6px 14px;
-    border-radius: 30px;
-    transition: all 0.3s ease;
-}
-.btn-auth:hover {
-    background: rgb(255, 255, 255);
-    color: #111;
-}
-
-/* Links de navegação desktop */
-.nav-links a {
+.nav-links a, .dropdown-style, .btn-auth {
     background: transparent !important;
     border: none !important;
-    color: #000000 !important;
+    color: #000 !important;
     font-weight: 500;
     padding: 8px 16px;
     border-radius: 20px;
     transition: all 0.3s ease;
 }
-.dropdown-style{
-    background: transparent !important;
-    border: none !important;
-    color: #000000 !important;
-    font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
-}
-.nav-links a:hover {
-    background: rgb(0, 0, 0);
-    color: #111 !important;
-}
 
-/* Botão hamburguer mobile */
+.nav-links a:hover, .btn-auth:hover { background: #000; color: #fff !important; }
+
 .btn-mobile-menu {
-    border: 1px solid rgb(0, 0, 0);
+    border: 1px solid #000;
     background: transparent;
-    color: rgb(0, 0, 0);
+    color: #000;
     border-radius: 8px;
-    transition: all 0.3s ease;
-}
-.btn-mobile-menu:hover {
-    background: rgb(0, 0, 0);
-    color: #111;
 }
 
-/* Drawer Mobile */
+/* --- FORMULÁRIOS & INPUTS --- */
+.input-group {
+    display: flex;
+    flex-wrap: nowrap !important;
+    width: 100%;
+}
+
+.input-group > :not(:first-child) { margin-bottom: 0 !important; }
+
+.search-bar input { border-radius: 30px 0 0 30px; border: none; padding: 10px 15px; }
+.search-bar button { border-radius: 0 30px 30px 0; background: #e7e7e7; padding: 0 18px; }
+
+.login-container .form-control { padding: 0.75rem; border-radius: 0.5rem; }
+
+/* --- UTILS & MOBILE --- */
+.banner-img { width: 100%; max-height: 300px; object-fit: cover; }
 .drawer-mobile {
-    position: fixed;
-    top: 0;
-    start: 0;
-    width: 250px;
-    height: 100vh;
-    background: #ffffff;
-    color: #000000;
-    padding: 20px;
-    transform: translateX(-100%);
-    transition: 0.3s;
-    z-index: 1050;
-}
-.drawer-mobile h5 {
-    font-weight: 600;
-    letter-spacing: 1px;
-    color: rgb(0, 0, 0);
-}
-.drawer-mobile a {
-    background: transparent !important;
-    border: none !important;
-    color: #000000 !important;
-    font-weight: 500;
-    text-align: left;
-    padding: 10px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-.drawer-mobile a:hover {
-    background: gold;
-    color: #111 !important;
-}
-.btn-close-drawer {
-    background: transparent;
-    border: none;
-    font-size: 24px;
-    color: rgb(0, 0, 0);
-    cursor: pointer;
+    position: fixed; top: 0; left: 0; width: 250px; height: 100vh;
+    background: #fff; padding: 20px; transform: translateX(-100%);
+    transition: 0.3s; z-index: 1050;
 }
 
-/* Busca */
-.search-bar input {
-    border-radius: 30px 0 0 30px;
-    border: none;
-    padding: 10px 15px;
+@media (max-width: 768px) {
+    .input-group > .form-control { width: 100% !important; }
+    .format-header-mobile { display: flex; justify-content: center; gap: 11px; }
 }
-.search-bar button {
-    border-radius: 0 30px 30px 0;
-    border: 1px solid white;
-    background: #e7e7e7;
-    color: #111;
-    transition: all 0.3s ease;
-    padding: 0 18px;
-}
-.search-bar button:hover {
-    background: #cecece;
-}
+/* --- 1. INTERFACE DE BUSCA & NAVEGAÇÃO --- */
+.search-bar button:hover { background: #cecece; }
 
-.admin-sidebar .list-group-item {
-    background: transparent;
-    color: #000000;
-    border: none;
-    padding: 12px 20px;
-    transition: 0.3s;
-}
+.nav-links .dropdown:hover .dropdown-menu { display: block; }
+.nav-links .dropdown-toggle::after { display: none; } /* Remove seta padrão */
 
-.admin-sidebar .collapse a {
-    padding-left: 40px;
-}
-
-/* Drawer mobile */
+/* --- 2. DRAWER MOBILE & OVERLAY (Unificado) --- */
 .drawer-mobile {
     position: fixed;
     top: 0;
     left: 0;
     width: 260px;
     height: 100%;
-    color: #fff;
+    background: #fff; /* Adicionado para visibilidade */
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 1050;
     padding: 15px;
 }
 
-.drawer-mobile.open {
-    transform: translateX(0);
-}
-
-.drawer-mobile h5 {
-    color: black;
-    font-weight: 600;
-}
+.drawer-mobile.open { transform: translateX(0); }
+.drawer-mobile h5 { color: #000; font-weight: 600; }
 
 .drawer-overlay {
     position: fixed;
@@ -463,91 +186,64 @@ body {
     display: none;
     z-index: 1049;
 }
+.drawer-overlay.show { display: block; }
 
-.drawer-overlay.show {
-    display: block;
-}
-
-/* Botão abrir menu mobile */
-.btn-menu-mobile {
-    border: 1px solid rgb(0, 0, 0);
-    color: black;
-    padding: 6px 14px;
-    border-radius: 6px;
+/* Botões de Menu Mobile */
+.btn-menu-mobile, .sax-btn-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: 0.3s;
+    border-radius: 8px;
 }
 
-.btn-menu-mobile:hover {
-    background: black;
-    color: #111;
+.btn-menu-mobile {
+    border: 1px solid #000;
+    color: #000;
+    padding: 6px 14px;
 }
+.btn-menu-mobile:hover { background: #000; color: #fff; }
 
-/* Botão voltar topo */
-#backToTop {
-    background: #737373;
-    color: #ffffff;
-    border: none;
+.sax-btn-mobile {
+    background: #000;
+    color: #fff;
+    width: 45px;
+    height: 45px;
 }
+.sax-btn-mobile:hover { background: #333; }
 
-#backToTop:hover {
-    background: #e6c200;
-}
-.nav-links .dropdown:hover .dropdown-menu {
-    display: block;
-}
-.nav-links .dropdown-toggle::after {
-    display: none; /* tira seta feia do bootstrap */
-}
-.blogSwiper .card:hover {
-    transform: translateY(-3px);
-    transition: .3s ease;
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-}
-
-.object-fit-cover {
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-}
-.z-index-button{
-    z-index: 9999;
-}
-
-/* Estilos Base do Painel Admin */
+/* --- 3. PAINEL ADMIN (SAX LAYOUT) --- */
 .sax-admin-layout {
-    background-color: #f4f7f6; /* Cinza azulado muito leve para descanso visual */
+    background-color: #f4f7f6;
     min-height: 100vh;
     font-family: 'Inter', sans-serif;
 }
 
-.sax-admin-title {
-    font-size: 1.25rem;
-    color: #1a1a1a;
+.admin-sidebar .list-group-item {
+    background: transparent;
+    color: #000;
+    border: none;
+    padding: 12px 20px;
+    transition: 0.3s;
 }
+.admin-sidebar .collapse a { padding-left: 40px; }
 
-.letter-spacing-2 { letter-spacing: 2px; }
-.letter-spacing-1 { letter-spacing: 1px; }
-.x-small { font-size: 0.7rem; font-weight: 600; }
-
-/* Menu Lateral */
-.sax-sidebar-card {
+/* Cards do Admin */
+.sax-sidebar-card, .sax-main-card {
     background: #fff;
     border-radius: 16px;
-    padding: 10px;
     border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Card Principal de Conteúdo */
-.sax-main-card {
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-}
+.sax-main-card { overflow: hidden; }
 
 .sax-card-header {
     background: #fff;
     padding: 20px 25px;
     border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .header-indicator {
@@ -557,59 +253,53 @@ body {
     border-radius: 10px;
 }
 
-.sax-card-body {
-    padding: 30px;
+.sax-card-body { padding: 30px; }
+
+/* Tabelas Admin */
+.table {
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+.table tr { background: #fff; transition: 0.2s; }
+
+/* --- 4. UTILITÁRIOS & COMPONENTES --- */
+.object-fit-cover { object-fit: cover; width: 100%; height: 100%; }
+.z-index-button { z-index: 9999; }
+
+/* Tipografia */
+.letter-spacing-2 { letter-spacing: 2px; }
+.letter-spacing-1 { letter-spacing: 1px; }
+.x-small { font-size: 0.7rem; font-weight: 600; }
+
+/* Efeitos de Card */
+.blogSwiper .card:hover {
+    transform: translateY(-3px);
+    transition: .3s ease;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,0.15) !important;
 }
 
-/* Botão Mobile */
-.sax-btn-mobile {
-    background: #000;
-    color: #fff;
-    border: none;
-    width: 45px;
-    height: 45px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.3s;
-}
-
-.sax-btn-mobile:hover { background: #333; }
-
-/* Botão Voltar ao Topo Premium */
-.sax-back-to-top {
+/* --- 5. VOLTAR AO TOPO (Unificado) --- */
+.sax-back-to-top, #backToTop {
     position: fixed;
     bottom: 30px;
     right: 30px;
     width: 50px;
     height: 50px;
-    background-color: #000;
-    color: #fff;
     border-radius: 50%;
     display: none; /* Controlado via JS */
     align-items: center;
     justify-content: center;
     z-index: 1000;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background-color: #000;
+    color: #fff;
+    border: none;
 }
 
-.sax-back-to-top:hover {
-    background-color: #333;
+.sax-back-to-top:hover, #backToTop:hover {
+    background-color: #e6c200; /* Destaque Gold no hover */
     transform: scale(1.1);
 }
-
-/* Ajustes de Tabela e Formulários no Admin */
-.table {
-    border-collapse: separate;
-    border-spacing: 0 10px;
-}
-
-.table tr {
-    background: #fff;
-    transition: 0.2s;
-}
-
 @media (max-width: 768px) {
     .sax-admin-header {
         flex-direction: column;

@@ -15,6 +15,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="{{ asset('css/palace.css') }}" rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@200;300;400;600;700&display=swap"
         rel="stylesheet">
@@ -24,27 +26,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
-
-    <style>
-        :root {
-            --palace-dark: #0a0a0a;
-            --palace-dark-soft: #141414;
-            --palace-gold: #c5a059;
-            --palace-gold-hover: #e2b86d;
-            --palace-text: #ffffff;
-            --palace-muted: #a0a0a0;
-            --transition-smooth: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Reset & Base */
-        body {
-            background-color: black !important;
-            color: var(--palace-text);
-            font-family: 'Montserrat', sans-serif;
-            overflow-x: hidden;
-            line-height: 1.6;
-        }
-    </style>
 </head>
 
 <body>

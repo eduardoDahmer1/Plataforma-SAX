@@ -59,31 +59,3 @@
         </div>
     </div>
 </section>
-
-<style>
-    /* Apenas o essencial que o Bootstrap não cobre nativamente */
-    .btn-outline-gold {
-        color: var(--palace-gold);
-        border-color: var(--palace-gold);
-    }
-    .btn-outline-gold:hover {
-        background-color: var(--palace-gold);
-        color: #000;
-        border-color: var(--palace-gold);
-    }
-    
-    .tracking-wider { letter-spacing: 0.15rem; }
-    
-    .min-vh-40 { min-height: 400px; }
-
-    /* Força o Iframe injetado a preencher o container pai */
-    .map-container iframe {
-        width: 100% !important;
-        height: 100% !important;
-        filter: grayscale(1) invert(0.9) contrast(1.2); /* Deixa o mapa no tom dark do site */
-    }
-
-    @media (max-width: 991px) {
-        .min-vh-40 { min-height: 300px; }
-    }
-</style>

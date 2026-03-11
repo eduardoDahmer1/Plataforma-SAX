@@ -87,6 +87,10 @@
                     Palace</a>
                 <a href="{{ route('admin.bridal.index') }}" class="submenu-link"><i class="fas fa-heart"></i> Conteúdo
                     Bridal</a>
+                <a href="{{ route('admin.cafe_bistro.index') }}" class="submenu-link"><i class="fas fa-coffee"></i> Conteúdo
+                    Café & Bistrô</a>
+                    <a href="{{ route('admin.institucional.index') }}" class="submenu-link"><i class="fas fa-university"></i> Conteúdo
+                    Institucional</a>
                 <a href="{{ route('admin.cupons.index') }}" class="submenu-link"><i class="fa-solid fa-ticket"></i>
                     Cupons</a>
                 <a href="{{ route('admin.activate.index') }}" class="submenu-link">

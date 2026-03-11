@@ -12,25 +12,21 @@
 
             {{-- Texto --}}
             <div class="col-lg-6" data-reveal="right">
-                <span class="eyebrow">Celebrações</span>
+                <span class="eyebrow">{{ $cafeBistro->eventos_subtitulo ?? 'Celebrações' }}</span>
                 <div class="divider"></div>
-                <h2 class="section-title mb-4">O lugar perfeito para as suas celebrações</h2>
+                <h2 class="section-title mb-4">{{ $cafeBistro->eventos_titulo ?? 'O lugar perfeito para as suas celebrações' }}</h2>
 
-                <p class="eventos-texto">
-                    Um espaço onde as ideias ganham vida e cada celebração se transforma em uma experiência única.
-                </p>
-                <p class="eventos-texto">
-                    No SAX Café & Bistró, criamos o ambiente ideal para reuniões, aniversários e eventos especiais,
-                    com a possibilidade de personalizar cada detalhe para a sua ocasião.
-                </p>
+                {!! nl2br(e($cafeBistro->eventos_texto ?? 'Um espaço onde as ideias ganham vida e cada celebração se transforma em uma experiência única.')) !!}
 
                 {{-- Separador de servicios --}}
-                <p class="eventos-separador">
-                    Aniversários &bull; Eventos corporativos &bull; Celebrações privadas
-                </p>
+                @if($cafeBistro->eventos_tipos)
+                    <p class="eventos-separador">
+                        {{ implode(' • ', $cafeBistro->eventos_tipos) }}
+                    </p>
+                @endif
 
                 {{-- CTA WhatsApp --}}
-                <a href="https://wa.me/" target="_blank" rel="noopener" class="btn-cafe-white btn-cafe-white--whatsapp">
+                <a href="{{ $cafeBistro->whatsapp_link }}" target="_blank" rel="noopener" class="btn-cafe-white btn-cafe-white--whatsapp">
                     <i class="bi bi-whatsapp"></i> Fale Conosco
                 </a>
             </div>

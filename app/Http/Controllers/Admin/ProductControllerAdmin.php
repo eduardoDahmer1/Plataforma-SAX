@@ -247,19 +247,32 @@ class ProductControllerAdmin extends Controller
 
         $brands = Brand::where('status', 1)
             ->orWhere('id', $item->brand_id)
+            ->orderBy('name', 'asc')
             ->get();
 
         $categories = Category::where('status', 1)
             ->orWhere('id', $item->category_id)
+            ->orderBy('name', 'asc')
             ->get();
 
-        $subcategories = Subcategory::where('category_id', $item->category_id)->get();
-        $categoriasfilhas = CategoriasFilhas::where('subcategory_id', $item->subcategory_id)->get();
+        $subcategories = $item->category_id
+            ? Subcategory::where('category_id', $item->category_id)->get()
+            : collect();
 
-        $products = Product::select('id', 'name')->get();
+        $categoriasfilhas = $item->subcategory_id
+            ? CategoriasFilhas::where('subcategory_id', $item->subcategory_id)->get()
+            : collect();
+
+        $products = Product::select('id', 'name', 'sku')
+            ->where('id', '!=', $id)
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $item->selected_children = Product::where('parent_id', $item->id)
+            ->pluck('id')
+            ->toArray();
 
         $item->parent_id = is_string($item->parent_id) ? explode(',', $item->parent_id) : ($item->parent_id ?? []);
-        $item->color_parent_id = is_string($item->color_parent_id) ? explode(',', $item->color_parent_id) : ($item->color_parent_id ?? []);
 
         return view('admin.products.edit', compact(
             'item',
@@ -282,128 +295,126 @@ class ProductControllerAdmin extends Controller
             'description' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'brand_id' => 'nullable|exists:brands,id,status,1',
-            'category_id' => 'nullable|exists:categories,id,status,1',
+            'brand_id' => 'nullable|exists:brands,id',
+            'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'childcategory_id' => 'nullable|exists:childcategories,id', // Corrigido para childcategories
+            'childcategory_id' => 'nullable|exists:childcategories,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
             'parent_id' => 'nullable|array',
-            'parent_id.*' => 'nullable|exists:products,id',
-            'color_parent_id' => 'nullable|array',
-            'color_parent_id.*' => 'nullable|exists:products,id',
-            'size' => 'nullable|string|max:50',
             'stores' => 'nullable|array',
-            'stores.*' => 'string|in:asuncion,cde,pjc',
             'color' => 'nullable|string|max:7',
         ]);
 
-        $data = $request->only([
-            'sku',
-            'name',
-            'description',
-            'price',
-            'stock',
-            'brand_id',
-            'stores',
-            'category_id',
-            'subcategory_id',
-            'childcategory_id',
-            'size',
-            'color'
-        ]);
+        try {
+            $data = $request->only([
+                'sku',
+                'name',
+                'description',
+                'price',
+                'stock',
+                'brand_id',
+                'category_id',
+                'subcategory_id',
+                'childcategory_id',
+                'size',
+                'color'
+            ]);
 
-        // --- TRATAMENTO DE IMAGEM PRINCIPAL ---
-        if ($request->hasFile('photo')) {
-            if ($product->photo && Storage::disk('public')->exists($product->photo)) {
-                $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
-                if (!$usedElsewhere) {
+            // --- IMAGEM PRINCIPAL ---
+            if ($request->hasFile('photo')) {
+                if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                     Storage::disk('public')->delete($product->photo);
                 }
+                $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
             }
-            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
-        }
 
-        // --- TRATAMENTO DE GALERIA ---
-        // Começamos com a galeria atual do banco
-        $currentGallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
-        if (!is_array($currentGallery)) {
-            $currentGallery = [];
-        }
+            // --- GALERIA ---
+            $currentGallery = is_string($product->gallery) ? json_decode($product->gallery, true) : ($product->gallery ?? []);
+            if (!is_array($currentGallery)) $currentGallery = [];
 
-        if ($request->hasFile('gallery')) {
-            foreach ($request->file('gallery') as $image) {
-                $currentGallery[] = $this->convertToWebp($image, 'gallery');
+            if ($request->hasFile('gallery')) {
+                foreach ($request->file('gallery') as $image) {
+                    $newImagePath = $this->convertToWebp($image, 'gallery');
+                    if ($newImagePath) $currentGallery[] = $newImagePath;
+                }
             }
-        }
-        // Reindexa e prepara para salvar
-        $data['gallery'] = array_values($currentGallery);
+            $data['gallery'] = json_encode(array_values($currentGallery));
 
-        // No Controller update...
-        // --- LÓGICA DE ATIVAÇÃO AUTOMÁTICA ---
-        $hasMainPhoto = !empty($data['photo']) || (!empty($product->photo) && !isset($data['photo']));
+            // --- STATUS AUTOMÁTICO ---
+            $hasPhoto = !empty($data['photo']) || !empty($product->photo);
+            $data['status'] = ($hasPhoto && !empty($data['name']) && $data['price'] > 5 && $data['stock'] > 0) ? 1 : 0;
 
-        // Importante: count($data['gallery']) verifica a galeria JÁ ATUALIZADA no banco
-        $hasGalleryImages = count($currentGallery) > 0;
+            // --- OUTROS DADOS ---
+            $data['highlights'] = json_encode($request->input('highlights', []));
+            $data['stores'] = $request->input('stores', []);
+            $data['product_role'] = 'P';
 
-        if (
-            ($hasMainPhoto || $hasGalleryImages) &&
-            !empty($data['name']) &&
-            !empty($data['description']) &&
-            $data['stock'] > 0 &&
-            $data['price'] > 5
-        ) {
-            $data['status'] = 1;
-        } else {
-            $data['status'] = 0;
-        }
+            $product->update($data);
 
-        // --- CONFIGURAÇÕES ADICIONAIS ---
-        $selectedChildrenIds = array_filter((array) $request->input('parent_id', []));
-        $data['highlights'] = json_encode($request->input('highlights', []));
-        $data['product_role'] = 'P';
-        $data['parent_id'] = null;
-        $data['stores'] = $request->input('stores', []);
+            // --- ATUALIZAR FILHOS ---
+            $selectedChildrenIds = array_filter((array) $request->input('parent_id', []));
 
-        $data['gallery'] = json_encode($data['gallery']);
+            // Remove parentesco de quem saiu da lista
+            Product::where('parent_id', $product->id)
+                ->whereNotIn('id', $selectedChildrenIds)
+                ->update(['parent_id' => null, 'product_role' => 'P']);
 
-        $oldChildrenIds = Product::where('parent_id', $product->id)->pluck('id')->toArray();
-
-        $product->update($data);
-
-        // --- ATUALIZAR FILHOS ---
-        $removedChildren = array_diff($oldChildrenIds, $selectedChildrenIds);
-        foreach ($removedChildren as $childId) {
-            $child = Product::find($childId);
-            if ($child) {
-                $child->update(['parent_id' => null, 'product_role' => 'P', 'color_parent_id' => null]);
-            }
-        }
-
-        foreach ($selectedChildrenIds as $childId) {
-            $child = Product::find($childId);
-            if ($child && $child->id != $product->id) {
-                $child->update([
-                    'parent_id' => $product->id,
-                    'product_role' => 'F',
-                    'description' => $product->description,
-                    'photo' => $product->photo,
-                    'gallery' => $product->gallery,
-                    'brand_id' => $product->brand_id,
-                    'category_id' => $product->category_id,
-                    'subcategory_id' => $product->subcategory_id,
-                    'status' => $product->status,
-                    'stores' => $product->stores
+            // Atualiza os filhos atuais
+            if (!empty($selectedChildrenIds)) {
+                Product::whereIn('id', $selectedChildrenIds)->update([
+                    'parent_id'      => $product->id,
+                    'product_role'   => 'F',
+                    'description'    => $product->description,
+                    'photo'          => $product->photo,
+                    'gallery'        => $data['gallery'],
+                    'brand_id'       => $product->brand_id,
+                    'category_id'    => $product->category_id,
+                    'status'         => $product->status,
+                    'stores'         => json_encode($data['stores'])
                 ]);
             }
+
+            return redirect()->route('admin.products.index')->with('success', 'Produto atualizado com sucesso!');
+        } catch (\Exception $e) {
+            \Log::error("Erro no Update de Produto: " . $e->getMessage());
+            return back()->with('error', 'Erro ao salvar: ' . $e->getMessage())->withInput();
         }
+    }
 
-        $msg = $product->status == 1
-            ? 'Produto atualizado e ATIVADO automaticamente!'
-            : 'Produto atualizado, mas permanece INATIVO (falta completar requisitos ou imagens).';
+    // ================== AUX ==================
+    private function convertToWebp($image, $type)
+    {
+        try {
+            $temp = $image->getRealPath();
 
-        return redirect()->route('admin.products.index')->with('success', $msg);
+            // imagecreatefromstring identifica automaticamente se é JPG, PNG ou WEBP
+            $imgRes = @imagecreatefromstring(file_get_contents($temp));
+
+            if (!$imgRes) {
+                return null;
+            }
+
+            ob_start();
+            imagewebp($imgRes, null, 85);
+            $webpData = ob_get_clean();
+            imagedestroy($imgRes);
+
+            $dir = "products/{$type}/";
+            $fileName = uniqid() . '.webp';
+
+            if (!Storage::disk('public')->exists($dir)) {
+                Storage::disk('public')->makeDirectory($dir);
+            }
+
+            Storage::disk('public')->put($dir . $fileName, $webpData);
+
+            return $dir . $fileName;
+        } catch (\Exception $e) {
+            \Log::error("Erro na conversão WebP: " . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -524,33 +535,6 @@ class ProductControllerAdmin extends Controller
             $product->delete();
         }
         return redirect()->route('admin.products.index')->with('success', 'Produto excluído com sucesso!');
-    }
-
-    // ================== AUX ==================
-    private function convertToWebp($image, $type)
-    {
-        $temp = $image->getRealPath();
-        $ext = strtolower($image->getClientOriginalExtension());
-
-        $imgRes = match ($ext) {
-            'jpeg', 'jpg' => imagecreatefromjpeg($temp),
-            'png' => imagecreatefrompng($temp),
-            'gif' => imagecreatefromgif($temp),
-            'webp' => imagecreatefromwebp($temp),
-            default => throw new \Exception('Formato de imagem não suportado')
-        };
-
-        ob_start();
-        imagewebp($imgRes, null, 90);
-        $webpData = ob_get_clean();
-        imagedestroy($imgRes);
-
-        $dir = "products/{$type}/";
-        $fileName = uniqid() . '.webp';
-        if (!Storage::disk('public')->exists($dir)) Storage::disk('public')->makeDirectory($dir);
-        Storage::disk('public')->put("{$dir}{$fileName}", $webpData);
-
-        return "{$dir}{$fileName}";
     }
 
     public function getSubcategories($categoryId)

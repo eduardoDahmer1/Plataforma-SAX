@@ -17,13 +17,17 @@
                 </p>
 
                 <div class="footer-social">
-                    <a href="#" target="_blank" rel="noopener" aria-label="Instagram" class="footer-social-link">
-                        <i class="bi bi-instagram"></i>
-                    </a>
-                    <a href="#" target="_blank" rel="noopener" aria-label="Facebook" class="footer-social-link">
-                        <i class="bi bi-facebook"></i>
-                    </a>
-                    <a href="https://wa.me/" target="_blank" rel="noopener" aria-label="WhatsApp" class="footer-social-link">
+                    @if($cafeBistro->instagram_url)
+                        <a href="{{ $cafeBistro->instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram" class="footer-social-link">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                    @endif
+                    @if($cafeBistro->facebook_url)
+                        <a href="{{ $cafeBistro->facebook_url }}" target="_blank" rel="noopener" aria-label="Facebook" class="footer-social-link">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                    @endif
+                    <a href="{{ $cafeBistro->whatsapp_link }}" target="_blank" rel="noopener" aria-label="WhatsApp" class="footer-social-link">
                         <i class="bi bi-whatsapp"></i>
                     </a>
                 </div>
@@ -35,22 +39,14 @@
 
                 <table class="footer-horarios w-100">
                     <tbody>
-                        <tr>
-                            <td class="footer-dia">Segunda</td>
-                            <td class="footer-hora footer-fechado">Fechado</td>
-                        </tr>
-                        <tr>
-                            <td class="footer-dia">Ter — Qui</td>
-                            <td class="footer-hora">09:00 — 23:00</td>
-                        </tr>
-                        <tr>
-                            <td class="footer-dia">Sex — Sáb</td>
-                            <td class="footer-hora">09:00 — 23:30</td>
-                        </tr>
-                        <tr>
-                            <td class="footer-dia">Domingo</td>
-                            <td class="footer-hora">09:00 — 23:00</td>
-                        </tr>
+                        @foreach($cafeBistro->horarios ?? [] as $h)
+                            <tr>
+                                <td class="footer-dia">{{ $h['dia'] }}</td>
+                                <td class="footer-hora {{ !$h['apertura'] ? 'footer-fechado' : '' }}">
+                                    {{ $h['apertura'] ? $h['apertura'] . ' — ' . $h['cierre'] : 'Fechado' }}
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -61,15 +57,15 @@
 
                 <address class="footer-endereco">
                     <i class="bi bi-geo-alt me-2"></i>
-                    Shopping Dubai, Pedro Juan Caballero — Paraguai
+                    {{ $cafeBistro->direccion ?? 'Shopping Dubai, Pedro Juan Caballero — Paraguai' }}
                 </address>
 
                 <p class="footer-telefone">
                     <i class="bi bi-telephone me-2"></i>
-                    +595 000 000 000
+                    {{ $cafeBistro->telefono ?? '+595 000 000 000' }}
                 </p>
 
-                <a href="https://wa.me/" target="_blank" rel="noopener" class="btn-reservar-cafe d-inline-block mt-2">
+                <a href="{{ $cafeBistro->whatsapp_link }}" target="_blank" rel="noopener" class="btn-reservar-cafe d-inline-block mt-2">
                     Fazer Reserva
                 </a>
             </div>

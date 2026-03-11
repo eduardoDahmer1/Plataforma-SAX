@@ -1,0 +1,7 @@
+:root {
+    --gold: #c5a059;
+    --dark: #111111;
+}
+.text-gold { color: var(--gold); }
+.bg-gold { background-color: var(--gold); }
+.tracking-widest { letter-spacing: 0.2em; }

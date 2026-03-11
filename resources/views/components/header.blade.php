@@ -189,9 +189,10 @@
                         </a>
                     </li>
                 @endforeach
+                <li class="list-inline-item"><a href="{{ route('institucional.index') }}" class="text-institucional">INSTITUCIONAL</a></li>
                 <li class="list-inline-item"><a href="{{ route('bridal.index') }}" class="text-bridal">BRIDAL</a></li>
                 <li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">PALACE</a></li>
-                <li class="list-inline-item"><a href="{{ route('cafe_bistro') }}" class="text-bistro">CAFÉ & BISTRÔ</a></li>
+                <li class="list-inline-item"><a href="{{ route('cafe_bistro.index') }}" class="text-bistro">CAFÉ & BISTRÔ</a></li>
                 <li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">#SAXNEWS</a>
                 </li>
             </ul>
@@ -571,6 +572,7 @@
     .text-bridal { color: #b2945e !important; }
     .text-palace { color: #a31d24 !important; }
     .text-bistro { color: #4a6fa5 !important; }
+    .text-institucional { color: #123d7d !important; }
 
     @media (max-width: 991px) {
         .logo-img { height: 35px; }

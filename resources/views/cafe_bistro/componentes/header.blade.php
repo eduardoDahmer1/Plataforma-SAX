@@ -4,7 +4,7 @@
         <nav class="navbar navbar-expand-lg p-0">
 
             {{-- Logo --}}
-            <a href="{{ route('cafe_bistro') }}" class="brand-cafe me-auto">
+            <a href="{{ route('cafe_bistro.index') }}" class="brand-cafe me-auto">
                 SAX Café & Bistrô
             </a>
 

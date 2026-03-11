@@ -6,7 +6,7 @@
         <div class="text-center mb-5" data-reveal="up">
             <span class="eyebrow">Cardápio</span>
             <div class="divider mx-auto"></div>
-            <h2 class="section-title">Sabor Autêntico</h2>
+            <h2 class="section-title">{{ $cafeBistro->cardapio_titulo ?? 'Sabor Autêntico' }}</h2>
         </div>
 
         {{-- Bento Grid --}}
@@ -65,19 +65,39 @@
 
             {{-- Cuerpo: visor PDF --}}
             <div class="modal-body carta-modal-body p-0">
-                {{-- Conectar cuando el PDF esté disponible --}}
-                <div class="carta-pdf-placeholder">
-                    <i class="bi bi-file-earmark-pdf" style="font-size: 3rem; opacity: 0.4;"></i>
-                    <p class="mt-3 mb-0" style="opacity: 0.5;">PDF do cardápio será integrado aqui</p>
-                </div>
+                @if($cafeBistro->cardapio_pdf)
+                    {{-- Desktop: iframe con scroll nativo del navegador --}}
+                    <iframe src="{{ asset('storage/' . $cafeBistro->cardapio_pdf) }}"
+                            class="carta-pdf-viewer d-none d-md-block"
+                            title="Cardápio PDF"></iframe>
+
+                    {{-- Mobile: mensaje + botón para abrir en nueva pestaña --}}
+                    <div class="d-md-none text-center py-5 px-4">
+                        <i class="bi bi-file-earmark-pdf" style="font-size: 3rem; opacity: 0.5;"></i>
+                        <p class="mt-3 mb-4 small" style="opacity: 0.7;">
+                            Para melhor visualização, abra o cardápio no navegador.
+                        </p>
+                        <a href="{{ asset('storage/' . $cafeBistro->cardapio_pdf) }}"
+                           target="_blank" rel="noopener"
+                           class="btn-carta-download">
+                            <i class="bi bi-box-arrow-up-right me-2"></i>Abrir Cardápio
+                        </a>
+                    </div>
+                @else
+                    <div class="carta-pdf-placeholder">
+                        <i class="bi bi-file-earmark-pdf" style="font-size: 3rem; opacity: 0.4;"></i>
+                        <p class="mt-3 mb-0" style="opacity: 0.5;">PDF do cardápio será integrado aqui</p>
+                    </div>
+                @endif
             </div>
 
-            {{-- Footer: botón descargar --}}
-            <div class="modal-footer carta-modal-footer border-0 justify-content-center">
-                {{-- Conectar href cuando el PDF esté disponible --}}
-                <a href="#" class="btn-carta-download" onclick="event.preventDefault();">
-                    <i class="bi bi-download me-2"></i>Baixar Cardápio
-                </a>
+            {{-- Footer: botón descargar (solo desktop, mobile ya tiene el suyo) --}}
+            <div class="modal-footer carta-modal-footer border-0 justify-content-center d-none d-md-flex">
+                @if($cafeBistro->cardapio_pdf)
+                    <a href="{{ asset('storage/' . $cafeBistro->cardapio_pdf) }}" download class="btn-carta-download">
+                        <i class="bi bi-download me-2"></i>Baixar Cardápio
+                    </a>
+                @endif
             </div>
 
         </div>

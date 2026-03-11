@@ -22,6 +22,8 @@ use App\Http\Controllers\CuponUserController;
 use App\Http\Controllers\PagoParController;
 use App\Http\Controllers\PalaceController;
 use App\Http\Controllers\BridalController;
+use App\Http\Controllers\CafeBistroController;
+use App\Http\Controllers\InstitucionalController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\SystemController;
@@ -41,6 +43,8 @@ use App\Http\Controllers\Admin\AdminHighlightController;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\PalaceAdminController;
 use App\Http\Controllers\Admin\BridalAdminController;
+use App\Http\Controllers\Admin\CafeBistroAdminController;
+use App\Http\Controllers\Admin\InstitucionalAdminController;
 use App\Http\Controllers\Admin\ActivateBrandsAndCategoriesController;
 
 // Auth Controllers
@@ -51,10 +55,11 @@ use App\Http\Controllers\Auth\UserPreferenceController;
 // --- Public Routes ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::get('/institucional', [InstitucionalController::class, 'index'])->name('institucional.index');
 Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.page');
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
 Route::get('/bridal', [BridalController::class, 'index'])->name('bridal.index');
-Route::get('/bistro', fn() => view('cafe_bistro.index'))->name('cafe_bistro');
+Route::get('/bistro', [CafeBistroController::class, 'index'])->name('cafe_bistro.index');
 
 Route::get('/categorias-gerais', [App\Http\Controllers\AllCategoriesController::class, 'index'])->name('all-categories.index');
 
@@ -164,6 +169,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('palace', PalaceAdminController::class);
     Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');
     Route::resource('bridal', BridalAdminController::class);
+    Route::resource('cafe_bistro', CafeBistroAdminController::class);
+    Route::resource('institucional', InstitucionalAdminController::class);
 
     Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');

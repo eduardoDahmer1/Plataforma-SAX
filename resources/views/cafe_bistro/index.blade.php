@@ -1,6 +1,6 @@
 @extends('layout.cafe_bistro')
 
-@section('title', 'SAX Café & Bistrô')
+@section('title', $cafeBistro->meta_title ?? 'SAX Café & Bistrô')
 
 @section('content')
     @include('cafe_bistro.componentes.hero')

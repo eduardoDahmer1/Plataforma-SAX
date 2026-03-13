@@ -30,6 +30,7 @@ class CafeBistro extends Model
         'cardapio_titulo',
         'cardapio_subtitulo',
         'cardapio_pdf',
+        'cardapio_galeria',
 
         // Eventos
         'eventos_titulo',
@@ -53,6 +54,7 @@ class CafeBistro extends Model
         'is_active'       => 'boolean',
         'eventos_tipos'   => 'array',
         'eventos_galeria' => 'array',
+        'cardapio_galeria' => 'array',
         'horarios'        => 'array',
     ];
 

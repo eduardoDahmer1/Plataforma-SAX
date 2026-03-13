@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('cardapio_titulo')->nullable();
             $table->text('cardapio_subtitulo')->nullable();
             $table->string('cardapio_pdf')->nullable();
+            $table->json('cardapio_galeria')->nullable();
 
             // Eventos
             $table->string('eventos_titulo')->nullable();

@@ -9,13 +9,36 @@
                 <div class="divider"></div>
                 <h2 class="section-title mb-4">Horários</h2>
 
+                @php
+                    // Agrupar días consecutivos con el mismo horario
+                    $horarios = $cafeBistro->horarios ?? [];
+                    $grupos = [];
+                    foreach ($horarios as $h) {
+                        $abertura = $h['apertura'] ?? '';
+                        $cierre   = $h['cierre']   ?? '';
+                        $horario  = $abertura ? "$abertura — $cierre" : 'Fechado';
+                        $ultimo   = count($grupos) - 1;
+                        if ($ultimo >= 0 && $grupos[$ultimo]['horario'] === $horario) {
+                            $grupos[$ultimo]['fim'] = $h['dia'] ?? '';
+                        } else {
+                            $grupos[] = [
+                                'inicio'  => $h['dia'] ?? '',
+                                'fim'     => '',
+                                'horario' => $horario,
+                                'fechado' => !$abertura,
+                            ];
+                        }
+                    }
+                @endphp
                 <table class="horarios-table w-100">
                     <tbody>
-                        @foreach($cafeBistro->horarios ?? [] as $h)
+                        @foreach($grupos as $g)
                             <tr>
-                                <td class="horarios-dia">{{ $h['dia'] }}</td>
-                                <td class="horarios-hora {{ !$h['apertura'] ? 'horarios-fechado' : '' }}">
-                                    {{ $h['apertura'] ? $h['apertura'] . ' — ' . $h['cierre'] : 'Fechado' }}
+                                <td class="horarios-dia">
+                                    {{ $g['inicio'] }}{{ $g['fim'] ? ' — ' . $g['fim'] : '' }}
+                                </td>
+                                <td class="horarios-hora {{ $g['fechado'] ? 'horarios-fechado' : '' }}">
+                                    {{ $g['horario'] }}
                                 </td>
                             </tr>
                         @endforeach

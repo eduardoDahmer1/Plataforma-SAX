@@ -246,6 +246,40 @@
                             <p class="x-small text-muted m-0">Somente PDF — máx. 8MB</p>
                         </div>
                     </div>
+
+                    {{-- Galería de imágenes del cardápio (bento grid) --}}
+                    <div class="col-12 mt-2">
+                        <label class="sax-form-label d-block mb-2">
+                            Galeria de Imagens
+                            <span class="text-muted fw-normal">(máx. 8 fotos — para o bento grid)</span>
+                        </label>
+
+                        {{-- Preview de imágenes existentes --}}
+                        <div id="cardapioGaleriaPreview" class="gallery-preview-grid mb-3">
+                            @foreach($cafeBistro->cardapio_galeria ?? [] as $index => $foto)
+                                <div class="gallery-preview-item shadow-sm border" data-cardapio-img="{{ $index }}">
+                                    <img src="{{ asset('storage/'.$foto) }}" class="w-100 h-100 object-fit-cover">
+                                    <input type="hidden" name="cardapio_galeria_actual[]" value="{{ $foto }}">
+                                    <button type="button" class="gallery-remove-btn" onclick="removeCardapioImg(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Upload de nuevas imágenes --}}
+                        <div class="upload-zone" id="cardapioGaleriaZone">
+                            <input type="file" name="cardapio_galeria[]" class="upload-input" multiple accept="image/*">
+                            <i class="fas fa-images mb-2 opacity-25 fa-lg"></i>
+                            <p class="x-small fw-bold m-0">Clique ou arraste imagens</p>
+                            <p class="x-small text-muted m-0">JPG, PNG, WEBP — máx. 4MB cada</p>
+                        </div>
+
+                        <p class="x-small text-muted mt-2 mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="cardapioGaleriaCount">{{ count($cafeBistro->cardapio_galeria ?? []) }}</span>/8 imagens carregadas
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -253,10 +287,145 @@
         {{-- ══════════════════════════════════════════════════════════ --}}
         {{-- 05. EVENTOS                                               --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
+        <div class="sax-premium-card shadow-sm overflow-hidden">
+            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
+                <div class="icon-circle-bistro"><i class="fas fa-champagne-glasses"></i></div>
+                <div>
+                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">05 — Eventos</p>
+                    <p class="x-small text-muted mb-0">Textos, tipos e galeria da seção de eventos</p>
+                </div>
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    {{-- Título y subtítulo --}}
+                    <div class="col-md-6">
+                        <label class="sax-form-label">Título da Seção</label>
+                        <input type="text" name="eventos_titulo" class="form-control sax-input"
+                               value="{{ old('eventos_titulo', $cafeBistro->eventos_titulo) }}"
+                               placeholder="Eventos Especiais">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="sax-form-label">Subtítulo</label>
+                        <input type="text" name="eventos_subtitulo" class="form-control sax-input"
+                               value="{{ old('eventos_subtitulo', $cafeBistro->eventos_subtitulo) }}"
+                               placeholder="Celebre seus momentos conosco">
+                    </div>
+
+                    {{-- Texto descriptivo --}}
+                    <div class="col-12">
+                        <label class="sax-form-label">Texto</label>
+                        <textarea name="eventos_texto" class="form-control sax-input" rows="4"
+                                  placeholder="Descrição do espaço para eventos...">{{ old('eventos_texto', $cafeBistro->eventos_texto) }}</textarea>
+                    </div>
+
+                    {{-- Tipos de eventos (tags dinámicos) --}}
+                    <div class="col-12">
+                        <label class="sax-form-label d-block mb-2">
+                            Tipos de Eventos
+                            <span class="text-muted fw-normal">(pressione Enter para adicionar)</span>
+                        </label>
+                        <div class="d-flex flex-wrap gap-2 mb-2" id="eventosTiposContainer">
+                            @foreach($eventosTipos as $tipo)
+                                <span class="eventos-tag">
+                                    {{ $tipo }}
+                                    <input type="hidden" name="eventos_tipos[]" value="{{ $tipo }}">
+                                    <button type="button" class="eventos-tag-remove" onclick="this.parentElement.remove()">&times;</button>
+                                </span>
+                            @endforeach
+                        </div>
+                        <input type="text" id="eventosTipoInput" class="form-control sax-input"
+                               placeholder="Ex: Aniversários, Casamentos, Corporativo...">
+                    </div>
+
+                    {{-- Galería de eventos --}}
+                    <div class="col-12 mt-2">
+                        <label class="sax-form-label d-block mb-2">Galeria de Eventos</label>
+
+                        <div id="eventosGaleriaPreview" class="gallery-preview-grid mb-3">
+                            @foreach($cafeBistro->eventos_galeria ?? [] as $index => $foto)
+                                <div class="gallery-preview-item shadow-sm border" data-evento-img="{{ $index }}">
+                                    <img src="{{ asset('storage/'.$foto) }}" class="w-100 h-100 object-fit-cover">
+                                    <input type="hidden" name="eventos_galeria_actual[]" value="{{ $foto }}">
+                                    <button type="button" class="gallery-remove-btn" onclick="removeEventoImg(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="upload-zone">
+                            <input type="file" name="eventos_galeria[]" class="upload-input" multiple accept="image/*">
+                            <i class="fas fa-images mb-2 opacity-25 fa-lg"></i>
+                            <p class="x-small fw-bold m-0">Clique ou arraste imagens</p>
+                            <p class="x-small text-muted m-0">JPG, PNG, WEBP — máx. 4MB cada</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- ══════════════════════════════════════════════════════════ --}}
         {{-- 06. HORÁRIOS                                             --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
+        <div class="sax-premium-card shadow-sm overflow-hidden">
+            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
+                <div class="icon-circle-bistro"><i class="fas fa-clock"></i></div>
+                <div>
+                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">06 — Horários</p>
+                    <p class="x-small text-muted mb-0">Dias da semana e horários de funcionamento</p>
+                </div>
+            </div>
+            <div class="p-4">
+                @php
+                    $diasSemana = ['Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado','Domingo'];
+                @endphp
+
+                <div class="d-flex flex-column gap-2">
+                    @foreach($diasSemana as $i => $diaNome)
+                        @php
+                            $h = $horarios[$i] ?? ['dia' => '', 'apertura' => '', 'cierre' => ''];
+                        @endphp
+                        <div class="row g-2 align-items-center horario-row">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="horario-dia-label">{{ $diaNome }}</span>
+                                    <input type="hidden" name="horarios[{{ $i }}][dia]" value="{{ $diaNome }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="x-small text-muted" style="min-width:2rem;">De</span>
+                                    <input type="time" name="horarios[{{ $i }}][apertura]"
+                                           class="form-control sax-input sax-input-sm"
+                                           value="{{ $h['apertura'] ?? '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="x-small text-muted" style="min-width:2rem;">Até</span>
+                                    <input type="time" name="horarios[{{ $i }}][cierre]"
+                                           class="form-control sax-input sax-input-sm"
+                                           value="{{ $h['cierre'] ?? '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <label class="horario-fechado-label">
+                                    <input type="checkbox" class="form-check-input me-1 horario-fechado-check"
+                                           data-row="{{ $i }}"
+                                           {{ ($h['apertura'] ?? '') === '' && ($h['cierre'] ?? '') === '' && $cafeBistro->exists && $cafeBistro->horarios ? 'checked' : '' }}>
+                                    <span class="x-small">Fechado</span>
+                                </label>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <p class="x-small text-muted mt-3 mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Marque "Fechado" para desabilitar os horários do dia.
+                </p>
+            </div>
+        </div>
 
         {{-- ══════════════════════════════════════════════════════════ --}}
         {{-- 07. SEO                                                   --}}
@@ -368,6 +537,89 @@
     .alert-modern { border-radius: 0.75rem; border: none; }
     .alert-success.alert-modern { background: var(--bistro-dark); color: #fff; }
 
+    /* Galería preview grid */
+    .gallery-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+        gap: 0.75rem;
+    }
+    .gallery-preview-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    .gallery-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .gallery-remove-btn {
+        position: absolute;
+        top: 0.375rem;
+        right: 0.375rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-size: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .gallery-preview-item:hover .gallery-remove-btn { opacity: 1; }
+
+    /* Tags de tipos de eventos */
+    .eventos-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.75rem;
+        background: var(--bistro-light-bg);
+        color: var(--bistro-dark);
+        border-radius: 2rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.03125rem;
+    }
+    .eventos-tag-remove {
+        border: none;
+        background: none;
+        color: var(--bistro-mid);
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    .eventos-tag-remove:hover { color: #dc3545; }
+
+    /* Horários */
+    .horario-row {
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.75rem;
+        transition: background 0.15s;
+    }
+    .horario-row:nth-child(odd) { background: #fafbfc; }
+    .horario-row:hover { background: var(--bistro-light-bg); }
+    .horario-dia-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--bistro-dark);
+        min-width: 8rem;
+    }
+    .sax-input-sm { font-size: 0.8rem; padding: 0.35rem 0.625rem; }
+    .horario-fechado-label {
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+    }
+
     @media (max-width: 768px) {
         .sticky-header { padding: 0.75rem 1rem !important; }
     }
@@ -375,6 +627,7 @@
 
 @push('scripts')
 <script>
+// Preview de imágenes individuales (hero, sobre)
 document.querySelectorAll('.img-trigger').forEach(function(input) {
     input.addEventListener('change', function() {
         if (!this.files || !this.files[0]) return;
@@ -383,6 +636,57 @@ document.querySelectorAll('.img-trigger').forEach(function(input) {
         reader.onload = e => document.getElementById(prevId).src = e.target.result;
         reader.readAsDataURL(this.files[0]);
     });
+});
+
+// Remover imagen existente de la galería del cardápio
+function removeCardapioImg(btn) {
+    btn.closest('.gallery-preview-item').remove();
+    updateCardapioCount();
+}
+
+// Actualizar contador de imágenes
+function updateCardapioCount() {
+    var existentes = document.querySelectorAll('#cardapioGaleriaPreview .gallery-preview-item').length;
+    document.getElementById('cardapioGaleriaCount').textContent = existentes;
+}
+
+// Remover imagen existente de la galería de eventos
+function removeEventoImg(btn) {
+    btn.closest('.gallery-preview-item').remove();
+}
+
+// Tags dinámicos para tipos de eventos
+document.getElementById('eventosTipoInput').addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    var val = this.value.trim();
+    if (!val) return;
+
+    var container = document.getElementById('eventosTiposContainer');
+    var tag = document.createElement('span');
+    tag.className = 'eventos-tag';
+    tag.innerHTML = val +
+        '<input type="hidden" name="eventos_tipos[]" value="' + val.replace(/"/g, '&quot;') + '">' +
+        '<button type="button" class="eventos-tag-remove" onclick="this.parentElement.remove()">&times;</button>';
+    container.appendChild(tag);
+    this.value = '';
+});
+
+// Checkbox "Fechado" deshabilita los inputs de horario
+document.querySelectorAll('.horario-fechado-check').forEach(function(check) {
+    var row = check.closest('.horario-row');
+    var timeInputs = row.querySelectorAll('input[type="time"]');
+
+    function toggle() {
+        timeInputs.forEach(function(input) {
+            input.disabled = check.checked;
+            if (check.checked) input.value = '';
+            input.style.opacity = check.checked ? '0.4' : '1';
+        });
+    }
+
+    toggle(); // estado inicial
+    check.addEventListener('change', toggle);
 });
 </script>
 @endpush

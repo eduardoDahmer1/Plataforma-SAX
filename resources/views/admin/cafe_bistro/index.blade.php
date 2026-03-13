@@ -236,10 +236,11 @@
                         <table class="w-100">
                             <tbody>
                                 @foreach($horarios as $h)
+                                    @php $abertura = $h['apertura'] ?? ''; @endphp
                                     <tr class="border-bottom">
-                                        <td class="py-2 small fw-bold">{{ $h['dia'] }}</td>
-                                        <td class="py-2 small text-end {{ !$h['apertura'] ? 'text-danger' : 'text-muted' }}">
-                                            {{ $h['apertura'] ? $h['apertura'] . ' — ' . $h['cierre'] : 'Fechado' }}
+                                        <td class="py-2 small fw-bold">{{ $h['dia'] ?? '' }}</td>
+                                        <td class="py-2 small text-end {{ $abertura ? 'text-muted' : 'text-danger' }}">
+                                            {{ $abertura ? $abertura . ' — ' . ($h['cierre'] ?? '') : 'Fechado' }}
                                         </td>
                                     </tr>
                                 @endforeach

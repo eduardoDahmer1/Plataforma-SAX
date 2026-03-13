@@ -37,14 +37,26 @@
             <div class="col-lg-4 col-md-6">
                 <h6 class="footer-col-title">Horários</h6>
 
+                @php
+                    $grupos = [];
+                    foreach ($cafeBistro->horarios ?? [] as $h) {
+                        $abertura = $h['apertura'] ?? '';
+                        $cierre   = $h['cierre']   ?? '';
+                        $horario  = $abertura ? "$abertura — $cierre" : 'Fechado';
+                        $ultimo   = count($grupos) - 1;
+                        if ($ultimo >= 0 && $grupos[$ultimo]['horario'] === $horario) {
+                            $grupos[$ultimo]['fim'] = $h['dia'] ?? '';
+                        } else {
+                            $grupos[] = ['inicio' => $h['dia'] ?? '', 'fim' => '', 'horario' => $horario, 'fechado' => !$abertura];
+                        }
+                    }
+                @endphp
                 <table class="footer-horarios w-100">
                     <tbody>
-                        @foreach($cafeBistro->horarios ?? [] as $h)
+                        @foreach($grupos as $g)
                             <tr>
-                                <td class="footer-dia">{{ $h['dia'] }}</td>
-                                <td class="footer-hora {{ !$h['apertura'] ? 'footer-fechado' : '' }}">
-                                    {{ $h['apertura'] ? $h['apertura'] . ' — ' . $h['cierre'] : 'Fechado' }}
-                                </td>
+                                <td class="footer-dia">{{ $g['inicio'] }}{{ $g['fim'] ? ' — ' . $g['fim'] : '' }}</td>
+                                <td class="footer-hora {{ $g['fechado'] ? 'footer-fechado' : '' }}">{{ $g['horario'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>

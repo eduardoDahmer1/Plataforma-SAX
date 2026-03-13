@@ -49,6 +49,9 @@ class CafeBistroAdminController extends Controller
             'cardapio_titulo'   => 'nullable|string|max:255',
             'cardapio_subtitulo' => 'nullable|string',
             'cardapio_pdf'      => 'nullable|mimes:pdf|max:8192',
+            'cardapio_galeria'         => 'nullable|array|max:8',
+            'cardapio_galeria.*'       => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'cardapio_galeria_actual'  => 'nullable|array',
 
             // Eventos
             'eventos_titulo'   => 'nullable|string|max:255',
@@ -111,6 +114,27 @@ class CafeBistroAdminController extends Controller
 
         $data['eventos_galeria'] = $galeriaFinal;
         unset($data['eventos_galeria_actual']);
+
+        // 4. Galería del cardápio (array de imágenes)
+        $cardapioGaleriaActual = $request->input('cardapio_galeria_actual', []);
+        $cardapioGaleriaFinal  = is_array($cardapioGaleriaActual) ? $cardapioGaleriaActual : [];
+
+        if ($request->hasFile('cardapio_galeria')) {
+            foreach ($request->file('cardapio_galeria') as $img) {
+                $cardapioGaleriaFinal[] = $this->convertToWebp($img, 'cafe_bistro/cardapio');
+            }
+        }
+
+        // Eliminar imágenes removidas por el admin
+        $cardapioGaleriaAnterior = $cafeBistro->cardapio_galeria ?? [];
+        foreach ($cardapioGaleriaAnterior as $oldImg) {
+            if (!in_array($oldImg, $cardapioGaleriaFinal)) {
+                Storage::disk('public')->delete($oldImg);
+            }
+        }
+
+        $data['cardapio_galeria'] = $cardapioGaleriaFinal;
+        unset($data['cardapio_galeria_actual']);
 
         $cafeBistro->update($data);
         Cache::forget('cafe_bistro_data');

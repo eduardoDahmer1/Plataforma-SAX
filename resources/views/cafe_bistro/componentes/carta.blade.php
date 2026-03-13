@@ -9,34 +9,21 @@
             <h2 class="section-title">{{ $cafeBistro->cardapio_titulo ?? 'Sabor Autêntico' }}</h2>
         </div>
 
-        {{-- Bento Grid --}}
-        <div class="carta-grid" data-reveal="up">
+        {{-- Bento Grid dinámico --}}
+        @php $galeria = $cafeBistro->cardapio_galeria ?? []; @endphp
 
-            {{-- Pos 1: Vertical grande (ocupa 2 filas) --}}
-            <div class="carta-item carta-item--tall">
-                <div class="img-placeholder carta-img">GOURMET</div>
+        @if(count($galeria))
+            <div class="carta-grid" data-reveal="up">
+                @foreach($galeria as $i => $foto)
+                    <div class="carta-item {{ $i === 0 ? 'carta-item--tall' : '' }}">
+                        <img src="{{ asset('storage/' . $foto) }}"
+                             alt="Cardápio imagem {{ $i + 1 }}"
+                             class="carta-img"
+                             loading="lazy">
+                    </div>
+                @endforeach
             </div>
-
-            {{-- Pos 2: Cuadrada --}}
-            <div class="carta-item">
-                <div class="img-placeholder carta-img">PASTA</div>
-            </div>
-
-            {{-- Pos 3: Cuadrada --}}
-            <div class="carta-item">
-                <div class="img-placeholder carta-img">COCKTAIL</div>
-            </div>
-
-            {{-- Pos 4: Cuadrada --}}
-            <div class="carta-item">
-                <div class="img-placeholder carta-img">DESSERT</div>
-            </div>
-
-            {{-- Pos 5: Cuadrada --}}
-            <div class="carta-item">
-                <div class="img-placeholder carta-img">COFFEE</div>
-            </div>
-        </div>
+        @endif
 
         {{-- CTA --}}
         <div class="text-center mt-5" data-reveal="up">

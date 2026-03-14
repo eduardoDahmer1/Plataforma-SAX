@@ -109,26 +109,43 @@
             </div>
         </div>
 
-        {{-- 04. LOGOS DAS MARCAS (STACK) --}}
+        {{-- 06. EXPERIÊNCIA VIRTUAL (NOVOS CAMPOS) --}}
         <div class="col-12">
             <div class="sax-premium-card p-4 shadow-sm bg-white">
-                <div class="row align-items-center">
-                    <div class="col-md-4 border-right">
-                        <h6 class="font-weight-bold text-uppercase letter-spacing-1 mb-1">Portfólio de Marcas</h6>
-                        <p class="x-small text-muted text-uppercase mb-0">Logos exibidos no rodapé/marcas</p>
-                    </div>
-                    <div class="col-md-8 pt-3 pt-md-0">
-                        <div class="avatar-stack-premium d-flex align-items-center flex-wrap">
-                            @php $logos = is_array($institucional->brand_logos) ? $institucional->brand_logos : json_decode($institucional->brand_logos, true); @endphp
-                            @forelse(array_slice($logos ?? [], 0, 12) as $logo)
-                                <div class="avatar-item border-gold-subtle" style="background: #fff; padding: 5px;">
-                                    <img src="{{ asset('storage/'.$logo) }}" style="object-fit: contain;">
+                <h6 class="font-weight-bold text-uppercase letter-spacing-1 mb-4">
+                    <i class="fas fa-vr-cardboard text-gold mr-2"></i> Experiencia Virtual & Cámaras
+                </h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="x-small text-uppercase fw-bold text-muted d-block mb-2">Tour Virtual 360°</label>
+                        <div class="rounded overflow-hidden border bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                            @if($institucional->iframe_tour_360)
+                                <div class="text-center p-3">
+                                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                                    <p class="m-0 x-small fw-bold">Link de Tour Ativo</p>
                                 </div>
-                            @empty
-                                <span class="text-muted x-small italic">Sin logos registrados.</span>
-                            @endforelse
-                            @if(count($logos ?? []) > 12)
-                                <div class="avatar-item plus-count">+{{ count($logos) - 12 }}</div>
+                            @else
+                                <span class="text-muted x-small italic">No configurado</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="x-small text-uppercase fw-bold text-muted d-block mb-2">Ponte da Amizade</label>
+                        <div class="rounded overflow-hidden border bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                            @if($institucional->iframe_ponte_amizade)
+                                <i class="fas fa-video text-gold"></i>
+                            @else
+                                <span class="text-muted x-small italic">Offline</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="x-small text-uppercase fw-bold text-muted d-block mb-2">Centro CDE</label>
+                        <div class="rounded overflow-hidden border bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                            @if($institucional->iframe_centro_cde)
+                                <i class="fas fa-video text-gold"></i>
+                            @else
+                                <span class="text-muted x-small italic">Offline</span>
                             @endif
                         </div>
                     </div>

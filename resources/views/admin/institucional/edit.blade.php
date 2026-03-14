@@ -11,7 +11,7 @@
             <div>
                 <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Editar Institucional</h2>
                 <div class="sax-divider-gold"></div>
-                <span class="text-muted x-small">Última atualização: {{ $institucional->updated_at->format('d/m H:i') }}</span>
+                <span class="text-muted x-small">Última actualización: {{ $institucional->updated_at->format('d/m H:i') }}</span>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.institucional.index') }}" class="btn-back-minimal me-3 d-none d-md-flex align-items-center">
@@ -60,6 +60,28 @@
                         <label class="sax-form-label text-gold">Pilar 03: Título & Texto</label>
                         <input type="text" name="text_section_three_title" class="form-control sax-input mb-2 font-weight-bold" value="{{ $institucional->text_section_three_title }}">
                         <textarea name="text_section_three_body" class="form-control sax-input small" rows="2">{{ $institucional->text_section_three_body }}</textarea>
+                    </div>
+                </div>
+
+                {{-- NOVO: 04. EXPERIÊNCIA VIRTUAL (IFRAMES) --}}
+                <div class="sax-premium-card p-4 mb-4 shadow-sm">
+                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">04. Experiencia Virtual & Cámaras</h6>
+                    
+                    <div class="mb-4">
+                        <label class="sax-form-label">Iframe: Tour Virtual 360° (Tienda)</label>
+                        <textarea name="iframe_tour_360" class="form-control sax-input font-monospace small" rows="3" placeholder='<iframe src="..."></iframe>'>{{ $institucional->iframe_tour_360 }}</textarea>
+                        <small class="text-muted x-small">Pegue o código gerado pelo Google Maps ou Matterport.</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="sax-form-label">Iframe: Cámara Ponte da Amizade</label>
+                            <textarea name="iframe_ponte_amizade" class="form-control sax-input font-monospace small" rows="3">{{ $institucional->iframe_ponte_amizade }}</textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="sax-form-label">Iframe: Cámara Centro CDE</label>
+                            <textarea name="iframe_centro_cde" class="form-control sax-input font-monospace small" rows="3">{{ $institucional->iframe_centro_cde }}</textarea>
+                        </div>
                     </div>
                 </div>
 
@@ -130,24 +152,6 @@
                         @endforeach
                     </div>
                 </div>
-
-                {{-- LOGOS DAS MARCAS --}}
-                <div class="sax-premium-card p-4 shadow-sm">
-                    <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">Logos de Marcas</h6>
-                    <div class="asset-upload-zone py-3 border-secondary-soft mb-3">
-                        <input type="file" name="brand_logos[]" class="sax-input-file" multiple>
-                        <p class="x-small fw-bold m-0"><i class="fas fa-cloud-upload-alt me-1"></i> CARGAR LOGOS</p>
-                    </div>
-                    <div class="gallery-preview-grid">
-                        @php $logos = is_array($institucional->brand_logos) ? $institucional->brand_logos : json_decode($institucional->brand_logos, true); @endphp
-                        @foreach($logos ?? [] as $logo)
-                            <div class="gallery-preview-item border" style="background: #f8f9fa;">
-                                <img src="{{ asset('storage/'.$logo) }}" style="object-fit: contain; padding: 2px;">
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
             </div>
         </div>
     </form>
@@ -178,6 +182,7 @@
     .btn-back-minimal { color: #64748b; font-size: 0.7rem; font-weight: 800; text-decoration: none; letter-spacing: 1px; }
     .sticky-header { position: sticky; top: 0; z-index: 1020; }
     .x-small { font-size: 0.65rem; }
+    .font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 </style>
 @endsection
 

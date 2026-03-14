@@ -7,4 +7,5 @@
     @include('institucional.componentes.stats')
     @include('institucional.componentes.brands-gallery')
     @include('institucional.componentes.cta')
+    @include('institucional.componentes.video')
 @endsection

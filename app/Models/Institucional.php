@@ -17,7 +17,7 @@ class Institucional extends Model
 
     /**
      * Atributos que podem ser preenchidos em massa (Mass Assignment).
-     * Inclui todos os campos identificados na sua estrutura de banco de dados.
+     * Inclui todos os campos originais e os novos campos de iframes.
      */
     protected $fillable = [
         'top_sliders',
@@ -35,6 +35,10 @@ class Institucional extends Model
         'stat_brands_count',
         'stat_sqm_count',
         'stat_employees_count',
+        // Novos campos adicionados via migration
+        'iframe_tour_360',
+        'iframe_ponte_amizade',
+        'iframe_centro_cde',
     ];
 
     /**

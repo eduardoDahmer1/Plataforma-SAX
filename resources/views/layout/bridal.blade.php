@@ -156,7 +156,7 @@
 </head>
 <body>
 
-    @include('bridal.componentes.header')
+    <x-header-internas />
 
     <main>
         @yield('content')

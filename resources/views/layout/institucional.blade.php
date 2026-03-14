@@ -29,7 +29,7 @@
 </head>
 
 <body>
-    @include('institucional.header')
+    <x-header-internas />
 
     <main>
         @yield('content')

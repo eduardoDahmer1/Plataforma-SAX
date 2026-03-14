@@ -3,7 +3,7 @@
 (function () {
 
     // ─── Navbar: scrolled + hide on scroll ────────────────────────────────
-    const nav       = document.getElementById('cafeBistroNav');
+    const nav       = document.getElementById('mainHeader');
     let lastY       = window.scrollY;
     let ticking     = false;
     const THRESHOLD = 100;
@@ -97,7 +97,7 @@
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
             // fecha o menu mobile se estiver aberto
-            const collapse = document.getElementById('cafeNav');
+            const collapse = document.getElementById('expNavbarMobile');
             if (collapse && collapse.classList.contains('show')) {
                 bootstrap.Collapse.getInstance(collapse)?.hide();
             }

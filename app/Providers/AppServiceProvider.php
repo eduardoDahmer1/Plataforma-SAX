@@ -75,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
                 'banner1'           => $attribute?->banner1 ?? null,
                 'logo_palace'       => $attribute?->logo_palace ?? null,
                 'logo_bridal'       => $attribute?->logo_bridal ?? null,
+                'logo_cafe_bistro'  => $attribute?->logo_cafe_bistro ?? null,
                 'banner_horizontal' => $attribute?->banner_horizontal ?? null,
                 'banner2'           => $attribute?->banner2 ?? null,
                 'banner3'           => $attribute?->banner3 ?? null,

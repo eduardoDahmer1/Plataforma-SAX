@@ -23,7 +23,7 @@
 </head>
 <body>
 
-    @include('cafe_bistro.componentes.header')
+    <x-header-internas />
 
     <main>
         @yield('content')

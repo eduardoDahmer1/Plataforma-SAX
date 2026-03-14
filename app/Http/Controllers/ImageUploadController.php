@@ -15,6 +15,7 @@ class ImageUploadController extends Controller
         $webpImage = $attribute?->header_image;
         $logoPalace = $attribute?->logo_palace;
         $logoBridal = $attribute?->logo_bridal;
+        $logoCafeBistro = $attribute?->logo_cafe_bistro;
         $bannerHorizontal = $attribute?->banner_horizontal;
         $noimage = $attribute?->noimage;
         $banners = [
@@ -31,7 +32,7 @@ class ImageUploadController extends Controller
         ];
 
         // Passando $attribute para que os novos ícones funcionem no seu array do Blade
-        return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal','bannerHorizontal', 'noimage', 'banners', 'attribute'));
+        return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal', 'logoCafeBistro', 'bannerHorizontal', 'noimage', 'banners', 'attribute'));
     }
 
     private function processImageUpload($file, $filename)
@@ -129,6 +130,10 @@ class ImageUploadController extends Controller
     // --- Métodos Logo Bridal ---
     public function uploadLogoBridal(Request $request) { return $this->uploadImage($request, 'logo_bridal', 'logo_bridal.webp'); }
     public function deleteLogoBridal() { return $this->deleteImage('logo_bridal'); }
+
+    // --- Métodos Logo Café & Bistrô ---
+    public function uploadLogoCafeBistro(Request $request) { return $this->uploadImage($request, 'logo_cafe_bistro', 'logo_cafe_bistro.webp'); }
+    public function deleteLogoCafeBistro() { return $this->deleteImage('logo_cafe_bistro'); }
 
     public function uploadBannerHorizontal(Request $request) { return $this->uploadImage($request, 'banner_horizontal', 'banner_horizontal.webp'); }
     public function deleteBannerHorizontal() { return $this->deleteImage('banner_horizontal'); }

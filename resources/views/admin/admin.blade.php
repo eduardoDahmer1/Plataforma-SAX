@@ -43,6 +43,7 @@
                 ['field' => 'header_image', 'title' => 'Logo Header', 'category' => 'Identidad', 'file' => $webpImage ?? null, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
                 ['field' => 'logo_palace', 'title' => 'Logo SAX Palace', 'category' => 'Identidad', 'file' => $logoPalace ?? null, 'routeUpload' => 'admin.logopalace.upload', 'routeDelete' => 'admin.logopalace.delete'],
                 ['field' => 'logo_bridal', 'title' => 'Logo SAX Bridal', 'category' => 'Identidad', 'file' => $logoBridal ?? null, 'routeUpload' => 'admin.logobridal.upload', 'routeDelete' => 'admin.logobridal.delete'],
+                ['field' => 'logo_cafe_bistro', 'title' => 'Logo SAX Café & Bistrô', 'category' => 'Identidad', 'file' => $logoCafeBistro ?? null, 'routeUpload' => 'admin.logocafebistro.upload', 'routeDelete' => 'admin.logocafebistro.delete'],
                 ['field' => 'banner_horizontal', 'title' => 'Banner Horizontal', 'category' => 'Identidad', 'file' => $bannerHorizontal ?? null, 'routeUpload' => 'admin.bannerhorizontal.upload', 'routeDelete' => 'admin.bannerhorizontal.delete'],
 
                 ['field' => 'icon_info', 'title' => 'Ícone Info/Relógio', 'category' => 'Sistema', 'file' => $attribute->icon_info ?? null, 'routeUpload' => 'admin.icon_info.upload', 'routeDelete' => 'admin.icon_info.delete'],

@@ -36,28 +36,33 @@ class InstitucionalAdminController extends Controller
         $institucional = Institucional::findOrFail($id);
 
         $data = $request->validate([
-            'section_one_title'        => 'nullable|string|max:255',
-            'section_one_content'      => 'nullable|string',
-            'text_section_one_title'   => 'nullable|string|max:255',
-            'text_section_one_body'    => 'nullable|string',
-            'text_section_two_title'   => 'nullable|string|max:255',
-            'text_section_two_body'    => 'nullable|string',
-            'text_section_three_title' => 'nullable|string|max:255',
-            'text_section_three_body'  => 'nullable|string',
-            'stat_brands_count'        => 'nullable|integer',
-            'stat_sqm_count'           => 'nullable|integer',
-            'stat_employees_count'     => 'nullable|integer',
+            'section_one_title'         => 'nullable|string|max:255',
+            'section_one_content'       => 'nullable|string',
+            'text_section_one_title'    => 'nullable|string|max:255',
+            'text_section_one_body'     => 'nullable|string',
+            'text_section_two_title'    => 'nullable|string|max:255',
+            'text_section_two_body'     => 'nullable|string',
+            'text_section_three_title'  => 'nullable|string|max:255',
+            'text_section_three_body'   => 'nullable|string',
+            'stat_brands_count'         => 'nullable|integer',
+            'stat_sqm_count'            => 'nullable|integer',
+            'stat_employees_count'      => 'nullable|integer',
+            
+            // Novos campos de Iframes
+            'iframe_tour_360'           => 'nullable|string',
+            'iframe_ponte_amizade'      => 'nullable|string',
+            'iframe_centro_cde'         => 'nullable|string',
             
             // Imagem Única
-            'section_one_image'        => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
+            'section_one_image'         => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
             
             // Múltiplas Imagens (Arrays)
-            'top_sliders'              => 'nullable|array',
-            'top_sliders.*'            => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'brand_logos'              => 'nullable|array',
-            'brand_logos.*'            => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'gallery_images'           => 'nullable|array',
-            'gallery_images.*'         => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'top_sliders'               => 'nullable|array',
+            'top_sliders.*'             => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'brand_logos'               => 'nullable|array',
+            'brand_logos.*'             => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'gallery_images'            => 'nullable|array',
+            'gallery_images.*'          => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
         ]);
 
         // 1. Processar Imagem Principal da Seção 1
@@ -72,7 +77,7 @@ class InstitucionalAdminController extends Controller
         $arrayFields = ['top_sliders', 'brand_logos', 'gallery_images'];
         foreach ($arrayFields as $field) {
             if ($request->hasFile($field)) {
-                // Deleta imagens antigas do array físico
+                // Deleta imagens antigas do armazenamento físico
                 if ($institucional->$field) {
                     foreach ($institucional->$field as $oldPath) {
                         Storage::disk('public')->delete($oldPath);
@@ -86,7 +91,7 @@ class InstitucionalAdminController extends Controller
                 $data[$field] = $newPaths;
             }
         }
-
+        
         $institucional->update($data);
 
         return redirect()->route('admin.institucional.index')->with('success', 'Dados institucionais atualizados com sucesso!');

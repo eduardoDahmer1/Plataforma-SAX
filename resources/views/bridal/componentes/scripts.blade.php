@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     // --- Navbar scroll effect ---
-    const nav = document.getElementById('bridalNav');
+    const nav = document.getElementById('mainHeader');
     if (nav) {
         window.addEventListener('scroll', function () {
             nav.classList.toggle('scrolled', window.scrollY > 50);

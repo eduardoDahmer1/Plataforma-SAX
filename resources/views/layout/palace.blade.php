@@ -29,7 +29,7 @@
 </head>
 
 <body>
-    @include('palace.header')
+    <x-header-internas />
 
     <main>
         @yield('content')

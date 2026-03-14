@@ -265,6 +265,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('/logobridal/upload', [ImageUploadController::class, 'uploadLogoBridal'])->name('logobridal.upload');
     Route::delete('logobridal/delete', [ImageUploadController::class, 'deleteLogoBridal'])->name('logobridal.delete');
 
+    Route::post('/logocafebistro/upload', [ImageUploadController::class, 'uploadLogoCafeBistro'])->name('logocafebistro.upload');
+    Route::delete('/logocafebistro/delete', [ImageUploadController::class, 'deleteLogoCafeBistro'])->name('logocafebistro.delete');
+
     Route::post('/bannerhorizontal/upload', [ImageUploadController::class, 'uploadBannerHorizontal'])->name('bannerhorizontal.upload');
     Route::delete('/bannerhorizontal/delete', [ImageUploadController::class, 'deleteBannerHorizontal'])->name('bannerhorizontal.delete');
 

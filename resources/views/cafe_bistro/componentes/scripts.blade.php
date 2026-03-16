@@ -88,6 +88,18 @@
     });
 
 
+    // ─── Swiper: Carrusel de eventos ────────────────────────────────────
+    if (document.querySelector('.eventosSwiper')) {
+        new Swiper('.eventosSwiper', {
+            loop: true,
+            speed: 800,
+            autoplay: { delay: 5000, disableOnInteraction: false },
+            effect: 'fade',
+            fadeEffect: { crossFade: true },
+        });
+    }
+
+
     // ─── Smooth scroll para âncoras do navbar ──────────────────────────────
     document.querySelectorAll('a[href^="#"]').forEach(function (link) {
         link.addEventListener('click', function (e) {

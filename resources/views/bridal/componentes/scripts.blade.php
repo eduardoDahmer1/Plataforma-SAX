@@ -42,12 +42,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var section = el.closest('.bridal-products-section');
      new Swiper(el, {
         slidesPerView: 2,
-        spaceBetween: 16,
+        spaceBetween: 10,
         loop: true,
         autoplay: { delay: 5000, disableOnInteraction: false },
         breakpoints: {
-            768: { slidesPerView: 3, spaceBetween: 24 },
-            1200: { slidesPerView: 4, spaceBetween: 30 },
+            768:  { slidesPerView: 3, spaceBetween: 15 },
+            1024: { slidesPerView: 4, spaceBetween: 20 },
+            1400: { slidesPerView: 5, spaceBetween: 20 },
         },
         });
     });

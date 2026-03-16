@@ -3,11 +3,26 @@
     <div class="container">
         <div class="row align-items-center gy-5">
 
-            {{-- Foto placeholder --}}
+            {{-- Carrusel de eventos --}}
             <div class="col-lg-6" data-reveal="left">
-                <div class="img-placeholder rounded" style="height: 28rem;">
-                    EVENTOS
-                </div>
+                @if(!empty($cafeBistro->eventos_galeria))
+                    <div class="swiper eventosSwiper rounded" style="aspect-ratio: 4/5;">
+                        <div class="swiper-wrapper">
+                            @foreach($cafeBistro->eventos_galeria as $foto)
+                                <div class="swiper-slide">
+                                    <img src="{{ asset('storage/' . $foto) }}"
+                                         alt="Evento"
+                                         class="w-100 h-100"
+                                         style="object-fit: cover;">
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <div class="img-placeholder rounded" style="aspect-ratio: 4/5;">
+                        EVENTOS
+                    </div>
+                @endif
             </div>
 
             {{-- Texto --}}
@@ -18,11 +33,13 @@
 
                 {!! nl2br(e($cafeBistro->eventos_texto ?? 'Um espaço onde as ideias ganham vida e cada celebração se transforma em uma experiência única.')) !!}
 
-                {{-- Separador de servicios --}}
+                {{-- Tipos de evento --}}
                 @if($cafeBistro->eventos_tipos)
-                    <p class="eventos-separador">
-                        {{ implode(' • ', $cafeBistro->eventos_tipos) }}
-                    </p>
+                    <ul class="eventos-tipos-list">
+                        @foreach($cafeBistro->eventos_tipos as $tipo)
+                            <li>{{ $tipo }}</li>
+                        @endforeach
+                    </ul>
                 @endif
 
                 {{-- CTA WhatsApp --}}

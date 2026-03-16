@@ -1,4 +1,5 @@
 @php
+    $cartItems = $cartItems ?? [];
     $currentQty = $cartItems[$item->id] ?? 0;
     $isOutOfStock = $item->stock <= 0;
 @endphp
@@ -16,10 +17,13 @@
                     <div class="sax-stock-overlay">AGOTADO</div>
                 @endif
 
-                <div class="position-absolute top-0 end-0 p-3"> @auth
-                        <x-product-favorite-button :item="$item" />
-                    @endauth
-                </div>
+                @if($showFavorite ?? true)
+                    <div class="position-absolute top-0 end-0 p-3">
+                        @auth
+                            <x-product-favorite-button :item="$item" />
+                        @endauth
+                    </div>
+                @endif
             </div>
 
             <div class="card-body px-2 py-3 d-flex flex-column">
@@ -33,7 +37,9 @@
 
                 <div class="d-flex justify-content-between align-items-center mt-auto">
                     <div class="sax-price fw-bold text-dark">
-                        {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
+                        @if($showPrice ?? true)
+                            {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '' }}
+                        @endif
                     </div>
                     <div class="sax-sku text-muted">
                         SKU: {{ $item->sku ?? 'N/A' }}

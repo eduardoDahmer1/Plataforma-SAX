@@ -1,37 +1,36 @@
 @php
-    // 1. Definição das experiências e seus dados específicos
+    // 1. Identificação da rota (necessário para as cores/estilos)
     $isBridal = Request::is('bridal*');
     $isPalace = Request::is('palace*');
     $isBistro = Request::is('bistro*');
     $isInst   = Request::is('institucional*');
 
-    // 2. Resgate de dados com Cache (apenas se a rota condizer)
-    $bridalData = $isBridal ? Cache::remember('bridal_data', 28800, fn() => \App\Models\Bridal::first()) : null;
-    $palaceData = $isPalace ? Cache::remember('palace_data', 28800, fn() => \App\Models\Palace::first()) : null;
-    $cafeData   = $isBistro ? Cache::remember('cafe_bistro_data', 28800, fn() => \App\Models\CafeBistro::first()) : null;
+    // 2. Lógica simplificada do WhatsApp (usando o que vem do Controller)
+    $whatsapp = match(true) {
+        $isBridal => collect($bridalData->locations ?? [])->first()['whatsapp_url'] ?? 'https://wa.me/595983123456',
+        $isPalace => 'https://wa.me/' . preg_replace('/\D/', '', $palaceData->contato_whatsapp ?? '595983000000'),
+        $isBistro => $cafeData->whatsapp_link ?? 'https://wa.me/595983000000',
+        $isInst   => 'https://wa.me/595983123456',
+        default   => '#'
+    };
 
-    // 3. Lógica do WhatsApp (Tratamento de strings e fallbacks)
-    $waBridal = collect($bridalData->locations ?? [])->first()['whatsapp_url'] ?? 'https://wa.me/595983123456';
-    $waPalace = 'https://wa.me/' . preg_replace('/\D/', '', $palaceData->contato_whatsapp ?? '595983000000');
-    $waBistro = $cafeData->whatsapp_link ?? 'https://wa.me/595983000000';
-
-    // 4. Montagem da Configuração usando Ternários
+    // 3. Configuração Visual (Mapeamento limpo)
     $config = [
         'brand_name' => $isBridal ? 'Bridal' : ($isPalace ? 'Palace' : ($isBistro ? 'Café & Bistrô' : ($isInst ? 'Institucional' : 'SAX'))),
         'logo_key'   => $isBridal ? 'logo_bridal' : ($isPalace ? 'logo_palace' : ($isBistro ? 'logo_cafe_bistro' : ($isInst ? 'header_image' : ''))),
-        'whatsapp'   => $isBridal ? $waBridal : ($isPalace ? $waPalace : ($isBistro ? $waBistro : ($isInst ? 'https://wa.me/595983123456' : '#'))),
+        'whatsapp'   => $whatsapp,
         'cta_label'  => ($isPalace || $isBistro) ? 'Reservar' : 'Fale Conosco',
         'cta_icon'   => ($isPalace || $isBistro) ? 'bi-calendar-check' : 'bi-whatsapp',
         'logo_filter'=> $isInst ? 'brightness(0) invert(1)' : 'none',
         'color' => [
             'scrollBg'   => $isBridal ? 'rgba(250,248,245,0.98)' : ($isBistro ? 'rgba(15,29,53,0.98)' : 'rgba(0,0,0,0.95)'),
             'accent'     => $isBridal ? '#C9A76E' : ($isBistro ? '#4a6fa5' : '#C5A059'),
-            'scrollText' => ($isBridal && !Request::is('bridal*')) ? '#2C2C2C' : ($isBridal ? '#2C2C2C' : '#fff'),
+            'scrollText' => $isBridal ? '#2C2C2C' : '#fff',
         ],
     ];
 
     $siteAttributes = View::shared('attributes');
-    $hasCustomLogo = $siteAttributes && !empty($siteAttributes->{$config['logo_key']});
+    $hasCustomLogo  = $siteAttributes && !empty($siteAttributes->{$config['logo_key']});
 @endphp
 
 <header class="navbar navbar-expand-lg fixed-top exp-header transition-all" id="mainHeader">

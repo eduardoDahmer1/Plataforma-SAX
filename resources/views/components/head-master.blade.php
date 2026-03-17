@@ -27,7 +27,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -37,15 +37,14 @@
 @if(Request::is('*cafe*') || Request::is('*bistro*'))
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@100;300;400;600&display=swap" rel="stylesheet">
     <link href="{{ asset('css/cafe_bistro.css') }}?v={{ file_exists(public_path('css/cafe_bistro.css')) ? filemtime(public_path('css/cafe_bistro.css')) : time() }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 @endif
 
 {{-- 2. Bridal, Palace e Institucionais (Compartilham Swiper, AOS e Fontes Elegantes) --}}
 @if(Request::is('*bridal*') || Request::is('*palace*') || Request::is('*institucional*'))
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@200;300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
-    
+
+    @if(Request::is('*bridal*')) <link href="{{ asset('css/bridal.css') }}" rel="stylesheet"> @endif
     @if(Request::is('*palace*')) <link href="{{ asset('css/palace.css') }}" rel="stylesheet"> @endif
     @if(Request::is('*institucional*')) <link href="{{ asset('css/institucional.css') }}" rel="stylesheet"> @endif
 @endif
@@ -59,7 +58,6 @@
 {{-- 4. Detalhes do Produto --}}
 @if(Route::is('produto.show'))
     <link href="{{ asset('css/show-products.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 @endif
 
 {{-- 5. Admin / Trumbowyg --}}

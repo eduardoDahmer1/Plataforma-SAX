@@ -28,10 +28,3 @@
     </div>
 </section>
 
-@push('styles')
-<style>
-    .bridal-products-section {
-        background: var(--bridal-white);
-    }
-</style>
-@endpush

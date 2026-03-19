@@ -1,4 +1,4 @@
-@extends('layout.bridal')
+@extends('layout.internas')
 
 @section('title', $bridal->title ?? 'SAX Bridal')
 
@@ -56,12 +56,20 @@
         'instagramUrl' => $bridal->social_instagram ? 'https://instagram.com/' . ltrim($bridal->social_instagram, '@') : '#',
     ])
 
-    
+
     {{-- Contacto / Sucursales --}}
     @include('bridal.componentes.contato', [
     'locations' => $bridal->locations ?? [],
     ])
 
 
+@endsection
+
+@section('footer')
+    @include('bridal.componentes.footer')
+@endsection
+
+@section('section-scripts')
+    @include('bridal.componentes.scripts')
 @endsection
 

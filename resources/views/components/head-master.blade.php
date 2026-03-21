@@ -65,6 +65,7 @@
 
 {{-- 5. Admin / Trumbowyg --}}
 @if(Route::is('admin.*') || Route::is('manutencao'))
+    <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/trumbowyg/dist/ui/trumbowyg.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/trumbowyg/dist/plugins/resizimg/trumbowyg.resizimg.min.css" />
 @endif

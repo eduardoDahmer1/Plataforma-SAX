@@ -15,8 +15,7 @@
 
     @include('components.footer')
 
-    @include('components.scripts')
-    @stack('scripts')
+    <x-scripts-master />
 
 </body>
 

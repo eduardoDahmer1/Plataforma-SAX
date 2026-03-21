@@ -64,8 +64,8 @@
     {{-- Footer --}}
     @include('components.footer')
 
-    <!-- JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <x-scripts-master />
+
     <script>
         // Voltar ao topo
         const backToTop = document.getElementById("backToTop");
@@ -98,8 +98,6 @@
             overlay.classList.remove("show");
         });
     </script>
-
-    @stack('scripts')
 </body>
 
 </html>

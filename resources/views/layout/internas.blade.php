@@ -14,9 +14,9 @@
 
     @yield('footer')
 
-    @yield('section-scripts')
+    <x-scripts-master />
 
-    @stack('scripts')
+    @yield('section-scripts')
 </body>
 
 </html>

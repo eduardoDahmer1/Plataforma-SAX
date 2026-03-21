@@ -18,9 +18,7 @@
 
     @include('palace.footer')
 
-    @include('palace.script')
-
-    @stack('scripts')
+    <x-scripts-master />
 </body>
 
 </html>

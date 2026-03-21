@@ -222,5 +222,11 @@
         .exp-header .exp-logo .sax-text { color: var(--header-scroll-text) !important; }
         .exp-header .btn-shop-link { color: var(--header-scroll-text); border-color: var(--header-scroll-text); }
         .exp-header .hamburger-icon span { background: var(--header-accent); }
+
+        /* Dropdown inline no mobile — evita clipping do overflow-y: auto */
+        #expNavbarMobile .dropdown-menu {
+            position: static;
+            transform: none;
+        }
     }
 </style>

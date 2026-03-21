@@ -13,8 +13,6 @@
 
     @include('bridal.componentes.footer')
 
-    @include('bridal.componentes.scripts')
-
-    @stack('scripts')
+    <x-scripts-master />
 </body>
 </html>

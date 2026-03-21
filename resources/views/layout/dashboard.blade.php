@@ -46,11 +46,7 @@
 
     @include('components.footer')
 
-    @include('components.scripts')
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ENjdO4Dr2bkBIFxQpeoQbS0n0OzO2zCk41ZJL6hFQ6nG1q3KfIFJSkGrydg7Y+Y+" crossorigin="anonymous">
-    </script>
+    <x-scripts-master />
 
     <script>
         const backToTop = document.getElementById("backToTop");

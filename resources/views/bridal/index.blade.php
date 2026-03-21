@@ -69,7 +69,3 @@
     @include('bridal.componentes.footer')
 @endsection
 
-@section('section-scripts')
-    @include('bridal.componentes.scripts')
-@endsection
-

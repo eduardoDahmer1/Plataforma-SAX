@@ -14,9 +14,7 @@
 
     @include('institucional.componentes.footer')
 
-    @include('institucional.componentes.script')
-
-    @stack('scripts')
+    <x-scripts-master />
 </body>
 
 </html>

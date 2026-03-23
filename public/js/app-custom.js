@@ -1,6 +1,9 @@
 // ============================
 // APP-CUSTOM.JS
+// Scripts globales del frontend público.
+// Se carga en todas las rutas excepto checkout.
 // ============================
+
 
 // ======== Back to Top ========
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,7 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
 // ======== setFormType ========
+// Usado en contact/form.blade.php
 function setFormType(type) {
     const contactType = document.getElementById('contact_type');
     if (!contactType) return;
@@ -34,122 +39,8 @@ function setFormType(type) {
 }
 setFormType(1);
 
-// ======== Categoria / Subcategoria / Filha ========
-document.addEventListener('DOMContentLoaded', function () {
-    const categorySelect = document.getElementById('category_id');
-    const subcategorySelect = document.getElementById('subcategory_id');
-    const categoriasfilhasSelect = document.getElementById('categoriasfilhas_id');
 
-    if (!categorySelect || !subcategorySelect || !categoriasfilhasSelect) return;
-
-    const categories = JSON.parse(categorySelect.dataset.categories || '[]');
-    const subcategories = JSON.parse(subcategorySelect.dataset.subcategories || '[]');
-    const categoriasfilhas = JSON.parse(categoriasfilhasSelect.dataset.categoriasfilhas || '[]');
-
-    function clearOptions(select) {
-        select.innerHTML = '<option value="">Selecione uma opção</option>';
-    }
-
-    function populateSubcategories(categoryId) {
-        clearOptions(subcategorySelect);
-        clearOptions(categoriasfilhasSelect);
-        if (!categoryId) return;
-        subcategories.filter(s => s.category_id == categoryId).forEach(sub => {
-            const option = document.createElement('option');
-            option.value = sub.id;
-            option.text = sub.name || sub.slug;
-            subcategorySelect.appendChild(option);
-        });
-    }
-
-    function populateCategoriasFilhas(subcategoryId) {
-        clearOptions(categoriasfilhasSelect);
-        if (!subcategoryId) return;
-        categoriasfilhas.filter(c => c.subcategory_id == subcategoryId).forEach(child => {
-            const option = document.createElement('option');
-            option.value = child.id;
-            option.text = child.name || child.slug;
-            categoriasfilhasSelect.appendChild(option);
-        });
-    }
-
-    categorySelect.addEventListener('change', () => populateSubcategories(categorySelect.value));
-    subcategorySelect.addEventListener('change', () => populateCategoriasFilhas(subcategorySelect.value));
-
-    if (categorySelect.value) {
-        populateSubcategories(categorySelect.value);
-        if (subcategorySelect.value) populateCategoriasFilhas(subcategorySelect.value);
-    }
-});
-
-
-// ======== Trumbowyg Editors (jQuery) ========
-if (window.jQuery) {
-    $(document).ready(function () {
-        const commonBtns = [
-            ['viewHTML'],
-            ['undo', 'redo'],
-            ['formatting'],
-            ['strong', 'em', 'del'],
-            ['superscript', 'subscript'],
-            ['link'],
-            ['insertImage'], // apenas inserir imagem via URL
-            ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
-            ['unorderedList', 'orderedList'],
-            ['horizontalRule'],
-            ['removeformat'],
-            ['fullscreen']
-        ];
-
-        function getPlugins(serverPath = null) {
-            const plugins = {
-                resizimg: { minSize: 64, step: 16 },
-                autogrow: {},
-            };
-            if (serverPath) {
-                plugins.upload = {
-                    serverPath: serverPath,
-                    fileFieldName: 'image',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
-                };
-            }
-            return plugins;
-        }
-
-        // Editor do blog (com upload)
-        if ($('#editor-blog').length) {
-            $('#editor-blog').trumbowyg({
-                btns: commonBtns.concat([['upload']]),
-                plugins: getPlugins('/admin/blogs/upload-image'),
-                autogrow: true,
-                removeformatPasted: true,
-                allowTagsFromPaste: true,
-            });
-        }
-
-        // Editor de produto (sem upload)
-        if ($('#editor').length) {
-            $('#editor').trumbowyg({
-                btns: commonBtns,
-                plugins: getPlugins(),
-                autogrow: true,
-                removeformatPasted: true,
-                allowTagsFromPaste: true,
-            });
-        }
-
-        // Sincronizar conteúdo do editor ao enviar o formulário
-        $('#editForm').on('submit', function () {
-            if ($('#editor').length) {
-                $('textarea[name="description"]').val($('#editor').trumbowyg('html'));
-            }
-            if ($('#editor-blog').length) {
-                $('textarea[name="content"]').val($('#editor-blog').trumbowyg('html'));
-            }
-        });
-    });
-}
-
+// ======== Bootstrap Carousel Touch Swipe ========
 document.querySelectorAll('.carousel').forEach(carousel => {
     let startX = 0,
         endX = 0;
@@ -160,6 +51,9 @@ document.querySelectorAll('.carousel').forEach(carousel => {
         if (endX - startX > 50) bootstrap.Carousel.getInstance(carousel).prev();
     });
 });
+
+
+// ======== Blog Swiper ========
 document.addEventListener('DOMContentLoaded', function() {
     const blogSwiper = new Swiper('.blogSwiper', {
         slidesPerView: 3,

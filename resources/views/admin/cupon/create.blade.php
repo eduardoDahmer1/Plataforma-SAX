@@ -37,10 +37,4 @@
     </div>
 </div>
 
-<style>
-    .tracking-wider { letter-spacing: 0.12em; }
-    .x-small { font-size: 0.65rem; }
-    .sax-divider-dark { width: 40px; height: 2px; background: #000; }
-    .hover-underline:hover { text-decoration: underline !important; }
-</style>
 @endsection

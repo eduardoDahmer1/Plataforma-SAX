@@ -84,35 +84,4 @@
     </div>
 </div>
 
-<style>
-    /* Admin Editorial UI Overrides */
-    .x-small { font-size: 0.65rem; }
-    .x-small-7 { font-size: 0.6rem; }
-    .tracking-wider { letter-spacing: 0.1em; }
-    .italic { font-style: italic; }
-    
-    /* Tabs */
-    .filter-tab { font-size: 0.65rem; font-weight: 800; text-decoration: none; color: #999; letter-spacing: 1px; padding-bottom: 8px; border-bottom: 2px solid transparent; transition: 0.3s; }
-    .filter-tab:hover, .filter-tab.active { color: #000; border-bottom-color: #000; }
-
-    /* Card Styling */
-    .sax-admin-card { background: #fff; border: 1px solid #eee; transition: 0.2s; }
-    .sax-admin-card:hover { border-color: #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-
-    .sax-card-img-box { width: 80px; height: 80px; overflow: hidden; }
-    .sax-card-img-box img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* Pill */
-    .status-pill { font-size: 0.55rem; font-weight: 900; padding: 2px 8px; border-radius: 50px; }
-    .status-pill.active { background: #dcfce7; color: #15803d; }
-    .status-pill.draft { background: #f3f4f6; color: #6b7280; }
-
-    /* Icons */
-    .action-icon { color: #888; text-decoration: none; font-size: 0.9rem; transition: 0.2s; background: none; border: none; padding: 0; }
-    .action-icon:hover { color: #000; }
-    .action-icon.text-danger:hover { color: #dc3545; }
-
-    /* Pagination */
-    .pagination { --bs-pagination-border-radius: 0; --bs-pagination-color: #000; --bs-pagination-active-bg: #000; }
-</style>
 @endsection

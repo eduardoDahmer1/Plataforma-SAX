@@ -153,25 +153,3 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
-
-<style>
-    .tracking-wider { letter-spacing: 0.12em; }
-    .x-small { font-size: 0.7rem; }
-    .italic { font-style: italic; }
-    .sax-label { font-size: 0.7rem; font-weight: 800; color: #444; text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .sax-input { border-radius: 0 !important; border: 1px solid #ddd !important; padding: 12px; }
-    .sax-input-sm { font-size: 0.75rem; border-radius: 0; border: 1px solid #eee; padding: 5px 10px; }
-    
-    /* Remove sombras chatas do bootstrap nos inputs */
-    .form-control:focus, .form-select:focus { box-shadow: none !important; border-color: #000 !important; }
-    
-    /* Estilo do Switch */
-    .form-check-input:checked { background-color: #000 !important; border-color: #000 !important; }
-
-    /* Ajuste fino para o Editor ficar idêntico ao da imagem */
-    .tox-tinymce {
-        border-radius: 0 !important;
-        border: 1px solid #ddd !important;
-    }
-    .tox .tox-toolbar__group { padding: 0 5px !important; }
-</style>

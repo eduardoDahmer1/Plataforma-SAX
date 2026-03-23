@@ -16,7 +16,7 @@
 
     <div class="row">
         <div class="col-lg-10 mx-auto">
-            <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data" class="sax-form">
                 @csrf
                 <div class="row g-4">
                     
@@ -86,68 +86,4 @@
     </div>
 </div>
 
-{{-- Script de Automação de Slug --}}
-<script>
-    document.getElementById('name').addEventListener('input', function() {
-        let slug = this.value.toLowerCase()
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9 -]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-');
-        document.getElementById('slug').value = slug;
-    });
-</script>
 @endsection
-<style>
-    /* Zona de Upload Minimalista */
-.sax-file-dropzone {
-    border: 2px dashed #e9ecef;
-    border-radius: 15px;
-    padding: 25px;
-    text-align: center;
-    background: #fcfcfc;
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.sax-file-dropzone:hover {
-    border-color: #000;
-    background: #fff;
-}
-
-.sax-file-input {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-/* Campos de Texto */
-.sax-input {
-    border: 1px solid #f1f4f8;
-    background: #fff;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.9rem;
-}
-
-.sax-input:focus {
-    border-color: #000;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-}
-
-.sax-form-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
-</style>

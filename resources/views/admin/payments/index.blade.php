@@ -78,40 +78,6 @@
     </div>
 </div>
 
-<style>
-    /* Minimalist Gateway UI */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .tracking-tighter { letter-spacing: 0.05em; }
-    .x-small { font-size: 0.65rem; }
-    
-    .payment-icon {
-        width: 35px; height: 35px;
-        background: #f8f9fa;
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 4px; color: #aaa;
-    }
-
-    /* Switch Style Customization */
-    .form-check-input:checked {
-        background-color: #000;
-        border-color: #000;
-    }
-    .form-check-input {
-        cursor: pointer;
-        box-shadow: none !important;
-    }
-
-    /* Status Dot */
-    .status-dot { height: 6px; width: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; background: #dee2e6; }
-    .status-dot.active { background: #10b981; }
-
-    /* Utilities */
-    .btn-clean { background: none; border: none; padding: 0; cursor: pointer; }
-    .hover-underline:hover { text-decoration: underline !important; }
-    .table td { border-bottom: 1px solid #f1f1f1; }
-    .cursor-pointer { cursor: pointer; }
-</style>
-
 <script>
 document.querySelectorAll('.toggle-active').forEach(checkbox => {
     checkbox.addEventListener('change', function() {

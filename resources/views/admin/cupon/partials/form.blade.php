@@ -115,48 +115,6 @@
     </div>
 </div>
 
-<style>
-    /* Tipografía y Estructura */
-    .x-small { font-size: 0.65rem; }
-    .tracking-wider { letter-spacing: 0.12em; }
-    .font-monospace { font-family: 'SFMono-Regular', Consolas, monospace !important; }
-
-    .sax-section-title {
-        font-size: 0.75rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #000;
-        display: block;
-        border-bottom: 2px solid #000;
-        width: fit-content;
-        padding-bottom: 3px;
-    }
-
-    .sax-label {
-        font-size: 0.65rem;
-        font-weight: 800;
-        color: #888;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .sax-input {
-        border-radius: 0 !important;
-        border: 1px solid #e0e0e0 !important;
-        padding: 12px 15px;
-        font-size: 0.9rem;
-        transition: 0.2s;
-    }
-
-    .sax-input:focus {
-        border-color: #000 !important;
-        box-shadow: none !important;
-        background-color: #fafafa;
-    }
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const modelo = document.querySelector('select[name="modelo"]');

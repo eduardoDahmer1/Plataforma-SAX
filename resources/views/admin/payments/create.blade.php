@@ -89,45 +89,6 @@
     </div>
 </div>
 
-<style>
-    /* Minimalist Technical UI */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .tracking-tighter { letter-spacing: 0.05em; }
-    .x-small { font-size: 0.65rem; }
-    .italic { font-style: italic; }
-    .sax-divider-dark { width: 40px; height: 2px; background: #000; }
-    
-    .sax-form-label {
-        font-size: 0.65rem;
-        font-weight: 800;
-        color: #999;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .sax-input {
-        border-radius: 0;
-        border: 1px solid #e5e5e5;
-        padding: 12px 15px;
-        font-size: 0.9rem;
-        transition: 0.2s;
-    }
-
-    .sax-input:focus {
-        border-color: #000;
-        box-shadow: none;
-        background-color: #fcfcfc;
-    }
-
-    .form-check-input:checked {
-        background-color: #000;
-        border-color: #000;
-    }
-
-    .cursor-pointer { cursor: pointer; }
-</style>
-
 <script>
 function toggleFields() {
     const type = document.getElementById('type').value;

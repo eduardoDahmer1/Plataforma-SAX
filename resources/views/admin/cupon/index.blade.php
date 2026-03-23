@@ -89,36 +89,4 @@
     </div>
 </div>
 
-<style>
-    /* UI Cupones Minimalista */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .tracking-tighter { letter-spacing: 0.05em; }
-    .x-small { font-size: 0.65rem; }
-    .fw-800 { font-weight: 800; }
-    .fw-900 { font-weight: 900; }
-    .italic { font-style: italic; }
-    
-    .sax-label-mini {
-        font-size: 0.55rem;
-        font-weight: 800;
-        color: #bbb;
-        text-transform: uppercase;
-    }
-
-    .sax-coupon-card {
-        transition: 0.2s;
-        background: #fff;
-    }
-    .sax-coupon-card:hover {
-        border-color: #000 !important;
-        transform: translateY(-3px);
-    }
-
-    .border-dashed { border-style: dashed !important; }
-    .font-monospace { font-family: 'SFMono-Regular', Consolas, monospace; }
-
-    /* Utilitários */
-    .btn-clean { background: none; border: none; padding: 0; cursor: pointer; }
-    .hover-underline:hover { text-decoration: underline !important; }
-</style>
 @endsection

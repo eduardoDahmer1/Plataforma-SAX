@@ -14,7 +14,8 @@
             <p><strong>Marca:</strong> {{ $cupon->brand->name ?? 'Todas' }}</p>
             <p><strong>Valor mínimo:</strong> {{ $cupon->valor_minimo ?? '-' }}</p>
             <p><strong>Valor máximo:</strong> {{ $cupon->valor_maximo ?? '-' }}</p>
-            <p><strong>Data:</strong> {{ $cupon->data_inicio->format('d/m/Y') }} - {{ $cupon->data_final->format('d/m/Y') }}</p>
+            <p><strong>Data:</strong> {{ $cupon->data_inicio->format('d/m/Y') }} -
+                {{ $cupon->data_final->format('d/m/Y') }}</p>
             <p><strong>Usado:</strong> {{ $cupon->usado }}</p>
 
             <div class="mt-3 d-flex gap-2">

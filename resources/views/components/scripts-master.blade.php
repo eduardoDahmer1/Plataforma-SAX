@@ -12,10 +12,10 @@
 <!-- 2. Bootstrap JS (universal) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- 3. Swiper JS (store + temáticas, no admin/checkout/dashboard/manutencao) -->
-@unless(Route::is('admin.*') || Route::is('checkout.*') || Route::is('user.*') || Route::is('dashboard') || Route::is('manutencao'))
+<!-- 3. Swiper JS (público + admin, no checkout/dashboard/manutencao) -->
+@if(!Route::is('checkout.*') && !Route::is('user.*') && !Route::is('dashboard') && !Route::is('manutencao'))
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-@endunless
+@endif
 
 <!-- 4. AOS — Animate On Scroll (bridal, palace, institucional) -->
 @if(Request::is('*bridal*') || Request::is('*palace*') || Request::is('*institucional*'))
@@ -27,9 +27,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 @endif
 
-<!-- 6. Trumbowyg + Plugins (admin — también carga Swiper pues app-custom.js lo necesita) -->
+<!-- 6. app-custom.js — Scripts globales del frontend (todas las rutas excepto checkout) -->
+@if(!Route::is('checkout.*'))
+    <script src="{{ asset('js/app-custom.js') }}"></script>
+@endif
+
+<!-- 7. Trumbowyg + Plugins + admin.js (solo admin) -->
 @if(Route::is('admin.*') || Route::is('manutencao'))
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/upload/trumbowyg.upload.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/resizimg/trumbowyg.resizimg.min.js"></script>
@@ -44,12 +48,12 @@
     <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/history/trumbowyg.history.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/preformatted/trumbowyg.preformatted.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/plugins/template/trumbowyg.template.min.js"></script>
-    <script src="{{ asset('js/app-custom.js') }}"></script>
+    <script src="{{ asset('js/admin.js') }}?v={{ filemtime(public_path('js/admin.js')) }}"></script>
 @endif
 
-<!-- 7. Scripts por sección -->
+<!-- 8. Scripts por sección -->
 
-<!-- Home y detalle de producto (únicos que usan .blogSwiper, .productSwiper, .accordion-trigger) -->
+<!-- Home y detalle de producto -->
 @if(Route::is('home') || Route::is('produto.show'))
     <script src="{{ asset('js/home.js') }}"></script>
 @endif
@@ -76,5 +80,5 @@
     <script src="{{ asset('js/app-custom-checkout.js') }}"></script>
 @endif
 
-<!-- 8. Stack para scripts inyectados desde vistas child (@push('scripts')) -->
+<!-- 9. Stack para scripts inyectados desde vistas child (@push('scripts')) -->
 @stack('scripts')

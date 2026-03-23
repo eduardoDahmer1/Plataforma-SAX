@@ -101,38 +101,6 @@
     </div>
 </div>
 
-<style>
-    /* Minimalist UI Components */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .tracking-tighter { letter-spacing: 0.05em; }
-    .x-small { font-size: 0.65rem; }
-    .bg-light-subtle { background-color: #f8f9fa !important; }
-    
-    /* User Avatar Initial */
-    .user-initial {
-        width: 35px; height: 35px;
-        background: #000; color: #fff;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 900; font-size: 0.8rem;
-    }
-
-    /* Status Dots por tipo */
-    .status-dot { height: 6px; width: 6px; border-radius: 50%; display: inline-block; }
-    .status-dot.type-1 { background: #10b981; } /* Admin */
-    .status-dot.type-2 { background: #3b82f6; } /* Usuario */
-    .status-dot.type-3 { background: #f59e0b; } /* Curso */
-
-    /* Buttons and Links */
-    .btn-clean { background: none; border: none; padding: 0; cursor: pointer; }
-    .hover-underline:hover { text-decoration: underline !important; }
-    
-    .table td { border-bottom: 1px solid #f1f1f1; transition: 0.2s; }
-    .clickable-row:hover td { background-color: #fafafa; }
-
-    /* Custom Select */
-    .form-select-sm { cursor: pointer; }
-</style>
-
 <script>
 document.getElementById('filterUserType').addEventListener('change', function() {
     const filter = this.value;

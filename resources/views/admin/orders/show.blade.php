@@ -142,24 +142,4 @@
     </div>
 </div>
 
-<style>
-    /* Minimalist Tweaks */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .x-small { font-size: 0.65rem; }
-    .italic { font-style: italic; }
-    .bg-light-subtle { background-color: #fcfcfc !important; }
-    .border-dark-subtle { border-color: #e5e5e5 !important; }
-    
-    /* Status Dot */
-    .status-dot { height: 7px; width: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-    .status-dot.pending { background: #f59e0b; }
-    .status-dot.processing { background: #3b82f6; }
-    .status-dot.completed { background: #10b981; }
-    .status-dot.canceled { background: #ef4444; }
-
-    .grayscale-hover { filter: grayscale(100%); transition: 0.3s; }
-    .grayscale-hover:hover { filter: grayscale(0%); }
-
-    .table td, .table th { border-bottom: 1px solid #f1f1f1; }
-</style>
 @endsection

@@ -66,38 +66,7 @@
 
     <x-scripts-master />
 
-    <script>
-        // Voltar ao topo
-        const backToTop = document.getElementById("backToTop");
-        window.addEventListener("scroll", () => {
-            backToTop.style.display = window.scrollY > 200 ? "block" : "none";
-        });
-        backToTop.addEventListener("click", () => {
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        });
 
-        // Drawer Mobile
-        const openDrawer = document.getElementById("openDrawer");
-        const closeDrawer = document.getElementById("closeDrawer");
-        const drawer = document.getElementById("drawerMobile");
-        const overlay = document.getElementById("drawerOverlay");
-
-        openDrawer.addEventListener("click", () => {
-            drawer.classList.add("open");
-            overlay.classList.add("show");
-        });
-        closeDrawer.addEventListener("click", () => {
-            drawer.classList.remove("open");
-            overlay.classList.remove("show");
-        });
-        overlay.addEventListener("click", () => {
-            drawer.classList.remove("open");
-            overlay.classList.remove("show");
-        });
-    </script>
 </body>
 
 </html>

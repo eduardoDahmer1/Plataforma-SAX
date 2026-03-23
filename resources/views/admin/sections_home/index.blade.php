@@ -71,35 +71,4 @@
     </div>
 </div>
 
-<style>
-    /* Mantive seu estilo original, que já é muito bom e segue a linha minimalista */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .tracking-tighter { letter-spacing: 0.05em; }
-    .x-small { font-size: 0.65rem; }
-    .italic { font-style: italic; }
-    .cursor-pointer { cursor: pointer; }
-    
-    .sax-settings-box { background: #fff; }
-    .sax-setting-item { transition: background 0.2s ease; }
-    .sax-setting-item:hover { background-color: #fafafa; }
-
-    .sax-icon-wrapper {
-        width: 30px; height: 30px;
-        display: flex; align-items: center; justify-content: center;
-        background: #f8f9fa; border-radius: 4px;
-    }
-
-    .sax-switch {
-        width: 2.8em !important; height: 1.4em !important;
-        cursor: pointer;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e") !important;
-    }
-    .sax-switch:checked {
-        background-color: #000 !important;
-        border-color: #000 !important;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
-    }
-    .sax-switch:focus { box-shadow: none !important; border-color: #dee2e6 !important; }
-    .border-dashed { border: 1px dashed #dee2e6 !important; }
-</style>
 @endsection

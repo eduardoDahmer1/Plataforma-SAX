@@ -139,47 +139,4 @@
     </div>
 </div>
 
-<style>
-    /* Estética Financeira Minimalista */
-    .tracking-wider { letter-spacing: 0.12em; }
-    .tracking-tighter { letter-spacing: 0.05em; }
-    .x-small { font-size: 0.65rem; }
-    .italic { font-style: italic; }
-    
-    .sax-label {
-        font-size: 0.6rem;
-        font-weight: 800;
-        color: #bbb;
-        text-transform: uppercase;
-        display: block;
-        margin-bottom: 8px;
-    }
-
-    .sax-currency-card {
-        transition: 0.2s;
-        background: #fff;
-    }
-    .sax-currency-card:hover {
-        border-color: #000 !important;
-        transform: translateY(-2px);
-    }
-
-    .sax-input {
-        border-radius: 0 !important;
-        border: 1px solid #e5e5e5 !important;
-        padding: 10px 12px;
-        font-size: 0.85rem;
-    }
-    .sax-input:focus {
-        border-color: #000 !important;
-        box-shadow: none !important;
-        background-color: #fafafa;
-    }
-
-    .btn-clean { background: none; border: none; padding: 0; cursor: pointer; }
-    .hover-underline:hover { text-decoration: underline !important; }
-    
-    /* Fontes mono para números financeiros */
-    .font-monospace { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace !important; }
-</style>
 @endsection

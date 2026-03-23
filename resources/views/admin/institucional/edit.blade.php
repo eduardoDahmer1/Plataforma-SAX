@@ -157,33 +157,6 @@
     </form>
 </div>
 
-<style>
-    /* Reaproveitando os estilos do Palace para manter unidade visual */
-    :root { --gold: #D4AF37; --sax-dark: #121212; }
-    .bg-white-soft { background-color: #f8fafc; }
-    .text-gold { color: var(--gold) !important; }
-    .border-gold { border-color: var(--gold) !important; }
-    .border-gold-subtle { border-color: rgba(212, 175, 55, 0.3) !important; }
-    .sax-title { font-size: 1.4rem; font-weight: 900; color: var(--sax-dark); }
-    .sax-divider-gold { width: 45px; height: 4px; background: var(--gold); margin: 8px 0; border-radius: 2px; }
-    .letter-spacing-2 { letter-spacing: 2px; }
-    .letter-spacing-1 { letter-spacing: 1px; }
-    .sax-premium-card { background: #fff; border-radius: 20px; border: 1px solid #eef2f7; }
-    .sax-form-label { font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-    .sax-input { border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.85rem; }
-    .sax-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
-    .asset-upload-zone { border: 2px dashed #e2e8f0; border-radius: 15px; text-align: center; position: relative; transition: all 0.3s; cursor: pointer; }
-    .asset-upload-zone:hover { border-color: var(--gold); background: #fff; }
-    .sax-input-file { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 5; }
-    .gallery-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; }
-    .gallery-preview-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: #eee; }
-    .gallery-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-    .btn-dark-gold { background: var(--sax-dark); color: var(--gold); border: none; font-size: 0.8rem; letter-spacing: 1px; }
-    .btn-back-minimal { color: #64748b; font-size: 0.7rem; font-weight: 800; text-decoration: none; letter-spacing: 1px; }
-    .sticky-header { position: sticky; top: 0; z-index: 1020; }
-    .x-small { font-size: 0.65rem; }
-    .font-monospace { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-</style>
 @endsection
 
 @push('scripts')

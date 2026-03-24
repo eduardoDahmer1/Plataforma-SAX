@@ -72,13 +72,17 @@
                         {{-- Status --}}
                         <div class="order-block">
                             <span class="sax-label-min">STATUS</span>
-                            <div class="status-indicator {{ $order->status }}">
+                            @php($status = strtolower((string) $order->status))
+                            <div class="status-indicator {{ $status }}">
                                 <span class="dot"></span> 
-                                @switch($order->status)
+                                @switch($status)
                                     @case('pending') Pendente @break
                                     @case('processing') Em Andamento @break
                                     @case('completed') Completo @break
+                                    @case('paid') Pago @break
+                                    @case('failed') Falhou @break
                                     @case('canceled') Cancelado @break
+                                    @case('cancelled') Cancelado @break
                                     @default Desconhecido
                                 @endswitch
                             </div>
@@ -169,6 +173,14 @@
     .status-indicator.pending .dot { background: #f1b400; }
     .status-indicator.completed { color: #198754; }
     .status-indicator.completed .dot { background: #198754; }
+    .status-indicator.paid { color: #198754; }
+    .status-indicator.paid .dot { background: #198754; }
+    .status-indicator.failed,
+    .status-indicator.canceled,
+    .status-indicator.cancelled { color: #dc3545; }
+    .status-indicator.failed .dot,
+    .status-indicator.canceled .dot,
+    .status-indicator.cancelled .dot { background: #dc3545; }
 
     /* Botões */
     .btn-sax-black {

@@ -2,6 +2,12 @@
 
 @section('content')
 <div class="sax-order-details-wrapper">
+    @if (session('warning'))
+        <div class="alert alert-warning mb-4" role="alert">
+            {{ session('warning') }}
+        </div>
+    @endif
+
     {{-- Header --}}
     <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -34,6 +40,22 @@
                         <span class="label">TOTAL:</span>
                         <span class="value fw-bold text-dark fs-5">{{ currency_format($order->items->sum(fn($i) => $i->price * $i->quantity)) }}</span>
                     </div>
+
+                    @if (($order->payment_method ?? null) === 'bancard_v2' && strtolower((string) $order->status) === 'paid' && !empty($order->shop_process_id))
+                        <div class="mt-3">
+                            <a href="{{ route('bancard.v2.success', ['shop_process_id' => $order->shop_process_id]) }}" class="btn btn-outline-success btn-sax-sm w-100">
+                                VER CONFIRMACAO
+                            </a>
+                        </div>
+                    @endif
+
+                    @if (($order->payment_method ?? null) === 'bancard_v2' && strtolower((string) $order->status) !== 'paid')
+                        <div class="mt-3">
+                            <a href="{{ route('checkout.bancard.v2', $order->id) }}" class="btn btn-outline-primary btn-sax-sm w-100">
+                                TENTAR PAGAMENTO NOVAMENTE
+                            </a>
+                        </div>
+                    @endif
 
                     {{-- Seção de Comprovante --}}
                     <div class="mt-4 pt-3 border-top">

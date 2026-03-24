@@ -45,7 +45,7 @@ class CheckoutController extends Controller
             'email'           => 'required|email',
             'phone'           => 'required|string',
             'shipping'        => 'required|in:1,2,3',
-            'payment_method'  => 'required|in:deposito,bancard,whatsapp,pagopar',
+            'payment_method'  => 'required|in:deposito,bancard,bancard_v2,whatsapp,pagopar',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street'          => 'required_if:shipping,2',
             'number'          => 'required_if:shipping,2',
@@ -174,14 +174,18 @@ class CheckoutController extends Controller
             DB::commit();
 
             // 6. Limpeza de Carrinho (Gateway Externo NÃO limpa agora para evitar perda de dados se falhar)
-            if (!in_array($paymentMethod, ['bancard', 'pagopar'])) {
+            if (!in_array($paymentMethod, ['bancard', 'pagopar', 'bancard_v2'])) {
                 Cart::where('user_id', $user->id)->delete();
                 session()->forget('applied_cupon');
             }
 
-            // 7. Redirecionamento Final (Dica do Victor: Bancard dentro do Pagopar)
+            // 7. Redirecionamento Final
+            if ($paymentMethod === 'bancard_v2') {
+                return redirect()->route('checkout.bancard.v2', ['order' => $order->id]);
+            }
+
+            // Legado: bancard segue no fluxo antigo via PagoPar.
             if (in_array($paymentMethod, ['pagopar', 'bancard'])) {
-                // Chama a controller do Pagopar para ambos os casos
                 return app(PagoParController::class)->payment($order);
             }
 

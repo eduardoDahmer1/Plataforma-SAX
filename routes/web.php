@@ -129,6 +129,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/error', fn() => view('checkout.error'))->name('checkout.error');
     Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
 
+    // Bancard V2 (novo fluxo com checkout-js oficial)
+    Route::get('/checkout/bancard-v2/{order}', [\App\Http\Controllers\BancardV2Controller::class, 'checkoutPage'])
+        ->whereNumber('order')
+        ->name('checkout.bancard.v2');
+    Route::get('/checkout/bancard-v2/{order}/cancel', [\App\Http\Controllers\BancardV2Controller::class, 'cancelCheckout'])
+        ->whereNumber('order')
+        ->name('checkout.bancard.v2.cancel');
+
     // PagoPar (Bancard / Pix / Outros)
     Route::prefix('pagopar')->group(function () {
         Route::get('/finish', [PagoParController::class, 'finish'])->name('pagopar.finish');
@@ -160,6 +168,12 @@ Route::middleware('auth')->group(function () {
     //     return back()->with('message', 'Link de verificação reenviado!');
     // })->middleware(['throttle:6,1'])->name('verification.send');
 });
+
+// Bancard V2 callback/return (acesso externo do gateway)
+Route::post('/checkout/bancard-v2/callback', [\App\Http\Controllers\BancardV2Controller::class, 'callback'])->name('bancard.v2.callback');
+Route::get('/checkout/bancard-v2/finish', [\App\Http\Controllers\BancardV2Controller::class, 'returnPage'])->name('bancard.v2.return');
+Route::get('/checkout/bancard-v2/success', [\App\Http\Controllers\BancardV2Controller::class, 'successPage'])->name('bancard.v2.success');
+Route::get('/checkout/bancard-v2/error', [\App\Http\Controllers\BancardV2Controller::class, 'errorPage'])->name('bancard.v2.error');
 
 // --- Admin Routes ---
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {

@@ -4,12 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // =========================
     // ====== STEPS ===========
     // =========================
-    let currentStep = 1;
+    const currentStepInput = document.getElementById('currentStep');
+    let currentStep = Number(currentStepInput?.value || 1);
     const steps = document.querySelectorAll('.step');
 
     function showStep(step) {
         steps.forEach((s, i) => s.classList.toggle('active', i === step - 1));
-        const currentStepInput = document.getElementById('currentStep');
         if (currentStepInput) currentStepInput.value = step;
     }
 
@@ -99,12 +99,32 @@ document.addEventListener('DOMContentLoaded', function () {
     // =========================
     window.selectPayment = function(method) {
         const paymentInput = document.getElementById('payment_method');
-        if(paymentInput) paymentInput.value = method;
+        const instruction = document.getElementById('payment-instruction');
 
-        document.getElementById('btn-deposito')?.classList.remove('active');
-        document.getElementById('btn-bancard')?.classList.remove('active');
-        document.getElementById('btn-' + method)?.classList.add('active');
+        if (paymentInput) {
+            paymentInput.value = method;
+        }
+
+        document.querySelectorAll('.sax-payment-method').forEach((button) => {
+            const isActive = button.dataset.paymentMethod === method;
+            button.classList.toggle('active', isActive);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        if (instruction) {
+            instruction.innerText = ['bancard', 'bancard_v2'].includes(method)
+                ? 'Você será redirecionado para o checkout seguro do Bancard para pagar com Cartão ou QR Code.'
+                : 'Após finalizar, você verá os dados bancários para transferência e envio do comprovante.';
+        }
     };
+
+    document.querySelectorAll('.sax-payment-method[data-payment-method]').forEach((button) => {
+        button.addEventListener('click', function() {
+            window.selectPayment(this.dataset.paymentMethod);
+        });
+    });
+
+    window.selectPayment(document.getElementById('payment_method')?.value || 'deposito');
 
     // =========================
     // ====== VALIDAÇÃO =======
@@ -113,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (checkoutForm) {
         checkoutForm.addEventListener('submit', function(e) {
             const selectedMethod = document.getElementById('payment_method')?.value;
-            if (!selectedMethod || !['bancard','deposito'].includes(selectedMethod)) {
+            if (!selectedMethod || !['bancard', 'bancard_v2', 'deposito'].includes(selectedMethod)) {
                 e.preventDefault();
                 alert('Escolha um método de pagamento válido');
                 return false;

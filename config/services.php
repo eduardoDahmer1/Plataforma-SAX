@@ -22,7 +22,7 @@ return [
     'bancard' => [
         'public_key' => env('BANCARD_PUBLIC_KEY'),
         'private_key' => env('BANCARD_PRIVATE_KEY'),
-        'sandbox' => filter_var(env('BANCARD_SANDBOX', true), FILTER_VALIDATE_BOOLEAN),
+        'sandbox' => filter_var(env('BANCARD_SANDBOX', env('BANCARD_MODE', 'sandbox') === 'sandbox'), FILTER_VALIDATE_BOOLEAN),
     ],
 
     'pagopar' => [

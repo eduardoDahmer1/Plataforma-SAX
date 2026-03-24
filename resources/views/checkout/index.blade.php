@@ -1,10 +1,42 @@
 @extends('layout.checkout')
 
 @section('content')
+@php
+    $initialStep = (int) old('step', 1);
+    $errorFields = $errors->keys();
+
+    if (!empty($errorFields)) {
+        if (collect($errorFields)->contains(fn ($field) => in_array($field, ['name', 'document', 'email', 'phone'], true))) {
+            $initialStep = 2;
+        } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['shipping', 'country', 'cep', 'street', 'number', 'city', 'state', 'store', 'observations'], true))) {
+            $initialStep = 3;
+        } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['payment_method', 'deposit_receipt'], true))) {
+            $initialStep = 4;
+        }
+    }
+
+    $initialStep = max(1, min(4, $initialStep));
+@endphp
 <div class="container mt-5">
+    @if ($errors->any() || session('error'))
+        <div class="alert alert-danger border-0 rounded-0 mb-4">
+            @if (session('error'))
+                <div>{{ session('error') }}</div>
+            @endif
+
+            @if ($errors->any())
+                <ul class="mb-0 ps-3">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    @endif
+
     <form id="checkoutForm" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data">
         @csrf
-        <input type="hidden" name="step" id="currentStep">
+        <input type="hidden" name="step" id="currentStep" value="{{ $initialStep }}">
 
         {{-- STEP 1 --}}
         <x-checkout.step1-cart :cart="$cart" />
@@ -196,13 +228,38 @@
     /* 6. PAGAMENTO (STEP 4) */
     .sax-payment-method {
         border: 2px solid #000;
-        background: transparent;
+        background: #fff;
+        color: #111;
         padding: 20px 40px;
         font-weight: 700;
         letter-spacing: 1px;
         text-transform: uppercase;
         font-size: 0.8rem;
         transition: 0.3s;
+        cursor: pointer;
+        box-shadow: none;
+        outline: none;
+    }
+
+    .sax-payment-method:hover {
+        background: #f4f4f4;
+    }
+
+    .sax-payment-method[aria-pressed="true"] {
+        background: #111;
+        color: #fff;
+        border-color: #111;
+    }
+
+    .sax-payment-method:focus,
+    .sax-payment-method:focus-visible {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .sax-payment-method,
+    .sax-payment-method * {
+        pointer-events: auto !important;
     }
 
     .sax-payment-notice { 

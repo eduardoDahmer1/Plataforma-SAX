@@ -26,6 +26,7 @@
                 </thead>
                 <tbody>
                     @foreach ($orders as $order)
+                        @php($status = strtolower((string) $order->status))
                         <tr>
                             <td class="fw-bold fs-6">#{{ $order->id }}</td>
                             <td class="text-muted">{{ $order->created_at->format('d/m/Y') }}</td>
@@ -33,13 +34,16 @@
                                 <span class="badge-payment-sax">{{ ucfirst($order->payment_method) }}</span>
                             </td>
                             <td>
-                                <div class="status-indicator-sax {{ $order->status }}">
+                                <div class="status-indicator-sax {{ $status }}">
                                     <span class="dot"></span>
-                                    @switch($order->status)
+                                    @switch($status)
                                         @case('pending') Pendente @break
                                         @case('processing') Em Andamento @break
                                         @case('completed') Completo @break
+                                        @case('paid') Pago @break
+                                        @case('failed') Falhou @break
                                         @case('canceled') Cancelado @break
+                                        @case('cancelled') Cancelado @break
                                         @default Desconhecido
                                     @endswitch
                                 </div>
@@ -57,6 +61,7 @@
 
         <div class="d-md-none">
             @foreach ($orders as $order)
+                @php($status = strtolower((string) $order->status))
                 <div class="order-card-sax shadow-sm">
                     <div class="order-mobile-header">
                         <div>
@@ -64,7 +69,7 @@
                             <span class="order-id">#{{ $order->id }}</span>
                             <span class="order-date">{{ $order->created_at->format('d/m/Y') }}</span>
                         </div>
-                        <div class="status-indicator-sax {{ $order->status }}">
+                        <div class="status-indicator-sax {{ $status }}">
                             <span class="dot"></span>
                         </div>
                     </div>
@@ -76,12 +81,16 @@
                         </div>
                         <div class="mb-3">
                             <span class="sax-label-min">STATUS</span>
-                            <span class="status-text-mobile {{ $order->status }}">
-                                @switch($order->status)
+                            <span class="status-text-mobile {{ $status }}">
+                                @switch($status)
                                     @case('pending') Pendente @break
                                     @case('processing') Em Andamento @break
                                     @case('completed') Completo @break
+                                    @case('paid') Pago @break
+                                    @case('failed') Falhou @break
                                     @case('canceled') Cancelado @break
+                                    @case('cancelled') Cancelado @break
+                                    @default Desconhecido
                                 @endswitch
                             </span>
                         </div>
@@ -136,10 +145,16 @@
     
     .status-indicator-sax.completed { color: #198754; }
     .status-indicator-sax.completed .dot { background: #198754; }
+    .status-indicator-sax.paid { color: #198754; }
+    .status-indicator-sax.paid .dot { background: #198754; }
     .status-indicator-sax.pending { color: #f1b400; }
     .status-indicator-sax.pending .dot { background: #f1b400; }
-    .status-indicator-sax.canceled { color: #dc3545; }
-    .status-indicator-sax.canceled .dot { background: #dc3545; }
+    .status-indicator-sax.failed,
+    .status-indicator-sax.canceled,
+    .status-indicator-sax.cancelled { color: #dc3545; }
+    .status-indicator-sax.failed .dot,
+    .status-indicator-sax.canceled .dot,
+    .status-indicator-sax.cancelled .dot { background: #dc3545; }
 
     /* Mobile Cards */
     .order-card-sax {
@@ -153,6 +168,10 @@
     .order-id { font-size: 1.3rem; font-weight: 800; display: block; line-height: 1; margin-bottom: 2px; }
     .order-date { font-size: 0.8rem; color: #777; }
     .status-text-mobile { font-weight: 700; font-size: 0.9rem; }
+    .status-text-mobile.paid { color: #198754; }
+    .status-text-mobile.failed,
+    .status-text-mobile.canceled,
+    .status-text-mobile.cancelled { color: #dc3545; }
     .status-text-mobile.pending { color: #f1b400; }
 
     /* Buttons */

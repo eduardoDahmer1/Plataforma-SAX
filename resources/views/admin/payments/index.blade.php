@@ -10,7 +10,7 @@
             <p class="small text-secondary mb-0">Configure os métodos de transação disponíveis na finalização da compra</p>
         </div>
         <a href="{{ route('admin.payments.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
-            <i class="fa fa-plus me-2"></i> Novo Método
+            <i class="fa fa-plus me-2"></i> Novo método
         </a>
     </div>
 
@@ -22,7 +22,7 @@
                     <th class="py-3 border-0 fw-bold" style="width: 250px;">Método</th>
                     <th class="py-3 border-0 fw-bold">Tipo</th>
                     <th class="py-3 border-0 fw-bold">Estado</th>
-                    <th class="py-3 border-0 fw-bold text-center" style="width: 100px;">Visibilidad</th>
+                    <th class="py-3 border-0 fw-bold text-center" style="width: 100px;">Visibilidade</th>
                     <th class="py-3 border-0 fw-bold text-end">Gestão</th>
                 </tr>
             </thead>
@@ -44,7 +44,7 @@
                         <div class="status-indicator">
                             <span class="status-dot {{ $method->active == 1 ? 'active' : '' }}"></span>
                             <span class="x-small text-uppercase fw-bold {{ $method->active == 1 ? 'text-dark' : 'text-muted' }}">
-                                {{ $method->active == 1 ? 'Activo' : 'Inactivo' }}
+                                {{ $method->active == 1 ? 'Ativo' : 'Inativo' }}
                             </span>
                         </div>
                     </td>
@@ -59,7 +59,7 @@
                             <a href="{{ route('admin.payments.edit', $method->id) }}" class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
                                 CONFIGURAR
                             </a>
-                            <form action="{{ route('admin.payments.destroy', $method->id) }}" method="POST" onsubmit="return confirm('¿Eliminar este método de pago?')" class="m-0">
+                            <form action="{{ route('admin.payments.destroy', $method->id) }}" method="POST" onsubmit="return confirm('Excluir este método de pagamento?')" class="m-0">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">
                                     ELIMINAR
@@ -82,7 +82,7 @@
 document.querySelectorAll('.toggle-active').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
         const id = this.dataset.id;
-        const active = this.checked ? 1 : 2;
+        const active = this.checked ? 1 : 0;
 
         fetch(`/admin/payments/${id}/toggle-active`, {
             method: 'POST',
@@ -102,18 +102,18 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
             const dot = row.querySelector('.status-dot');
             const text = row.querySelector('.status-indicator span:last-child');
             
-            if(active == 1){
+            if(active === 1){
                 dot.classList.add('active');
-                text.textContent = 'ACTIVO';
+                text.textContent = 'ATIVO';
                 text.classList.replace('text-muted', 'text-dark');
             } else {
                 dot.classList.remove('active');
-                text.textContent = 'INACTIVO';
+                text.textContent = 'INATIVO';
                 text.classList.replace('text-dark', 'text-muted');
             }
         })
         .catch(() => {
-            alert('Error al actualizar');
+            alert('Erro ao atualizar');
             this.checked = !this.checked;
         });
     });

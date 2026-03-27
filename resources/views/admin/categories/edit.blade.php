@@ -107,23 +107,4 @@
 @if ($category->banner)
 <form id="delete-banner-form" action="{{ route('admin.categories.deleteBanner', $category->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
 @endif
-
-<script>
-    function confirmDelete(type) {
-        if(confirm('¿Desea eliminar esta imagen?')) {
-            document.getElementById('delete-' + type + '-form').submit();
-        }
-    }
-
-    function previewImg(input, targetId) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                let img = document.getElementById(targetId);
-                if(img) img.src = e.target.result;
-            }
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-</script>
 @endsection

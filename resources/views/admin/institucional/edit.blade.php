@@ -114,7 +114,7 @@
                         <img id="preview-section-one" src="{{ $institucional->section_one_image ? asset('storage/'.$institucional->section_one_image) : 'https://placehold.co/600x400' }}" class="img-fluid w-100">
                     </div>
                     <div class="asset-upload-zone py-3">
-                        <input type="file" name="section_one_image" class="sax-input-file img-input" data-preview="preview-section-one">
+                        <input type="file" name="section_one_image" class="sax-input-file img-trigger" data-prev="preview-section-one">
                         <p class="x-small fw-bold m-0"><i class="fas fa-sync-alt me-1"></i> CAMBIAR IMAGEN</p>
                     </div>
                 </div>
@@ -159,19 +159,3 @@
 
 @endsection
 
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        // Preview em tempo real para inputs de imagem única
-        $('.img-input').change(function() {
-            const input = this;
-            const previewId = $(this).data('preview');
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => $('#' + previewId).attr('src', e.target.result);
-                reader.readAsDataURL(input.files[0]);
-            }
-        });
-    });
-</script>
-@endpush

@@ -80,7 +80,7 @@
             <div class="mb-3">
               <input id="forgot_email" type="email" name="email" placeholder="Seu email cadastrado" required class="form-control"/>
             </div>
-            <button type="submit" class="btn btn-warning w-100 mb-4">
+            <div id="forgotMessage" class="small mb-3" style="display:none;"></div> <button type="submit" class="btn btn-warning w-100 mb-4" id="btnForgot">
               <i class="fas fa-envelope me-2"></i> Enviar Link
             </button>
             <div class="text-center small">

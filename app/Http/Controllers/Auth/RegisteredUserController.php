@@ -17,7 +17,7 @@ use Illuminate\View\View;
 class RegisteredUserController extends Controller
 {
     /**
-     * Display the registration view.
+     * Exibe a tela de registro.
      */
     public function create(): View
     {
@@ -25,20 +25,14 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * Processa a requisição de registro.
      */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => [
-                'required',
-                'confirmed',
-                'min:5',
-            ],
+            'password' => ['required', 'confirmed', 'min:5'],
         ]);
     
         $user = User::create([
@@ -47,12 +41,14 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
     
+        // Dispara o evento de registro (envio de e-mail de verificação)
+        // O try/catch evita que o cadastro trave se o servidor de e-mail oscilar
         try {
             event(new Registered($user));
         } catch (\Throwable $e) {
             Log::error('Falha ao disparar evento Registered: '.$e->getMessage(), [
                 'user_id' => $user->id,
-                'trace'   => $e->getTraceAsString()
+                'email'   => $user->email
             ]);
         }
     

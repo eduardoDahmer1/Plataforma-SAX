@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -51,6 +52,18 @@ use App\Http\Controllers\Admin\ActivateBrandsAndCategoriesController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\Auth\UserPreferenceController;
+
+Route::get('/testar-email', function () {
+    try {
+        Mail::raw('Opa! Se você recebeu isso, o SMTP da Umbler está funcionando no Laravel.', function ($message) {
+            $message->to('eduustcc@gmail.com')
+                    ->subject('Teste de SMTP - Sax Department');
+        });
+        return "Sucesso! O e-mail foi enviado.";
+    } catch (\Exception $e) {
+        return "Erro ao enviar: " . $e->getMessage();
+    }
+});
 
 // --- Public Routes ---
 Route::get('/', [HomeController::class, 'index'])->name('home');

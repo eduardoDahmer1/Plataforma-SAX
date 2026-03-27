@@ -100,14 +100,4 @@
         {{ $users->links() }}
     </div>
 </div>
-
-<script>
-document.getElementById('filterUserType').addEventListener('change', function() {
-    const filter = this.value;
-    const rows = document.querySelectorAll('#usersTable tbody tr[data-usertype]');
-    rows.forEach(row => {
-        row.style.display = (filter === 'all' || row.getAttribute('data-usertype') === filter) ? '' : 'none';
-    });
-});
-</script>
 @endsection

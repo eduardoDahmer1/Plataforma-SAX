@@ -43,17 +43,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 // ======== Auto-Slug ========
-// Usado en brands/create, brands/edit, categories/create
-// Convierte el campo #name en slug automáticamente
+// Usado en brands/create, brands/edit, categories/create (#name → #slug)
+// y en blogs/create, blogs/edit (#title → #slug)
 document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('.sax-form');
+    const slugEl = document.getElementById('slug');
+    if (!slugEl) return;
+
+    const form = slugEl.closest('form');
     if (!form) return;
 
-    const nameEl = form.querySelector('#name');
-    const slugEl = form.querySelector('#slug');
-    if (!nameEl || !slugEl) return;
+    const sourceEl = form.querySelector('#name') || form.querySelector('#title');
+    if(!sourceEl) return;
 
-    nameEl.addEventListener('input', function () {
+    sourceEl.addEventListener('input', function () {
         slugEl.value = this.value.toLowerCase()
             .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
             .replace(/[^a-z0-9 -]/g, '')
@@ -109,72 +111,109 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// ======== Trumbowyg Editors (jQuery) ========
-if (window.jQuery) {
-    $(document).ready(function () {
-        const commonBtns = [
-            ['viewHTML'],
-            ['undo', 'redo'],
-            ['formatting'],
-            ['strong', 'em', 'del'],
-            ['superscript', 'subscript'],
-            ['link'],
-            ['insertImage'],
-            ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
-            ['unorderedList', 'orderedList'],
-            ['horizontalRule'],
-            ['removeformat'],
-            ['fullscreen']
-        ];
-
-        function getPlugins(serverPath = null) {
-            const plugins = {
-                resizimg: { minSize: 64, step: 16 },
-                autogrow: {},
-            };
-            if (serverPath) {
-                plugins.upload = {
-                    serverPath: serverPath,
-                    fileFieldName: 'image',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
-                };
-            }
-            return plugins;
-        }
-
-        // Editor del blog (con upload)
-        if ($('#editor-blog').length) {
-            $('#editor-blog').trumbowyg({
-                btns: commonBtns.concat([['upload']]),
-                plugins: getPlugins('/admin/blogs/upload-image'),
-                autogrow: true,
-                removeformatPasted: true,
-                allowTagsFromPaste: true,
-            });
-        }
-
-        // Editor de producto (sin upload)
-        if ($('#editor').length) {
-            $('#editor').trumbowyg({
-                btns: commonBtns,
-                plugins: getPlugins(),
-                autogrow: true,
-                removeformatPasted: true,
-                allowTagsFromPaste: true,
-            });
-        }
-
-        // Sincronizar contenido al enviar el formulario
-        $('#editForm').on('submit', function () {
-            if ($('#editor').length) {
-                $('textarea[name="description"]').val($('#editor').trumbowyg('html'));
-            }
-            if ($('#editor-blog').length) {
-                $('textarea[name="content"]').val($('#editor-blog').trumbowyg('html'));
-            }
-        });
+// ── TinyMCE: editor de blog ───────────────────────────────────
+if (document.getElementById('editor-blog') && typeof tinymce !== 'undefined') {
+    tinymce.init({
+        selector: '#editor-blog',
+        height: 450,
+        menubar: false,
+        branding: false,
+        statusbar: true,
+        plugins: ['advlist autolink lists link image charmap print preview anchor',
+                  'searchreplace visualblocks code fullscreen',
+                  'insertdatetime media table paste code help wordcount'],
+        toolbar: 'formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | link image | code fullscreen',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }',
+        setup: function(editor) { editor.on('change', function() { editor.save(); }); }
     });
 }
+
+// ── TinyMCE: editor de producto ───────────────────────────────
+if (document.getElementById('editor-product') && typeof tinymce !== 'undefined') {
+    tinymce.init({
+        selector: '#editor-product',
+        height: 400,
+        menubar: false,
+        branding: false,
+        statusbar: true,
+        plugins: ['advlist autolink lists link image charmap print preview anchor',
+                  'searchreplace visualblocks code fullscreen',
+                  'insertdatetime media table paste code help wordcount'],
+        toolbar: 'formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | link image | code fullscreen',
+        content_style: 'body { font-family: -apple-system, sans-serif; font-size: 14px; }',
+        setup: function(editor) { editor.on('change', function() { editor.save(); }); }
+    });
+}
+
+// ── Image preview genérico (.img-trigger + data-prev) ─────────
+// Cubre: bridal, cafe_bistro, palace, institucional
+document.addEventListener('change', function(e) {
+    if (!e.target.classList.contains('img-trigger')) return;
+    if (!e.target.files || !e.target.files[0]) return;
+    document.getElementById(e.target.dataset.prev).src = URL.createObjectURL(e.target.files[0]);
+});
+
+// ── Location image preview (.loc-img-trigger) ─────────────────
+// Cubre: bridal — images dentro de location-items dinámicos
+document.addEventListener('change', function(e) {
+    if (!e.target.classList.contains('loc-img-trigger')) return;
+    if (!e.target.files || !e.target.files[0]) return;
+    e.target.closest('.location-item').querySelector('.loc-prev').src = URL.createObjectURL(e.target.files[0]);
+});
+
+// ── Bridal: agregar/eliminar sucursales ───────────────────────
+(function() {
+    const container = document.getElementById('locations-container');
+    const btnAdd    = document.getElementById('btn-add-location');
+    if (!container || !btnAdd) return;
+
+    let locIndex = parseInt(container.dataset.locCount, 10);
+
+    btnAdd.addEventListener('click', function() {
+        const empty = document.getElementById('locations-empty');
+        if (empty) empty.remove();
+        const i = locIndex++;
+        const col = document.createElement('div');
+        col.className = 'col-md-4 location-item';
+        col.innerHTML = `
+            <div class="border rounded-3 p-3 bg-light position-relative">
+                <button type="button" class="btn-remove-location position-absolute top-0 end-0 m-2 btn btn-sm btn-light border rounded-circle">
+                    <i class="fas fa-times x-small"></i>
+                </button>
+                <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:120px;">
+                    <img class="loc-prev w-100 h-100 object-fit-cover"
+                         src="https://placehold.co/400x200/121212/D4AF37?text=Sucursal">
+                </div>
+                <div class="upload-zone py-2 mb-2">
+                    <input type="file" name="locations_items[${i}][image]"
+                           class="upload-input loc-img-trigger" accept="image/*">
+                    <p class="x-small text-muted m-0">Subir imagen</p>
+                </div>
+                <input type="hidden" name="locations_items[${i}][image_path]" value="">
+                <div class="mb-2">
+                    <label class="sax-form-label">Nombre</label>
+                    <input type="text" name="locations_items[${i}][name]"
+                           class="form-control sax-input" placeholder="Nombre de la sucursal">
+                </div>
+                <div class="mb-2">
+                    <label class="sax-form-label">Dirección</label>
+                    <input type="text" name="locations_items[${i}][address]"
+                           class="form-control sax-input" placeholder="Dirección completa">
+                </div>
+                <div class="mb-0">
+                    <label class="sax-form-label">Teléfono (WhatsApp)</label>
+                    <input type="text" name="locations_items[${i}][phone]"
+                           class="form-control sax-input" placeholder="+595 XXX XXX XXX">
+                </div>
+            </div>`;
+        container.appendChild(col);
+    });
+
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-remove-location');
+        if (btn) btn.closest('.location-item').remove();
+    });
+})();
 
 
 // ======== Categoría / Subcategoría / Hija (Cascada) ========
@@ -226,3 +265,122 @@ document.addEventListener('DOMContentLoaded', function () {
         if (subcategorySelect.value) populateCategoriasFilhas(subcategorySelect.value);
     }
 });
+
+
+// ======== Cafe Bistro: Eliminar imagen de galería (cardápio y eventos) ========
+// Delegación en document — cubre items renderizados por Blade y nuevos
+(function () {
+    function updateCardapioCount() {
+        var preview = document.getElementById('cardapioGaleriaPreview');
+        var counter = document.getElementById('cardapioGaleriaCount');
+        if (!preview || !counter) return;
+        counter.textContent = preview.querySelectorAll('.gallery-preview-item').length;
+    }
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.gallery-remove-btn');
+        if (!btn) return;
+        var item = btn.closest('.gallery-preview-item');
+        if (!item) return;
+        var isCardapio = !!item.closest('#cardapioGaleriaPreview');
+        item.remove();
+        if (isCardapio) updateCardapioCount();
+    });
+})();
+
+
+// ======== Cafe Bistro: Tags dinámicos de tipos de eventos ========
+(function () {
+    var input = document.getElementById('eventosTipoInput');
+    if (!input) return;
+
+    input.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        var val = this.value.trim();
+        if (!val) return;
+        var container = document.getElementById('eventosTiposContainer');
+        var tag = document.createElement('span');
+        tag.className = 'eventos-tag';
+        tag.innerHTML = val +
+            '<input type="hidden" name="eventos_tipos[]" value="' + val.replace(/"/g, '&quot;') + '">' +
+            '<button type="button" class="eventos-tag-remove" onclick="this.parentElement.remove()">&times;</button>';
+        container.appendChild(tag);
+        this.value = '';
+    });
+})();
+
+
+// ======== Cafe Bistro: Checkbox "Fechado" deshabilita inputs de horario ========
+(function () {
+    var checks = document.querySelectorAll('.horario-fechado-check');
+    if (!checks.length) return;
+
+    checks.forEach(function (check) {
+        var row = check.closest('.horario-row');
+        var timeInputs = row.querySelectorAll('input[type="time"]');
+
+        function toggle() {
+            timeInputs.forEach(function (input) {
+                input.disabled = check.checked;
+                if (check.checked) input.value = '';
+                input.style.opacity = check.checked ? '0.4' : '1';
+            });
+        }
+
+        toggle();
+        check.addEventListener('change', toggle);
+    });
+})();
+
+
+// ======== Activate: Toggle Status ========
+// Usado en activate/index.blade.php — botones de status de categorías y marcas
+function toggleUI(btn) {
+    const input = btn.previousElementSibling;
+    const isCurrentlyActive = input.value == "1";
+    if (isCurrentlyActive) {
+        input.value = "2";
+        btn.className = "status-badge status-inactive";
+        btn.innerHTML = 'Inativo <span>▾</span>';
+    } else {
+        input.value = "1";
+        btn.className = "status-badge status-active";
+        btn.innerHTML = 'Ativo <span>▴</span>';
+    }
+}
+
+
+// ======== Categories Edit: Media ========
+// Usado en categories/edit.blade.php — confirmación de borrado y preview de imagen
+function confirmDelete(type) {
+    if (confirm('Deseja excluir esta imagem?')) {
+        document.getElementById('delete-' + type + '-form').submit();
+    }
+}
+
+function previewImg(input, targetId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = document.getElementById(targetId);
+            if (img) img.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+
+// ======== Clients: Filtro por tipo de usuario ========
+(function () {
+    const filterSelect = document.getElementById('filterUserType');
+    if (!filterSelect) return;
+
+    filterSelect.addEventListener('change', function () {
+        const filter = this.value;
+        const rows = document.querySelectorAll('#usersTable tbody tr[data-usertype]');
+        rows.forEach(function (row) {
+            row.style.display = (filter === 'all' || row.getAttribute('data-usertype') === filter) ? '' : 'none';
+        });
+    });
+})();

@@ -50,23 +50,4 @@
         </button>
     </div>
 </form>
-
-<script>
-function toggleUI(btn) {
-    const input = btn.previousElementSibling;
-    const isCurrentlyActive = input.value == "1"; 
-    
-    if (isCurrentlyActive) {
-        // Se estava ativo, desativa
-        input.value = "2";
-        btn.className = "status-badge status-inactive";
-        btn.innerHTML = 'Inativo <span>▾</span>';
-    } else {
-        // Se estava inativo, ativa
-        input.value = "1";
-        btn.className = "status-badge status-active";
-        btn.innerHTML = 'Ativo <span>▴</span>';
-    }
-}
-</script>
 @endsection

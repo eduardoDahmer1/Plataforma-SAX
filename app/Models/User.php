@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\WelcomeAndVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -42,6 +43,24 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
+    /**
+     * Sobrescreve o envio da notificação de verificação de e-mail.
+     * Isso garante que o usuário receba o e-mail de boas-vindas personalizado.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new WelcomeAndVerifyEmail());
+    }
+
+    /**
+     * Accessor para retornar o papel do usuário de forma legível.
+     */
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+    
     public function getUserRoleAttribute()
     {
         return match ($this->user_type) {

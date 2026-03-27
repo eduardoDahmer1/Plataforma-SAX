@@ -415,9 +415,6 @@
         <input type="hidden" name="image_names" id="inputImageNames">
     </form>
 
-    {{-- Script do TinyMCE --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>
-
     <script>
         function deleteSelectedImages() {
             const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
@@ -446,30 +443,6 @@
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
             checkboxes.forEach(cb => cb.checked = !allChecked);
         }
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            tinymce.init({
-                selector: '#editor-product', // Alvo do ID acima
-                height: 400,
-                menubar: false,
-                branding: false,
-                statusbar: true,
-                plugins: [
-                    'advlist autolink lists link image charmap print preview anchor',
-                    'searchreplace visualblocks code fullscreen',
-                    'insertdatetime media table paste code help wordcount'
-                ],
-                toolbar: 'formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | link image | code fullscreen',
-                content_style: 'body { font-family: -apple-system, sans-serif; font-size: 14px; }',
-                setup: function(editor) {
-                    editor.on('change', function() {
-                        editor.save();
-                    });
-                }
-            });
-        });
     </script>
 
     <script>

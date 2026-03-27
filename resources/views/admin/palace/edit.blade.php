@@ -59,7 +59,7 @@
                                         <img id="preview-bar-{{$i}}" src="{{ $palace->$field ? asset('storage/'.$palace->$field) : 'https://placehold.co/200x200' }}" class="w-100 h-100 object-fit-cover">
                                     </div>
                                     <div class="asset-upload-zone p-1 py-2">
-                                        <input type="file" name="bar_imagem_{{$i}}" class="sax-input-file img-input" data-preview="preview-bar-{{$i}}">
+                                        <input type="file" name="bar_imagem_{{$i}}" class="sax-input-file img-trigger" data-prev="preview-bar-{{$i}}">
                                         <i class="fas fa-camera fa-xs opacity-50"></i>
                                         <span style="font-size: 8px;" class="fw-bold">FOTO {{$i}}</span>
                                     </div>
@@ -118,7 +118,7 @@
                         <img id="preview-hero" src="{{ $palace->hero_imagem ? asset('storage/'.$palace->hero_imagem) : 'https://placehold.co/600x400' }}" class="img-fluid w-100">
                     </div>
                     <div class="asset-upload-zone py-3">
-                        <input type="file" name="hero_imagem" class="sax-input-file img-input" data-preview="preview-hero">
+                        <input type="file" name="hero_imagem" class="sax-input-file img-trigger" data-prev="preview-hero">
                         <p class="x-small fw-bold m-0"><i class="fas fa-sync-alt me-1"></i> CAMBIAR IMAGEN</p>
                     </div>
                 </div>
@@ -141,7 +141,7 @@
                         </div>
                     </div>
                     <div class="asset-upload-zone py-3 bg-white-10 border-secondary mb-3">
-                        <input type="file" name="tematica_imagem" class="sax-input-file img-input" data-preview="preview-tematica">
+                        <input type="file" name="tematica_imagem" class="sax-input-file img-trigger" data-prev="preview-tematica">
                         <p class="x-small fw-bold m-0 text-white">CAMBIAR FOTO</p>
                     </div>
                     <div class="preview-box-sm rounded overflow-hidden" style="height: 120px;">
@@ -192,18 +192,3 @@
 
 @endsection
 
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        $('.img-input').change(function() {
-            const input = this;
-            const previewId = $(this).data('preview');
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => $('#' + previewId).attr('src', e.target.result);
-                reader.readAsDataURL(input.files[0]);
-            }
-        });
-    });
-</script>
-@endpush

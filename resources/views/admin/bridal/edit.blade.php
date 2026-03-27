@@ -437,7 +437,7 @@
                 </button>
             </div>
             <div class="p-4">
-                <div id="locations-container" class="row g-3">
+                <div id="locations-container" class="row g-3" data-loc-count="{{ count($locations) }}">
                     @forelse($locations as $i => $loc)
                         <div class="col-md-4 location-item">
                             <div class="border rounded-3 p-3 bg-light position-relative">
@@ -534,80 +534,4 @@
 </div>
 </div>
 
-@push('scripts')
-<script>
-// ── Image preview on file select ──────────────────────────────
-document.querySelectorAll('.img-trigger').forEach(function(input) {
-    input.addEventListener('change', function() {
-        if (!this.files || !this.files[0]) return;
-        const prevId = this.dataset.prev;
-        const reader = new FileReader();
-        reader.onload = e => document.getElementById(prevId).src = e.target.result;
-        reader.readAsDataURL(this.files[0]);
-    });
-});
-
-// ── Location image preview (inline within location card) ──────
-document.addEventListener('change', function(e) {
-    if (!e.target.classList.contains('loc-img-trigger')) return;
-    const input = e.target;
-    if (!input.files || !input.files[0]) return;
-    const img = input.closest('.location-item').querySelector('.loc-prev');
-    const reader = new FileReader();
-    reader.onload = ev => img.src = ev.target.result;
-    reader.readAsDataURL(input.files[0]);
-});
-
-// ── Locations: añadir fila ────────────────────────────────────
-let locIndex = {{ count($locations) }};
-
-document.getElementById('btn-add-location').addEventListener('click', function() {
-    const empty = document.getElementById('locations-empty');
-    if (empty) empty.remove();
-
-    const i   = locIndex++;
-    const col = document.createElement('div');
-    col.className = 'col-md-4 location-item';
-    col.innerHTML = `
-        <div class="border rounded-3 p-3 bg-light position-relative">
-            <button type="button" class="btn-remove-location position-absolute top-0 end-0 m-2 btn btn-sm btn-light border rounded-circle">
-                <i class="fas fa-times x-small"></i>
-            </button>
-            <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:120px;">
-                <img class="loc-prev w-100 h-100 object-fit-cover"
-                     src="https://placehold.co/400x200/121212/D4AF37?text=Sucursal">
-            </div>
-            <div class="upload-zone py-2 mb-2">
-                <input type="file" name="locations_items[${i}][image]"
-                       class="upload-input loc-img-trigger" accept="image/*">
-                <p class="x-small text-muted m-0">Subir imagen</p>
-            </div>
-            <input type="hidden" name="locations_items[${i}][image_path]" value="">
-            <div class="mb-2">
-                <label class="sax-form-label">Nombre</label>
-                <input type="text" name="locations_items[${i}][name]"
-                       class="form-control sax-input" placeholder="Nombre de la sucursal">
-            </div>
-            <div class="mb-2">
-                <label class="sax-form-label">Dirección</label>
-                <input type="text" name="locations_items[${i}][address]"
-                       class="form-control sax-input" placeholder="Dirección completa">
-            </div>
-            <div class="mb-0">
-                <label class="sax-form-label">Teléfono (WhatsApp)</label>
-                <input type="text" name="locations_items[${i}][phone]"
-                       class="form-control sax-input" placeholder="+595 XXX XXX XXX">
-            </div>
-        </div>`;
-    document.getElementById('locations-container').appendChild(col);
-});
-
-// ── Locations: remove row ─────────────────────────────────────
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.btn-remove-location')) {
-        e.target.closest('.location-item').remove();
-    }
-});
-</script>
-@endpush
 @endsection

@@ -260,7 +260,7 @@
                                 <div class="gallery-preview-item shadow-sm border" data-cardapio-img="{{ $index }}">
                                     <img src="{{ asset('storage/'.$foto) }}" class="w-100 h-100 object-fit-cover">
                                     <input type="hidden" name="cardapio_galeria_actual[]" value="{{ $foto }}">
-                                    <button type="button" class="gallery-remove-btn" onclick="removeCardapioImg(this)">
+                                    <button type="button" class="gallery-remove-btn">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
@@ -346,7 +346,7 @@
                                 <div class="gallery-preview-item shadow-sm border" data-evento-img="{{ $index }}">
                                     <img src="{{ asset('storage/'.$foto) }}" class="w-100 h-100 object-fit-cover">
                                     <input type="hidden" name="eventos_galeria_actual[]" value="{{ $foto }}">
-                                    <button type="button" class="gallery-remove-btn" onclick="removeEventoImg(this)">
+                                    <button type="button" class="gallery-remove-btn">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
@@ -458,70 +458,5 @@
     </button>
 </div>
 
-@push('scripts')
-<script>
-// Preview de imágenes individuales (hero, sobre)
-document.querySelectorAll('.img-trigger').forEach(function(input) {
-    input.addEventListener('change', function() {
-        if (!this.files || !this.files[0]) return;
-        const prevId = this.dataset.prev;
-        const reader = new FileReader();
-        reader.onload = e => document.getElementById(prevId).src = e.target.result;
-        reader.readAsDataURL(this.files[0]);
-    });
-});
-
-// Remover imagen existente de la galería del cardápio
-function removeCardapioImg(btn) {
-    btn.closest('.gallery-preview-item').remove();
-    updateCardapioCount();
-}
-
-// Actualizar contador de imágenes
-function updateCardapioCount() {
-    var existentes = document.querySelectorAll('#cardapioGaleriaPreview .gallery-preview-item').length;
-    document.getElementById('cardapioGaleriaCount').textContent = existentes;
-}
-
-// Remover imagen existente de la galería de eventos
-function removeEventoImg(btn) {
-    btn.closest('.gallery-preview-item').remove();
-}
-
-// Tags dinámicos para tipos de eventos
-document.getElementById('eventosTipoInput').addEventListener('keydown', function(e) {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    var val = this.value.trim();
-    if (!val) return;
-
-    var container = document.getElementById('eventosTiposContainer');
-    var tag = document.createElement('span');
-    tag.className = 'eventos-tag';
-    tag.innerHTML = val +
-        '<input type="hidden" name="eventos_tipos[]" value="' + val.replace(/"/g, '&quot;') + '">' +
-        '<button type="button" class="eventos-tag-remove" onclick="this.parentElement.remove()">&times;</button>';
-    container.appendChild(tag);
-    this.value = '';
-});
-
-// Checkbox "Fechado" deshabilita los inputs de horario
-document.querySelectorAll('.horario-fechado-check').forEach(function(check) {
-    var row = check.closest('.horario-row');
-    var timeInputs = row.querySelectorAll('input[type="time"]');
-
-    function toggle() {
-        timeInputs.forEach(function(input) {
-            input.disabled = check.checked;
-            if (check.checked) input.value = '';
-            input.style.opacity = check.checked ? '0.4' : '1';
-        });
-    }
-
-    toggle(); // estado inicial
-    check.addEventListener('change', toggle);
-});
-</script>
-@endpush
 
 @endsection

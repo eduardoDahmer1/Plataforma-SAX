@@ -63,11 +63,9 @@
     <link href="{{ asset('css/show-products.css') }}" rel="stylesheet">
 @endif
 
-{{-- 5. Admin / Trumbowyg --}}
+{{-- 5. Admin --}}
 @if(Route::is('admin.*') || Route::is('manutencao'))
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/trumbowyg/dist/ui/trumbowyg.min.css" />
-    <link rel="stylesheet" href="https://unpkg.com/trumbowyg/dist/plugins/resizimg/trumbowyg.resizimg.min.css" />
 @endif
 
 @stack('styles')

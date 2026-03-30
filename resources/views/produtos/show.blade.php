@@ -76,24 +76,32 @@
                         {{-- Ações de Compra --}}
                         <div class="actions-wrapper mb-5">
                             <div class="d-flex gap-2">
-                                @if (Auth::check())
-                                    <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1">
-                                        @csrf
-                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                        <button type="submit" class="btn btn-dark btn-add-bag w-100"
-                                            {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                                            {{ $product->stock > 0 ? 'AÑADIR A LA BOLSA' : 'AGOTADO' }}
-                                        </button>
-                                    </form>
-                                    <button class="btn btn-outline-dark btn-wishlist">
-                                        <i class="far fa-heart"></i>
-                                    </button>
+                                @if($isBridal)
+                                    {{-- Botão Alternativo para Bridal --}}
+                                    <a href="https://wa.me/SEU_NUMERO" class="btn btn-outline-dark w-100 py-3">
+                                        <i class="fab fa-whatsapp me-2"></i> AGENDAR CONSULTA BRIDAL
+                                    </a>
                                 @else
-                                    <a href="{{ route('login') }}"
-                                        class="btn btn-dark btn-add-bag flex-grow-1 text-center">LOGIN PARA COMPRAR</a>
+                                    {{-- Fluxo Normal de Compra --}}
+                                    @if (Auth::check())
+                                        <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1">
+                                            @csrf
+                                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                            <button type="submit" class="btn btn-dark btn-add-bag w-100"
+                                                {{ $product->stock <= 0 ? 'disabled' : '' }}>
+                                                {{ $product->stock > 0 ? 'ADICIONAR AO CARRINHO' : 'ESGOTADO' }}
+                                            </button>
+                                        </form>
+                                        
+                                        {{-- Botão Wishlist (escondido se for Bridal) --}}
+                                        <button class="btn btn-outline-dark btn-wishlist">
+                                            <i class="far fa-heart"></i>
+                                        </button>
+                                    @else
+                                        <a href="{{ route('login') }}"
+                                            class="btn btn-dark btn-add-bag flex-grow-1 text-center">LOGIN PARA COMPRAR</a>
+                                    @endif
                                 @endif
-
-
                             </div>
                         </div>
 

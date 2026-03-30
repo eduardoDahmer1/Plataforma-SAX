@@ -59,7 +59,7 @@
 @endif
 
 {{-- 4. Detalhes do Produto --}}
-@if(Route::is('produto.show'))
+@if(Route::is('produto.show') || Route::is('product.show'))
     <link href="{{ asset('css/show-products.css') }}" rel="stylesheet">
 @endif
 

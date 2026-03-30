@@ -22,6 +22,7 @@
             method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <input type="hidden" name="return_to" value="{{ request('return_to') }}">
 
             <div class="row g-3">
                 @if ($type === 'product')
@@ -280,7 +281,7 @@
                             <button class="btn btn-primary" id="parent_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
-                        <div id="parent_results" class="row g-2" style="display:none; z-index:1000;"></div>
+                        <div id="parent_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}"></div>
                         <div id="selected_parents" class="row g-2 mt-2">
                             @if (!empty($item->parent_id))
                                 @php
@@ -383,6 +384,10 @@
 
             <button type="submit" class="btn btn-success mt-4"><i class="fas fa-save me-2"></i>Salvar
                 Alterações</button>
+            <a href="{{ request('return_to') ?: route('admin.products.index') }}"
+               class="btn btn-secondary mt-4">
+                <i class="fas fa-times me-2"></i>Cancelar
+            </a>
         </form>
     </div>
     {{-- 1. FORMULÁRIOS DE APOIO (Apenas uma vez aqui) --}}
@@ -415,157 +420,6 @@
         <input type="hidden" name="image_names" id="inputImageNames">
     </form>
 
-    <script>
-        function deleteSelectedImages() {
-            const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
-            const selectedNames = Array.from(checkboxes).map(cb => cb.value);
-
-            if (selectedNames.length === 0) {
-                alert('Selecione pelo menos uma imagem.');
-                return;
-            }
-
-            if (confirm(`Excluir ${selectedNames.length} imagens selecionadas?`)) {
-                const form = document.getElementById('formMultiDeleteGallery');
-                const input = document.getElementById('inputImageNames');
-
-                if (form && input) {
-                    input.value = selectedNames.join(',');
-                    form.submit();
-                } else {
-                    console.error("Formulário de exclusão múltipla não encontrado ou ID duplicado!");
-                }
-            }
-        }
-
-        function toggleSelectAll() {
-            const checkboxes = document.querySelectorAll('.gallery-checkbox');
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            checkboxes.forEach(cb => cb.checked = !allChecked);
-        }
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            function setupSearch(inputId, btnId, resultsId, selectedId, hiddenName, searchUrl) {
-                const searchInput = document.getElementById(inputId);
-                const searchBtn = document.getElementById(btnId);
-                const resultsDiv = document.getElementById(resultsId);
-                const selectedDiv = document.getElementById(selectedId);
-
-                function searchProducts() {
-                    const query = searchInput.value.trim();
-                    if (query.length < 2) {
-                        resultsDiv.style.display = 'none';
-                        resultsDiv.innerHTML = '';
-                        return;
-                    }
-
-                    fetch(searchUrl + '?q=' + encodeURIComponent(query))
-                        .then(res => res.json())
-                        .then(data => {
-                            let html = '';
-                            if (data.length) {
-                                data.forEach(product => {
-                                    const alreadySelected = Array.from(selectedDiv.querySelectorAll(
-                                            `input[name="${hiddenName}[]"]`))
-                                        .some(input => input.value == product.id);
-
-                                    html += `
-                                        <div class="col-6 col-md-4 col-lg-2">
-                                            <div class="card h-100 card-hover ${alreadySelected ? 'border-success selected' : ''}" 
-                                                style="cursor:pointer;" data-id="${product.id}"
-                                                data-color="${product.color || ''}" data-size="${product.size || ''}">
-                                                <img src="${product.photo || '{{ asset('storage/uploads/noimage.webp') }}'}" 
-                                                    class="img-fluid object-fit-cover" alt="${product.name || product.external_name}">
-                                                <div class="card-body p-2">
-                                                    <p class="card-text m-0 fw-bold">${product.name || product.external_name}</p>
-                                                    ${product.color ? `<div class="d-flex align-items-center mt-1">
-                                                                                                                                <span style="display:inline-block;width:16px;height:16px;background:${product.color};border:1px solid #ccc;margin-right:5px;"></span>
-                                                                                                                                <small>${product.color}</small>
-                                                                                                                            </div>` : ''}
-                                                    ${product.size ? `<div class="mt-1"><small class="text-muted">Tamanho: ${product.size}</small></div>` : ''}
-                                                </div>
-                                            </div>
-                                        </div>`;
-                                });
-                            } else {
-                                html =
-                                    '<div class="col-12"><div class="alert alert-info m-0">Nenhum produto encontrado</div></div>';
-                            }
-                            resultsDiv.innerHTML = html;
-                            resultsDiv.style.display = 'flex';
-                            resultsDiv.style.flexWrap = 'wrap';
-                        })
-                        .catch(err => console.error('Falha na busca de produtos:', err));
-                }
-
-                searchBtn.addEventListener('click', searchProducts);
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        searchProducts();
-                    }
-                });
-
-                resultsDiv.addEventListener('click', function(e) {
-                    const card = e.target.closest('.card');
-                    if (!card) return;
-                    const id = card.getAttribute('data-id');
-                    if (selectedDiv.querySelector(`div[data-id="${id}"]`)) return;
-
-                    const name = card.querySelector('.card-text').textContent;
-                    const imgSrc = card.querySelector('img').src;
-                    const color = card.getAttribute('data-color');
-                    const size = card.getAttribute('data-size');
-
-                    const newCard = document.createElement('div');
-                    newCard.className = 'col-6 col-md-4 col-lg-2';
-                    newCard.setAttribute('data-id', id);
-                    newCard.innerHTML = `
-                        <div class="card border-success h-100 position-relative">
-                            <img src="${imgSrc}" class="card-img-top" style="height:120px; object-fit:cover;">
-                            <div class="card-body p-2">
-                                <p class="card-text m-0 fw-bold">${name}</p>
-                                ${color ? `<div class="d-flex align-items-center mt-1">
-                                                                                                            <span style="display:inline-block;width:16px;height:16px;background:${color};border:1px solid #ccc;margin-right:5px;"></span>
-                                                                                                            <small>${color}</small>
-                                                                                                        </div>` : ''}
-                                ${size ? `<div class="mt-1"><small class="text-muted">Tamanho: ${size}</small></div>` : ''}
-                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-item">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                                <input type="hidden" name="${hiddenName}[]" value="${id}">
-                            </div>
-                        </div>`;
-                    selectedDiv.appendChild(newCard);
-                });
-
-                selectedDiv.addEventListener('click', function(e) {
-                    if (e.target.closest('.remove-item')) {
-                        const card = e.target.closest('[data-id]');
-                        card.remove();
-                    }
-                });
-
-                document.addEventListener('click', function(e) {
-                    if (!e.target.closest(`#${inputId}, #${resultsId}, #${btnId}`)) {
-                        resultsDiv.style.display = 'none';
-                    }
-                });
-            }
-
-            // Configura busca para Tamanho
-            setupSearch('parent_search', 'parent_search_btn', 'parent_results', 'selected_parents', 'parent_id',
-                '/admin/products/search');
-
-            // Configura busca para Cor
-            setupSearch('color_search', 'color_search_btn', 'color_results', 'selected_colors', 'color_parent_id',
-                '/admin/products/search');
-
-        });
-    </script>
     <style>
         input[type="color"].form-control-color {
             width: 50px;

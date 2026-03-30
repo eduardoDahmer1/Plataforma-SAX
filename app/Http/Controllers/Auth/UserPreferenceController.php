@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class UserPreferenceController extends Controller
 {
+    
     // Lista de produtos favoritos do usuário
     public function index()
     {
@@ -19,7 +20,8 @@ class UserPreferenceController extends Controller
                 ->with('erro', 'Seu perfil não permite usar favoritos');
         }
 
-        $favoriteProducts = $user->favoriteProducts()->paginate(12);
+        // Usamos with('brand') para carregar as marcas de uma vez só
+        $favoriteProducts = $user->favoriteProducts()->with('brand')->paginate(12);
 
         return view('users.preferences.index', compact('favoriteProducts'));
     }

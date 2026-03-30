@@ -62,34 +62,8 @@
     </div>
 </div>
 
-<script>
-    // Injetamos os dados da controller para uma variável JS
-    const dadosProdutos = @json($detalhesProdutos);
-
-    function abrirModalLocal(data) {
-        const corpo = document.getElementById('corpoTabelaLocal');
-        const titulo = document.getElementById('tituloModal');
-        const produtosDoDia = dadosProdutos[data] || [];
-
-        titulo.innerText = 'Editados em ' + data;
-        corpo.innerHTML = '';
-
-        if (produtosDoDia.length === 0) {
-            corpo.innerHTML = '<tr><td colspan="3" class="text-center py-4">Nenhum detalhe encontrado.</td></tr>';
-        } else {
-            produtosDoDia.forEach(p => {
-                corpo.innerHTML += `
-                    <tr>
-                        <td class="ps-4"><b>${p.name}</b></td>
-                        <td class="text-center"><code class="small">${p.sku || '-'}</code></td>
-                        <td class="pe-4 text-end"><span class="badge bg-light text-dark border">${p.ref_code || '-'}</span></td>
-                    </tr>`;
-            });
-        }
-
-        new bootstrap.Modal(document.getElementById('modalDetalhesLocal')).show();
-    }
-</script>
+{{-- Datos inyectados desde el controller — la lógica está en products-admin.js --}}
+<script>var dadosProdutos = @json($detalhesProdutos);</script>
 @endsection
 
 <style>

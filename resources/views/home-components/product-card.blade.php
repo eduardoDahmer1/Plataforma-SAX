@@ -14,7 +14,7 @@
                     onerror="this.src='https://placehold.co/400x533/f5f5f5/999?text=No+Image'">
 
                 @if ($isOutOfStock)
-                    <div class="sax-stock-overlay">AGOTADO</div>
+                    <div class="sax-stock-overlay">ESGOTADO</div>
                 @endif
 
                 @if($showFavorite ?? true)

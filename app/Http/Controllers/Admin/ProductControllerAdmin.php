@@ -376,6 +376,15 @@ class ProductControllerAdmin extends Controller
                 ]);
             }
 
+            $returnTo = $request->input('return_to');
+
+            // Redireciona de volta à página anterior (com filtros preservados) se a URL
+            // pertencer ao próprio domínio. Evita open redirect para domínios externos.
+            if ($returnTo && str_starts_with($returnTo, config('app.url'))) {
+                return redirect($returnTo)->with('success', 'Produto atualizado com sucesso!');
+            }
+
+            // Fallback: redireciona ao índice sem filtros
             return redirect()->route('admin.products.index')->with('success', 'Produto atualizado com sucesso!');
         } catch (\Exception $e) {
             \Log::error("Erro no Update de Produto: " . $e->getMessage());

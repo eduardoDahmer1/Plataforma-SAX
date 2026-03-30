@@ -38,6 +38,11 @@
     <script src="{{ asset('js/admin.js') }}?v={{ filemtime(public_path('js/admin.js')) }}"></script>
 @endif
 
+<!-- Products admin (edit, index, review) -->
+@if(Route::is('admin.products.edit') || Route::is('admin.products.index') || Route::is('admin.products.review'))
+    <script src="{{ asset('js/products-admin.js') }}?v={{ filemtime(public_path('js/products-admin.js')) }}"></script>
+@endif
+
 <!-- 8. Scripts por sección -->
 
 <!-- Home y detalle de producto -->

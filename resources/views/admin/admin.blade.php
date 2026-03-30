@@ -101,16 +101,7 @@
     </div>
 </div>
 
-{{-- Script para trocar o texto do arquivo selecionado --}}
-<script>
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('custom-file-input')) {
-            let fileName = e.target.files[0].name;
-            let label = e.target.closest('.upload-wrapper').querySelector('.btn-upload-label');
-            if(label) label.innerHTML = `<i class="fas fa-file-image me-1"></i> ${fileName}`;
-        }
-    });
-</script>
+
 @endsection
 
 <style>

@@ -4,7 +4,7 @@
     <div class="sax-wishlist-wrapper">
         {{-- Cabeçalho --}}
         <div class="dashboard-header mb-5">
-            <h2 class="sax-title text-uppercase letter-spacing-2">Mi Lista de Deseos</h2>
+            <h2 class="sax-title text-uppercase letter-spacing-2">Minha lista de desejos</h2>
             <div class="sax-divider-dark"></div>
         </div>
 
@@ -17,26 +17,28 @@
         @if ($favoriteProducts->isEmpty())
             <div class="empty-wishlist text-center py-5 border">
                 <i class="far fa-heart fa-3x mb-3 opacity-25"></i>
-                <p class="text-muted text-uppercase letter-spacing-1 small">Tu lista está vacía.</p>
+                <p class="text-muted text-uppercase letter-spacing-1 small">Sua lista está vazia.</p>
                 <a href="{{ route('home') }}" class="btn btn-dark rounded-0 px-5 mt-3 x-small fw-bold letter-spacing-2">
                     EXPLORAR PRODUCTOS
                 </a>
             </div>
         @else
             {{-- Grid Ajustado --}}
-            <div class="row g-2"> {{-- g-2 para manter o visual de grid colado --}}
+            <div class="row g-2">
                 @foreach ($favoriteProducts as $product)
+
                     <div class="col-6 col-md-4 col-lg-3 mb-3" id="product-{{ $product->id }}">
                         <div class="card h-100 border-0 rounded-0 jw-product-card">
 
                             {{-- Área da Imagem --}}
                             <div class="jw-img-container position-relative">
-                                <a href="{{ route('products.show', $product->id) }}" class="w-100 h-100">
+                                {{-- Link ajustado para produto.show usando o slug ou ID --}}
+                                <a href="{{ route('produto.show', $product->slug ?? $product->id) }}" class="w-100 h-100">
                                     <img src="{{ $product->photo ? asset('storage/' . $product->photo) : asset('storage/uploads/noimage.webp') }}"
                                         class="card-img-top img-fluid rounded-0" alt="{{ $product->external_name }}">
                                 </a>
 
-                                {{-- Botão de Remover (X) - Estilo Minimalista --}}
+                                {{-- Botão de Remover (X) --}}
                                 <div class="position-absolute top-0 end-0 p-3">
                                     <form action="{{ route('user.preferences.toggle') }}" method="POST"
                                         class="remove-fav-form">
@@ -54,19 +56,19 @@
 
                             <div class="card-body px-2 py-3 d-flex flex-column">
                                 <div class="sax-brand fw-bold text-uppercase mb-1">
-                                    {{ $item->brand->name ?? 'BRAND NAME' }}
+                                    {{ $product->brand->name ?? 'BRAND NAME' }}
                                 </div>
 
                                 <div class="sax-product-name text-muted mb-3">
-                                    {{ $item->name ?? $item->external_name }}
+                                    {{ $product->name ?? $product->external_name }}
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center mt-auto">
                                     <div class="sax-price fw-bold text-dark">
-                                        {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
+                                            {{ isset($product->price) ? currency_format($product->price, 2, ',', '.') : '0,00' }}
                                     </div>
                                     <div class="sax-sku text-muted">
-                                        SKU: {{ $item->sku ?? 'N/A' }}
+                                        SKU: {{ $product->sku ?? 'N/A' }}
                                     </div>
                                 </div>
                             </div>

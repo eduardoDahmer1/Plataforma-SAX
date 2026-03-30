@@ -90,12 +90,39 @@ class ProductController extends Controller
 
     public function show($id_or_slug)
     {
-        // 1. Busca o produto principal
+        // 1. Busca o produto principal com relacionamentos
         $product = Product::where('id', $id_or_slug)
             ->orWhere('slug', $id_or_slug)
             ->with(['brand', 'category', 'subcategory', 'categoriasfilhas'])
             ->firstOrFail();
 
+        // --- LÓGICA DE TRAVA BRIDAL POR ID ---
+        // IDs extraídos das suas consultas SQL no phpMyAdmin
+        $bridalBrandIds = [
+            641,  // Pronovias
+            610,  // St. Patrick
+            664,  // Rosa Clara
+            1236, // Marchesa
+            1237, // Vera Wang
+            1444, // Ladybird
+            951,  // Allure
+            // Adicione aqui os IDs de Nicole Milano e White One quando ativos
+        ];
+
+        $isBridal = false;
+        
+        // Verifica por ID da Marca (Mais seguro que o nome)
+        if ($product->brand_id && in_array($product->brand_id, $bridalBrandIds)) {
+            $isBridal = true;
+        }
+
+        // Backup: Verifica por Categoria (slug ou nome contendo 'bridal')
+        if (!$isBridal && $product->category && str_contains(strtolower($product->category->name), 'bridal')) {
+            $isBridal = true;
+        }
+        // ------------------------------
+
+        // Preços e Descontos
         $product->current_price = $product->promotion_price > 0 ? $product->promotion_price : $product->price;
         $product->has_discount = $product->previous_price > $product->current_price;
 
@@ -118,14 +145,11 @@ class ProductController extends Controller
         }
         $coresRelacionadas = Product::whereIn('id', $colorIds)->where('status', 1)->get();
 
-        // 4. Atributos (Ícones de Sistema: Cabide, Info, Ajuda)
-        // Buscamos o primeiro registro da tabela attributes onde você salvou os ícones
+        // 4. Atributos e Configurações com Cache
         $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
-
-        // 5. Configurações Gerais
         $settings = Cache::remember('general_settings', 600, fn() => Generalsetting::first());
 
-        // 6. Busca produtos destacados para as seções inferiores
+        // 5. Busca produtos destacados
         $highlightTypes = ['destaque', 'lancamentos'];
         $highlights = [];
         foreach ($highlightTypes as $key) {
@@ -140,11 +164,12 @@ class ProductController extends Controller
 
         return view('produtos.show', [
             'product'           => $product,
+            'isBridal'          => $isBridal, // Variável para o Blade esconder preços/carrinho
             'siblings'          => $siblings,
             'coresRelacionadas' => $coresRelacionadas,
             'highlights'        => $highlights,
             'settings'          => $settings,
-            'attribute'         => $attribute // Enviando os ícones para o Blade
+            'attribute'         => $attribute
         ]);
     }
 

@@ -40,7 +40,7 @@ class BancardV2Controller extends Controller
         }
 
         try {
-            $amount = $this->formatAmount($order->total);
+            $amount = $this->convertOrderTotalToPyg($order);
             $currency = self::CURRENCY;
             $shopProcessId = $this->bancard->generateShopProcessId($order);
             $token = $this->bancard->buildSingleBuyToken($shopProcessId, $amount, $currency);
@@ -91,6 +91,24 @@ class BancardV2Controller extends Controller
 
             return redirect()->route('checkout.index')->with('error', 'Erro ao iniciar pagamento Bancard V2.');
         }
+    }
+
+    /**
+     * Converte o valor total do pedido para PYG usando a cotação cadastrada.
+     */
+    private function convertOrderTotalToPyg(Order $order): string
+    {
+        $valorBase = $order->total;
+        $valorMoeda = $order->currency_value ?? 1;
+        $moedaBase = $order->currency_sign ?? 'USD';
+
+        // Buscar taxa do PYG
+        $pyg = \App\Models\Currency::where('sign', 'GS$')->orWhere('name', 'PYG')->first();
+        $taxaPyg = $pyg->value ?? 1;
+
+        // Converter para PYG
+        $valorEmPyg = $valorBase * ($taxaPyg / $valorMoeda);
+        return number_format($valorEmPyg, 2, '.', '');
     }
 
     public function cancelCheckout(Order $order): RedirectResponse

@@ -127,4 +127,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+
+    // --- Video Component: Resize iframes + Stop on modal close ---
+    if (typeof $ !== 'undefined') {
+        $('.video-responsive-container iframe').each(function() {
+            $(this).attr('width', '100%').attr('height', '100%');
+        });
+
+        $('#modalCDE').on('hidden.bs.modal', function () {
+            var $iframe = $(this).find('iframe');
+            var src = $iframe.attr('src');
+            $iframe.attr('src', '');
+            $iframe.attr('src', src);
+        });
+    }
+
 });

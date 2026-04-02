@@ -3,7 +3,7 @@
         <h2 class="sax-main-title">SUAS MARCAS RECOMENDADAS</h2>
 
         <div class="sax-carousel-master">
-            <div class="sax-carousel-3d" id="brandsCarousel">
+            <div class="sax-carousel-3d" id="brandsCarousel" data-storage-base="{{ asset('storage') }}" data-marcas-url="{{ url('marcas') }}">
                 {{-- Injetado via JS --}}
             </div>
 
@@ -185,103 +185,8 @@
         }
     </style>
 
+{{-- Datos del server para el carrusel 3D (lógica en home.js) --}}
 <script>
-(function() {
-    window.addEventListener('load', function() {
-        const container = document.getElementById('brandsCarousel');
-        const nameDisplay = document.getElementById('saxBrandName');
-        const dotsContainer = document.getElementById('saxDots');
-        
-        // Recebe os dados do Controller
-        const brands = {!! $brands->toJson() !!};
-        if (!brands || brands.length === 0) return;
-
-        let currentIndex = 0;
-
-        brands.forEach((brand, i) => {
-            const div = document.createElement('div');
-            div.className = 'sax-item hidden';
-            div.setAttribute('data-name', brand.name);
-            
-            // 1. Prioridade absoluta para o campo banner
-            let imgFile = brand.banner || ''; 
-            
-            // 2. Limpeza de barras extras
-            imgFile = imgFile.replace(/^\/+/, '');
-
-            // 3. Montagem da URL - Ajustado para o padrão do seu banco de dados
-            // Se no banco está "brands/banner/arquivo.webp", o asset('storage') 
-            // resultará em: dominio.com/storage/brands/banner/arquivo.webp
-            const imgPath = imgFile.startsWith('http') 
-                ? imgFile 
-                : `{{ asset('storage') }}/${imgFile}`;
-
-            div.innerHTML = `
-                <a href="{{ url('marcas') }}/${brand.slug || brand.id}">
-                    <img src="${imgPath}" alt="${brand.name}" 
-                         onerror="this.src='https://placehold.co/320x480/222/fff?text=${brand.name.replace(/\s/g, '+')}'">
-                </a>
-            `;
-            container.appendChild(div);
-
-            // Criar Dot
-            const dot = document.createElement('div');
-            dot.className = 'sax-dot';
-            dotsContainer.appendChild(dot);
-        });
-
-        const items = container.querySelectorAll('.sax-item');
-        const dots = dotsContainer.querySelectorAll('.sax-dot');
-
-        function updateCarousel() {
-            if (items.length === 0) return;
-
-            items.forEach((item, i) => {
-                item.className = 'sax-item hidden';
-                if(dots[i]) dots[i].classList.remove('active');
-
-                let diff = i - currentIndex;
-                
-                // Lógica infinita
-                if (diff > brands.length / 2) diff -= brands.length;
-                if (diff < -brands.length / 2) diff += brands.length;
-
-                if (diff === 0) {
-                    item.className = 'sax-item active';
-                    nameDisplay.innerText = item.getAttribute('data-name');
-                    if(dots[i]) dots[i].classList.add('active');
-                }
-                else if (diff === -1) item.className = 'sax-item p1';
-                else if (diff === 1) item.className = 'sax-item n1';
-                else if (diff === -2) item.className = 'sax-item p2';
-                else if (diff === 2) item.className = 'sax-item n2';
-            });
-        }
-
-        // Navegação
-        document.getElementById('saxNext').addEventListener('click', () => {
-            currentIndex = (currentIndex + 1) % brands.length;
-            updateCarousel();
-        });
-
-        document.getElementById('saxPrev').addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + brands.length) % brands.length;
-            updateCarousel();
-        });
-
-        // Click direto na imagem
-        items.forEach((item, index) => {
-            item.addEventListener('click', (e) => {
-                if (!item.classList.contains('active')) {
-                    e.preventDefault();
-                    currentIndex = index;
-                    updateCarousel();
-                }
-            });
-        });
-
-        updateCarousel();
-    });
-})();
+    window.saxBrandsData = {!! $brands->toJson() !!};
 </script>
 @endif

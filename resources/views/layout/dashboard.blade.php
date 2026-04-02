@@ -48,18 +48,7 @@
 
     <x-scripts-master />
 
-    <script>
-        const backToTop = document.getElementById("backToTop");
-        window.addEventListener("scroll", () => {
-            backToTop.style.display = window.scrollY > 300 ? "block" : "none";
-        });
-        backToTop.addEventListener("click", () => {
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        });
-    </script>
+    {{-- JS back-to-top ya existe en app-custom.js --}}
 </body>
 
 </html>

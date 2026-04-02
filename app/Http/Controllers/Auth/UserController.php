@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\UserCupon;
 use App\Models\Cupon;
 use Illuminate\Support\Facades\Hash;
+use App\Models\PaymentMethod;
 
 class UserController extends Controller
 {
@@ -69,12 +70,20 @@ class UserController extends Controller
     public function showOrder($id)
     {
         $user = Auth::user();
-        $order = Order::with('items')
-                      ->where('id', $id)
-                      ->where('user_id', $user->id)
-                      ->firstOrFail();
 
-        return view('users.order', compact('order')); 
+        // Busca o pedido com os itens
+        $order = Order::with('items')
+                    ->where('id', $id)
+                    ->where('user_id', $user->id)
+                    ->firstOrFail();
+
+        // BUSCA AS CONTAS BANCÁRIAS
+        // Removi o 'status' para evitar o erro de coluna não encontrada
+        $bankAccounts = PaymentMethod::whereNotNull('bank_details')
+                                    ->get();
+
+        // PASSA AS DUAS VARIÁVEIS PARA A VIEW
+        return view('users.order', compact('order', 'bankAccounts'));
     }
 
     // Aplicar cupom no checkout

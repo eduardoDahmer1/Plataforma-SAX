@@ -1,0 +1,724 @@
+/* ============================================
+   BLOG.CSS — SAX Plataforma
+   Estilo tipo Medium / Notion: lectura limpia,
+   jerarquía clara, mucho aire.
+   Mobile-first.
+   ============================================ */
+
+:root {
+    --blog-black: #1a1a1a;
+    --blog-text: #333;
+    --blog-muted: #6b6b6b;
+    --blog-light: #999;
+    --blog-border: #e6e6e6;
+    --blog-bg: #fff;
+    --blog-bg-soft: #fafafa;
+    --blog-gold: #b2945e;
+    --blog-radius: 8px;
+    --blog-ease: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ================================================
+   BLOG INDEX — Listado de posts
+   ================================================ */
+
+.sax-blog-container {
+    background: var(--blog-bg);
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+/* -- Encabezado editorial -- */
+.sax-editorial-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3rem);
+    letter-spacing: 0.15em;
+    color: var(--blog-black);
+    line-height: 1.1;
+}
+
+.sax-editorial-title .thin {
+    font-weight: 400;
+    font-style: italic;
+}
+
+.sax-subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--blog-light);
+    margin-top: 0.75rem;
+}
+
+/* -- Nav de categorías -- */
+.sax-nav-wrapper {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+}
+
+.sax-nav-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+.sax-nav-item {
+    text-decoration: none !important;
+    color: var(--blog-light);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    padding-bottom: 0.375rem;
+    border-bottom: 2px solid transparent;
+    transition: all var(--blog-ease);
+}
+
+.sax-nav-item.active,
+.sax-nav-item:hover {
+    color: var(--blog-black);
+    border-bottom-color: var(--blog-black);
+}
+
+/* -- Busca -- */
+.sax-search-minimal {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--blog-border);
+    border-radius: 2rem;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    transition: border-color var(--blog-ease);
+}
+
+.sax-search-minimal:focus-within {
+    border-color: var(--blog-black);
+}
+
+.sax-search-minimal input {
+    border: none;
+    outline: none;
+    font-size: 0.8rem;
+    width: 100%;
+    background: transparent;
+    color: var(--blog-text);
+}
+
+.sax-search-minimal input::placeholder {
+    color: var(--blog-light);
+    font-weight: 500;
+}
+
+.sax-search-minimal button {
+    border: none;
+    background: none;
+    font-size: 0.85rem;
+    color: var(--blog-light);
+    cursor: pointer;
+    transition: color var(--blog-ease);
+    flex-shrink: 0;
+}
+
+.sax-search-minimal button:hover {
+    color: var(--blog-black);
+}
+
+/* -- Featured / Destacado -- */
+.sax-featured-section {
+    overflow: hidden;
+    border-radius: var(--blog-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.featured-img-container {
+    height: 16rem;
+    overflow: hidden;
+}
+
+.featured-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.sax-featured-section:hover .featured-img-container img {
+    transform: scale(1.03);
+}
+
+.featured-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--blog-black);
+}
+
+.featured-excerpt {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--blog-muted);
+}
+
+.sax-badge-gold {
+    color: var(--blog-gold);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.sax-btn-link {
+    display: inline-block;
+    padding: 0.65rem 1.5rem;
+    border: 1px solid var(--blog-black);
+    border-radius: var(--blog-radius);
+    color: var(--blog-black);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    transition: all var(--blog-ease);
+}
+
+.sax-btn-link:hover {
+    background: var(--blog-black);
+    color: #fff;
+}
+
+/* -- Cards de posts -- */
+.sax-card-v2 {
+    border-radius: var(--blog-radius);
+    overflow: hidden;
+    transition: transform var(--blog-ease), box-shadow var(--blog-ease);
+}
+
+.sax-card-v2:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.sax-card-img {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--blog-bg-soft);
+}
+
+.sax-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.sax-card-v2:hover .sax-card-img img {
+    transform: scale(1.04);
+}
+
+.sax-card-cat {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    padding: 0.25rem 0.65rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 4px;
+}
+
+.sax-card-body {
+    padding: 0.75rem 0 0.25rem;
+}
+
+.sax-card-meta {
+    font-size: 0.7rem;
+    color: var(--blog-light);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.375rem;
+}
+
+.sax-card-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--blog-black);
+    line-height: 1.3;
+    margin-bottom: 0.375rem;
+}
+
+.sax-card-text {
+    font-size: 0.875rem;
+    color: var(--blog-muted);
+    line-height: 1.55;
+}
+
+
+/* ================================================
+   BLOG SHOW — Artículo individual (estilo Medium)
+   ================================================ */
+
+.sax-reading-env {
+    background: var(--blog-bg);
+}
+
+/* -- Barra de progreso -- */
+.reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blog-gold), #c9a96e);
+    z-index: 10000;
+    transition: width 0.12s linear;
+}
+
+/* -- Hero: anular el min-height excesivo -- */
+.sax-hero-header .min-vh-75 {
+    min-height: auto !important;
+}
+
+.sax-hero-header {
+    background: var(--blog-bg);
+    border-bottom: 1px solid var(--blog-border);
+    padding: 2rem 0;
+}
+
+.hero-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--blog-radius);
+    background: var(--blog-bg-soft);
+    aspect-ratio: 3 / 4;
+    max-height: 32rem;
+}
+
+.hero-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.img-credit {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(0, 0, 0, 0.45);
+    padding: 0.2rem 0.5rem;
+    letter-spacing: 0.04em;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+}
+
+/* -- Breadcrumb -- */
+.sax-breadcrumb-minimal {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.sax-breadcrumb-minimal a {
+    text-decoration: none;
+    color: var(--blog-light);
+    transition: color var(--blog-ease);
+}
+
+.sax-breadcrumb-minimal a:hover {
+    color: var(--blog-black);
+}
+
+.sax-breadcrumb-minimal .sep {
+    margin: 0 0.5rem;
+    color: var(--blog-border);
+}
+
+.sax-breadcrumb-minimal .curr {
+    color: var(--blog-gold);
+}
+
+/* -- Título y subtítulo del artículo -- */
+.sax-main-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--blog-black);
+    margin-top: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.sax-main-subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.05rem;
+    color: var(--blog-muted);
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 30rem;
+}
+
+/* -- Autor -- */
+.sax-author-box {
+    padding-top: 1.25rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--blog-border);
+}
+
+.author-name {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--blog-black);
+}
+
+.post-date {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--blog-light);
+    margin-top: 0.125rem;
+}
+
+.read-time-pill {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--blog-border);
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    color: var(--blog-muted);
+}
+
+/* -- Cuerpo del artículo (estilo Medium) -- */
+.sax-article-body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.125rem;
+    line-height: 1.9;
+    color: var(--blog-text);
+    padding-top: 2.5rem;
+    padding-bottom: 1rem;
+    max-width: 42rem;
+    margin: 0 auto;
+}
+
+.sax-article-body p {
+    margin-bottom: 1.75rem;
+}
+
+.sax-article-body h2,
+.sax-article-body h3,
+.sax-article-body h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--blog-black);
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+}
+
+.sax-article-body h2 { font-size: 1.75rem; }
+.sax-article-body h3 { font-size: 1.4rem; }
+.sax-article-body h4 { font-size: 1.15rem; }
+
+.sax-article-body img {
+    max-width: 100%;
+    height: auto;
+    margin: 2rem 0;
+    border-radius: var(--blog-radius);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.sax-article-body blockquote {
+    border-left: 3px solid var(--blog-gold);
+    padding: 1rem 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: var(--blog-muted);
+    background: var(--blog-bg-soft);
+    border-radius: 0 var(--blog-radius) var(--blog-radius) 0;
+}
+
+.sax-article-body a {
+    color: var(--blog-gold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(178, 148, 94, 0.4);
+    transition: text-decoration-color var(--blog-ease);
+}
+
+.sax-article-body a:hover {
+    text-decoration-color: var(--blog-gold);
+}
+
+.sax-article-body ul,
+.sax-article-body ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1.75rem;
+}
+
+.sax-article-body li {
+    margin-bottom: 0.5rem;
+}
+
+.drop-cap > p:first-of-type::first-letter {
+    font-family: 'Playfair Display', Georgia, serif;
+    float: left;
+    font-size: 4rem;
+    line-height: 0.8;
+    padding-top: 0.35rem;
+    padding-right: 0.6rem;
+    font-weight: 900;
+    color: var(--blog-black);
+}
+
+/* -- Footer del post: Tags + Compartir -- */
+.sax-post-footer-minimal {
+    margin-top: 1rem;
+    margin-bottom: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--blog-border) !important;
+    max-width: 42rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sax-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag-item {
+    font-size: 0.7rem;
+    text-decoration: none;
+    color: var(--blog-muted);
+    background: var(--blog-bg-soft);
+    border: 1px solid var(--blog-border);
+    padding: 0.3rem 0.75rem;
+    border-radius: 2rem;
+    letter-spacing: 0.03em;
+    transition: all var(--blog-ease);
+}
+
+.tag-item:hover {
+    border-color: var(--blog-black);
+    color: var(--blog-black);
+    background: #fff;
+}
+
+.sax-social-share {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.share-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--blog-border);
+    color: var(--blog-muted);
+    text-decoration: none;
+    transition: all var(--blog-ease);
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+.share-btn:hover {
+    background: var(--blog-black);
+    color: #fff;
+    border-color: var(--blog-black);
+    transform: translateY(-2px);
+}
+
+/* -- Sidebar -- */
+.sax-sidebar-sticky {
+    position: sticky;
+    top: 5rem;
+}
+
+.sidebar-widget {
+    background: var(--blog-bg-soft);
+    border-radius: var(--blog-radius);
+    padding: 1.5rem;
+}
+
+.widget-title {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    border-bottom: 2px solid var(--blog-black);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.sax-cat-list li {
+    margin-bottom: 0.625rem;
+}
+
+.sax-cat-list li a {
+    font-size: 0.8rem;
+    text-decoration: none;
+    color: var(--blog-muted);
+    font-weight: 500;
+    transition: all var(--blog-ease);
+}
+
+.sax-cat-list li.active a,
+.sax-cat-list li a:hover {
+    color: var(--blog-black);
+}
+
+.sax-mini-form input {
+    font-size: 0.8rem;
+    border-radius: var(--blog-radius);
+    border: 1px solid var(--blog-border);
+}
+
+.sax-mini-form input:focus {
+    border-color: var(--blog-black);
+    box-shadow: none;
+}
+
+.sax-mini-form .btn {
+    border-radius: var(--blog-radius) !important;
+}
+
+/* -- Related Posts -- */
+.sax-related-posts {
+    border-top: 1px solid var(--blog-border);
+    background: var(--blog-bg-soft);
+}
+
+.sax-related-posts h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+    font-weight: 900;
+}
+
+.mini-post-card {
+    border-radius: var(--blog-radius);
+    overflow: hidden;
+    transition: transform var(--blog-ease), box-shadow var(--blog-ease);
+}
+
+.mini-post-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.img-hover {
+    transition: transform 0.5s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mini-post-card:hover .img-hover {
+    transform: scale(1.05);
+}
+
+.text-gold {
+    color: var(--blog-gold);
+}
+
+/* -- Animaciones -- */
+.animate-up {
+    animation: blogFadeUp 0.6s ease-out;
+}
+
+.animate-up-delayed {
+    animation: blogFadeUp 0.8s ease-out both;
+    animation-delay: 0.1s;
+}
+
+@keyframes blogFadeUp {
+    from { opacity: 0; transform: translateY(1rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ================================================
+   UTILITÁRIOS
+   ================================================ */
+
+.tracking-tighter { letter-spacing: -0.02em; }
+.fw-900 { font-weight: 900; }
+.italic { font-style: italic; }
+.x-small { font-size: 0.65rem; }
+
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+
+/* Tablet (>=768px) */
+@media (min-width: 48rem) {
+    .featured-img-container {
+        height: 24rem;
+    }
+
+    .hero-image-wrapper {
+        aspect-ratio: 2 / 3;
+        max-height: 28rem;
+    }
+}
+
+/* Desktop (>=992px) */
+@media (min-width: 62rem) {
+    .featured-img-container {
+        height: 30rem;
+    }
+
+    .hero-image-wrapper {
+        aspect-ratio: 3 / 4;
+        max-height: 34rem;
+    }
+
+    .sax-hero-header {
+        padding: 3rem 0;
+    }
+}
+
+/* Mobile (<768px) */
+@media (max-width: 47.99rem) {
+    .sax-hero-header {
+        padding: 1rem 0;
+    }
+
+    .sax-hero-header .py-5 {
+        padding-top: 1.25rem !important;
+        padding-bottom: 1.25rem !important;
+    }
+
+    .hero-image-wrapper {
+        aspect-ratio: 16 / 10;
+        max-height: 18rem;
+        border-radius: 0;
+    }
+
+    .sax-main-title {
+        margin-top: 1rem;
+    }
+
+    .sax-article-body {
+        font-size: 1.0625rem;
+        padding-top: 1.5rem;
+    }
+
+    .sax-post-footer-minimal .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+}

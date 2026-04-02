@@ -247,22 +247,5 @@
     </div>
 </div>
 
-<script>
-function setFormType(type) {
-    document.getElementById('contact_type').value = type;
-    
-    document.querySelectorAll('.form-field').forEach(el => {
-        el.style.display = el.dataset.type == type ? 'block' : 'none';
-        el.querySelectorAll('input, textarea').forEach(i => i.required = el.dataset.type == type);
-    });
-
-    if(type == 1) {
-        document.getElementById('btn-atendimento').classList.add('active');
-        document.getElementById('btn-curriculo').classList.remove('active');
-    } else {
-        document.getElementById('btn-curriculo').classList.add('active');
-        document.getElementById('btn-atendimento').classList.remove('active');
-    }
-}
-</script>
+{{-- JS setFormType ya existe en app-custom.js --}}
 @endsection

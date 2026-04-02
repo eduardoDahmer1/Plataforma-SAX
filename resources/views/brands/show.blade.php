@@ -133,7 +133,10 @@
 
     .hero-img-render {
         width: 100%;
+        height: clamp(12rem, 25vh, 22rem);
         object-fit: cover;
+        object-position: center;
+        display: block;
     }
 
     .sax-sku {
@@ -153,9 +156,7 @@
 
     .hero-overlay-soft {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
+        inset: 0;
         background: rgba(0, 0, 0, 0.05);
     }
 

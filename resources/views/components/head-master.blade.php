@@ -63,7 +63,13 @@
     <link href="{{ asset('css/show-products.css') }}" rel="stylesheet">
 @endif
 
-{{-- 5. Admin --}}
+{{-- 5. Blog --}}
+@if(Request::is('*blog*') || Request::is('*blogs*'))
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="{{ asset('css/blog.css') }}?v={{ filemtime(public_path('css/blog.css')) }}" rel="stylesheet">
+@endif
+
+{{-- 6. Admin --}}
 @if(Route::is('admin.*') || Route::is('manutencao'))
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
 @endif

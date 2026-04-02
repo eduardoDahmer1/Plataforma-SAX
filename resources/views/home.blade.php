@@ -106,37 +106,7 @@
         @include('home-components.form-home')
     </div>
 
-    {{-- SCRIPTS DE INICIALIZAÇÃO DO SLIDER --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const swiper = new Swiper(".mySwiper", {
-                slidesPerView: 2,      // Padrão Mobile
-                spaceBetween: 10,
-                grabCursor: true,
-                navigation: {
-                    nextEl: ".swiper-button-next",
-                    prevEl: ".swiper-button-prev",
-                },
-                breakpoints: {
-                    // Quando a tela for >= 768px (Tablet): 3 cards
-                    768: {
-                        slidesPerView: 3,
-                        spaceBetween: 15
-                    },
-                    // Quando a tela for >= 1024px (Notebook): 4 cards
-                    1024: {
-                        slidesPerView: 4,
-                        spaceBetween: 20
-                    },
-                    // Quando a tela for >= 1400px (Desktop Grande): 5 cards
-                    1400: {
-                        slidesPerView: 5,
-                        spaceBetween: 20
-                    }
-                }
-            });
-        });
-    </script>
+    {{-- JS migrado a home.js --}}
 
     <style>
         .sax-home-wrapper { background-color: #fff; overflow-x: hidden; }

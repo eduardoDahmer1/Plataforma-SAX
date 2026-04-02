@@ -29,7 +29,7 @@
 
 <!-- 6. app-custom.js — Scripts globales del frontend (todas las rutas excepto checkout) -->
 @if(!Route::is('checkout.*'))
-    <script src="{{ asset('js/app-custom.js') }}"></script>
+    <script src="{{ asset('js/app-custom.js') }}?v={{ filemtime(public_path('js/app-custom.js'))}}"></script>
 @endif
 
 <!-- 7. TinyMCE + admin.js (solo admin) -->
@@ -47,8 +47,8 @@
 
 <!-- Home y detalle de producto -->
 @if(Route::is('home') || Route::is('produto.show'))
-    <script src="{{ asset('js/home.js') }}"></script>
-@endif
+    <script src="{{ asset('js/home.js') }}?v={{ filemtime(public_path('js/home.js')) }}"></script>
+@endif 
 
 <!-- Temáticas (solo público — admin usa admin.js) -->
 @if(!Route::is('admin.*') && Request::is('*institucional*'))
@@ -56,20 +56,20 @@
 @endif
 
 @if(!Route::is('admin.*') && Request::is('*palace*'))
-    <script src="{{ asset('js/palace.js') }}"></script>
+    <script src="{{ asset('js/palace.js') }}?v={{ filemtime(public_path('js/palace.js')) }}"></script>
 @endif
 
 @if(!Route::is('admin.*') && Request::is('*bridal*'))
-    <script src="{{ asset('js/bridal.js') }}"></script>
+    <script src="{{ asset('js/bridal.js') }}?v={{ filemtime(public_path('js/bridal.js')) }}"></script>
 @endif
 
 @if(!Route::is('admin.*') && (Request::is('*cafe*') || Request::is('*bistro*')))
-    <script src="{{ asset('js/bistro.js') }}"></script>
+    <script src="{{ asset('js/bistro.js') }}?v={{ filemtime(public_path('js/bistro.js')) }}"></script>
 @endif
 
 <!-- Checkout -->
 @if(Route::is('checkout.*'))
-    <script src="{{ asset('js/app-custom-checkout.js') }}"></script>
+    <script src="{{ asset('js/app-custom-checkout.js') }}?v={{ filemtime(public_path('js/app-custom-checkout.js')) }}"></script>
 @endif
 
 <!-- 9. Stack para scripts inyectados desde vistas child (@push('scripts')) -->

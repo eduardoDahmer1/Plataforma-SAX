@@ -3,9 +3,9 @@
 @section('content')
 <div class="sax-order-details-wrapper">
     @if (session('warning'))
-        <div class="alert alert-warning mb-4" role="alert">
-            {{ session('warning') }}
-        </div>
+    <div class="alert alert-warning mb-4" role="alert">
+        {{ session('warning') }}
+    </div>
     @endif
 
     {{-- Header --}}
@@ -34,46 +34,66 @@
                     </div>
                     <div class="info-row">
                         <span class="label">MÉTODO:</span>
-                        <span class="badge-payment-sax {{ $order->payment_method }}">{{ ucfirst($order->payment_method) }}</span>
+                        <span
+                            class="badge-payment-sax {{ $order->payment_method }}">{{ ucfirst($order->payment_method) }}</span>
                     </div>
                     <div class="info-row total-row">
                         <span class="label">TOTAL:</span>
-                        <span class="value fw-bold text-dark fs-5">{{ currency_format($order->items->sum(fn($i) => $i->price * $i->quantity)) }}</span>
+                        <span
+                            class="value fw-bold text-dark fs-5">{{ currency_format($order->items->sum(fn($i) => $i->price * $i->quantity)) }}</span>
                     </div>
 
-                    @if (($order->payment_method ?? null) === 'bancard_v2' && strtolower((string) $order->status) === 'paid' && !empty($order->shop_process_id))
-                        <div class="mt-3">
-                            <a href="{{ route('bancard.v2.success', ['shop_process_id' => $order->shop_process_id]) }}" class="btn btn-outline-success btn-sax-sm w-100">
-                                VER CONFIRMACAO
-                            </a>
-                        </div>
+                    {{-- --- LOGICA BANCARD --- --}}
+                    @if (($order->payment_method ?? null) === 'bancard_v2')
+                    @if (strtolower((string) $order->status) === 'paid' && !empty($order->shop_process_id))
+                    <div class="mt-3">
+                        <a href="{{ route('bancard.v2.success', ['shop_process_id' => $order->shop_process_id]) }}"
+                            class="btn btn-outline-success btn-sax-sm w-100">
+                            <i class="fas fa-check-circle me-2"></i> VER CONFIRMACAO
+                        </a>
+                    </div>
+                    @elseif (strtolower((string) $order->status) !== 'paid')
+                    <div class="mt-3">
+                        <a href="{{ route('checkout.bancard.v2', $order->id) }}"
+                            class="btn btn-outline-primary btn-sax-sm w-100">
+                            <i class="fas fa-sync-alt me-2"></i> TENTAR PAGAMENTO NOVAMENTE
+                        </a>
+                    </div>
+                    @endif
                     @endif
 
-                    @if (($order->payment_method ?? null) === 'bancard_v2' && strtolower((string) $order->status) !== 'paid')
-                        <div class="mt-3">
-                            <a href="{{ route('checkout.bancard.v2', $order->id) }}" class="btn btn-outline-primary btn-sax-sm w-100">
-                                TENTAR PAGAMENTO NOVAMENTE
-                            </a>
-                        </div>
+                    {{-- --- LOGICA DEPÓSITO --- --}}
+                    @if ($order->payment_method === 'deposito' && strtolower((string) $order->status) !== 'paid')
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-dark btn-sax-sm w-100" data-bs-toggle="modal"
+                            data-bs-target="#modalContasBancarias">
+                            <i class="fas fa-university me-2"></i> VER DATOS BANCARIOS
+                        </button>
+                    </div>
                     @endif
 
-                    {{-- Seção de Comprovante --}}
+                    {{-- Seção de Comprovante (Sempre visível se não for pago) --}}
                     <div class="mt-4 pt-3 border-top">
                         @if ($order->deposit_receipt)
-                            <label class="sax-label d-block mb-2">COMPROBANTE ENVIADO</label>
-                            <a href="{{ asset('storage/' . $order->deposit_receipt) }}" target="_blank" class="receipt-preview-link">
-                                <img src="{{ asset('storage/' . $order->deposit_receipt) }}" class="img-fluid rounded border shadow-sm">
-                                <div class="overlay"><i class="fas fa-search-plus"></i> Ver Ampliado</div>
-                            </a>
-                        @else
-                            <div class="upload-sax-box">
-                                <h6 class="x-small fw-bold text-success mb-2"><i class="fa fa-file-upload"></i> ADJUNTAR COMPROBANTE</h6>
-                                <form action="{{ route('orders.deposit.submit', $order->id) }}" method="POST" enctype="multipart/form-data">
-                                    @csrf
-                                    <input type="file" name="deposit_receipt" class="form-control sax-input-file mb-2" required>
-                                    <button type="submit" class="btn btn-dark btn-sax-sm w-100">ENVIAR AHORA</button>
-                                </form>
-                            </div>
+                        <label class="sax-label d-block mb-2">COMPROBANTE ENVIADO</label>
+                        <a href="{{ asset('storage/' . $order->deposit_receipt) }}" target="_blank"
+                            class="receipt-preview-link">
+                            <img src="{{ asset('storage/' . $order->deposit_receipt) }}"
+                                class="img-fluid rounded border shadow-sm">
+                            <div class="overlay"><i class="fas fa-search-plus"></i> Ver Ampliado</div>
+                        </a>
+                        @elseif (strtolower((string) $order->status) !== 'paid')
+                        <div class="upload-sax-box">
+                            <h6 class="x-small fw-bold text-success mb-2"><i class="fa fa-file-upload"></i> ADJUNTAR
+                                COMPROBANTE</h6>
+                            <form action="{{ route('orders.deposit.submit', $order->id) }}" method="POST"
+                                enctype="multipart/form-data">
+                                @csrf
+                                <input type="file" name="deposit_receipt" class="form-control sax-input-file mb-2"
+                                    required>
+                                <button type="submit" class="btn btn-dark btn-sax-sm w-100">ENVIAR AHORA</button>
+                            </form>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -96,21 +116,17 @@
                         <label class="sax-label">DIRECCIÓN DE ENTREGA</label>
                         <p class="small text-dark mb-1">
                             @if($order->shipping == 3)
-                                <span class="badge bg-dark rounded-0">RECOJO EN TIENDA: {{ $order->store == 1 ? 'SAX Ciudad del Este' : 'SAX Asunción' }}</span>
+                            <span class="badge bg-dark rounded-0">RECOJO EN TIENDA:
+                                {{ $order->store == 1 ? 'SAX Ciudad del Este' : 'SAX Asunción' }}</span>
                             @else
-                                {{ $order->street ?? ($order->user->street ?? '-') }}, {{ $order->number ?? ($order->user->number ?? '-') }}<br>
-                                {{ $order->city ?? ($order->user->city ?? '-') }}, {{ $order->state ?? ($order->user->state ?? '-') }}<br>
-                                CP: {{ $order->cep ?? ($order->user->cep ?? '-') }}
+                            {{ $order->street ?? ($order->user->street ?? '-') }},
+                            {{ $order->number ?? ($order->user->number ?? '-') }}<br>
+                            {{ $order->city ?? ($order->user->city ?? '-') }},
+                            {{ $order->state ?? ($order->user->state ?? '-') }}<br>
+                            CP: {{ $order->cep ?? ($order->user->cep ?? '-') }}
                             @endif
                         </p>
                     </div>
-
-                    @if ($order->observations)
-                        <div class="mt-3 p-2 bg-light border-start border-dark">
-                            <label class="sax-label mb-1">OBSERVACIONES</label>
-                            <p class="x-small m-0 italic">{{ $order->observations }}</p>
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -120,45 +136,91 @@
     <h5 class="sax-title-sub text-uppercase letter-spacing-2 mb-4">Productos del Pedido</h5>
     <div class="order-items-list">
         @foreach ($order->items as $item)
-            <div class="item-sax-row shadow-sm border rounded-4 bg-white p-3 mb-3">
-                <div class="row align-items-center">
-                    <div class="col-3 col-md-2 text-center">
-                        <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
-                             class="img-fluid rounded object-fit-contain" style="max-height: 80px;">
-                    </div>
-                    <div class="col-9 col-md-4">
-                        <h6 class="mb-1 text-uppercase fw-bold small">{{ $item->product->external_name ?? 'Producto' }}</h6>
-                        <span class="text-muted x-small">SKU: {{ $item->product->sku ?? '-' }}</span>
-                    </div>
-                    <div class="col-4 col-md-2 mt-3 mt-md-0 text-center">
-                        <label class="sax-label d-block">CANT.</label>
-                        <span class="fw-bold">{{ $item->quantity }}</span>
-                    </div>
-                    <div class="col-4 col-md-2 mt-3 mt-md-0 text-center">
-                        <label class="sax-label d-block">UNITARIO</label>
-                        <span class="text-muted">{{ currency_format($item->price) }}</span>
-                    </div>
-                    <div class="col-4 col-md-2 mt-3 mt-md-0 text-end pe-4">
-                        <label class="sax-label d-block">SUBTOTAL</label>
-                        <span class="fw-bold text-dark">{{ currency_format($item->price * $item->quantity) }}</span>
-                    </div>
+        <div class="item-sax-row shadow-sm border rounded-4 bg-white p-3 mb-3">
+            <div class="row align-items-center">
+                <div class="col-3 col-md-2 text-center">
+                    <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
+                        class="img-fluid rounded object-fit-contain" style="max-height: 80px;">
+                </div>
+                <div class="col-9 col-md-4">
+                    <h6 class="mb-1 text-uppercase fw-bold small">{{ $item->product->external_name ?? 'Producto' }}</h6>
+                    <span class="text-muted x-small">SKU: {{ $item->product->sku ?? '-' }}</span>
+                </div>
+                <div class="col-4 col-md-2 mt-3 mt-md-0 text-center">
+                    <label class="sax-label d-block">CANT.</label>
+                    <span class="fw-bold">{{ $item->quantity }}</span>
+                </div>
+                <div class="col-4 col-md-2 mt-3 mt-md-0 text-center">
+                    <label class="sax-label d-block">UNITARIO</label>
+                    <span class="text-muted">{{ currency_format($item->price) }}</span>
+                </div>
+                <div class="col-4 col-md-2 mt-3 mt-md-0 text-end pe-4">
+                    <label class="sax-label d-block">SUBTOTAL</label>
+                    <span class="fw-bold text-dark">{{ currency_format($item->price * $item->quantity) }}</span>
                 </div>
             </div>
+        </div>
         @endforeach
     </div>
+
+    {{-- MODAL DE CONTAS BANCÁRIAS (Ajustado com col-md-6) --}}
+    @if ($order->payment_method === 'deposito')
+    <div class="modal fade" id="modalContasBancarias" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title text-uppercase letter-spacing-1 small">Dados para Depósito</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4 text-center">Escolha uma de nossas contas para realizar o pagamento:
+                    </p>
+                    <div class="row g-3">
+                        @foreach ($bankAccounts as $bank)
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 border rounded bg-light h-100">
+                                <h6 class="fw-bold mb-2 text-uppercase small text-dark" style="letter-spacing: 1px;">
+                                    {{ $bank->name }}</h6>
+                                <div class="sax-bank-details small text-muted">
+                                    {!! nl2br(e($bank->bank_details)) !!}
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-dark w-100" data-bs-dismiss="modal">ENTENDIDO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Suporte --}}
     <div class="help-footer-sax text-center mt-5 py-4 border-top">
         <p class="text-muted small mb-3 text-uppercase letter-spacing-1">¿Necesitas ayuda con este pedido?</p>
-        <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Hola, necesito ayuda con mi pedido #' . $order->id) }}"
-           target="_blank" class="btn btn-outline-success rounded-pill px-4 btn-sm fw-bold">
+        <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Hola, necesito ajuda com meu pedido #' . $order->id) }}"
+            target="_blank" class="btn btn-outline-success rounded-pill px-4 btn-sm fw-bold">
             <i class="fab fa-whatsapp me-2"></i> CONTACTAR SOPORTE
         </a>
     </div>
 </div>
 @endsection
+
 <style>
-    /* Cards Premium */
+/* CSS Adicional para o Modal e Detalhes */
+.sax-bank-details {
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.modal-content {
+    border-radius: 15px;
+}
+
+/* Reaproveitando os seus estilos existentes */
 .sax-premium-card {
     background: #fff;
     border: 1px solid #f0f0f0;
@@ -176,9 +238,10 @@
     margin: 0;
 }
 
-.card-sax-body { padding: 25px; }
+.card-sax-body {
+    padding: 25px;
+}
 
-/* Info Rows */
 .info-row {
     display: flex;
     justify-content: space-between;
@@ -198,7 +261,6 @@
     border-top: 1px dashed #eee;
 }
 
-/* Receipt Preview */
 .receipt-preview-link {
     position: relative;
     display: block;
@@ -207,8 +269,11 @@
 
 .receipt-preview-link .overlay {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.4);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
     color: #fff;
     display: flex;
     align-items: center;
@@ -219,9 +284,10 @@
     transition: 0.3s;
 }
 
-.receipt-preview-link:hover .overlay { opacity: 1; }
+.receipt-preview-link:hover .overlay {
+    opacity: 1;
+}
 
-/* Upload Box */
 .upload-sax-box {
     background: #f8fff9;
     border: 1px dashed #28a745;
@@ -234,9 +300,14 @@
     border: 1px solid #eee;
 }
 
-/* Itens Row */
-.item-sax-row { transition: 0.3s; }
-.item-sax-row:hover { transform: scale(1.01); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
+.item-sax-row {
+    transition: 0.3s;
+}
+
+.item-sax-row:hover {
+    transform: scale(1.01);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+}
 
 .sax-title-sub {
     font-size: 0.9rem;
@@ -245,7 +316,7 @@
     padding-left: 15px;
 }
 
-/* Helpers */
-.x-small { font-size: 0.65rem; }
-.italic { font-style: italic; }
+.x-small {
+    font-size: 0.65rem;
+}
 </style>

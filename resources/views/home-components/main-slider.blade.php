@@ -86,30 +86,5 @@
     }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof Swiper !== 'undefined') {
-            new Swiper('.mainSwiper', {
-                loop: true,
-                speed: 800,
-                autoplay: {
-                    delay: 5000,
-                    disableOnInteraction: false,
-                },
-                pagination: {
-                    el: '.swiper-pagination',
-                    clickable: true,
-                },
-                navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
-                },
-                effect: 'fade',
-                fadeEffect: {
-                    crossFade: true
-                },
-            });
-        }
-    });
-</script>
+{{-- JS migrado a home.js --}}
 @endif

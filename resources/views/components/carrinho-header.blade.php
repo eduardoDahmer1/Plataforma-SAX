@@ -130,27 +130,4 @@
     </div>
 </div>
 
-{{-- Script Carrinho --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const cartBtn = document.getElementById('cart-button');
-        const cartSidebar = document.getElementById('cart-sidebar');
-        const cartOverlay = document.getElementById('cart-overlay');
-        const cartClose = document.getElementById('cart-close');
-
-        function toggleCart() {
-            cartSidebar.classList.toggle('open');
-            cartOverlay.classList.toggle('open');
-            // Previne scroll no body quando aberto
-            document.body.style.overflow = cartSidebar.classList.contains('open') ? 'hidden' : '';
-        }
-
-        cartBtn?.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleCart();
-        });
-
-        cartClose?.addEventListener('click', toggleCart);
-        cartOverlay?.addEventListener('click', toggleCart);
-    });
-</script>
+{{-- JS migrado a app-custom.js --}}

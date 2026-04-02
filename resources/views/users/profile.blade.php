@@ -85,11 +85,7 @@
     </form>
 </div>
 
-<script>
-    document.getElementById('already_registered').addEventListener('change', function() {
-        document.getElementById('sax_number_field').style.display = this.value === '1' ? 'block' : 'none';
-    });
-</script>
+{{-- JS migrado a app-custom.js --}}
 @endsection
 <style>
     /* Container e Header */

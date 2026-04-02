@@ -26,6 +26,7 @@
     $symbol = $currency->sign ?? 'R$';
     $decimal = $currency->decimal_separator ?? ',';
     $thousand = $currency->thousands_separator ?? '.';
+    $decimals = $currency->decimal_digits ?? 2;
     $rate = $currency->value ?? 1;
 @endphp
 
@@ -68,7 +69,7 @@
                             $subtotalItem = $convertedPrice * $item->quantity;
                             $totalGeral += $subtotalItem;
 
-                            $formattedPrice = $symbol . ' ' . number_format($convertedPrice, 2, $decimal, $thousand);
+                            $formattedPrice = $symbol . ' ' . number_format($convertedPrice, $decimals, $decimal, $thousand);
                         @endphp
                         <div class="cart-item">
                             <div class="item-image">
@@ -120,7 +121,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fw-bold">SUBTOTAL:</span>
                     <span class="fw-bold h5 mb-0 text-dark">
-                        {{ $symbol . ' ' . number_format($totalGeral, 2, $decimal, $thousand) }}
+                        {{ $symbol . ' ' . number_format($totalGeral, $decimals, $decimal, $thousand) }}
                     </span>
                 </div>
                 <a href="{{ route('cart.view') }}" class="btn-go-to-cart w-100 py-3">IR PARA O CARRINHO</a>

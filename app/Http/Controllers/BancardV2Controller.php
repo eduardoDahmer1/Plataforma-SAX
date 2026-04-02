@@ -69,10 +69,14 @@ class BancardV2Controller extends Controller
                     'process_id' => $data['process_id'],
                 ]);
 
+                $pygSymbol = $this->resolvePygSymbol();
+
                 return view('payment.bancard-v2', [
                     'order' => $order,
                     'processId' => $data['process_id'],
                     'checkoutJsUrl' => $this->bancard->getCheckoutJsUrl(),
+                    'totalInPyg' => $amount,
+                    'pygSymbol' => $pygSymbol,
                 ]);
             }
 
@@ -242,15 +246,16 @@ class BancardV2Controller extends Controller
 
         $order = Order::where('shop_process_id', $shopProcessId)->first();
         $displayPayload = session()->pull('bancard_v2_error_payload');
+        $pygSymbol = $this->resolvePygSymbol();
 
         if (is_array($displayPayload) && (string) data_get($displayPayload, 'shopProcessId') === $shopProcessId) {
-            return view('payment.bancard-v2-error', $displayPayload);
+            return view('payment.bancard-v2-error', $displayPayload + ['pygSymbol' => $pygSymbol]);
         }
 
         $confirmation = $this->bancard->fetchSingleBuyConfirmation($shopProcessId);
         $displayPayload = $this->bancard->buildErrorDisplayPayload($shopProcessId, $confirmation, $order, $status);
 
-        return view('payment.bancard-v2-error', $displayPayload);
+        return view('payment.bancard-v2-error', $displayPayload + ['pygSymbol' => $pygSymbol]);
     }
 
     public function successPage(Request $request): View|RedirectResponse
@@ -263,9 +268,10 @@ class BancardV2Controller extends Controller
 
         $order = Order::where('shop_process_id', $shopProcessId)->first();
         $displayPayload = session()->pull('bancard_v2_success_payload');
+        $pygSymbol = $this->resolvePygSymbol();
 
         if (is_array($displayPayload) && (string) data_get($displayPayload, 'shopProcessId') === $shopProcessId) {
-            return view('payment.bancard-v2-success', $displayPayload);
+            return view('payment.bancard-v2-success', $displayPayload + ['pygSymbol' => $pygSymbol]);
         }
 
         $confirmation = $this->bancard->fetchSingleBuyConfirmation($shopProcessId);
@@ -276,6 +282,7 @@ class BancardV2Controller extends Controller
             'shopProcessId' => $displayPayload['shopProcessId'],
             'amount' => $displayPayload['amount'],
             'responseDescription' => $displayPayload['responseDescription'],
+            'pygSymbol' => $pygSymbol,
         ]);
     }
 
@@ -350,6 +357,13 @@ class BancardV2Controller extends Controller
         }
 
         Cart::where('user_id', $order->user_id)->delete();
+    }
+
+    private function resolvePygSymbol(): string
+    {
+        $pygCurrency = \App\Models\Currency::where('name', 'PYG')->first();
+
+        return $pygCurrency?->sign ?? 'G$';
     }
 
 

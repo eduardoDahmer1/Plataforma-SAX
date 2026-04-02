@@ -76,16 +76,17 @@ class CartController extends Controller
         $symbol = $currency->sign ?? 'R$';
         $decimal = $currency->decimal_separator ?? ',';
         $thousand = $currency->thousands_separator ?? '.';
+        $decimals = $currency->decimal_digits ?? 2;
         $rate = $currency->value ?? 1;
 
-        $cart->transform(function ($item) use ($symbol, $decimal, $thousand, $rate) {
+        $cart->transform(function ($item) use ($symbol, $decimal, $thousand, $decimals, $rate) {
             if ($item->product) {
                 $price = ($item->product->price ?? 0) * $rate;
-                $item->product->formatted_price = $symbol . ' ' . number_format($price, 2, $decimal, $thousand);
+                $item->product->formatted_price = $symbol . ' ' . number_format($price, $decimals, $decimal, $thousand);
 
                 if ($item->product->previous_price) {
                     $prev = $item->product->previous_price * $rate;
-                    $item->product->formatted_previous_price = $symbol . ' ' . number_format($prev, 2, $decimal, $thousand);
+                    $item->product->formatted_previous_price = $symbol . ' ' . number_format($prev, $decimals, $decimal, $thousand);
                 }
             }
             return $item;

@@ -32,7 +32,7 @@
 
                     <div class="bg-light p-3 mb-3 border-start border-3 {{ $currency->is_default ? 'border-dark' : 'border-secondary' }}">
                         <span class="sax-label">Valor de Conversión</span>
-                        <span class="h4 fw-light font-monospace m-0">{{ number_format($currency->value, 4) }}</span>
+                        <span class="h4 fw-light font-monospace m-0">{{ number_format($currency->value, $currency->decimal_digits ?? 2, $currency->decimal_separator ?? '.', $currency->thousands_separator ?? ',') }}</span>
                     </div>
 
                     <div class="d-flex gap-3 pt-2 border-top">
@@ -55,8 +55,13 @@
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <form action="{{ route('admin.currencies.update', $currency->id) }}" method="POST" class="modal-content rounded-0 border-0 shadow-lg">
                     @csrf @method('PUT')
-                    <div class="modal-header border-bottom py-3 px-4">
-                        <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small">Configuração de Moeda: {{ $currency->name }}</h6>
+                    <div class="modal-header border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small mb-0">Configuração de Moeda: {{ $currency->name }}</h6>
+                            @if($currency->is_default)
+                                <span class="badge bg-dark rounded-0 x-small tracking-tighter">BASE / DEFAULT</span>
+                            @endif
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4">

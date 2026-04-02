@@ -27,8 +27,8 @@
                                     <td>{{ $shopProcessId }}</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row" class="text-muted">Importe</th>
-                                    <td>{{ $amount }} PYG</td>
+                                    <th scope="row" class="text-muted">Valor pago</th>
+                                    <td>{{ $pygSymbol ?? 'G$' }} {{ number_format((float) $amount, 0, ',', '.') }}</td>
                                 </tr>
                                 <tr>
                                     <th scope="row" class="text-muted">Descricao da resposta</th>

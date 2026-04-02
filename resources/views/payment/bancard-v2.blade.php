@@ -17,7 +17,11 @@
                 </div>
                 <div class="bancard-meta-item">
                     <span class="meta-label">Total</span>
-                    <strong class="meta-value">{{ number_format((float) $order->total, 2, ',', '.') }}</strong>
+                    <strong class="meta-value">{{ currency_format((float) $order->total) }}</strong>
+                </div>
+                <div class="bancard-meta-item">
+                    <span class="meta-label">Total PYG</span>
+                    <strong class="meta-value">{{ $pygSymbol }} {{ number_format((float) $totalInPyg, 0, ',', '.') }}</strong>
                 </div>
                 <div class="bancard-meta-item">
                     <span class="meta-label">Status</span>
@@ -83,7 +87,7 @@
 
     .bancard-meta-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
         margin: 16px 0 14px;
     }

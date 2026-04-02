@@ -40,7 +40,7 @@ class BancardV2Controller extends Controller
         }
 
         try {
-            $amount = $this->formatAmount($order->total);
+            $amount = $this->convertOrderTotalToPyg($order);
             $currency = self::CURRENCY;
             $shopProcessId = $this->bancard->generateShopProcessId($order);
             $token = $this->bancard->buildSingleBuyToken($shopProcessId, $amount, $currency);
@@ -69,10 +69,14 @@ class BancardV2Controller extends Controller
                     'process_id' => $data['process_id'],
                 ]);
 
+                $pygSymbol = $this->resolvePygSymbol();
+
                 return view('payment.bancard-v2', [
                     'order' => $order,
                     'processId' => $data['process_id'],
                     'checkoutJsUrl' => $this->bancard->getCheckoutJsUrl(),
+                    'totalInPyg' => $amount,
+                    'pygSymbol' => $pygSymbol,
                 ]);
             }
 
@@ -91,6 +95,24 @@ class BancardV2Controller extends Controller
 
             return redirect()->route('checkout.index')->with('error', 'Erro ao iniciar pagamento Bancard V2.');
         }
+    }
+
+    /**
+     * Converte o valor total do pedido para PYG usando a cotação cadastrada.
+     */
+    private function convertOrderTotalToPyg(Order $order): string
+    {
+        $valorBase = $order->total;
+        $valorMoeda = $order->currency_value ?? 1;
+        $moedaBase = $order->currency_sign ?? 'USD';
+
+        // Buscar taxa do PYG
+        $pyg = \App\Models\Currency::where('sign', 'GS$')->orWhere('name', 'PYG')->first();
+        $taxaPyg = $pyg->value ?? 1;
+
+        // Converter para PYG
+        $valorEmPyg = $valorBase * ($taxaPyg / $valorMoeda);
+        return number_format($valorEmPyg, 2, '.', '');
     }
 
     public function cancelCheckout(Order $order): RedirectResponse
@@ -224,15 +246,16 @@ class BancardV2Controller extends Controller
 
         $order = Order::where('shop_process_id', $shopProcessId)->first();
         $displayPayload = session()->pull('bancard_v2_error_payload');
+        $pygSymbol = $this->resolvePygSymbol();
 
         if (is_array($displayPayload) && (string) data_get($displayPayload, 'shopProcessId') === $shopProcessId) {
-            return view('payment.bancard-v2-error', $displayPayload);
+            return view('payment.bancard-v2-error', $displayPayload + ['pygSymbol' => $pygSymbol]);
         }
 
         $confirmation = $this->bancard->fetchSingleBuyConfirmation($shopProcessId);
         $displayPayload = $this->bancard->buildErrorDisplayPayload($shopProcessId, $confirmation, $order, $status);
 
-        return view('payment.bancard-v2-error', $displayPayload);
+        return view('payment.bancard-v2-error', $displayPayload + ['pygSymbol' => $pygSymbol]);
     }
 
     public function successPage(Request $request): View|RedirectResponse
@@ -245,9 +268,10 @@ class BancardV2Controller extends Controller
 
         $order = Order::where('shop_process_id', $shopProcessId)->first();
         $displayPayload = session()->pull('bancard_v2_success_payload');
+        $pygSymbol = $this->resolvePygSymbol();
 
         if (is_array($displayPayload) && (string) data_get($displayPayload, 'shopProcessId') === $shopProcessId) {
-            return view('payment.bancard-v2-success', $displayPayload);
+            return view('payment.bancard-v2-success', $displayPayload + ['pygSymbol' => $pygSymbol]);
         }
 
         $confirmation = $this->bancard->fetchSingleBuyConfirmation($shopProcessId);
@@ -258,6 +282,7 @@ class BancardV2Controller extends Controller
             'shopProcessId' => $displayPayload['shopProcessId'],
             'amount' => $displayPayload['amount'],
             'responseDescription' => $displayPayload['responseDescription'],
+            'pygSymbol' => $pygSymbol,
         ]);
     }
 
@@ -329,9 +354,39 @@ class BancardV2Controller extends Controller
         if ($order->status !== 'paid') {
             $order->status = 'paid';
             $order->save();
+
+            $this->reduceOrderStock($order);
         }
 
         Cart::where('user_id', $order->user_id)->delete();
+    }
+
+    private function reduceOrderStock(Order $order): void
+    {
+        $order->loadMissing('items.product');
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+
+            if (!$product) {
+                continue;
+            }
+
+            $quantity = max(0, (int) $item->quantity);
+            $availableStock = max(0, (int) $product->stock);
+            $decrementBy = min($quantity, $availableStock);
+
+            if ($decrementBy > 0) {
+                $product->decrement('stock', $decrementBy);
+            }
+        }
+    }
+
+    private function resolvePygSymbol(): string
+    {
+        $pygCurrency = \App\Models\Currency::where('name', 'PYG')->first();
+
+        return $pygCurrency?->sign ?? 'G$';
     }
 
 

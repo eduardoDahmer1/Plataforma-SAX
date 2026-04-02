@@ -354,9 +354,32 @@ class BancardV2Controller extends Controller
         if ($order->status !== 'paid') {
             $order->status = 'paid';
             $order->save();
+
+            $this->reduceOrderStock($order);
         }
 
         Cart::where('user_id', $order->user_id)->delete();
+    }
+
+    private function reduceOrderStock(Order $order): void
+    {
+        $order->loadMissing('items.product');
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+
+            if (!$product) {
+                continue;
+            }
+
+            $quantity = max(0, (int) $item->quantity);
+            $availableStock = max(0, (int) $product->stock);
+            $decrementBy = min($quantity, $availableStock);
+
+            if ($decrementBy > 0) {
+                $product->decrement('stock', $decrementBy);
+            }
+        }
     }
 
     private function resolvePygSymbol(): string

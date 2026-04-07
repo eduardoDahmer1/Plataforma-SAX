@@ -1,16 +1,12 @@
 @extends('layout.admin')
 
 @section('content')
+<x-admin.card>
+<x-admin.page-header
+    title="Performance de Edição"
+    description="Acompanhamento diário de atualizações no catálogo">
+</x-admin.page-header>
 <div class="sax-stats-wrapper">
-    <div class="dashboard-header mb-5">
-        <div class="d-flex align-items-center gap-3 mb-2">
-            <div class="header-icon-bg"><i class="fas fa-chart-line text-dark"></i></div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Performance de Edição</h2>
-        </div>
-        <p class="text-muted small ms-5">Acompanhamento diário de atualizações no catálogo</p>
-        <div class="sax-divider-dark ms-5"></div>
-    </div>
-
     <div class="row g-4">
         @foreach ($edicoesPorDia as $linha)
             <div class="col-12 col-sm-6 col-md-4 col-xl-3">
@@ -64,6 +60,7 @@
 
 {{-- Datos inyectados desde el controller — la lógica está en products-admin.js --}}
 <script>var dadosProdutos = @json($detalhesProdutos);</script>
+</x-admin.card>
 @endsection
 
 <style>

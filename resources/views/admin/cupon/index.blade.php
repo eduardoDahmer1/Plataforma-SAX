@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
-    {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Cupones de Descuento</h1>
-            <p class="small text-secondary mb-0">Gestión de incentivos y reglas de precio</p>
-        </div>
-        <a href="{{ route('admin.cupons.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
-            <i class="fas fa-plus me-2"></i> Nuevo Cupón
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Cupons de Desconto"
+        description="Gestão de incentivos e regras de preço">
+        <x-slot:actions>
+            <a href="{{ route('admin.cupons.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
+                <i class="fas fa-plus me-2"></i> Novo Cupom
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Alertas --}}
     @if (session('error') || session('success'))
@@ -35,7 +33,7 @@
                                 {{ $cupon->tipo === 'percentual' ? '%' : '$' }}
                             </span>
                         </div>
-                        
+
                         {{-- Corpo do Ticket --}}
                         <div class="p-4 text-center border-bottom border-dashed">
                             <h2 class="h3 fw-900 tracking-tighter mb-1 text-uppercase">{{ $cupon->codigo }}</h2>
@@ -51,7 +49,7 @@
                                 <span class="x-small fw-bold text-dark text-uppercase">{{ $cupon->modelo ?? 'Universal' }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
-                                <span class="sax-label-mini">Categoría</span>
+                                <span class="sax-label-mini">Categoria</span>
                                 <span class="x-small fw-bold text-dark text-uppercase">{{ $cupon->category->name ?? 'Todas' }}</span>
                             </div>
                             <div class="d-flex justify-content-between">
@@ -78,7 +76,7 @@
             </div>
         @empty
             <div class="col-12 py-5 text-center border border-dashed">
-                <p class="text-muted x-small text-uppercase tracking-wider mb-0 italic">No hay cupones activos en este momento.</p>
+                <p class="text-muted x-small text-uppercase tracking-wider mb-0 italic">Não há cupons ativos no momento.</p>
             </div>
         @endforelse
     </div>
@@ -87,6 +85,5 @@
     <div class="mt-5 d-flex justify-content-center">
         {{ $cupons->links() }}
     </div>
-</div>
-
+</x-admin.card>
 @endsection

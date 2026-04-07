@@ -106,6 +106,23 @@ class ImageUploadController extends Controller
         return back()->with('error', 'Nenhuma imagem válida enviada.');
     }
 
+        public function updateTextTopo(Request $request)
+    {
+        $request->validate([
+            'text_topo' => 'nullable|string|max:255',
+        ]);
+
+        // Busca o registro único da tabela attributes (geralmente id 1)
+        $attribute = \App\Models\Attribute::first(); 
+        
+        if ($attribute) {
+            $attribute->update(['text_topo' => $request->text_topo]);
+            return redirect()->back()->with('success', 'Texto do topo atualizado com sucesso!');
+        }
+
+        return redirect()->back()->withErrors('Erro ao encontrar as configurações.');
+    }
+
     private function deleteImage($field)
     {
         $filename = DB::table('attributes')->where('id', 1)->value($field);

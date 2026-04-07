@@ -1,29 +1,25 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2">
-    {{-- Header Estruturado --}}
-    <div class="dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Subcategorías</h2>
-            <div class="sax-divider-dark"></div>
-            <p class="text-muted x-small mt-2 mb-0">
-                Estructura de <span class="text-dark fw-bold">{{ $subcategories->total() }}</span> niveles secundarios activos
-            </p>
-        </div>
-        <a href="{{ route('admin.subcategories.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
-            <i class="fa fa-folder-plus me-2"></i> Nueva Subcategoría
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Subcategorias"
+        description="Estrutura de <span class='text-dark fw-bold'>{{ $subcategories->total() }}</span> níveis secundários ativos">
+        <x-slot:actions>
+            <a href="{{ route('admin.subcategories.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="fa fa-folder-plus me-2"></i> Nova Subcategoria
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Filtro de Pesquisa --}}
-    <div class="sax-search-wrapper mb-4 p-2 bg-white shadow-sm rounded-4 border">
+    <div class="sax-search-wrapper mb-4">
         <form action="{{ route('admin.subcategories.index') }}" method="GET">
             <div class="input-group">
                 <span class="input-group-text bg-transparent border-0 px-3">
                     <i class="fa fa-search text-muted"></i>
                 </span>
-                <input type="text" name="search" class="form-control border-0 sax-search-input py-2" 
+                <input type="text" name="search" class="form-control border-0 sax-search-input py-2"
                     placeholder="Buscar por nombre de subcategoría..." value="{{ request('search') }}">
                 <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">BUSCAR</button>
             </div>
@@ -51,7 +47,7 @@
                     </div>
 
                     <h5 class="subcategory-title mb-1">{{ $subcategory->name }}</h5>
-                    
+
                     {{-- Badge da Categoria Pai --}}
                     <div class="parent-category-badge mb-4">
                         <i class="fa fa-level-up-alt fa-rotate-90 me-1 opacity-50"></i>
@@ -66,7 +62,7 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <a href="{{ route('admin.subcategories.show', $subcategory) }}" class="btn btn-action-sax w-100">
-                                    <i class="fa fa-file-alt"></i> Datos
+                                    <i class="fa fa-file-alt"></i> Dados
                                 </a>
                             </div>
                             <div class="col-6">
@@ -93,5 +89,5 @@
     <div class="d-flex justify-content-center mt-5">
         {{ $subcategories->links() }}
     </div>
-</div>
+</x-admin.card>
 @endsection

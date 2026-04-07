@@ -1,11 +1,10 @@
 @extends('layout.admin')
 
 @section('content')
-
+<x-admin.card>
 <form action="{{ route('admin.activate.updateAll') }}" method="POST">
     @csrf
-    <div class="container-fluid">
-        <div class="sections-wrapper">
+    <div class="sections-wrapper">
             
             {{-- Seção de Categorias --}}
             <div class="card-sax">
@@ -42,7 +41,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <div class="footer-actions">
         <button type="submit" class="btn-save-all">
@@ -50,4 +48,5 @@
         </button>
     </div>
 </form>
+</x-admin.card>
 @endsection

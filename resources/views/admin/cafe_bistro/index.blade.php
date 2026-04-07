@@ -19,29 +19,27 @@
     $badge = fn($done) => $done
         ? '<span class="badge-section-done"><i class="fas fa-check-circle me-1"></i>Configurado</span>'
         : '<span class="badge-section-empty"><i class="far fa-circle me-1"></i>Vacío</span>';
+
+    $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
+        <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
+        <li class="breadcrumb-item x-small text-uppercase active text-bistro" aria-current="page">Visão Geral</li>
+    </ol></nav>';
 @endphp
 
-<div class="sax-admin-container py-4 bg-white-soft">
-
-    {{-- ── HEADER ──────────────────────────────────────────────────── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4 px-4">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">SAX Café & Bistrô</h2>
-            <div class="sax-divider-bistro"></div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent p-0 mb-0">
-                    <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-                    <li class="breadcrumb-item x-small text-uppercase active text-bistro" aria-current="page">Visión General</li>
-                </ol>
-            </nav>
-        </div>
-        <a href="{{ route('admin.cafe_bistro.edit', $cafeBistro->id) }}" class="btn btn-dark-bistro px-4 shadow-sm rounded-pill fw-bold">
-            <i class="fas fa-pen-nib me-2 fa-xs"></i> EDITAR CONTENIDO
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="SAX Café &amp; Bistrô"
+        :description="$breadcrumb"
+        divider="sax-divider-bistro">
+        <x-slot:actions>
+            <a href="{{ route('admin.cafe_bistro.edit', $cafeBistro->id) }}" class="btn btn-dark-bistro px-4 shadow-sm rounded-pill fw-bold">
+                <i class="fas fa-pen-nib me-2 fa-xs"></i> EDITAR CONTEÚDO
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- ── STATUS BAR ──────────────────────────────────────────────── --}}
-    <div class="status-bar mx-4 mb-4 px-4 py-3 d-flex align-items-center gap-3 flex-wrap">
+    <div class="status-bar mb-4 px-4 py-3 d-flex align-items-center gap-3 flex-wrap">
         <div class="d-flex align-items-center gap-2">
             <span class="status-dot {{ $cafeBistro->is_active ? 'dot-success' : 'dot-danger' }}"></span>
             <span class="x-small fw-bold text-uppercase letter-spacing-1">
@@ -67,16 +65,14 @@
 
     {{-- ── FLASH ───────────────────────────────────────────────────── --}}
     @if(session('success'))
-        <div class="alert alert-modern alert-success mb-4 mx-4">
+        <div class="alert alert-sax-success alert-dismissible fade show mb-4">
             <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
         </div>
     @endif
 
-    <div class="row px-3 g-4">
+    <div class="row g-4">
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 01. HERO                                                   --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- 01. HERO --}}
         <div class="col-12">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -103,9 +99,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 02. SOBRE NÓS                                             --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- 02. SOBRE NÓS --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm overflow-hidden h-100">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -131,9 +125,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 03. CARDÁPIO                                               --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- 03. CARDÁPIO --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -153,10 +145,10 @@
                         <i class="fas fa-file-pdf fa-2x {{ $cafeBistro->cardapio_pdf ? 'text-bistro' : 'text-muted opacity-25' }}"></i>
                         <div>
                             @if($cafeBistro->cardapio_pdf)
-                                <p class="small fw-bold mb-0">PDF cargado</p>
+                                <p class="small fw-bold mb-0">PDF carregado</p>
                                 <p class="x-small text-muted mb-0">{{ basename($cafeBistro->cardapio_pdf) }}</p>
                             @else
-                                <p class="small text-muted mb-0">Sin PDF cargado</p>
+                                <p class="small text-muted mb-0">Sem PDF carregado</p>
                                 <p class="x-small text-muted mb-0">Subir desde el editor</p>
                             @endif
                         </div>
@@ -165,9 +157,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 04. EVENTOS                                                --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- 04. EVENTOS --}}
         <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -218,9 +208,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 05. HORÁRIOS                                               --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- 05. HORÁRIOS --}}
         <div class="col-lg-5">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -256,9 +244,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 06. CONTACTO                                               --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- 06. CONTACTO --}}
         <div class="col-lg-7">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -275,14 +261,14 @@
                             <div class="d-flex align-items-start gap-2 mb-3">
                                 <i class="fas fa-map-pin text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Dirección</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Endereço</p>
                                     <p class="small mb-0">{{ $cafeBistro->direccion ?? '—' }}</p>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start gap-2 mb-3">
                                 <i class="fas fa-phone text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Teléfono</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Telefone</p>
                                     <p class="small mb-0">{{ $cafeBistro->telefono ?? '—' }}</p>
                                 </div>
                             </div>
@@ -322,9 +308,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- SEO & METADATOS                                            --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- SEO & METADADOS --}}
         <div class="col-12">
             <div class="sax-premium-card p-4 bg-dark text-white border-0 shadow-lg position-relative overflow-hidden">
                 <div class="position-absolute" style="top:-0.625rem;right:-0.625rem;opacity:.05;">
@@ -333,19 +317,19 @@
                 <div class="d-flex align-items-center mb-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="icon-circle-bistro"><i class="fas fa-search-plus"></i></div>
-                        <h6 class="fw-bold text-bistro text-uppercase letter-spacing-2 mb-0">SEO & Metadatos</h6>
+                        <h6 class="fw-bold text-bistro text-uppercase letter-spacing-2 mb-0">SEO & Metadados</h6>
                     </div>
                     <span class="ms-auto badge bg-light text-dark x-small">Google Preview</span>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Meta Title</label>
-                        <span class="fw-bold">{{ $cafeBistro->meta_title ?? '— No configurado' }}</span>
+                        <span class="fw-bold">{{ $cafeBistro->meta_title ?? '— Não configurado' }}</span>
                     </div>
                     <div class="col-md-6">
                         <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Meta Description</label>
                         <span class="small opacity-75">
-                            {{ $cafeBistro->meta_description ? Str::limit($cafeBistro->meta_description, 160) : '— No configurado' }}
+                            {{ $cafeBistro->meta_description ? Str::limit($cafeBistro->meta_description, 160) : '— Não configurado' }}
                         </span>
                     </div>
                 </div>
@@ -353,6 +337,6 @@
         </div>
 
     </div>{{-- /row --}}
-</div>
+</x-admin.card>
 
 @endsection

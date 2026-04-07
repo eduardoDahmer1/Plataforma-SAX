@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
-    {{-- Header Minimalista --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Gateways de pagamento</h1>
-            <p class="small text-secondary mb-0">Configure os métodos de transação disponíveis na finalização da compra</p>
-        </div>
-        <a href="{{ route('admin.payments.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
-            <i class="fa fa-plus me-2"></i> Novo método
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Gateways de Pagamento"
+        description="Configure os métodos de transação disponíveis na finalização da compra">
+        <x-slot:actions>
+            <a href="{{ route('admin.payments.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
+                <i class="fa fa-plus me-2"></i> Novo método
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Lista de Métodos --}}
     <div class="table-responsive">
@@ -50,7 +48,7 @@
                     </td>
                     <td class="py-4 text-center">
                         <div class="form-check form-switch d-inline-block">
-                            <input class="form-check-input toggle-active cursor-pointer" type="checkbox" 
+                            <input class="form-check-input toggle-active cursor-pointer" type="checkbox"
                                    data-id="{{ $method->id }}" {{ $method->active == 1 ? 'checked' : '' }}>
                         </div>
                     </td>
@@ -76,47 +74,47 @@
             </tbody>
         </table>
     </div>
-</div>
 
-<script>
-document.querySelectorAll('.toggle-active').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        const id = this.dataset.id;
-        const active = this.checked ? 1 : 0;
+    <script>
+    document.querySelectorAll('.toggle-active').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const id = this.dataset.id;
+            const active = this.checked ? 1 : 0;
 
-        fetch(`/admin/payments/${id}/toggle-active`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ active })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Error');
-            return res.json();
-        })
-        .then(data => {
-            const row = this.closest('tr');
-            const dot = row.querySelector('.status-dot');
-            const text = row.querySelector('.status-indicator span:last-child');
-            
-            if(active === 1){
-                dot.classList.add('active');
-                text.textContent = 'ATIVO';
-                text.classList.replace('text-muted', 'text-dark');
-            } else {
-                dot.classList.remove('active');
-                text.textContent = 'INATIVO';
-                text.classList.replace('text-dark', 'text-muted');
-            }
-        })
-        .catch(() => {
-            alert('Erro ao atualizar');
-            this.checked = !this.checked;
+            fetch(`/admin/payments/${id}/toggle-active`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ active })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Error');
+                return res.json();
+            })
+            .then(data => {
+                const row = this.closest('tr');
+                const dot = row.querySelector('.status-dot');
+                const text = row.querySelector('.status-indicator span:last-child');
+
+                if(active === 1){
+                    dot.classList.add('active');
+                    text.textContent = 'ATIVO';
+                    text.classList.replace('text-muted', 'text-dark');
+                } else {
+                    dot.classList.remove('active');
+                    text.textContent = 'INATIVO';
+                    text.classList.replace('text-dark', 'text-muted');
+                }
+            })
+            .catch(() => {
+                alert('Erro ao atualizar');
+                this.checked = !this.checked;
+            });
         });
     });
-});
-</script>
+    </script>
+</x-admin.card>
 @endsection

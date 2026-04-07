@@ -33,16 +33,17 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
-{{-- 1. Café & Bistrô --}}
-@if(Request::is('*cafe*') || Request::is('*bistro*'))
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@100;300;400;600&display=swap" rel="stylesheet">
-    <link href="{{ asset('css/cafe_bistro.css') }}?v={{ file_exists(public_path('css/cafe_bistro.css')) ? filemtime(public_path('css/cafe_bistro.css')) : time() }}" rel="stylesheet">
-@endif
-
-{{-- 2. Bridal, Palace e Institucionais (Compartilham Swiper, AOS e Fontes Elegantes) --}}
-@if(Request::is('*bridal*') || Request::is('*palace*') || Request::is('*institucional*'))
+{{-- Temáticas: Café & Bistrô, Bridal, Palace, Institucional (solo público, nunca en admin) --}}
+@if(!Route::is('admin.*') && (Request::is('*cafe*') || Request::is('*bistro*') || Request::is('*bridal*') || Request::is('*palace*') || Request::is('*institucional*')))
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+
+    @if(Request::is('*cafe*') || Request::is('*bistro*'))
+        <link href="{{ asset('css/cafe_bistro.css') }}?v={{ file_exists(public_path('css/cafe_bistro.css')) ? filemtime(public_path('css/cafe_bistro.css')) : time() }}" rel="stylesheet">
+    @endif
+
+    @if(Request::is('*bridal*') || Request::is('*palace*') || Request::is('*institucional*'))
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    @endif
 
     @if(Request::is('*bridal*')) <link href="{{ asset('css/bridal.css') }}" rel="stylesheet"> @endif
     @if(Request::is('*palace*')) <link href="{{ asset('css/palace.css') }}" rel="stylesheet"> @endif
@@ -71,7 +72,7 @@
 
 {{-- 6. Admin --}}
 @if(Route::is('admin.*') || Route::is('manutencao'))
-    <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
 @endif
 
 @stack('styles')

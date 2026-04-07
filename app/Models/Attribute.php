@@ -26,6 +26,7 @@ class Attribute extends Model
         'banner8',
         'banner9',
         'banner10',
+        'text_topo',
         'icon_info',
         'icon_cabide',
         'icon_help',

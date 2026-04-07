@@ -1,23 +1,21 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
-    {{-- Header com Estilo SAX Admin --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 fw-bold text-uppercase tracking-tighter mb-0">Conteudo Editorial</h1>
-            <p class="small text-muted mb-0">Gestão de artigos e notícias do blog</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-white border rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
-                CATEGORÍAS
-            </a>
-            <a href="{{ route('admin.blogs.create') }}" class="btn btn-dark rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
-                <i class="fa fa-plus me-1"></i> NOVO ARTIGO
-            </a>
-        </div>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Conteúdo Editorial"
+        description="Gestão de artigos e notícias do blog">
+        <x-slot:actions>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-white border rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
+                    CATEGORIAS
+                </a>
+                <a href="{{ route('admin.blogs.create') }}" class="btn btn-dark rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
+                    <i class="fa fa-plus me-1"></i> NOVO ARTIGO
+                </a>
+            </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Lista de Cards --}}
     <div class="sax-admin-list">
@@ -40,7 +38,7 @@
                     <div class="d-flex align-items-center gap-2">
                         <span class="x-small text-muted italic">/{{ $blog->slug }}</span>
                         <span class="status-pill {{ $blog->is_active ? 'active' : 'draft' }}">
-                            {{ $blog->is_active ? 'PUBLICADO' : 'BORRADOR' }}
+                            {{ $blog->is_active ? 'PUBLICADO' : 'RASCUNHO' }}
                         </span>
                     </div>
                 </div>
@@ -56,7 +54,7 @@
                 {{-- Ações --}}
                 <div class="col-auto px-4 border-start">
                     <div class="d-flex gap-3">
-                        <a href="{{ route('blogs.show', $blog->slug) }}" target="_blank" class="action-icon" title="Vista Previa">
+                        <a href="{{ route('blogs.show', $blog->slug) }}" target="_blank" class="action-icon" title="Vista Prévia">
                             <i class="far fa-eye"></i>
                         </a>
                         <a href="{{ route('admin.blogs.edit', $blog) }}" class="action-icon" title="Editar">
@@ -82,6 +80,5 @@
     <div class="mt-4">
         {{ $blogs->links('pagination::bootstrap-4') }}
     </div>
-</div>
-
+</x-admin.card>
 @endsection

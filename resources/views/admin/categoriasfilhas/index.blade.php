@@ -1,104 +1,95 @@
 @extends('layout.admin')
 
 @section('content')
-    <div class="sax-admin-container py-2">
-        {{-- Header de Hierarquia Final --}}
-        <div class="dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-            <div>
-                <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Categorías Hijas</h2>
-                <div class="sax-divider-dark"></div>
-                <p class="text-muted x-small mt-2 mb-0">
-                    Gestionando <span class="text-dark fw-bold">{{ $categoriasfilhas->total() }}</span> terminales de
-                    navegación
-                </p>
-            </div>
-            <a href="{{ route('admin.categorias-filhas.create') }}"
-                class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
-                <i class="fa fa-sitemap me-2"></i> Nueva Sub-Subcategoría
+<x-admin.card>
+    <x-admin.page-header
+        title="Categorias Filhas"
+        description="Gerenciando <span class='text-dark fw-bold'>{{ $categoriasfilhas->total() }}</span> terminais de navegação">
+        <x-slot:actions>
+            <a href="{{ route('admin.categorias-filhas.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="fa fa-sitemap me-2"></i> Nova Sub-Subcategoria
             </a>
-        </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-        {{-- Busca Refinada --}}
-        <div class="sax-search-wrapper mb-4 p-2 bg-white shadow-sm rounded-4 border">
-            <form action="{{ route('admin.categorias-filhas.index') }}" method="GET">
-                <div class="input-group">
-                    <span class="input-group-text bg-transparent border-0 px-3">
-                        <i class="fa fa-search text-muted"></i>
-                    </span>
-                    <input type="text" name="search" class="form-control border-0 sax-search-input py-2"
-                        placeholder="Buscar terminal por nombre..." value="{{ request('search') }}">
-                    <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">BUSCAR</button>
-                </div>
-            </form>
-        </div>
-
-        @if (session('success'))
-            <div class="alert alert-sax-success alert-dismissible fade show mb-4" role="alert">
-                <i class="fa fa-check-circle me-2"></i> {{ session('success') }}
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    {{-- Busca Refinada --}}
+    <div class="sax-search-wrapper mb-4">
+        <form action="{{ route('admin.categorias-filhas.index') }}" method="GET">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-0 px-3">
+                    <i class="fa fa-search text-muted"></i>
+                </span>
+                <input type="text" name="search" class="form-control border-0 sax-search-input py-2"
+                    placeholder="Buscar terminal por nombre..." value="{{ request('search') }}">
+                <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">BUSCAR</button>
             </div>
-        @endif
+        </form>
+    </div>
 
-        {{-- Grid de Child Categories --}}
-        <div class="row g-3">
-            @foreach ($categoriasfilhas as $filha)
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="sax-child-card h-100 shadow-sm border-0 d-flex flex-column p-4">
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <a href="{{ route('categorias-filhas.show', $filha->slug) }}" target="_blank"
-                                    class="text-muted hover-dark">
-                                    <i class="fa fa-external-link-alt x-small"></i>
+    @if (session('success'))
+        <div class="alert alert-sax-success alert-dismissible fade show mb-4" role="alert">
+            <i class="fa fa-check-circle me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    {{-- Grid de Child Categories --}}
+    <div class="row g-3">
+        @foreach ($categoriasfilhas as $filha)
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="sax-child-card h-100 shadow-sm border-0 d-flex flex-column p-4">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <a href="{{ route('categorias-filhas.show', $filha->slug) }}" target="_blank"
+                                class="text-muted hover-dark">
+                                <i class="fa fa-external-link-alt x-small"></i>
+                            </a>
+                        </div>
+                        <h5 class="child-title text-truncate" title="{{ $filha->name }}">
+                            {{ $filha->name }}
+                        </h5>
+                        <div class="parent-info mt-2">
+                            <label class="sax-label-tiny mb-0">SUBCATEGORIA PAI</label>
+                            <p class="text-muted small text-truncate m-0">
+                                <i class="fa fa-level-up-alt fa-rotate-90 me-1"></i>
+                                {{ $filha->subcategory ? ($filha->subcategory->name ?: $filha->subcategory->slug) : 'Sin vínculo' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Ações Compactas --}}
+                    <div class="sax-action-grid mt-auto pt-3 border-top">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{{ route('admin.categorias-filhas.show', $filha->id) }}"
+                                    class="btn btn-action-sax w-100" title="Ver Admin">
+                                    <i class="fa fa-eye"></i>
                                 </a>
                             </div>
-                            <h5 class="child-title text-truncate" title="{{ $filha->name }}">
-                                {{ $filha->name }}
-                            </h5>
-                            <div class="parent-info mt-2">
-                                <label class="sax-label-tiny mb-0">SUBCATEGORÍA PAI</label>
-                                <p class="text-muted small text-truncate m-0">
-                                    <i class="fa fa-level-up-alt fa-rotate-90 me-1"></i>
-                                    {{ $filha->subcategory ? ($filha->subcategory->name ?: $filha->subcategory->slug) : 'Sin vínculo' }}
-                                </p>
+                            <div class="col-6">
+                                <a href="{{ route('admin.categorias-filhas.edit', $filha->id) }}"
+                                    class="btn btn-action-sax w-100" title="Editar">
+                                    <i class="fa fa-edit"></i>
+                                </a>
                             </div>
-                        </div>
-
-                        {{-- Ações Compactas --}}
-                        <div class="sax-action-grid mt-auto pt-3 border-top">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    {{-- CORREÇÃO: Usando $filha->id em vez de $categoriasfilhas --}}
-                                    <a href="{{ route('admin.categorias-filhas.show', $filha->id) }}"
-                                        class="btn btn-action-sax w-100" title="Ver Admin">
-                                        <i class="fa fa-eye"></i>
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    {{-- CORREÇÃO: Usando $filha->id em vez de $categoriasfilhas --}}
-                                    <a href="{{ route('admin.categorias-filhas.edit', $filha->id) }}"
-                                        class="btn btn-action-sax w-100" title="Editar">
-                                        <i class="fa fa-edit"></i>
-                                    </a>
-                                </div>
-                                <div class="col-12">
-                                    {{-- CORREÇÃO: Usando $filha->id no action do form --}}
-                                    <form action="{{ route('admin.categorias-filhas.destroy', $filha->id) }}"
-                                        method="POST" onsubmit="return confirm('¿Eliminar sub-subcategoría?')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-delete-sax w-100">
-                                            <i class="fa fa-trash-alt me-2"></i>ELIMINAR
-                                        </button>
-                                    </form>
-                                </div>
+                            <div class="col-12">
+                                <form action="{{ route('admin.categorias-filhas.destroy', $filha->id) }}"
+                                    method="POST" onsubmit="return confirm('¿Eliminar sub-subcategoría?')">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-delete-sax w-100">
+                                        <i class="fa fa-trash-alt me-2"></i>ELIMINAR
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
-            @endforeach
-        </div>
-
-        <div class="d-flex justify-content-center mt-5">
-            {{ $categoriasfilhas->links() }}
-        </div>
+            </div>
+        @endforeach
     </div>
+
+    <div class="d-flex justify-content-center mt-5">
+        {{ $categoriasfilhas->links() }}
+    </div>
+</x-admin.card>
 @endsection

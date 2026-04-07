@@ -18,33 +18,30 @@
     ];
     $completedCount = count(array_filter($sections));
 
-    // Macro: badge de estado de sección
     $badge = fn($done) => $done
         ? '<span class="badge-section-done"><i class="fas fa-check-circle me-1"></i>Configurado</span>'
         : '<span class="badge-section-empty"><i class="far fa-circle me-1"></i>Vacío</span>';
+
+    $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
+        <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
+        <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">Visão Geral</li>
+    </ol></nav>';
 @endphp
 
-<div class="sax-admin-container py-4 bg-white-soft">
-
-    {{-- ── HEADER ──────────────────────────────────────────────────── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4 px-4">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">SAX Bridal</h2>
-            <div class="sax-divider-gold"></div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent p-0 mb-0">
-                    <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-                    <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">Visión General</li>
-                </ol>
-            </nav>
-        </div>
-        <a href="{{ route('admin.bridal.edit', $bridal->id) }}" class="btn btn-dark-gold px-4 shadow-sm rounded-pill fw-bold">
-            <i class="fas fa-pen-nib me-2 fa-xs"></i> EDITAR CONTENIDO
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="SAX Bridal"
+        :description="$breadcrumb"
+        divider="sax-divider-gold">
+        <x-slot:actions>
+            <a href="{{ route('admin.bridal.edit', $bridal->id) }}" class="btn btn-dark-gold px-4 shadow-sm rounded-pill fw-bold">
+                <i class="fas fa-pen-nib me-2 fa-xs"></i> EDITAR CONTEÚDO
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- ── STATUS BAR ──────────────────────────────────────────────── --}}
-    <div class="status-bar mx-4 mb-4 px-4 py-3 d-flex align-items-center gap-3 flex-wrap">
+    <div class="status-bar mb-4 px-4 py-3 d-flex align-items-center gap-3 flex-wrap">
         <div class="d-flex align-items-center gap-2">
             <span class="status-dot {{ $bridal->is_active ? 'dot-success' : 'dot-danger' }}"></span>
             <span class="x-small fw-bold text-uppercase letter-spacing-1">
@@ -70,16 +67,14 @@
 
     {{-- ── FLASH ───────────────────────────────────────────────────── --}}
     @if(session('success'))
-        <div class="alert alert-modern alert-success mb-4 mx-4">
+        <div class="alert alert-sax-success alert-dismissible fade show mb-4">
             <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
         </div>
     @endif
 
-    <div class="row px-3 g-4">
+    <div class="row g-4">
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 01. HERO                                                   --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- 01. HERO --}}
         <div class="col-12">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -108,10 +103,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 02. BRANDS | 03. PROMOS | 04. SERVICES                    --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
 
         {{-- 02. PROMOS --}}
         <div class="col-12">
@@ -203,11 +194,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 05. PALACE BANNER | 06. TESTIMONIALS                      --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
-
-        {{-- 05. PALACE BANNER --}}
+        {{-- 05. PALACE BANNER | 06. TESTIMONIALS --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm overflow-hidden h-100">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -243,7 +230,6 @@
             </div>
         </div>
 
-        {{-- 06. TESTIMONIALS --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -291,11 +277,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- 07. INSTAGRAM CTA | 08. SUCURSALES                        --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
-
-        {{-- 07. INSTAGRAM --}}
+        {{-- 07. INSTAGRAM | 07. SUCURSALES --}}
         <div class="col-lg-4">
             <div class="sax-premium-card p-0 shadow-sm h-100 instagram-card">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -321,7 +303,6 @@
             </div>
         </div>
 
-        {{-- 07. SUCURSALES --}}
         <div class="col-lg-8">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100 overflow-hidden">
                 <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
@@ -371,9 +352,7 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════════════════════════════════════ --}}
-        {{-- SEO & METADATOS                                           --}}
-        {{-- ══════════════════════════════════════════════════════════ --}}
+        {{-- SEO & METADATOS --}}
         <div class="col-12">
             <div class="sax-premium-card p-4 bg-dark text-white border-0 shadow-lg position-relative overflow-hidden">
                 <div class="position-absolute" style="top:-10px;right:-10px;opacity:.05;">
@@ -382,19 +361,19 @@
                 <div class="d-flex align-items-center mb-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="icon-circle-gold"><i class="fas fa-search-plus"></i></div>
-                        <h6 class="fw-bold text-gold text-uppercase letter-spacing-2 mb-0">SEO & Metadatos</h6>
+                        <h6 class="fw-bold text-gold text-uppercase letter-spacing-2 mb-0">SEO & Metadados</h6>
                     </div>
                     <span class="ms-auto badge bg-light text-dark x-small">Google Preview</span>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3 mb-md-0">
                         <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Meta Title</label>
-                        <span class="fw-bold">{{ $bridal->meta_title ?? '— No configurado' }}</span>
+                        <span class="fw-bold">{{ $bridal->meta_title ?? '— Não configurado' }}</span>
                     </div>
                     <div class="col-md-6">
                         <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Meta Description</label>
                         <span class="small opacity-75">
-                            {{ $bridal->meta_description ? Str::limit($bridal->meta_description, 160) : '— No configurado' }}
+                            {{ $bridal->meta_description ? Str::limit($bridal->meta_description, 160) : '— Não configurado' }}
                         </span>
                     </div>
                 </div>
@@ -402,6 +381,6 @@
         </div>
 
     </div>{{-- /row --}}
-</div>
+</x-admin.card>
 
 @endsection

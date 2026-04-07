@@ -1,29 +1,25 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2">
-    {{-- Header de Marcas --}}
-    <div class="dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Marcas</h2>
-            <div class="sax-divider-dark"></div>
-            <p class="text-muted x-small mt-2 mb-0">
-                Mostrando <span class="text-dark fw-bold">{{ $brands->count() }}</span> de {{ $brands->total() }} marcas registradas
-            </p>
-        </div>
-        <a href="{{ route('admin.brands.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
-            <i class="fa fa-plus me-2"></i> Nueva Marca
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Marcas"
+        description="Mostrando <span class='text-dark fw-bold'>{{ $brands->count() }}</span> de {{ $brands->total() }} marcas cadastradas">
+        <x-slot:actions>
+            <a href="{{ route('admin.brands.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="fa fa-plus me-2"></i> Nova Marca
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Barra de Busca Minimalista --}}
-    <div class="sax-search-wrapper mb-4 p-3 bg-white shadow-sm rounded-4">
+    <div class="sax-search-wrapper mb-4">
         <form action="{{ route('admin.brands.index') }}" method="GET">
             <div class="input-group">
                 <span class="input-group-text bg-transparent border-0 px-3">
                     <i class="fa fa-search text-muted"></i>
                 </span>
-                <input type="text" name="search" class="form-control border-0 sax-search-input" 
+                <input type="text" name="search" class="form-control border-0 sax-search-input"
                     placeholder="Buscar por nombre o ID de marca..." value="{{ request('search') }}">
                 <button class="btn btn-dark rounded-3 px-4" type="submit">BUSCAR</button>
             </div>
@@ -87,5 +83,5 @@
     <div class="d-flex justify-content-center mt-5">
         {{ $brands->links() }}
     </div>
-</div>
+</x-admin.card>
 @endsection

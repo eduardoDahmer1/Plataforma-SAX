@@ -15,7 +15,7 @@
         <div class="sax-admin-header d-flex justify-content-between align-items-center mb-4">
             
             <div class="d-flex gap-2">
-                <button class="sax-btn-mobile d-md-none" id="openDrawer">
+                <button class="sax-btn-mobile d-md-none" id="openAdminDrawer">
                     <i class="fa fa-bars"></i>
                 </button>
             </div>
@@ -31,17 +31,7 @@
 
             {{-- Área de Conteúdo --}}
             <main class="col-md-9">
-                <div class="sax-main-card shadow-sm border-0">
-                    <div class="sax-card-header d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <div class="header-indicator me-3"></div>
-                            <strong class="text-uppercase small letter-spacing-1">Quadro de Trabalho</strong>
-                        </div>
-                    </div>
-                    <div class="sax-card-body">
-                        @yield('content')
-                    </div>
-                </div>
+                @yield('content')
             </main>
         </div>
     </div>
@@ -52,11 +42,11 @@
 </button>
 
     {{-- Drawer Mobile --}}
-    <div class="drawer-overlay" id="drawerOverlay"></div>
-    <div class="drawer-mobile" id="drawerMobile">
+    <div class="drawer-overlay" id="adminDrawerOverlay"></div>
+    <div class="drawer-mobile" id="adminDrawerMobile">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5>Menu</h5>
-            <button class="btn text-black" id="closeDrawer">&times;</button>
+            <button class="btn text-black" id="closeAdminDrawer">&times;</button>
         </div>
         @include('admin.menu-lateral')
     </div>

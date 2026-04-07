@@ -1,31 +1,32 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-4 bg-white-soft">
-    {{-- Header Estilo Dashboard SAX --}}
-    <div class="dashboard-header d-flex justify-content-between align-items-center mb-5 px-4">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">SAX Palace</h2>
-            <div class="sax-divider-gold"></div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent p-0 mb-0">
-                    <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-                    <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">Visão Geral</li>
-                </ol>
-            </nav>
-        </div>
-        <a href="{{ route('admin.palace.edit', $palace->id) }}" class="btn btn-dark-gold px-4 shadow-sm rounded-pill transition fw-bold">
-            <i class="fas fa-pen-nib mr-2 fa-xs"></i> EDITAR CONTENIDO
-        </a>
-    </div>
+@php
+    $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
+        <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
+        <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">Visão Geral</li>
+    </ol></nav>';
+@endphp
+
+<x-admin.card>
+    <x-admin.page-header
+        title="SAX Palace"
+        :description="$breadcrumb"
+        divider="sax-divider-gold">
+        <x-slot:actions>
+            <a href="{{ route('admin.palace.edit', $palace->id) }}" class="btn btn-dark-gold px-4 shadow-sm rounded-pill transition fw-bold">
+                <i class="fas fa-pen-nib me-2 fa-xs"></i> EDITAR CONTEÚDO
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     @if(session('success'))
-        <div class="alert alert-modern alert-success slide-in-top mb-4 mx-4">
-            <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+        <div class="alert alert-sax-success alert-dismissible fade show slide-in-top mb-4">
+            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
         </div>
     @endif
 
-    <div class="row px-3 g-4">
+    <div class="row g-4">
         {{-- 01. HERO PREVIEW - FULL WIDTH --}}
         <div class="col-12 mb-2">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
@@ -169,6 +170,6 @@
             </div>
         </div>
     </div>
-</div>
+</x-admin.card>
 
 @endsection

@@ -1,21 +1,18 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    {{-- Header Minimalista --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Pedidos</h1>
-            <p class="small text-secondary mb-0">{{ $orders->total() }} transações registradas</p>
-        </div>
-        <div class="d-flex gap-2">
+<x-admin.card>
+    <x-admin.page-header
+        title="Pedidos"
+        description="{{ $orders->total() }} transações registradas">
+        <x-slot:actions>
             <button class="btn btn-sm btn-outline-dark border-0 rounded-0 text-uppercase fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
                 <i class="fa fa-sliders-h me-2"></i> Filtros
             </button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    {{-- Filtros em Colapso (Para manter o visual limpo) --}}
+    {{-- Filtros em Colapso --}}
     <div class="collapse {{ request()->anyFilled(['payment_method', 'status', 'user_name']) ? 'show' : '' }} mb-5" id="filterCollapse">
         <form method="GET" action="{{ route('admin.orders.index') }}" class="row g-3 border-bottom pb-4">
             <div class="col-md-2">
@@ -114,5 +111,5 @@
         </div>
         {{ $orders->links('pagination::bootstrap-4') }}
     </div>
-</div>
+</x-admin.card>
 @endsection

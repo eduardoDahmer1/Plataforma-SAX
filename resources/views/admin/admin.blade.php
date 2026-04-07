@@ -11,25 +11,22 @@
                         <li class="breadcrumb-item active">Multimedia</li>
                     </ol>
                 </nav>
-                <h1 class="h2 fw-bold text-dark mb-0">Gestión de Banners y Logos</h1>
+                <h1 class="h2 fw-bold text-dark mb-0">Gerenciamento de banners e logotipos</h1>
                 <p class="text-muted mb-0">Controle a identidade visual e os banners da plataforma em um só lugar.</p>
             </div>
         </div>
 
         {{-- Alertas --}}
         @if(session('success'))
-            <div class="alert alert-modern-success alert-dismissible fade show mb-4" role="alert">
-                <div class="d-flex align-items-center">
-                    <div class="alert-icon-circle me-3"><i class="fas fa-check"></i></div>
-                    <div>{{ session('success') }}</div>
-                </div>
+            <div class="alert alert-sax-success alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         @if($errors->any())
             <div class="alert alert-modern-danger mb-4" role="alert">
-                <div class="fw-bold mb-2"><i class="fas fa-exclamation-circle me-2"></i> Por favor corrija los siguientes errores:</div>
+                <div class="fw-bold mb-2"><i class="fas fa-exclamation-circle me-2"></i> Por favor corrija os seguintes erros:</div>
                 <ul class="mb-0 ps-3">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -37,6 +34,38 @@
                 </ul>
             </div>
         @endif
+
+        <div class="card border-0 shadow-sm mb-5">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="icon-shape bg-soft-primary text-primary rounded me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #eef2ff;">
+                        <i class="fas fa-font"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold">Texto Informativo do Topo</h5>
+                </div>
+                
+                <form action="{{ route('admin.attributes.update_text') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-9">
+                            <label for="text_topo" class="form-label small text-uppercase fw-bold text-muted">Conteúdo do Texto</label>
+                            <input type="text" 
+                                   name="text_topo" 
+                                   id="text_topo" 
+                                   class="form-control form-control-lg border-2" 
+                                   placeholder="Ex: Frete grátis para compras acima de R$ 200,00" 
+                                   value="{{ $attribute->text_topo ?? '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm">
+                                <i class="fas fa-save me-2"></i> Atualizar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         @php
             $images = [
@@ -100,10 +129,4 @@
         </div>
     </div>
 </div>
-
-
 @endsection
-
-<style>
-
-</style>

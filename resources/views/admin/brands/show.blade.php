@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2">
-    {{-- Header de Navegação --}}
-    <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Perfil de la Marca</h2>
-            <div class="sax-divider-dark"></div>
-            <span class="text-muted x-small">Gestión de activos de identidad</span>
-        </div>
-        <a href="{{ route('admin.brands.index') }}" class="btn-back-minimal">
-            <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Perfil de la Marca"
+        description="Gestión de activos de identidad">
+        <x-slot:actions>
+            <a href="{{ route('admin.brands.index') }}" class="btn-back-minimal">
+                <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <div class="row g-4">
         {{-- Coluna de Informações --}}
@@ -107,5 +105,5 @@
             </div>
         </div>
     </div>
-</div>
+</x-admin.card>
 @endsection

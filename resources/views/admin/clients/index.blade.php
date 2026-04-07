@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
-    {{-- Header Minimalista --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Diretório de usuários</h1>
-            <p class="small text-secondary mb-0">Total: <span class="text-dark fw-bold">{{ $userCount }}</span> Registros ativos</p>
-        </div>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
-            Novo Usuario
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Diretório de Usuários"
+        description="Total: <span class='text-dark fw-bold'>{{ $userCount }}</span> registros ativos">
+        <x-slot:actions>
+            <a href="{{ route('admin.users.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
+                Novo Usuário
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     @if(session('success'))
         <div class="alert alert-dark border-0 rounded-0 small mb-4 py-3 shadow-sm d-flex justify-content-between align-items-center" role="alert">
@@ -28,8 +26,8 @@
             <select id="filterUserType" class="form-select form-select-sm border-0 bg-light-subtle rounded-0 px-3" style="width: 180px;">
                 <option value="all">Todos os níveis</option>
                 <option value="1">Admin Master</option>
-                <option value="2">Usuario Común</option>
-                <option value="3">Usuario Curso</option>
+                <option value="2">Usuário Comum</option>
+                <option value="3">Usuário Curso</option>
             </select>
         </div>
     </div>
@@ -40,8 +38,8 @@
             <thead class="bg-white">
                 <tr class="text-uppercase x-small tracking-wider text-secondary">
                     <th class="py-3 border-0 fw-bold" style="width: 60px;">ID</th>
-                    <th class="py-3 border-0 fw-bold">Usuario</th>
-                    <th class="py-3 border-0 fw-bold">Nivel de Acesso</th>
+                    <th class="py-3 border-0 fw-bold">Usuário</th>
+                    <th class="py-3 border-0 fw-bold">Nível de Acesso</th>
                     <th class="py-3 border-0 fw-bold">Registro</th>
                     <th class="py-3 border-0 fw-bold text-end">Ações</th>
                 </tr>
@@ -64,7 +62,7 @@
                             @csrf
                             <select name="user_type" class="form-select form-select-sm border-0 bg-light-subtle x-small fw-bold rounded-0 py-1" onchange="this.form.submit()">
                                 <option value="1" {{ $user->user_type == 1 ? 'selected' : '' }}>ADMIN</option>
-                                <option value="2" {{ $user->user_type == 2 ? 'selected' : '' }}>USUARIO</option>
+                                <option value="2" {{ $user->user_type == 2 ? 'selected' : '' }}>USUÁRIO</option>
                                 <option value="3" {{ $user->user_type == 3 ? 'selected' : '' }}>CURSO</option>
                             </select>
                             <span class="status-dot type-{{ $user->user_type }}"></span>
@@ -99,5 +97,5 @@
     <div class="mt-5 d-flex justify-content-center">
         {{ $users->links() }}
     </div>
-</div>
+</x-admin.card>
 @endsection

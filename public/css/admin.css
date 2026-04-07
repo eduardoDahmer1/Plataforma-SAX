@@ -1,3 +1,277 @@
+/* ═══════════════════════════════════════════════════════
+   SAX ADMIN — Variables Globales
+   ═══════════════════════════════════════════════════════ */
+:root {
+    /* Marca */
+    --gold: #D4AF37;
+    --gold-light: #fdf8e6;
+    --sax-dark: #121212;
+
+    /* Bistro */
+    --bistro-dark: #0f1d35;
+    --bistro-navy: #1a2a4a;
+    --bistro-mid: #2d4a7a;
+    --bistro-primary: #2d4a7a;
+    --bistro-light-bg: #eef2f8;
+    --bistro-light: #e8eef6;
+
+    /* Bordes y Radios */
+    --border-light: #eef2f7;
+    --border-medium: #e2e8f0;
+    --radius-card: 1.5rem;
+
+    /* Texto */
+    --text-muted-sax: #64748b;
+}
+
+/* ── Utilidades base ────────────────────────────────── */
+.bg-white-soft {
+    background-color: #f8fafc;
+}
+
+.bg-white-10 {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.text-gold {
+    color: var(--gold) !important;
+}
+
+.text-bistro {
+    color: var(--bistro-primary) !important;
+}
+
+.border-gold {
+    border-color: var(--gold) !important;
+}
+
+.border-gold-subtle {
+    border-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+.x-small {
+    font-size: 0.68rem;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.letter-spacing-2 {
+    letter-spacing: 2px;
+}
+
+/* ── Card Premium ───────────────────────────────────── */
+.sax-premium-card {
+    background: #fff;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-light);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sax-premium-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.08);
+}
+
+/* ── Input Base SAX ────────────────────────────────── */
+/* TODO: .sax-input está compartida con app.css — migrar vistas a clases separadas en tarea futura */
+.sax-input {
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-medium);
+    padding: 0.75rem 1rem;
+    background: #fff;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sax-input:focus {
+    border-color: var(--sax-dark);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    outline: none;
+}
+
+.sax-input-sm {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.625rem;
+}
+
+.sax-input-file {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.sax-input-dark {
+    background: rgba(255, 255, 255, .07) !important;
+    border-color: rgba(255, 255, 255, .15) !important;
+    color: #fff !important;
+}
+
+.sax-input-dark::placeholder {
+    color: rgba(255, 255, 255, .35);
+}
+
+.sax-input-dark:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, .2) !important;
+}
+
+/* ── Botones SAX ────────────────────────────────────── */
+.btn-dark-gold {
+    background: var(--sax-dark);
+    color: var(--gold);
+    border: none;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.btn-dark-gold:hover {
+    background: #000;
+    color: #fff;
+    transform: scale(1.02);
+}
+
+.btn-back-minimal {
+    text-decoration: none;
+    color: var(--text-muted-sax);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-back-minimal:hover {
+    color: var(--sax-dark);
+    transform: translateX(-5px);
+}
+
+.btn-action-sax {
+    background: transparent;
+    border: 1px solid var(--border-medium);
+    color: #444;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.625rem;
+    border-radius: 0.625rem;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-action-sax:hover {
+    background: var(--sax-dark);
+    border-color: var(--sax-dark);
+    color: #fff;
+}
+
+.btn-delete-sax {
+    background: #fff5f5;
+    border: 1px solid #fee2e2;
+    color: #dc2626;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.625rem;
+    border-radius: 0.625rem;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-delete-sax:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
+
+/* ── Labels ─────────────────────────────────────────── */
+.sax-form-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-muted-sax);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.sax-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+}
+
+.sax-label-tiny {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #aaa;
+    letter-spacing: 0.5px;
+    display: block;
+}
+
+.sax-label-mini {
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: #bbb;
+    text-transform: uppercase;
+}
+
+/* ── Dividers ───────────────────────────────────────── */
+.sax-divider-dark {
+    width: 2.5rem;
+    height: 3px;
+    background: var(--sax-dark);
+    margin: 0.5rem 0;
+}
+
+.sax-divider-gold {
+    width: 3rem;
+    height: 4px;
+    background: var(--gold);
+    margin: 0.5rem 0;
+    border-radius: 2px;
+}
+
+.sax-divider-bistro {
+    width: 3rem;
+    height: 0.25rem;
+    background: var(--bistro-primary);
+    margin: 0.5rem 0;
+    border-radius: 0.125rem;
+}
+
+/* ── Alertas ────────────────────────────────────────── */
+.alert-sax-success {
+    background: #ecfdf5;
+    border: none;
+    border-left: 4px solid #10b981;
+    color: #065f46;
+    border-radius: 0.75rem;
+    font-size: 0.85rem;
+    padding: 0.9375rem 1.5625rem;
+}
+
+/* ── Upload Zone ────────────────────────────────────── */
+.asset-upload-zone {
+    border: 2px dashed var(--border-medium);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    text-align: center;
+    background: #fbfbfb;
+    transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.asset-upload-zone:hover {
+    border-color: var(--sax-dark);
+    background: #fff;
+}
+
+
 /* Estilos anteriores mantidos com melhorias */
 .sections-wrapper {
     display: flex;
@@ -102,42 +376,10 @@
     letter-spacing: 0.12em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .italic {
     font-style: italic;
 }
 
-.sax-divider-dark {
-    width: 40px;
-    height: 2px;
-    background: #000;
-}
-
-.sax-form-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    display: block;
-}
-
-.sax-input {
-    border-radius: 0;
-    border: 1px solid #e5e5e5;
-    padding: 12px 15px;
-    font-size: 0.9rem;
-    transition: 0.2s;
-}
-
-.sax-input:focus {
-    border-color: #000;
-    box-shadow: none;
-    background-color: #fcfcfc;
-}
 
 /* Zona de Upload Custom */
 .sax-upload-zone {
@@ -176,10 +418,6 @@
 
 .tracking-tighter {
     letter-spacing: 0.05em;
-}
-
-.x-small {
-    font-size: 0.65rem;
 }
 
 .fs-7 {
@@ -260,27 +498,6 @@
     font-family: 'Inter', sans-serif;
 }
 
-.sax-divider-dark {
-    width: 40px;
-    height: 3px;
-    background: #000;
-    margin-top: 10px;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 3px;
-}
-
-.x-small {
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-/* Card Premium */
-.sax-premium-card {
-    background: #fff;
-    border-radius: 24px;
-}
 
 /* Banner Wrapper */
 .banner-preview-wrapper {
@@ -311,13 +528,6 @@
     right: 20px;
 }
 
-/* Labels e Badges */
-.sax-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    letter-spacing: 1px;
-}
 
 .bg-soft-dark {
     background-color: #f8f9fa;
@@ -325,53 +535,15 @@
     font-weight: 700;
 }
 
-/* Botão Voltar */
-.btn-back-minimal {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #888;
-    text-decoration: none;
-    transition: all 0.3s;
-}
-
-.btn-back-minimal:hover {
-    color: #000;
-    transform: translateX(-5px);
-}
 
 .tracking-wider {
     letter-spacing: 0.12em;
-}
-
-.x-small {
-    font-size: 0.7rem;
 }
 
 .italic {
     font-style: italic;
 }
 
-.sax-label {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: #444;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-input {
-    border-radius: 0 !important;
-    border: 1px solid #ddd !important;
-    padding: 12px;
-}
-
-.sax-input-sm {
-    font-size: 0.75rem;
-    border-radius: 0;
-    border: 1px solid #eee;
-    padding: 5px 10px;
-}
 
 /* Remove sombras chatas do bootstrap nos inputs */
 .form-control:focus,
@@ -397,13 +569,6 @@
 }
 
 /* Admin Editorial UI Overrides */
-.x-small {
-    font-size: 0.65rem;
-}
-
-.x-small-7 {
-    font-size: 0.6rem;
-}
 
 .tracking-wider {
     letter-spacing: 0.1em;
@@ -499,54 +664,6 @@
     --bs-pagination-active-bg: #000;
 }
 
-/* Estilização da Zona de Upload */
-.asset-upload-zone {
-    border: 2px dashed #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    background: #fbfbfb;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.asset-upload-zone:hover {
-    border-color: #000;
-    background: #fff;
-}
-
-.sax-input-file {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-/* Inputs e Estética Premium */
-.sax-input {
-    border: 1px solid #eef2f7;
-    background: #fff;
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-}
-
-.sax-input:focus {
-    border-color: #000;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.03);
-}
-
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
 
 /* Botão Dark SAX */
 .btn-dark {
@@ -583,9 +700,79 @@
 }
 
 /* Busca */
+.sax-search-wrapper {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.sax-search-input {
+    border: none;
+}
+
 .sax-search-input:focus {
     box-shadow: none;
     background: #fcfcfc;
+}
+
+/* Barra de filtros inline */
+.sax-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+    background: #fff;
+    border-radius: 1rem;
+    padding: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+}
+
+.sax-filter-item {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 8rem;
+}
+
+.sax-filter-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.sax-filter-select {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+    border: none;
+    background: transparent;
+    padding: 0.375rem 1.75rem 0.375rem 0.5rem;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+    width: auto;
+}
+
+.sax-filter-select:focus {
+    border-color: #000;
+    box-shadow: none;
+    outline: none;
+}
+
+.sax-clear-filters {
+    font-size: 0.75rem;
+    color: #999;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.sax-clear-filters:hover {
+    color: #000;
 }
 
 /* Botões Customizados */
@@ -626,45 +813,6 @@
     color: #166534;
 }
 
-.alert-sax-success {
-    background: #000;
-    color: #fff;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    padding: 15px 25px;
-}
-
-/* ZONA DE UPLOAD (Idêntico ao Create) */
-.asset-upload-zone {
-    border: 2px dashed #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    background: #fbfbfb;
-    transition: all 0.3s ease;
-    position: relative;
-    min-height: 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.asset-upload-zone:hover {
-    border-color: #000;
-    background: #fff;
-}
-
-.sax-input-file {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 2;
-}
 
 /* Estilo para o Badge de arquivo existente */
 .bg-success-soft {
@@ -676,23 +824,7 @@
 }
 
 /* Premium Estética */
-.sax-input {
-    border: 1px solid #eef2f7;
-    background: #fff;
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-}
 
-.sax-input:focus {
-    border-color: #000;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.03);
-}
-
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
 
 .btn-dark {
     background: #000;
@@ -708,20 +840,6 @@
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 }
 
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-.x-small {
-    font-size: 0.65rem;
-}
-
-.sax-divider-dark {
-    width: 40px;
-    height: 3px;
-    background: #000;
-    margin: 8px 0;
-}
 
 /* Estilos de Logo */
 .brand-profile-logo {
@@ -782,15 +900,6 @@
     color: #ccc;
 }
 
-/* Utilitários SAX */
-.sax-label {
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #999;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    display: block;
-}
 
 .value-box {
     padding: 10px 15px;
@@ -798,56 +907,6 @@
     background: #f8f9fa;
 }
 
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
-
-.x-small {
-    font-size: 0.65rem;
-}
-
-:root {
-    --gold: #D4AF37;
-    --gold-light: #fdf8e6;
-    --sax-dark: #121212;
-}
-
-/* ── Base ───────────────────────────────────────────── */
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.text-gold {
-    color: var(--gold) !important;
-}
-
-.x-small {
-    font-size: 0.68rem;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-/* ── Título / Divider ───────────────────────────────── */
-.sax-title {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: var(--sax-dark);
-}
-
-.sax-divider-gold {
-    width: 45px;
-    height: 4px;
-    background: var(--gold);
-    margin: 8px 0;
-    border-radius: 2px;
-}
 
 /* ── Sticky Header ──────────────────────────────────── */
 .sticky-header {
@@ -856,17 +915,11 @@
     z-index: 1020;
 }
 
-/* ── Premium Card ───────────────────────────────────── */
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-    border: 1px solid #eef2f7;
-}
 
 /* ── Card Section Header ────────────────────────────── */
 .section-header {
     background: #fafafa;
-    border-radius: 20px 20px 0 0;
+    border-radius: 1.25rem 1.25rem 0 0;
 }
 
 /* ── Icon Circle ────────────────────────────────────── */
@@ -883,43 +936,6 @@
     flex-shrink: 0;
 }
 
-/* ── Labels / Inputs ────────────────────────────────── */
-.sax-form-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #64748b;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    display: block;
-}
-
-.sax-input {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    background: #fff;
-}
-
-.sax-input:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, .12);
-}
-
-.sax-input-dark {
-    background: rgba(255, 255, 255, .07) !important;
-    border-color: rgba(255, 255, 255, .15) !important;
-    color: #fff !important;
-}
-
-.sax-input-dark::placeholder {
-    color: rgba(255, 255, 255, .35);
-}
-
-.sax-input-dark:focus {
-    border-color: var(--gold) !important;
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, .2) !important;
-}
 
 /* ── Upload Zone ────────────────────────────────────── */
 .upload-zone {
@@ -1016,78 +1032,13 @@
     opacity: 1;
 }
 
-/* ── Edit Button ────────────────────────────────────── */
-.btn-dark-gold {
-    background: var(--sax-dark);
-    color: var(--gold);
-    border: none;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    transition: background .2s;
-}
-
-.btn-dark-gold:hover {
-    background: #000;
-    color: #fff;
-}
-
-/* ── Cancel Link ────────────────────────────────────── */
-.btn-back-minimal {
-    text-decoration: none;
-    color: #64748b;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.btn-back-minimal:hover {
-    color: var(--sax-dark);
-}
 
 /* ── Alert ──────────────────────────────────────────── */
 .alert-modern {
-    border-radius: 12px;
+    border-radius: 0.75rem;
     border: none;
 }
 
-.alert-success.alert-modern {
-    background: var(--sax-dark);
-    color: var(--gold);
-}
-
-@media (max-width: 768px) {
-    .sticky-header {
-        padding: 12px 16px !important;
-    }
-}
-
-:root {
-    --gold: #D4AF37;
-    --gold-light: #fdf8e6;
-    --sax-dark: #121212;
-}
-
-/* ── Base ───────────────────────────────────────────── */
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.text-gold {
-    color: var(--gold) !important;
-}
-
-.x-small {
-    font-size: 0.68rem;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
 
 /* ── Title / Divider ────────────────────────────────── */
 .sax-title {
@@ -1096,55 +1047,6 @@
     color: var(--sax-dark);
 }
 
-.sax-divider-gold {
-    width: 50px;
-    height: 4px;
-    background: var(--gold);
-    margin: 10px 0;
-    border-radius: 2px;
-}
-
-/* ── Premium Card ───────────────────────────────────── */
-.sax-premium-card {
-    border-radius: 20px;
-    border: 1px solid #eef2f7;
-    transition: transform .25s ease, box-shadow .25s ease;
-}
-
-.sax-premium-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .08) !important;
-}
-
-/* ── Section Header (inside card) ───────────────────── */
-.section-header {
-    background: #fafafa;
-    border-radius: 20px 20px 0 0;
-}
-
-/* ── Icon Circle ────────────────────────────────────── */
-.icon-circle-gold {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: var(--gold-light);
-    color: var(--gold);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .9rem;
-    flex-shrink: 0;
-}
-
-/* ── Badges ─────────────────────────────────────────── */
-.badge-gold-soft {
-    background: var(--gold-light);
-    color: var(--gold);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 800;
-    font-size: 0.65rem;
-}
 
 .badge-section-done {
     background: #ecfdf5;
@@ -1167,73 +1069,10 @@
     white-space: nowrap;
 }
 
-/* ── Status Bar ─────────────────────────────────────── */
-.status-bar {
-    background: #fff;
-    border-radius: 14px;
-    border: 1px solid #eef2f7;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
-}
-
-.status-divider {
-    width: 1px;
-    height: 18px;
-    background: #e5e7eb;
-    flex-shrink: 0;
-}
-
-.status-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-.dot-success {
-    background: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, .18);
-}
-
-.dot-danger {
-    background: #ef4444;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, .18);
-}
-
-.section-pip {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-}
-
-.pip-done {
-    background: #10b981;
-}
-
-.pip-empty {
-    background: #e5e7eb;
-}
-
-/* ── Edit Button ────────────────────────────────────── */
-.btn-dark-gold {
-    background: var(--sax-dark);
-    color: var(--gold);
-    border: none;
-    letter-spacing: 1px;
-    font-size: 0.75rem;
-    transition: background .2s, transform .2s;
-}
-
-.btn-dark-gold:hover {
-    background: #000;
-    color: #fff;
-    transform: scale(1.02);
-}
-
 /* ── Hero ───────────────────────────────────────────── */
 .hero-image-wrapper {
     height: 100%;
-    min-height: 280px;
+    min-height: 17.5rem;
 }
 
 /* ── Brands ─────────────────────────────────────────── */
@@ -1350,80 +1189,7 @@
     margin-bottom: 10px;
 }
 
-/* ── Flash Alert ────────────────────────────────────── */
-.alert-modern {
-    border-radius: 12px;
-    border: none;
-}
-
-.alert-success.alert-modern {
-    background: var(--sax-dark);
-    color: var(--gold);
-}
-
 /* ── Responsive ─────────────────────────────────────── */
-@media (max-width: 768px) {
-    .palace-visual {
-        width: 100%;
-        min-height: 150px;
-    }
-
-    .hero-image-wrapper {
-        min-height: 200px;
-    }
-
-    .branch-thumb {
-        height: 100px;
-    }
-
-    .status-bar {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 10px !important;
-    }
-
-    .status-divider {
-        display: none;
-    }
-}
-
-:root {
-    --bistro-dark: #0f1d35;
-    --bistro-navy: #1a2a4a;
-    --bistro-mid: #2d4a7a;
-    --bistro-light-bg: #eef2f8;
-    --sax-dark: #121212;
-}
-
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.x-small {
-    font-size: 0.68rem;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 0.125rem;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 0.0625rem;
-}
-
-.sax-title {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: var(--sax-dark);
-}
-
-.sax-divider-bistro {
-    width: 2.8125rem;
-    height: 0.25rem;
-    background: var(--bistro-dark);
-    margin: 0.5rem 0;
-    border-radius: 0.125rem;
-}
 
 .sticky-header {
     position: sticky;
@@ -1431,16 +1197,6 @@
     z-index: 1020;
 }
 
-.sax-premium-card {
-    background: #fff;
-    border-radius: 1.25rem;
-    border: 1px solid #eef2f7;
-}
-
-.section-header {
-    background: #fafafa;
-    border-radius: 1.25rem 1.25rem 0 0;
-}
 
 .icon-circle-bistro {
     width: 2.375rem;
@@ -1455,27 +1211,6 @@
     flex-shrink: 0;
 }
 
-.sax-form-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #64748b;
-    margin-bottom: 0.3125rem;
-    text-transform: uppercase;
-    letter-spacing: .03125rem;
-    display: block;
-}
-
-.sax-input {
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    font-size: 0.85rem;
-    background: #fff;
-}
-
-.sax-input:focus {
-    border-color: var(--bistro-mid);
-    box-shadow: 0 0 0 3px rgba(45, 74, 122, .12);
-}
 
 .upload-zone {
     border: 2px dashed #e2e8f0;
@@ -1524,28 +1259,6 @@
     transform: scale(1.02);
 }
 
-.btn-back-minimal {
-    text-decoration: none;
-    color: #64748b;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.0625rem;
-}
-
-.btn-back-minimal:hover {
-    color: var(--sax-dark);
-}
-
-.alert-modern {
-    border-radius: 0.75rem;
-    border: none;
-}
-
-.alert-success.alert-modern {
-    background: var(--bistro-dark);
-    color: #fff;
-}
 
 /* Galería preview grid */
 .gallery-preview-grid {
@@ -1640,10 +1353,6 @@
     min-width: 8rem;
 }
 
-.sax-input-sm {
-    font-size: 0.8rem;
-    padding: 0.35rem 0.625rem;
-}
 
 .horario-fechado-label {
     display: inline-flex;
@@ -1652,71 +1361,6 @@
     user-select: none;
 }
 
-@media (max-width: 768px) {
-    .sticky-header {
-        padding: 0.75rem 1rem !important;
-    }
-}
-
-:root {
-    --bistro-primary: #2d4a7a;
-    --bistro-light: #e8eef6;
-    --sax-dark: #0f1d35;
-}
-
-/* ── Base ───────────────────────────────────────────── */
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.text-bistro {
-    color: var(--bistro-primary) !important;
-}
-
-.x-small {
-    font-size: 0.68rem;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-/* ── Title / Divider ────────────────────────────────── */
-.sax-title {
-    font-size: 1.6rem;
-    font-weight: 900;
-    color: var(--sax-dark);
-}
-
-.sax-divider-bistro {
-    width: 3.125rem;
-    height: 0.25rem;
-    background: var(--bistro-primary);
-    margin: 0.625rem 0;
-    border-radius: 0.125rem;
-}
-
-/* ── Premium Card ───────────────────────────────────── */
-.sax-premium-card {
-    border-radius: 1.25rem;
-    border: 1px solid #eef2f7;
-    transition: transform .25s ease, box-shadow .25s ease;
-}
-
-.sax-premium-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, .08) !important;
-}
-
-/* ── Section Header ─────────────────────────────────── */
-.section-header {
-    background: #fafafa;
-    border-radius: 1.25rem 1.25rem 0 0;
-}
 
 /* ── Icon Circle ────────────────────────────────────── */
 .icon-circle-bistro {
@@ -1851,38 +1495,7 @@
     margin-bottom: 0.625rem;
 }
 
-/* ── Flash Alert ────────────────────────────────────── */
-.alert-modern {
-    border-radius: 0.75rem;
-    border: none;
-}
-
-.alert-success.alert-modern {
-    background: var(--sax-dark);
-    color: var(--bistro-primary);
-}
-
 /* ── Responsive ─────────────────────────────────────── */
-@media (max-width: 768px) {
-    .sobre-visual {
-        width: 100%;
-        min-height: 9.375rem;
-    }
-
-    .hero-image-wrapper {
-        min-height: 12.5rem;
-    }
-
-    .status-bar {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 0.625rem !important;
-    }
-
-    .status-divider {
-        display: none;
-    }
-}
 
 /* Assets Edit Boxes */
 .asset-edit-box {
@@ -1924,13 +1537,6 @@
     transform: scale(1.1);
 }
 
-/* Inputs e Selects */
-.sax-input {
-    border: 1px solid #eef2f7;
-    border-radius: 10px;
-    padding: 12px 15px;
-    font-size: 0.9rem;
-}
 
 .sax-select-wrapper {
     position: relative;
@@ -1945,29 +1551,7 @@
 }
 
 /* Base Styles */
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
 
-.sax-form-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-.x-small {
-    font-size: 0.7rem;
-}
 
 /* Cards Específicos para Nível 3 */
 .sax-child-card {
@@ -1998,58 +1582,6 @@
     letter-spacing: -0.2px;
 }
 
-.sax-label-tiny {
-    font-size: 0.55rem;
-    font-weight: 800;
-    color: #bbb;
-    letter-spacing: 0.5px;
-}
-
-/* Botões de Ação SAX Mini */
-.btn-action-sax {
-    background: #f8f9fa;
-    border: 1px solid #eee;
-    color: #444;
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    transition: 0.2s;
-}
-
-.btn-action-sax:hover {
-    background: #000;
-    color: #fff;
-    border-color: #000;
-}
-
-.btn-delete-sax {
-    background: #fff;
-    border: 1px solid #fee2e2;
-    color: #dc2626;
-    font-size: 0.65rem;
-    font-weight: 800;
-    padding: 8px;
-    border-radius: 8px;
-    transition: 0.3s;
-    text-transform: uppercase;
-}
-
-.btn-delete-sax:hover {
-    background: #dc2626;
-    color: #fff;
-}
-
-/* Reutilizando Helpers do Sistema */
-.sax-divider-dark {
-    width: 35px;
-    height: 3px;
-    background: #000;
-    margin-top: 8px;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
 
 /* Fluxo de Hierarquia Visual */
 .h-connector {
@@ -2063,13 +1595,6 @@
     color: #444;
 }
 
-.sax-label-tiny {
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #aaa;
-    letter-spacing: 0.5px;
-    display: block;
-}
 
 /* Previews de Mídia */
 .media-preview-sax {
@@ -2110,15 +1635,6 @@
 }
 
 /* Base Sax Styles */
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
-
-.sax-title {
-    font-size: 1.5rem;
-    font-weight: 900;
-}
 
 .italic {
     font-style: italic;
@@ -2151,65 +1667,15 @@
 }
 
 /* Campos de Texto */
-.sax-input {
-    border: 1px solid #f1f4f8;
-    background: #fff;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.9rem;
-}
 
-.sax-input:focus {
-    border-color: #000;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.sax-form-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
 
 /* Container Base */
 .sax-admin-container {
-    background-color: #f8f9fa;
     min-height: 100vh;
 }
 
 /* Tipografia e Títulos */
-.sax-title {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: #1a1a1a;
-}
 
-.sax-divider-dark {
-    width: 40px;
-    height: 4px;
-    background: #1a1a1a;
-    margin-top: 5px;
-}
-
-.sax-label-tiny {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    letter-spacing: 1px;
-    display: block;
-}
-
-.x-small {
-    font-size: 0.75rem;
-}
 
 /* Inputs Customizados */
 .input-group-sax {
@@ -2306,33 +1772,7 @@
 }
 
 /* Botões e Utilitários */
-.sax-premium-card {
-    background: #fff;
-    border-radius: 24px;
-}
 
-.btn-back-minimal {
-    text-decoration: none;
-    color: #666;
-    font-weight: 800;
-    font-size: 0.7rem;
-    letter-spacing: 1px;
-    transition: color 0.3s;
-}
-
-.btn-back-minimal:hover {
-    color: #000;
-}
-
-@media (max-width: 768px) {
-    .media-upload-preview {
-        width: 100%;
-    }
-
-    .card-sax-body {
-        padding: 25px !important;
-    }
-}
 
 /* Card de Categoria */
 .sax-category-card {
@@ -2367,80 +1807,16 @@
     text-transform: capitalize;
 }
 
-/* Botões de Ação Personalizados */
-.btn-action-sax {
-    background: transparent;
-    border: 1px solid #eee;
-    color: #444;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 10px;
-    border-radius: 10px;
-    transition: 0.3s;
-    text-transform: uppercase;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.btn-action-sax:hover {
-    background: #000;
-    border-color: #000;
-    color: #fff;
-}
 
-.btn-delete-sax {
-    background: #fff5f5;
-    border: 1px solid #fee2e2;
-    color: #dc2626;
-    font-size: 0.7rem;
-    font-weight: 800;
-    padding: 10px;
-    border-radius: 10px;
-    transition: 0.3s;
-}
-
-.btn-delete-sax:hover {
-    background: #dc2626;
-    color: #fff;
-}
-
-/* Alerta SAX Dark */
-.alert-sax-success {
-    background-color: #1a1a1a;
-    border: none;
-    color: #fff;
-    border-radius: 15px;
-    font-weight: 500;
-}
-
-/* Custom Search */
-.sax-search-input:focus {
-    box-shadow: none;
-}
 
 /* Card e Estrutura */
-.sax-premium-card {
-    background: #fff;
-    border: 1px solid #f0f0f0;
-    border-radius: 20px;
-}
 
 .card-sax-header h6 {
     font-size: 0.75rem;
     color: #000;
 }
 
-/* Campos de Informação */
-.sax-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    letter-spacing: 1px;
-    display: block;
-    margin-bottom: 8px;
-}
 
 .value-box {
     padding: 12px 18px;
@@ -2502,18 +1878,6 @@
     text-transform: uppercase;
 }
 
-/* Botão Voltar */
-.btn-back-minimal {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #888;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.btn-back-minimal:hover {
-    color: #000;
-}
 
 /* Minimalist UI Components */
 .tracking-wider {
@@ -2522,10 +1886,6 @@
 
 .tracking-tighter {
     letter-spacing: 0.05em;
-}
-
-.x-small {
-    font-size: 0.65rem;
 }
 
 .bg-light-subtle {
@@ -2604,22 +1964,10 @@
     letter-spacing: 0.05em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .italic {
     font-style: italic;
 }
 
-.sax-label {
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #bbb;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 8px;
-}
 
 .sax-currency-card {
     transition: 0.2s;
@@ -2631,18 +1979,6 @@
     transform: translateY(-2px);
 }
 
-.sax-input {
-    border-radius: 0 !important;
-    border: 1px solid #e5e5e5 !important;
-    padding: 10px 12px;
-    font-size: 0.85rem;
-}
-
-.sax-input:focus {
-    border-color: #000 !important;
-    box-shadow: none !important;
-    background-color: #fafafa;
-}
 
 .btn-clean {
     background: none;
@@ -2669,21 +2005,10 @@
     letter-spacing: 0.05em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .italic {
     font-style: italic;
 }
 
-.sax-label {
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #bbb;
-    text-transform: uppercase;
-    display: block;
-}
 
 /* Estilo de abas de filtro */
 .sax-filter-link {
@@ -2734,16 +2059,8 @@
     text-decoration: underline !important;
 }
 
-@media (min-width: 768px) {
-    .border-start-md {
-        border-left: 1px solid #eee !important;
-    }
-}
 
 /* Tipografía y Estructura */
-.x-small {
-    font-size: 0.65rem;
-}
 
 .tracking-wider {
     letter-spacing: 0.12em;
@@ -2765,42 +2082,11 @@
     padding-bottom: 3px;
 }
 
-.sax-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #888;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-input {
-    border-radius: 0 !important;
-    border: 1px solid #e0e0e0 !important;
-    padding: 12px 15px;
-    font-size: 0.9rem;
-    transition: 0.2s;
-}
-
-.sax-input:focus {
-    border-color: #000 !important;
-    box-shadow: none !important;
-    background-color: #fafafa;
-}
 
 .tracking-wider {
     letter-spacing: 0.12em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
-.sax-divider-dark {
-    width: 40px;
-    height: 2px;
-    background: #000;
-}
 
 .hover-underline:hover {
     text-decoration: underline !important;
@@ -2815,10 +2101,6 @@
     letter-spacing: 0.05em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .fw-800 {
     font-weight: 800;
 }
@@ -2831,12 +2113,6 @@
     font-style: italic;
 }
 
-.sax-label-mini {
-    font-size: 0.55rem;
-    font-weight: 800;
-    color: #bbb;
-    text-transform: uppercase;
-}
 
 .sax-coupon-card {
     transition: 0.2s;
@@ -2869,98 +2145,7 @@
 }
 
 /* Reaproveitando os estilos do Palace para manter unidade visual */
-:root {
-    --gold: #D4AF37;
-    --sax-dark: #121212;
-}
 
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.text-gold {
-    color: var(--gold) !important;
-}
-
-.border-gold {
-    border-color: var(--gold) !important;
-}
-
-.border-gold-subtle {
-    border-color: rgba(212, 175, 55, 0.3) !important;
-}
-
-.sax-title {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: var(--sax-dark);
-}
-
-.sax-divider-gold {
-    width: 45px;
-    height: 4px;
-    background: var(--gold);
-    margin: 8px 0;
-    border-radius: 2px;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-    border: 1px solid #eef2f7;
-}
-
-.sax-form-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #64748b;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-}
-
-.sax-input {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 0.85rem;
-}
-
-.sax-input:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-}
-
-.asset-upload-zone {
-    border: 2px dashed #e2e8f0;
-    border-radius: 15px;
-    text-align: center;
-    position: relative;
-    transition: all 0.3s;
-    cursor: pointer;
-}
-
-.asset-upload-zone:hover {
-    border-color: var(--gold);
-    background: #fff;
-}
-
-.sax-input-file {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 5;
-}
 
 .gallery-preview-grid {
     display: grid;
@@ -2981,21 +2166,6 @@
     object-fit: cover;
 }
 
-.btn-dark-gold {
-    background: var(--sax-dark);
-    color: var(--gold);
-    border: none;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-}
-
-.btn-back-minimal {
-    color: #64748b;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-decoration: none;
-    letter-spacing: 1px;
-}
 
 .sticky-header {
     position: sticky;
@@ -3003,69 +2173,12 @@
     z-index: 1020;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .font-monospace {
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* Reaproveitando seu sistema de identidade SAX Palace */
-:root {
-    --gold: #D4AF37;
-    --gold-light: #fdf8e6;
-    --sax-dark: #121212;
-}
 
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.text-gold {
-    color: var(--gold) !important;
-}
-
-.border-gold {
-    border-color: var(--gold) !important;
-}
-
-.border-gold-subtle {
-    border: 1px solid rgba(212, 175, 55, 0.3) !important;
-}
-
-.sax-title {
-    font-size: 1.6rem;
-    font-weight: 900;
-    color: var(--sax-dark);
-}
-
-.sax-divider-gold {
-    width: 50px;
-    height: 4px;
-    background: var(--gold);
-    margin: 10px 0;
-    border-radius: 2px;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-.sax-premium-card {
-    border-radius: 24px;
-    border: 1px solid #eef2f7;
-    transition: all 0.3s;
-}
-
-.sax-premium-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05) !important;
-}
 
 .icon-circle-gold {
     width: 40px;
@@ -3124,19 +2237,6 @@
     font-weight: 800;
 }
 
-.btn-dark-gold {
-    background: var(--sax-dark);
-    color: var(--gold);
-    border: none;
-    letter-spacing: 1px;
-    font-size: 0.75rem;
-}
-
-.btn-dark-gold:hover {
-    background: #000;
-    color: #fff;
-    transform: scale(1.02);
-}
 
 .status-indicator {
     width: 10px;
@@ -3155,33 +2255,15 @@
     transition: 0.4s;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .lead-sm {
     font-size: 0.95rem;
     line-height: 1.7;
 }
 
-@media (max-width: 768px) {
-    .hero-image-wrapper {
-        height: 250px;
-    }
-
-    .avatar-stack-premium {
-        justify-content: center;
-        margin-top: 15px;
-    }
-}
 
 /* Tipografia e Espaçamento */
 .tracking-wider {
     letter-spacing: 0.1em;
-}
-
-.x-small {
-    font-size: 0.7rem;
 }
 
 .fs-7 {
@@ -3262,10 +2344,6 @@
     letter-spacing: 0.12em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .italic {
     font-style: italic;
 }
@@ -3317,94 +2395,6 @@
     border-bottom: 1px solid #f1f1f1;
 }
 
-:root {
-    --gold: #D4AF37;
-    --sax-dark: #121212;
-}
-
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.bg-white-10 {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.text-gold {
-    color: var(--gold) !important;
-}
-
-.sax-title {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: var(--sax-dark);
-}
-
-.sax-divider-gold {
-    width: 45px;
-    height: 4px;
-    background: var(--gold);
-    margin: 8px 0;
-    border-radius: 2px;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-    border: 1px solid #eef2f7;
-}
-
-.sax-form-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #64748b;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-}
-
-.sax-input {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 0.85rem;
-}
-
-.sax-input:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-}
-
-.asset-upload-zone {
-    border: 2px dashed #e2e8f0;
-    border-radius: 15px;
-    text-align: center;
-    position: relative;
-    transition: all 0.3s;
-    cursor: pointer;
-}
-
-.asset-upload-zone:hover {
-    border-color: var(--gold);
-    background: #fff;
-}
-
-.sax-input-file {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 5;
-}
 
 .gallery-preview-grid {
     display: grid;
@@ -3424,13 +2414,6 @@
     object-fit: cover;
 }
 
-.btn-dark-gold {
-    background: var(--sax-dark);
-    color: var(--gold);
-    border: none;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-}
 
 .sticky-header {
     position: sticky;
@@ -3438,60 +2421,8 @@
     z-index: 1020;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 /* SAX Identity System */
-:root {
-    --gold: #D4AF37;
-    --gold-light: #fdf8e6;
-    --sax-dark: #121212;
-}
 
-.bg-white-soft {
-    background-color: #f8fafc;
-}
-
-.bg-white-10 {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.text-gold {
-    color: var(--gold) !important;
-}
-
-.sax-title {
-    font-size: 1.6rem;
-    font-weight: 900;
-    color: var(--sax-dark);
-}
-
-.sax-divider-gold {
-    width: 50px;
-    height: 4px;
-    background: var(--gold);
-    margin: 10px 0;
-    border-radius: 2px;
-}
-
-.letter-spacing-2 {
-    letter-spacing: 2px;
-}
-
-.letter-spacing-1 {
-    letter-spacing: 1px;
-}
-
-.sax-premium-card {
-    border-radius: 24px;
-    border: 1px solid #eef2f7;
-    transition: transform 0.3s;
-}
-
-.sax-premium-card:hover {
-    transform: translateY(-3px);
-}
 
 /* Icon Styles */
 .icon-circle-gold {
@@ -3614,20 +2545,6 @@
     min-height: 220px;
 }
 
-/* Botão & Status */
-.btn-dark-gold {
-    background: var(--sax-dark);
-    color: var(--gold);
-    border: none;
-    letter-spacing: 1px;
-    font-size: 0.75rem;
-}
-
-.btn-dark-gold:hover {
-    background: #000;
-    color: #fff;
-    transform: scale(1.02);
-}
 
 .status-indicator {
     width: 10px;
@@ -3641,29 +2558,11 @@
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .lead-sm {
     font-size: 1rem;
     line-height: 1.6;
 }
 
-@media (max-width: 768px) {
-    .arab-visual {
-        width: 100%;
-        height: 180px;
-    }
-
-    .hero-image-wrapper {
-        height: 250px;
-    }
-
-    .avatar-stack-premium {
-        justify-content: center;
-    }
-}
 
 /* Minimalist Technical UI */
 .tracking-wider {
@@ -3674,42 +2573,10 @@
     letter-spacing: 0.05em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .italic {
     font-style: italic;
 }
 
-.sax-divider-dark {
-    width: 40px;
-    height: 2px;
-    background: #000;
-}
-
-.sax-form-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-input {
-    border-radius: 0;
-    border: 1px solid #e5e5e5;
-    padding: 12px 15px;
-    font-size: 0.9rem;
-    transition: 0.2s;
-}
-
-.sax-input:focus {
-    border-color: #000;
-    box-shadow: none;
-    background-color: #fcfcfc;
-}
 
 .form-check-input:checked {
     background-color: #000;
@@ -3729,42 +2596,10 @@
     letter-spacing: 0.05em;
 }
 
-.x-small {
-    font-size: 0.65rem;
-}
-
 .italic {
     font-style: italic;
 }
 
-.sax-divider-dark {
-    width: 40px;
-    height: 2px;
-    background: #000;
-}
-
-.sax-form-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-input {
-    border-radius: 0;
-    border: 1px solid #e5e5e5;
-    padding: 12px 15px;
-    font-size: 0.9rem;
-    transition: 0.2s;
-}
-
-.sax-input:focus {
-    border-color: #000;
-    box-shadow: none;
-    background-color: #fcfcfc;
-}
 
 .form-check-input:checked {
     background-color: #000;
@@ -3782,10 +2617,6 @@
 
 .tracking-tighter {
     letter-spacing: 0.05em;
-}
-
-.x-small {
-    font-size: 0.65rem;
 }
 
 .payment-icon {
@@ -3851,10 +2682,6 @@
 
 .tracking-tighter {
     letter-spacing: 0.05em;
-}
-
-.x-small {
-    font-size: 0.65rem;
 }
 
 .italic {
@@ -3956,27 +2783,7 @@
 }
 
 /* Base Styles Sync */
-.sax-input {
-    border: 1px solid #eef2f7;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.9rem;
-}
 
-.sax-form-label {
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    display: block;
-}
-
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-}
 
 /* Card de Subcategoria */
 .sax-subcategory-card {
@@ -4014,89 +2821,12 @@
     font-size: 0.7rem;
 }
 
-/* Botões Customizados (Padronizados com o Admin) */
-.btn-action-sax {
-    background: transparent;
-    border: 1px solid #eee;
-    color: #555;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 8px;
-    border-radius: 10px;
-    transition: 0.2s;
-    text-transform: uppercase;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.btn-action-sax:hover {
-    background: #111;
-    color: #fff;
-    border-color: #111;
-}
-
-.btn-delete-sax {
-    background: #fff5f5;
-    border: 1px solid #fee2e2;
-    color: #e53e3e;
-    font-size: 0.68rem;
-    font-weight: 800;
-    padding: 10px;
-    border-radius: 10px;
-    transition: 0.3s;
-}
-
-.btn-delete-sax:hover {
-    background: #e53e3e;
-    color: #fff;
-}
-
-/* Alertas SAX */
-.alert-sax-success {
-    background: #111;
-    color: #fff;
-    border-radius: 12px;
-    border: none;
-    font-size: 0.85rem;
-}
 
 /* Estilo Base */
 .sax-admin-container {
     font-family: 'Inter', sans-serif;
 }
 
-.sax-divider-dark {
-    width: 40px;
-    height: 3px;
-    background: #000;
-    margin-top: 8px;
-}
-
-.x-small {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-/* Cards Premium */
-.sax-premium-card {
-    background: #fff;
-    border-radius: 20px;
-    transition: all 0.3s ease;
-}
-
-/* Campos de Dados */
-.sax-label {
-    font-size: 0.6rem;
-    font-weight: 800;
-    color: #a0a0a0;
-    letter-spacing: 1.2px;
-    display: block;
-    margin-bottom: 8px;
-}
 
 .value-box {
     padding: 12px 18px;
@@ -4160,20 +2890,6 @@
     text-transform: uppercase;
 }
 
-/* Botão Voltar */
-.btn-back-minimal {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #999;
-    text-decoration: none;
-    transition: color 0.3s, transform 0.3s;
-    display: inline-block;
-}
-
-.btn-back-minimal:hover {
-    color: #000;
-    transform: translateX(-5px);
-}
 
 /* Layout Base */
 .admin-banners-wrapper {
@@ -4297,29 +3013,217 @@
     background: #f1f5f9;
 }
 
-/* Alertas Modernos */
-.alert-modern-success {
-    background-color: #ecfdf5;
-    border: none;
-    border-left: 4px solid #10b981;
-    color: #065f46;
-    border-radius: 12px;
-}
-
-.alert-icon-circle {
-    width: 32px;
-    height: 32px;
-    background: #10b981;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
 .btn-submit-action {
     border-radius: 10px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     font-size: 0.75rem;
+}
+
+/* ========================================================================
+   SIDEBAR - Menu Lateral Admin
+   ======================================================================== */
+
+/* Sidebar Container + Variables */
+.sax-admin-sidebar {
+    --sidebar-active-bg: transparent;
+    --sidebar-active-border: #1e3a5f;
+    --sidebar-hover-bg: rgba(0, 0, 0, 0.04);
+    --sidebar-text: #374151;
+    --sidebar-text-active: #0f172a;
+    --sidebar-subtext: #4b5563;
+    --sidebar-radius: 0.5rem;
+    --sidebar-gap: 0.25rem;
+    padding: 0.625rem;
+}
+
+/* Contenedor visual del sidebar */
+.sax-sidebar-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 0.5rem;
+    box-shadow: none;
+}
+
+/* Items Principales */
+.sax-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.625rem 0.75rem;
+    color: var(--sidebar-text);
+    text-decoration: none !important;
+    border-radius: var(--sidebar-radius);
+    border-left: 3px solid transparent;
+    margin-bottom: var(--sidebar-gap);
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.sax-nav-item:hover {
+    background-color: var(--sidebar-hover-bg);
+    color: var(--sidebar-text-active);
+}
+
+.sax-nav-item.active {
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-text-active);
+    border-left-color: var(--sidebar-active-border);
+    border-bottom: none;
+    font-weight: 600;
+}
+
+/* Íconos con Colores Suaves (Soft BG) */
+.nav-icon-box {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.bg-soft-warning {
+    background: #fff8e1;
+    color: #ffa000;
+}
+
+.bg-soft-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.bg-soft-primary {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.bg-soft-info {
+    background: #e0f7fa;
+    color: #00838f;
+}
+
+.bg-soft-danger {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Separadores entre Grupos */
+.nav-group + .nav-group {
+    margin-top: 0.125rem;
+    padding-top: 0.125rem;
+}
+
+/* Submenu */
+.sax-submenu {
+    padding-left: 1.25rem;
+    margin-bottom: 0.5rem;
+    margin-left: 1.75rem;
+    border-left: 1px solid #e5e7eb;
+}
+
+.submenu-link {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+    color: var(--sidebar-subtext);
+    text-decoration: none !important;
+    font-size: 0.8125rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.submenu-link i {
+    font-size: 0.75rem;
+    margin-right: 0.625rem;
+    width: 0.9375rem;
+    text-align: center;
+}
+
+.submenu-link:hover {
+    color: var(--sidebar-text-active);
+    background-color: var(--sidebar-hover-bg);
+    padding-left: 0.75rem;
+}
+
+.submenu-link.active {
+    color: var(--sidebar-text-active);
+    font-weight: 600;
+}
+
+/* Animación de la Flecha */
+.arrow-icon {
+    font-size: 0.7rem;
+    transition: transform 0.3s;
+}
+
+.has-collapse:not(.collapsed) .arrow-icon {
+    transform: rotate(180deg);
+}
+
+/* Mobile Touch Targets */
+
+/* ── Responsive ─────────────────────────────────────── */
+/* TODO: .border-start-md → migrar a clase Bootstrap nativa en el HTML */
+
+@media (max-width: 768px) {
+    /* Sticky Header */
+    .sticky-header {
+        padding: 0.75rem 1rem !important;
+    }
+
+    /* Visuales de sección */
+    .palace-visual,
+    .sobre-visual,
+    .arab-visual {
+        width: 100%;
+        min-height: 9.375rem;
+    }
+
+    .hero-image-wrapper {
+        min-height: 12.5rem;
+    }
+
+    .branch-thumb {
+        height: 6.25rem;
+    }
+
+    /* Status bar → stack vertical */
+    .status-bar {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.625rem !important;
+    }
+
+    .status-divider {
+        display: none;
+    }
+
+    /* Upload y cards */
+    .media-upload-preview {
+        width: 100%;
+    }
+
+    .card-sax-body {
+        padding: 1.5625rem !important;
+    }
+
+    /* Avatar stack */
+    .avatar-stack-premium {
+        justify-content: center;
+        margin-top: 0.9375rem;
+    }
+
+    /* Sidebar nav */
+    .sax-nav-item {
+        padding: 0.75rem;
+    }
+
+    .submenu-link {
+        padding: 0.5rem;
+    }
 }

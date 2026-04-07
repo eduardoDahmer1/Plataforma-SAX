@@ -88,7 +88,11 @@
                         </div>
                     </div>
                 </li>
-                <li class="nav-item"><a class="nav-link" href="#sobre">Sobre Nós</a></li>
+                @if(Request::is('institucional'))
+                    <li class="nav-item">
+                        <a class="nav-link" href="#sobre">Sobre Nós</a>
+                    </li>
+                @endif
                 <li class="nav-item"><a class="nav-link" href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('contact.form') }}">Contato</a></li>
             </ul>

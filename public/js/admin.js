@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const openDrawer = document.getElementById("openDrawer");
-    const closeDrawer = document.getElementById("closeDrawer");
-    const drawer = document.getElementById("drawerMobile");
-    const overlay = document.getElementById("drawerOverlay");
+    const openDrawer = document.getElementById("openAdminDrawer");
+    const closeDrawer = document.getElementById("closeAdminDrawer");
+    const drawer = document.getElementById("adminDrawerMobile");
+    const overlay = document.getElementById("adminDrawerOverlay");
 
     if (openDrawer && closeDrawer && drawer && overlay) {
         openDrawer.addEventListener("click", () => {

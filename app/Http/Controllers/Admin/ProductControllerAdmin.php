@@ -10,6 +10,7 @@ use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Attribute;
 
 class ProductControllerAdmin extends Controller
 {
@@ -45,9 +46,11 @@ class ProductControllerAdmin extends Controller
 
         $products = Product::select($productColumns)
             ->when($search, fn($q) => $q
-                ->where('external_name', 'LIKE', "%{$search}%")
-                ->orWhere('sku', 'LIKE', "%{$search}%")
-                ->orWhere('slug', 'LIKE', "%{$search}%"))
+                ->where(function ($q2) use ($search) {
+                    $q2->where('external_name', 'LIKE', "%{$search}%")
+                       ->orWhere('sku', 'LIKE', "%{$search}%")
+                       ->orWhere('slug', 'LIKE', "%{$search}%");
+                }))
             ->when($brandId, fn($q) => $q->where('brand_id', $brandId))
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->when($statusFilter, function ($q) use ($statusFilter) {
@@ -90,10 +93,10 @@ class ProductControllerAdmin extends Controller
                     case 'oldest':
                         $q->orderBy('created_at', 'asc');
                         break;
-                    case 'recently_updated':
+                    case 'last_edit':
                         $q->orderBy('updated_at', 'desc');
                         break;
-                    case 'old_updated':
+                    case 'old_edit':
                         $q->orderBy('updated_at', 'asc');
                         break;
                     case 'price_low':

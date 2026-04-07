@@ -1,8 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
+<x-admin.card>
     {{-- Navegação e Título --}}
     <div class="mb-5">
         <a href="{{ route('admin.payments.index') }}" class="text-decoration-none x-small fw-bold text-uppercase text-secondary tracking-wider">
@@ -96,7 +95,6 @@
             </form>
         </div>
     </div>
-</div>
 
 <script>
 function toggleFields() {
@@ -118,4 +116,5 @@ document.getElementById('type').addEventListener('change', toggleFields);
 document.getElementById('name').addEventListener('input', toggleFields);
 toggleFields();
 </script>
+</x-admin.card>
 @endsection

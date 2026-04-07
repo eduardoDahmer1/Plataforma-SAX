@@ -1,19 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-4">
-    <div class="container-fluid">
-        {{-- Header --}}
-        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Editar Categoria</h2>
-                <div class="sax-divider-dark"></div>
-                <p class="text-muted small mt-2">Gerencie as informações principais e identidade visual da categoria <strong>{{ $category->name }}</strong></p>
-            </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Editar Categoria"
+        description="Gerencie as informações principais e identidade visual da categoria <strong>{{ $category->name }}</strong>">
+        <x-slot:actions>
             <a href="{{ route('admin.categories.index') }}" class="btn-back-minimal">
                 <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
             </a>
-        </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
         <div class="row justify-content-center">
             <div class="col-xl-10">
@@ -98,7 +95,6 @@
             </div>
         </div>
     </div>
-</div>
 
 {{-- Formulários Ocultos para Delete --}}
 @if ($category->photo)
@@ -107,4 +103,5 @@
 @if ($category->banner)
 <form id="delete-banner-form" action="{{ route('admin.categories.deleteBanner', $category->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
 @endif
+</x-admin.card>
 @endsection

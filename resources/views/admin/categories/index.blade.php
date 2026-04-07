@@ -1,29 +1,25 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2">
-    {{-- Cabeçalho Estilizado --}}
-    <div class="dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Categorías</h2>
-            <div class="sax-divider-dark"></div>
-            <p class="text-muted x-small mt-2 mb-0">
-                Catálogo con <span class="text-dark fw-bold">{{ $categories->total() }}</span> departamentos activos
-            </p>
-        </div>
-        <a href="{{ route('admin.categories.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
-            <i class="fa fa-plus-circle me-2"></i> Nueva Categoría
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Categorias"
+        description="Catálogo com <span class='text-dark fw-bold'>{{ $categories->total() }}</span> departamentos ativos">
+        <x-slot:actions>
+            <a href="{{ route('admin.categories.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="fa fa-plus-circle me-2"></i> Nova Categoria
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Barra de Filtro Minimalista --}}
-    <div class="sax-search-wrapper mb-4 p-2 bg-white shadow-sm rounded-4 border">
+    <div class="sax-search-wrapper mb-4">
         <form action="{{ route('admin.categories.index') }}" method="GET">
             <div class="input-group">
                 <span class="input-group-text bg-transparent border-0 px-3">
                     <i class="fa fa-search text-muted"></i>
                 </span>
-                <input type="text" name="search" class="form-control border-0 sax-search-input py-2" 
+                <input type="text" name="search" class="form-control border-0 sax-search-input py-2"
                     placeholder="Buscar por nombre o slug..." value="{{ request('search') }}">
                 <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">FILTRAR</button>
             </div>
@@ -57,7 +53,7 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <a href="{{ route('admin.categories.show', $category) }}" class="btn btn-action-sax w-100">
-                                    <i class="fa fa-folder-open me-1"></i> Datos
+                                    <i class="fa fa-folder-open me-1"></i> Dados
                                 </a>
                             </div>
                             <div class="col-6">
@@ -69,7 +65,7 @@
                                 <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('¿Desea eliminar esta categoría?')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-delete-sax w-100 mt-1">
-                                        <i class="fa fa-trash-alt me-1"></i> ELIMINAR CATEGORÍA
+                                        <i class="fa fa-trash-alt me-1"></i> ELIMINAR CATEGORIA
                                     </button>
                                 </form>
                             </div>
@@ -85,5 +81,5 @@
     <div class="d-flex justify-content-center mt-5">
         {{ $categories->links() }}
     </div>
-</div>
+</x-admin.card>
 @endsection

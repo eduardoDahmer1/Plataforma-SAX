@@ -193,6 +193,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
+    Route::put('attributes/text-topo', [ImageUploadController::class, 'updateTextTopo'])->name('attributes.update_text');
+
     Route::resource('palace', PalaceAdminController::class);
     Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');
     Route::resource('bridal', BridalAdminController::class);
@@ -316,5 +318,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('image-upload', [ImageUploadController::class, 'delete'])->name('image.delete');
     Route::get('image-upload', [ImageUploadController::class, 'form'])->name('image.form');
 });
+
+Route::get('lang/{locale}', function ($locale) {
+    if (in_array($locale, ['pt_BR', 'en', 'es'])) {
+        session()->put('locale', $locale);
+    }
+    return redirect()->back();
+})->name('lang.switch');
 
 require __DIR__ . '/auth.php';

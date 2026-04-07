@@ -1,8 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
+<x-admin.card>
     {{-- Navegação e ID --}}
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -140,6 +139,7 @@
             </div>
         </div>
     </div>
-</div>
+
+</x-admin.card>
 
 @endsection

@@ -40,7 +40,7 @@
 
     {{-- ── ERRORES / FLASH ──────────────────────────────────────── --}}
     @if(session('success'))
-        <div class="alert alert-modern alert-success mb-4 mx-4">
+        <div class="alert alert-sax-success alert-dismissible fade show mb-4 mx-4">
             <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
         </div>
     @endif

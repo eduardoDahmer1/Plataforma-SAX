@@ -1,19 +1,17 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
-    {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Centro de Mensajes</h1>
-            <p class="small text-secondary mb-0">Gestión de comunicaciones y currículos recibidos</p>
-        </div>
-        <a href="{{ route('admin.contacts.export', ['type' => request('type')]) }}"
-           class="btn btn-outline-dark btn-sm rounded-0 px-3 text-uppercase fw-bold x-small tracking-wider">
-           <i class="fas fa-download me-2"></i>Exportar CSV
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Centro de Mensagens"
+        description="Gestão de comunicações e currículos recebidos">
+        <x-slot:actions>
+            <a href="{{ route('admin.contacts.export', ['type' => request('type')]) }}"
+               class="btn btn-outline-dark btn-sm rounded-0 px-3 text-uppercase fw-bold x-small tracking-wider">
+               <i class="fas fa-download me-2"></i>Exportar CSV
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Filtros Estilo Tab --}}
     <div class="d-flex gap-2 mb-4 border-bottom pb-3">
@@ -38,7 +36,7 @@
                 <div class="card border rounded-0 shadow-none sax-message-card">
                     <div class="card-body p-4">
                         <div class="row align-items-center">
-                            
+
                             {{-- Info do Remetente --}}
                             <div class="col-md-3">
                                 <div class="d-flex align-items-center">
@@ -53,7 +51,7 @@
 
                             {{-- Conteúdo da Mensagem --}}
                             <div class="col-md-5 py-3 py-md-0 border-start-md ps-md-4">
-                                <span class="sax-label mb-1">Mensaje</span>
+                                <span class="sax-label mb-1">Mensagem</span>
                                 <p class="small text-secondary mb-0 lh-base italic">
                                     "{{ Str::limit($contact->message, 120) }}"
                                 </p>
@@ -61,7 +59,7 @@
 
                             {{-- Data e Anexo --}}
                             <div class="col-md-2 text-md-center py-2 py-md-0">
-                                <span class="sax-label mb-1">Recibido</span>
+                                <span class="sax-label mb-1">Recebido</span>
                                 <span class="d-block x-small fw-bold text-dark">{{ $contact->created_at->format('d/m/Y') }}</span>
                                 <span class="x-small text-muted">{{ $contact->created_at->format('H:i') }}</span>
                             </div>
@@ -70,13 +68,13 @@
                             <div class="col-md-2 text-md-end pt-3 pt-md-0">
                                 <div class="d-flex justify-content-md-end gap-3 align-items-center">
                                     @if($contact->attachment)
-                                        <a href="{{ asset('storage/' . $contact->attachment) }}" target="_blank" 
+                                        <a href="{{ asset('storage/' . $contact->attachment) }}" target="_blank"
                                            class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                                           VER ADJUNTO
+                                           VER ANEXO
                                         </a>
                                     @endif
 
-                                    <form action="{{ route('admin.contatos.destroy', $contact->id) }}" method="POST" 
+                                    <form action="{{ route('admin.contatos.destroy', $contact->id) }}" method="POST"
                                           onsubmit="return confirm('¿Eliminar mensaje?')" class="m-0">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">
@@ -92,7 +90,7 @@
             </div>
         @empty
             <div class="col-12 py-5 text-center">
-                <p class="text-muted small italic">No se encontraron mensajes en esta categoría.</p>
+                <p class="text-muted small italic">Nenhuma mensagem encontrada nesta categoria.</p>
             </div>
         @endforelse
     </div>
@@ -101,6 +99,5 @@
     <div class="mt-5 d-flex justify-content-center">
         {{ $contacts->appends(['type' => request('type')])->links() }}
     </div>
-</div>
-
+</x-admin.card>
 @endsection

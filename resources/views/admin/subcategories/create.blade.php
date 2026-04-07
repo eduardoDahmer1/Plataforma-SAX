@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2">
-    {{-- Header --}}
-    <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Nueva Subcategoría</h2>
-            <div class="sax-divider-dark"></div>
-            <span class="text-muted x-small">Defina un segundo nivel jerárquico para el catálogo</span>
-        </div>
-        <a href="{{ route('admin.subcategories.index') }}" class="btn-back-minimal">
-            <i class="fas fa-times me-1"></i> DESCARTAR
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Nueva Subcategoría"
+        description="Defina un segundo nivel jerárquico para el catálogo">
+        <x-slot:actions>
+            <a href="{{ route('admin.subcategories.index') }}" class="btn-back-minimal">
+                <i class="fas fa-times me-1"></i> DESCARTAR
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <div class="row">
         <div class="col-lg-10 mx-auto">
@@ -92,5 +90,5 @@
             </form>
         </div>
     </div>
-</div>
+</x-admin.card>
 @endsection

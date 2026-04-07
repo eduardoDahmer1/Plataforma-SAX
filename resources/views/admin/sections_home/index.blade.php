@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
-    {{-- Header Minimalista --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Estrutura inicial</h1>
-            <p class="small text-secondary mb-0">Gestione a visibilidade das seções principais da sua loja</p>
-        </div>
-        <button type="submit" form="sectionsForm" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
-            Guardar Configuração
-        </button>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Estrutura Inicial"
+        description="Gerencie a visibilidade das seções principais da sua loja">
+        <x-slot:actions>
+            <button type="submit" form="sectionsForm" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
+                Guardar Configuração
+            </button>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <div class="row">
         <div class="col-lg-6">
@@ -21,7 +19,6 @@
                 @method('PATCH')
 
                 @php
-                    // Ajustado para exibir APENAS as seções que você está usando agora
                     $sections = [
                         'lancamentos' => ['label' => 'Novos Lançamentos', 'icon' => 'fa-calendar-plus'],
                         'destaque' => ['label' => 'Produtos Destacados', 'icon' => 'fa-star'],
@@ -42,9 +39,8 @@
                                 <span class="x-small text-muted italic">Seção: {{ $key }}</span>
                             </div>
                         </div>
-                        
+
                         <div class="form-check form-switch">
-                            {{-- O name deve ser o mesmo da chave do array --}}
                             <input class="form-check-input sax-switch" type="checkbox" name="{{ $key }}" id="{{ $key }}"
                                 {{ $settings->{'show_highlight_'.$key} ? 'checked' : '' }}>
                         </div>
@@ -57,18 +53,17 @@
         {{-- Coluna de Ajuda --}}
         <div class="col-lg-4 offset-lg-1 mt-5 mt-lg-0">
             <div class="border-start ps-4 h-100">
-                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3">Guía de Visualização</h6>
+                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3">Guia de Visualização</h6>
                 <p class="x-small text-secondary lh-base italic mb-4">
-                    Estas são as duas seções principais ativas em sua nova interface de luxo. 
+                    Estas são as duas seções principais ativas em sua nova interface de luxo.
                     Certifique-se de que os produtos tenham marcada a opção correspondente em seu painel individual para que apareçam na Home.
                 </p>
                 <div class="p-3 bg-light border-dashed">
                     <span class="x-small fw-bold text-dark d-block mb-1 text-uppercase">Nota de Estilo:</span>
-                    <span class="x-small text-muted italic">A Home agora segue um design editorial mais limpo, enfocándose exclusivamente no que é tendência e em produtos estrela.</span>
+                    <span class="x-small text-muted italic">A Home agora segue um design editorial mais limpo, focando exclusivamente no que é tendência e em produtos estrela.</span>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
+</x-admin.card>
 @endsection

@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
-    {{-- Header Minimalista --}}
-    <div class="d-flex justify-content-between align-items-end mb-5">
-        <div>
-            <h1 class="h4 fw-light text-uppercase tracking-wider mb-1">Moedas e câmbios</h1>
-            <p class="small text-secondary mb-0">Gestão de tipos de câmbio e formatos de moeda</p>
-        </div>
-        <button class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider" data-bs-toggle="modal" data-bs-target="#addCurrencyModal">
-            <i class="fas fa-plus me-2"></i> Nova Moeda
-        </button>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Moedas e Câmbios"
+        description="Gestão de tipos de câmbio e formatos de moeda">
+        <x-slot:actions>
+            <button class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider" data-bs-toggle="modal" data-bs-target="#addCurrencyModal">
+                <i class="fas fa-plus me-2"></i> Nova Moeda
+            </button>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     {{-- Grid de Moedas --}}
     <div class="row g-4">
@@ -31,15 +29,15 @@
                     </div>
 
                     <div class="bg-light p-3 mb-3 border-start border-3 {{ $currency->is_default ? 'border-dark' : 'border-secondary' }}">
-                        <span class="sax-label">Valor de Conversión</span>
+                        <span class="sax-label">Valor de Conversão</span>
                         <span class="h4 fw-light font-monospace m-0">{{ number_format($currency->value, $currency->decimal_digits ?? 2, $currency->decimal_separator ?? '.', $currency->thousands_separator ?? ',') }}</span>
                     </div>
 
                     <div class="d-flex gap-3 pt-2 border-top">
                         <button class="btn-clean text-dark x-small fw-bold tracking-tighter hover-underline" data-bs-toggle="modal" data-bs-target="#editCurrencyModal{{ $currency->id }}">
-                            EDITAR PARÁMETROS
+                            EDITAR PARÂMETROS
                         </button>
-                        
+
                         @if(!$currency->is_default)
                         <a href="{{ route('admin.currencies.default', $currency->id) }}" class="text-primary text-decoration-none x-small fw-bold tracking-tighter hover-underline">
                             ESTABELECER COMO BASE
@@ -50,7 +48,7 @@
             </div>
         </div>
 
-        {{-- Modal Editar (Versão Minimalista) --}}
+        {{-- Modal Editar --}}
         <div class="modal fade" id="editCurrencyModal{{ $currency->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <form action="{{ route('admin.currencies.update', $currency->id) }}" method="POST" class="modal-content rounded-0 border-0 shadow-lg">
@@ -75,7 +73,7 @@
                                 <input type="text" name="sign" class="form-control sax-input" value="{{ $currency->sign }}" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Taixa de Cambio</label>
+                                <label class="sax-label">Taxa de Câmbio</label>
                                 <input type="number" step="0.0001" name="value" class="form-control sax-input font-monospace" value="{{ $currency->value }}" required>
                             </div>
                             <div class="col-12">
@@ -87,7 +85,7 @@
                                 <input type="text" name="decimal_separator" class="form-control sax-input text-center" value="{{ $currency->decimal_separator ?? '.' }}">
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Sep. Miles</label>
+                                <label class="sax-label">Sep. Milhar</label>
                                 <input type="text" name="thousands_separator" class="form-control sax-input text-center" value="{{ $currency->thousands_separator ?? ',' }}">
                             </div>
                             <div class="col-md-4">
@@ -105,7 +103,7 @@
         </div>
         @endforeach
     </div>
-</div>
+</x-admin.card>
 
 {{-- Modal Adicionar Moeda --}}
 <div class="modal fade" id="addCurrencyModal" tabindex="-1" aria-hidden="true">
@@ -113,11 +111,10 @@
         <form action="{{ route('admin.currencies.store') }}" method="POST" class="modal-content rounded-0 border-0 shadow-lg">
             @csrf
             <div class="modal-header border-bottom py-3 px-4">
-                <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small">Registrar Nueva Divisa</h6>
+                <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small">Registrar Nova Divisa</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                {{-- Mesma estrutura do Edit para manter consistência --}}
                 <div class="row g-4">
                     <div class="col-md-4">
                         <label class="sax-label">ISO Code (USD, BRL, PYG)</label>
@@ -128,7 +125,7 @@
                         <input type="text" name="sign" class="form-control sax-input" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="sax-label">Taixa Inicial</label>
+                        <label class="sax-label">Taxa Inicial</label>
                         <input type="number" step="0.0001" name="value" class="form-control sax-input font-monospace" required>
                     </div>
                     <div class="col-12">

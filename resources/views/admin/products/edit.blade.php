@@ -15,8 +15,8 @@
         $type = $type ?? 'product';
     @endphp
 
-    <div class="container mt-5">
-        <h1 class="mb-4"><i class="fas fa-box-open me-2"></i>Editar Produto</h1>
+    <x-admin.card>
+    <x-admin.page-header title="Editar Produto" description="Edite as informações do produto no catálogo"></x-admin.page-header>
 
         <form action="{{ isset($item) ? route('admin.products.update', $item->id) : route('admin.products.store') }}"
             method="POST" enctype="multipart/form-data">
@@ -389,7 +389,6 @@
                 <i class="fas fa-times me-2"></i>Cancelar
             </a>
         </form>
-    </div>
     {{-- 1. FORMULÁRIOS DE APOIO (Apenas uma vez aqui) --}}
     @if ($item->photo)
         <form action="{{ route('admin.products.deletePhoto', $item->id) }}" method="POST" style="display:none;"
@@ -477,5 +476,6 @@
             background-color: #f9f9f9 !important;
         }
     </style>
+    </x-admin.card>
 
 @endsection

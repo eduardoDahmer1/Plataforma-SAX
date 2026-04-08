@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2">
-    {{-- Header --}}
-    <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Editar Nivel Final</h2>
-            <div class="sax-divider-dark"></div>
-            <span class="text-muted x-small">Sub-Subcategoría: <span class="text-dark fw-bold">#{{ $categoriasfilhas->id }}</span></span>
-        </div>
-        <a href="{{ route('admin.categorias-filhas.index') }}" class="btn-back-minimal">
-            <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Editar Nivel Final"
+        description="Sub-Subcategoría: <span class='text-dark fw-bold'>#{{ $categoriasfilhas->id }}</span>">
+        <x-slot:actions>
+            <a href="{{ route('admin.categorias-filhas.index') }}" class="btn-back-minimal">
+                <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <div class="row">
         <div class="col-lg-10 mx-auto">
@@ -103,7 +101,6 @@
             </form>
         </div>
     </div>
-</div>
 
 {{-- Hidden Forms --}}
 @if ($categoriasfilhas->photo)
@@ -117,4 +114,5 @@
     @csrf @method('DELETE')
 </form>
 @endif
+</x-admin.card>
 @endsection

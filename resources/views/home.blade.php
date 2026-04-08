@@ -5,8 +5,8 @@
         // 1. Definições Iniciais
         $settings = $settings ?? \App\Models\Generalsetting::first();
         $highlightTitles = [
-            'lancamentos' => 'Recem Chegados',
-            'destaque' => 'Destacados',
+            'lancamentos' => __('messages.lancamentos'),
+            'destaque' => __('messages.destacados'),
         ];
     @endphp
 
@@ -26,7 +26,7 @@
         <section class="sax-exclusive-banner py-5">
             <div class="container-fluid px-lg-5">
                 <div class="exclusive-content text-center">
-                    <h2 class="sax-brands-title text-dark">Coleção Exclusiva</h2>
+                    <h2 class="sax-brands-title text-dark">{{ __('messages.colecao_exclusiva') }}</h2>
                     @if(isset($banner1) && $banner1)
                         <div class="mt-4">
                             <img src="{{ asset('storage/uploads/' . $banner1) }}" 

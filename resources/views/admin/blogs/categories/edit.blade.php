@@ -1,7 +1,13 @@
 @extends('layout.admin')
 @section('content')
-<div class="container py-4">
-    <h1 class="mb-4">Editar Categoria</h1>
+<x-admin.card>
+    <x-admin.page-header title="Editar Categoria de Blog" description="Atualize o nome e o banner da categoria">
+        <x-slot:actions>
+            <a href="{{ route('admin.blog-categories.index') }}" class="btn-back-minimal">
+                <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <form action="{{ route('admin.blog-categories.update', $category) }}" method="POST" enctype="multipart/form-data">
 
@@ -24,5 +30,5 @@
         <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i> Salvar Alterações</button>
         <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
     </form>
-</div>
+</x-admin.card>
 @endsection

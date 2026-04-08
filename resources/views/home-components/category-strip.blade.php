@@ -4,11 +4,11 @@
             @foreach($categories as $cat)
                 @php
                     $displayName = $cat->name;
-                    if($cat->slug == 'feminino')  $displayName = 'MULHER';
-                    if($cat->slug == 'masculino') $displayName = 'HOMEM';
-                    if($cat->slug == 'infantil')  $displayName = 'CRIANÇAS';
-                    if($cat->slug == 'optico')    $displayName = 'LENTE';
-                    if($cat->slug == 'casa')      $displayName = 'CASA';
+                    if($cat->slug == 'feminino')  $displayName = __('messages.mulher');
+                    if($cat->slug == 'masculino') $displayName = __('messages.homem');
+                    if($cat->slug == 'infantil')  $displayName = __('messages.criancas');
+                    if($cat->slug == 'optico')    $displayName = __('messages.lente');
+                    if($cat->slug == 'casa')      $displayName = __('messages.casa');
                     $photoPath = ltrim($cat->photo, '/');
                     
                     if (!empty($photoPath)) {

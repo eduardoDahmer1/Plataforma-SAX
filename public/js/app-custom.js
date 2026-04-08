@@ -188,10 +188,11 @@ document.addEventListener('DOMContentLoaded', function () {
         [loginForm, registerForm, forgotForm].forEach(f => f.classList.add('d-none'));
         form.classList.remove('d-none');
 
+        const lang = window.saxLang || {};
         switch(form.id) {
-            case 'loginForm': modalTitle.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login'; break;
-            case 'registerForm': modalTitle.innerHTML = '<i class="fas fa-user-plus me-2"></i>Registrar'; break;
-            case 'forgotForm': modalTitle.innerHTML = '<i class="fas fa-envelope me-2"></i>Recuperar Senha'; break;
+            case 'loginForm': modalTitle.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>' + lang.entrar; break;
+            case 'registerForm': modalTitle.innerHTML = '<i class="fas fa-user-plus me-2"></i>' + lang.cadastrar; break;
+            case 'forgotForm': modalTitle.innerHTML = '<i class="fas fa-envelope me-2"></i>' + lang.recuperar_senha; break;
         }
     }
 

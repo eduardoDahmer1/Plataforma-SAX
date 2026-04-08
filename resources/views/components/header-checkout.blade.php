@@ -48,9 +48,9 @@
 
         {{-- Menu de navegação (Estilo Abas) --}}
         <div class="sax-nav-wrapper d-flex flex-wrap justify-content-center border-top border-bottom">
-            <a href="{{ route('home') }}" class="sax-nav-item">MULHER</a>
-            <a href="{{ route('home') }}" class="sax-nav-item">HOMEM</a>
-            <a href="{{ route('home') }}" class="sax-nav-item">CRIANÇAS</a>
+            <a href="{{ route('home') }}" class="sax-nav-item">{{ __('messages.mulher') }}</a>
+            <a href="{{ route('home') }}" class="sax-nav-item">{{ __('messages.homem') }}</a>
+            <a href="{{ route('home') }}" class="sax-nav-item">{{ __('messages.criancas') }}</a>
             
             @if(auth()->check())
                 @if(auth()->user()->user_type == 1)

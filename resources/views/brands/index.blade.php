@@ -5,16 +5,20 @@
         <div class="container">
             {{-- Cabeçalho Minimalista --}}
             <div class="text-center mb-5">
-                <h1 class="sax-title">Nuestras Marcas</h1>
+                <h1 class="sax-title">{{ __('messages.nossas_marcas') }}</h1>
                 <div class="sax-divider mx-auto"></div>
-                <p class="text-muted small text-uppercase tracking-widest mt-3">Excelencia y exclusividad en cada detalle</p>
+                <p class="text-muted small text-uppercase tracking-widest mt-3">
+                    {{ __('messages.excelencia_detalhe') }}
+                </p>
             </div>
 
             {{-- Busca Elegante --}}
             <div class="search-container mb-5">
                 <form method="GET" class="mx-auto" style="max-width: 600px;">
                     <div class="sax-search-input">
-                        <input type="text" name="search" placeholder="¿Qué marca estás buscando?" value="{{ request('search') }}">
+                        <input type="text" name="search" 
+                               placeholder="{{ __('messages.busca_marca') }}" 
+                               value="{{ request('search') }}">
                         <button type="submit">
                             <i class="fas fa-search"></i>
                         </button>
@@ -47,7 +51,7 @@
                     <div class="col-12 py-5 text-center">
                         <div class="no-results">
                             <i class="fas fa-search mb-3"></i>
-                            <p>No se encontraron marcas que coincidan con su búsqueda.</p>
+                            <p>{{ __('messages.marcas_nao_encontradas') }}</p>
                         </div>
                     </div>
                 @endforelse

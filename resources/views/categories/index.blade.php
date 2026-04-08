@@ -5,16 +5,20 @@
         <div class="container">
             {{-- Cabeçalho Minimalista Estilo SAX --}}
             <div class="text-center mb-5">
-                <h1 class="sax-title">Categorías</h1>
+                <h1 class="sax-title">{{ __('messages.categorias') }}</h1>
                 <div class="sax-divider mx-auto"></div>
-                <p class="text-muted small text-uppercase tracking-widest mt-3">Explore nuestras colecciones exclusivas</p>
+                <p class="text-muted small text-uppercase tracking-widest mt-3">
+                    {{ __('messages.explore_colecoes') }}
+                </p>
             </div>
 
             {{-- Busca Elegante --}}
             <div class="search-container mb-5">
                 <form method="GET" class="mx-auto" style="max-width: 600px;">
                     <div class="sax-search-input">
-                        <input type="text" name="search" placeholder="¿Qué colección buscas?" value="{{ request('search') }}">
+                        <input type="text" name="search" 
+                               placeholder="{{ __('messages.busca_colecao') }}" 
+                               value="{{ request('search') }}">
                         <button type="submit">
                             <i class="fas fa-search"></i>
                         </button>
@@ -23,21 +27,21 @@
             </div>
 
             {{-- Grid de Categorias com Padrão de Luxo --}}
-            <div class="row g-2"> {{-- g-2 para um respiro elegante entre blocos cinzas --}}
+            <div class="row g-2">
                 @forelse ($categories as $category)
                     @if (($category->products_count ?? 0) > 0)
                         <div class="col-6 col-md-4 col-lg-3">
                             <a href="{{ route('categories.show', $category->slug) }}" class="category-sax-card">
-                                {{-- Área da Imagem com o mesmo efeito das Marcas --}}
+                                {{-- Área da Imagem --}}
                                 <div class="category-img-box">
                                     @if ($category->photo && Storage::disk('public')->exists($category->photo))
                                         <img src="{{ Storage::url($category->photo) }}" alt="{{ $category->name }}" loading="lazy">
                                     @else
-                                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sin imagen">
+                                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="{{ __('messages.sem_imagem') }}">
                                     @endif
                                 </div>
 
-                                {{-- Info Centralizada e Minimalista --}}
+                                {{-- Info Centralizada --}}
                                 <div class="category-info">
                                     <h5 class="category-name">{{ $category->name ?? $category->slug }}</h5>
                                 </div>
@@ -48,13 +52,13 @@
                     <div class="col-12 py-5 text-center">
                         <div class="no-results">
                             <i class="fas fa-search mb-3"></i>
-                            <p>No se encontraron categorías que coincidan con su búsqueda.</p>
+                            <p>{{ __('messages.categorias_nao_encontradas') }}</p>
                         </div>
                     </div>
                 @endforelse
             </div>
 
-            {{-- Paginação Customizada Padrão Marcas --}}
+            {{-- Paginação Customizada --}}
             <div class="sax-pagination mt-5">
                 {{ $categories->appends(request()->input())->links() }}
             </div>

@@ -56,7 +56,7 @@
         {{-- Navegação Desktop --}}
         <div class="collapse navbar-collapse d-none d-lg-flex justify-content-between" id="expNavbarDesktop">
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0 text-uppercase">
-                <li class="nav-item"><a class="nav-link {{ Request::is('/') ? 'active' : '' }}" href="/">Início</a></li>
+                <li class="nav-item"><a class="nav-link {{ Request::is('/') ? 'active' : '' }}" href="/">{{ __('messages.inicio') }}</a></li>
                 <li class="nav-item dropdown exp-dropdown-mega">
                     <a class="nav-link dropdown-toggle" href="#" id="catDropDesk">Shop</a>
                     <div class="dropdown-menu border-0 shadow-lg">
@@ -106,7 +106,7 @@
         {{-- Navegação Mobile --}}
         <div class="collapse navbar-collapse d-lg-none" id="expNavbarMobile">
             <ul class="navbar-nav pt-4 text-uppercase">
-                <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+                <li class="nav-item"><a class="nav-link" href="/">{{ __('messages.inicio') }}</a></li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="shopDropMobile" data-bs-toggle="dropdown">Shop</a>
                     <ul class="dropdown-menu bg-transparent border-0 ps-3">

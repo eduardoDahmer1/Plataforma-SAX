@@ -21,18 +21,15 @@
                                 : asset('storage/uploads/noimage.webp');
                             $gallery = is_string($product->gallery)
                                 ? json_decode($product->gallery, true)
-                                : ($product->gallery ?:
-                                []);
+                                : ($product->gallery ?: []);
                         @endphp
 
-                        {{-- Imagem Principal --}}
                         <div class="col-12 mb-2">
                             <div class="gallery-frame">
                                 <img src="{{ $mainImage }}" class="img-fluid w-100" alt="{{ $product->external_name }}">
                             </div>
                         </div>
 
-                        {{-- Grid de Galeria (2 colunas) --}}
                         @foreach ($gallery as $img)
                             <div class="col-6">
                                 <div class="gallery-frame">
@@ -54,10 +51,9 @@
                             {{ currency_format($product->price) }}
                         </div>
 
-                        {{-- Seleção de Tamanhos Dinâmica --}}
                         <div class="size-selection-wrapper mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="section-label">GUIA DE TAMANHOS</span>
+                                <span class="section-label">{{ __('messages.guia_tamanhos') }}</span>
                             </div>
                             <div class="size-grid">
                                 @if (isset($siblings) && $siblings->count() > 0)
@@ -73,43 +69,38 @@
                             </div>
                         </div>
 
-                        {{-- Ações de Compra --}}
                         <div class="actions-wrapper mb-5">
                             <div class="d-flex gap-2">
                                 @if($isBridal)
-                                    {{-- Botão Alternativo para Bridal --}}
                                     <a href="https://wa.me/SEU_NUMERO" class="btn btn-outline-dark w-100 py-3">
-                                        <i class="fab fa-whatsapp me-2"></i> AGENDAR CONSULTA BRIDAL
+                                        <i class="fab fa-whatsapp me-2"></i> {{ __('messages.agendar_consulta_bridal') }}
                                     </a>
                                 @else
-                                    {{-- Fluxo Normal de Compra --}}
                                     @if (Auth::check())
                                         <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1">
                                             @csrf
                                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                                             <button type="submit" class="btn btn-dark btn-add-bag w-100"
                                                 {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                                                {{ $product->stock > 0 ? 'ADICIONAR AO CARRINHO' : 'ESGOTADO' }}
+                                                {{ $product->stock > 0 ? __('messages.adicionar_ao_carrinho') : __('messages.esgotado') }}
                                             </button>
                                         </form>
-                                        
-                                        {{-- Botão Wishlist (escondido se for Bridal) --}}
                                         <button class="btn btn-outline-dark btn-wishlist">
                                             <i class="far fa-heart"></i>
                                         </button>
                                     @else
                                         <a href="{{ route('login') }}"
-                                            class="btn btn-dark btn-add-bag flex-grow-1 text-center">LOGIN PARA COMPRAR</a>
+                                            class="btn btn-dark btn-add-bag flex-grow-1 text-center">
+                                            {{ __('messages.login_para_comprar') }}
+                                        </a>
                                     @endif
                                 @endif
                             </div>
                         </div>
 
-                        {{-- Accordion de Informações --}}
                         <div class="product-details-accordion">
                             <div class="accordion-item-sax">
-                                <div class="accordion-trigger">DESCRIÇÃO DO PRODUTO <i class="fas fa-plus small"></i>
-                                </div>
+                                <div class="accordion-trigger">{{ __('messages.descricao_produto') }} <i class="fas fa-plus small"></i></div>
                                 <div class="accordion-content show">
                                     <div class="rich-text-content">
                                         {!! $product->description !!}
@@ -119,7 +110,7 @@
 
                             @if ($product->attributes)
                                 <div class="accordion-item-sax">
-                                    <div class="accordion-trigger">DETALHES TÉCNICOS <i class="fas fa-plus small"></i></div>
+                                    <div class="accordion-trigger">{{ __('messages.detalhes_tecnicos') }} <i class="fas fa-plus small"></i></div>
                                     <div class="accordion-content">
                                         <table class="table table-sm table-borderless m-0 x-small">
                                             @foreach (json_decode($product->attributes, true) as $key => $value)
@@ -134,26 +125,20 @@
                             @endif
 
                             <div class="accordion-item-sax">
-                                <div class="accordion-trigger">ENVIOS E DEVOLUÇÕES <i class="fas fa-plus small"></i></div>
+                                <div class="accordion-trigger">{{ __('messages.envios_devolucoes') }} <i class="fas fa-plus small"></i></div>
                                 <div class="accordion-content">
-                                    <p>Consulte nossos prazos de entrega e políticas de devolução no checkout. Garantimos
-                                        até 7 dias para trocas ou devoluções de produtos em perfeitas condições e com nota
-                                        fiscal, válido para Brasil e Paraguai</p>
+                                    <p>{{ __('messages.politica_envio_texto') }}</p>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Disponibilidade em Loja --}}
                         <div class="store-availability mt-5 pt-4 border-top">
-                            <div class="section-label mb-3 text-uppercase fw-bold tracking-wider"
-                                style="font-size: 0.75rem; color: #1a1a1a;">
-                                <i class="fas fa-map-marker-alt me-2"></i> Disponível para retirada na loja
+                            <div class="section-label mb-3 text-uppercase fw-bold tracking-wider" style="font-size: 0.75rem; color: #1a1a1a;">
+                                <i class="fas fa-map-marker-alt me-2"></i> {{ __('messages.disponivel_retirada') }}
                             </div>
 
                             @php
-                                // Garante que stores seja um array, mesmo que venha nulo do banco
                                 $selectedStores = is_array($product->stores) ? $product->stores : [];
-
                                 $allStores = [
                                     'asuncion' => 'Asunción',
                                     'cde' => 'Ciudad Del Este',
@@ -180,11 +165,11 @@
             </div>
         </div>
 
-        {{-- SEÇÕES DE DESTAQUE DINÂMICAS --}}
+        {{-- SEÇÕES DE DESTAQUE --}}
         @php
             $highlightTitles = [
-                'lancamentos' => 'Recem Chegados',
-                'destaque' => 'Artigos Similares',
+                'lancamentos' => __('messages.recem_chegados'),
+                'destaque' => __('messages.artigos_similares'),
             ];
         @endphp
 
@@ -211,50 +196,6 @@
                 </section>
             @endif
         @endforeach
-        <section class="help-section">
-            <div class="help-grid">
-                {{-- CARD: GUIA DE COMPRA (Ícone Cabide) --}}
-                <div class="help-card">
-                    <div class="icon">
-                        @if ($attribute && $attribute->icon_cabide && Storage::disk('public')->exists('uploads/' . $attribute->icon_cabide))
-                            <img src="{{ asset('storage/uploads/' . $attribute->icon_cabide) }}" alt="Guia de Compra"
-                                width="30">
-                        @else
-                            👕
-                        @endif
-                    </div>
-                    <h3>COMO REALIZAR UMA COMPRA</h3>
-                    <p>Seu guia para fazer pedidos</p>
-                </div>
-
-                {{-- CARD: PERGUNTAS FREQUENTES (Ícone Ajuda/Dúvida) --}}
-                <div class="help-card">
-                    <div class="icon">
-                        @if ($attribute && $attribute->icon_help && Storage::disk('public')->exists('uploads/' . $attribute->icon_help))
-                            <img src="{{ asset('storage/uploads/' . $attribute->icon_help) }}" alt="FAQ"
-                                width="30">
-                        @else
-                            <span class="red-icon">?</span>
-                        @endif
-                    </div>
-                    <h3>PERGUNTAS FREQUENTES</h3>
-                    <p>Respondemos suas dúvidas!</p>
-                </div>
-
-                {{-- CARD: PRECISA DE AJUDA (Ícone Info/Relógio) --}}
-                <div class="help-card">
-                    <div class="icon">
-                        @if ($attribute && $attribute->icon_info && Storage::disk('public')->exists('uploads/' . $attribute->icon_info))
-                            <img src="{{ asset('storage/uploads/' . $attribute->icon_info) }}" alt="Ajuda"
-                                width="30">
-                        @else
-                            ⓘ
-                        @endif
-                    </div>
-                    <h3>PRECISA DE AJUDA?</h3>
-                    <p>Fale com nossa equipe de Atendimento ao Cliente</p>
-                </div>
-            </div>
-        </section>
+        @include('home-components.form-home')
     </div>
 @endsection

@@ -193,6 +193,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/', [ImageUploadController::class, 'index'])->name('index');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
+    Route::resource('languages', \App\Http\Controllers\Admin\LanguageControllerAdmin::class);
+
     Route::put('attributes/text-topo', [ImageUploadController::class, 'updateTextTopo'])->name('attributes.update_text');
 
     Route::resource('palace', PalaceAdminController::class);

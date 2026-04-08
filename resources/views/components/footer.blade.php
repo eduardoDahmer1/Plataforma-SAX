@@ -1,18 +1,20 @@
 <footer class="sax-footer-refined">
     <div class="container">
         @php
-            $menuSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
+            // Slugs das categorias principais
+            $menuSlugs = ['feminino', 'masculino', 'infantil', 'otica', 'casa'];
+            
             $footerCategories = \App\Models\Category::whereIn('slug', $menuSlugs)
-                ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'optico', 'casa')")
+                ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'otica', 'casa')")
                 ->get();
 
-            // O Map agora busca a tradução baseada no slug
+            // O mapeamento usa as chaves exatas que inserimos no banco de dados
             $labelMap = [
-                'feminino' => __('messages.feminino'),
+                'feminino'  => __('messages.feminino'),
                 'masculino' => __('messages.masculino'),
-                'infantil' => __('messages.infantil'),
-                'optico' => __('messages.otica'),
-                'casa' => __('messages.casa'),
+                'infantil'  => __('messages.infantil'),
+                'otica'     => __('messages.otica'),
+                'casa'      => __('messages.casa'),
             ];
         @endphp
 
@@ -39,7 +41,7 @@
                 <div class="column-content">
                     <h6 class="footer-title">{{ __('messages.sobre_nos') }}</h6>
                     <ul class="footer-links">
-                        <li><a href="{{ route('all-categories.index') }}">{{ __('messages.categorias') }} Gerais</a></li>
+                        <li><a href="{{ route('all-categories.index') }}">{{ __('messages.categorias_gerais') }}</a></li>
                         <li><a href="{{ route('brands.index') }}">{{ __('messages.nossas_marcas') }}</a></li>
                         <li><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                         <li><a href="{{ route('palace.index') }}">SAX Palace</a></li>

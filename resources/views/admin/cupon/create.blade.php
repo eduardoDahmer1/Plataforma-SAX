@@ -1,8 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
+<x-admin.card>
     {{-- Header de Navegação --}}
     <div class="mb-5">
         <a href="{{ route('admin.cupons.index') }}" class="text-decoration-none x-small fw-bold text-uppercase text-secondary tracking-wider">
@@ -35,6 +34,7 @@
             </form>
         </div>
     </div>
-</div>
+
+</x-admin.card>
 
 @endsection

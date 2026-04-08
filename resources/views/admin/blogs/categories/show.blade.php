@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2">
-    {{-- Header de Navegação --}}
-    <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Categoría de Blog</h2>
-            <div class="sax-divider-dark"></div>
-            <span class="text-muted x-small">Detalles del recurso informativo</span>
-        </div>
-        <a href="{{ route('admin.blog-categories.index') }}" class="btn-back-minimal">
-            <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
-        </a>
-    </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Categoría de Blog"
+        description="Detalles del recurso informativo">
+        <x-slot:actions>
+            <a href="{{ route('admin.blog-categories.index') }}" class="btn-back-minimal">
+                <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <div class="row">
         <div class="col-lg-8 mx-auto">
@@ -61,5 +59,5 @@
             </div>
         </div>
     </div>
-</div>
+</x-admin.card>
 @endsection

@@ -16,11 +16,11 @@
     ->get();
 
     $labelMap = [
-    'feminino' => 'MULHER',
-    'masculino' => 'HOMEM',
-    'infantil' => 'CRIANÇAS',
-    'optico' => 'LENTE',
-    'casa' => 'CASA',
+    'feminino' => __('messages.mulher'),
+    'masculino' => __('messages.homem'),
+    'infantil' => __('messages.criancas'),
+    'optico' => __('messages.lente'),
+    'casa' => __('messages.casa'),
     ];
     @endphp
 
@@ -37,10 +37,16 @@
                         @csrf
                         <select name="currency_id" class="sax-currency-select" onchange="this.form.submit()">
                             @foreach ($currencies as $currency)
-                            <option value="{{ $currency->id }}"
-                                {{ (int) $currency->id === (int) $currentCurrencyId ? 'selected' : '' }}>
-                                {{ $currency->sign }} {{ $currency->name }}
-                            </option>
+                                @php
+                                    $langLabel = '';
+                                    if ($currency->name === 'USD') $langLabel = 'EN';
+                                    elseif ($currency->name === 'BRL') $langLabel = 'PT';
+                                    elseif ($currency->name === 'PYG') $langLabel = 'ES';
+                                @endphp
+                                <option value="{{ $currency->id }}"
+                                    {{ (int) $currency->id === (int) $currentCurrencyId ? 'selected' : '' }}>
+                                    {{ $langLabel }} | {{ $currency->sign }} {{ $currency->name }}
+                                </option>
                             @endforeach
                         </select>
                     </form>
@@ -62,10 +68,10 @@
             <ul class="list-inline m-0 main-nav-list">
                 <li class="list-inline-item"><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                 <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">SAX PALACE</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">CONTATO</a></li>
+                <li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
 
                 <li class="list-inline-item border-start ps-3 dropdown-mega-parent">
-                    <a href="{{ route('categories.index') }}">CATEGORÍAS</a>
+                    <a href="{{ route('categories.index') }}">{{ __('messages.categorias') }}</a>
                     <div class="mega-menu-box" style="display: none;">
                         <div class="container text-start">
                             <div class="row py-4">
@@ -96,7 +102,7 @@
                     </div>
                 </li>
                 <li class="list-inline-item border-start ps-3">
-                    <a href="{{ route('all-categories.index') }}">CATEGORÍAS GERAIS</a>
+                    <a href="{{ route('all-categories.index') }}">{{ __('messages.categorias_gerais') }}</a>
                 </li>
             </ul>
         </div>
@@ -136,7 +142,7 @@
                             <i class="fa fa-search"></i>
                         </span>
                         <input type="text" name="search" class="form-control sax-search-input"
-                            placeholder="¿Qué deseas buscar?" value="{{ request('search') }}">
+                            placeholder="{{ __('messages.pesquisar') }}" value="{{ request('search') }}">
                     </div>
                 </form>
             </div>
@@ -152,22 +158,21 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item"
-                                    href="{{ auth()->user()->user_type == 1 ? route('admin.index') : route('user.dashboard') }}">MEU
-                                    PAINEL</a></li>
+                                    href="{{ auth()->user()->user_type == 1 ? route('admin.index') : route('user.dashboard') }}">{{ __('messages.meu_painel') }}</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="dropdown-item text-danger">SAIR</button>
+                                    <button type="submit" class="dropdown-item text-danger">{{ __('messages.sair') }}</button>
                                 </form>
                             </li>
                         </ul>
                     </div>
                     @else
                     <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#loginModal"
-                        class="fw-bold uppercase small tracking-1">INICIAR SESÃO</a>
+                        class="fw-bold uppercase small tracking-1">{{ __('messages.entrar') }}</a>
                     @endif
                 </div>
                 @if (Auth::check())
@@ -277,7 +282,7 @@
                 <li><a href="{{ route('bridal.index') }}"
                         class="p-3 d-block text-dark text-decoration-none small border-bottom">SAX BRIDAL</a></li>
                 <li><a href="{{ route('contact.form') }}"
-                        class="p-3 d-block text-dark text-decoration-none small border-bottom">CONTATO</a></li>
+                        class="p-3 d-block text-dark text-decoration-none small border-bottom">{{ __('messages.contato') }}</a></li>
                 <li><a href="{{ route('palace.index') }}"
                         class="p-3 d-block text-dark text-decoration-none small border-bottom">SAX PALACE</a></li>
                 <li>
@@ -297,7 +302,7 @@
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-0"><i class="fa fa-search"></i></span>
                         <input type="text" name="search" id="mobileSearchInput" class="form-control sax-search-input"
-                            placeholder="Buscar productos...">
+                            placeholder="{{ __('messages.pesquisar') }}">
                     </div>
                 </div>
             </form>

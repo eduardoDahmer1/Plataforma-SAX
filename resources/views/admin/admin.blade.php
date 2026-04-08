@@ -1,20 +1,11 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="admin-banners-wrapper py-4">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-end mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Admin</a></li>
-                        <li class="breadcrumb-item active">Multimedia</li>
-                    </ol>
-                </nav>
-                <h1 class="h2 fw-bold text-dark mb-0">Gerenciamento de banners e logotipos</h1>
-                <p class="text-muted mb-0">Controle a identidade visual e os banners da plataforma em um só lugar.</p>
-            </div>
-        </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Gerenciamento de Banners e Logotipos"
+        description="Controle a identidade visual e os banners da plataforma em um só lugar.">
+    </x-admin.page-header>
 
         {{-- Alertas --}}
         @if(session('success'))
@@ -128,5 +119,5 @@
             @endforeach
         </div>
     </div>
-</div>
+</x-admin.card>
 @endsection

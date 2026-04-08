@@ -6,18 +6,26 @@
     <div class="container pt-5 pb-4">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-2">
-                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted small uppercase tracking-2">Inicio</a></li>
-                <li class="breadcrumb-item active small uppercase tracking-2" aria-current="page">Categorias</li>
+                <li class="breadcrumb-item">
+                    <a href="/" class="text-decoration-none text-muted small uppercase tracking-2">
+                        {{ __('messages.inicio') }}
+                    </a>
+                </li>
+                <li class="breadcrumb-item active small uppercase tracking-2" aria-current="page">
+                    {{ __('messages.categorias') }}
+                </li>
             </ol>
         </nav>
-        <h1 class="display-5 fw-light text-uppercase tracking-5 mb-0">Nuestras Categorias</h1>
+        <h1 class="display-5 fw-light text-uppercase tracking-5 mb-0">
+            {{ __('messages.nossas_categorias') }}
+        </h1>
         <div class="title-separator mt-3"></div>
     </div>
 
     <div class="container pb-5">
         @foreach($categories as $category)
             <section class="category-section mb-5">
-                {{-- Título da Categoria Pai com ID para links de âncora se necessário --}}
+                {{-- Título da Categoria Pai --}}
                 <div class="category-header d-flex align-items-center mb-4">
                     <a href="{{ route('categories.show', $category->slug) }}">
                         <h2 class="fw-bold text-uppercase m-0 h4 tracking-2">{{ $category->name }}</h2>
@@ -54,6 +62,7 @@
         @endforeach
     </div>
 </div>
+@endsection
 
 <style>
     /* Configurações de Tipografia e Espaçamento */
@@ -128,4 +137,3 @@
         }
     }
 </style>
-@endsection

@@ -43,7 +43,7 @@
         <div class="brand-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
                 <a href="{{ route('brands.index') }}" class="back-link-minimal">
-                    <i class="fas fa-chevron-left me-1"></i> VOLVER A MARCAS
+                    <i class="fas fa-chevron-left me-1"></i> {{ __('messages.voltar_marcas') }}
                 </a>
                 <div class="brand-logo-container mt-3">
                     @if ($brand->image && Storage::disk('public')->exists($brand->image))

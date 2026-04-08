@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container mt-4">
+<x-admin.card>
     <h2 class="mb-4"><i class="fas fa-folder me-2"></i>Editar Subcategoria</h2>
 
     <form action="{{ route('admin.subcategories.update', $subcategory->id) }}" method="POST" enctype="multipart/form-data">
@@ -73,5 +73,6 @@
         @method('DELETE')
     </form>
     @endif
-</div>
+
+</x-admin.card>
 @endsection

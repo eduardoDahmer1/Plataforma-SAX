@@ -4,7 +4,7 @@
             <div class="login-header">
                 <div class="login-header-title">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"></path></svg>
-                    ENTRAR
+                    {{ __('messages.entrar') }}
                 </div>
                 <div class="login-header-close">&times;</div>
             </div>
@@ -20,23 +20,23 @@
                     </div>
 
                     <div class="form-group">
-                        <input id="password" class="form-input" type="password" name="password" placeholder="Senha" required />
+                        <input id="password" class="form-input" type="password" name="password" placeholder="{{ __('messages.senha') }}" required />
                     </div>
 
                     <div class="forgot-password-container">
                         <a href="{{ route('password.request') }}" class="link-bold-dark">
-                            Esqueceu a senha?
+                            {{ __('messages.esqueci_senha') }}
                         </a>
                     </div>
 
                     <button type="submit" class="btn-submit">
                         <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20"><path d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"></path></svg>
-                        ENTRAR
+                        {{ __('messages.entrar') }}
                     </button>
 
                     <div class="register-footer">
-                        Não tem uma conta? 
-                        <a href="{{ route('register') }}" class="link-bold-dark">Registre-se</a>
+                        {{ __('messages.nao_tem_conta') }}
+                        <a href="{{ route('register') }}" class="link-bold-dark">{{ __('messages.registre_se') }}</a>
                     </div>
                 </form>
             </div>

@@ -1,26 +1,22 @@
 @extends('layout.admin')
 
 @section('content')
-    <div class="sax-admin-container py-2">
-        {{-- Header com Caminho de Navegação --}}
-        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Detalle de Nivel Final</h2>
-                <div class="sax-divider-dark"></div>
-                <nav aria-label="breadcrumb" class="mt-2">
-                    <ol class="breadcrumb x-small mb-0 text-uppercase fw-bold letter-spacing-1">
-                        <li class="breadcrumb-item text-muted">{{ $categoriasfilhas->subcategory->category->name ?? 'Cat' }}
-                        </li>
-                        <li class="breadcrumb-item text-muted">{{ $categoriasfilhas->subcategory->name ?? 'Sub' }}</li>
-                        <li class="breadcrumb-item text-dark active">{{ $categoriasfilhas->name }}</li>
-                    </ol>
-                </nav>
-            </div>
+@php
+    $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb x-small mb-0 text-uppercase fw-bold letter-spacing-1">
+        <li class="breadcrumb-item text-muted">' . ($categoriasfilhas->subcategory->category->name ?? 'Cat') . '</li>
+        <li class="breadcrumb-item text-muted">' . ($categoriasfilhas->subcategory->name ?? 'Sub') . '</li>
+        <li class="breadcrumb-item text-dark active">' . $categoriasfilhas->name . '</li>
+    </ol></nav>';
+@endphp
+<x-admin.card>
+    <x-admin.page-header title="Detalle de Nivel Final" :description="$breadcrumb">
+        <x-slot:actions>
             <a href="{{ route('admin.categorias-filhas.edit', $categoriasfilhas) }}"
-                class="btn btn-dark w-100 rounded-pill fw-bold x-small py-3">
+                class="btn btn-dark rounded-pill fw-bold x-small py-2 px-4">
                 <i class="fas fa-edit me-2"></i> EDITAR ESTA CATEGORÍA
             </a>
-        </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
         <div class="row g-4">
             {{-- Coluna de Herança e Dados --}}
@@ -126,5 +122,5 @@
                 </div>
             </div>
         </div>
-    </div>
+</x-admin.card>
 @endsection

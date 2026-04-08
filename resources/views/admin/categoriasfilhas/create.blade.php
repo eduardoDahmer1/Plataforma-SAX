@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container mt-4">
+<x-admin.card>
     <h2 class="mb-4"><i class="fas fa-plus me-2"></i>Criar Sub-Subcategoria</h2>
 
     <form action="{{ route('admin.categoriasfilhas.store') }}" method="POST" enctype="multipart/form-data">
@@ -33,5 +33,6 @@
 
         <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Salvar</button>
     </form>
-</div>
+
+</x-admin.card>
 @endsection

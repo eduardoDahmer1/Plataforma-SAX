@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\App;
 use App\Models\Category;
 use App\Models\Attribute;
+use App\Models\Language;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,25 +29,53 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 1. Compartilha atributos globais de forma simples
+        // 1. Tradução Dinâmica via Banco de Dados
+        if (Schema::hasTable('languages')) {
+            
+            // Usamos um cache único para todas as traduções para evitar múltiplas queries
+            $allTranslations = Cache::remember('all_translations_db', now()->addHours(24), function () {
+                return Language::all();
+            });
+
+            foreach ($allTranslations as $translation) {
+                // Registra a tradução para cada idioma disponível no banco
+                // Isso permite que o helper __('messages.chave') funcione instantaneamente após a troca de locale
+                
+                // Português
+                app('translator')->addLines([
+                    "messages.{$translation->key}" => $translation->pt
+                ], 'pt_BR');
+
+                // Espanhol
+                app('translator')->addLines([
+                    "messages.{$translation->key}" => $translation->es
+                ], 'es');
+
+                // Inglês
+                app('translator')->addLines([
+                    "messages.{$translation->key}" => $translation->en
+                ], 'en');
+            }
+        }
+
+        // 2. Compartilha atributos globais
         View::share('attributes', Attribute::first());
 
-        // 2. Carrega helper de moeda
+        // 3. Carrega helper de moeda
         if (file_exists(app_path('Helpers/CurrencyHelper.php'))) {
             require_once app_path('Helpers/CurrencyHelper.php');
         }
-        
-        // 3. Força HTTPS em produção
+
+        // 4. Força HTTPS em produção
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
 
-        // 4. Paginação com Bootstrap
+        // 5. Paginação com Bootstrap
         Paginator::useBootstrap();
 
         /**
-         * 5. MEGA MENU COMPOSER
-         * Carrega a árvore de categorias apenas para as views que precisam (layout e header)
+         * 6. MEGA MENU COMPOSER
          */
         View::composer(['layout.layout', 'layout.header', 'components.header'], function ($view) {
             $headerCategories = Cache::remember('header_categories_tree', now()->addHours(24), function () {
@@ -62,15 +93,16 @@ class AppServiceProvider extends ServiceProvider
         });
 
         /**
-         * 6. ATRIBUTOS E BANNERS COMPOSER
-         * Mantive sua lógica original, mas otimizada em uma única variável de objeto
+         * 7. ATRIBUTOS E BANNERS COMPOSER
          */
         View::composer('*', function ($view) {
             $attribute = Cache::remember('global_attributes_db', now()->addHours(24), function() {
                 return DB::table('attributes')->where('id', 1)->first();
             });
 
+            // Injeta também o locale atual para facilitar nas views
             $view->with([
+                'locale'            => App::getLocale(),
                 'webpImage'         => $attribute?->header_image ?? null,
                 'banner1'           => $attribute?->banner1 ?? null,
                 'logo_palace'       => $attribute?->logo_palace ?? null,

@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container">
+<x-admin.card>
     <a href="{{ route('pages.home') }}" class="btn btn-primary mb-3">Home</a>
 
     <h2>Detalhes do Arquivo</h2>
@@ -49,6 +49,7 @@
     @if(auth()->user()->user_type == 1)
     <a href="{{ route('admin.uploads.index') }}" class="btn btn-primary mt-4">Voltar para a lista de arquivos</a>
     @endif
-</div>
+
+</x-admin.card>
 
 @endsection

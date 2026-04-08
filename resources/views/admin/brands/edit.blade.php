@@ -1,18 +1,16 @@
 @extends('layout.admin')
 
 @section('content')
-    <div class="sax-admin-container py-2">
-        {{-- Header --}}
-        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Editar Marca</h2>
-                <div class="sax-divider-dark"></div>
-                <span class="text-muted x-small">ID da Marca: #{{ $brand->id }}</span>
-            </div>
+<x-admin.card>
+    <x-admin.page-header
+        title="Editar Marca"
+        description="ID da Marca: #{{ $brand->id }}">
+        <x-slot:actions>
             <a href="{{ route('admin.brands.index') }}" class="btn-back-minimal">
                 <i class="fas fa-times me-1"></i> CANCELAR
             </a>
-        </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
         <div class="row">
             <div class="col-lg-10 mx-auto">
@@ -125,6 +123,7 @@
                 </form>
             </div>
         </div>
-    </div>
+
+</x-admin.card>
 
 @endsection

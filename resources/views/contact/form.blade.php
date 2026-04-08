@@ -135,9 +135,13 @@
     <div class="container">
         {{-- Cabeçalho Minimalista --}}
         <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold text-uppercase letter-spacing-3 mb-2">Contato</h1>
+            <h1 class="display-5 fw-bold text-uppercase letter-spacing-3 mb-2">
+                {{ __('messages.contato') }}
+            </h1>
             <div class="sax-divider mx-auto mb-3"></div>
-            <p class="text-muted text-uppercase x-small letter-spacing-2">Estamos à sua disposição para o que precisar</p>
+            <p class="text-muted text-uppercase x-small letter-spacing-2">
+                {{ __('messages.estamos_disposicao') }}
+            </p>
         </div>
 
         @if(session('success'))
@@ -154,10 +158,10 @@
                         {{-- Seleção de Tipo de Atendimento --}}
                         <div class="mb-4 d-flex gap-3 justify-content-start border-bottom">
                             <button type="button" class="btn btn-sax-tab active" id="btn-atendimento" onclick="setFormType(1)">
-                                ATENDIMENTO
+                                {{ __('messages.atendimento') }}
                             </button>
                             <button type="button" class="btn btn-sax-tab" id="btn-curriculo" onclick="setFormType(2)">
-                                TRABALHE CONOSCO
+                                {{ __('messages.trabalhe_conosco') }}
                             </button>
                         </div>
 
@@ -167,33 +171,33 @@
 
                             <div class="row g-4">
                                 <div class="col-md-4">
-                                    <label class="sax-label">NOME COMPLETO</label>
+                                    <label class="sax-label">{{ __('messages.nome_completo') }}</label>
                                     <input type="text" name="name" class="form-control sax-input" placeholder="Ex: Maria Silva" required>
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="sax-label">EMAIL</label>
+                                    <label class="sax-label">{{ __('messages.email') }}</label>
                                     <input type="email" name="email" class="form-control sax-input" placeholder="email@exemplo.com" required>
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="sax-label">TELEFONE</label>
+                                    <label class="sax-label">{{ __('messages.telefone') }}</label>
                                     <input type="text" name="phone" class="form-control sax-input" placeholder="+595 XXX XXXXXX">
                                 </div>
 
                                 <div class="col-md-12 form-field" data-type="1">
-                                    <label class="sax-label">MENSAGEM</label>
-                                    <textarea name="message" class="form-control sax-input" rows="4" placeholder="Como podemos ajudar?" required></textarea>
+                                    <label class="sax-label">{{ __('messages.mensagem') }}</label>
+                                    <textarea name="message" class="form-control sax-input" rows="4" placeholder="{{ __('messages.como_ajudar') }}" required></textarea>
                                 </div>
 
                                 <div class="col-md-12 form-field" data-type="2" style="display:none;">
-                                    <label class="sax-label">ANEXAR CURRÍCULO (PDF/IMG)</label>
+                                    <label class="sax-label">{{ __('messages.anexar_curriculo') ?? 'ANEXAR CURRÍCULO (PDF/IMG)' }}</label>
                                     <input type="file" name="attachment" class="form-control sax-input" accept=".pdf,image/*">
                                 </div>
 
                                 <div class="col-md-4 ms-auto">
                                     <button type="submit" class="btn btn-dark w-100 py-3 rounded-0 text-uppercase letter-spacing-2 fw-bold btn-sax-submit">
-                                        Enviar
+                                        {{ __('messages.enviar') }}
                                     </button>
                                 </div>
                             </div>
@@ -208,13 +212,13 @@
         {{-- Seção de Mapas Lado a Lado --}}
         <div class="row">
             <div class="col-12 text-center mb-4">
-                <h2 class="map-section-title">Nossas Unidades</h2>
+                <h2 class="map-section-title">{{ __('messages.nossas_unidades') }}</h2>
             </div>
             
             {{-- Unidade CDE --}}
             <div class="col-lg-4">
                 <div class="map-card">
-                    <h6 class="text-uppercase">SAX CDE</h6>
+                    <h6 class="text-uppercase">{{ __('messages.sax_cde') }}</h6>
                     <p>Av. San Blas, Ciudad del Este, Paraguai</p>
                     <div class="map-wrapper shadow-sm">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1865759.3980800086!2d-57.434554686265194!3d-24.028902543292244!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94f69aaaec5ef03d%3A0xff12a8b090a63ebd!2sSAX%20Department%20Store!5e0!3m2!1spt-BR!2spy!4v1770210106773!5m2!1spt-BR!2spy" loading="lazy"></iframe>
@@ -225,7 +229,7 @@
             {{-- Unidade Asunción --}}
             <div class="col-lg-4">
                 <div class="map-card">
-                    <h6 class="text-uppercase">SAX Asunción</h6>
+                    <h6 class="text-uppercase">{{ __('messages.sax_asuncion') }}</h6>
                     <p>Paseo La Galería, Asunción, Paraguai</p>
                     <div class="map-wrapper shadow-sm">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28864.905476014617!2d-57.634103725683595!3d-25.266777699999995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x945da76681b0d661%3A0x2e9754f73b54e3a5!2sSAX%20Department%20Store%20-%20Asunci%C3%B3n!5e0!3m2!1spt-BR!2spy!4v1770210083150!5m2!1spt-BR!2spy" loading="lazy"></iframe>
@@ -236,7 +240,7 @@
             {{-- Unidade Pedro Juan --}}
             <div class="col-lg-4">
                 <div class="map-card">
-                    <h6 class="text-uppercase">SAX Pedro Juan Caballero</h6>
+                    <h6 class="text-uppercase">{{ __('messages.sax_pjc') }}</h6>
                     <p>Shopping Dubai, Pedro Juan Caballero, Paraguai</p>
                     <div class="map-wrapper shadow-sm">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d58954.282839244144!2d-55.76757534513292!3d-22.555054301589653!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94626f0079a38969%3A0xc5b346bd463b3b48!2sSAX%20Department%20Store%20-%20Pedro%20Juan%20Caballero!5e0!3m2!1spt-BR!2spy!4v1770210046629!5m2!1spt-BR!2spy" loading="lazy"></iframe>

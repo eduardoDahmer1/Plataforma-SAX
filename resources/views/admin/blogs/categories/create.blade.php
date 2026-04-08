@@ -1,8 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container-fluid py-4 px-md-5">
-    
+<x-admin.card>
     {{-- Navegação e Título --}}
     <div class="mb-5">
         <a href="{{ route('admin.blog-categories.index') }}" class="text-decoration-none x-small fw-bold text-uppercase text-secondary tracking-wider">
@@ -60,6 +59,7 @@
             </div>
         </div>
     </div>
-</div>
+
+</x-admin.card>
 
 @endsection

@@ -43,7 +43,7 @@
                 <span class="cart-badge">{{ $cartCount }}</span>
             @endif
         </div>
-        <span class="cart-label">Carrinho</span>
+        <span class="cart-label">{{ __('messages.carrinho') }}</span>
     </button>
 
     <div id="cart-overlay" class="cart-overlay"></div>

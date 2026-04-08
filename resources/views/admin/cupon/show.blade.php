@@ -1,10 +1,8 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="container py-4">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h3 class="card-title mb-3">{{ $cupon->codigo }}</h3>
+<x-admin.card>
+    <h3 class="mb-3">{{ $cupon->codigo }}</h3>
 
             <p><strong>Tipo:</strong> {{ ucfirst($cupon->tipo) }}</p>
             <p><strong>Montante:</strong> {{ $cupon->montante }}</p>
@@ -21,8 +19,6 @@
             <div class="mt-3 d-flex gap-2">
                 <a href="{{ route('admin.cupons.edit', $cupon) }}" class="btn btn-primary">Editar</a>
                 <a href="{{ route('admin.cupons.index') }}" class="btn btn-secondary">Voltar</a>
-            </div>
-        </div>
     </div>
-</div>
+</x-admin.card>
 @endsection

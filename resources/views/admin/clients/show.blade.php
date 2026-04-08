@@ -1,8 +1,8 @@
 @extends('layout.admin')
 
 @section('content')
-    <div class="container mt-4">
-        <div
+<x-admin.card>
+    <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
             <h2>Detalhes do Cliente</h2>
             <a href="{{ route('admin.clients.index') }}" class="btn btn-secondary mt-2 mt-md-0">
@@ -160,5 +160,6 @@
                 <i class="fa fa-info-circle me-1"></i> Este cliente ainda não realizou nenhum pedido.
             </div>
         @endif
-    </div>
+
+</x-admin.card>
 @endsection

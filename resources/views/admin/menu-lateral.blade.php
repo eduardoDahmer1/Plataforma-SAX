@@ -51,7 +51,7 @@
                 <div class="nav-icon-box bg-soft-primary">
                     <i class="fa-solid fa-cart-shopping"></i>
                 </div>
-                <span class="nav-text">Vendas</span>
+                <span class="nav-text">{{ __('messages.vendas') }}</span>
                 <i class="fa-solid fa-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="collapse sax-submenu {{ $vendasOpen ? 'show' : '' }}" id="menuVendas">
@@ -110,6 +110,9 @@
                     Institucional</a>
                 <a href="{{ route('admin.cupons.index') }}" class="submenu-link {{ request()->routeIs('admin.cupons.*') ? 'active' : '' }}"><i class="fa-solid fa-ticket"></i>
                     Cupons</a>
+                    <a href="{{ route('admin.languages.index') }}" class="submenu-link {{ request()->routeIs('admin.languages.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-language"></i> Gerenciar Idiomas
+                    </a>
                 <a href="{{ route('admin.activate.index') }}" class="submenu-link {{ request()->routeIs('admin.activate.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-toggle-on"></i> Ativar Marcas/Categorias
                 </a>

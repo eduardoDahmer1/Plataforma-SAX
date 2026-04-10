@@ -28,7 +28,7 @@
 
 <x-admin.card>
     <x-admin.page-header
-        title="SAX Café &amp; Bistrô"
+        title="SAX Café & Bistrô"
         :description="$breadcrumb"
         divider="sax-divider-bistro">
         <x-slot:actions>
@@ -63,12 +63,7 @@
         </div>
     </div>
 
-    {{-- ── FLASH ───────────────────────────────────────────────────── --}}
-    @if(session('success'))
-        <div class="alert alert-sax-success alert-dismissible fade show mb-4">
-            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-        </div>
-    @endif
+    <x-admin.alert />
 
     <div class="row g-4">
 

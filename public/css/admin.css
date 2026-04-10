@@ -258,6 +258,7 @@
 
 /* ── Upload Zone ────────────────────────────────────── */
 .asset-upload-zone {
+    position: relative;
     border: 2px dashed var(--border-medium);
     border-radius: 0.75rem;
     padding: 1.25rem;
@@ -786,9 +787,9 @@
 }
 
 .btn-sax-lg {
-    border-radius: 10px;
+    border-radius: 0.625rem;
     font-size: 0.85rem;
-    padding: 12px 20px;
+    padding: 0.75rem 1.25rem;
 }
 
 .btn-soft-danger {
@@ -2754,6 +2755,11 @@
 .form-select.sax-input {
     appearance: none;
     cursor: pointer;
+    border: 1px solid var(--border-medium);
+}
+
+.form-control.sax-input {
+    border: 1px solid var(--border-medium);
 }
 
 /* Upload Areas */

@@ -105,16 +105,21 @@ document.addEventListener('DOMContentLoaded', function () {
             paymentInput.value = method;
         }
 
+        // Gerencia a classe 'active' visual nos botões
         document.querySelectorAll('.sax-payment-method').forEach((button) => {
             const isActive = button.dataset.paymentMethod === method;
             button.classList.toggle('active', isActive);
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
 
+        // Atualiza o texto de instrução traduzido
         if (instruction) {
+            const msgBancard = "{{ __('messages.instrucao_pagamento_bancard') }}";
+            const msgDeposito = "{{ __('messages.instrucao_pagamento_deposito') }}";
+
             instruction.innerText = ['bancard', 'bancard_v2'].includes(method)
-                ? 'Você será redirecionado para o checkout seguro do Bancard para pagar com Cartão ou QR Code.'
-                : 'Após finalizar, você verá os dados bancários para transferência e envio do comprovante.';
+                ? msgBancard
+                : msgDeposito;
         }
     };
 

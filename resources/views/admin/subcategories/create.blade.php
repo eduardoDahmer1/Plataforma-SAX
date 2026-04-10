@@ -76,17 +76,7 @@
                 </div>
 
                 {{-- Footer de Ações --}}
-                <div class="mt-5 pt-4 border-top d-flex justify-content-between align-items-center">
-                    <a href="{{ route('admin.index') }}" class="btn btn-link text-muted text-decoration-none x-small fw-bold">
-                        <i class="fas fa-th-large me-1"></i> PANEL PRINCIPAL
-                    </a>
-                    <div class="d-flex gap-2">
-                        <a href="{{ route('admin.subcategories.index') }}" class="btn btn-light rounded-pill px-4 x-small fw-bold border">VOLVER AL LISTADO</a>
-                        <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold letter-spacing-1">
-                            CREAR SUB-NIVEL <i class="fas fa-save ms-2 text-warning"></i>
-                        </button>
-                    </div>
-                </div>
+                <x-admin.form-actions :cancelRoute="route('admin.subcategories.index')" cancelLabel="Voltar" submitLabel="Criar sub-nível" />
             </form>
         </div>
     </div>

@@ -54,10 +54,7 @@
             <input type="file" name="banner" class="form-control mt-2">
         </div>
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Salvar</button>
-            <a href="{{ route('admin.subcategories.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Cancelar</a>
-        </div>
+        <x-admin.form-actions :cancelRoute="route('admin.subcategories.index')" />
     </form>
 
     @if ($subcategory->photo)

@@ -4,13 +4,10 @@
 <x-admin.card>
     <x-admin.page-header
         title="Categorias"
-        description="Catálogo com <span class='text-dark fw-bold'>{{ $categories->total() }}</span> departamentos ativos">
-        <x-slot:actions>
-            <a href="{{ route('admin.categories.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
-                <i class="fa fa-plus-circle me-2"></i> Nova Categoria
-            </a>
-        </x-slot:actions>
-    </x-admin.page-header>
+        description="Catálogo com <span class='text-dark fw-bold'>{{ $categories->total() }}</span> departamentos ativos"
+        actionUrl="{{ route('admin.categories.create') }}"
+        actionLabel="Nova Categoria"
+        actionIcon="fa fa-plus-circle" />
 
     {{-- Barra de Filtro Minimalista --}}
     <div class="sax-search-wrapper mb-4">
@@ -26,12 +23,7 @@
         </form>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-sax-success alert-dismissible fade show mb-4" role="alert">
-            <i class="fa fa-check-circle me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+    <x-admin.alert />
 
     {{-- Grid de Categorias --}}
     <div class="row g-3">

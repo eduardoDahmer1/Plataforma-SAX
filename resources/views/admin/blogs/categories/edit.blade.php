@@ -27,8 +27,7 @@
             @endif
         </div>
 
-        <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i> Salvar Alterações</button>
-        <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
+        <x-admin.form-actions :cancelRoute="route('admin.blog-categories.index')" submitLabel="Salvar Alterações" />
     </form>
 </x-admin.card>
 @endsection

@@ -1,4 +1,11 @@
-@props(['title', 'description', 'divider' => 'sax-divider-dark'])
+@props([
+    'title',
+    'description',
+    'divider'     => 'sax-divider-dark',
+    'actionUrl'   => null,
+    'actionLabel' => null,
+    'actionIcon'  => 'fa fa-plus',
+])
 
 <div class="dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
     <div>
@@ -8,5 +15,12 @@
     </div>
     @if(isset($actions))
         <div>{{ $actions }}</div>
+    @elseif($actionUrl && $actionLabel)
+        <div>
+            <a href="{{ $actionUrl }}"
+               class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="{{ $actionIcon }} me-2"></i> {{ $actionLabel }}
+            </a>
+        </div>
     @endif
 </div>

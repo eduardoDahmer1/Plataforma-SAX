@@ -81,14 +81,7 @@
                             </div>
 
                             {{-- Actions --}}
-                            <div class="mt-5 pt-4 border-top d-flex flex-wrap justify-content-end gap-3">
-                                <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold x-small">
-                                    <i class="fas fa-times me-2"></i>CANCELAR
-                                </a>
-                                <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold x-small py-3">
-                                    <i class="fas fa-sync-alt me-2 text-warning"></i>ACTUALIZAR DATOS
-                                </button>
-                            </div>
+                            <x-admin.form-actions :cancelRoute="route('admin.categories.index')" submitLabel="Atualizar dados" submitIcon="fa-sync-alt" />
                         </form>
                     </div>
                 </div>

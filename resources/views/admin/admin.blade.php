@@ -8,23 +8,7 @@
     </x-admin.page-header>
 
         {{-- Alertas --}}
-        @if(session('success'))
-            <div class="alert alert-sax-success alert-dismissible fade show mb-4" role="alert">
-                <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-modern-danger mb-4" role="alert">
-                <div class="fw-bold mb-2"><i class="fas fa-exclamation-circle me-2"></i> Por favor corrija os seguintes erros:</div>
-                <ul class="mb-0 ps-3">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <x-admin.alert />
 
         <div class="card border-0 shadow-sm mb-5">
             <div class="card-body p-4">

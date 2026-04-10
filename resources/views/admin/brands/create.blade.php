@@ -107,18 +107,7 @@
             </div>
 
             {{-- Ações Inferiores --}}
-            <div class="mt-5 pt-4 border-top d-flex justify-content-between align-items-center">
-                <a href="{{ route('admin.index') }}" class="btn btn-link text-dark text-decoration-none x-small fw-bold">
-                    <i class="fas fa-arrow-left me-1"></i> DASHBOARD
-                </a>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('admin.brands.index') }}"
-                        class="btn btn-light rounded-pill px-4 text-muted x-small fw-bold">DESCARTAR</a>
-                    <button type="submit" class="btn btn-dark rounded-pill px-5 fw-bold letter-spacing-1">
-                        CREAR MARCA <i class="fas fa-check-circle ms-2 text-success"></i>
-                    </button>
-                </div>
-            </div>
+            <x-admin.form-actions :cancelRoute="route('admin.brands.index')" cancelLabel="Descartar" submitLabel="Criar marca" />
             </form>
         </div>
     </div>

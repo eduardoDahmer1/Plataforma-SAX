@@ -14,7 +14,7 @@
     for ($i = count($testimonials); $i < 4; $i++) $testimonials[] = ['foto' => '', 'quote' => '', 'author' => '', 'ubicacion' => ''];
 @endphp
 
-<div class="sax-admin-container py-2 bg-white-soft">
+<x-admin.card>
 <form id="formBridal" action="{{ route('admin.bridal.update', $bridal->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
@@ -39,19 +39,9 @@
     </div>
 
     {{-- ── ERRORES / FLASH ──────────────────────────────────────── --}}
-    @if(session('success'))
-        <div class="alert alert-sax-success alert-dismissible fade show mb-4 mx-4">
-            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if($errors->any())
-        <div class="alert alert-danger mx-4 mb-4 rounded-3 border-0">
-            <p class="fw-bold small mb-2"><i class="fas fa-exclamation-triangle me-1"></i> Hay errores en el formulario:</p>
-            <ul class="mb-0 small">
-                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
-            </ul>
-        </div>
-    @endif
+    <div class="mx-4">
+        <x-admin.alert />
+    </div>
 
     <div class="px-3 d-flex flex-column gap-4">
 
@@ -532,6 +522,6 @@
         <i class="fas fa-check-circle me-2"></i> GUARDAR CAMBIOS
     </button>
 </div>
-</div>
+</x-admin.card>
 
 @endsection

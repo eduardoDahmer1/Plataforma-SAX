@@ -20,11 +20,7 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    @if(session('success'))
-        <div class="alert alert-sax-success alert-dismissible fade show slide-in-top mb-4">
-            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-        </div>
-    @endif
+    <x-admin.alert />
 
     <div class="row g-4">
         {{-- 01. SEÇÃO PRINCIPAL (SOBRE NOSOTROS) --}}

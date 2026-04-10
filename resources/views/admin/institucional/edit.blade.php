@@ -1,7 +1,7 @@
 @extends('layout.admin')
 
 @section('content')
-<div class="sax-admin-container py-2 bg-white-soft">
+<x-admin.card>
     <form action="{{ route('admin.institucional.update', $institucional->id) }}" method="POST" enctype="multipart/form-data" id="formInstitucional">
         @csrf
         @method('PUT')
@@ -155,7 +155,7 @@
             </div>
         </div>
     </form>
-</div>
+</x-admin.card>
 
 @endsection
 

@@ -43,7 +43,7 @@
         <div class="category-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
                 <a href="{{ route('categories.index') }}" class="back-link-minimal">
-                    <i class="fas fa-chevron-left me-1"></i> VOLVER A CATEGORIAS
+                    <i class="fas fa-chevron-left me-1"></i> {{ __('messages.voltar_categorias') }}
                 </a>
                 <div class="category-logo-container mt-3">
                     @if ($category->photo && Storage::disk('public')->exists($category->photo))

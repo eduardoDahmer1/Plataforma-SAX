@@ -49,12 +49,8 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-end mt-2">
-            <a href="{{ route('admin.languages.index') }}" class="btn btn-outline-secondary px-4 me-2" style="border-radius: 8px; font-weight: 700;">VOLTAR</a>
-            <button type="submit" class="btn btn-dark px-5" style="border-radius: 8px; font-weight: 700; background: #000; border: none;">
-                SALVAR TRADUÇÕES
-            </button>
-        </div>
+        <x-admin.form-actions :cancelRoute="route('admin.languages.index')" cancelLabel="Voltar" submitLabel="Salvar traduções" />
+
     </form>
 </div>
 

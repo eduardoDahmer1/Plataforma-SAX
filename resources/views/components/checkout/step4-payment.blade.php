@@ -1,6 +1,5 @@
 {{-- STEP 4: PAGAMENTO --}}
 <div class="step" id="step4">
-    {{-- Cálculo do Total dentro do componente --}}
     @php 
         $totalPedido = 0;
         foreach ($cart as $item) {
@@ -17,44 +16,38 @@
     @endphp
 
     <div class="sax-checkout-box text-center py-5">
-        <h5 class="mb-4 text-uppercase tracking-wider">Forma de Pagamento</h5>
+        <h5 class="mb-4 text-uppercase tracking-wider">{{ __('messages.forma_pagamento') }}</h5>
         
         <div class="d-flex justify-content-center flex-wrap gap-3">
             {{-- Opção: Depósito --}}
             <button type="button" class="sax-payment-method" id="btn-deposito" data-payment-method="deposito" aria-pressed="false">
                 <i class="fa fa-university mb-2 d-block"></i>
-                DEPÓSITO / TRANSFERÊNCIA
+                {{ __('messages.deposito_transferencia') }}
             </button>
-
-            {{-- Opção: Bancard
-            <button type="button" class="sax-payment-method" id="btn-bancard" onclick="selectPayment('bancard')">
-                <i class="fa fa-credit-card mb-2 d-block"></i>
-                CARTÃO / QR (BANCARD)
-            </button> --}}
 
             @if ($hasBancardV2)
                 <button type="button" class="sax-payment-method" id="btn-bancard_v2" data-payment-method="bancard_v2" aria-pressed="false">
                     <i class="fa fa-credit-card mb-2 d-block"></i>
-                    CARTÃO / QR (BANCARD V2)
+                    {{ __('messages.cartao_qr_bancard') }}
                 </button>
             @endif
         </div>
 
         <p class="sax-payment-notice mt-4" id="payment-instruction">
-            Após finalizar, você verá os dados bancários para transferência e envio do comprovante.
+            {{ __('messages.instrucao_pagamento_deposito') }}
         </p>
     </div>
 
-    {{-- Campo oculto essencial que envia o método escolhido para o CheckoutController --}}
+    {{-- Campo oculto essencial para o Controller --}}
     <input type="hidden" name="payment_method" id="payment_method" value="{{ old('payment_method', 'deposito') }}">
 
     <div class="sax-checkout-box mt-4">
-        <h4 class="sax-step-title">Resumo Final</h4>
+        <h4 class="sax-step-title">{{ __('messages.resumo_final') }}</h4>
         
         <div class="sax-cart-list mb-4">
             @foreach ($cart as $item)
                 <div class="d-flex align-items-center gap-3 mb-2 border-bottom pb-2">
-                    <img src="{{ $item->product->photo_url ?? 'https://via.placeholder.com/60' }}" 
+                    <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
                          style="width: 50px; height: 50px; object-fit: contain; background: #f5f5f5;">
                     <div class="flex-grow-1">
                         <small class="d-block fw-bold">{{ $item->product->external_name ?? 'Produto' }}</small>
@@ -69,16 +62,16 @@
 
         <div class="sax-summary-total">
             <div class="d-flex justify-content-between mb-2">
-                <span>Subtotal</span>
+                <span>{{ __('messages.subtotal') }}</span>
                 <span>{{ currency_format($totalPedido) }}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
-                <span>Envio</span>
-                <span class="text-success fw-bold">A COMBINAR</span>
+                <span>{{ __('messages.envio') }}</span>
+                <span class="text-success fw-bold">{{ __('messages.a_combinar') }}</span>
             </div>
             <hr>
             <div class="d-flex justify-content-between align-items-center total-row">
-                <strong>TOTAL</strong>
+                <strong>{{ __('messages.total') }}</strong>
                 <strong style="font-size: 1.5rem;">{{ currency_format($totalPedido) }}</strong>
             </div>
         </div>
@@ -86,10 +79,16 @@
 
     <div class="d-flex justify-content-between mt-4">
         <button type="button" class="sax-btn-prev" onclick="prevStep(3)">
-            <i class="fa fa-arrow-left me-2"></i> Voltar
+            <i class="fa fa-arrow-left me-2"></i> {{ __('messages.voltar') }}
         </button>
         <button type="submit" class="sax-btn-finish" id="checkoutSubmit">
-            <i class="fa fa-check me-2"></i> FINALIZAR COMPRA
+            <i class="fa fa-check me-2"></i> {{ __('messages.finalizar_compra') }}
         </button>
     </div>
 </div>
+<script>
+    window.translations = {
+        payment_bancard: "{{ __('messages.instrucao_pagamento_bancard') }}",
+        payment_deposito: "{{ __('messages.instrucao_pagamento_deposito') }}"
+    };
+</script>

@@ -4,25 +4,25 @@
 <div class="sax-dashboard-wrapper">
     {{-- Cabeçalho de Boas-vindas --}}
     <div class="dashboard-header mb-5">
-        <h1 class="sax-title">OLÁ, {{ explode(' ', auth()->user()->name)[0] }}</h1>
-        <p class="sax-subtitle">Gerencie suas informações e acompanhe seus pedidos</p>
+        <h1 class="sax-title">{{ __('messages.ola') }}, {{ explode(' ', auth()->user()->name)[0] }}</h1>
+        <p class="sax-subtitle">{{ __('messages.gerencie_infos') }}</p>
         <div class="sax-divider-black"></div>
     </div>
 
     {{-- Perfil e Dados --}}
     <div class="section-label mb-3">
-        <h6 class="sax-section-title">Informações da Conta</h6>
+        <h6 class="sax-section-title">{{ __('messages.infos_conta') }}</h6>
     </div>
 
     <div class="row g-3 mb-5">
         @php
             $fields = [
-                ['label' => 'Nome', 'value' => auth()->user()->name, 'icon' => 'user'],
-                ['label' => 'Email', 'value' => auth()->user()->email, 'icon' => 'envelope'],
-                ['label' => 'Telefone', 'value' => (auth()->user()->phone_country ?? '') . ' ' . (auth()->user()->phone_number ?? ''), 'icon' => 'phone'],
-                ['label' => 'Endereço', 'value' => auth()->user()->address, 'icon' => 'home'],
-                ['label' => 'Documento', 'value' => auth()->user()->document, 'icon' => 'id-card'],
-                ['label' => 'Cidade/Estado', 'value' => auth()->user()->city . ' - ' . auth()->user()->state, 'icon' => 'map-marker-alt'],
+                ['label' => __('messages.label_nome'), 'value' => auth()->user()->name, 'icon' => 'user'],
+                ['label' => __('messages.label_email'), 'value' => auth()->user()->email, 'icon' => 'envelope'],
+                ['label' => __('messages.label_telefone'), 'value' => (auth()->user()->phone_country ?? '') . ' ' . (auth()->user()->phone_number ?? ''), 'icon' => 'phone'],
+                ['label' => __('messages.label_endereco'), 'value' => auth()->user()->address, 'icon' => 'home'],
+                ['label' => __('messages.label_documento'), 'value' => auth()->user()->document, 'icon' => 'id-card'],
+                ['label' => __('messages.label_cidade_estado'), 'value' => auth()->user()->city . ' - ' . auth()->user()->state, 'icon' => 'map-marker-alt'],
             ];
         @endphp
 
@@ -45,9 +45,11 @@
 
     {{-- Seção de Pedidos --}}
     <div class="section-label d-flex justify-content-between align-items-end mb-4">
-        <h6 class="sax-section-title m-0">Pedidos Recentes</h6>
+        <h6 class="sax-section-title m-0">{{ __('messages.pedidos_recentes') }}</h6>
         @if ($orders->count() > 0)
-            <a href="{{ route('user.orders') }}" class="btn-link-sax">Ver histórico completo <i class="fas fa-chevron-right ms-1"></i></a>
+            <a href="{{ route('user.orders') }}" class="btn-link-sax">
+                {{ __('messages.ver_historico') }} <i class="fas fa-chevron-right ms-1"></i>
+            </a>
         @endif
     </div>
 
@@ -58,38 +60,38 @@
                     <div class="order-content">
                         {{-- Info Principal --}}
                         <div class="order-block">
-                            <span class="sax-label-min">NÚMERO DO PEDIDO</span>
+                            <span class="sax-label-min">{{ __('messages.num_pedido') }}</span>
                             <span class="order-id">#{{ $order->id }}</span>
                             <span class="order-date">{{ $order->created_at->format('d/m/Y') }}</span>
                         </div>
 
                         {{-- Pagamento --}}
                         <div class="order-block">
-                            <span class="sax-label-min">PAGAMENTO</span>
+                            <span class="sax-label-min">{{ __('messages.pagamento') }}</span>
                             <span class="badge-payment">{{ ucfirst($order->payment_method) }}</span>
                         </div>
 
                         {{-- Status --}}
                         <div class="order-block">
-                            <span class="sax-label-min">STATUS</span>
+                            <span class="sax-label-min">{{ __('messages.status') }}</span>
                             @php($status = strtolower((string) $order->status))
                             <div class="status-indicator {{ $status }}">
                                 <span class="dot"></span> 
                                 @switch($status)
-                                    @case('pending') Pendente @break
-                                    @case('processing') Em Andamento @break
-                                    @case('completed') Completo @break
-                                    @case('paid') Pago @break
-                                    @case('failed') Falhou @break
-                                    @case('canceled') Cancelado @break
-                                    @case('cancelled') Cancelado @break
-                                    @default Desconhecido
+                                    @case('pending') {{ __('messages.status_pending') }} @break
+                                    @case('processing') {{ __('messages.status_processing') }} @break
+                                    @case('completed') {{ __('messages.status_completed') }} @break
+                                    @case('paid') {{ __('messages.status_paid') }} @break
+                                    @case('failed') {{ __('messages.status_failed') }} @break
+                                    @case('canceled') 
+                                    @case('cancelled') {{ __('messages.status_canceled') }} @break
+                                    @default {{ __('messages.status_unknown') }}
                                 @endswitch
                             </div>
                         </div>
 
                         <div class="order-action">
-                            <a href="{{ route('user.orders.show', $order->id) }}" class="btn-sax-black">DETALHES</a>
+                            <a href="{{ route('user.orders.show', $order->id) }}" class="btn-sax-black">{{ __('messages.detalhes') }}</a>
                         </div>
                     </div>
                 </div>
@@ -98,7 +100,7 @@
     @else
         <div class="empty-state">
             <i class="fas fa-box-open fa-2x mb-3 opacity-50"></i>
-            <p>Você ainda não realizou pedidos.</p>
+            <p>{{ __('messages.sem_pedidos') }}</p>
         </div>
     @endif
 </div>

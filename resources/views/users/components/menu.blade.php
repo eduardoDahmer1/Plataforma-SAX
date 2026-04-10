@@ -2,33 +2,33 @@
 
     {{-- 🔑 Informações Pessoais --}}
     <div class="sax-menu-group">
-        <span class="sax-menu-label text-uppercase letter-spacing-1">Minha conta</span>
+        <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_minha_conta') }}</span>
         <div class="sax-menu-items">
             <a href="{{ route('user.profile.edit') }}" class="sax-menu-link">
-                <i class="fa fa-user-edit"></i> Editar dados pessoais
+                <i class="fa fa-user-edit"></i> {{ __('messages.menu_editar_dados') }}
             </a>
             <a href="#" class="sax-menu-link">
-                <i class="fa fa-lock"></i> Segurança / Senha
+                <i class="fa fa-lock"></i> {{ __('messages.menu_seguranca') }}
             </a>
         </div>
     </div>
 
     {{-- 🛒 Pedidos e Compras --}}
     <div class="sax-menu-group mt-4">
-        <span class="sax-menu-label text-uppercase letter-spacing-1">Compras</span>
+        <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_compras') }}</span>
         <div class="sax-menu-items">
             <a href="{{ route('user.orders') }}" class="sax-menu-link">
-                <i class="fa fa-list"></i> Histórico de Pedidos
+                <i class="fa fa-list"></i> {{ __('messages.menu_historico') }}
             </a>
         </div>
     </div>
 
     {{-- ❤️ Favoritos --}}
     <div class="sax-menu-group mt-4">
-        <span class="sax-menu-label text-uppercase letter-spacing-1">Preferencia</span>
+        <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_preferencia') }}</span>
         <div class="sax-menu-items">
             <a href="{{ route('user.preferences') }}" class="sax-menu-link">
-                <i class="fa fa-star"></i> Lista de Desejos
+                <i class="fa fa-star"></i> {{ __('messages.menu_wishlist') }}
             </a>
         </div>
     </div>
@@ -39,12 +39,12 @@
             <a href="{{ route('logout') }}" 
                onclick="event.preventDefault();document.getElementById('logout-form').submit();"
                class="sax-menu-link text-dark fw-bold">
-                <i class="fa fa-sign-out-alt"></i> Sair
+                <i class="fa fa-sign-out-alt"></i> {{ __('messages.menu_sair') }}
             </a>
             
             <button type="button" class="sax-menu-link border-0 bg-transparent text-danger w-100 text-start" 
                     data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                <i class="fa fa-trash-alt"></i> Excluir conta
+                <i class="fa fa-trash-alt"></i> {{ __('messages.menu_excluir_conta') }}
             </button>
         </div>
     </div>
@@ -60,18 +60,22 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-0">
             <div class="modal-body p-4 text-center">
-                <h5 class="fw-bold text-uppercase letter-spacing-2 mb-3">Excluir conta?</h5>
-                <p class="text-muted small px-3">Esta ação é irreversível. Todos os seus dados e histórico de pedidos serão perdidos.</p>
+                <h5 class="fw-bold text-uppercase letter-spacing-2 mb-3">{{ __('messages.modal_excluir_titulo') }}</h5>
+                <p class="text-muted small px-3">{{ __('messages.modal_excluir_aviso') }}</p>
                 
                 <form method="POST" action="{{ route('user.destroy') }}" id="deleteAccountForm">
                     @csrf @method('DELETE')
                     <div class="mb-4">
-                        <input type="password" name="password" placeholder="Confirma tu contraseña" 
+                        <input type="password" name="password" placeholder="{{ __('messages.placeholder_senha_confirm') }}" 
                                class="form-control sax-modal-input text-center" required>
                     </div>
                     <div class="d-flex flex-column gap-2">
-                        <button type="submit" class="btn btn-dark rounded-0 py-2 text-uppercase fw-bold x-small">Confirmar exclusão</button>
-                        <button type="button" class="btn btn-link text-muted text-decoration-none x-small" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-dark rounded-0 py-2 text-uppercase fw-bold x-small">
+                            {{ __('messages.btn_confirmar_exclusao') }}
+                        </button>
+                        <button type="button" class="btn btn-link text-muted text-decoration-none x-small" data-bs-dismiss="modal">
+                            {{ __('messages.btn_cancelar') }}
+                        </button>
                     </div>
                 </form>
             </div>

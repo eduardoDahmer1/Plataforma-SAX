@@ -4,20 +4,11 @@
 <x-admin.card>
     <x-admin.page-header
         title="Categorias de Blog"
-        description="Organização hierárquica do conteúdo editorial">
-        <x-slot:actions>
-            <a href="{{ route('admin.blog-categories.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
-                <i class="fa fa-plus me-2"></i> Nova Categoria
-            </a>
-        </x-slot:actions>
-    </x-admin.page-header>
+        description="Organização hierárquica do conteúdo editorial"
+        actionUrl="{{ route('admin.blog-categories.create') }}"
+        actionLabel="Nova Categoria" />
 
-    @if(session('success'))
-        <div class="alert alert-dark border-0 rounded-0 small mb-4 py-3 shadow-sm d-flex justify-content-between align-items-center" role="alert">
-            <span><i class="fa fa-check me-2"></i> {{ session('success') }}</span>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+    <x-admin.alert />
 
     @if($categories->count())
     <div class="row g-4">

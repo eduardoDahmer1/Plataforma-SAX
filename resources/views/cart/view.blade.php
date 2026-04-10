@@ -6,9 +6,9 @@
         {{-- Título da Página --}}
         <div class="col-12 border-bottom pb-3 mb-4">
             <h1 class="display-6 fw-bold text-uppercase letter-spacing-2 m-0">
-                <i class="fas fa-shopping-bag me-2 small"></i>Sua Sacola
+                <i class="fas fa-shopping-bag me-2 small"></i>{{ __('messages.sua_sacola') }}
             </h1>
-            <p class="text-muted small mt-2">{{ $cart->count() }} itens selecionados</p>
+            <p class="text-muted small mt-2">{{ $cart->count() }} {{ __('messages.itens_selecionados') }}</p>
         </div>
 
         @if ($cart->count() > 0)
@@ -67,7 +67,7 @@
                                     <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="mt-2">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-remove-sax">
-                                            <i class="far fa-trash-alt me-1"></i>Remover
+                                            <i class="far fa-trash-alt me-1"></i>{{ __('messages.remover') }}
                                         </button>
                                     </form>
                                 </div>
@@ -77,42 +77,42 @@
                 </div>
                 
                 <a href="{{ route('home') }}" class="btn btn-link text-dark text-decoration-none x-small fw-bold mt-3">
-                    <i class="fas fa-arrow-left me-2"></i> CONTINUAR COMPRANDO
+                    <i class="fas fa-arrow-left me-2"></i> {{ __('messages.continuar_comprando') }}
                 </a>
             </div>
 
             {{-- Resumo do Pedido (Sidebar) --}}
             <div class="col-lg-4">
                 <div class="checkout-summary-sax p-4 rounded-4 shadow-sm border bg-light sticky-top" style="top: 20px;">
-                    <h5 class="fw-bold text-uppercase mb-4">Resumo do Pedido</h5>
+                    <h5 class="fw-bold text-uppercase mb-4">{{ __('messages.resumo_pedido') }}</h5>
                     
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Subtotal</span>
+                        <span class="text-muted">{{ __('messages.subtotal') }}</span>
                         <span class="fw-bold">{{ currency_format($totalCarrinho) }}</span>
                     </div>
                     
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Desconto</span>
+                        <span class="text-muted">{{ __('messages.desconto') }}</span>
                         <span class="text-success fw-bold">- {{ currency_format(0) }}</span>
                     </div>
 
                     <hr class="my-3">
 
                     <div class="d-flex justify-content-between mb-4">
-                        <span class="h5 fw-bold">TOTAL</span>
+                        <span class="h5 fw-bold">{{ __('messages.total') }}</span>
                         <span class="h5 fw-bold text-dark">{{ currency_format($totalCarrinho) }}</span>
                     </div>
 
                     <div class="d-grid gap-2">
                         <form action="{{ route('checkout.index') }}" method="GET">
                             <button type="submit" class="btn btn-dark btn-lg w-100 rounded-pill py-3 fw-bold text-uppercase x-small">
-                                <i class="fas fa-lock me-2"></i> Finalizar Compra
+                                <i class="fas fa-lock me-2"></i> {{ __('messages.finalizar_compra') }}
                             </button>
                         </form>
 
                         <form action="{{ route('checkout.whatsapp') }}" method="GET">
                             <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill py-3 fw-bold text-uppercase x-small">
-                                <i class="fab fa-whatsapp me-2"></i> Checkout WhatsApp
+                                <i class="fab fa-whatsapp me-2"></i> {{ __('messages.checkout_whatsapp') }}
                             </button>
                         </form>
                     </div>
@@ -120,7 +120,7 @@
                     <div class="text-center mt-4">
                         <img src="https://vignette.wikia.nocookie.net/logopedia/images/e/e3/Visa_2014.svg" height="20" class="me-2 opacity-50">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" height="20" class="me-2 opacity-50">
-                        <i class="fas fa-shield-alt text-muted me-1"></i> <span class="x-small text-muted">Compra 100% Segura</span>
+                        <i class="fas fa-shield-alt text-muted me-1"></i> <span class="x-small text-muted">{{ __('messages.compra_segura') }}</span>
                     </div>
                 </div>
             </div>
@@ -130,9 +130,11 @@
                 <div class="mb-4">
                     <i class="fas fa-shopping-bag fa-4x text-light"></i>
                 </div>
-                <h2 class="fw-bold">Sua sacola está vazia</h2>
-                <p class="text-muted">Parece que você ainda não escolheu seus produtos.</p>
-                <a href="{{ route('home') }}" class="btn btn-dark rounded-pill px-5 py-3 mt-3">VOLTAR PARA A LOJA</a>
+                <h2 class="fw-bold">{{ __('messages.sacola_vazia_titulo') }}</h2>
+                <p class="text-muted">{{ __('messages.sacola_vazia_desc') }}</p>
+                <a href="{{ route('home') }}" class="btn btn-dark rounded-pill px-5 py-3 mt-3">
+                    {{ __('messages.voltar_loja') }}
+                </a>
             </div>
         @endif
     </div>
@@ -317,3 +319,4 @@
         });
     </script>
 @endpush --}}
+

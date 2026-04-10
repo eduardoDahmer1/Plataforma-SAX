@@ -3,7 +3,7 @@
 @section('content')
 <div class="sax-edit-wrapper">
     <div class="dashboard-header mb-5">
-        <h2 class="sax-title text-uppercase letter-spacing-2">Actualizar Registro</h2>
+        <h2 class="sax-title text-uppercase letter-spacing-2">{{ __('messages.actualizar_registro') }}</h2>
         <div class="sax-divider-dark"></div>
     </div>
 
@@ -14,19 +14,19 @@
         <div class="row g-4">
             {{-- Nome --}}
             <div class="col-md-6 mb-3">
-                <label class="sax-label">NOMBRE COMPLETO</label>
+                <label class="sax-label">{{ __('messages.nome_completo') }}</label>
                 <input type="text" name="name" class="form-control sax-input" value="{{ old('name', auth()->user()->name) }}" required>
             </div>
 
             {{-- Email --}}
             <div class="col-md-6 mb-3">
-                <label class="sax-label">EMAIL</label>
+                <label class="sax-label">{{ __('messages.email') }}</label>
                 <input type="email" name="email" class="form-control sax-input" value="{{ old('email', auth()->user()->email) }}" required>
             </div>
 
             {{-- Telefone --}}
             <div class="col-md-12 mb-3">
-                <label class="sax-label">TELÉFONO</label>
+                <label class="sax-label">{{ __('messages.telefone') }}</label>
                 <div class="d-flex gap-2">
                     <select name="phone_country" class="form-select sax-input w-auto">
                         <option value="+55" {{ auth()->user()->phone_country == '+55' ? 'selected' : '' }}>BRA (+55)</option>
@@ -38,48 +38,48 @@
 
             {{-- Endereço / Ubicación --}}
             <div class="col-12">
-                <label class="sax-label">UBICACIÓN / DIRECCIÓN</label>
+                <label class="sax-label">{{ __('messages.localizacao_endereco') }}</label>
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <input type="text" name="cep" placeholder="Código Postal" class="form-control sax-input" value="{{ old('cep', auth()->user()->cep) }}">
+                        <input type="text" name="cep" placeholder="{{ __('messages.placeholder_cep') }}" class="form-control sax-input" value="{{ old('cep', auth()->user()->cep) }}">
                     </div>
                     <div class="col-md-9">
-                        <input type="text" name="address" placeholder="Dirección Completa" class="form-control sax-input" value="{{ old('address', auth()->user()->address) }}">
+                        <input type="text" name="address" placeholder="{{ __('messages.placeholder_endereco') }}" class="form-control sax-input" value="{{ old('address', auth()->user()->address) }}">
                     </div>
                     <div class="col-md-6">
-                        <input type="text" name="city" placeholder="Ciudad" class="form-control sax-input" value="{{ old('city', auth()->user()->city) }}">
+                        <input type="text" name="city" placeholder="{{ __('messages.placeholder_cidade') }}" class="form-control sax-input" value="{{ old('city', auth()->user()->city) }}">
                     </div>
                     <div class="col-md-6">
-                        <input type="text" name="state" placeholder="Estado/Departamento" class="form-control sax-input" value="{{ old('state', auth()->user()->state) }}">
+                        <input type="text" name="state" placeholder="{{ __('messages.placeholder_estado') }}" class="form-control sax-input" value="{{ old('state', auth()->user()->state) }}">
                     </div>
                 </div>
             </div>
 
             {{-- Documento --}}
             <div class="col-md-6 mb-3">
-                <label class="sax-label">NÚMERO DE DOCUMENTO</label>
+                <label class="sax-label">{{ __('messages.num_documento') }}</label>
                 <input type="text" name="document" class="form-control sax-input" value="{{ old('document', auth()->user()->document ?? '') }}">
             </div>
 
             {{-- Cadastro na Sax --}}
             <div class="col-md-6 mb-3">
-                <label class="sax-label">¿YA POSEE REGISTRO EN SAX?</label>
+                <label class="sax-label">{{ __('messages.ja_possui_registro') }}</label>
                 <select name="already_registered" id="already_registered" class="form-select sax-input">
-                    <option value="1" {{ auth()->user()->already_registered ? 'selected' : '' }}>Sí</option>
-                    <option value="0" {{ !auth()->user()->already_registered ? 'selected' : '' }}>No</option>
+                    <option value="1" {{ auth()->user()->already_registered ? 'selected' : '' }}>{{ __('messages.sim') }}</option>
+                    <option value="0" {{ !auth()->user()->already_registered ? 'selected' : '' }}>{{ __('messages.nao') }}</option>
                 </select>
             </div>
 
             {{-- Número do cadastro --}}
             <div class="col-md-12 mb-3" id="sax_number_field" style="display: {{ auth()->user()->already_registered ? 'block' : 'none' }};">
-                <label class="sax-label">NÚMERO DE REGISTRO INTERNO</label>
+                <label class="sax-label">{{ __('messages.num_registro_interno') }}</label>
                 <input type="text" name="additional_info" class="form-control sax-input" value="{{ old('additional_info', auth()->user()->additional_info ?? '') }}">
             </div>
         </div>
 
         <div class="d-flex justify-content-end mt-5">
             <button type="submit" class="btn btn-dark btn-sax-submit px-5 py-3 text-uppercase fw-bold letter-spacing-1">
-                Actualizar Datos
+                {{ __('messages.atualizar_dados_btn') }}
             </button>
         </div>
     </form>

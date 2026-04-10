@@ -6,10 +6,7 @@
     $cart = $user ? Cart::with('product')->where('user_id', $user->id)->get() : collect();
     $cartCount = $cart->sum('quantity');
 
-    // Inicializa o total acumulado
     $totalGeral = 0;
-
-    // Pega a moeda da sessão
     $currencySession = session('currency');
     $currencyId = null;
 
@@ -51,8 +48,8 @@
     <div id="cart-sidebar" class="cart-sidebar">
         <div class="cart-header">
             <div class="header-title">
-                <span class="fw-bold">ITENS NO CARRINHO</span>
-                <span class="items-count">{{ $cartCount }} Itens</span>
+                <span class="fw-bold">{{ __('messages.itens_no_carrinho') }}</span>
+                <span class="items-count">{{ $cartCount }} {{ __('messages.unidade_itens') }}</span>
             </div>
             <button id="cart-close" class="close-drawer">&times;</button>
         </div>
@@ -64,11 +61,8 @@
                         @php
                             $basePrice = $item->product->price ?? 0;
                             $convertedPrice = $basePrice * $rate;
-
-                            // SOMA O TOTAL AQUI
                             $subtotalItem = $convertedPrice * $item->quantity;
                             $totalGeral += $subtotalItem;
-
                             $formattedPrice = $symbol . ' ' . number_format($convertedPrice, $decimals, $decimal, $thousand);
                         @endphp
                         <div class="cart-item">
@@ -77,8 +71,9 @@
                                     alt="{{ $item->product->name }}">
                             </div>
                             <div class="item-details">
-                                <a href="#"
-                                    class="item-name text-decoration-none">{{ $item->product->external_name ?? $item->product->name }}</a>
+                                <a href="#" class="item-name text-decoration-none">
+                                    {{ $item->product->external_name ?? $item->product->name }}
+                                </a>
                                 <span class="item-price">{{ $formattedPrice }}</span>
 
                                 <div class="item-controls">
@@ -86,8 +81,7 @@
                                         <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
                                             @csrf @method('PUT')
                                             <input type="hidden" name="quantity" value="{{ $item->quantity - 1 }}">
-                                            <button type="submit" class="qty-btn"
-                                                {{ $item->quantity <= 1 ? 'disabled' : '' }}>-</button>
+                                            <button type="submit" class="qty-btn" {{ $item->quantity <= 1 ? 'disabled' : '' }}>-</button>
                                         </form>
                                         <span class="qty-number">{{ $item->quantity }}</span>
                                         <form action="{{ route('cart.update', $item->product_id) }}" method="POST">
@@ -97,11 +91,9 @@
                                                 @if ($item->quantity >= ($item->product->stock ?? 1)) disabled @endif>+</button>
                                         </form>
                                     </div>
-                                    <form action="{{ route('cart.remove', $item->product_id) }}" method="POST"
-                                        class="ms-auto">
+                                    <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="ms-auto">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="remove-item-btn"><i
-                                                class="fa fa-trash-o"></i></button>
+                                        <button type="submit" class="remove-item-btn"><i class="fa fa-trash-o"></i></button>
                                     </form>
                                 </div>
                             </div>
@@ -110,24 +102,23 @@
                 </div>
             @else
                 <div class="empty-cart-msg text-center mt-5">
-                    <p>Sua sacola está vazia.</p>
+                    <p>{{ __('messages.sacola_vazia') }}</p>
                 </div>
             @endif
         </div>
 
         @if ($cartCount > 0)
             <div class="cart-footer border-top p-3 bg-white">
-                {{-- Exibição do Total --}}
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-bold">SUBTOTAL:</span>
+                    <span class="fw-bold">{{ __('messages.subtotal') }}:</span>
                     <span class="fw-bold h5 mb-0 text-dark">
                         {{ $symbol . ' ' . number_format($totalGeral, $decimals, $decimal, $thousand) }}
                     </span>
                 </div>
-                <a href="{{ route('cart.view') }}" class="btn-go-to-cart w-100 py-3">IR PARA O CARRINHO</a>
+                <a href="{{ route('cart.view') }}" class="btn-go-to-cart w-100 py-3 text-uppercase">
+                    {{ __('messages.ir_para_carrinho') }}
+                </a>
             </div>
         @endif
     </div>
 </div>
-
-{{-- JS migrado a app-custom.js --}}

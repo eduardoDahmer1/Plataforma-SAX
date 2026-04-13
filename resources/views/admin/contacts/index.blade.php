@@ -3,12 +3,12 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Centro de Mensagens"
-        description="Gestão de comunicações e currículos recebidos">
+        title="{{ __('messages.centro_mensagens_titulo') }}"
+        description="{{ __('messages.gestao_comunicacoes_desc') }}">
         <x-slot:actions>
             <a href="{{ route('admin.contacts.export', ['type' => request('type')]) }}"
                class="btn btn-outline-dark btn-sm rounded-0 px-3 text-uppercase fw-bold x-small tracking-wider">
-               <i class="fas fa-download me-2"></i>Exportar CSV
+               <i class="fas fa-download me-2"></i> {{ __('messages.exportar_csv_btn') }}
             </a>
         </x-slot:actions>
     </x-admin.page-header>
@@ -17,15 +17,15 @@
     <div class="d-flex gap-2 mb-4 border-bottom pb-3">
         <a href="{{ route('admin.contatos.index') }}"
            class="sax-filter-link {{ request('type') === null ? 'active' : '' }}">
-           TODOS
+           {{ __('messages.filtro_todos') }}
         </a>
         <a href="{{ route('admin.contatos.index', ['type' => 1]) }}"
            class="sax-filter-link {{ request('type') == 1 ? 'active' : '' }}">
-           CONSULTAS
+           {{ __('messages.filtro_consultas') }}
         </a>
         <a href="{{ route('admin.contatos.index', ['type' => 2]) }}"
            class="sax-filter-link {{ request('type') == 2 ? 'active' : '' }}">
-           CURRÍCULOS
+           {{ __('messages.filtro_curriculos') }}
         </a>
     </div>
 
@@ -51,7 +51,7 @@
 
                             {{-- Conteúdo da Mensagem --}}
                             <div class="col-md-5 py-3 py-md-0 border-start-md ps-md-4">
-                                <span class="sax-label mb-1">Mensagem</span>
+                                <span class="sax-label mb-1">{{ __('messages.label_mensagem') }}</span>
                                 <p class="small text-secondary mb-0 lh-base italic">
                                     "{{ Str::limit($contact->message, 120) }}"
                                 </p>
@@ -59,7 +59,7 @@
 
                             {{-- Data e Anexo --}}
                             <div class="col-md-2 text-md-center py-2 py-md-0">
-                                <span class="sax-label mb-1">Recebido</span>
+                                <span class="sax-label mb-1">{{ __('messages.label_recebido') }}</span>
                                 <span class="d-block x-small fw-bold text-dark">{{ $contact->created_at->format('d/m/Y') }}</span>
                                 <span class="x-small text-muted">{{ $contact->created_at->format('H:i') }}</span>
                             </div>
@@ -70,15 +70,15 @@
                                     @if($contact->attachment)
                                         <a href="{{ asset('storage/' . $contact->attachment) }}" target="_blank"
                                            class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                                           VER ANEXO
+                                           {{ __('messages.ver_anexo_link') }}
                                         </a>
                                     @endif
 
                                     <form action="{{ route('admin.contatos.destroy', $contact->id) }}" method="POST"
-                                          onsubmit="return confirm('¿Eliminar mensaje?')" class="m-0">
+                                          onsubmit="return confirm('{{ __('messages.confirmar_eliminar_msg') }}')" class="m-0">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">
-                                            ELIMINAR
+                                            {{ __('messages.eliminar_btn') }}
                                         </button>
                                     </form>
                                 </div>
@@ -90,7 +90,7 @@
             </div>
         @empty
             <div class="col-12 py-5 text-center">
-                <p class="text-muted small italic">Nenhuma mensagem encontrada nesta categoria.</p>
+                <p class="text-muted small italic">{{ __('messages.nenhuma_mensagem_aviso') }}</p>
             </div>
         @endforelse
     </div>

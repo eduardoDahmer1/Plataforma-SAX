@@ -26,27 +26,16 @@
     @method('PUT')
 
     {{-- ── HEADER STICKY ──────────────────────────────────────────── --}}
-    <div class="sticky-header px-4 py-3 mb-5 bg-white border-bottom shadow-sm d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Editar SAX Café & Bistrô</h2>
-            <div class="sax-divider-bistro"></div>
-            <span class="text-muted x-small">
-                Última actualização: {{ $cafeBistro->updated_at ? $cafeBistro->updated_at->format('d/m/Y H:i') : 'Nunca' }}
-            </span>
-        </div>
-        <div class="d-flex gap-2 align-items-center">
-            <a href="{{ route('admin.cafe_bistro.index') }}" class="btn-back-minimal d-none d-md-flex align-items-center">
-                <i class="fas fa-times me-1"></i> CANCELAR
-            </a>
-            <button type="submit" class="btn btn-dark-bistro rounded-pill px-4 fw-bold shadow-sm">
-                <i class="fas fa-check-circle me-2"></i> SALVAR ALTERAÇÕES
-            </button>
-        </div>
-    </div>
+    <x-admin.sticky-header
+        title="Editar SAX Café & Bistrô"
+        cancelRoute="{{ route('admin.cafe_bistro.index') }}"
+        divider="sax-divider-bistro"
+        btnClass="btn-dark-bistro"
+        submitLabel="SALVAR ALTERAÇÕES"
+        :updatedAt="$cafeBistro->updated_at ? 'Última actualização: '.$cafeBistro->updated_at->format('d/m/Y H:i') : null"
+    />
 
     <x-admin.alert />
-
-    
 
     <div class="px-3 d-flex flex-column gap-4">
 
@@ -100,13 +89,7 @@
         {{-- 02. HERO                                                  --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm overflow-hidden">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-bistro"><i class="fas fa-image"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">02 — Hero</p>
-                    <p class="x-small text-muted mb-0">Imagem de fundo e textos de boas-vindas</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-image" theme="bistro" number="02" title="Hero" subtitle="Imagem de fundo e textos de boas-vindas" />
             <div class="row g-0">
                 <div class="col-lg-7 p-4">
                     <div class="mb-3">
@@ -143,13 +126,7 @@
         {{-- 03. SOBRE NÓS                                            --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm overflow-hidden">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-bistro"><i class="fas fa-store-alt"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">03 — Sobre Nós</p>
-                    <p class="x-small text-muted mb-0">Imagem, título e texto de apresentação</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-store-alt" theme="bistro" number="03" title="Sobre Nós" subtitle="Imagem, título e texto de apresentação" />
             <div class="row g-0">
                 <div class="col-lg-7 p-4">
                     <div class="mb-3">
@@ -185,13 +162,7 @@
         {{-- 04. CARDÁPIO                                             --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm overflow-hidden">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-bistro"><i class="fas fa-book-open"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">04 — Cardápio</p>
-                    <p class="x-small text-muted mb-0">Títulos e PDF do cardápio (máx. 8MB)</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-book-open" theme="bistro" number="04" title="Cardápio" subtitle="Títulos e PDF do cardápio (máx. 8MB)" />
             <div class="p-4">
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -276,13 +247,7 @@
         {{-- 05. EVENTOS                                               --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm overflow-hidden">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-bistro"><i class="fas fa-champagne-glasses"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">05 — Eventos</p>
-                    <p class="x-small text-muted mb-0">Textos, tipos e galeria da seção de eventos</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-champagne-glasses" theme="bistro" number="05" title="Eventos" subtitle="Textos, tipos e galeria da seção de eventos" />
             <div class="p-4">
                 <div class="row g-3">
                     {{-- Título y subtítulo --}}
@@ -356,13 +321,7 @@
         {{-- 06. HORÁRIOS                                             --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm overflow-hidden">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-bistro"><i class="fas fa-clock"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">06 — Horários</p>
-                    <p class="x-small text-muted mb-0">Dias da semana e horários de funcionamento</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-clock" theme="bistro" number="06" title="Horários" subtitle="Dias da semana e horários de funcionamento" />
             <div class="p-4">
                 @php
                     $diasSemana = ['Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado','Domingo'];
@@ -441,11 +400,7 @@
 
 
 {{-- MOBILE: botón fijo inferior --}}
-<div class="d-md-none fixed-bottom p-3 bg-white border-top shadow-lg" style="z-index:1030;">
-    <button form="formCafeBistro" type="submit" class="btn btn-dark-bistro w-100 py-3 rounded-pill fw-bold">
-        <i class="fas fa-check-circle me-2"></i> SALVAR ALTERAÇÕES
-    </button>
-</div>
+<x-admin.mobile-submit formId="formCafeBistro" btnClass="btn-dark-bistro" label="SALVAR ALTERAÇÕES" />
 
 
 @endsection

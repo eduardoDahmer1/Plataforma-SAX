@@ -20,23 +20,11 @@
     @method('PUT')
 
     {{-- ── HEADER STICKY ────────────────────────────────────────── --}}
-    <div class="sticky-header px-4 py-3 mb-5 bg-white border-bottom shadow-sm d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="sax-title text-uppercase letter-spacing-2 m-0">Editar SAX Bridal</h2>
-            <div class="sax-divider-gold"></div>
-            <span class="text-muted x-small">
-                Última actualización: {{ $bridal->updated_at ? $bridal->updated_at->format('d/m/Y H:i') : 'Nunca' }}
-            </span>
-        </div>
-        <div class="d-flex gap-2 align-items-center">
-            <a href="{{ route('admin.bridal.index') }}" class="btn-back-minimal d-none d-md-flex align-items-center">
-                <i class="fas fa-times me-1"></i> CANCELAR
-            </a>
-            <button type="submit" class="btn btn-dark-gold rounded-pill px-4 fw-bold shadow-sm">
-                <i class="fas fa-check-circle me-2"></i> GUARDAR CAMBIOS
-            </button>
-        </div>
-    </div>
+    <x-admin.sticky-header
+        title="Editar SAX Bridal"
+        cancelRoute="{{ route('admin.bridal.index') }}"
+        :updatedAt="$bridal->updated_at ? 'Última actualización: '.$bridal->updated_at->format('d/m/Y H:i') : null"
+    />
 
     {{-- ── ERRORES / FLASH ──────────────────────────────────────── --}}
     <div class="mx-4">
@@ -49,13 +37,7 @@
         {{-- 01. HERO                                                   --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm overflow-hidden">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-gold"><i class="fas fa-image"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">01 — Hero</p>
-                    <p class="x-small text-muted mb-0">Imagen principal y textos de bienvenida</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-image" number="01" title="Hero" subtitle="Imagen principal y textos de bienvenida" />
             <div class="row g-0">
                 <div class="col-lg-7 p-4">
                     <div class="mb-3">
@@ -74,18 +56,13 @@
                     </div>
                 </div>
                 <div class="col-lg-5 p-4 bg-light border-start">
-                    <label class="sax-form-label d-block mb-2">Imagen Hero</label>
-                    <div class="img-preview-box mb-3 rounded-3 overflow-hidden border" style="height:180px;">
-                        <img id="prev-hero"
-                             src="{{ $bridal->hero_image ? asset('storage/'.$bridal->hero_image) : 'https://placehold.co/600x400/121212/D4AF37?text=Hero' }}"
-                             class="w-100 h-100 object-fit-cover">
-                    </div>
-                    <div class="upload-zone">
-                        <input type="file" name="hero_image" class="upload-input img-trigger" data-prev="prev-hero" accept="image/*">
-                        <i class="fas fa-cloud-upload-alt mb-2 opacity-25 fa-lg"></i>
-                        <p class="x-small fw-bold m-0">Haga clic o arrastre una imagen</p>
-                        <p class="x-small text-muted m-0">JPG, PNG, WEBP — máx. 8MB</p>
-                    </div>
+                    <x-admin.image-upload
+                        name="hero_image"
+                        previewId="prev-hero"
+                        :currentImage="$bridal->hero_image ? asset('storage/'.$bridal->hero_image) : null"
+                        placeholder="https://placehold.co/600x400/121212/D4AF37?text=Hero"
+                        label="Imagen Hero"
+                    />
                 </div>
             </div>
         </div>
@@ -94,13 +71,7 @@
         {{-- 02. PROMOS (3 slots fijos)                                --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-gold"><i class="fas fa-percent"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">03 — Promos</p>
-                    <p class="x-small text-muted mb-0">Carrusel promocional (máx. 3 ítems)</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-percent" number="03" title="Promos" subtitle="Carrusel promocional (máx. 3 ítems)" />
             <div class="p-4">
                 <div class="row g-3">
                     @for($i = 0; $i < 3; $i++)
@@ -112,16 +83,14 @@
                             </div>
 
                             {{-- Imagen --}}
-                            <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:120px;">
-                                <img id="prev-promo-{{ $i }}"
-                                     src="{{ !empty($promos[$i]['image']) ? asset('storage/'.$promos[$i]['image']) : 'https://placehold.co/400x200/121212/D4AF37?text=Promo+'.($i+1) }}"
-                                     class="w-100 h-100 object-fit-cover">
-                            </div>
-                            <div class="upload-zone py-2 mb-3">
-                                <input type="file" name="promos_items[{{ $i }}][image]"
-                                       class="upload-input img-trigger" data-prev="prev-promo-{{ $i }}" accept="image/*">
-                                <p class="x-small text-muted m-0">Cambiar imagen</p>
-                            </div>
+                            <x-admin.image-upload
+                                name="promos_items[{{ $i }}][image]"
+                                previewId="prev-promo-{{ $i }}"
+                                :currentImage="!empty($promos[$i]['image']) ? asset('storage/'.$promos[$i]['image']) : null"
+                                placeholder="https://placehold.co/400x200/121212/D4AF37?text=Promo+{{ $i+1 }}"
+                                height="120px"
+                                compact
+                            />
                             <input type="hidden" name="promos_items[{{ $i }}][image_path]"
                                    value="{{ $promos[$i]['image'] ?? '' }}">
 
@@ -160,13 +129,7 @@
         {{-- 04. SERVICIOS (4 slots fijos)                             --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-gold"><i class="fas fa-concierge-bell"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">04 — Servicios</p>
-                    <p class="x-small text-muted mb-0">Label, título, CTA y 4 ítems de servicio</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-concierge-bell" number="04" title="Servicios" subtitle="Label, título, CTA y 4 ítems de servicio" />
             <div class="p-4">
                 {{-- Metadatos de sección --}}
                 <div class="row g-3 mb-4 pb-4 border-bottom">
@@ -201,16 +164,14 @@
                                 <span class="badge-num">{{ $i + 1 }}</span>
                                 <span class="x-small fw-bold text-uppercase text-muted">Servicio {{ $i + 1 }}</span>
                             </div>
-                            <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:100px;">
-                                <img id="prev-svc-{{ $i }}"
-                                     src="{{ !empty($services[$i]['image']) ? asset('storage/'.$services[$i]['image']) : 'https://placehold.co/300x200/fdf8e6/D4AF37?text=Svc+'.($i+1) }}"
-                                     class="w-100 h-100 object-fit-cover">
-                            </div>
-                            <div class="upload-zone py-2 mb-3">
-                                <input type="file" name="services_items[{{ $i }}][image]"
-                                       class="upload-input img-trigger" data-prev="prev-svc-{{ $i }}" accept="image/*">
-                                <p class="x-small text-muted m-0">Cambiar imagen</p>
-                            </div>
+                            <x-admin.image-upload
+                                name="services_items[{{ $i }}][image]"
+                                previewId="prev-svc-{{ $i }}"
+                                :currentImage="!empty($services[$i]['image']) ? asset('storage/'.$services[$i]['image']) : null"
+                                placeholder="https://placehold.co/300x200/fdf8e6/D4AF37?text=Svc+{{ $i+1 }}"
+                                height="100px"
+                                compact
+                            />
                             <input type="hidden" name="services_items[{{ $i }}][image_path]"
                                    value="{{ $services[$i]['image'] ?? '' }}">
                             <div class="mb-2">
@@ -235,13 +196,7 @@
         {{-- 05. PALACE BANNER                                         --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm overflow-hidden">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-gold"><i class="fas fa-landmark"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">05 — Palace Banner</p>
-                    <p class="x-small text-muted mb-0">Banner destacado del salón</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-landmark" number="05" title="Palace Banner" subtitle="Banner destacado del salón" />
             <div class="row g-0">
                 <div class="col-lg-7 p-4">
                     <div class="row g-3">
@@ -268,18 +223,14 @@
                     </div>
                 </div>
                 <div class="col-lg-5 p-4 bg-light border-start">
-                    <label class="sax-form-label d-block mb-2">Imagen Palace</label>
-                    <div class="img-preview-box mb-3 rounded-3 overflow-hidden border" style="height:180px;">
-                        <img id="prev-palace"
-                             src="{{ $bridal->palace_image ? asset('storage/'.$bridal->palace_image) : 'https://placehold.co/600x400/121212/D4AF37?text=Palace' }}"
-                             class="w-100 h-100 object-fit-cover">
-                    </div>
-                    <div class="upload-zone">
-                        <input type="file" name="palace_image" class="upload-input img-trigger" data-prev="prev-palace" accept="image/*">
-                        <i class="fas fa-cloud-upload-alt mb-2 opacity-25 fa-lg"></i>
-                        <p class="x-small fw-bold m-0">Haga clic o arrastre una imagen</p>
-                        <p class="x-small text-muted m-0">JPG, PNG, WEBP — máx. 4MB</p>
-                    </div>
+                    <x-admin.image-upload
+                        name="palace_image"
+                        previewId="prev-palace"
+                        :currentImage="$bridal->palace_image ? asset('storage/'.$bridal->palace_image) : null"
+                        placeholder="https://placehold.co/600x400/121212/D4AF37?text=Palace"
+                        label="Imagen Palace"
+                        maxSize="4MB"
+                    />
                 </div>
             </div>
         </div>
@@ -288,13 +239,7 @@
         {{-- 06. TESTIMONIOS (4 slots fijos)                           --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-gold"><i class="fas fa-quote-left"></i></div>
-                <div>
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">06 — Testimonios</p>
-                    <p class="x-small text-muted mb-0">Label, título y 4 reseñas de clientes</p>
-                </div>
-            </div>
+            <x-admin.block-header icon="fas fa-quote-left" number="06" title="Testimonios" subtitle="Label, título y 4 reseñas de clientes" />
             <div class="p-4">
                 {{-- Metadatos --}}
                 <div class="row g-3 mb-4 pb-4 border-bottom">
@@ -316,17 +261,13 @@
                     <div class="col-md-6">
                         <div class="border rounded-3 p-3 h-100" style="background:#fafafa;">
                             <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="testimonial-avatar-upload position-relative">
-                                    <img id="prev-test-{{ $i }}"
-                                         src="{{ !empty($testimonials[$i]['foto']) ? asset('storage/'.$testimonials[$i]['foto']) : 'https://placehold.co/100x100/eef2f7/ccc?text=Foto' }}"
-                                         class="avatar-preview rounded-circle border">
-                                    <input type="file" name="testimonials_items[{{ $i }}][foto]"
-                                           class="upload-input img-trigger avatar-trigger"
-                                           data-prev="prev-test-{{ $i }}" accept="image/*">
-                                    <div class="avatar-overlay rounded-circle">
-                                        <i class="fas fa-camera x-small text-white"></i>
-                                    </div>
-                                </div>
+                                <x-admin.image-upload
+                                    name="testimonials_items[{{ $i }}][foto]"
+                                    previewId="prev-test-{{ $i }}"
+                                    :currentImage="!empty($testimonials[$i]['foto']) ? asset('storage/'.$testimonials[$i]['foto']) : null"
+                                    placeholder="https://placehold.co/100x100/eef2f7/ccc?text=Foto"
+                                    circular
+                                />
                                 <div>
                                     <span class="badge-num">{{ $i + 1 }}</span>
                                     <p class="x-small text-muted mb-0 mt-1">Foto del cliente</p>
@@ -416,16 +357,7 @@
         {{-- 07. SUCURSALES (dinámico)                                 --}}
         {{-- ══════════════════════════════════════════════════════════ --}}
         <div class="sax-premium-card shadow-sm">
-            <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                <div class="icon-circle-gold"><i class="fas fa-map-marker-alt"></i></div>
-                <div class="flex-grow-1">
-                    <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">07 — Sucursales</p>
-                    <p class="x-small text-muted mb-0">Locales y contacto (cantidad libre)</p>
-                </div>
-                <button type="button" id="btn-add-location" class="btn btn-sm btn-outline-dark rounded-pill x-small fw-bold px-3">
-                    <i class="fas fa-plus me-1"></i> AÑADIR SUCURSAL
-                </button>
-            </div>
+            <x-admin.block-header icon="fas fa-map-marker-alt" number="07" title="Sucursales" subtitle="Locales y contacto (cantidad libre)" actionLabel="AÑADIR SUCURSAL" actionId="btn-add-location" />
             <div class="p-4">
                 <div id="locations-container" class="row g-3" data-loc-count="{{ count($locations) }}">
                     @forelse($locations as $i => $loc)
@@ -434,15 +366,14 @@
                                 <button type="button" class="btn-remove-location position-absolute top-0 end-0 m-2 btn btn-sm btn-light border rounded-circle">
                                     <i class="fas fa-times x-small"></i>
                                 </button>
-                                <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:120px;">
-                                    <img class="loc-prev w-100 h-100 object-fit-cover"
-                                         src="{{ !empty($loc['image']) ? asset('storage/'.$loc['image']) : 'https://placehold.co/400x200/121212/D4AF37?text=Sucursal' }}">
-                                </div>
-                                <div class="upload-zone py-2 mb-2">
-                                    <input type="file" name="locations_items[{{ $i }}][image]"
-                                           class="upload-input loc-img-trigger" accept="image/*">
-                                    <p class="x-small text-muted m-0">Subir imagen</p>
-                                </div>
+                                <x-admin.image-upload
+                                    name="locations_items[{{ $i }}][image]"
+                                    previewId="prev-loc-{{ $i }}"
+                                    :currentImage="!empty($loc['image']) ? asset('storage/'.$loc['image']) : null"
+                                    placeholder="https://placehold.co/400x200/121212/D4AF37?text=Sucursal"
+                                    height="120px"
+                                    compact
+                                />
                                 <input type="hidden" name="locations_items[{{ $i }}][image_path]"
                                        value="{{ $loc['image'] ?? '' }}">
                                 <div class="mb-2">
@@ -517,11 +448,7 @@
 </form>
 
 {{-- MOBILE: botón fijo inferior --}}
-<div class="d-md-none fixed-bottom p-3 bg-white border-top shadow-lg" style="z-index:1030;">
-    <button form="formBridal" type="submit" class="btn btn-dark-gold w-100 py-3 rounded-pill fw-bold">
-        <i class="fas fa-check-circle me-2"></i> GUARDAR CAMBIOS
-    </button>
-</div>
+<x-admin.mobile-submit formId="formBridal" />
 </x-admin.card>
 
 @endsection

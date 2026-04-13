@@ -7,7 +7,7 @@
             </div>
             @if($img['file'])
                 <div class="preview-overlay">
-                    <form action="{{ route($img['routeDelete']) }}" method="POST" onsubmit="return confirm('¿Eliminar esta imagen?');">
+                    <form action="{{ route($img['routeDelete']) }}" method="POST" onsubmit="return confirm('{{ __('messages.confirmar_exclusao_imagem') }}');">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn btn-danger btn-sm rounded-circle shadow">
                             <i class="fas fa-times"></i>
@@ -25,7 +25,7 @@
                     <div class="mb-2 text-muted opacity-25">
                         <i class="fas fa-image fa-3x"></i>
                     </div>
-                    <span class="text-muted small fw-medium">Vacío</span>
+                    <span class="text-muted small fw-medium">{{ __('messages.vazio_label') }}</span>
                 </div>
             @endif
         </div>
@@ -36,11 +36,11 @@
                 <div class="upload-wrapper mb-2">
                     <input type="file" class="custom-file-input" name="{{ $img['field'] }}" required>
                     <div class="btn-upload-label">
-                        <i class="fas fa-cloud-upload-alt me-1"></i> Seleccionar
+                        <i class="fas fa-cloud-upload-alt me-1"></i> {{ __('messages.selecionar_arquivo_btn') }}
                     </div>
                 </div>
                 <button type="submit" class="btn btn-dark btn-sm w-100 fw-bold btn-submit-action py-2">
-                    Actualizar
+                    {{ __('messages.atualizar_btn') }}
                 </button>
             </form>
         </div>

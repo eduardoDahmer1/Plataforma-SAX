@@ -3,11 +3,11 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Moedas e Câmbios"
-        description="Gestão de tipos de câmbio e formatos de moeda">
+        title="{{ __('messages.moedas_cambios_titulo') }}"
+        description="{{ __('messages.gestao_cambio_desc') }}">
         <x-slot:actions>
             <button class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider" data-bs-toggle="modal" data-bs-target="#addCurrencyModal">
-                <i class="fas fa-plus me-2"></i> Nova Moeda
+                <i class="fas fa-plus me-2"></i> {{ __('messages.nova_moeda_btn') }}
             </button>
         </x-slot:actions>
     </x-admin.page-header>
@@ -24,23 +24,23 @@
                             <span class="x-small text-uppercase tracking-wider text-muted italic">{{ $currency->description }}</span>
                         </div>
                         @if($currency->is_default)
-                            <span class="badge bg-dark rounded-0 x-small tracking-tighter">BASE / DEFAULT</span>
+                            <span class="badge bg-dark rounded-0 x-small tracking-tighter">{{ __('messages.moeda_base_badge') }}</span>
                         @endif
                     </div>
 
                     <div class="bg-light p-3 mb-3 border-start border-3 {{ $currency->is_default ? 'border-dark' : 'border-secondary' }}">
-                        <span class="sax-label">Valor de Conversão</span>
+                        <span class="sax-label">{{ __('messages.valor_conversao_label') }}</span>
                         <span class="h4 fw-light font-monospace m-0">{{ number_format($currency->value, $currency->decimal_digits ?? 2, $currency->decimal_separator ?? '.', $currency->thousands_separator ?? ',') }}</span>
                     </div>
 
                     <div class="d-flex gap-3 pt-2 border-top">
                         <button class="btn-clean text-dark x-small fw-bold tracking-tighter hover-underline" data-bs-toggle="modal" data-bs-target="#editCurrencyModal{{ $currency->id }}">
-                            EDITAR PARÂMETROS
+                            {{ __('messages.editar_parametros_btn') }}
                         </button>
 
                         @if(!$currency->is_default)
                         <a href="{{ route('admin.currencies.default', $currency->id) }}" class="text-primary text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                            ESTABELECER COMO BASE
+                            {{ __('messages.estabelecer_base_link') }}
                         </a>
                         @endif
                     </div>
@@ -55,9 +55,9 @@
                     @csrf @method('PUT')
                     <div class="modal-header border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-2">
-                            <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small mb-0">Configuração de Moeda: {{ $currency->name }}</h6>
+                            <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small mb-0">{{ __('messages.configuracao_moeda_modal') }}: {{ $currency->name }}</h6>
                             @if($currency->is_default)
-                                <span class="badge bg-dark rounded-0 x-small tracking-tighter">BASE / DEFAULT</span>
+                                <span class="badge bg-dark rounded-0 x-small tracking-tighter">{{ __('messages.moeda_base_badge') }}</span>
                             @endif
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -69,34 +69,34 @@
                                 <input type="text" name="name" class="form-control sax-input" value="{{ $currency->name }}" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Símbolo (Sign)</label>
+                                <label class="sax-label">{{ __('messages.simbolo_label') }}</label>
                                 <input type="text" name="sign" class="form-control sax-input" value="{{ $currency->sign }}" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Taxa de Câmbio</label>
+                                <label class="sax-label">{{ __('messages.taxa_cambio_label') }}</label>
                                 <input type="number" step="0.0001" name="value" class="form-control sax-input font-monospace" value="{{ $currency->value }}" required>
                             </div>
                             <div class="col-12">
-                                <label class="sax-label">Descrição</label>
+                                <label class="sax-label">{{ __('messages.descricao_label') }}</label>
                                 <input type="text" name="description" class="form-control sax-input" value="{{ $currency->description }}" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Sep. Decimal</label>
+                                <label class="sax-label">{{ __('messages.sep_decimal_label') }}</label>
                                 <input type="text" name="decimal_separator" class="form-control sax-input text-center" value="{{ $currency->decimal_separator ?? '.' }}">
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Sep. Milhar</label>
+                                <label class="sax-label">{{ __('messages.sep_milhar_label') }}</label>
                                 <input type="text" name="thousands_separator" class="form-control sax-input text-center" value="{{ $currency->thousands_separator ?? ',' }}">
                             </div>
                             <div class="col-md-4">
-                                <label class="sax-label">Dígitos Decimais</label>
+                                <label class="sax-label">{{ __('messages.digitos_decimais_label') }}</label>
                                 <input type="number" name="decimal_digits" class="form-control sax-input text-center" value="{{ $currency->decimal_digits ?? 2 }}">
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 p-4 pt-0">
-                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-0 px-4 x-small fw-bold text-uppercase" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">Atualizar Moeda</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-0 px-4 x-small fw-bold text-uppercase" data-bs-dismiss="modal">{{ __('messages.cancelar_btn') }}</button>
+                        <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">{{ __('messages.atualizar_moeda_btn') }}</button>
                     </div>
                 </form>
             </div>
@@ -111,7 +111,7 @@
         <form action="{{ route('admin.currencies.store') }}" method="POST" class="modal-content rounded-0 border-0 shadow-lg">
             @csrf
             <div class="modal-header border-bottom py-3 px-4">
-                <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small">Registrar Nova Divisa</h6>
+                <h6 class="modal-title text-uppercase fw-bold tracking-wider x-small">{{ __('messages.registrar_nova_divisa_titulo') }}</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
@@ -121,24 +121,23 @@
                         <input type="text" name="name" class="form-control sax-input" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="sax-label">Símbolo</label>
+                        <label class="sax-label">{{ __('messages.simbolo_label') }}</label>
                         <input type="text" name="sign" class="form-control sax-input" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="sax-label">Taxa Inicial</label>
+                        <label class="sax-label">{{ __('messages.taxa_inicial_label') }}</label>
                         <input type="number" step="0.0001" name="value" class="form-control sax-input font-monospace" required>
                     </div>
                     <div class="col-12">
-                        <label class="sax-label">Descrição Extendida</label>
+                        <label class="sax-label">{{ __('messages.descricao_extendida_label') }}</label>
                         <input type="text" name="description" class="form-control sax-input" required>
                     </div>
                 </div>
             </div>
             <div class="modal-footer border-top-0 p-4 pt-0">
-                <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">Guardar Nova Moeda</button>
+                <button type="submit" class="btn btn-dark btn-sm rounded-0 px-4 x-small fw-bold text-uppercase">{{ __('messages.guardar_moeda_btn') }}</button>
             </div>
         </form>
     </div>
 </div>
-
 @endsection

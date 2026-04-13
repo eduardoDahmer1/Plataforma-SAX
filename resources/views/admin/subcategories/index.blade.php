@@ -3,11 +3,11 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Subcategorias"
-        description="Estrutura de <span class='text-dark fw-bold'>{{ $subcategories->total() }}</span> níveis secundários ativos">
+        title="{{ __('messages.subcategorias_titulo') }}"
+        description="{{ __('messages.estrutura_de') }} <span class='text-dark fw-bold'>{{ $subcategories->total() }}</span> {{ __('messages.niveis_secundarios') }}">
         <x-slot:actions>
             <a href="{{ route('admin.subcategories.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
-                <i class="fa fa-folder-plus me-2"></i> Nova Subcategoria
+                <i class="fa fa-folder-plus me-2"></i> {{ __('messages.nova_subcategoria') }}
             </a>
         </x-slot:actions>
     </x-admin.page-header>
@@ -20,18 +20,13 @@
                     <i class="fa fa-search text-muted"></i>
                 </span>
                 <input type="text" name="search" class="form-control border-0 sax-search-input py-2"
-                    placeholder="Buscar por nombre de subcategoría..." value="{{ request('search') }}">
-                <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">BUSCAR</button>
+                    placeholder="{{ __('messages.buscar_subcategoria_placeholder') }}" value="{{ request('search') }}">
+                <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">{{ __('messages.buscar_botao') }}</button>
             </div>
         </form>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-sax-success alert-dismissible fade show mb-4" role="alert">
-            <i class="fa fa-check-circle me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+    <x-admin.alert />
 
     {{-- Grid de Subcategorias --}}
     <div class="row g-3">
@@ -51,9 +46,13 @@
                     {{-- Badge da Categoria Pai --}}
                     <div class="parent-category-badge mb-4">
                         <i class="fa fa-level-up-alt fa-rotate-90 me-1 opacity-50"></i>
-                        <span class="text-muted">Perteneciente a:</span>
+                        <span class="text-muted">{{ __('messages.pertencente_a') }}</span>
                         <strong class="text-dark">
-                            {{ $subcategory->category ? ($subcategory->category->name ?: $subcategory->category->slug) : 'Sin categoría' }}
+                            @if($subcategory->category)
+                                {{ $subcategory->category->name ?: $subcategory->category->slug }}
+                            @else
+                                <span class="text-danger">{{ __('messages.sem_categoria') }}</span>
+                            @endif
                         </strong>
                     </div>
 
@@ -62,19 +61,19 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <a href="{{ route('admin.subcategories.show', $subcategory) }}" class="btn btn-action-sax w-100">
-                                    <i class="fa fa-file-alt"></i> Dados
+                                    <i class="fa fa-file-alt"></i> {{ __('messages.dados') }}
                                 </a>
                             </div>
                             <div class="col-6">
                                 <a href="{{ route('admin.subcategories.edit', $subcategory) }}" class="btn btn-action-sax w-100">
-                                    <i class="fa fa-pen"></i> Editar
+                                    <i class="fa fa-pen"></i> {{ __('messages.editar') }}
                                 </a>
                             </div>
                             <div class="col-12">
-                                <form action="{{ route('admin.subcategories.destroy', $subcategory) }}" method="POST" onsubmit="return confirm('¿Eliminar subcategoría?')">
+                                <form action="{{ route('admin.subcategories.destroy', $subcategory) }}" method="POST" onsubmit="return confirm('{{ __('messages.confirmar_eliminar_subcategoria') }}')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-delete-sax w-100 mt-1">
-                                        <i class="fa fa-trash-alt me-1"></i> ELIMINAR REGISTRO
+                                        <i class="fa fa-trash-alt me-1"></i> {{ __('messages.eliminar_registro') }}
                                     </button>
                                 </form>
                             </div>

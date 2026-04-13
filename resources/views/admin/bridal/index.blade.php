@@ -7,21 +7,6 @@
     $testimonials = is_array($bridal->testimonials) ? $bridal->testimonials : (json_decode($bridal->testimonials, true) ?? []);
     $locations    = is_array($bridal->locations)    ? $bridal->locations    : (json_decode($bridal->locations, true)    ?? []);
 
-    $sections = [
-        'hero'         => !empty($bridal->hero_title),
-        'promos'       => count($promos) > 0,
-        'services'     => count($services) > 0,
-        'palace'       => !empty($bridal->palace_title),
-        'testimonials' => count($testimonials) > 0,
-        'instagram'    => !empty($bridal->social_instagram),
-        'locations'    => count($locations) > 0,
-    ];
-    $completedCount = count(array_filter($sections));
-
-    $badge = fn($done) => $done
-        ? '<span class="badge-section-done"><i class="fas fa-check-circle me-1"></i>Configurado</span>'
-        : '<span class="badge-section-empty"><i class="far fa-circle me-1"></i>Vacío</span>';
-
     $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
         <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">Visão Geral</li>
@@ -40,31 +25,6 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    {{-- ── STATUS BAR ──────────────────────────────────────────────── --}}
-    <div class="status-bar mb-4 px-4 py-3 d-flex align-items-center gap-3 flex-wrap">
-        <div class="d-flex align-items-center gap-2">
-            <span class="status-dot {{ $bridal->is_active ? 'dot-success' : 'dot-danger' }}"></span>
-            <span class="x-small fw-bold text-uppercase letter-spacing-1">
-                {{ $bridal->is_active ? 'Página Activa' : 'Página Inactiva' }}
-            </span>
-        </div>
-        <div class="status-divider"></div>
-        <div class="x-small text-muted">
-            <i class="fas fa-clock me-1 opacity-50"></i>
-            Actualizado: {{ $bridal->updated_at ? $bridal->updated_at->diffForHumans() : 'Sin datos' }}
-        </div>
-        <div class="status-divider"></div>
-        <div class="x-small text-muted">
-            <i class="fas fa-layer-group me-1 opacity-50"></i>
-            <span class="fw-bold text-dark">{{ $completedCount }}</span> / 7 secciones configuradas
-        </div>
-        <div class="ms-auto d-flex gap-1 align-items-center">
-            @foreach($sections as $key => $done)
-                <div class="section-pip {{ $done ? 'pip-done' : 'pip-empty' }}" title="{{ ucfirst($key) }}"></div>
-            @endforeach
-        </div>
-    </div>
-
     {{-- ── FLASH ───────────────────────────────────────────────────── --}}
     @if(session('success'))
         <div class="alert alert-sax-success alert-dismissible fade show mb-4">
@@ -77,14 +37,7 @@
         {{-- 01. HERO --}}
         <div class="col-12">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fas fa-image"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 01 — Hero</p>
-                        <p class="x-small text-muted mb-0">Imagen principal y textos de bienvenida</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['hero']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-image" number="01" title="Hero" subtitle="Imagen principal y textos de bienvenida" />
                 <div class="row g-0">
                     <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
                         <span class="badge-gold-soft mb-3 text-uppercase letter-spacing-1 d-inline-block">Hero</span>
@@ -107,14 +60,7 @@
         {{-- 02. PROMOS --}}
         <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fas fa-percent"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 03 — Promos</p>
-                        <p class="x-small text-muted mb-0">Carrusel promocional (máx. 3)</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['promos']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-percent" number="03" title="Promos" subtitle="Carrusel promocional (máx. 3)" />
                 <div class="p-4">
                     @if(count($promos) > 0)
                         <div class="d-flex flex-column gap-2">
@@ -148,14 +94,7 @@
         {{-- 04. SERVICES --}}
         <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fas fa-concierge-bell"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 04 — Servicios</p>
-                        <p class="x-small text-muted mb-0">{{ $bridal->services_label ?: 'Etiqueta no configurada' }}</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['services']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-concierge-bell" number="04" title="Servicios" :subtitle="$bridal->services_label ?: 'Etiqueta no configurada'" />
                 <div class="p-4">
                     @if(count($services) > 0)
                         <div class="row g-2 mb-3">
@@ -197,14 +136,7 @@
         {{-- 05. PALACE BANNER | 06. TESTIMONIALS --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm overflow-hidden h-100">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fas fa-landmark"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 05 — Palace Banner</p>
-                        <p class="x-small text-muted mb-0">Banner destacado del salón</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['palace']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-landmark" number="05" title="Palace Banner" subtitle="Banner destacado del salón" />
                 <div class="d-flex flex-column flex-sm-row" style="min-height:200px;">
                     <div class="palace-visual flex-shrink-0">
                         <img src="{{ $bridal->palace_image ? asset('storage/'.$bridal->palace_image) : 'https://placehold.co/400x300/121212/D4AF37?text=Palace' }}"
@@ -232,14 +164,7 @@
 
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fas fa-quote-left"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 06 — Testimonios</p>
-                        <p class="x-small text-muted mb-0">{{ $bridal->testimonials_label ?: 'Etiqueta no configurada' }}</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['testimonials']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-quote-left" number="06" title="Testimonios" :subtitle="$bridal->testimonials_label ?: 'Etiqueta no configurada'" />
                 <div class="p-4">
                     @if(count($testimonials) > 0)
                         <div class="row g-2">
@@ -280,14 +205,7 @@
         {{-- 07. INSTAGRAM | 07. SUCURSALES --}}
         <div class="col-lg-4">
             <div class="sax-premium-card p-0 shadow-sm h-100 instagram-card">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fab fa-instagram"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 07 — Instagram</p>
-                        <p class="x-small text-muted mb-0">CTA a redes sociales</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['instagram']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fab fa-instagram" number="07" title="Instagram" subtitle="CTA a redes sociales" />
                 <div class="p-4 d-flex align-items-center gap-3">
                     <i class="fab fa-instagram fa-2x text-gold"></i>
                     <div>
@@ -305,14 +223,7 @@
 
         <div class="col-lg-8">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100 overflow-hidden">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-gold"><i class="fas fa-map-marker-alt"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 07 — Sucursales</p>
-                        <p class="x-small text-muted mb-0">Locales y contacto</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['locations']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-map-marker-alt" number="07" title="Sucursales" subtitle="Locales y contacto" />
                 <div class="p-4">
                     @if(count($locations) > 0)
                         <div class="row g-2">

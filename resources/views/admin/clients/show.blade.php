@@ -2,13 +2,15 @@
 
 @section('content')
 <x-admin.card>
-    <div
-            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
-            <h2>Detalhes do Cliente</h2>
-            <a href="{{ route('admin.clients.index') }}" class="btn btn-secondary mt-2 mt-md-0">
-                <i class="fa fa-arrow-left me-1"></i> Voltar
+    <x-admin.page-header
+        title="Detalhes do Cliente"
+        description="Perfil de <strong>{{ $client->name }}</strong>">
+        <x-slot:actions>
+            <a href="{{ route('admin.clients.index') }}" class="btn-back-minimal">
+                <i class="fas fa-arrow-left me-1"></i> VOLTAR
             </a>
-        </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
         {{-- Card de informações do cliente --}}
         <div class="card shadow-sm mb-4">

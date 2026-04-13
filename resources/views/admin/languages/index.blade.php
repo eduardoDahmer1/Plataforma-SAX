@@ -6,13 +6,11 @@
         title="Traduções"
         description="Mostrando {{ $languages->count() }} chaves de tradução cadastradas">
         
-        <x-slot:actions>
-            <a href="{{ route('admin.languages.create') }}" 
-               class="btn btn-dark px-4" 
-               style="border-radius: 8px; font-weight: 700; background: #000;">
-                <i class="fas fa-plus me-2"></i>NOVA CHAVE
-            </a>
-        </x-slot:actions>
+       <x-admin.page-header
+            title="Traduções"
+            description="Mostrando {{ $languages->count() }} chaves de tradução cadastradas"
+            actionUrl="{{ route('admin.languages.create') }}"
+            actionLabel="Nova Chave" />
         
     </x-admin.page-header>
 

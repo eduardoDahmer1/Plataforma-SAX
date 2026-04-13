@@ -153,13 +153,6 @@ document.addEventListener('change', function(e) {
     document.getElementById(e.target.dataset.prev).src = URL.createObjectURL(e.target.files[0]);
 });
 
-// ── Location image preview (.loc-img-trigger) ─────────────────
-// Cubre: bridal — images dentro de location-items dinámicos
-document.addEventListener('change', function(e) {
-    if (!e.target.classList.contains('loc-img-trigger')) return;
-    if (!e.target.files || !e.target.files[0]) return;
-    e.target.closest('.location-item').querySelector('.loc-prev').src = URL.createObjectURL(e.target.files[0]);
-});
 
 // ── Bridal: agregar/eliminar sucursales ───────────────────────
 (function() {
@@ -181,12 +174,12 @@ document.addEventListener('change', function(e) {
                     <i class="fas fa-times x-small"></i>
                 </button>
                 <div class="img-preview-box mb-2 rounded-2 overflow-hidden border" style="height:120px;">
-                    <img class="loc-prev w-100 h-100 object-fit-cover"
+                    <img id="prev-loc-${i}" class="w-100 h-100 object-fit-cover"
                          src="https://placehold.co/400x200/121212/D4AF37?text=Sucursal">
                 </div>
                 <div class="upload-zone py-2 mb-2">
                     <input type="file" name="locations_items[${i}][image]"
-                           class="upload-input loc-img-trigger" accept="image/*">
+                           class="upload-input img-trigger" data-prev="prev-loc-${i}" accept="image/*">
                     <p class="x-small text-muted m-0">Subir imagen</p>
                 </div>
                 <input type="hidden" name="locations_items[${i}][image_path]" value="">

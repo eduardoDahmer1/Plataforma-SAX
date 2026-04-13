@@ -6,20 +6,6 @@
     $eventosTipos   = $cafeBistro->eventos_tipos ?? [];
     $eventosGaleria = $cafeBistro->eventos_galeria ?? [];
 
-    $sections = [
-        'hero'     => !empty($cafeBistro->hero_titulo),
-        'sobre'    => !empty($cafeBistro->sobre_titulo),
-        'cardapio' => !empty($cafeBistro->cardapio_titulo),
-        'eventos'  => !empty($cafeBistro->eventos_titulo),
-        'horarios' => count($horarios) > 0,
-        'contacto' => !empty($cafeBistro->direccion),
-    ];
-    $completedCount = count(array_filter($sections));
-
-    $badge = fn($done) => $done
-        ? '<span class="badge-section-done"><i class="fas fa-check-circle me-1"></i>Configurado</span>'
-        : '<span class="badge-section-empty"><i class="far fa-circle me-1"></i>Vacío</span>';
-
     $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
         <li class="breadcrumb-item x-small text-uppercase active text-bistro" aria-current="page">Visão Geral</li>
@@ -38,31 +24,6 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    {{-- ── STATUS BAR ──────────────────────────────────────────────── --}}
-    <div class="status-bar mb-4 px-4 py-3 d-flex align-items-center gap-3 flex-wrap">
-        <div class="d-flex align-items-center gap-2">
-            <span class="status-dot {{ $cafeBistro->is_active ? 'dot-success' : 'dot-danger' }}"></span>
-            <span class="x-small fw-bold text-uppercase letter-spacing-1">
-                {{ $cafeBistro->is_active ? 'Página Activa' : 'Página Inactiva' }}
-            </span>
-        </div>
-        <div class="status-divider"></div>
-        <div class="x-small text-muted">
-            <i class="fas fa-clock me-1 opacity-50"></i>
-            Actualizado: {{ $cafeBistro->updated_at ? $cafeBistro->updated_at->diffForHumans() : 'Sin datos' }}
-        </div>
-        <div class="status-divider"></div>
-        <div class="x-small text-muted">
-            <i class="fas fa-layer-group me-1 opacity-50"></i>
-            <span class="fw-bold text-dark">{{ $completedCount }}</span> / 6 secciones configuradas
-        </div>
-        <div class="ms-auto d-flex gap-1 align-items-center">
-            @foreach($sections as $key => $done)
-                <div class="section-pip {{ $done ? 'pip-done' : 'pip-empty' }}" title="{{ ucfirst($key) }}"></div>
-            @endforeach
-        </div>
-    </div>
-
     <x-admin.alert />
 
     <div class="row g-4">
@@ -70,14 +31,7 @@
         {{-- 01. HERO --}}
         <div class="col-12">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-bistro"><i class="fas fa-image"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 01 — Hero</p>
-                        <p class="x-small text-muted mb-0">Imagen principal y textos de bienvenida</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['hero']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-image" theme="bistro" number="01" title="Hero" subtitle="Imagen principal y textos de bienvenida" />
                 <div class="row g-0">
                     <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
                         <span class="badge-bistro-soft mb-3 text-uppercase letter-spacing-1 d-inline-block">Hero</span>
@@ -97,14 +51,7 @@
         {{-- 02. SOBRE NÓS --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm overflow-hidden h-100">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-bistro"><i class="fas fa-book-open"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 02 — Sobre Nós</p>
-                        <p class="x-small text-muted mb-0">Historia y descripción del espacio</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['sobre']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-book-open" theme="bistro" number="02" title="Sobre Nós" subtitle="Historia y descripción del espacio" />
                 <div class="d-flex flex-column flex-sm-row" style="min-height:200px;">
                     <div class="sobre-visual flex-shrink-0">
                         <img src="{{ $cafeBistro->sobre_imagen ? asset('storage/'.$cafeBistro->sobre_imagen) : 'https://placehold.co/400x300/0f1d35/4a6fa5?text=Sobre' }}"
@@ -123,14 +70,7 @@
         {{-- 03. CARDÁPIO --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-bistro"><i class="fas fa-utensils"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 03 — Cardápio</p>
-                        <p class="x-small text-muted mb-0">Título y PDF del menú</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['cardapio']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-utensils" theme="bistro" number="03" title="Cardápio" subtitle="Título y PDF del menú" />
                 <div class="p-4">
                     <h5 class="fw-bold text-dark mb-3">{{ $cafeBistro->cardapio_titulo ?? '—' }}</h5>
                     @if($cafeBistro->cardapio_subtitulo)
@@ -155,14 +95,7 @@
         {{-- 04. EVENTOS --}}
         <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-bistro"><i class="fas fa-glass-cheers"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 04 — Eventos</p>
-                        <p class="x-small text-muted mb-0">Celebraciones y galería</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['eventos']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-glass-cheers" theme="bistro" number="04" title="Eventos" subtitle="Celebraciones y galería" />
                 <div class="p-4">
                     <div class="row">
                         <div class="col-md-6">
@@ -206,14 +139,7 @@
         {{-- 05. HORÁRIOS --}}
         <div class="col-lg-5">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-bistro"><i class="fas fa-clock"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 05 — Horários</p>
-                        <p class="x-small text-muted mb-0">Días y horarios de funcionamiento</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['horarios']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-clock" theme="bistro" number="05" title="Horários" subtitle="Días y horarios de funcionamiento" />
                 <div class="p-4">
                     @if(count($horarios) > 0)
                         <table class="w-100">
@@ -242,14 +168,7 @@
         {{-- 06. CONTACTO --}}
         <div class="col-lg-7">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <div class="section-header px-4 pt-4 pb-3 border-bottom d-flex align-items-center gap-3">
-                    <div class="icon-circle-bistro"><i class="fas fa-map-marker-alt"></i></div>
-                    <div>
-                        <p class="fw-bold text-uppercase letter-spacing-1 small mb-0">Sección 06 — Contacto</p>
-                        <p class="x-small text-muted mb-0">Dirección, teléfono y redes</p>
-                    </div>
-                    <div class="ms-auto">{!! $badge($sections['contacto']) !!}</div>
-                </div>
+                <x-admin.block-header icon="fas fa-map-marker-alt" theme="bistro" number="06" title="Contacto" subtitle="Dirección, teléfono y redes" />
                 <div class="p-4">
                     <div class="row g-3">
                         <div class="col-md-6">

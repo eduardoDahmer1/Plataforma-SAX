@@ -5,9 +5,9 @@
     {{-- Header de Navegação --}}
     <div class="mb-5">
         <a href="{{ route('admin.cupons.index') }}" class="text-decoration-none x-small fw-bold text-uppercase text-secondary tracking-wider">
-            <i class="fa fa-chevron-left me-1"></i> Inventario de Cupones
+            <i class="fa fa-chevron-left me-1"></i> {{ __('messages.inventario_cupons_link') }}
         </a>
-        <h1 class="h4 fw-light mt-2 mb-0 text-uppercase tracking-wider">Configurar Nuevo Cupón</h1>
+        <h1 class="h4 fw-light mt-2 mb-0 text-uppercase tracking-wider">{{ __('messages.configurar_novo_cupon_titulo') }}</h1>
         <div class="sax-divider-dark mt-3"></div>
     </div>
 
@@ -18,17 +18,17 @@
                 
                 <div class="card border rounded-0 shadow-none">
                     <div class="card-body p-4 p-md-5">
-                        @include('admin.cupon.partials.form', ['button' => 'Registrar Cupón'])
+                        @include('admin.cupon.partials.form', ['button' => __('messages.registrar_cupon_btn')])
                     </div>
                 </div>
 
                 {{-- Ações de Rodapé (Caso não estejam no partial) --}}
                 <div class="mt-4 d-flex align-items-center gap-3">
                     <button type="submit" class="btn btn-dark rounded-0 px-5 py-2 fw-bold text-uppercase tracking-wider small">
-                        Guardar Cupón
+                        {{ __('messages.guardar_cupon_btn') }}
                     </button>
                     <a href="{{ route('admin.cupons.index') }}" class="text-secondary text-decoration-none x-small fw-bold text-uppercase hover-underline">
-                        Descartar
+                        {{ __('messages.descartar_link') }}
                     </a>
                 </div>
             </form>
@@ -36,5 +36,4 @@
     </div>
 
 </x-admin.card>
-
 @endsection

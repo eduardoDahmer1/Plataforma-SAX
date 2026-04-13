@@ -3,10 +3,10 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Marcas"
-        description="Mostrando <span class='text-dark fw-bold'>{{ $brands->count() }}</span> de {{ $brands->total() }} marcas cadastradas"
+        title="{{ __('messages.marcas_titulo') }}"
+        description="{{ __('messages.mostrando_marcas') }} <span class='text-dark fw-bold'>{{ $brands->count() }}</span> {{ __('messages.de') }} {{ $brands->total() }} {{ __('messages.marcas_cadastradas') }}"
         actionUrl="{{ route('admin.brands.create') }}"
-        actionLabel="Nova Marca" />
+        actionLabel="{{ __('messages.nova_marca') }}" />
 
     {{-- Barra de Busca Minimalista --}}
     <div class="sax-search-wrapper mb-4">
@@ -16,8 +16,8 @@
                     <i class="fa fa-search text-muted"></i>
                 </span>
                 <input type="text" name="search" class="form-control border-0 sax-search-input"
-                    placeholder="Buscar por nombre o ID de marca..." value="{{ request('search') }}">
-                <button class="btn btn-dark rounded-3 px-4" type="submit">BUSCAR</button>
+                    placeholder="{{ __('messages.buscar_marca_placeholder') }}" value="{{ request('search') }}">
+                <button class="btn btn-dark rounded-3 px-4" type="submit">{{ __('messages.buscar_botao') }}</button>
             </div>
         </form>
     </div>
@@ -38,7 +38,7 @@
                     {{-- Links de Acesso Rápido --}}
                     <div class="mb-4">
                         <a href="{{ route('brands.show', $brand->slug) }}" target="_blank" class="text-muted text-decoration-none x-small hover-dark">
-                            <i class="fa fa-external-link-alt me-1"></i> Ver página pública
+                            <i class="fa fa-external-link-alt me-1"></i> {{ __('messages.ver_pagina_publica') }}
                         </a>
                     </div>
 
@@ -52,14 +52,14 @@
                             </div>
                             <div class="col-6">
                                 <a href="{{ route('admin.brands.edit', $brand) }}" class="btn btn-outline-dark btn-sax-sm w-100">
-                                    <i class="fa fa-edit"></i> Editar
+                                    <i class="fa fa-edit"></i> {{ __('messages.editar') }}
                                 </a>
                             </div>
                             <div class="col-12 mt-2">
-                                <form action="{{ route('admin.brands.destroy', $brand) }}" method="POST" onsubmit="return confirm('¿Eliminar marca?')">
+                                <form action="{{ route('admin.brands.destroy', $brand) }}" method="POST" onsubmit="return confirm('{{ __('messages.confirmar_eliminar_marca') }}')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-soft-danger btn-sax-sm w-100">
-                                        <i class="fa fa-trash me-1"></i> Eliminar Marca
+                                        <i class="fa fa-trash me-1"></i> {{ __('messages.eliminar_marca') }}
                                     </button>
                                 </form>
                             </div>

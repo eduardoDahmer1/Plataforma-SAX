@@ -3,10 +3,10 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Categorias"
-        description="Catálogo com <span class='text-dark fw-bold'>{{ $categories->total() }}</span> departamentos ativos"
+        title="{{ __('messages.categorias_titulo') }}"
+        description="{{ __('messages.catalogo_com') }} <span class='text-dark fw-bold'>{{ $categories->total() }}</span> {{ __('messages.departamentos_ativos') }}"
         actionUrl="{{ route('admin.categories.create') }}"
-        actionLabel="Nova Categoria"
+        actionLabel="{{ __('messages.nova_categoria') }}"
         actionIcon="fa fa-plus-circle" />
 
     {{-- Barra de Filtro Minimalista --}}
@@ -17,8 +17,8 @@
                     <i class="fa fa-search text-muted"></i>
                 </span>
                 <input type="text" name="search" class="form-control border-0 sax-search-input py-2"
-                    placeholder="Buscar por nombre o slug..." value="{{ request('search') }}">
-                <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">FILTRAR</button>
+                    placeholder="{{ __('messages.buscar_categoria_placeholder') }}" value="{{ request('search') }}">
+                <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">{{ __('messages.filtrar_botao') }}</button>
             </div>
         </form>
     </div>
@@ -33,7 +33,7 @@
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <span class="category-id-badge">#{{ $category->id }}</span>
-                        <a href="{{ route('categories.show', $category->slug) }}" target="_blank" class="text-muted hover-dark transition-all" title="Ver en la tienda">
+                        <a href="{{ route('categories.show', $category->slug) }}" target="_blank" class="text-muted hover-dark transition-all" title="{{ __('messages.ver_na_loja') }}">
                             <i class="fa fa-external-link-alt small"></i>
                         </a>
                     </div>
@@ -45,19 +45,19 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <a href="{{ route('admin.categories.show', $category) }}" class="btn btn-action-sax w-100">
-                                    <i class="fa fa-folder-open me-1"></i> Dados
+                                    <i class="fa fa-folder-open me-1"></i> {{ __('messages.dados') }}
                                 </a>
                             </div>
                             <div class="col-6">
                                 <a href="{{ route('admin.categories.edit', $category) }}" class="btn btn-action-sax w-100">
-                                    <i class="fa fa-pen me-1"></i> Editar
+                                    <i class="fa fa-pen me-1"></i> {{ __('messages.editar') }}
                                 </a>
                             </div>
                             <div class="col-12">
-                                <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('¿Desea eliminar esta categoría?')">
+                                <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('{{ __('messages.confirmar_eliminar_categoria') }}')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-delete-sax w-100 mt-1">
-                                        <i class="fa fa-trash-alt me-1"></i> ELIMINAR CATEGORIA
+                                        <i class="fa fa-trash-alt me-1"></i> {{ __('messages.eliminar_categoria') }}
                                     </button>
                                 </form>
                             </div>

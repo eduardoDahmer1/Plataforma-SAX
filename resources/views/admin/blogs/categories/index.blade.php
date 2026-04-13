@@ -3,10 +3,10 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Categorias de Blog"
-        description="Organização hierárquica do conteúdo editorial"
+        title="{{ __('messages.categorias_blog_titulo') }}"
+        description="{{ __('messages.organizacao_editorial_desc') }}"
         actionUrl="{{ route('admin.blog-categories.create') }}"
-        actionLabel="Nova Categoria" />
+        actionLabel="{{ __('messages.nova_categoria') }}" />
 
     <x-admin.alert />
 
@@ -22,13 +22,15 @@
                             <img src="{{ Storage::url($cat->banner) }}" alt="{{ $cat->name }}" class="grayscale-hover">
                         @else
                             <div class="no-image-placeholder x-small text-uppercase fw-bold text-muted">
-                                No Image
+                                {{ __('messages.no_image_placeholder') }}
                             </div>
                         @endif
 
                         {{-- Overlay de Ações (Aparece no hover) --}}
                         <div class="category-overlay">
-                            <a href="{{ route('admin.blog-categories.edit', $cat) }}" class="btn btn-light btn-sm rounded-0 x-small fw-bold border">EDITAR</a>
+                            <a href="{{ route('admin.blog-categories.edit', $cat) }}" class="btn btn-light btn-sm rounded-0 x-small fw-bold border">
+                                {{ __('messages.editar_btn') }}
+                            </a>
                         </div>
                     </div>
 
@@ -38,11 +40,15 @@
                             <span class="x-small text-secondary text-uppercase tracking-wider">ID #{{ $cat->id }}</span>
 
                             <div class="d-flex gap-3 align-items-center">
-                                <a href="{{ route('admin.blog-categories.show', $cat) }}" class="text-dark x-small fw-bold text-decoration-none hover-underline">VER</a>
+                                <a href="{{ route('admin.blog-categories.show', $cat) }}" class="text-dark x-small fw-bold text-decoration-none hover-underline">
+                                    {{ __('messages.ver_btn') }}
+                                </a>
 
-                                <form action="{{ route('admin.blog-categories.destroy', $cat) }}" method="POST" class="m-0" onsubmit="return confirm('¿Eliminar categoría?')">
+                                <form action="{{ route('admin.blog-categories.destroy', $cat) }}" method="POST" class="m-0" onsubmit="return confirm('{{ __('messages.confirmar_eliminar_categoria_blog') }}')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">ELIMINAR</button>
+                                    <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">
+                                        {{ __('messages.eliminar_btn_cap') }}
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -54,7 +60,7 @@
 
     @else
         <div class="py-5 text-center border">
-            <p class="text-muted small italic mb-0">Nenhuma categoria registrada.</p>
+            <p class="text-muted small italic mb-0">{{ __('messages.nenhuma_categoria_blog') }}</p>
         </div>
     @endif
 </x-admin.card>

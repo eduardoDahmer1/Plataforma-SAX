@@ -3,11 +3,11 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Categorias Filhas"
-        description="Gerenciando <span class='text-dark fw-bold'>{{ $categoriasfilhas->total() }}</span> terminais de navegação">
+        title="{{ __('messages.categorias_filhas_titulo') }}"
+        description="{!! __('messages.gerenciando_terminais_desc', ['total' => $categoriasfilhas->total()]) !!}">
         <x-slot:actions>
             <a href="{{ route('admin.categorias-filhas.create') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
-                <i class="fa fa-sitemap me-2"></i> Nova Sub-Subcategoria
+                <i class="fa fa-sitemap me-2"></i> {{ __('messages.nova_sub_subcategoria') }}
             </a>
         </x-slot:actions>
     </x-admin.page-header>
@@ -20,8 +20,8 @@
                     <i class="fa fa-search text-muted"></i>
                 </span>
                 <input type="text" name="search" class="form-control border-0 sax-search-input py-2"
-                    placeholder="Buscar terminal por nombre..." value="{{ request('search') }}">
-                <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">BUSCAR</button>
+                    placeholder="{{ __('messages.buscar_terminal_placeholder') }}" value="{{ request('search') }}">
+                <button class="btn btn-dark rounded-3 px-4 m-1" type="submit">{{ __('messages.buscar_btn') }}</button>
             </div>
         </form>
     </div>
@@ -49,10 +49,10 @@
                             {{ $filha->name }}
                         </h5>
                         <div class="parent-info mt-2">
-                            <label class="sax-label-tiny mb-0">SUBCATEGORIA PAI</label>
+                            <label class="sax-label-tiny mb-0">{{ __('messages.subcategoria_pai_label') }}</label>
                             <p class="text-muted small text-truncate m-0">
                                 <i class="fa fa-level-up-alt fa-rotate-90 me-1"></i>
-                                {{ $filha->subcategory ? ($filha->subcategory->name ?: $filha->subcategory->slug) : 'Sin vínculo' }}
+                                {{ $filha->subcategory ? ($filha->subcategory->name ?: $filha->subcategory->slug) : __('messages.sin_vinculo') }}
                             </p>
                         </div>
                     </div>
@@ -62,22 +62,22 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <a href="{{ route('admin.categorias-filhas.show', $filha->id) }}"
-                                    class="btn btn-action-sax w-100" title="Ver Admin">
+                                    class="btn btn-action-sax w-100" title="{{ __('messages.ver_admin') }}">
                                     <i class="fa fa-eye"></i>
                                 </a>
                             </div>
                             <div class="col-6">
                                 <a href="{{ route('admin.categorias-filhas.edit', $filha->id) }}"
-                                    class="btn btn-action-sax w-100" title="Editar">
+                                    class="btn btn-action-sax w-100" title="{{ __('messages.editar') }}">
                                     <i class="fa fa-edit"></i>
                                 </a>
                             </div>
                             <div class="col-12">
                                 <form action="{{ route('admin.categorias-filhas.destroy', $filha->id) }}"
-                                    method="POST" onsubmit="return confirm('¿Eliminar sub-subcategoría?')">
+                                    method="POST" onsubmit="return confirm('{{ __('messages.confirmar_eliminar_filha') }}')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-delete-sax w-100">
-                                        <i class="fa fa-trash-alt me-2"></i>ELIMINAR
+                                        <i class="fa fa-trash-alt me-2"></i>{{ __('messages.eliminar_btn') }}
                                     </button>
                                 </form>
                             </div>

@@ -3,22 +3,22 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Diretório de Usuários"
-        description="Total: <span class='text-dark fw-bold'>{{ $userCount }}</span> registros ativos"
+        title="{{ __('messages.diretorio_usuarios') }}"
+        description="{!! __('messages.registros_ativos_total', ['total' => $userCount]) !!}"
         actionUrl="{{ route('admin.users.create') }}"
-        actionLabel="Novo Usuário" />
+        actionLabel="{{ __('messages.novo_usuario_btn') }}" />
 
     <x-admin.alert />
 
     {{-- Filtros e Busca --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom gap-3">
         <div class="d-flex align-items-center gap-3">
-            <label class="x-small fw-bold text-uppercase text-secondary tracking-tighter">Filtrar por tipo:</label>
+            <label class="x-small fw-bold text-uppercase text-secondary tracking-tighter">{{ __('messages.filtrar_tipo_label') }}</label>
             <select id="filterUserType" class="form-select form-select-sm border-0 bg-light-subtle rounded-0 px-3" style="width: 180px;">
-                <option value="all">Todos os níveis</option>
-                <option value="1">Admin Master</option>
-                <option value="2">Usuário Comum</option>
-                <option value="3">Usuário Curso</option>
+                <option value="all">{{ __('messages.todos_os_niveis') }}</option>
+                <option value="1">{{ __('messages.admin_master') }}</option>
+                <option value="2">{{ __('messages.usuario_comum') }}</option>
+                <option value="3">{{ __('messages.usuario_curso') }}</option>
             </select>
         </div>
     </div>
@@ -28,11 +28,11 @@
         <table class="table align-middle border-top-0" id="usersTable">
             <thead class="bg-white">
                 <tr class="text-uppercase x-small tracking-wider text-secondary">
-                    <th class="py-3 border-0 fw-bold" style="width: 60px;">ID</th>
-                    <th class="py-3 border-0 fw-bold">Usuário</th>
-                    <th class="py-3 border-0 fw-bold">Nível de Acesso</th>
-                    <th class="py-3 border-0 fw-bold">Registro</th>
-                    <th class="py-3 border-0 fw-bold text-end">Ações</th>
+                    <th class="py-3 border-0 fw-bold" style="width: 60px;">{{ __('messages.col_id_user') }}</th>
+                    <th class="py-3 border-0 fw-bold">{{ __('messages.col_usuario') }}</th>
+                    <th class="py-3 border-0 fw-bold">{{ __('messages.col_nivel_acesso') }}</th>
+                    <th class="py-3 border-0 fw-bold">{{ __('messages.col_registro') }}</th>
+                    <th class="py-3 border-0 fw-bold text-end">{{ __('messages.col_acoes_user') }}</th>
                 </tr>
             </thead>
             <tbody class="border-top-0">
@@ -52,9 +52,9 @@
                         <form action="{{ route('admin.users.updateType', $user->id) }}" method="POST" class="d-flex align-items-center gap-2">
                             @csrf
                             <select name="user_type" class="form-select form-select-sm border-0 bg-light-subtle x-small fw-bold rounded-0 py-1" onchange="this.form.submit()">
-                                <option value="1" {{ $user->user_type == 1 ? 'selected' : '' }}>ADMIN</option>
-                                <option value="2" {{ $user->user_type == 2 ? 'selected' : '' }}>USUÁRIO</option>
-                                <option value="3" {{ $user->user_type == 3 ? 'selected' : '' }}>CURSO</option>
+                                <option value="1" {{ $user->user_type == 1 ? 'selected' : '' }}>{{ __('messages.admin_master') }}</option>
+                                <option value="2" {{ $user->user_type == 2 ? 'selected' : '' }}>{{ __('messages.usuario_comum') }}</option>
+                                <option value="3" {{ $user->user_type == 3 ? 'selected' : '' }}>{{ __('messages.usuario_curso') }}</option>
                             </select>
                             <span class="status-dot type-{{ $user->user_type }}"></span>
                         </form>
@@ -65,12 +65,12 @@
                     <td class="py-4 text-end">
                         <div class="d-flex justify-content-end gap-3">
                             <a href="{{ route('admin.clients.show', $user->id) }}" class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                                DETALHES
+                                {{ __('messages.detalhes_btn') }}
                             </a>
-                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('¿Eliminar usuario?')" class="m-0">
+                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.confirmar_eliminar_usuario') }}')" class="m-0">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">
-                                    ELIMINAR
+                                    {{ __('messages.eliminar_user_btn') }}
                                 </button>
                             </form>
                         </div>
@@ -78,7 +78,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted small italic">Nenhum usuário encontrado na base de dados.</td>
+                    <td colspan="5" class="text-center py-5 text-muted small italic">{{ __('messages.nenhum_usuario_encontrado') }}</td>
                 </tr>
                 @endforelse
             </tbody>

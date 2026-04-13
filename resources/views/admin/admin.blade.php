@@ -3,50 +3,55 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Gerenciamento de Banners e Logotipos"
-        description="Controle a identidade visual e os banners da plataforma em um só lugar.">
+        title="{{ __('messages.gestao_banners_titulo') }}"
+        description="{{ __('messages.gestao_banners_desc') }}">
     </x-admin.page-header>
 
-        {{-- Alertas --}}
-        <x-admin.alert />
+    {{-- Alertas --}}
+    <x-admin.alert />
 
-        <div class="card border-0 shadow-sm mb-5">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="icon-shape bg-soft-primary text-primary rounded me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #eef2ff;">
-                        <i class="fas fa-font"></i>
-                    </div>
-                    <h5 class="mb-0 fw-bold">Texto Informativo do Topo</h5>
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+                <div class="icon-shape bg-soft-primary text-primary rounded me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #eef2ff;">
+                    <i class="fas fa-font"></i>
                 </div>
-                
-                <form action="{{ route('admin.attributes.update_text') }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-9">
-                            <label for="text_topo" class="form-label small text-uppercase fw-bold text-muted">Conteúdo do Texto</label>
-                            <input type="text" 
-                                   name="text_topo" 
-                                   id="text_topo" 
-                                   class="form-control form-control-lg border-2" 
-                                   placeholder="Ex: Frete grátis para compras acima de R$ 200,00" 
-                                   value="{{ $attribute->text_topo ?? '' }}">
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm">
-                                <i class="fas fa-save me-2"></i> Atualizar
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                <h5 class="mb-0 fw-bold">{{ __('messages.texto_informativo_topo') }}</h5>
             </div>
+            
+            <form action="{{ route('admin.attributes.update_text') }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-9">
+                        <label for="text_topo" class="form-label small text-uppercase fw-bold text-muted">{{ __('messages.conteudo_do_texto') }}</label>
+                        <input type="text" 
+                               name="text_topo" 
+                               id="text_topo" 
+                               class="form-control form-control-lg border-2" 
+                               placeholder="Ex: Frete grátis..." 
+                               value="{{ $attribute->text_topo ?? '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm">
+                            <i class="fas fa-save me-2"></i> {{ __('messages.atualizar') }}
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
+    </div>
 
-        @php
-            $images = [
-                ['field' => 'header_image', 'title' => 'Logo Header', 'category' => 'Identidad', 'file' => $webpImage ?? null, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
-                ['field' => 'logo_palace', 'title' => 'Logo SAX Palace', 'category' => 'Identidad', 'file' => $logoPalace ?? null, 'routeUpload' => 'admin.logopalace.upload', 'routeDelete' => 'admin.logopalace.delete'],
-                ['field' => 'logo_bridal', 'title' => 'Logo SAX Bridal', 'category' => 'Identidad', 'file' => $logoBridal ?? null, 'routeUpload' => 'admin.logobridal.upload', 'routeDelete' => 'admin.logobridal.delete'],
+    @php
+        // Definimos as categorias traduzidas para os labels
+        $catIdentidade = __('messages.cat_identidade');
+        $catHome = __('messages.cat_home');
+        $catSistema = __('messages.cat_sistema');
+
+        $images = [
+            ['field' => 'header_image', 'title' => 'Logo Header', 'category' => $catIdentidade, 'file' => $webpImage ?? null, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
+            ['field' => 'logo_palace', 'title' => 'Logo SAX Palace', 'category' => $catIdentidade, 'file' => $logoPalace ?? null, 'routeUpload' => 'admin.logopalace.upload', 'routeDelete' => 'admin.logopalace.delete'],
+            ['field' => 'logo_bridal', 'title' => 'Logo SAX Bridal', 'category' => 'Identidad', 'file' => $logoBridal ?? null, 'routeUpload' => 'admin.logobridal.upload', 'routeDelete' => 'admin.logobridal.delete'],
                 ['field' => 'logo_cafe_bistro', 'title' => 'Logo SAX Café & Bistrô', 'category' => 'Identidad', 'file' => $logoCafeBistro ?? null, 'routeUpload' => 'admin.logocafebistro.upload', 'routeDelete' => 'admin.logocafebistro.delete'],
                 ['field' => 'banner_horizontal', 'title' => 'Banner Horizontal', 'category' => 'Identidad', 'file' => $bannerHorizontal ?? null, 'routeUpload' => 'admin.bannerhorizontal.upload', 'routeDelete' => 'admin.bannerhorizontal.delete'],
 
@@ -65,43 +70,42 @@
                 ['field' => 'banner8', 'title' => 'Banner Principal 08', 'category' => 'Home', 'file' => $banners['banner8'] ?? null, 'routeUpload' => 'admin.banner8.upload', 'routeDelete' => 'admin.banner8.delete'],
                 ['field' => 'banner9', 'title' => 'Banner Principal 09', 'category' => 'Home', 'file' => $banners['banner9'] ?? null, 'routeUpload' => 'admin.banner9.upload', 'routeDelete' => 'admin.banner9.delete'],
                 ['field' => 'banner10', 'title' => 'Banners Internas', 'category' => 'Home', 'file' => $banners['banner10'] ?? null, 'routeUpload' => 'admin.banner10.upload', 'routeDelete' => 'admin.banner10.delete'],
-            ];
-            
-            $categories = ['Identidad', 'Home', 'Sistema'];
-        @endphp
+        ];
+        
+        $categories = [$catIdentidade, $catHome, $catSistema];
+    @endphp
 
-        <ul class="nav nav-pills-custom mb-4" id="bannerTabs" role="tablist">
+    <ul class="nav nav-pills-custom mb-4" id="bannerTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#all">{{ __('messages.todos') }}</button>
+        </li>
+        @foreach($categories as $cat)
             <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#all">Todos</button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#cat-{{ Str::slug($cat) }}">{{ $cat }}</button>
             </li>
-            @foreach($categories as $cat)
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#cat-{{ Str::slug($cat) }}">{{ $cat }}</button>
-                </li>
-            @endforeach
-        </ul>
+        @endforeach
+    </ul>
 
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="all">
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="all">
+            <div class="row g-4">
+                @foreach($images as $img)
+                    @include('admin.partials.banner_card', ['img' => $img])
+                @endforeach
+            </div>
+        </div>
+
+        @foreach($categories as $cat)
+            <div class="tab-pane fade" id="cat-{{ Str::slug($cat) }}">
                 <div class="row g-4">
                     @foreach($images as $img)
-                        @include('admin.partials.banner_card', ['img' => $img])
+                        @if($img['category'] == $cat)
+                            @include('admin.partials.banner_card', ['img' => $img])
+                        @endif
                     @endforeach
                 </div>
             </div>
-
-            @foreach($categories as $cat)
-                <div class="tab-pane fade" id="cat-{{ Str::slug($cat) }}">
-                    <div class="row g-4">
-                        @foreach($images as $img)
-                            @if($img['category'] == $cat)
-                                @include('admin.partials.banner_card', ['img' => $img])
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
-        </div>
+        @endforeach
     </div>
 </x-admin.card>
 @endsection

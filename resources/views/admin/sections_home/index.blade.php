@@ -3,11 +3,11 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Estrutura Inicial"
-        description="Gerencie a visibilidade das seções principais da sua loja">
+        title="{{ __('messages.estrutura_inicial_titulo') }}"
+        description="{{ __('messages.estrutura_inicial_desc') }}">
         <x-slot:actions>
             <button type="submit" form="sectionsForm" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
-                Guardar Configuração
+                {{ __('messages.guardar_configuracao_btn') }}
             </button>
         </x-slot:actions>
     </x-admin.page-header>
@@ -20,8 +20,8 @@
 
                 @php
                     $sections = [
-                        'lancamentos' => ['label' => 'Novos Lançamentos', 'icon' => 'fa-calendar-plus'],
-                        'destaque' => ['label' => 'Produtos Destacados', 'icon' => 'fa-star'],
+                        'lancamentos' => ['label' => __('messages.novos_lancamentos_label'), 'icon' => 'fa-calendar-plus'],
+                        'destaque' => ['label' => __('messages.produtos_destacados_label'), 'icon' => 'fa-star'],
                     ];
                 @endphp
 
@@ -36,7 +36,7 @@
                                 <label class="d-block fw-bold text-dark text-uppercase x-small tracking-tighter mb-0 cursor-pointer" for="{{ $key }}">
                                     {{ $data['label'] }}
                                 </label>
-                                <span class="x-small text-muted italic">Seção: {{ $key }}</span>
+                                <span class="x-small text-muted italic">{{ __('messages.secao_label_hint') }} {{ $key }}</span>
                             </div>
                         </div>
 
@@ -53,14 +53,13 @@
         {{-- Coluna de Ajuda --}}
         <div class="col-lg-4 offset-lg-1 mt-5 mt-lg-0">
             <div class="border-start ps-4 h-100">
-                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3">Guia de Visualização</h6>
+                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3">{{ __('messages.guia_visualizacao_titulo') }}</h6>
                 <p class="x-small text-secondary lh-base italic mb-4">
-                    Estas são as duas seções principais ativas em sua nova interface de luxo.
-                    Certifique-se de que os produtos tenham marcada a opção correspondente em seu painel individual para que apareçam na Home.
+                    {{ __('messages.guia_visualizacao_texto') }}
                 </p>
                 <div class="p-3 bg-light border-dashed">
-                    <span class="x-small fw-bold text-dark d-block mb-1 text-uppercase">Nota de Estilo:</span>
-                    <span class="x-small text-muted italic">A Home agora segue um design editorial mais limpo, focando exclusivamente no que é tendência e em produtos estrela.</span>
+                    <span class="x-small fw-bold text-dark d-block mb-1 text-uppercase">{{ __('messages.nota_estilo_label') }}</span>
+                    <span class="x-small text-muted italic">{{ __('messages.nota_estilo_texto') }}</span>
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@
 @php
     $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-        <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">Visão Geral Institucional</li>
+        <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">'.__('messages.visao_geral_inst_breadcrumb').'</li>
     </ol></nav>';
 @endphp
 
@@ -15,7 +15,7 @@
         divider="sax-divider-gold">
         <x-slot:actions>
             <a href="{{ route('admin.institucional.edit', $institucional->id) }}" class="btn btn-dark-gold px-4 shadow-sm rounded-pill transition fw-bold">
-                <i class="fas fa-edit me-2 fa-xs"></i> EDITAR INSTITUCIONAL
+                <i class="fas fa-edit me-2 fa-xs"></i> {{ __('messages.editar_institucional_btn') }}
             </a>
         </x-slot:actions>
     </x-admin.page-header>
@@ -23,17 +23,17 @@
     <x-admin.alert />
 
     <div class="row g-4">
-        {{-- 01. SEÇÃO PRINCIPAL (SOBRE NOSOTROS) --}}
+        {{-- 01. SEÇÃO PRINCIPAL --}}
         <div class="col-12 mb-2">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
                 <div class="row g-0 h-100">
                     <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
-                        <span class="badge-gold-soft mb-3 text-uppercase letter-spacing-1">História &amp; Identidade</span>
+                        <span class="badge-gold-soft mb-3 text-uppercase letter-spacing-1">{{ __('messages.historia_identidade_badge') }}</span>
                         <h1 class="display-5 font-weight-bold text-dark mb-3">{{ $institucional->section_one_title }}</h1>
                         <p class="text-muted lead-sm mb-4">{{ Str::limit($institucional->section_one_content, 300) }}</p>
                         <div class="d-flex align-items-center">
                             <div class="status-indicator active"></div>
-                            <span class="x-small fw-bold text-uppercase tracking-wider text-success">Conteúdo Ativo no Site</span>
+                            <span class="x-small fw-bold text-uppercase tracking-wider text-success">{{ __('messages.conteudo_ativo_site') }}</span>
                         </div>
                     </div>
                     <div class="col-lg-5">
@@ -51,11 +51,11 @@
                 <div class="position-absolute" style="top: -10px; right: -10px; opacity: 0.1;">
                     <i class="fas fa-chart-line fa-6x text-gold"></i>
                 </div>
-                <h6 class="font-weight-bold text-gold text-uppercase letter-spacing-2 mb-4">Números da Plataforma</h6>
+                <h6 class="font-weight-bold text-gold text-uppercase letter-spacing-2 mb-4">{{ __('messages.numeros_plataforma_label') }}</h6>
 
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
                     <div>
-                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Marcas Internacionais</label>
+                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">{{ __('messages.marcas_internacionais_label') }}</label>
                         <span class="h3 font-weight-bold text-gold mb-0">+{{ $institucional->stat_brands_count }}</span>
                     </div>
                     <i class="fas fa-tags text-muted"></i>
@@ -63,7 +63,7 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
                     <div>
-                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Área Total (m²)</label>
+                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">{{ __('messages.area_total_label') }}</label>
                         <span class="h3 font-weight-bold text-white mb-0">{{ $institucional->stat_sqm_count }}k</span>
                     </div>
                     <i class="fas fa-expand-arrows-alt text-muted"></i>
@@ -71,7 +71,7 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-0">
                     <div>
-                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Colaboradores</label>
+                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">{{ __('messages.colaboradores_label') }}</label>
                         <span class="h3 font-weight-bold text-white mb-0">{{ $institucional->stat_employees_count }}</span>
                     </div>
                     <i class="fas fa-users text-muted"></i>
@@ -84,7 +84,7 @@
             <div class="sax-premium-card p-4 h-100 shadow-sm bg-white">
                 <div class="d-flex align-items-center mb-4 border-bottom pb-3">
                     <div class="icon-circle-gold mr-3"><i class="fas fa-award"></i></div>
-                    <h6 class="m-0 font-weight-bold text-uppercase letter-spacing-1">Pilares &amp; Valores</h6>
+                    <h6 class="m-0 font-weight-bold text-uppercase letter-spacing-1">{{ __('messages.pilares_valores_label') }}</h6>
                 </div>
 
                 <div class="row">
@@ -110,23 +110,23 @@
         <div class="col-12">
             <div class="sax-premium-card p-4 shadow-sm bg-white">
                 <h6 class="font-weight-bold text-uppercase letter-spacing-1 mb-4">
-                    <i class="fas fa-vr-cardboard text-gold me-2"></i> Experiência Virtual &amp; Câmeras
+                    <i class="fas fa-vr-cardboard text-gold me-2"></i> {{ __('messages.exp_virtual_cameras_label') }}
                 </h6>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="x-small text-uppercase fw-bold text-muted d-block mb-2">Tour Virtual 360°</label>
+                        <label class="x-small text-uppercase fw-bold text-muted d-block mb-2">{{ __('messages.tour_virtual_label') }}</label>
                         <div class="rounded overflow-hidden border bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
                             @if($institucional->iframe_tour_360)
                                 <div class="text-center p-3">
                                     <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
-                                    <p class="m-0 x-small fw-bold">Link de Tour Ativo</p>
+                                    <p class="m-0 x-small fw-bold">{{ __('messages.tour_ativo_status') }}</p>
                                 </div>
                             @else
-                                <span class="text-muted x-small italic">Não configurado</span>
+                                <span class="text-muted x-small italic">{{ __('messages.nao_configurado_status') }}</span>
                             @endif
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                                        <div class="col-md-3 mb-3">
                         <label class="x-small text-uppercase fw-bold text-muted d-block mb-2">Ponte da Amizade</label>
                         <div class="rounded overflow-hidden border bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
                             @if($institucional->iframe_ponte_amizade)
@@ -150,14 +150,14 @@
             </div>
         </div>
 
-        {{-- 05. GALERIA DE BANNERS & FOTOS --}}
+        {{-- 05. GALERIA --}}
         <div class="col-12">
             <div class="sax-premium-card p-4 shadow-sm bg-white">
                 <h6 class="font-weight-bold text-uppercase letter-spacing-1 mb-4">
-                    <i class="fas fa-images text-gold me-2"></i> Galeria de Banners &amp; Fotos
+                    <i class="fas fa-images text-gold me-2"></i> {{ __('messages.galeria_banners_fotos_label') }}
                 </h6>
                 <div class="row g-2">
-                    @php
+                                        @php
                         $banners = is_array($institucional->top_sliders) ? $institucional->top_sliders : json_decode($institucional->top_sliders, true);
                         $galeria = is_array($institucional->gallery_images) ? $institucional->gallery_images : json_decode($institucional->gallery_images, true);
                         $todas = array_merge($banners ?? [], $galeria ?? []);
@@ -171,7 +171,7 @@
                     @endforeach
                     @if(count($todas) > 6)
                         <div class="col-md-2 col-4 d-flex align-items-center justify-content-center bg-light rounded-lg border">
-                            <span class="fw-bold text-gold">+{{ count($todas) - 6 }} fotos</span>
+                            <span class="fw-bold text-gold">+{{ count($todas) - 6 }} {{ __('messages.mais_fotos_label') }}</span>
                         </div>
                     @endif
                 </div>
@@ -179,5 +179,4 @@
         </div>
     </div>
 </x-admin.card>
-
 @endsection

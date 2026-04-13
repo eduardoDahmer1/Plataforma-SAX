@@ -2,12 +2,12 @@
 
 @section('content')
 <x-admin.card>
-    <x-admin.page-header
-        title="Gateways de Pagamento"
-        description="Configure os métodos de transação disponíveis na finalização da compra">
+<x-admin.page-header
+        title="{{ __('messages.gateways_pagamento_titulo') }}"
+        description="{{ __('messages.gateways_pagamento_desc') }}">
         <x-slot:actions>
             <a href="{{ route('admin.payments.create') }}" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold tracking-wider">
-                <i class="fa fa-plus me-2"></i> Novo método
+                <i class="fa fa-plus me-2"></i> {{ __('messages.novo_metodo_btn') }}
             </a>
         </x-slot:actions>
     </x-admin.page-header>
@@ -17,11 +17,11 @@
         <table class="table align-middle">
             <thead class="bg-white">
                 <tr class="text-uppercase x-small tracking-wider text-secondary">
-                    <th class="py-3 border-0 fw-bold" style="width: 250px;">Método</th>
-                    <th class="py-3 border-0 fw-bold">Tipo</th>
-                    <th class="py-3 border-0 fw-bold">Estado</th>
-                    <th class="py-3 border-0 fw-bold text-center" style="width: 100px;">Visibilidade</th>
-                    <th class="py-3 border-0 fw-bold text-end">Gestão</th>
+                    <th class="py-3 border-0 fw-bold" style="width: 250px;">{{ __('messages.col_metodo') }}</th>
+                    <th class="py-3 border-0 fw-bold">{{ __('messages.col_tipo') }}</th>
+                    <th class="py-3 border-0 fw-bold">{{ __('messages.col_estado') }}</th>
+                    <th class="py-3 border-0 fw-bold text-center" style="width: 100px;">{{ __('messages.col_visibilidade') }}</th>
+                    <th class="py-3 border-0 fw-bold text-end">{{ __('messages.col_gestao') }}</th>
                 </tr>
             </thead>
             <tbody class="border-top-0">
@@ -42,7 +42,7 @@
                         <div class="status-indicator">
                             <span class="status-dot {{ $method->active == 1 ? 'active' : '' }}"></span>
                             <span class="x-small text-uppercase fw-bold {{ $method->active == 1 ? 'text-dark' : 'text-muted' }}">
-                                {{ $method->active == 1 ? 'Ativo' : 'Inativo' }}
+                                {{ $method->active == 1 ? __('messages.status_ativo') : __('messages.status_inativo') }}
                             </span>
                         </div>
                     </td>
@@ -55,12 +55,12 @@
                     <td class="py-4 text-end">
                         <div class="d-flex justify-content-end gap-3">
                             <a href="{{ route('admin.payments.edit', $method->id) }}" class="text-dark text-decoration-none x-small fw-bold tracking-tighter hover-underline">
-                                CONFIGURAR
+                                {{ __('messages.configurar_link') }}
                             </a>
-                            <form action="{{ route('admin.payments.destroy', $method->id) }}" method="POST" onsubmit="return confirm('Excluir este método de pagamento?')" class="m-0">
+                            <form action="{{ route('admin.payments.destroy', $method->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.confirmar_exclusao_metodo') }}')" class="m-0">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-clean text-danger x-small fw-bold tracking-tighter">
-                                    ELIMINAR
+                                    {{ __('messages.eliminar_link') }}
                                 </button>
                             </form>
                         </div>
@@ -68,7 +68,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted small italic">Não há gateways de pagamento configurados.</td>
+                    <td colspan="5" class="text-center py-5 text-muted small italic">{{ __('messages.sem_gateways_aviso') }}</td>
                 </tr>
                 @endforelse
             </tbody>

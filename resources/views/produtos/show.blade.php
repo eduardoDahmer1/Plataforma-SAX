@@ -51,6 +51,27 @@
                             {{ currency_format($product->price) }}
                         </div>
 
+                        <div class="color-selection-wrapper mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="section-label">{{ __('messages.cores_disponiveis') }}</span>
+                            </div>
+                            <div class="color-grid d-flex flex-wrap gap-2">
+                                @if (isset($colorSiblings) && $colorSiblings->count() > 0)
+                                    @foreach ($colorSiblings as $colorSib)
+                                        <a href="{{ route('produto.show', $colorSib->slug ?? $colorSib->id) }}" 
+                                        class="color-box {{ $product->id == $colorSib->id ? 'active' : '' }}"
+                                        style="background-color: {{ $colorSib->color ?? '#ccc' }}; width: 35px; height: 35px; border-radius: 50%; border: 2px solid {{ $product->id == $colorSib->id ? '#000' : '#eee' }}; display: block;"
+                                        title="{{ $colorSib->color }}">
+                                        </a>
+                                    @endforeach
+                                @else
+                                    <div class="color-box active" 
+                                        style="background-color: {{ $product->color ?? '#ccc' }}; width: 35px; height: 35px; border-radius: 50%; border: 2px solid #000;">
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <div class="size-selection-wrapper mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="section-label">{{ __('messages.guia_tamanhos') }}</span>

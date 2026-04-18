@@ -19,7 +19,7 @@
             </div>
 
             <div class="col-md-3 mb-4 d-none d-md-block">
-                @include('users.components.menu')
+                <x-users.menu />
             </div>
 
             <div class="col-md-9">
@@ -35,7 +35,7 @@
                 aria-label="Fechar"></button>
         </div>
         <div class="offcanvas-body p-0">
-            @include('users.components.menu')
+            <x-users.menu />
         </div>
     </div>
 

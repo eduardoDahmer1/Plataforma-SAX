@@ -281,7 +281,7 @@
                             <button class="btn btn-primary" id="parent_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
-                        <div id="parent_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}"></div>
+                        <div id="parent_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}"></div>
                         <div id="selected_parents" class="row g-2 mt-2">
                             @if (!empty($item->parent_id))
                                 @php
@@ -291,10 +291,10 @@
                                 @endphp
                                 @foreach ($parentIds as $pid)
                                     @php $parentProduct = App\Models\Product::find($pid); @endphp
-                                    @if ($parentProduct)
+                                    @if ($parentProduct && (int) $parentProduct->id !== (int) $item->id)
                                         <div class="col-6 col-md-4 col-lg-2" data-id="{{ $parentProduct->id }}">
                                             <div class="card border-success h-100 position-relative">
-                                                <img src="{{ $parentProduct->photo ? Storage::url($parentProduct->photo) : '/images/no-image.png' }}"
+                                                <img src="{{ $parentProduct->photo_url }}"
                                                     class="card-img-top" style="height:120px; object-fit:cover;">
                                                 <div class="card-body p-2">
                                                     <p class="card-text m-0 fw-bold">
@@ -335,7 +335,7 @@
                             <button class="btn btn-primary" id="color_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
-                        <div id="color_results" class="row g-2" style="display:none; z-index:1000;"></div>
+                        <div id="color_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}"></div>
                         <div id="selected_colors" class="row g-2 mt-2">
                             @if (!empty($item->color_parent_id))
                                 @php
@@ -345,10 +345,10 @@
                                 @endphp
                                 @foreach ($colorIds as $cid)
                                     @php $colorProduct = App\Models\Product::find($cid); @endphp
-                                    @if ($colorProduct)
+                                    @if ($colorProduct && (int) $colorProduct->id !== (int) $item->id)
                                         <div class="col-6 col-md-4 col-lg-2" data-id="{{ $colorProduct->id }}">
                                             <div class="card border-success h-100 position-relative">
-                                                <img src="{{ $colorProduct->photo ? Storage::url($colorProduct->photo) : '/images/no-image.png' }}"
+                                                <img src="{{ $colorProduct->photo_url }}"
                                                     class="card-img-top" style="height:120px; object-fit:cover;">
                                                 <div class="card-body p-2">
                                                     <p class="card-text m-0 fw-bold">

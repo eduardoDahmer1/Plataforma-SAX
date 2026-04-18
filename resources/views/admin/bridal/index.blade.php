@@ -9,7 +9,7 @@
 
     $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-        <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">Visão Geral</li>
+        <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">' . __('messages.visao_geral_label') . '</li>
     </ol></nav>';
 @endphp
 
@@ -20,7 +20,7 @@
         divider="sax-divider-gold">
         <x-slot:actions>
             <a href="{{ route('admin.bridal.edit', $bridal->id) }}" class="btn btn-dark-gold px-4 shadow-sm rounded-pill fw-bold">
-                <i class="fas fa-pen-nib me-2 fa-xs"></i> EDITAR CONTEÚDO
+                <i class="fas fa-pen-nib me-2 fa-xs"></i> {{__('messages.editar_conteudo_btn')}}
             </a>
         </x-slot:actions>
     </x-admin.page-header>
@@ -37,7 +37,7 @@
         {{-- 01. HERO --}}
         <div class="col-12">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
-                <x-admin.block-header icon="fas fa-image" number="01" title="Hero" subtitle="Imagen principal y textos de bienvenida" />
+                <x-admin.block-header icon="fas fa-image" number="01" title="Hero" :subtitle="__('messages.welcome_main_image_texts')" />
                 <div class="row g-0">
                     <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
                         <span class="badge-gold-soft mb-3 text-uppercase letter-spacing-1 d-inline-block">Hero</span>
@@ -60,7 +60,7 @@
         {{-- 02. PROMOS --}}
         <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
-                <x-admin.block-header icon="fas fa-percent" number="03" title="Promos" subtitle="Carrusel promocional (máx. 3)" />
+                <x-admin.block-header icon="fas fa-percent" number="02" title="Promos" :subtitle="__('messages.featured_carousel')" />
                 <div class="p-4">
                     @if(count($promos) > 0)
                         <div class="d-flex flex-column gap-2">
@@ -84,7 +84,7 @@
                     @else
                         <div class="empty-state-mini">
                             <i class="fas fa-percent empty-icon d-block"></i>
-                            <p class="x-small text-muted mb-0">Sin promos configuradas</p>
+                            <p class="x-small text-muted mb-0">{{ __('messages.nao_configurado_status') }}</p>
                         </div>
                     @endif
                 </div>
@@ -94,7 +94,7 @@
         {{-- 04. SERVICES --}}
         <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
-                <x-admin.block-header icon="fas fa-concierge-bell" number="04" title="Servicios" :subtitle="$bridal->services_label ?: 'Etiqueta no configurada'" />
+                <x-admin.block-header icon="fas fa-concierge-bell" number="04" :title="__('messages.services')" :subtitle="$bridal->services_label ?: __('messages.nao_configurado_status')" />
                 <div class="p-4">
                     @if(count($services) > 0)
                         <div class="row g-2 mb-3">
@@ -133,44 +133,16 @@
             </div>
         </div>
 
-        {{-- 05. PALACE BANNER | 06. TESTIMONIALS --}}
-        <div class="col-lg-6">
-            <div class="sax-premium-card p-0 shadow-sm overflow-hidden h-100">
-                <x-admin.block-header icon="fas fa-landmark" number="05" title="Palace Banner" subtitle="Banner destacado del salón" />
-                <div class="d-flex flex-column flex-sm-row" style="min-height:200px;">
-                    <div class="palace-visual flex-shrink-0">
-                        <img src="{{ $bridal->palace_image ? asset('storage/'.$bridal->palace_image) : 'https://placehold.co/400x300/121212/D4AF37?text=Palace' }}"
-                             class="w-100 h-100 object-fit-cover" alt="Palace">
-                    </div>
-                    <div class="p-4 d-flex flex-column justify-content-center bg-white flex-grow-1">
-                        @if($bridal->palace_subtitle)
-                            <span class="badge-gold-soft text-uppercase x-small mb-2 d-inline-block">
-                                {{ $bridal->palace_subtitle }}
-                            </span>
-                        @endif
-                        <h5 class="fw-bold text-dark mb-2">{{ $bridal->palace_title ?? '—' }}</h5>
-                        <p class="small text-muted lh-base mb-2">
-                            {{ $bridal->palace_description ? Str::limit($bridal->palace_description, 100) : '—' }}
-                        </p>
-                        @if($bridal->palace_link)
-                            <p class="x-small text-muted mb-0">
-                                <i class="fas fa-link me-1 opacity-50"></i>{{ Str::limit($bridal->palace_link, 40) }}
-                            </p>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6">
+        {{-- 06. TESTIMONIALS --}}
+        <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <x-admin.block-header icon="fas fa-quote-left" number="06" title="Testimonios" :subtitle="$bridal->testimonials_label ?: 'Etiqueta no configurada'" />
+                <x-admin.block-header icon="fas fa-quote-left" number="06" :title="__('messages.testimonials')" :subtitle="$bridal->testimonials_label ?: __('messages.nao_configurado_status')" />
                 <div class="p-4">
                     @if(count($testimonials) > 0)
                         <div class="row g-2">
                             @foreach($testimonials as $t)
                                 <div class="col-6">
-                                    <div class="testimonial-mini p-3">
+                                    <div class="testimonial-mini p-4">
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             @if(!empty($t['foto']))
                                                 <img src="{{ asset('storage/'.$t['foto']) }}"
@@ -186,7 +158,7 @@
                                             </div>
                                         </div>
                                         <p class="x-small text-muted fst-italic mb-0 lh-sm">
-                                            "{{ Str::limit($t['quote'] ?? '', 60) }}"
+                                            "{{ $t['quote'] ?? '' }}"
                                         </p>
                                     </div>
                                 </div>
@@ -205,7 +177,7 @@
         {{-- 07. INSTAGRAM | 07. SUCURSALES --}}
         <div class="col-lg-4">
             <div class="sax-premium-card p-0 shadow-sm h-100 instagram-card">
-                <x-admin.block-header icon="fab fa-instagram" number="07" title="Instagram" subtitle="CTA a redes sociales" />
+                <x-admin.block-header icon="fab fa-instagram" number="07" title="Instagram" :subtitle="__('messages.social_media_cta')" />
                 <div class="p-4 d-flex align-items-center gap-3">
                     <i class="fab fa-instagram fa-2x text-gold"></i>
                     <div>
@@ -223,7 +195,7 @@
 
         <div class="col-lg-8">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100 overflow-hidden">
-                <x-admin.block-header icon="fas fa-map-marker-alt" number="07" title="Sucursales" subtitle="Locales y contacto" />
+                <x-admin.block-header icon="fas fa-map-marker-alt" number="07" title="Sucursales" :subtitle="__('messages.locations_contacts')" />
                 <div class="p-4">
                     @if(count($locations) > 0)
                         <div class="row g-2">
@@ -251,7 +223,7 @@
                         </div>
                         <p class="x-small text-muted mb-0 mt-3">
                             <i class="fas fa-info-circle me-1 opacity-50"></i>
-                            {{ count($locations) }} sucursal(es) configurada(s)
+                            {{ count($locations) }} {{ __('messages.locations_configured_count') }}
                         </p>
                     @else
                         <div class="empty-state-mini">
@@ -272,7 +244,7 @@
                 <div class="d-flex align-items-center mb-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="icon-circle-gold"><i class="fas fa-search-plus"></i></div>
-                        <h6 class="fw-bold text-gold text-uppercase letter-spacing-2 mb-0">SEO & Metadados</h6>
+                        <h6 class="fw-bold text-gold text-uppercase letter-spacing-2 mb-0">{{ __('messages.seo_metadata') }}</h6>
                     </div>
                     <span class="ms-auto badge bg-light text-dark x-small">Google Preview</span>
                 </div>

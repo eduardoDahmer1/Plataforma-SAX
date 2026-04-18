@@ -23,7 +23,7 @@
     {{-- Filtros inline --}}
     <div class="sax-filter-bar">
         <div class="sax-filter-item">
-            <label class="sax-filter-label">Marca</label>
+            <label class="sax-filter-label">{{ __('messages.marca') }}</label>
             <select name="brand_id" class="form-select sax-filter-select">
                 <option value="">Todas as Marcas</option>
                 @foreach($brands as $brand)
@@ -35,7 +35,7 @@
         </div>
 
         <div class="sax-filter-item">
-            <label class="sax-filter-label">Categoria</label>
+            <label class="sax-filter-label">{{ __('messages.categoria') }}</label>
             <select name="category_id" class="form-select sax-filter-select">
                 <option value="">Todas as Categorias</option>
                 @foreach($categories as $category)
@@ -47,7 +47,7 @@
         </div>
 
         <div class="sax-filter-item">
-            <label class="sax-filter-label">Status</label>
+            <label class="sax-filter-label">{{ __('messages.status') }}</label>
             <select name="status_filter" class="form-select sax-filter-select">
                 <option value="">Todos os status</option>
                 <optgroup label="Visibilidade">
@@ -56,7 +56,7 @@
                 </optgroup>
                 <optgroup label="Imagens">
                     <option value="with_image" @selected(request('status_filter') == 'with_image')>Com Imagem</option>
-                    <option value="without_image" @selected(request('status_filter') == 'without_image')>Sem Imagem</option>
+                    <option value="without_image" @selected(request('status_filter') == 'without_image')>{{ __('messages.sem_imagem') }}</option>
                 </optgroup>
                 <optgroup label="Estoque">
                     <option value="in_stock" @selected(request('status_filter') == 'in_stock')>Com Estoque</option>
@@ -66,13 +66,13 @@
         </div>
 
         <div class="sax-filter-item">
-            <label class="sax-filter-label">Ordenar por</label>
+            <label class="sax-filter-label">{{ __('messages.ordenar_por') }}</label>
             <select name="sort_by" class="form-select sax-filter-select">
                 <option value="">Mais recentes</option>
                 <option value="oldest" @selected(request('sort_by') == 'oldest')>Mais antigos</option>
                 <option value="last_edit" @selected(request('sort_by') == 'last_edit')>Últimos editados</option>
-                <option value="price_low" @selected(request('sort_by') == 'price_low')>Menor preço</option>
-                <option value="price_high" @selected(request('sort_by') == 'price_high')>Maior preço</option>
+                <option value="price_low" @selected(request('sort_by') == 'price_low')>{{ __('messages.menor_preco') }}</option>
+                <option value="price_high" @selected(request('sort_by') == 'price_high')>{{ __('messages.maior_preco') }}</option>
                 <option value="name_az" @selected(request('sort_by') == 'name_az')>Nome (A–Z)</option>
             </select>
         </div>

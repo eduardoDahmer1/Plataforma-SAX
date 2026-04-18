@@ -27,7 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            fetch(searchUrl + '?q=' + encodeURIComponent(query))
+            const excludeId = resultsDiv.dataset.currentProductId || '';
+            const params = new URLSearchParams({ q: query });
+            if (excludeId) params.append('exclude_id', excludeId);
+
+            fetch(searchUrl + '?' + params.toString())
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
                     var html = '';

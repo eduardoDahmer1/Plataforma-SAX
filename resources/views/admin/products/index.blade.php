@@ -3,7 +3,7 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Produtos"
+        title="{{ __('messages.menu_produtos') }}"
         description="Exibindo <span class='text-dark fw-bold'>{{ $products->count() }}</span> de {{ $products->total() }} produtos registrados">
         <x-slot:actions>
             <a href="{{ route('admin.products.review') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
@@ -59,7 +59,7 @@
                                         class="img-fluid rounded shadow-sm"
                                         style="max-height:9em; object-fit:cover; display:block; margin:auto;">
                                     @if (!$product->status)
-                                        <span class="position-absolute top-0 start-0 badge bg-danger">Inativo</span>
+                                        <span class="position-absolute top-0 start-0 badge bg-danger">{{ __('messages.status_inativo') }}</span>
                                     @endif
                                 </div>
 
@@ -99,13 +99,13 @@
                                             @csrf
                                             <button class="btn btn-sm w-100 {{ $product->status ? 'btn-success' : 'btn-secondary' }}" type="submit">
                                                 <i class="fa {{ $product->status ? 'fa-toggle-on' : 'fa-toggle-off' }} me-1"></i>
-                                                {{ $product->status ? 'Ativo' : 'Inativo' }}
+                                                {{ $product->status ? __('messages.status_ativo') : __('messages.status_inativo') }}
                                             </button>
                                         </form>
 
                                         <a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => request()->fullUrl()]) }}"
                                             class="btn btn-sm btn-warning flex-grow-1">
-                                            <i class="fa fa-edit me-1"></i> Editar
+                                            <i class="fa fa-edit me-1"></i> {{ __('messages.editar') }}
                                         </a>
 
                                         <button type="button" class="btn btn-sm btn-info flex-grow-1"
@@ -149,7 +149,7 @@
                                             @php
                                                 $highlights = [
                                                     'destaque' => 'Destaques',
-                                                    'lancamentos' => 'Lançamentos',
+                                                    'lancamentos' => __('messages.lancamentos'),
                                                 ];
                                             @endphp
                                             <div class="row">

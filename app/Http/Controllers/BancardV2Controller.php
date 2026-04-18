@@ -63,11 +63,12 @@ class BancardV2Controller extends Controller
             $data = $singleBuy['data'];
 
             if ($singleBuy['ok'] && isset($data['process_id'])) {
-                Log::info('Bancard V2 checkout created', [
-                    'order_id' => $order->id,
-                    'shop_process_id' => $shopProcessId,
-                    'process_id' => $data['process_id'],
-                ]);
+
+                // Log::info('Bancard V2 checkout created', [
+                //     'order_id' => $order->id,
+                //     'shop_process_id' => $shopProcessId,
+                //     'process_id' => $data['process_id'],
+                // ]);
 
                 $pygSymbol = $this->resolvePygSymbol();
 

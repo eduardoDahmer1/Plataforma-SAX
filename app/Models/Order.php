@@ -50,6 +50,8 @@ class Order extends Model
         'shipping_email',
         'shipping_phone',
         'shipping_country',
+        'complement', // Adicionar este
+        'district',   // Adicionar este
         'shipping_state',
         'shipping_city',
         'shipping_zip',

@@ -7,7 +7,7 @@
 
 <body class="bg-light">
 
-    @include('components.header-checkout')
+    @include('components.header')
 
     <main class="py-4 container">
         @yield('content')

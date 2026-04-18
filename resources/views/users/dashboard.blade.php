@@ -16,13 +16,23 @@
 
     <div class="row g-3 mb-5">
         @php
+            $u = auth()->user();
+            
+            // Montagem do endereço completo conforme os novos campos
+            $fullAddress = $u->address;
+            if($u->number) $fullAddress .= ', ' . $u->number;
+            if($u->complement) $fullAddress .= ' (' . $u->complement . ')';
+            if($u->district) $fullAddress .= ' - ' . $u->district;
+
             $fields = [
-                ['label' => __('messages.label_nome'), 'value' => auth()->user()->name, 'icon' => 'user'],
-                ['label' => __('messages.label_email'), 'value' => auth()->user()->email, 'icon' => 'envelope'],
-                ['label' => __('messages.label_telefone'), 'value' => (auth()->user()->phone_country ?? '') . ' ' . (auth()->user()->phone_number ?? ''), 'icon' => 'phone'],
-                ['label' => __('messages.label_endereco'), 'value' => auth()->user()->address, 'icon' => 'home'],
-                ['label' => __('messages.label_documento'), 'value' => auth()->user()->document, 'icon' => 'id-card'],
-                ['label' => __('messages.label_cidade_estado'), 'value' => auth()->user()->city . ' - ' . auth()->user()->state, 'icon' => 'map-marker-alt'],
+                ['label' => __('messages.label_nome'), 'value' => $u->name, 'icon' => 'user'],
+                ['label' => __('messages.label_email'), 'value' => $u->email, 'icon' => 'envelope'],
+                ['label' => __('messages.label_telefone'), 'value' => ($u->phone_country ? '+'.$u->phone_country : '') . ' ' . $u->phone_number, 'icon' => 'phone'],
+                ['label' => __('messages.label_documento'), 'value' => $u->document, 'icon' => 'id-card'],
+                ['label' => __('messages.label_endereco'), 'value' => $fullAddress, 'icon' => 'home'],
+                ['label' => __('messages.label_cidade_estado'), 'value' => ($u->city && $u->state) ? $u->city . ' - ' . $u->state : $u->city . $u->state, 'icon' => 'map-marker-alt'],
+                ['label' => __('messages.label_cep') ?? 'CEP', 'value' => $u->cep, 'icon' => 'mail-bulk'],
+                ['label' => __('messages.label_pais') ?? 'País', 'value' => ucfirst($u->country), 'icon' => 'globe'],
             ];
         @endphp
 
@@ -35,7 +45,7 @@
                     </div>
                     <div class="card-details">
                         <span class="label">{{ $field['label'] }}</span>
-                        <div class="value">{{ $field['value'] }}</div>
+                        <div class="value" title="{{ $field['value'] }}">{{ $field['value'] }}</div>
                     </div>
                 </div>
             </div>

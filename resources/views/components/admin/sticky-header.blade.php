@@ -3,8 +3,8 @@
     'cancelRoute',
     'updatedAt'   => null,
     'divider'     => 'sax-divider-gold',
-    'submitLabel' => 'GUARDAR CAMBIOS',
-    'cancelLabel' => 'CANCELAR',
+    'submitLabel' => __('messages.save_btn'),
+    'cancelLabel' => __('messages.cancel_btn'),
     'btnClass'    => 'btn-dark-gold',
 ])
 <div class="sticky-header px-4 py-3 mb-5 bg-white border-bottom shadow-sm d-flex justify-content-between align-items-center">

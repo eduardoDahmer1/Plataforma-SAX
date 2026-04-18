@@ -38,7 +38,7 @@
                     </div>
                     <div class="info-row total-row">
                         <span class="label">{{ __('messages.total') }}:</span>
-                        <span class="value fw-bold text-dark fs-5">{{ currency_format($order->items->sum(fn($i) => $i->price * $i->quantity)) }}</span>
+                        <span class="value fw-bold text-dark fs-5">{{ currency_format($order->total) }}</span>
                     </div>
 
                     {{-- --- LOGICA BANCARD --- --}}
@@ -70,8 +70,9 @@
                     <div class="mt-4 pt-3 border-top">
                         @if ($order->deposit_receipt)
                         <label class="sax-label d-block mb-2">{{ __('messages.comprovante_enviado_cap') }}</label>
-                        <a href="{{ asset('storage/' . $order->deposit_receipt) }}" target="_blank" class="receipt-preview-link">
-                            <img src="{{ asset('storage/' . $order->deposit_receipt) }}" class="img-fluid rounded border shadow-sm">
+                        {{-- Ajustado para a subpasta deposits --}}
+                        <a href="{{ asset('storage/deposits/' . $order->deposit_receipt) }}" target="_blank" class="receipt-preview-link">
+                            <img src="{{ asset('storage/deposits/' . $order->deposit_receipt) }}" class="img-fluid rounded border shadow-sm">
                             <div class="overlay"><i class="fas fa-search-plus"></i> {{ __('messages.ver_ampliado') }}</div>
                         </a>
                         @elseif (strtolower((string) $order->status) !== 'paid')
@@ -96,9 +97,10 @@
                 <div class="card-sax-body">
                     <div class="mb-4">
                         <label class="sax-label">{{ __('messages.destinatario') }}</label>
-                        <p class="m-0 fw-semibold">{{ $order->name ?? ($order->user->name ?? '-') }}</p>
-                        <p class="text-muted small m-0">{{ $order->email ?? ($order->user->email ?? '-') }}</p>
-                        <p class="text-muted small">{{ $order->phone ?? ($order->user->phone_number ?? '-') }}</p>
+                        <p class="m-0 fw-semibold">{{ $order->name }} {{ $order->surname }}</p>
+                        <p class="text-muted small m-0">{{ $order->email }}</p>
+                        <p class="text-muted small">{{ $order->phone }}</p>
+                        <p class="text-muted small">Doc: {{ $order->document }}</p>
                     </div>
 
                     <div>
@@ -108,11 +110,19 @@
                             <span class="badge bg-dark rounded-0">{{ __('messages.recolha_na_loja') }}
                                 {{ $order->store == 1 ? 'SAX Ciudad del Este' : 'SAX Assunción' }}</span>
                             @else
-                            {{ $order->street ?? ($order->user->street ?? '-') }},
-                            {{ $order->number ?? ($order->user->number ?? '-') }}<br>
-                            {{ $order->city ?? ($order->user->city ?? '-') }},
-                            {{ $order->state ?? ($order->user->state ?? '-') }}<br>
-                            CP: {{ $order->cep ?? ($order->user->cep ?? '-') }}
+                            {{-- Mostra Rua, Número e Bairro --}}
+                            {{ $order->street }}, {{ $order->number }} 
+                            @if($order->district) • {{ $order->district }} @endif <br>
+                            
+                            {{-- Complemento se existir --}}
+                            @if($order->complement)
+                            <span class="text-muted italic">{{ $order->complement }}</span><br>
+                            @endif
+
+                            {{ $order->city }}, {{ $order->state }}<br>
+                            
+                            {{-- País e CEP --}}
+                            {{ strtoupper($order->country) }} • CP: {{ $order->cep }}
                             @endif
                         </p>
                     </div>
@@ -131,8 +141,8 @@
                     <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" class="img-fluid rounded object-fit-contain" style="max-height: 80px;">
                 </div>
                 <div class="col-9 col-md-4">
-                    <h6 class="mb-1 text-uppercase fw-bold small">{{ $item->product->external_name ?? 'Producto' }}</h6>
-                    <span class="text-muted x-small">SKU: {{ $item->product->sku ?? '-' }}</span>
+                    <h6 class="mb-1 text-uppercase fw-bold small">{{ $item->name ?? ($item->product->external_name ?? 'Producto') }}</h6>
+                    <span class="text-muted x-small">SKU: {{ $item->sku ?? '-' }}</span>
                 </div>
                 <div class="col-4 col-md-2 mt-3 mt-md-0 text-center">
                     <label class="sax-label d-block">{{ __('messages.cant_abrev') }}</label>

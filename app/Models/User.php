@@ -31,6 +31,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'already_registered',
         'additional_info',
         'document',
+        'number',       // Adicionado
+        'district',     // Adicionado
+        'complement',   // Adicionado
+        'country',      // Adicionado/Ajustado
     ];
 
     protected $hidden = [

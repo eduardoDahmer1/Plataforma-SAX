@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Currency;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 
@@ -39,9 +38,8 @@ class CurrencyController extends Controller
 
             /**
              * 5. LIMPEZA DE CACHE
-             * Como o AppServiceProvider armazena as traduções no cache 'all_translations_db',
-             * precisamos removê-lo para que o provedor recarregue os dados do banco 
-             * com o novo locale na próxima requisição.
+             * Remove o cache para que o AppServiceProvider recarregue 
+             * as traduções com o novo locale.
              */
             Cache::forget('all_translations_db');
             
@@ -49,6 +47,7 @@ class CurrencyController extends Controller
             session()->save();
         }
 
-        return back()->with('success', 'Idioma e moeda alterados com sucesso!');
+        // Retorna silenciosamente
+        return back();
     }
 }

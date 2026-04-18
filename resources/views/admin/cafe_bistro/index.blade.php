@@ -8,7 +8,7 @@
 
     $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-        <li class="breadcrumb-item x-small text-uppercase active text-bistro" aria-current="page">Visão Geral</li>
+        <li class="breadcrumb-item x-small text-uppercase active text-bistro" aria-current="page">' . __('messages.visao_geral_label') . '</li>
     </ol></nav>';
 @endphp
 
@@ -19,7 +19,7 @@
         divider="sax-divider-bistro">
         <x-slot:actions>
             <a href="{{ route('admin.cafe_bistro.edit', $cafeBistro->id) }}" class="btn btn-dark-bistro px-4 shadow-sm rounded-pill fw-bold">
-                <i class="fas fa-pen-nib me-2 fa-xs"></i> EDITAR CONTEÚDO
+                <i class="fas fa-pen-nib me-2 fa-xs"></i> {{ __('messages.editar_conteudo_btn') }}
             </a>
         </x-slot:actions>
     </x-admin.page-header>
@@ -31,7 +31,7 @@
         {{-- 01. HERO --}}
         <div class="col-12">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
-                <x-admin.block-header icon="fas fa-image" theme="bistro" number="01" title="Hero" subtitle="Imagen principal y textos de bienvenida" />
+                <x-admin.block-header icon="fas fa-image" theme="bistro" number="01" title="Hero" :subtitle="__('messages.welcome_main_image_texts')" />
                 <div class="row g-0">
                     <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
                         <span class="badge-bistro-soft mb-3 text-uppercase letter-spacing-1 d-inline-block">Hero</span>
@@ -51,7 +51,7 @@
         {{-- 02. SOBRE NÓS --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm overflow-hidden h-100">
-                <x-admin.block-header icon="fas fa-book-open" theme="bistro" number="02" title="Sobre Nós" subtitle="Historia y descripción del espacio" />
+                <x-admin.block-header icon="fas fa-book-open" theme="bistro" number="02" :title="__('messages.about_us_title')" :subtitle="__('messages.about_space_history_desc')" />
                 <div class="d-flex flex-column flex-sm-row" style="min-height:200px;">
                     <div class="sobre-visual flex-shrink-0">
                         <img src="{{ $cafeBistro->sobre_imagen ? asset('storage/'.$cafeBistro->sobre_imagen) : 'https://placehold.co/400x300/0f1d35/4a6fa5?text=Sobre' }}"
@@ -70,7 +70,7 @@
         {{-- 03. CARDÁPIO --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <x-admin.block-header icon="fas fa-utensils" theme="bistro" number="03" title="Cardápio" subtitle="Título y PDF del menú" />
+                <x-admin.block-header icon="fas fa-utensils" theme="bistro" number="03" :title="__('messages.menu_title')" :subtitle="__('messages.menu_title_pdf_desc')" />
                 <div class="p-4">
                     <h5 class="fw-bold text-dark mb-3">{{ $cafeBistro->cardapio_titulo ?? '—' }}</h5>
                     @if($cafeBistro->cardapio_subtitulo)
@@ -80,11 +80,11 @@
                         <i class="fas fa-file-pdf fa-2x {{ $cafeBistro->cardapio_pdf ? 'text-bistro' : 'text-muted opacity-25' }}"></i>
                         <div>
                             @if($cafeBistro->cardapio_pdf)
-                                <p class="small fw-bold mb-0">PDF carregado</p>
+                                <p class="small fw-bold mb-0">{{ __('messages.pdf_uploaded_status') }}</p>
                                 <p class="x-small text-muted mb-0">{{ basename($cafeBistro->cardapio_pdf) }}</p>
                             @else
-                                <p class="small text-muted mb-0">Sem PDF carregado</p>
-                                <p class="x-small text-muted mb-0">Subir desde el editor</p>
+                                <p class="small text-muted mb-0">{{ __('messages.no_pdf_uploaded_status') }}</p>
+                                <p class="x-small text-muted mb-0">{{ __('messages.upload_from_editor_hint') }}</p>
                             @endif
                         </div>
                     </div>
@@ -95,7 +95,7 @@
         {{-- 04. EVENTOS --}}
         <div class="col-12">
             <div class="sax-premium-card p-0 shadow-sm bg-white">
-                <x-admin.block-header icon="fas fa-glass-cheers" theme="bistro" number="04" title="Eventos" subtitle="Celebraciones y galería" />
+                <x-admin.block-header icon="fas fa-glass-cheers" theme="bistro" number="04" :title="__('messages.events_title')" :subtitle="__('messages.events_gallery_desc')" />
                 <div class="p-4">
                     <div class="row">
                         <div class="col-md-6">
@@ -122,12 +122,12 @@
                                     @endforeach
                                 </div>
                                 <p class="x-small text-muted mt-2 mb-0">
-                                    <i class="fas fa-images me-1 opacity-50"></i>{{ count($eventosGaleria) }} imagen(es)
+                                    <i class="fas fa-images me-1 opacity-50"></i>{{ count($eventosGaleria) }} {{ __('messages.images_count_label') }}
                                 </p>
                             @else
                                 <div class="empty-state-mini">
                                     <i class="fas fa-images empty-icon d-block"></i>
-                                    <p class="x-small text-muted mb-0">Sin galería de eventos</p>
+                                    <p class="x-small text-muted mb-0">{{ __('messages.no_events_gallery_status') }}</p>
                                 </div>
                             @endif
                         </div>
@@ -139,7 +139,7 @@
         {{-- 05. HORÁRIOS --}}
         <div class="col-lg-5">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <x-admin.block-header icon="fas fa-clock" theme="bistro" number="05" title="Horários" subtitle="Días y horarios de funcionamiento" />
+                <x-admin.block-header icon="fas fa-clock" theme="bistro" number="05" :title="__('messages.opening_hours_title')" :subtitle="__('messages.opening_hours_desc')" />
                 <div class="p-4">
                     @if(count($horarios) > 0)
                         <table class="w-100">
@@ -149,7 +149,7 @@
                                     <tr class="border-bottom">
                                         <td class="py-2 small fw-bold">{{ $h['dia'] ?? '' }}</td>
                                         <td class="py-2 small text-end {{ $abertura ? 'text-muted' : 'text-danger' }}">
-                                            {{ $abertura ? $abertura . ' — ' . ($h['cierre'] ?? '') : 'Fechado' }}
+                                            {{ $abertura ? $abertura . ' — ' . ($h['cierre'] ?? '') : __('messages.closed_status') }}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -158,7 +158,7 @@
                     @else
                         <div class="empty-state-mini">
                             <i class="fas fa-clock empty-icon d-block"></i>
-                            <p class="x-small text-muted mb-0">Sin horarios configurados</p>
+                            <p class="x-small text-muted mb-0">{{ __('messages.no_hours_configured_status') }}</p>
                         </div>
                     @endif
                 </div>
@@ -168,28 +168,28 @@
         {{-- 06. CONTACTO --}}
         <div class="col-lg-7">
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
-                <x-admin.block-header icon="fas fa-map-marker-alt" theme="bistro" number="06" title="Contacto" subtitle="Dirección, teléfono y redes" />
+                <x-admin.block-header icon="fas fa-map-marker-alt" theme="bistro" number="06" :title="__('messages.contact_title')" :subtitle="__('messages.contact_details_desc')" />
                 <div class="p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="d-flex align-items-start gap-2 mb-3">
                                 <i class="fas fa-map-pin text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Endereço</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">{{ __('messages.address_label') }}</p>
                                     <p class="small mb-0">{{ $cafeBistro->direccion ?? '—' }}</p>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start gap-2 mb-3">
                                 <i class="fas fa-phone text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Telefone</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">{{ __('messages.phone_label') }}</p>
                                     <p class="small mb-0">{{ $cafeBistro->telefono ?? '—' }}</p>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start gap-2">
                                 <i class="fab fa-whatsapp text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">WhatsApp</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">{{ __('messages.whatsapp_label') }}</p>
                                     <p class="small mb-0">{{ $cafeBistro->whatsapp ?? '—' }}</p>
                                 </div>
                             </div>
@@ -198,22 +198,22 @@
                             <div class="d-flex align-items-start gap-2 mb-3">
                                 <i class="fab fa-instagram text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Instagram</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">{{ __('messages.instagram_label') }}</p>
                                     <p class="small mb-0">{{ $cafeBistro->instagram_url ?? '—' }}</p>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start gap-2 mb-3">
                                 <i class="fab fa-facebook text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Facebook</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">{{ __('messages.facebook_label') }}</p>
                                     <p class="small mb-0">{{ $cafeBistro->facebook_url ?? '—' }}</p>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start gap-2">
                                 <i class="fas fa-map text-bistro mt-1"></i>
                                 <div>
-                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">Mapa Embed</p>
-                                    <p class="small mb-0">{{ $cafeBistro->mapa_embed ? 'Configurado' : '—' }}</p>
+                                    <p class="x-small text-uppercase fw-bold text-muted mb-0">{{ __('messages.map_embed_label') }}</p>
+                                    <p class="small mb-0">{{ $cafeBistro->mapa_embed ? __('messages.configured_status') : '—' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -231,19 +231,19 @@
                 <div class="d-flex align-items-center mb-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="icon-circle-bistro"><i class="fas fa-search-plus"></i></div>
-                        <h6 class="fw-bold text-bistro text-uppercase letter-spacing-2 mb-0">SEO & Metadados</h6>
+                        <h6 class="fw-bold text-bistro text-uppercase letter-spacing-2 mb-0">{{ __('messages.seo_metadata') }}</h6>
                     </div>
-                    <span class="ms-auto badge bg-light text-dark x-small">Google Preview</span>
+                    <span class="ms-auto badge bg-light text-dark x-small">{{ __('messages.google_preview_label') }}</span>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3 mb-md-0">
-                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Meta Title</label>
-                        <span class="fw-bold">{{ $cafeBistro->meta_title ?? '— Não configurado' }}</span>
+                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">{{ __('messages.meta_title_label') }}</label>
+                        <span class="fw-bold">{{ $cafeBistro->meta_title ?? '— ' . __('messages.nao_configurado_status') }}</span>
                     </div>
                     <div class="col-md-6">
-                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">Meta Description</label>
+                        <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">{{ __('messages.meta_description_label') }}</label>
                         <span class="small opacity-75">
-                            {{ $cafeBistro->meta_description ? Str::limit($cafeBistro->meta_description, 160) : '— Não configurado' }}
+                            {{ $cafeBistro->meta_description ? Str::limit($cafeBistro->meta_description, 160) : '— ' . __('messages.nao_configurado_status') }}
                         </span>
                     </div>
                 </div>

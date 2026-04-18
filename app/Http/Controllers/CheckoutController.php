@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Cupon;
 use App\Http\Controllers\PagoParController;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
@@ -33,26 +34,29 @@ class CheckoutController extends Controller
 
         return view('checkout.index', compact('paymentMethods', 'cart'));
     }
-
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        // 1. Validações (Ajustado para aceitar bancard e pagopar no mesmo fluxo)
+        // 1. Validações
         $request->validate([
             'name'            => 'required|string|max:255',
-            'document'        => 'required|string|max:50',
+            'document'        => 'required|string|max:50', 
             'email'           => 'required|email',
             'phone'           => 'required|string',
             'shipping'        => 'required|in:1,2,3',
             'payment_method'  => 'required|in:deposito,bancard,bancard_v2,whatsapp,pagopar',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
+            
+            // Campos de endereço (Obrigatórios apenas se shipping for 2 - Novo Endereço)
             'street'          => 'required_if:shipping,2',
             'number'          => 'required_if:shipping,2',
+            'district'        => 'required_if:shipping,2', 
             'city'            => 'nullable|string',
             'state'           => 'nullable|string',
             'country'         => 'required_if:shipping,2',
-            'cep'             => 'required_if:shipping,2',
+            'cep'             => 'required_if:shipping,2', 
+            
             'store'           => 'required_if:shipping,3',
             'observations'    => 'nullable|string',
             'cupon'           => 'nullable|string',
@@ -66,7 +70,7 @@ class CheckoutController extends Controller
         $cupon         = null;
         $desconto      = 0;
 
-        // 2. Lógica de Cupom (Habilitado para Depósito e Gateway Pagopar)
+        // 2. Lógica de Cupom
         if ($request->filled('cupon') && in_array($paymentMethod, ['deposito', 'pagopar', 'bancard'])) {
             $cupon = Cupon::where('codigo', $request->input('cupon'))
                 ->where('data_inicio', '<=', now())
@@ -79,14 +83,12 @@ class CheckoutController extends Controller
                 ) {
                     return back()->with('error', 'Este cupom não se aplica ao valor do seu pedido.');
                 }
-
                 $desconto = $cupon->tipo === 'percentual'
                     ? $total * ($cupon->montante / 100)
                     : $cupon->montante;
 
                 $total -= $desconto;
                 $total = max(0, $total);
-
                 session(['applied_cupon' => $cupon]);
             } else {
                 return back()->with('error', 'Cupom inválido ou expirado.');
@@ -102,11 +104,11 @@ class CheckoutController extends Controller
 
             $observations = match ($request->shipping) {
                 '1', '2' => $request->input('observations') ?? '',
-                '3'      => $request->input('observations_store') ?? '',
+                '3'      => "Retirada na Loja ID: " . $request->input('store'),
                 default  => ''
             };
 
-            // 3. Criar pedido
+            // 3. Criar pedido inicial
             $order = Order::create([
                 'user_id'        => $user->id,
                 'status'         => 'pending',
@@ -121,36 +123,43 @@ class CheckoutController extends Controller
                 'phone'          => $request->input('phone'),
                 'observations'   => $observations,
                 'shipping'       => $request->input('shipping'),
+                'order_number'   => strtoupper(Str::random(10)),
+                'currency_sign'  => 'R$', 
+                'currency_value' => 1,
             ]);
 
             // 4. Lógica de Endereço/Loja (Mantida original)
-            switch ($request->shipping) {
-                case '1':
-                    $order->update([
-                        'street'  => $user->street,
-                        'number'  => $user->number,
-                        'city'    => $user->city,
-                        'state'   => $user->state,
-                        'cep'     => $user->cep,
-                        'country' => $user->country == 'paraguai' ? 'PY' : 'BR',
-                    ]);
-                    break;
-                case '2':
-                    $order->update([
-                        'street'  => $request->input('street'),
-                        'number'  => $request->input('number'),
-                        'city'    => $request->input('city') ?? '',
-                        'state'   => $request->input('state') ?? '',
+                switch ($request->shipping) {
+                    case '1':
+                        $order->update([
+                    'street'     => $user->street,
+                    'number'     => $user->number,
+                    'district'   => $user->district,
+                    'complement' => $user->complement,
+                    'city'       => $user->city,
+                    'state'      => $user->state,
+                    'cep'        => $user->cep,
+                    'country' => $user->country == 'paraguai' ? 'PY' : 'BR',
+                ]);
+                        break;
+                    case '2':
+                        $order->update([
+                    'street'     => $request->input(street),
+                    'number'     => $request->input(number),
+                    'district'   => $request->input(district),
+                    'complement' => $request->input(complement),
+                    'city'    => $request->input('city') ?? '',
+                    'state'   => $request->input('state') ?? '',
                         'cep'     => $request->input('cep') ?? '',
-                        'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
-                    ]);
-                    break;
-                case '3':
-                    $order->update(['store' => $request->input('store')]);
-                    break;
-            }
+                    'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
+                                    ]);
+                        break;
+                    case '3':
+                        $order->update(['store' => $request->input('store')]);
+                        break;
+                }
 
-            // 5. Salvar itens do pedido
+                // 5. Salvar itens do pedido
             foreach ($cart as $cartItem) {
                 OrderItem::create([
                     'order_id'      => $order->id,
@@ -164,6 +173,7 @@ class CheckoutController extends Controller
                 ]);
             }
 
+            // 6. Comprovante de Depósito
             if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
                 $file = $request->file('deposit_receipt');
                 $filename = time() . '_' . $file->getClientOriginalName();
@@ -173,18 +183,17 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            // 6. Limpeza de Carrinho (Gateway Externo NÃO limpa agora para evitar perda de dados se falhar)
+            // 7. Limpeza do Carrinho (Apenas métodos offline)
             if (!in_array($paymentMethod, ['bancard', 'pagopar', 'bancard_v2'])) {
                 Cart::where('user_id', $user->id)->delete();
                 session()->forget('applied_cupon');
             }
 
-            // 7. Redirecionamento Final
+            // 8. Redirecionamentos Finais
             if ($paymentMethod === 'bancard_v2') {
                 return redirect()->route('checkout.bancard.v2', ['order' => $order->id]);
             }
 
-            // Legado: bancard segue no fluxo antigo via PagoPar.
             if (in_array($paymentMethod, ['pagopar', 'bancard'])) {
                 return app(PagoParController::class)->payment($order);
             }
@@ -199,6 +208,7 @@ class CheckoutController extends Controller
             }
 
             return redirect()->route('checkout.success')->with('success', 'Pedido concluído!');
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Erro crítico no checkout: " . $e->getMessage());

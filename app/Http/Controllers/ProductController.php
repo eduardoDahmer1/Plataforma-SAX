@@ -126,24 +126,36 @@ class ProductController extends Controller
         $product->current_price = $product->promotion_price > 0 ? $product->promotion_price : $product->price;
         $product->has_discount = $product->previous_price > $product->current_price;
 
-        // 2. Variantes de Tamanho (Siblings)
-        $masterId = $product->id;
+        // 2. Variantes de talla: el hijo `F` apunta al ancla vertical en `parent_id`.
+        $masterId = (int) $product->id;
         if ($product->product_role === 'F' && !empty($product->parent_id)) {
-            $parentIds = is_array($product->parent_id) ? $product->parent_id : explode(',', $product->parent_id);
-            $masterId = trim($parentIds[0]);
+            if (is_string($product->parent_id) && str_contains($product->parent_id, ',')) {
+                $parentIds = array_values(array_filter(array_map('trim', explode(',', $product->parent_id))));
+                $masterId = (int) ($parentIds[0] ?? $masterId);
+            } else {
+                $masterId = (int) $product->parent_id;
+            }
         }
 
-        $siblings = Product::where('parent_id', 'LIKE', "%{$masterId}%")
-            ->orWhere('id', $masterId)
+        $siblings = Product::where(function ($query) use ($masterId) {
+                $query->where('parent_id', $masterId)
+                    ->orWhere('id', $masterId);
+            })
             ->where('status', 1)
             ->get();
 
-        // 3. Cores relacionadas
-        $colorIds = [];
-        if (!empty($product->color_parent_id)) {
-            $colorIds = is_array($product->color_parent_id) ? $product->color_parent_id : explode(',', $product->color_parent_id);
-        }
-        $coresRelacionadas = Product::whereIn('id', $colorIds)->where('status', 1)->get();
+        // 3. Familia de color: todos los colores de la misma familia apuntan al mismo ancla.
+        $colorGroupId = !empty($product->color_parent_id)
+            ? (int) $product->color_parent_id
+            : (int) $product->id;
+
+        $coresRelacionadas = Product::where(function ($query) use ($colorGroupId) {
+                $query->where('color_parent_id', $colorGroupId)
+                    ->orWhere('id', $colorGroupId);
+            })
+            ->where('status', 1)
+            ->where('product_role', 'P')
+            ->get();
 
         // 4. Atributos e Configurações com Cache
         $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
@@ -167,6 +179,7 @@ class ProductController extends Controller
             'isBridal'          => $isBridal, // Variável para o Blade esconder preços/carrinho
             'siblings'          => $siblings,
             'coresRelacionadas' => $coresRelacionadas,
+            'colorSiblings'     => $coresRelacionadas,
             'highlights'        => $highlights,
             'settings'          => $settings,
             'attribute'         => $attribute
@@ -212,7 +225,7 @@ class ProductController extends Controller
      */
     public function byCategoriasFilhas(CategoriasFilhas $CategoriasFilhas)
     {
-        $products = Product::where('categorias_filhas_id', $CategoriasFilhas->id)
+        $products = Product::where('childcategory_id', $CategoriasFilhas->id)
             ->where('product_role', 'P')
             ->with(['cupons' => fn($q) => $q->ativos()])
             ->paginate(12);

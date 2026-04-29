@@ -23,8 +23,9 @@
             @endforeach
         </div>
         
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
+        <div class="swiper-nav-click prev"></div>
+        <div class="swiper-nav-click next"></div>
+        
         <div class="swiper-pagination"></div>
     </div>
 </section>
@@ -32,9 +33,9 @@
 <style>
     .sax-main-slider {
         width: 100%;
-        /* AJUSTE AQUI: Diminuído de 80vh para 55vh */
         height: 55vh; 
         background: #000;
+        position: relative;
         overflow: hidden;
     }
 
@@ -52,7 +53,6 @@
     .slide-inner img {
         width: 100%;
         height: 100%;
-        /* object-position: center 20%; ajuda a não cortar cabeças em banners horizontais */
         object-fit: cover; 
         object-position: center;
     }
@@ -63,28 +63,39 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.2));
+        background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1));
     }
 
-    /* Estilo das Setas */
-    .swiper-button-next, .swiper-button-prev {
-        color: #fff !important;
-        transform: scale(0.6);
-        transition: 0.3s;
+    /* Estilização das áreas de clique */
+    .swiper-nav-click {
+        position: absolute;
+        top: 0;
+        z-index: 20;
+        height: 100%;
+        width: 20%; /* 20% da tela em cada lado troca o slide */
+        cursor: pointer;
     }
+
+    .swiper-nav-click.prev { left: 0; }
+    .swiper-nav-click.next { right: 0; }
 
     /* Paginação */
     .swiper-pagination-bullet {
         background: #fff !important;
+        opacity: 0.6;
+    }
+    .swiper-pagination-bullet-active {
+        opacity: 1;
     }
 
     @media (max-width: 768px) {
         .sax-main-slider {
-            /* AJUSTE MOBILE: Proporção mais quadrada para celulares */
             height: 40vh; 
+        }
+        .swiper-nav-click {
+            width: 25%; /* Área um pouco maior no mobile para facilitar o toque */
         }
     }
 </style>
-
 {{-- JS migrado a home.js --}}
 @endif

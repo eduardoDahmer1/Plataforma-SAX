@@ -12,7 +12,7 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    <form action="{{ route('admin.blog-categories.update', $category) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.blog-categories.update', ['blog_category' => $category->id]) }}" method="POST" enctype="multipart/form-data">
 
         @csrf
         @method('PUT')

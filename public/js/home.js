@@ -102,8 +102,9 @@ document.addEventListener('DOMContentLoaded', function () {
             clickable: true,
         },
         navigation: {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
+            // Alterado para as novas áreas de clique
+            nextEl: '.swiper-nav-click.next',
+            prevEl: '.swiper-nav-click.prev',
         },
         effect: 'fade',
         fadeEffect: {

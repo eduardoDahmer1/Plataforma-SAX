@@ -46,7 +46,6 @@
                     {{-- Badge da Categoria Pai --}}
                     <div class="parent-category-badge mb-4">
                         <i class="fa fa-level-up-alt fa-rotate-90 me-1 opacity-50"></i>
-                        <span class="text-muted">{{ __('messages.pertencente_a') }}</span>
                         <strong class="text-dark">
                             @if($subcategory->category)
                                 {{ $subcategory->category->name ?: $subcategory->category->slug }}

@@ -227,25 +227,37 @@ document.addEventListener('DOMContentLoaded', function () {
         select.innerHTML = '<option value="">Selecione uma opção</option>';
     }
 
-    function populateSubcategories(categoryId) {
+    function populateSubcategories(categoryId, selectedSubcategoryId = '') {
         clearOptions(subcategorySelect);
         clearOptions(categoriasfilhasSelect);
         if (!categoryId) return;
-        subcategories.filter(s => s.category_id == categoryId).forEach(sub => {
+
+        subcategories.filter(s => String(s.category_id) === String(categoryId)).forEach(sub => {
             const option = document.createElement('option');
             option.value = sub.id;
             option.text = sub.name || sub.slug;
+
+            if (String(sub.id) === String(selectedSubcategoryId)) {
+                option.selected = true;
+            }
+
             subcategorySelect.appendChild(option);
         });
     }
 
-    function populateCategoriasFilhas(subcategoryId) {
+    function populateCategoriasFilhas(subcategoryId, selectedChildId = '') {
         clearOptions(categoriasfilhasSelect);
         if (!subcategoryId) return;
-        categoriasfilhas.filter(c => c.subcategory_id == subcategoryId).forEach(child => {
+
+        categoriasfilhas.filter(c => String(c.subcategory_id) === String(subcategoryId)).forEach(child => {
             const option = document.createElement('option');
             option.value = child.id;
             option.text = child.name || child.slug;
+
+            if (String(child.id) === String(selectedChildId)) {
+                option.selected = true;
+            }
+
             categoriasfilhasSelect.appendChild(option);
         });
     }
@@ -253,9 +265,12 @@ document.addEventListener('DOMContentLoaded', function () {
     categorySelect.addEventListener('change', () => populateSubcategories(categorySelect.value));
     subcategorySelect.addEventListener('change', () => populateCategoriasFilhas(subcategorySelect.value));
 
+    const selectedSubcategoryId = subcategorySelect.dataset.selected || '';
+    const selectedChildId = categoriasfilhasSelect.dataset.selected || '';
+
     if (categorySelect.value) {
-        populateSubcategories(categorySelect.value);
-        if (subcategorySelect.value) populateCategoriasFilhas(subcategorySelect.value);
+        populateSubcategories(categorySelect.value, selectedSubcategoryId);
+        if (selectedSubcategoryId) populateCategoriasFilhas(selectedSubcategoryId, selectedChildId);
     }
 });
 

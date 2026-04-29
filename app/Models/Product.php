@@ -80,6 +80,7 @@ class Product extends Model
         'show_price',
         'show_in_navbar',
         'product_size',
+        'product_role',
         'synced',
         'gtin',
         'promotion_price',
@@ -92,14 +93,12 @@ class Product extends Model
         'stores',
         'brand_id',
         'parent_id',
-        'color_parent_id', // adiciona a coluna que vai armazenar cores como array
+        'color_parent_id',
     ];
 
     // Casts para JSON/array
     protected $casts = [
         'gallery' => 'array',
-        'parent_id' => 'array',
-        'color_parent_id' => 'array',
         'price' => 'float',
         'stores' => 'array',
         'stock' => 'integer',
@@ -131,16 +130,16 @@ class Product extends Model
 
     public function categoriasFilhas()
     {
-        return $this->belongsTo(CategoriasFilhas::class);
+        return $this->belongsTo(CategoriasFilhas::class, 'childcategory_id');
     }
 
-    // Produto Pai
+    // Ancla vertical de talla: `parent_id` apunta al producto base visible.
     public function parent()
     {
         return $this->belongsTo(Product::class, 'parent_id');
     }
 
-    // Produtos Filhos
+    // Variantes verticales de talla.
     public function children()
     {
         return $this->hasMany(Product::class, 'parent_id');
@@ -152,21 +151,22 @@ class Product extends Model
         return $this->hasMany(Cupon::class, 'produto_id');
     }
 
-    // Produto pai -> filhos
+    // Alias de variantes de talla.
     public function filhos()
     {
         return $this->hasMany(Product::class, 'parent_id', 'id');
     }
 
-    // Produto filho -> pai
+    // Alias del ancla de talla.
     public function pai()
     {
         return $this->belongsTo(Product::class, 'parent_id', 'id');
     }
 
+    // Miembros de la familia de color. `color_parent_id` apunta al ancla de la familia.
     public function coresRelacionadas()
     {
-        return $this->hasMany(Product::class, 'id', 'color_parent_id');
+        return $this->hasMany(Product::class, 'color_parent_id', 'id');
     }
 
     // Favoritado por usuários

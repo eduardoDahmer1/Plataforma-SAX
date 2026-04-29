@@ -1,8 +1,6 @@
 @extends('layout.admin')
 
 @section('content')
-
-@section('content')
     @php
         // Isso garante que a variável exista para o restante da página
         $galleryImages = [];
@@ -24,7 +22,7 @@
             @method('PUT')
             <input type="hidden" name="return_to" value="{{ request('return_to') }}">
 
-            <div class="row g-3">
+            <div class="row g-4 product-edit-grid">
                 @if ($type === 'product')
                     <!-- SKU e Nome Externo -->
                     <div class="col-md-6">
@@ -78,7 +76,7 @@
                     <div class="col-md-4">
                         <label for="subcategory_id" class="form-label"><i
                                 class="fas fa-folder-open me-1"></i>Subcategoria</label>
-                        <select name="subcategory_id" id="subcategory_id" class="form-select">
+                        <select name="subcategory_id" id="subcategory_id" class="form-select" data-subcategories='@json($subcategories)' data-selected="{{ old('subcategory_id', $item->subcategory_id ?? '') }}">
                             <option value="">Selecione uma subcategoria</option>
                             @foreach ($subcategories as $subcategory)
                                 <option value="{{ $subcategory->id }}"
@@ -92,11 +90,11 @@
                     <div class="col-md-4">
                         <label for="categoriasfilhas_id" class="form-label"><i class="fas fa-sitemap me-1"></i>Categorias
                             Filhas</label>
-                        <select name="categoriasfilhas_id" id="categoriasfilhas_id" class="form-select">
+                        <select name="childcategory_id" id="categoriasfilhas_id" class="form-select" data-categoriasfilhas='@json($categoriasfilhas)' data-selected="{{ old('childcategory_id', $item->childcategory_id ?? '') }}">
                             <option value="">Selecione uma categorias filhas</option>
                             @foreach ($categoriasfilhas as $categoriasfilhas)
                                 <option value="{{ $categoriasfilhas->id }}"
-                                    {{ $item->categoriasfilhas_id === $categoriasfilhas->id ? 'selected' : '' }}>
+                                    {{ (int) old('childcategory_id', $item->childcategory_id ?? 0) === (int) $categoriasfilhas->id ? 'selected' : '' }}>
                                     {{ $categoriasfilhas->name ?: $categoriasfilhas->slug }}
                                 </option>
                             @endforeach
@@ -117,42 +115,44 @@
                     </div>
 
                     {{-- 2. INTERFACE --}}
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="photo" class="form-label text-bold">
-                                <i class="fas fa-image me-1"></i>Foto Principal
-                            </label>
-                            <div class="d-flex align-items-start gap-2">
-                                <input type="file" name="photo" class="form-control" id="photoInput">
-                                @if ($item->photo)
-                                    <div class="position-relative border rounded p-1 bg-white"
-                                        style="width: 80px; height: 50px;">
-                                        <img src="{{ Storage::url($item->photo) }}" class="w-100 h-100"
-                                            style="object-fit: cover;">
-                                        <button type="button"
-                                            class="btn btn-danger btn-xs position-absolute top-0 end-0 m-n1 shadow-sm"
-                                            style="padding: 2px 5px; font-size: 10px;"
-                                            onclick="if(confirm('Excluir foto principal?')) document.getElementById('deletePhotoForm').submit();">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                @endif
+                    <div class="col-12">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="photo" class="form-label text-bold">
+                                    <i class="fas fa-image me-1"></i>Foto Principal
+                                </label>
+                                <div class="d-flex align-items-start gap-2">
+                                    <input type="file" name="photo" class="form-control" id="photoInput">
+                                    @if ($item->photo)
+                                        <div class="position-relative border rounded p-1 bg-white"
+                                            style="width: 80px; height: 50px;">
+                                            <img src="{{ Storage::url($item->photo) }}" class="w-100 h-100"
+                                                style="object-fit: cover;">
+                                            <button type="button"
+                                                class="btn btn-danger btn-xs position-absolute top-0 end-0 m-n1 shadow-sm"
+                                                style="padding: 2px 5px; font-size: 10px;"
+                                                onclick="if(confirm('Excluir foto principal?')) document.getElementById('deletePhotoForm').submit();">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label text-bold">
-                                <i class="fas fa-images me-1"></i>Galeria de Imagens
-                            </label>
-                            <div class="d-flex flex-column gap-2">
-                                <input type="file" name="gallery[]" class="form-control" multiple id="galleryInput">
-                                @if (!empty($galleryImages))
-                                    <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal"
-                                        data-bs-target="#modalGerenciarGaleria">
-                                        <i class="fas fa-tasks me-1"></i> Gerenciar Galeria ({{ count($galleryImages) }}
-                                        fotos)
-                                    </button>
-                                @endif
+                            <div class="col-md-6">
+                                <label class="form-label text-bold">
+                                    <i class="fas fa-images me-1"></i>Galeria de Imagens
+                                </label>
+                                <div class="d-flex flex-column gap-2">
+                                    <input type="file" name="gallery[]" class="form-control" multiple id="galleryInput">
+                                    @if (!empty($galleryImages))
+                                        <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal"
+                                            data-bs-target="#modalGerenciarGaleria">
+                                            <i class="fas fa-tasks me-1"></i> Gerenciar Galeria ({{ count($galleryImages) }}
+                                            fotos)
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -215,11 +215,80 @@
                     </div>
 
                     <!-- Tamanho do Produto -->
+                    @php
+                        $sizeOptions = [
+                            'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL',
+                            '3XL', '4XL', '5XL', '6XL', 'U',
+                            '2', '4', '6', '8', '10', '12', '14', '16', '18',
+                        ];
+
+                        for ($sizeNumber = 34; $sizeNumber <= 60; $sizeNumber++) {
+                            $sizeOptions[] = (string) $sizeNumber;
+                        }
+
+                        $sizeOptions = array_values(array_unique(array_merge($sizeOptions, [
+                            '3M', '6M', '9M', '12M', '18M',
+                            '2Y', '3Y', '4Y', '5Y', '6Y', '8Y', '10Y', '12Y',
+                        ])));
+
+                        $currentSize = old('size', $item->size ?? '');
+                        $categorySlug = strtolower($item->category->slug ?? '');
+                        $excludedSizeCategories = [
+                            'optico',
+                            'perfumes-and-cosmeticos',
+                            'casa',
+                            'bebidas',
+                            'electronicos',
+                            'patrimonio',
+                            'propaganda',
+                            'joyas-and-relojes',
+                            'habanos',
+                            'repuestos',
+                            'unisex',
+                        ];
+                        $isFashionCategory = !in_array($categorySlug, $excludedSizeCategories, true)
+                            && (
+                                in_array($categorySlug, ['masculino', 'feminino', 'infantil'], true)
+                                || str_starts_with($categorySlug, 'boss-')
+                                || str_starts_with($categorySlug, 'hugo-')
+                            );
+
+                        $detectedSize = '';
+                        if (preg_match('/#([^\s*]+)/', $item->external_name ?? '', $sizeMatch)) {
+                            $detectedSize = trim($sizeMatch[1]);
+                        }
+
+                        $looksLikeNonFashionMeasure = (bool) preg_match(
+                            '/(?:ML|CM|MM|KG|750|X\d|^\d+X|^H\d+)/i',
+                            $detectedSize
+                        );
+                        $suggestedSize = ($isFashionCategory && !$looksLikeNonFashionMeasure) ? $detectedSize : '';
+                        $initialSize = $currentSize ?: $suggestedSize;
+                        $hasInitialSizeOption = $initialSize !== '' && in_array($initialSize, $sizeOptions, true);
+                    @endphp
                     <div class="col-md-6">
-                        <label for="size" class="form-label"><i
+                        <label for="size_select" class="form-label"><i
                                 class="fas fa-ruler-combined me-1"></i>Tamanho</label>
-                        <input type="text" id="size" name="size" class="form-control"
-                            value="{{ old('size', $item->size ?? '') }}" placeholder="Digite o tamanho do produto">
+                        <input type="hidden" id="size" name="size" value="{{ $initialSize }}">
+                        <select id="size_select" class="form-select" data-size-select>
+                            <option value="">Selecione o tamanho</option>
+                            @if ($initialSize !== '' && !$hasInitialSizeOption)
+                                <option value="{{ $initialSize }}" selected>
+                                    {{ $currentSize ? 'Atual' : 'Detectada' }}: {{ $initialSize }}
+                                </option>
+                            @endif
+                            @foreach ($sizeOptions as $sizeOption)
+                                <option value="{{ $sizeOption }}" {{ $initialSize === $sizeOption ? 'selected' : '' }}>
+                                    {{ $sizeOption }}
+                                </option>
+                            @endforeach
+                            <option value="__manual__">Outro / manual</option>
+                        </select>
+                        <input type="text" id="size_manual" class="form-control mt-2 d-none"
+                            value="" placeholder="Digite o tamanho do produto" data-size-manual>
+                        @if ($suggestedSize !== '' && $currentSize === '')
+                            <small class="form-text text-muted">Detectado desde integração: #{{ $suggestedSize }}</small>
+                        @endif
                     </div>
 
                     <!-- Descrição -->
@@ -272,22 +341,46 @@
                         </div>
                     </div>
 
-                    <!-- RELACIONAMENTO POR TAMANHO -->
+                    @if (!empty($item->parent_id) || (($item->product_role ?? null) === 'F'))
+                        @php
+                            $currentParentProduct = $item->parent;
+                            $currentParentLabel = $currentParentProduct
+                                ? ($currentParentProduct->name ?: ($currentParentProduct->external_name ?: ('#' . $item->parent_id)))
+                                : ('#' . $item->parent_id);
+                        @endphp
+                        <div class="col-12 mb-4">
+                            <div class="alert alert-warning border mb-0">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        id="force_as_parent" name="force_as_parent" value="1"
+                                        {{ old('force_as_parent') ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="force_as_parent">
+                                        Convertir este producto nuevamente en P
+                                    </label>
+                                </div>
+                                <small class="d-block text-muted">
+                                    Este producto está vinculado como variante de talla de {{ $currentParentLabel }}.
+                                    Si activas este switch y guardas, se soltará de esa relación de talla y volverá a
+                                    su propio ancla de color.
+                                </small>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- RELACIONAMENTO POR TALLA -->
                     <div class="col-12 mb-4">
-                        <label class="form-label"><i class="fas fa-link me-1"></i>Produtos Filho (Tamanho)</label>
+                        <label class="form-label"><i class="fas fa-link me-1"></i>Variantes de talla</label>
                         <div class="input-group mb-2">
                             <input type="text" id="parent_search" class="form-control"
-                                placeholder="Buscar produto por tamanho..." autocomplete="off">
+                                placeholder="Buscar variante por talla..." autocomplete="off">
                             <button class="btn btn-primary" id="parent_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
                         <div id="parent_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}"></div>
                         <div id="selected_parents" class="row g-2 mt-2">
-                            @if (!empty($item->parent_id))
+                            @if (!empty($item->selected_size_children))
                                 @php
-                                    $parentIds = is_array($item->parent_id)
-                                        ? $item->parent_id
-                                        : explode(',', $item->parent_id);
+                                    $parentIds = $item->selected_size_children;
                                 @endphp
                                 @foreach ($parentIds as $pid)
                                     @php $parentProduct = App\Models\Product::find($pid); @endphp
@@ -324,24 +417,25 @@
                                 @endforeach
                             @endif
                         </div>
+                        <small class="form-text text-muted d-block mt-2">
+                            Estas variantes comparten el ancla de talla y heredan los datos comunes del producto base.
+                        </small>
                     </div>
 
-                    <!-- RELACIONAMENTO POR COR -->
+                    <!-- FAMÍLIA DE COLOR -->
                     <div class="col-12 mb-4">
-                        <label class="form-label"><i class="fas fa-palette me-1"></i>Produtos Filho (Cor)</label>
+                        <label class="form-label"><i class="fas fa-palette me-1"></i>Familia de color</label>
                         <div class="input-group mb-2">
                             <input type="text" id="color_search" class="form-control"
-                                placeholder="Buscar produto por cor..." autocomplete="off">
+                                placeholder="Buscar producto para la familia de color..." autocomplete="off">
                             <button class="btn btn-primary" id="color_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
                         <div id="color_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}"></div>
                         <div id="selected_colors" class="row g-2 mt-2">
-                            @if (!empty($item->color_parent_id))
+                            @if (!empty($item->selected_color_family_members))
                                 @php
-                                    $colorIds = is_array($item->color_parent_id)
-                                        ? $item->color_parent_id
-                                        : explode(',', $item->color_parent_id);
+                                    $colorIds = $item->selected_color_family_members;
                                 @endphp
                                 @foreach ($colorIds as $cid)
                                     @php $colorProduct = App\Models\Product::find($cid); @endphp
@@ -378,6 +472,12 @@
                                 @endforeach
                             @endif
                         </div>
+                        @error('color_parent_id')
+                            <div class="text-danger small mt-2">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted d-block mt-2">
+                            Los miembros de la familia de color conservan sus propios datos; solo comparten el mismo referente.
+                        </small>
                     </div>
                 @endif
             </div>
@@ -420,11 +520,48 @@
     </form>
 
     <style>
+        .product-edit-grid .form-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4a4339;
+            margin-bottom: 0.55rem;
+        }
+
+        .product-edit-grid .form-control,
+        .product-edit-grid .form-select {
+            min-height: 48px;
+            border-radius: 10px;
+            border: 1px solid #ddd6ca;
+            background: #fff;
+            box-shadow: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+
+        .product-edit-grid .form-control:focus,
+        .product-edit-grid .form-select:focus {
+            border-color: #b6a58c;
+            box-shadow: 0 0 0 0.2rem rgba(182, 165, 140, 0.12);
+        }
+
+        .product-edit-grid input[readonly] {
+            background: #f6f3ee;
+            color: #5e564b;
+        }
+
+        .product-edit-grid .form-text {
+            color: #7a7166 !important;
+            font-size: 0.82rem;
+            margin-top: 0.45rem;
+        }
+
         input[type="color"].form-control-color {
-            width: 50px;
-            height: 35px;
-            padding: 0;
-            border: 1px solid #ccc;
+            width: 58px;
+            height: 42px;
+            padding: 0.2rem;
+            border: 1px solid #ddd6ca;
+            border-radius: 10px;
             cursor: pointer;
         }
 

@@ -55,6 +55,9 @@ class CategoryController extends Controller
             $products = $category->products()
                 ->with('brand') // Adicionado para evitar erro no layout novo
                 ->where('status', 1)
+                ->where('product_role', 'P')
+                ->whereNotNull('photo')
+                ->where('photo', '!=', '')
                 ->paginate(12)
                 ->withQueryString();
 

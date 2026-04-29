@@ -25,6 +25,7 @@ class SearchController extends Controller
             ->select(['id', 'name', 'external_name', 'sku', 'price', 'stock', 'photo', 'brand_id', 'category_id', 'slug', 'status'])
             ->with(['brand:id,name'])
             ->where('status', 1)            // Apenas produtos ativos
+            ->where('product_role', 'P')    // Solo productos padre en el buscador
             ->where('stock', '>', 0)        // Com estoque
             ->whereNotNull('photo')         // Com foto
             ->where('photo', '!=', '');
@@ -56,17 +57,33 @@ class SearchController extends Controller
 
         // Dados da Sidebar - Agora filtrando apenas ATIVOS (Status 1)
         $sidebarData = Cache::remember('search_sidebar_v3', 3600, function () {
+            $visibleProductFilter = function ($q) {
+                $q->where('status', 1)
+                    ->where('product_role', 'P')
+                    ->where('stock', '>', 0)
+                    ->whereNotNull('photo')
+                    ->where('photo', '!=', '');
+            };
+
             return [
                 'brands'          => Brand::select('id', 'name')
                     ->where('status', 1) // Apenas marcas ativas
+                    ->whereHas('products', $visibleProductFilter)
                     ->orderBy('name')
                     ->get(),
                 'categories'      => Category::select('id', 'name', 'slug')
                     ->where('status', 1) // Apenas categorias ativas (sem restrição de ID fixo)
+                    ->whereHas('products', $visibleProductFilter)
                     ->orderBy('name')
                     ->get(),
-                'subcategories'   => Subcategory::select('id', 'name')->orderBy('name')->get(),
-                'categoriasfilhas' => CategoriasFilhas::select('id', 'name')->orderBy('name')->get(),
+                'subcategories'   => Subcategory::select('id', 'name')
+                    ->whereHas('products', $visibleProductFilter)
+                    ->orderBy('name')
+                    ->get(),
+                'categoriasfilhas' => CategoriasFilhas::select('id', 'name')
+                    ->whereHas('products', $visibleProductFilter)
+                    ->orderBy('name')
+                    ->get(),
             ];
         });
 

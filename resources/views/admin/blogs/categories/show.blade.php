@@ -47,9 +47,6 @@
                     <hr class="my-4 opacity-10">
 
                     <div class="d-flex flex-wrap gap-2 mt-4">
-                        <a href="{{ route('admin.blog-categories.edit', $category->id) }}" class="btn btn-dark rounded-pill px-4 btn-sm fw-bold">
-                            <i class="fas fa-edit me-2"></i> {{ __('messages.editar_categoria_btn_cap') }}
-                        </a>
                         {{-- Link para ver no blog (Exemplo de slug se existir) --}}
                         <a href="#" class="btn btn-outline-dark rounded-pill px-4 btn-sm fw-bold">
                             <i class="fas fa-external-link-alt me-2"></i> {{ __('messages.ver_no_blog_btn') }}

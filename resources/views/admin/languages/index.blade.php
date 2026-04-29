@@ -4,25 +4,32 @@
 <x-admin.card>
     <x-admin.page-header
         title="Traduções"
-        description="Mostrando {{ $languages->count() }} chaves de tradução cadastradas">
-        
-       <x-admin.page-header
-            title="Traduções"
-            description="Mostrando {{ $languages->count() }} chaves de tradução cadastradas"
-            actionUrl="{{ route('admin.languages.create') }}"
-            actionLabel="Nova Chave" />
-        
-    </x-admin.page-header>
+        description="Mostrando {{ $languages->count() }} chaves de tradução"
+        actionUrl="{{ route('admin.languages.create') }}"
+        actionLabel="Nova Chave" />
 
     <div class="card border-0 shadow-sm p-3 mb-4" style="border-radius: 15px;">
-        <div class="input-group">
-            <input type="text" id="searchLanguage" class="form-control border-0 bg-light" placeholder="Buscar por chave ou termo..." style="border-radius: 8px 0 0 8px;">
-            <button class="btn btn-dark px-4" style="border-radius: 0 8px 8px 0; background: #000;">BUSCAR</button>
-        </div>
+        <form action="{{ route('admin.languages.index') }}" method="GET">
+            <div class="input-group">
+                <input type="text" 
+                       name="search" 
+                       id="searchLanguage" 
+                       class="form-control border-0 bg-light" 
+                       placeholder="Buscar por chave ou termo..." 
+                       value="{{ $search ?? '' }}"
+                       style="border-radius: 8px 0 0 8px;">
+                <button type="submit" class="btn btn-dark px-4" style="border-radius: 0 8px 8px 0; background: #000;">
+                    <i class="fas fa-search mr-1"></i> BUSCAR
+                </button>
+                @if($search)
+                    <a href="{{ route('admin.languages.index') }}" class="btn btn-outline-secondary ml-2" style="border-radius: 8px;">Limpar</a>
+                @endif
+            </div>
+        </form>
     </div>
 
     <div class="row">
-        @foreach($languages as $l)
+        @forelse($languages as $l)
         <div class="col-12 col-md-6 col-lg-4 mb-4 language-item">
             <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; transition: transform 0.2s;">
                 <div class="card-body p-4">
@@ -68,9 +75,13 @@
                 </div>
             </div>
         </div>
-        @endforeach
+        @empty
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">Nenhuma tradução encontrada para "{{ $search }}".</p>
+        </div>
+        @endforelse
     </div>
-</x-admin-card>
+</x-admin.card>
 
 <style>
     .language-item:hover {
@@ -82,6 +93,12 @@
     .btn-outline-dark:hover {
         background-color: #000;
         color: #fff;
+    }
+    .text-truncate {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 </style>
 @endsection

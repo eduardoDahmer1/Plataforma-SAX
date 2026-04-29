@@ -23,7 +23,8 @@ class BrandController extends Controller
         $brands = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
             $query = Brand::where('status', 1) // Adicionado: Somente marcas ativas
                 ->withCount(['products' => function ($q) {
-                    $q->where('status', 1); // Opcional: contar apenas produtos ativos também
+                    $q->where('status', 1)
+                        ->where('product_role', 'P');
                 }])
                 ->orderBy('name')
                 ->having('products_count', '>', 0);
@@ -56,6 +57,8 @@ class BrandController extends Controller
         // 2. Busca produtos da marca
         $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand) {
             return $brand->products()
+                ->where('status', 1)
+                ->where('product_role', 'P')
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
                 ->with(['brand', 'category'])

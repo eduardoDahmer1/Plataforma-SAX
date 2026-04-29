@@ -9,10 +9,21 @@ use Illuminate\Support\Facades\Cache;
 
 class LanguageControllerAdmin extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $languages = Language::orderBy('key')->get();
-        return view('admin.languages.index', compact('languages'));
+        // Captura o termo de busca
+        $search = $request->query('search');
+
+        $languages = Language::orderBy('key')
+            ->when($search, function ($query, $search) {
+                return $query->where('key', 'like', "%{$search}%")
+                             ->orWhere('pt', 'like', "%{$search}%")
+                             ->orWhere('en', 'like', "%{$search}%")
+                             ->orWhere('es', 'like', "%{$search}%");
+            })
+            ->get();
+
+        return view('admin.languages.index', compact('languages', 'search'));
     }
 
     public function create()

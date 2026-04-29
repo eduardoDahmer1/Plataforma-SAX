@@ -49,7 +49,6 @@
                             {{ $filha->name }}
                         </h5>
                         <div class="parent-info mt-2">
-                            <label class="sax-label-tiny mb-0">{{ __('messages.subcategoria_pai_label') }}</label>
                             <p class="text-muted small text-truncate m-0">
                                 <i class="fa fa-level-up-alt fa-rotate-90 me-1"></i>
                                 {{ $filha->subcategory ? ($filha->subcategory->name ?: $filha->subcategory->slug) : __('messages.sin_vinculo') }}

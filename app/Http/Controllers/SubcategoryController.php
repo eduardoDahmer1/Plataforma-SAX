@@ -57,6 +57,9 @@ class SubcategoryController extends Controller
             // Pagina os produtos com a marca para o layout estilo JW
             $products = $subcategory->products()
                 ->where('status', 1)
+                ->where('product_role', 'P')
+                ->whereNotNull('photo')
+                ->where('photo', '!=', '')
                 ->with('brand') 
                 ->paginate(12)
                 ->withQueryString();

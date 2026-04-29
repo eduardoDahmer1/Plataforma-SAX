@@ -53,6 +53,7 @@ class CategoriasFilhasController extends Controller
             // Paginação dos produtos com a marca carregada
             $products = $categoriasfilhas->products()
                 ->where('status', 1) // Garante que só produtos ativos apareçam
+                ->where('product_role', 'P')
                 ->with('brand')
                 ->paginate(24)
                 ->withQueryString();

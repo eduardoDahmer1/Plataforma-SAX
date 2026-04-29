@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Imagen fallback leída del data-attribute del Blade (evita asset() en JS)
     var noImage = parentResults.dataset.noimage || '/storage/uploads/noimage.webp';
 
-    function setupSearch(inputId, btnId, resultsId, selectedId, hiddenName, searchUrl) {
+    function setupSearch(inputId, btnId, resultsId, selectedId, hiddenName, searchUrl, context) {
         const searchInput = document.getElementById(inputId);
         const searchBtn = document.getElementById(btnId);
         const resultsDiv = document.getElementById(resultsId);
@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const excludeId = resultsDiv.dataset.currentProductId || '';
             const params = new URLSearchParams({ q: query });
             if (excludeId) params.append('exclude_id', excludeId);
+            if (context) params.append('context', context);
 
             fetch(searchUrl + '?' + params.toString())
                 .then(function (res) { return res.json(); })
@@ -116,7 +117,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     setupSearch('parent_search', 'parent_search_btn', 'parent_results', 'selected_parents', 'parent_id', '/admin/products/search');
-    setupSearch('color_search', 'color_search_btn', 'color_results', 'selected_colors', 'color_parent_id', '/admin/products/search');
+    setupSearch('color_search', 'color_search_btn', 'color_results', 'selected_colors', 'color_parent_id', '/admin/products/search', 'color');
+});
+
+// ======== Edit: Selector asistido de tamaño ========
+document.addEventListener('DOMContentLoaded', function () {
+    var hiddenSize = document.getElementById('size');
+    var sizeSelect = document.querySelector('[data-size-select]');
+    var manualInput = document.querySelector('[data-size-manual]');
+
+    if (!hiddenSize || !sizeSelect || !manualInput) return;
+
+    function syncSizeValue() {
+        if (sizeSelect.value === '__manual__') {
+            manualInput.classList.remove('d-none');
+            hiddenSize.value = manualInput.value.trim();
+            return;
+        }
+
+        manualInput.classList.add('d-none');
+        manualInput.value = '';
+        hiddenSize.value = sizeSelect.value;
+    }
+
+    sizeSelect.addEventListener('change', syncSizeValue);
+    manualInput.addEventListener('input', syncSizeValue);
+    syncSizeValue();
 });
 
 

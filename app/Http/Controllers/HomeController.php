@@ -35,6 +35,9 @@ class HomeController extends Controller
         foreach ($highlightTypes as $key) {
             $highlights[$key] = Cache::remember("highlight_products_{$key}", 600, function () use ($key) {
                 return Product::where("highlights->{$key}", "1")
+                    ->where('product_role', 'P')
+                    ->whereNotNull('photo')
+                    ->where('photo', '!=', '')
                     ->with('brand')
                     ->take(5)
                     ->get();

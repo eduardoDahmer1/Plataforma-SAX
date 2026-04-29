@@ -20,7 +20,6 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CuponUserController;
-use App\Http\Controllers\PagoParController;
 use App\Http\Controllers\PalaceController;
 use App\Http\Controllers\BridalController;
 use App\Http\Controllers\CafeBistroController;
@@ -150,12 +149,6 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('order')
         ->name('checkout.bancard.v2.cancel');
 
-    // PagoPar (Bancard / Pix / Outros)
-    Route::prefix('pagopar')->group(function () {
-        Route::get('/finish', [PagoParController::class, 'finish'])->name('pagopar.finish');
-        Route::post('/callback', [PagoParController::class, 'callback'])->name('pagopar.callback');
-    });
-
     // Métodos Offline
     Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');
     Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
@@ -226,7 +219,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     // AJUSTE CATEGORIAS FILHAS ADMIN
     Route::get('products/subcategories/{category}', [ProductControllerAdmin::class, 'getSubcategories'])->name('products.getSubcategories');
-    Route::get('products/categorias-filhas/{subcategory}', [ProductControllerAdmin::class, 'getCategoriasFilhas'])->name('products.getcategorias-filhas');
+    Route::get('products/categorias-filhas/{subcategory}', [ProductControllerAdmin::class, 'getChildcategories'])->name('products.getcategorias-filhas');
 
     Route::delete('categorias-filhas/{categorias_filha}/delete-photo', [CategoriasFilhasControllerAdmin::class, 'deletePhoto'])->name('categorias-filhas.deletePhoto');
     Route::delete('categorias-filhas/{categorias_filha}/delete-banner', [CategoriasFilhasControllerAdmin::class, 'deleteBanner'])->name('categorias-filhas.deleteBanner');

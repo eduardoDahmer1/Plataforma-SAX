@@ -38,7 +38,6 @@
                     </div>
                     <h6 class="fw-bold mb-1 text-uppercase small tracking-tight">{{ $blog->title }}</h6>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="x-small text-muted italic">/{{ $blog->slug }}</span>
                         <span class="status-pill {{ $blog->is_active ? 'active' : 'draft' }}">
                             {{ $blog->is_active ? __('messages.status_publicado') : __('messages.status_rascunho') }}
                         </span>

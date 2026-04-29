@@ -10,6 +10,7 @@ use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
 use App\Models\Attribute;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -42,6 +43,7 @@ class ProductControllerAdmin extends Controller
             'subcategory_id',
             'childcategory_id',
             'status',
+            'product_role',
             'highlights'
         ];
 
@@ -167,13 +169,14 @@ class ProductControllerAdmin extends Controller
     {
         $q = $request->get('q');
         $excludeId = $request->integer('exclude_id');
+        $context = $request->get('context');
 
-        $products = Product::where('status', 1) // Garante que o produto esteja ativo
-            ->where(function ($query) use ($q) {
+        $products = Product::where(function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%")
                     ->orWhere('external_name', 'like', "%{$q}%")
                     ->orWhere('sku', 'like', "%{$q}%");
             })
+            ->when($context === 'color', fn($query) => $query->where('product_role', 'P'))
             ->when($excludeId, fn($query) => $query->where('id', '!=', $excludeId))
             ->orderBy('external_name')
             ->limit(50)
@@ -227,6 +230,7 @@ class ProductControllerAdmin extends Controller
         ]);
 
         $data['highlights'] = $request->input('highlights', []);
+        $data['product_role'] = 'P';
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
@@ -275,7 +279,7 @@ class ProductControllerAdmin extends Controller
             : collect();
 
         $categoriasfilhas = $item->subcategory_id
-            ? CategoriasFilhas::where('subcategory_id', $item->subcategory_id)->get()
+            ? CategoriasFilhas::whereIn('subcategory_id', $subcategories->pluck('id'))->get()
             : collect();
 
         $products = Product::select('id', 'name', 'sku')
@@ -283,11 +287,26 @@ class ProductControllerAdmin extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        $item->selected_children = Product::where('parent_id', $item->id)
+        $item->selected_size_children = Product::where('parent_id', $item->id)
+            ->where('product_role', 'F')
+            ->pluck('id')
+            ->toArray();
+        $familyRootId = !empty($item->color_parent_id) ? (int) $item->color_parent_id : (int) $item->id;
+        $item->selected_color_family_members = Product::where('color_parent_id', $familyRootId)
+            ->where('product_role', 'P')
+            ->where('id', '!=', $item->id)
             ->pluck('id')
             ->toArray();
 
-        $item->parent_id = is_string($item->parent_id) ? explode(',', $item->parent_id) : ($item->parent_id ?? []);
+        if (is_string($item->parent_id) && str_contains($item->parent_id, ',')) {
+            $item->parent_id = collect(explode(',', $item->parent_id))
+                ->map(fn($parentId) => (int) trim($parentId))
+                ->first(fn($parentId) => $parentId > 0) ?: null;
+        } elseif (is_array($item->parent_id)) {
+            $item->parent_id = collect($item->parent_id)
+                ->map(fn($parentId) => (int) $parentId)
+                ->first(fn($parentId) => $parentId > 0) ?: null;
+        }
 
         return view('admin.products.edit', compact(
             'item',
@@ -319,12 +338,112 @@ public function update(Request $request, $id)
         'highlights' => 'nullable|array',
         'parent_id' => 'nullable|array',
         'color_parent_id' => 'nullable|array',
+        'force_as_parent' => 'nullable|boolean',
         'stores' => 'nullable|array',
         'size' => 'nullable|string|max:50',
     ]);
 
     try {
         return DB::transaction(function () use ($request, $product) {
+            // guardamos los datos anteriores para ver si el producto F ya tenia datos y no cambiarlos
+            $previousDescription = $product->description;
+            $previousPhoto = $product->photo;
+            $previousGallery = is_string($product->gallery)
+                ? json_encode(array_values(json_decode($product->gallery, true) ?: []))
+                : json_encode(array_values($product->gallery ?: []));
+            $isCurrentlySizeVariant = (($product->product_role ?? null) === 'F') || !empty($product->parent_id);
+            $promoteToParent = $request->boolean('force_as_parent') && $isCurrentlySizeVariant;
+            // `parent_id[]` = variantes de talla.
+            // `color_parent_id[]` = miembros P de la familia de colores.
+            $originalFamilyRootId = !empty($product->color_parent_id)
+                ? (int) $product->color_parent_id
+                : (int) $product->id;
+            $existingSizeChildIds = Product::where('parent_id', $product->id)
+                ->where('product_role', 'F')
+                ->pluck('id')
+                ->map(fn($childId) => (int) $childId)
+                ->toArray();
+            $selectedSizeChildIds = array_values(array_filter(
+                array_unique(array_filter((array) $request->input('parent_id', []))),
+                fn($childId) => (int) $childId !== (int) $product->id
+            ));
+            $selectedColorFamilyMemberIds = array_values(array_filter(
+                array_unique(array_filter((array) $request->input('color_parent_id', []))),
+                fn($memberId) => (int) $memberId !== (int) $product->id
+            ));
+
+            // Mientras el producto siga siendo `F`, sus relaciones actuales se conservan.
+            // El switch lo devuelve a `P` y a su propio ancla para poder rearmarlo luego.
+            if ($isCurrentlySizeVariant) {
+                $selectedSizeChildIds = [];
+                $selectedColorFamilyMemberIds = [];
+            }
+
+            $selectedColorFamilyMemberIds = Product::whereIn('id', $selectedColorFamilyMemberIds)
+                ->where('product_role', 'P')
+                ->pluck('id')
+                ->map(fn($memberId) => (int) $memberId)
+                ->unique()
+                ->values()
+                ->toArray();
+            $selectedColorFamilyMembers = Product::whereIn('id', $selectedColorFamilyMemberIds)
+                ->get(['id', 'color_parent_id']);
+            $resolveExistingFamilyRoot = function (Product $anchor): ?int {
+                $candidateRootId = !empty($anchor->color_parent_id)
+                    ? (int) $anchor->color_parent_id
+                    : (int) $anchor->id;
+                $hasOtherAnchorsInFamily = Product::where('product_role', 'P')
+                    ->where('id', '!=', $anchor->id)
+                    ->where(function ($query) use ($candidateRootId) {
+                        $query->where('id', $candidateRootId)
+                            ->orWhere('color_parent_id', $candidateRootId);
+                    })
+                    ->exists();
+
+                if ($candidateRootId !== (int) $anchor->id || $hasOtherAnchorsInFamily) {
+                    return $candidateRootId;
+                }
+
+                return null;
+            };
+            $selectedExistingFamilyRoots = $selectedColorFamilyMembers
+                ->map(fn($member) => $resolveExistingFamilyRoot($member))
+                ->filter(fn($rootId) => !is_null($rootId))
+                ->map(fn($rootId) => (int) $rootId)
+                ->unique()
+                ->values()
+                ->toArray();
+
+            if (count($selectedExistingFamilyRoots) > 1) {
+                throw ValidationException::withMessages([
+                    'color_parent_id' => 'No puedes mezclar productos de familias de color distintas en la misma relación.',
+                ]);
+            }
+
+            $shouldSyncColorFamily = !$isCurrentlySizeVariant || $promoteToParent;
+            $targetFamilyRootId = $promoteToParent
+                ? (int) $product->id
+                : ($shouldSyncColorFamily
+                    ? ($selectedExistingFamilyRoots[0] ?? (int) $product->id)
+                    : $originalFamilyRootId);
+            $currentFamilyAnchorIds = $shouldSyncColorFamily
+                ? Product::where('product_role', 'P')
+                    ->where(function ($query) use ($originalFamilyRootId) {
+                        $query->where('id', $originalFamilyRootId)
+                            ->orWhere('color_parent_id', $originalFamilyRootId);
+                    })
+                    ->pluck('id')
+                    ->map(fn($anchorId) => (int) $anchorId)
+                    ->unique()
+                    ->values()
+                    ->toArray()
+                : [];
+            $desiredColorAnchorIds = $shouldSyncColorFamily
+                ? array_values(array_unique(array_merge(
+                    [(int) $product->id],
+                    $selectedColorFamilyMemberIds
+                )))
+                : [];
             
             $data = $request->only([
                 'sku', 'name', 'description', 'price', 'stock',
@@ -342,7 +461,13 @@ public function update(Request $request, $id)
             // --- IMAGEM PRINCIPAL ---
             if ($request->hasFile('photo')) {
                 if ($product->photo && Storage::disk('public')->exists($product->photo)) {
-                    Storage::disk('public')->delete($product->photo);
+                    $usedElsewhere = Product::where('photo', $product->photo)
+                        ->where('id', '!=', $product->id)
+                        ->exists();
+
+                    if (!$usedElsewhere) {
+                        Storage::disk('public')->delete($product->photo);
+                    }
                 }
                 $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
             }
@@ -366,25 +491,22 @@ public function update(Request $request, $id)
             // --- OUTROS DADOS ---
             $data['highlights'] = json_encode($request->input('highlights', []));
             $data['stores'] = json_encode($request->input('stores', []));
-            $data['product_role'] = 'P';
+            $data['color_parent_id'] = $targetFamilyRootId;
+            $data['product_role'] = ($promoteToParent || !empty($selectedSizeChildIds) || !empty($selectedColorFamilyMemberIds))
+                ? 'P'
+                : ($product->product_role ?: 'P');
+            if ($data['product_role'] === 'P') {
+                $data['parent_id'] = null;
+            }
 
             // Atualiza o Pai
             $product->update($data);
+            $resolvedParentColor = $data['color'] ?? $product->color;
 
-            // --- LÓGICA DE FILHOS (Relacionamento Unificado) ---
-            // Unificamos os IDs de tamanho e cor em uma lista só de "filhos"
-            $selectedChildrenIds = array_unique(array_merge(
-                array_filter((array) $request->input('parent_id', [])),
-                array_filter((array) $request->input('color_parent_id', []))
-            ));
-            $selectedChildrenIds = array_values(array_filter(
-                $selectedChildrenIds,
-                fn($childId) => (int) $childId !== (int) $product->id
-            ));
-
-            // 1. Quem DEIXOU de ser filho: Volta a ser Pai e limpa os dados herdados
+            // --- LÓGICA DE VARIANTES POR TALLA ---
+            // 1. Quem DEIXOU de ser variante de talla: vuelve a ser ' P '.
             Product::where('parent_id', $product->id)
-                ->whereNotIn('id', $selectedChildrenIds)
+                ->whereNotIn('id', $selectedSizeChildIds)
                 ->update([
                     'parent_id'       => null,
                     'color_parent_id' => null,
@@ -394,22 +516,88 @@ public function update(Request $request, $id)
                     'gallery'         => null
                 ]);
 
-            // 2. Quem É ou se TORNOU filho: Herda os dados do pai atualizado
-            if (!empty($selectedChildrenIds)) {
-                Product::whereIn('id', $selectedChildrenIds)
-                    ->where('id', '!=', $product->id) // Evita o produto ser filho dele mesmo
-                    ->update([
+            // 2. Quem é variante de talla hereda datos do Pai, mas só os campos vazios ou iguais ao anterior para evitar sobreescrever customizações manuais.
+            if (!empty($selectedSizeChildIds)) {
+                $children = Product::whereIn('id', $selectedSizeChildIds)
+                    ->where('id', '!=', $product->id) // Evita que el producto sea hijo de si mismo
+                    ->get();
+
+                foreach ($children as $child) {
+                    $isNewChild = !in_array((int) $child->id, $existingSizeChildIds, true);
+                    $childGallery = is_string($child->gallery)
+                        ? json_encode(array_values(json_decode($child->gallery, true) ?: []))
+                        : json_encode(array_values($child->gallery ?: []));
+
+                    $childData = [
                         'parent_id'       => $product->id,
-                        'color_parent_id' => $product->id,
+                        'color_parent_id' => $targetFamilyRootId,
+                        'color'           => $resolvedParentColor,
                         'product_role'    => 'F',
-                        'description'     => $product->description,
-                        'photo'           => $product->photo,
-                        'gallery'         => $product->gallery,
                         'brand_id'        => $product->brand_id,
                         'category_id'     => $product->category_id,
                         'status'          => $product->status,
                         'stores'          => $data['stores']
-                    ]);
+                    ];
+
+                    if ($isNewChild || empty($child->description) || $child->description === $previousDescription) {
+                        $childData['description'] = $product->description;
+                    }
+
+                    if ($isNewChild || empty($child->photo) || $child->photo === $previousPhoto) {
+                        $childData['photo'] = $product->photo;
+                    }
+
+                    if ($isNewChild || $childGallery === '[]' || $childGallery === $previousGallery) {
+                        $childData['gallery'] = $data['gallery'];
+                    }
+
+                    Product::where('id', $child->id)->update($childData);
+                }
+            }
+
+            // --- LÓGICA DE FAMILIA DE COLOR ---
+            // Cada ancla P arrastra toda su rama: el propio P y sus variantes F por talla.
+            if ($shouldSyncColorFamily) {
+                $shouldDetachCurrentFamilyBranches = $targetFamilyRootId === $originalFamilyRootId
+                    || (int) $product->id === $originalFamilyRootId;
+                $colorAnchorsToDetach = $shouldDetachCurrentFamilyBranches
+                    ? array_values(array_diff($currentFamilyAnchorIds, $desiredColorAnchorIds))
+                    : [];
+                foreach ($colorAnchorsToDetach as $anchorId) {
+                    Product::where('id', $anchorId)
+                        ->where('product_role', 'P')
+                        ->update([
+                            'color_parent_id' => $anchorId,
+                        ]);
+
+                    Product::where('parent_id', $anchorId)
+                        ->where('product_role', 'F')
+                        ->update([
+                            'color_parent_id' => $anchorId,
+                        ]);
+                }
+
+                $colorAnchorsToAttach = Product::whereIn('id', $desiredColorAnchorIds)
+                    ->where('product_role', 'P')
+                    ->pluck('id')
+                    ->map(fn($anchorId) => (int) $anchorId)
+                    ->unique()
+                    ->values()
+                    ->toArray();
+
+                foreach ($colorAnchorsToAttach as $anchorId) {
+                    Product::where('id', $anchorId)
+                        ->where('product_role', 'P')
+                        ->update([
+                            'color_parent_id' => $targetFamilyRootId,
+                        ]);
+
+                    Product::where('parent_id', $anchorId)
+                        ->where('product_role', 'F')
+                        ->update([
+                            'color_parent_id' => $targetFamilyRootId,
+                        ]);
+                }
             }
 
             $returnTo = $request->input('return_to');
@@ -419,6 +607,8 @@ public function update(Request $request, $id)
 
             return redirect()->route('admin.products.index')->with('success', 'Produto atualizado com sucesso!');
         });
+    } catch (ValidationException $e) {
+        return back()->withErrors($e->errors())->withInput();
     } catch (\Exception $e) {
         \Log::error("Erro no Update de Produto: " . $e->getMessage());
         return back()->with('error', 'Erro ao salvar: ' . $e->getMessage())->withInput();
@@ -513,7 +703,13 @@ public function update(Request $request, $id)
         }
 
         if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-            Storage::disk('public')->delete($imagePath);
+            $usedElsewhere = Product::where('gallery', 'like', "%{$imagePath}%")
+                ->where('id', '!=', $product->id)
+                ->exists();
+
+            if (!$usedElsewhere) {
+                Storage::disk('public')->delete($imagePath);
+            }
         }
 
         // IMPORTANTE: array_values reindexa [0, 1, 2] evitando chaves puladas no JSON
@@ -535,7 +731,13 @@ public function update(Request $request, $id)
         foreach ($gallery as $img) {
             if (in_array(basename($img), $imagesToDelete)) {
                 if (Storage::disk('public')->exists($img)) {
-                    Storage::disk('public')->delete($img);
+                    $usedElsewhere = Product::where('gallery', 'like', "%{$img}%")
+                        ->where('id', '!=', $product->id)
+                        ->exists();
+
+                    if (!$usedElsewhere) {
+                        Storage::disk('public')->delete($img);
+                    }
                 }
             } else {
                 $newGallery[] = $img;
@@ -553,7 +755,14 @@ public function update(Request $request, $id)
     {
         $product = Product::findOrFail($productId);
         if ($product->photo && Storage::disk('public')->exists($product->photo)) {
-            Storage::disk('public')->delete($product->photo);
+            $usedElsewhere = Product::where('photo', $product->photo)
+                ->where('id', '!=', $product->id)
+                ->exists();
+
+            if (!$usedElsewhere) {
+                Storage::disk('public')->delete($product->photo);
+            }
+
             $product->photo = null;
             $product->save();
             return redirect()->back()->with('success', 'Foto principal removida com sucesso!');
@@ -566,14 +775,7 @@ public function update(Request $request, $id)
     {
         $product = Product::find($id);
         if ($product) {
-            if ($product->photo && Storage::disk('public')->exists($product->photo)) {
-                Storage::disk('public')->delete($product->photo);
-            }
-            if ($product->gallery) {
-                foreach (json_decode($product->gallery, true) as $img) {
-                    if (Storage::disk('public')->exists($img)) Storage::disk('public')->delete($img);
-                }
-            }
+            $this->deleteProductImages($product);
             $product->delete();
         }
         return redirect()->route('admin.products.index')->with('success', 'Produto excluído com sucesso!');

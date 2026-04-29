@@ -75,8 +75,8 @@
                                         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-2">
                                             <span class="badge bg-secondary">SKU: {{ $product->sku }}</span>
                                             @if ($product->product_role)
-                                                <span class="badge {{ $product->product_role === 'P' ? 'bg-primary' : 'bg-info' }}">
-                                                    {{ $product->product_role === 'P' ? '👨 Pai' : '👶 Filho' }}
+                                                <span class="badge {{ $product->product_role === 'P' ? 'bg-primary' : 'bg-dark' }}">
+                                                    {{ $product->product_role === 'P' ? 'P' : 'F' }}
                                                 </span>
                                             @endif
                                             @if ($product->brand)

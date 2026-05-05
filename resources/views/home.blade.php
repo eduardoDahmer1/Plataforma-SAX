@@ -2,11 +2,11 @@
 
 @section('content')
     @php
-        // 1. Definições Iniciais
         $settings = $settings ?? \App\Models\Generalsetting::first();
         $highlightTitles = [
             'lancamentos' => __('messages.lancamentos'),
             'destaque' => __('messages.destacados'),
+            'mais_vistos' => __('messages.mais_vistos'),
         ];
     @endphp
 
@@ -39,22 +39,23 @@
             </div>
         </section>
 
-        {{-- 4. Seção Lançamentos --}}
+        {{-- 4. Seção: Recentemente Editados (Usando a variável do Controller) --}}
         @php 
-            $keyLanc = 'lancamentos';
-            $productsLanc = $highlights[$keyLanc] ?? collect(); 
-            $showLanc = $settings->{'show_highlight_' . $keyLanc} ?? 0;
+            $showEditados = $settings->show_highlight_lancamentos ?? 0;
+            // AJUSTE: O Controller envia como $lancamentos
+            $productsEditados = $lancamentos ?? collect(); 
         @endphp
 
-        @if ($showLanc && $productsLanc->isNotEmpty())
+        @if ($showEditados && $productsEditados->isNotEmpty())
             <div class="sax-section-container py-4">
                 <div class="container-fluid px-lg-5">
-                    <h2 class="sax-section-title mb-4">{{ $highlightTitles[$keyLanc] }}</h2>
-                    
+                    <h2 class="sax-section-title mb-4">RECENTEMENTE ATUALIZADOS</h2>
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
-                            @foreach ($productsLanc as $item)
-                                @include('home-components.product-card', ['item' => $item])
+                            @foreach ($productsEditados as $item)
+                                <div class="swiper-slide">
+                                    @include('home-components.product-card', ['item' => $item])
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -79,7 +80,31 @@
             </div>
         </section>
 
-        {{-- 6. Seção Destaques --}}
+        {{-- 6. Seção MAIS VISTOS (Ajustado com swiper-slide) --}}
+        @php 
+            $keyMaisVistos = 'famosos'; 
+            $showMaisVistos = $settings->{'show_highlight_' . $keyMaisVistos} ?? 0;
+            $productsMaisVistos = $mostViewed ?? collect();
+        @endphp
+
+        @if ($showMaisVistos && $productsMaisVistos->isNotEmpty())
+            <div class="sax-section-container py-4">
+                <div class="container-fluid px-lg-5">
+                    <h2 class="sax-section-title mb-4">{{ $highlightTitles['mais_vistos'] ?? 'MAIS VISTOS' }}</h2>
+                    <div class="swiper mySwiper">
+                        <div class="swiper-wrapper">
+                            @foreach ($productsMaisVistos as $item)
+                                <div class="swiper-slide"> {{-- ADICIONADO --}}
+                                    @include('home-components.product-card', ['item' => $item])
+                                </div> {{-- ADICIONADO --}}
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- 7. Seção Destaques (Ajustado com swiper-slide) --}}
         @php 
             $keyDest = 'destaque';
             $productsDest = $highlights[$keyDest] ?? collect();
@@ -90,11 +115,12 @@
             <div class="sax-section-container py-4">
                 <div class="container-fluid px-lg-5">
                     <h2 class="sax-section-title mb-4">{{ $highlightTitles[$keyDest] }}</h2>
-                    
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsDest as $item)
-                                @include('home-components.product-card', ['item' => $item])
+                                <div class="swiper-slide"> {{-- ADICIONADO --}}
+                                    @include('home-components.product-card', ['item' => $item])
+                                </div> {{-- ADICIONADO --}}
                             @endforeach
                         </div>
                     </div>

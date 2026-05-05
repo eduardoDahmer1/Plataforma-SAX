@@ -9,7 +9,7 @@ use App\Models\Category;
 use App\Models\Cart;
 use App\Models\Blog;
 use App\Models\Generalsetting;
-use App\Models\Attribute; // Importado para os ícones
+use App\Models\Attribute;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
@@ -19,18 +19,16 @@ class HomeController extends Controller
         // 1. Configurações Gerais
         $settings = Cache::remember('general_settings', 600, fn() => Generalsetting::first());
 
-        // 2. Atributos do Sistema (Ícones: Cabide, Info, Ajuda)
-        // Adicionado para resolver o erro no componente form-home.blade.php
+        // 2. Atributos do Sistema
         $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
 
-        // 3. Tipos de destaques
+        // 3. Tipos de destaques MANUAIS (Removido 'lancamentos' daqui pois agora é automático)
         $highlightTypes = [
             'destaque', 'mais_vendidos', 'melhores_avaliacoes', 'super_desconto',
-            'famosos', 'lancamentos', 'tendencias', 'promocoes',
-            'ofertas_relampago', 'navbar'
+            'famosos', 'tendencias', 'promocoes', 'ofertas_relampago', 'navbar'
         ];
 
-        // 4. Busca produtos destacados
+        // 4. Busca produtos destacados (Manuais via JSON)
         $highlights = [];
         foreach ($highlightTypes as $key) {
             $highlights[$key] = Cache::remember("highlight_products_{$key}", 600, function () use ($key) {
@@ -44,7 +42,32 @@ class HomeController extends Controller
             });
         }
 
-        // 5. Categorias para o "Category Strip"
+        // --- NOVO: 4.1 LANÇAMENTOS (Produtos Editados Recentemente) ---
+        // Agora busca os últimos que foram salvos/editados no Admin
+        $lancamentos = Cache::remember('home_products_updated_at', 600, function () {
+            return Product::where('status', 1)
+                ->where('product_role', 'P')
+                ->whereNotNull('photo')
+                ->where('photo', '!=', '')
+                ->with('brand')
+                ->orderBy('updated_at', 'DESC') // Ordem pelos editados recentemente
+                ->take(12)
+                ->get();
+        });
+
+        // --- 4.2 MAIS VISTOS ---
+        $mostViewed = Cache::remember('home_most_viewed_products', 600, function () {
+            return Product::where('status', 1)
+                ->where('views', '>', 0)
+                ->whereNotNull('photo')
+                ->where('photo', '!=', '')
+                ->with('brand')
+                ->orderBy('views', 'DESC')
+                ->take(12)
+                ->get();
+        });
+
+        // 5. Categorias Strip
         $categoriesStrip = Cache::remember('categories_home_strip_v4', 600, function () {
             $targetSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
             return Category::select('id', 'name', 'slug', 'photo')
@@ -53,13 +76,12 @@ class HomeController extends Controller
                 ->get();
         });
 
-        // 6. Marcas específicas para o "Slider 3D"
+        // 6. Marcas Slider 3D
         $brandsSlider = Cache::remember('home_brands_3d_v2', 600, function () {
             $selectedNames = [
                 'Baccarat', 'Boss', 'Celine', 'JW-PEI', 'Paul & Shark',
                 'Stokke', 'Valentino', 'Veja', 'Vilebrequin', 'Zadig&Voltaire'
             ];
-
             return Brand::select('id', 'name', 'slug', 'image', 'banner')
                 ->whereIn('name', $selectedNames)
                 ->where('status', 1)
@@ -67,26 +89,23 @@ class HomeController extends Controller
                 ->get();
         });
 
-        // 7. Dados para Filtros e Menus
-        $allCategories = Cache::remember(
-            'categories_all',
-            600,
-            fn() =>
+        // 7. Dados Gerais
+        $allCategories = Cache::remember('categories_all', 600, fn() =>
             Category::selectRaw("id, COALESCE(NULLIF(name,''),slug) as name, slug")->orderBy('name')->get()
         );
 
-        // 8. Blog
         $blogs = Cache::remember('home_blogs', 600, fn() => Blog::latest()->take(9)->get());
 
-        // 9. Carrinho
         $cartItems = auth()->check()
             ? Cart::where('user_id', auth()->id())->pluck('quantity', 'product_id')->toArray()
             : [];
 
         return view('home', [
             'settings'        => $settings,
-            'attribute'       => $attribute, // Variável enviada para a View
+            'attribute'       => $attribute,
             'highlights'      => $highlights,
+            'lancamentos'     => $lancamentos, // Enviando a nova query automática
+            'mostViewed'      => $mostViewed,
             'categories'      => $categoriesStrip,
             'allCategories'   => $allCategories,
             'brands'          => $brandsSlider,

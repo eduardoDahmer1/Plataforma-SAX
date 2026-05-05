@@ -157,79 +157,7 @@
 
 {{-- JS migrado a app-custom.js --}}
 @endsection
-<style>
-    /* Container e Header */
-.sax-edit-wrapper {
-    font-family: 'Inter', sans-serif;
-    max-width: 800px;
-}
 
-.sax-title {
-    font-weight: 700;
-    font-size: 1.5rem;
-    color: #1a1a1a;
-}
-
-.sax-divider-dark {
-    width: 50px;
-    height: 3px;
-    background-color: #000;
-    margin-top: 15px;
-}
-
-/* Formulário e Inputs */
-.sax-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    color: #888;
-    margin-bottom: 10px;
-}
-
-.sax-input {
-    border: none !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-    border-radius: 0 !important;
-    padding: 12px 0 !important;
-    background-color: transparent !important;
-    font-size: 0.95rem;
-    color: #1a1a1a;
-    transition: border-color 0.3s ease;
-}
-
-.sax-input:focus {
-    box-shadow: none !important;
-    border-color: #000 !important;
-    color: #000;
-}
-
-/* Selects */
-select.sax-input {
-    background-position: right 0 center;
-    padding-right: 20px !important;
-}
-
-/* Botão de Envio */
-.btn-sax-submit {
-    border-radius: 0;
-    font-size: 0.8rem;
-    background-color: #000;
-    border: 1px solid #000;
-    transition: all 0.4s ease;
-}
-
-.btn-sax-submit:hover {
-    background-color: #fff;
-    color: #000;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .sax-edit-wrapper {
-        padding: 0 15px;
-    }
-}
-</style>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     try {

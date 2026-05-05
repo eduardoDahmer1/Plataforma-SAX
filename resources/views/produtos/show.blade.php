@@ -186,37 +186,37 @@
             </div>
         </div>
 
-        {{-- SEÇÕES DE DESTAQUE --}}
-        @php
-            $highlightTitles = [
-                'lancamentos' => __('messages.recem_chegados'),
-                'destaque' => __('messages.artigos_similares'),
-            ];
-        @endphp
-
-        @foreach (['destaque', 'lancamentos'] as $key)
-            @php
-                $prods = $highlights[$key] ?? collect();
-                $show = $settings->{'show_highlight_' . $key} ?? 1;
-            @endphp
-
-            @if ($show && $prods->isNotEmpty())
-                <section class="sax-section-container py-5 border-top {{ $key == 'lancamentos' ? 'bg-light' : '' }}">
-                    <div class="container-fluid px-lg-5">
-                        <h2 class="sax-section-title mb-4">{{ $highlightTitles[$key] }}</h2>
-                        <div class="swiper productSwiper">
-                            <div class="swiper-wrapper">
-                                @foreach ($prods as $item)
-                                    <div class="swiper-slide">
-                                        @include('home-components.product-card', ['item' => $item])
-                                    </div>
-                                @endforeach
-                            </div>
+        {{-- PRODUTOS SIMILARES --}}
+        @if (isset($similares) && $similares->isNotEmpty())
+            <section class="sax-section-container py-5 border-top">
+                <div class="container-fluid px-lg-5">
+                    <h2 class="sax-section-title mb-4">{{ __('messages.artigos_similares') }}</h2>
+                    <div class="swiper productSwiper">
+                        <div class="swiper-wrapper">
+                            @foreach ($similares as $item)
+                                @include('home-components.product-card', ['item' => $item])
+                            @endforeach
                         </div>
                     </div>
-                </section>
-            @endif
-        @endforeach
+                </div>
+            </section>
+        @endif
+
+        {{-- MAIS VISTOS --}}
+        @if (isset($mostViewed) && $mostViewed->isNotEmpty())
+            <section class="sax-section-container py-5 border-top bg-light">
+                <div class="container-fluid px-lg-5">
+                    <h2 class="sax-section-title mb-4">MAIS VISTOS</h2>
+                    <div class="swiper productSwiper">
+                        <div class="swiper-wrapper">
+                            @foreach ($mostViewed as $item)
+                                @include('home-components.product-card', ['item' => $item])
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </section>
+        @endif
         @include('home-components.form-home')
     </div>
 @endsection

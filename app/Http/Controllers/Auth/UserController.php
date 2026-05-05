@@ -17,11 +17,32 @@ class UserController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $orders = Order::where('user_id', $user->id)
-                        ->orderBy('created_at', 'desc')
-                        ->get();
 
-        return view('users.dashboard', compact('user', 'orders'));
+        // 1. Busca os pedidos do usuário
+        $orders = Order::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+
+        // 2. BUSCA SEGURA DO HISTÓRICO (Compatível com MySQL antigo)
+
+        // Primeiro: Pegamos apenas os IDs dos produtos que ele viu
+        $productIds = \DB::table('product_views_history')->where('user_id', $user->id)->orderBy('updated_at', 'DESC')->limit(12)->pluck('product_id')->toArray();
+
+        $userHistory = collect(); // Inicializa vazio
+
+        if (!empty($productIds)) {
+            // Segundo: Buscamos os produtos reais usando esses IDs
+            $userHistory = \App\Models\Product::whereIn('products.id', $productIds)
+                ->where('status', 1)
+                ->with('brand')
+                // Join para garantir a ordem cronológica exata do histórico
+                ->join('product_views_history', 'products.id', '=', 'product_views_history.product_id')
+                ->where('product_views_history.user_id', $user->id)
+                ->orderBy('product_views_history.updated_at', 'DESC')
+                ->select('products.*')
+                ->get()
+                ->unique('id'); // Garante que não repita se houver lixo no banco
+        }
+
+        return view('users.dashboard', compact('user', 'orders', 'userHistory'));
     }
 
     public function edit()
@@ -37,25 +58,22 @@ class UserController extends Controller
 
         // 1. Validação (Aumentei o max de country para 100 conforme sua nova migration)
         $request->validate([
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email|max:255|unique:users,email,' . $user->id,
-            'country'       => 'nullable|string|max:100',
-            'address'       => 'nullable|string|max:255',
-            'number'        => 'nullable|string|max:20',
-            'district'      => 'nullable|string|max:255',
-            'complement'    => 'nullable|string|max:255',
-            'city'          => 'nullable|string|max:255',
-            'state'         => 'nullable|string|max:255',
-            'document'      => 'nullable|string|max:255',
-            'postal_code'   => 'nullable|string|max:20',
-            'cep'           => 'nullable|string|max:20',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'country' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:255',
+            'number' => 'nullable|string|max:20',
+            'district' => 'nullable|string|max:255',
+            'complement' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'document' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'cep' => 'nullable|string|max:20',
         ]);
 
         // 2. Coleta os dados básicos
-        $data = $request->only([
-            'name', 'email', 'country', 'address', 'number', 
-            'district', 'complement', 'city', 'state', 'document', 'additional_info'
-        ]);
+        $data = $request->only(['name', 'email', 'country', 'address', 'number', 'district', 'complement', 'city', 'state', 'document', 'additional_info']);
 
         // 3. Sincroniza o CEP / Postal Code
         if ($request->filled('postal_code')) {
@@ -83,7 +101,7 @@ class UserController extends Controller
         $data['shipping_postal_code'] = $data['cep'] ?? null;
 
         // 6. Ajuste do 'already_registered' (booleano)
-        $data['already_registered'] = ($request->already_registered == '1' || $request->already_registered == 'si') ? 1 : 0;
+        $data['already_registered'] = $request->already_registered == '1' || $request->already_registered == 'si' ? 1 : 0;
 
         // 7. Tentativa de Salvamento com Log de Erro
         try {
@@ -91,18 +109,18 @@ class UserController extends Controller
             return back()->with('success', 'Perfil atualizado com sucesso!');
         } catch (\Exception $e) {
             // Retorna o erro exato do SQL se a migration ainda não tiver sido aplicada ou falhar
-            return back()->withErrors(['msg' => 'Erro no banco: ' . $e->getMessage()])->withInput();
+            return back()
+                ->withErrors(['msg' => 'Erro no banco: ' . $e->getMessage()])
+                ->withInput();
         }
     }
 
     public function orders()
     {
         $user = Auth::user();
-        $orders = Order::where('user_id', $user->id)
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+        $orders = Order::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
 
-        return view('users.orders', compact('orders')); 
+        return view('users.orders', compact('orders'));
     }
 
     public function showOrder($id)
@@ -110,15 +128,11 @@ class UserController extends Controller
         $user = Auth::user();
 
         // Busca o pedido com os itens
-        $order = Order::with('items')
-                    ->where('id', $id)
-                    ->where('user_id', $user->id)
-                    ->firstOrFail();
+        $order = Order::with('items')->where('id', $id)->where('user_id', $user->id)->firstOrFail();
 
         // BUSCA AS CONTAS BANCÁRIAS
         // Removi o 'status' para evitar o erro de coluna não encontrada
-        $bankAccounts = PaymentMethod::whereNotNull('bank_details')
-                                    ->get();
+        $bankAccounts = PaymentMethod::whereNotNull('bank_details')->get();
 
         // PASSA AS DUAS VARIÁVEIS PARA A VIEW
         return view('users.order', compact('order', 'bankAccounts'));
@@ -129,44 +143,36 @@ class UserController extends Controller
     {
         $request->validate(['cupon' => 'required|string']);
         $user = Auth::user();
-    
-        $cupon = Cupon::where('codigo', $request->cupon)
-                      ->where('data_inicio', '<=', now())
-                      ->where('data_final', '>=', now())
-                      ->first();
-    
+
+        $cupon = Cupon::where('codigo', $request->cupon)->where('data_inicio', '<=', now())->where('data_final', '>=', now())->first();
+
         if (!$cupon) {
             return back()->withErrors(['cupon' => 'Cupom inválido ou expirado.']);
         }
-    
+
         $cartTotal = session()->get('cart_total', 0);
-    
+
         if ($cupon->valor_minimo && $cartTotal < $cupon->valor_minimo) {
             return back()->withErrors(['cupon' => "O pedido deve ser mínimo de {$cupon->valor_minimo} para este cupom."]);
         }
-    
+
         if ($cupon->valor_maximo && $cartTotal > $cupon->valor_maximo) {
             return back()->withErrors(['cupon' => "O pedido deve ser máximo de {$cupon->valor_maximo} para este cupom."]);
         }
-    
+
         // Calcula desconto
-        $discount = $cupon->tipo === 'percentual'
-            ? ($cartTotal * $cupon->montante) / 100
-            : $cupon->montante;
-    
+        $discount = $cupon->tipo === 'percentual' ? ($cartTotal * $cupon->montante) / 100 : $cupon->montante;
+
         // Salva na sessão (mantém compatibilidade)
         session()->put('cupon', [
             'id' => $cupon->id,
             'codigo' => $cupon->codigo,
             'discount' => $discount,
         ]);
-    
+
         // Salva também no banco para histórico
-        UserCupon::updateOrCreate(
-            ['user_id' => $user->id, 'cupon_id' => $cupon->id],
-            ['desconto' => round($discount, 2)]
-        );
-    
+        UserCupon::updateOrCreate(['user_id' => $user->id, 'cupon_id' => $cupon->id], ['desconto' => round($discount, 2)]);
+
         return back()->with('success', "Cupom '{$cupon->codigo}' aplicado! Desconto: {$discount}");
     }
 
@@ -180,11 +186,9 @@ class UserController extends Controller
     public function cupons()
     {
         $user = Auth::user();
-    
-        $cupons = UserCupon::with('cupon')
-                    ->where('user_id', $user->id)
-                    ->get();
-    
+
+        $cupons = UserCupon::with('cupon')->where('user_id', $user->id)->get();
+
         return view('users.cupon', compact('cupons'));
     }
 

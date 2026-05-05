@@ -8,16 +8,17 @@ use App\Models\Generalsetting;
 
 class AdminHighlightController extends Controller
 {
-    // 🔹 Reduzido para conter apenas as seções ativas
+    // 🔹 Adicionado 'famosos' para controlar a nova seção de Mais Vistos
     protected $sections = [
         'destaque',
         'lancamentos',
+        'famosos', 
     ];
 
     public function index()
     {
         $settings = Generalsetting::first();
-        // Certifique-se de que a view exiba apenas os checkboxes para estas duas seções
+        // A view agora receberá as três seções para exibição
         return view('admin.sections_home.index', compact('settings'));
     }
 
@@ -25,8 +26,9 @@ class AdminHighlightController extends Controller
     {
         $settings = Generalsetting::first();
 
-        // 🔹 O loop agora atualizará apenas 'show_highlight_destaque' e 'show_highlight_lancamentos'
+        // 🔹 O loop agora atualizará destaque, lancamentos e famosos
         foreach ($this->sections as $section) {
+            // O Laravel verifica se o checkbox foi marcado no request
             $settings->{'show_highlight_'.$section} = $request->has($section) ? 1 : 0;
         }
 

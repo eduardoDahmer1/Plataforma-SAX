@@ -27,6 +27,7 @@ class Product extends Model
         'size_price',
         'color',
         'previous_price',
+        'views',
         'status',
         'views',
         'colors',

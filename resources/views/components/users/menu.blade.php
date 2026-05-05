@@ -4,6 +4,9 @@
     <div class="sax-menu-group">
         <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_minha_conta') }}</span>
         <div class="sax-menu-items">
+            <a href="{{ route('user.dashboard') }}" class="sax-menu-link">
+                <i class="fa fa-user-edit"></i> {{ __('messages.inicio_menu') }}
+            </a>
             <a href="{{ route('user.profile.edit') }}" class="sax-menu-link">
                 <i class="fa fa-user-edit"></i> {{ __('messages.menu_editar_dados') }}
             </a>
@@ -20,9 +23,9 @@
             <a href="{{ route('user.orders') }}" class="sax-menu-link">
                 <i class="fa fa-list"></i> {{ __('messages.menu_historico') }}
             </a>
-            <a href="{{ route('user.cupons') }}" class="sax-menu-link">
+            {{-- <a href="{{ route('user.cupons') }}" class="sax-menu-link">
                 <i class="fa fa-ticket-alt"></i> {{ __('messages.cupom') }}
-            </a>
+            </a> --}}
         </div>
     </div>
 
@@ -85,73 +88,4 @@
         </div>
     </div>
 </div>
-<style>
-    /* Container do Menu */
-.sax-sidebar-menu {
-    background: #fff;
-    padding: 20px 0;
-}
 
-/* Rótulos das Seções */
-.sax-menu-label {
-    display: block;
-    font-size: 0.65rem;
-    font-weight: 800;
-    color: #999;
-    padding: 0 15px 10px 15px;
-    border-bottom: 1px solid #f0f0f0;
-    margin-bottom: 10px;
-}
-
-/* Itens do Menu */
-.sax-menu-items {
-    display: flex;
-    flex-direction: column;
-}
-
-.sax-menu-link {
-    padding: 12px 15px;
-    color: #333;
-    text-decoration: none !important;
-    font-size: 0.85rem;
-    font-weight: 400;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s ease;
-}
-
-.sax-menu-link i {
-    width: 25px;
-    font-size: 0.9rem;
-    color: #555;
-    transition: all 0.2s ease;
-}
-
-/* Hover & Active */
-.sax-menu-link:hover {
-    background-color: #f8f8f8;
-    color: #000;
-    padding-left: 20px;
-}
-
-.sax-menu-link:hover i {
-    color: #000;
-}
-
-/* Estilo do Modal */
-.sax-modal-input {
-    border: none;
-    border-bottom: 2px solid #eee;
-    border-radius: 0;
-    font-size: 0.9rem;
-}
-
-.sax-modal-input:focus {
-    box-shadow: none;
-    border-color: #000;
-}
-
-.letter-spacing-1 { letter-spacing: 1.5px; }
-.letter-spacing-2 { letter-spacing: 3px; }
-.x-small { font-size: 0.7rem; }
-</style>

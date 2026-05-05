@@ -36,14 +36,13 @@
                                 <img src="{{ $product->photo ? asset('storage/' . $product->photo) : asset('storage/uploads/noimage.webp') }}"
                                     class="card-img-top img-fluid rounded-0" alt="{{ $product->external_name }}">
                             </a>
-
                             {{-- Botão de Remover (X) --}}
                             <div class="position-absolute top-0 end-0 p-3">
-                                <form action="{{ route('user.preferences.toggle') }}" method="POST"
-                                    class="remove-fav-form">
+                                <form action="{{ route('user.preferences.toggle') }}" method="POST" class="remove-fav-form">
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    <button type="submit" class="btn-remove-jw" title="{{ __('messages.remover_wishlist') }}">
+                                    {{-- Adicionei a classe confirm-remover --}}
+                                    <button type="submit" class="btn-remove-jw confirm-remover" title="{{ __('messages.remover_wishlist') }}">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="1.2">
                                             <path d="M18 6L6 18M6 6l12 12"></path>
@@ -83,107 +82,32 @@
 </div>
 @endsection
 
-<style>
-    /* Estilo Base */
-    .sax-wishlist-wrapper {
-        font-family: 'Inter', sans-serif;
-    }
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.querySelectorAll('.remove-fav-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Trava o envio automático
+            
+            const formContainer = this;
 
-    .sax-sku {
-        font-size: 0.6rem;
-    }
-
-    .sax-product-name {
-        font-size: 0.7rem;
-        height: 2.4em;
-        line-height: 1.2;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        text-transform: uppercase;
-    }
-
-    .sax-brand {
-        font-size: 0.8rem;
-        color: #000;
-        letter-spacing: 0.5px;
-    }
-
-    .sax-divider-dark {
-        width: 40px;
-        height: 3px;
-        background: #000;
-        margin-top: 10px;
-    }
-
-    /* Card JW Style */
-    .jw-product-card {
-        background-color: #f2f2f2 !important;
-        transition: opacity 0.3s ease;
-    }
-
-    .jw-product-card:hover {
-        opacity: 0.9;
-    }
-
-    .jw-img-container {
-        aspect-ratio: 4 / 5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background-color: #f2f2f2;
-    }
-
-    .jw-img-container img {
-        width: 100%;
-        object-fit: contain;
-        /* 'contain' para bolsas/produtos com fundo limpo */
-        mix-blend-mode: multiply;
-    }
-
-    /* Tipografia */
-    .jw-brand {
-        font-size: 0.7rem;
-        letter-spacing: 0.1em;
-        color: #000;
-    }
-
-    .jw-product-name {
-        font-size: 0.8rem;
-        letter-spacing: 0.02em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .jw-price {
-        font-size: 0.85rem;
-        color: #000;
-    }
-
-    /* Botão de Remover */
-    .btn-remove-jw {
-        background: transparent;
-        border: none;
-        color: #000;
-        padding: 0;
-        transition: transform 0.2s ease, opacity 0.2s;
-        opacity: 0.6;
-    }
-
-    .btn-remove-jw:hover {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-
-    /* Utilitários */
-    .letter-spacing-2 {
-        letter-spacing: 3px;
-    }
-
-    .x-small {
-        font-size: 0.7rem;
-    }
-</style>
+            Swal.fire({
+                title: 'TEM CERTEZA?',
+                text: "Este item será removido da sua lista de desejos.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#000000', // Preto Sax
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'SIM, REMOVER',
+                cancelButtonText: 'NÃO',
+                border: 'none',
+                borderRadius: '0' // Estilo quadrado Sax
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formContainer.submit(); // Envia se confirmar
+                }
+            })
+        });
+    });
+</script>
+@endpush

@@ -11,16 +11,20 @@ class Generalsetting extends Model
 
     protected $table = 'generalsettings';
 
-    // 🔹 Apenas os campos que serão utilizados agora
+    // Adicionada a coluna 'show_highlight_famosos' para controlar os Mais Vistos
     protected $fillable = [
         'site_name',
         'show_highlight_destaque',
         'show_highlight_lancamentos',
+        'show_highlight_famosos', // <--- Nova aqui
+        'show_highlight_ofertas_relampago',  
     ];
 
-    // 🔹 Casts simplificados para boolean
+    // Garantindo que o Laravel trate o valor como booleano (0 ou 1)
     protected $casts = [
         'show_highlight_destaque' => 'boolean',
         'show_highlight_lancamentos' => 'boolean',
+        'show_highlight_famosos' => 'boolean', // <--- Nova aqui
+        'show_highlight_ofertas_relampago'=> 'boolean',
     ];
 }

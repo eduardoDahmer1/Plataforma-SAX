@@ -21,7 +21,9 @@
                 @php
                     $sections = [
                         'lancamentos' => ['label' => __('messages.novos_lancamentos_label'), 'icon' => 'fa-calendar-plus'],
-                        'destaque' => ['label' => __('messages.produtos_destacados_label'), 'icon' => 'fa-star'],
+                        'destaque'    => ['label' => __('messages.produtos_destacados_label'), 'icon' => 'fa-star'],
+                        // Adicionando a nova seção utilizando a coluna 'famosos' que já existe no seu banco
+                        'famosos'     => ['label' => 'PRODUTOS MAIS VISTOS', 'icon' => 'fa-eye'], 
                     ];
                 @endphp
 
@@ -41,6 +43,7 @@
                         </div>
 
                         <div class="form-check form-switch">
+                            {{-- O name="{{ $key }}" enviará 'famosos', 'destaque', etc. --}}
                             <input class="form-check-input sax-switch" type="checkbox" name="{{ $key }}" id="{{ $key }}"
                                 {{ $settings->{'show_highlight_'.$key} ? 'checked' : '' }}>
                         </div>

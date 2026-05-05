@@ -75,5 +75,10 @@
     <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
 @endif
 
+{{-- 7. User / Dashboard (Adicionado aqui) --}}
+@if(Route::is('user.*') || Route::is('dashboard'))
+    <link href="{{ asset('css/user.css') }}?v={{ file_exists(public_path('css/user.css')) ? filemtime(public_path('css/user.css')) : time() }}" rel="stylesheet">
+@endif
+
 @stack('styles')
 @stack('head-scripts')

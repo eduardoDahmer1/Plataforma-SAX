@@ -68,7 +68,7 @@
                         </div>
                         <div class="col-12" id="sandboxControl">
                             <div class="form-check form-switch mt-2">
-                                <input type="checkbox" name="sandbox" value="1" class="form-check-input cursor-pointer" id="sandbox" {{ (isset($method) && ($method->credentials['sandbox'] ?? false)) ? 'checked' : '' }}>
+                                <input type="checkbox" name="sandbox" value="1" class="form-check-input cursor-pointer" id="sandbox" {{ (isset($method) && ($method->settings['sandbox'] ?? false)) ? 'checked' : '' }}>
                                 <label class="form-check-label x-small fw-bold text-uppercase ms-2 cursor-pointer" for="sandbox">
                                     {{ __('messages.usar_sandbox_label') }}
                                 </label>

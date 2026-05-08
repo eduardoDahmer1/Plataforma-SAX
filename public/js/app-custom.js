@@ -181,8 +181,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const registerForm = document.getElementById('registerForm');
     const forgotForm = document.getElementById('forgotForm');
     const modalTitle = document.getElementById('modalTitle');
+    const loginModal = document.getElementById('loginModal');
+    const authRedirectFields = document.querySelectorAll('[data-auth-redirect-field]');
 
     if (!loginForm) return;
+
+    function setAuthRedirect(url) {
+        authRedirectFields.forEach(field => {
+            field.value = url || window.location.href;
+        });
+    }
 
     function showForm(form) {
         [loginForm, registerForm, forgotForm].forEach(f => f.classList.add('d-none'));
@@ -195,6 +203,28 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'forgotForm': modalTitle.innerHTML = '<i class="fas fa-envelope me-2"></i>' + lang.recuperar_senha; break;
         }
     }
+
+    setAuthRedirect(window.location.href);
+
+    loginModal?.addEventListener('show.bs.modal', function(event) {
+        const trigger = event.relatedTarget;
+        setAuthRedirect(trigger?.dataset.redirectTo || window.location.href);
+        showForm(loginForm);
+    });
+
+    document.querySelectorAll('.js-requires-login').forEach(trigger => {
+        trigger.addEventListener('click', function(event) {
+            event.preventDefault();
+            setAuthRedirect(this.dataset.redirectTo || window.location.href);
+
+            if (loginModal && typeof bootstrap !== 'undefined') {
+                bootstrap.Modal.getOrCreateInstance(loginModal).show();
+                return;
+            }
+
+            window.location.href = this.href;
+        });
+    });
 
     // Eventos de Troca
     document.getElementById('showRegister').addEventListener('click', e => { e.preventDefault(); showForm(registerForm); });

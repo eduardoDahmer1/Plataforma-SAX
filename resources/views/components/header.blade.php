@@ -136,15 +136,7 @@
 
             {{-- Busca Desktop --}}
             <div class="col-lg-7 d-none d-lg-block">
-                <form action="{{ route('search') }}" method="GET" class="sax-search-container">
-                    <div class="input-group">
-                        <span class="input-group-text bg-transparent border-0">
-                            <i class="fa fa-search"></i>
-                        </span>
-                        <input type="text" name="search" class="form-control sax-search-input"
-                            placeholder="{{ __('messages.pesquisar') }}" value="{{ request('search') }}">
-                    </div>
-                </form>
+                <x-search />
             </div>
 
             {{-- Ícones de Ação --}}
@@ -263,24 +255,82 @@
     <div class="drawer-overlay" id="drawerOverlay"></div>
 
     {{-- 6. SEARCH OVERLAY MOBILE --}}
-    <div id="mobileSearchOverlay" class="mobile-search-overlay">
-        <div class="p-4 text-end">
-            <button class="btn-close-search" id="closeSearch">&times;</button>
-        </div>
-        <div class="container">
-            <form action="{{ route('search') }}" method="GET">
-                <div class="sax-search-container bg-white border">
-                    <div class="input-group">
-                        <span class="input-group-text bg-transparent border-0"><i class="fa fa-search"></i></span>
-                        <input type="text" name="search" id="mobileSearchInput" class="form-control sax-search-input"
-                            placeholder="{{ __('messages.pesquisar') }}">
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    <x-search-mobile />
+
 </header>
 
 @include('components.modal-login')
 
 {{-- JS migrado a app-custom.js --}}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInputs = document.querySelectorAll('.search-autocomplete-input');
+
+    searchInputs.forEach(input => {
+        const form = input.closest('form');
+        const resultsContainer = form.querySelector('.autocomplete-results');
+        let timeout = null;
+
+        input.addEventListener('input', function () {
+            const query = this.value.trim();
+            clearTimeout(timeout);
+
+            if (query.length < 2) {
+                resultsContainer.innerHTML = '';
+                resultsContainer.classList.add('d-none');
+                return;
+            }
+
+            timeout = setTimeout(() => {
+                fetch(`/search/autocomplete?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = '';
+
+                        if (data && data.length > 0) {
+                            data.forEach(product => {
+                                // Definimos o título principal como Name
+                                // E o External Name como um subtexto, se existir e for diferente
+                                const secondaryName = (product.external_name && product.external_name !== product.name) 
+                                    ? `<small class="text-muted d-block" style="font-size: 10px;">${product.external_name}</small>` 
+                                    : '';
+
+                                html += `
+                                    <a href="${product.url}" class="autocomplete-item">
+                                        <img src="${product.photo}" class="autocomplete-img" onerror="this.src='https://placehold.co/50x50?text=SEM+FOTO';">
+                                        <div class="autocomplete-info">
+                                            <div class="autocomplete-left">
+                                                <span class="autocomplete-title">${product.name}</span>
+                                                ${secondaryName}
+                                                <span class="autocomplete-sku">SKU: ${product.sku}</span>
+                                            </div>
+                                            <div class="autocomplete-right">
+                                                <span class="autocomplete-brand">${product.brand}</span>
+                                                <span class="autocomplete-price">U$ ${product.price}</span>
+                                            </div>
+                                        </div>
+                                    </a>`;
+                            });
+                            resultsContainer.innerHTML = html;
+                            resultsContainer.classList.remove('d-none');
+                        } else {
+                            resultsContainer.innerHTML = '<div class="p-3 text-center text-muted">Nenhum produto encontrado.</div>';
+                            resultsContainer.classList.remove('d-none');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erro na busca:', err);
+                        resultsContainer.classList.add('d-none');
+                    });
+            }, 300);
+        });
+
+        // Fecha a lista ao clicar fora do formulário
+        document.addEventListener('click', function (e) {
+            if (!form.contains(e.target)) {
+                resultsContainer.classList.add('d-none');
+            }
+        });
+    });
+});
+</script>

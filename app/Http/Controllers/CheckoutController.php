@@ -144,10 +144,10 @@ class CheckoutController extends Controller
                         break;
                     case '2':
                         $order->update([
-                    'street'     => $request->input(street),
-                    'number'     => $request->input(number),
-                    'district'   => $request->input(district),
-                    'complement' => $request->input(complement),
+                    'street'     => $request->input('street'),
+                    'number'     => $request->input('number'),
+                    'district'   => $request->input('district'),
+                    'complement' => $request->input('complement'),
                     'city'    => $request->input('city') ?? '',
                     'state'   => $request->input('state') ?? '',
                         'cep'     => $request->input('cep') ?? '',

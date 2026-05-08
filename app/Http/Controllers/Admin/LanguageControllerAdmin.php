@@ -16,12 +16,15 @@ class LanguageControllerAdmin extends Controller
 
         $languages = Language::orderBy('key')
             ->when($search, function ($query, $search) {
-                return $query->where('key', 'like', "%{$search}%")
-                             ->orWhere('pt', 'like', "%{$search}%")
-                             ->orWhere('en', 'like', "%{$search}%")
-                             ->orWhere('es', 'like', "%{$search}%");
+                return $query->where(function($q) use ($search) {
+                    $q->where('key', 'like', "%{$search}%")
+                    ->orWhere('pt', 'like', "%{$search}%")
+                    ->orWhere('en', 'like', "%{$search}%")
+                    ->orWhere('es', 'like', "%{$search}%");
+                });
             })
-            ->get();
+            ->paginate(40) // Troca get() por paginate(40)
+            ->withQueryString(); // Mantém o termo de busca nos links das páginas
 
         return view('admin.languages.index', compact('languages', 'search'));
     }

@@ -67,6 +67,7 @@ Route::get('/testar-email', function () {
 // --- Public Routes ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::get('/search/autocomplete', [App\Http\Controllers\SearchController::class, 'autocomplete'])->name('search.autocomplete');
 Route::get('/institucional', [InstitucionalController::class, 'index'])->name('institucional.index');
 Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.page');
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');

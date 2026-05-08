@@ -121,4 +121,69 @@ class SearchController extends Controller
             default      => $query->orderBy('id', 'desc'),
         };
     }
+    
+    public function autocomplete(Request $request)
+    {
+        try {
+            $search = $request->get('q');
+
+            if (empty($search) || strlen($search) < 2) {
+                return response()->json([]);
+            }
+
+            $term = "%{$search}%";
+
+            $products = Product::query()
+                ->select(['id', 'name', 'external_name', 'sku', 'price', 'photo', 'slug', 'brand_id', 'category_id'])
+                ->with(['brand:id,name', 'category:id,name'])
+                ->where('status', 1)
+                ->where('product_role', 'P')
+                ->where('stock', '>', 0)
+                ->whereNotNull('photo')
+                ->where('photo', '!=', '')
+                ->where(function ($q) use ($term) {
+                    // A ordem aqui no WHERE não afeta o resultado final, 
+                    // mas mantive o name primeiro por organização
+                    $q->where('name', 'like', $term)
+                    ->orWhere('external_name', 'like', $term)
+                    ->orWhere('sku', 'like', $term);
+                })
+                /* 
+                ORDENAÇÃO PRIORITÁRIA:
+                1. Primeiro os que o 'name' começa exatamente com o que foi digitado
+                2. Depois por ordem alfabética do name
+                */
+                ->orderByRaw("CASE 
+                    WHEN name LIKE ? THEN 1 
+                    WHEN name LIKE ? THEN 2 
+                    ELSE 3 
+                    END", [$search, $search . '%'])
+                ->orderBy('name', 'asc')
+                ->limit(50) // Aumentado para 50 produtos
+                ->get();
+
+            $results = $products->map(function($product) {
+                // Ajuste de URL da foto
+                $photoPath = (str_contains($product->photo, 'http')) 
+                    ? $product->photo 
+                    : asset('storage/' . $product->photo);
+
+                return [
+                    // Exibe o external_name se existir, senão o name, mas a busca priorizou o name
+                    'name'     => $product->name ?? $product->external_name,
+                    'sku'      => $product->sku,
+                    'price'    => number_format($product->price, 2, '.', ','),
+                    'photo'    => $photoPath,
+                    'brand'    => $product->brand->name ?? 'SAX',
+                    'category' => $product->category->name ?? '',
+                    'url'      => route('produto.show', $product->slug) 
+                ];
+            });
+
+            return response()->json($results);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

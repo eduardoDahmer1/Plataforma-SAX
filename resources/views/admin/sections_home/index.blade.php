@@ -24,6 +24,8 @@
                         'destaque'    => ['label' => __('messages.produtos_destacados_label'), 'icon' => 'fa-star'],
                         // Adicionando a nova seção utilizando a coluna 'famosos' que já existe no seu banco
                         'famosos'     => ['label' => 'PRODUTOS MAIS VISTOS', 'icon' => 'fa-eye'], 
+                        'similares'   => ['label' => 'PRODUTOS SIMILARES', 'icon' => 'fa-layer-group'],
+                        'vistos_recentemente' => ['label' => 'VISTOS RECENTEMENTE', 'icon' => 'fa-history'],
                     ];
                 @endphp
 

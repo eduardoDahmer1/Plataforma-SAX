@@ -1140,11 +1140,41 @@ body {
 .mobile-search-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     z-index: 2000;
-    display: none;
+    display: none; /* Alterado para flex via JS quando ativo */
+    
+    /* Centralização total */
+    align-items: center; 
+    justify-content: center;
+    padding: 20px;
+
+    /* Desfoque do fundo (Site atrás) */
+    background: rgba(255, 255, 255, 0.4); /* Um branco bem translúcido */
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    
+    transition: all 0.3s ease;
+}
+
+/* Quando o overlay estiver ativo */
+.mobile-search-overlay.active {
+    display: flex;
+}
+
+/* Estilizando o container da busca dentro do overlay */
+.mobile-search-overlay .sax-search-container {
+    width: 100%;
+    max-width: 500px; /* Não deixa ficar gigante em telas maiores */
+    background: #fff;
+    padding: 15px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transform: translateY(-20px); /* Leve efeito de subida */
+    animation: slideIn 0.3s forwards;
+}
+
+@keyframes slideIn {
+    to { transform: translateY(0); opacity: 1; }
 }
 
 .mobile-search-overlay.active {
@@ -1395,3 +1425,86 @@ body {
 .btn-go-to-cart:hover {
     background: #333;
 }
+/* Garante que o form não esconda o que sai dele */
+form.position-relative {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* Container Principal de Resultados */
+.autocomplete-results {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border-radius: 0 0 12px 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+    max-height: 400px !important;
+    overflow-y: auto !important;
+    z-index: 999999 !important; /* Valor extremo para ficar na frente de tudo */
+    margin-top: 2px !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    display: block; /* O d-none do Bootstrap controlará a visibilidade inicial */
+}
+
+/* Item da Lista */
+.autocomplete-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #f1f1f1 !important;
+    text-decoration: none !important;
+    color: #333 !important;
+    transition: background 0.2s ease !important;
+}
+
+.autocomplete-item:last-child { border-bottom: none !important; }
+.autocomplete-item:hover { 
+    background-color: #f8f9fa !important; 
+    text-decoration: none !important; 
+    color: #333 !important;
+}
+
+/* Imagem */
+.autocomplete-img {
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+    margin-right: 14px !important;
+    border: 1px solid #eaeaea !important;
+    flex-shrink: 0 !important;
+}
+
+/* Info e Grid */
+.autocomplete-info {
+    flex-grow: 1 !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px !important;
+    align-items: center !important;
+}
+
+.autocomplete-left { display: flex !important; flex-direction: column !important; min-width: 0 !important; }
+.autocomplete-right { display: flex !important; flex-direction: column !important; text-align: right !important; }
+
+/* Tipografia */
+.autocomplete-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.autocomplete-sku { font-size: 11px !important; color: #888 !important; }
+.autocomplete-brand { font-size: 11px !important; font-weight: bold !important; text-transform: uppercase !important; color: #666 !important; }
+.autocomplete-price { font-size: 14px !important; font-weight: 700 !important; color: #000 !important; }
+
+/* Scrollbar Customizado */
+.autocomplete-results::-webkit-scrollbar { width: 6px; }
+.autocomplete-results::-webkit-scrollbar-track { background: #f1f1f1; }
+.autocomplete-results::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }

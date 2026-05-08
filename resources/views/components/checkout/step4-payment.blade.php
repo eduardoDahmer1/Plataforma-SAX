@@ -92,3 +92,10 @@
         payment_deposito: "{{ __('messages.instrucao_pagamento_deposito') }}"
     };
 </script>
+
+<style>
+    .flex-wrap .active{
+        background: #000000;
+        color: white;
+    }
+</style>

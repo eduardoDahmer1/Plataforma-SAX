@@ -7,7 +7,7 @@
             {{-- Área da Imagem com fundo cinza JW --}}
             <div class="jw-img-container position-relative">
                 <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-0"
-                    alt="{{ $item->external_name }}">
+                    alt="{{ $item->name }}">
 
                 {{-- Ícone de Favorito - Estilo Outline Fino --}}
                 <div class="position-absolute top-0 end-0 p-3">
@@ -23,7 +23,7 @@
                 </div>
 
                 <div class="sax-product-name text-muted mb-3">
-                    {{ $item->name ?? $item->external_name }}
+                    {{ $item->name ?? $item->name }}
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-auto">

@@ -12,6 +12,7 @@
 
           <form method="POST" action="{{ route('login') }}" class="login-form" id="loginForm">
             @csrf
+            <input type="hidden" name="redirect_to" value="{{ url()->current() }}" data-auth-redirect-field>
             <div class="mb-3">
               <input id="login_email" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('messages.email') }}" required autofocus class="form-control"/>
             </div>
@@ -39,6 +40,7 @@
 
           <form method="POST" action="{{ route('register') }}" class="login-form d-none" id="registerForm">
             @csrf
+            <input type="hidden" name="redirect_to" value="{{ url()->current() }}" data-auth-redirect-field>
             <div class="mb-3">
               <input id="name" type="text" name="name" value="{{ old('name') }}" placeholder="{{ __('messages.nome_completo') }}" required class="form-control"/>
             </div>

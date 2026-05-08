@@ -7,7 +7,7 @@
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb x-small text-uppercase">
                     <li class="breadcrumb-item"><a href="/" class="text-muted">Home</a></li>
-                    <li class="breadcrumb-item active text-dark">{{ $product->external_name }}</li>
+                    <li class="breadcrumb-item active text-dark">{{ $product->name }}</li>
                 </ol>
             </nav>
 
@@ -44,7 +44,7 @@
                 <div class="col-lg-6">
                     <div class="product-sticky-info">
                         <div class="brand-name">{{ $product->brand->name ?? 'Luxury Brand' }}</div>
-                        <h1 class="product-title text-uppercase">{{ $product->external_name }}</h1>
+                        <h1 class="product-title text-uppercase">{{ $product->name }}</h1>
                         <p class="product-title text-uppercase">SKU: {{ $product->sku }}</p>
 
                         <div class="product-price mb-4">
@@ -81,11 +81,11 @@
                                     @foreach ($siblings as $sib)
                                         <a href="{{ route('produto.show', $sib->slug ?? $sib->id) }}"
                                             class="size-box text-decoration-none {{ $product->id == $sib->id ? 'active' : '' }}">
-                                            {{ $sib->size ?? 'U' }}
+                                            {{ $sib->size ?? __('messages.guia_titulo') }}
                                         </a>
                                     @endforeach
                                 @else
-                                    <div class="size-box active">{{ $product->size ?? 'U' }}</div>
+                                    <div class="size-box active">{{ $product->size ?? __('messages.guia_titulo') }}</div>
                                 @endif
                             </div>
                         </div>
@@ -111,7 +111,8 @@
                                         </button>
                                     @else
                                         <a href="{{ route('login') }}"
-                                            class="btn btn-dark btn-add-bag flex-grow-1 text-center">
+                                            class="btn btn-dark btn-add-bag flex-grow-1 text-center js-requires-login"
+                                            data-redirect-to="{{ url()->current() }}">
                                             {{ __('messages.login_para_comprar') }}
                                         </a>
                                     @endif

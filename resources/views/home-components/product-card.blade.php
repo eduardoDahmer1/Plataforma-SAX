@@ -26,7 +26,7 @@
                 {{-- Imagem principal corrigida --}}
                 <img src="{{ $fotoExibir }}"
                     class="card-img-top img-fluid rounded-0" 
-                    alt="{{ $item->external_name ?? $item->name }}"
+                    alt="{{ $item->name ?? $item->name }}"
                     loading="lazy"
                     onerror="this.src='https://placehold.co/400x533/f5f5f5/999?text=No+Image'">
 
@@ -49,8 +49,8 @@
                     {{ $item->brand->name ?? 'BRAND NAME' }}
                 </div>
 
-                <div class="sax-product-name text-muted mb-3 text-truncate" title="{{ $item->external_name ?? $item->name }}">
-                    {{ $item->external_name ?? $item->name }}
+                <div class="sax-product-name text-muted mb-3 text-truncate" title="{{ $item->name ?? $item->name }}">
+                    {{ $item->name ?? $item->name }}
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-auto">

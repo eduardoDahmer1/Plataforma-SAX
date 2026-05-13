@@ -183,6 +183,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalTitle = document.getElementById('modalTitle');
     const loginModal = document.getElementById('loginModal');
     const authRedirectFields = document.querySelectorAll('[data-auth-redirect-field]');
+    const authTabs = document.querySelectorAll('[data-auth-tab]');
+    const registerEmail = document.getElementById('register_email');
+    const registerPassword = document.getElementById('register_password');
+    const registerPasswordConfirmation = document.getElementById('password_confirmation');
+    const registerEmailError = document.getElementById('registerEmailError');
+    const registerPasswordError = document.getElementById('registerPasswordError');
 
     if (!loginForm) return;
 
@@ -196,12 +202,23 @@ document.addEventListener('DOMContentLoaded', function () {
         [loginForm, registerForm, forgotForm].forEach(f => f.classList.add('d-none'));
         form.classList.remove('d-none');
 
-        const lang = window.saxLang || {};
-        switch(form.id) {
-            case 'loginForm': modalTitle.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>' + lang.entrar; break;
-            case 'registerForm': modalTitle.innerHTML = '<i class="fas fa-user-plus me-2"></i>' + lang.cadastrar; break;
-            case 'forgotForm': modalTitle.innerHTML = '<i class="fas fa-envelope me-2"></i>' + lang.recuperar_senha; break;
-        }
+        if (modalTitle) modalTitle.textContent = 'SAX';
+
+        authTabs.forEach(tab => {
+            tab.classList.toggle('is-active', tab.dataset.authTab === form.id);
+        });
+    }
+
+    function isCompleteEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showFieldError(field, errorEl, message) {
+        if (!errorEl) return;
+
+        errorEl.textContent = message || '';
+        errorEl.style.display = message ? 'block' : 'none';
+        field?.classList.toggle('is-invalid', Boolean(message));
     }
 
     setAuthRedirect(window.location.href);
@@ -209,8 +226,16 @@ document.addEventListener('DOMContentLoaded', function () {
     loginModal?.addEventListener('show.bs.modal', function(event) {
         const trigger = event.relatedTarget;
         setAuthRedirect(trigger?.dataset.redirectTo || window.location.href);
-        showForm(loginForm);
+        showForm(window.saxAuthModalForm === 'register' ? registerForm : loginForm);
     });
+
+    if (window.saxAuthModalForm === 'register') {
+        showForm(registerForm);
+
+        if (loginModal && typeof bootstrap !== 'undefined') {
+            bootstrap.Modal.getOrCreateInstance(loginModal).show();
+        }
+    }
 
     document.querySelectorAll('.js-requires-login').forEach(trigger => {
         trigger.addEventListener('click', function(event) {
@@ -231,6 +256,40 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('showLogin').addEventListener('click', e => { e.preventDefault(); showForm(loginForm); });
     document.getElementById('showForgot').addEventListener('click', e => { e.preventDefault(); showForm(forgotForm); });
     document.getElementById('showLoginFromForgot').addEventListener('click', e => { e.preventDefault(); showForm(loginForm); });
+
+    registerEmail?.addEventListener('input', function () {
+        if (!this.value || isCompleteEmail(this.value.trim())) {
+            showFieldError(registerEmail, registerEmailError, '');
+        }
+    });
+
+    registerPasswordConfirmation?.addEventListener('input', function () {
+        if (!this.value || this.value === registerPassword?.value) {
+            showFieldError(registerPasswordConfirmation, registerPasswordError, '');
+        }
+    });
+
+    registerForm?.addEventListener('submit', function (event) {
+        const email = registerEmail?.value.trim() || '';
+        const password = registerPassword?.value || '';
+        const confirmation = registerPasswordConfirmation?.value || '';
+        let hasError = false;
+
+        if (!isCompleteEmail(email)) {
+            showFieldError(registerEmail, registerEmailError, 'Informe um e-mail completo, como nome@dominio.com.');
+            hasError = true;
+        }
+
+        if (password && confirmation && password !== confirmation) {
+            showFieldError(registerPasswordConfirmation, registerPasswordError, 'A confirmacao da senha nao confere.');
+            hasError = true;
+        }
+
+        if (hasError) {
+            event.preventDefault();
+            (registerEmail?.classList.contains('is-invalid') ? registerEmail : registerPasswordConfirmation)?.focus();
+        }
+    });
 
     // Gerador de senha
     document.getElementById('generatePassword')?.addEventListener('click', function () {

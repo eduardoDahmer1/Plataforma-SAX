@@ -89,14 +89,4 @@
 
 </x-admin.card>
 
-<style>
-    .language-item:hover { transform: translateY(-5px); }
-    .badge { letter-spacing: 0.5px; }
-    .btn-outline-dark:hover { background-color: #000; color: #fff; }
-    .text-truncate { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    /* Ajuste para alinhar as setas da paginação se estiver usando Bootstrap 5 */
-    .pagination-custom svg { width: 20px; }
-    .pagination-custom nav > div:first-child { display: none; }
-</style>
 @endsection

@@ -1,26 +1,6 @@
 @extends('layout.admin')
 
 @section('content')
-<style>
-    /* Ajustes finos para Mobile */
-    @media (max-width: 768px) {
-        .mobile-card-item { border-bottom: 1px solid #eee; padding: 15px 0; }
-        .mobile-card-item:last-child { border-bottom: none; }
-        .desktop-table { display: none; }
-        .header-actions { flex-direction: column; align-items: flex-start !important; gap: 15px; }
-    }
-    @media (min-width: 769px) {
-        .mobile-view { display: none; }
-    }
-    .status-badge-container {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #f8f9fa;
-        padding: 5px 12px;
-        border-radius: 50px;
-    }
-</style>
 
 <x-admin.card>
     {{-- Navegação e ID --}}
@@ -148,19 +128,46 @@
                 
                 {{-- Gestão de Status --}}
                 <div class="border p-4 mb-4 bg-white shadow-sm rounded">
-                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3">{{ __('messages.gestao_pedido_card') }}</h6>
+                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.gestao_pedido_card') }}</h6>
+                    
+                    {{-- Form 1: Status do Pedido --}}
+                    <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="mb-4">
+                        @csrf 
+                        @method('PUT')
+                        <div class="mb-3">
+                            <label class="x-small text-secondary text-uppercase fw-bold mb-1 d-block">{{ __('messages.status_pedido_label') }}</label>
+                            <select name="status" class="form-select rounded-0 border-dark-subtle mb-2">
+                                @foreach (['pending', 'processing', 'shipped', 'completed', 'canceled'] as $statusKey)
+                                    <option value="{{ $statusKey }}" {{ $order->status === $statusKey ? 'selected' : '' }}>
+                                        {{ __('messages.status_' . $statusKey) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-dark w-100 rounded-0 text-uppercase fw-bold tracking-wider py-2">
+                                {{ __('messages.actualizar_estado_btn') }}
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="border-top my-3"></div>
+
+                    {{-- Form 2: Status do Pagamento --}}
                     <form action="{{ route('admin.orders.update', $order->id) }}" method="POST">
-                        @csrf @method('PUT')
-                        <select name="status" class="form-select rounded-0 border-dark-subtle mb-3">
-                            @foreach (['pending', 'processing', 'shipped', 'completed', 'canceled'] as $statusKey)
-                                <option value="{{ $statusKey }}" {{ $order->status === $statusKey ? 'selected' : '' }}>
-                                    {{ __('messages.status_' . $statusKey) }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <button type="submit" class="btn btn-dark w-100 rounded-0 text-uppercase fw-bold tracking-wider py-2">
-                            {{ __('messages.actualizar_estado_btn') }}
-                        </button>
+                        @csrf 
+                        @method('PUT')
+                        <div class="mb-3">
+                            <label class="x-small text-secondary text-uppercase fw-bold mb-1 d-block">{{ __('messages.status_pagamento_label') }}</label>
+                            <select name="payment_status" class="form-select rounded-0 border-dark-subtle mb-2">
+                                @foreach (['pending', 'paid', 'failed', 'refunded'] as $payStatus)
+                                    <option value="{{ $payStatus }}" {{ $order->payment_status === $payStatus ? 'selected' : '' }}>
+                                        {{ __('messages.payment_status_' . $payStatus) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-outline-dark w-100 rounded-0 text-uppercase fw-bold tracking-wider py-2">
+                                {{ __('messages.actualizar_pagamento_btn') }}
+                            </button>
+                        </div>
                     </form>
                 </div>
 

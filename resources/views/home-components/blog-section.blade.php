@@ -32,10 +32,3 @@
         @endforeach
     </div>
 </div>
-
-<style>
-    .blog-card { transition: .25s ease; }
-    .blog-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.14) !important; }
-    .blog-card img { transition: .3s ease; }
-    .blog-card:hover img { filter: brightness(0.9); }
-</style>

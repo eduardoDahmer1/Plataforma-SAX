@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -29,16 +29,37 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:'.User::class],
+            'document' => ['required', 'string', 'max:50'],
+            'phone_country' => ['required', 'string', 'in:55,595'],
+            'phone_number' => ['required', 'string', 'max:30'],
             'password' => ['required', 'confirmed', 'min:5'],
+        ], [
+            'email.email' => 'Informe um e-mail valido.',
+            'email.unique' => 'Este e-mail ja esta cadastrado.',
+            'phone_country.in' => 'Selecione um codigo de pais valido.',
+            'password.confirmed' => 'A confirmacao da senha nao confere.',
+            'password.min' => 'A senha deve ter pelo menos :min caracteres.',
         ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->with('auth_modal', 'register');
+        }
+
+        $validated = $validator->validated();
     
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'document' => $validated['document'],
+            'phone_country' => str_replace('+', '', $validated['phone_country']),
+            'phone_number' => $validated['phone_number'],
+            'password' => Hash::make($validated['password']),
         ]);
     
         // Dispara o evento de registro (envio de e-mail de verificação)
@@ -54,6 +75,8 @@ class RegisteredUserController extends Controller
     
         Auth::login($user);
     
-        return redirect(RouteServiceProvider::HOME);
+        return redirect()
+            ->route('user.profile.edit')
+            ->with('success', 'Conta criada com sucesso. Complete seus dados de endereço para agilizar seus pedidos.');
     }    
 }

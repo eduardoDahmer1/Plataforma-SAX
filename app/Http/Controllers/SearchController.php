@@ -13,96 +13,80 @@ use Illuminate\Support\Facades\Cache;
 
 class SearchController extends Controller
 {
-    /**
+/**
      * Index de Busca Otimizada
      */
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 36);
+        $search = $request->search;
 
-        // Iniciamos a query filtrando apenas o que é ATIVO e tem ESTOQUE/FOTO
+        // 1. Base da query principal
         $query = Product::query()
-            ->select(['id', 'name', 'external_name', 'sku', 'price', 'stock', 'photo', 'brand_id', 'category_id', 'slug', 'status'])
+            ->select([
+                'id', 'name', 'external_name', 'sku', 'price', 'stock', 
+                'photo', 'brand_id', 'category_id', 'subcategory_id', 
+                'childcategory_id', 'slug', 'status'
+            ])
             ->with(['brand:id,name'])
-            ->where('status', 1)            // Apenas produtos ativos
-            ->where('product_role', 'P')    // Solo productos padre en el buscador
-            ->where('stock', '>', 0)        // Com estoque
-            ->whereNotNull('photo')         // Com foto
+            ->where('status', 1)
+            ->where('product_role', 'P')
+            ->where('stock', '>', 0)
+            ->whereNotNull('photo')
             ->where('photo', '!=', '');
 
         // Filtro de Busca Textual
         if ($request->filled('search')) {
-            $term = "%{$request->search}%";
+            $term = "%{$search}%";
             $query->where(function ($q) use ($term) {
                 $q->where('external_name', 'like', $term)
-                    ->orWhere('name', 'like', $term)
-                    ->orWhere('sku', 'like', $term);
+                  ->orWhere('name', 'like', $term)
+                  ->orWhere('sku', 'like', $term);
             });
         }
 
-        // Filtros de Sidebar
+        // 2. Sidebar Dinâmica
+        $sidebarQuery = clone $query;
+        $productIds = (clone $sidebarQuery)->pluck('id');
+
+        // Marcas e Categorias geralmente têm status, se der erro nelas também, remova o ->where('status', 1)
+        $brands = Brand::where('status', 1) 
+            ->whereHas('products', function($q) use ($productIds) {
+                $q->whereIn('id', $productIds);
+            })->orderBy('name')->get(['id', 'name']);
+
+        $categories = Category::where('status', 1)
+            ->whereHas('products', function($q) use ($productIds) {
+                $q->whereIn('id', $productIds);
+            })->orderBy('name')->get(['id', 'name', 'slug']);
+
+        // Removido 'status' de Subcategories e CategoriasFilhas conforme o erro da imagem
+        $subcategories = Subcategory::whereHas('products', function($q) use ($productIds) {
+                $q->whereIn('id', $productIds);
+            })->orderBy('name')->get(['id', 'name']);
+
+        $categoriasfilhas = CategoriasFilhas::whereHas('products', function($q) use ($productIds) {
+                $q->whereIn('id', $productIds);
+            })->orderBy('name')->get(['id', 'name']);
+
+        // 3. Aplicar filtros selecionados
         $query->when($request->brand, fn($q) => $q->where('brand_id', $request->brand))
             ->when($request->category, fn($q) => $q->where('category_id', $request->category))
             ->when($request->subcategory, fn($q) => $q->where('subcategory_id', $request->subcategory))
-            ->when($request->categoriasfilhas, fn($q) => $q->where('categoriasfilhas_id', $request->categoriasfilhas));
-
-        // Filtro de Preço
-        $query->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
+            ->when($request->categoriasfilhas, fn($q) => $q->where('childcategory_id', $request->categoriasfilhas))
+            ->when($request->min_price, fn($q) => $q->where('price', '>=', $request->min_price))
             ->when($request->max_price, fn($q) => $q->where('price', '<=', $request->max_price));
 
-        // Aplica Ordenação
         $this->applySorting($query, $request->sort_by);
 
-        $paginated = $query->paginate($perPage)->withQueryString();
-
-        // Dados da Sidebar - Agora filtrando apenas ATIVOS (Status 1)
-        $sidebarData = Cache::remember('search_sidebar_v3', 3600, function () {
-            $visibleProductFilter = function ($q) {
-                $q->where('status', 1)
-                    ->where('product_role', 'P')
-                    ->where('stock', '>', 0)
-                    ->whereNotNull('photo')
-                    ->where('photo', '!=', '');
-            };
-
-            return [
-                'brands'          => Brand::select('id', 'name')
-                    ->where('status', 1) // Apenas marcas ativas
-                    ->whereHas('products', $visibleProductFilter)
-                    ->orderBy('name')
-                    ->get(),
-                'categories'      => Category::select('id', 'name', 'slug')
-                    ->where('status', 1) // Apenas categorias ativas (sem restrição de ID fixo)
-                    ->whereHas('products', $visibleProductFilter)
-                    ->orderBy('name')
-                    ->get(),
-                'subcategories'   => Subcategory::select('id', 'name')
-                    ->whereHas('products', $visibleProductFilter)
-                    ->orderBy('name')
-                    ->get(),
-                'categoriasfilhas' => CategoriasFilhas::select('id', 'name')
-                    ->whereHas('products', $visibleProductFilter)
-                    ->orderBy('name')
-                    ->get(),
-            ];
-        });
-
-        // Carrinho
-        $cartItems = [];
-        if (auth()->check()) {
-            $cartItems = Cart::where('user_id', auth()->id())->pluck('quantity', 'product_id')->toArray();
-        }
-
-        // Por isso (Mais seguro e explícito):
         return view('search.search', [
-            'brands'           => $sidebarData['brands'],
-            'categories'       => $sidebarData['categories'],
-            'subcategories'    => $sidebarData['subcategories'],
-            'categoriasfilhas' => $sidebarData['categoriasfilhas'], // Linha vital
-            'paginated'        => $paginated,
-            'cartItems'        => $cartItems,
+            'brands'           => $brands,
+            'categories'       => $categories,
+            'subcategories'    => $subcategories,
+            'categoriasfilhas' => $categoriasfilhas,
+            'paginated'        => $query->paginate($perPage)->withQueryString(),
             'request'          => $request,
-            'query'            => $request->search
+            'query'            => $search
         ]);
     }
 

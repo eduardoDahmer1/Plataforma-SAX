@@ -64,13 +64,3 @@
     <script>var dadosProdutos = @json($detalhesProdutos);</script>
 </x-admin.card>
 @endsection
-
-<style>
-    /* Seus estilos CSS originais aqui... */
-    .sax-stats-wrapper { font-family: 'Inter', sans-serif; }
-    .sax-stat-card { background: #fff; border-radius: 20px; transition: 0.3s; position: relative; overflow: hidden; }
-    .sax-stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-    .card-progress-bar { position: absolute; bottom: 0; width: 100%; height: 4px; background: #eee; }
-    .sax-stat-card:hover .card-progress-bar { background: #000; }
-    .date-badge { background: #f8f9fa; padding: 5px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; }
-</style>

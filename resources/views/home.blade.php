@@ -134,46 +134,4 @@
 
     {{-- JS migrado a home.js --}}
 
-    <style>
-        .sax-home-wrapper { background-color: #fff; overflow-x: hidden; }
-        
-        /* Ajustes Swiper */
-        .mySwiper {
-            padding-bottom: 50px !important;
-            width: 100%;
-        }
-
-        /* Títulos das Seções */
-        .sax-section-title {
-            font-size: 1.4rem;
-            font-weight: 500;
-            color: #1a1a1a;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-        }
-
-        .sax-brands-title {
-            font-size: 2.2rem;
-            font-weight: 400;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-        }
-
-        /* Banners Triplos */
-        .sax-triple-banners img {
-            height: 450px;
-            object-fit: cover;
-            transition: transform 0.6s ease;
-        }
-        .sax-triple-banners img:hover { transform: scale(1.02); }
-
-        @media (max-width: 768px) {
-            .sax-section-title { font-size: 1.1rem; text-align: center; }
-            .sax-brands-title { font-size: 1.4rem; }
-            .sax-triple-banners img { height: auto; }
-        }
-    </style>
 @endsection

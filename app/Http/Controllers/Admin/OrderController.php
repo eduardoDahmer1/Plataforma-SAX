@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem; // Importante para o método store
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB; // Faltava essa importação para as transactions
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -44,34 +46,46 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
-    // Atualiza status do pedido
+    // Atualiza status do pedido ou do pagamento
     public function update(Request $request, $id)
     {
         $order = Order::findOrFail($id);
 
+        // Validação flexível: exige um OU outro
         $request->validate([
-            'status' => 'required|in:pending,processing,completed,canceled,paid,failed',
+            'status' => 'nullable|in:pending,processing,shipped,completed,canceled',
+            'payment_status' => 'nullable|in:pending,paid,failed,refunded',
         ]);
 
-        // Se o Admin marcar como pago manualmente
-        if ($request->status === 'paid' || $request->status === 'completed') {
-            $order->payment_status = 'completed';
-        }
-
-        // Se o Admin cancelar, devolvemos o estoque
-        if ($request->status === 'canceled' && $order->status !== 'canceled') {
-            foreach ($order->items as $item) {
-                $product = $item->product;
-                if ($product) {
-                    $product->increment('stock', $item->quantity);
+        // Se veio atualização de STATUS DO PEDIDO
+        if ($request->has('status')) {
+            
+            // Se o Admin cancelar, devolvemos o estoque (apenas se não estava cancelado antes)
+            if ($request->status === 'canceled' && $order->status !== 'canceled') {
+                foreach ($order->items as $item) {
+                    $product = $item->product;
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+                    }
                 }
+            }
+            
+            $order->status = $request->status;
+            
+            // Lógica automática: Se marcar pedido como concluído, presume-se pago (opcional)
+            if ($request->status === 'completed') {
+                $order->payment_status = 'paid';
             }
         }
 
-        $order->status = $request->status;
+        // Se veio atualização de STATUS DO PAGAMENTO
+        if ($request->has('payment_status')) {
+            $order->payment_status = $request->payment_status;
+        }
+
         $order->save();
 
-        return redirect()->back()->with('success', 'Pedido atualizado com sucesso!');
+        return redirect()->back()->with('success', 'Pedido atualizedo com sucesso!');
     }
 
     // Mostra detalhes do pedido
@@ -127,7 +141,7 @@ class OrderController extends Controller
         $request->validate([
             'payment_method' => 'required|string',
             'status'         => 'required|string',
-            'name'           => 'required|string',
+            'name'            => 'required|string',
             'document'       => 'nullable|string',
             'email'          => 'required|email',
             'phone'          => 'nullable|string',
@@ -138,8 +152,8 @@ class OrderController extends Controller
             'cep'            => 'nullable|string',
             'street'         => 'nullable|string',
             'number'         => 'nullable|string',
-            'district'       => 'nullable|string', // Novo campo
-            'complement'     => 'nullable|string', // Novo campo
+            'district'       => 'nullable|string',
+            'complement'     => 'nullable|string',
             'observations'   => 'nullable|string',
             'shipping'       => 'nullable|integer',
             'store'          => 'nullable|integer',
@@ -171,8 +185,8 @@ class OrderController extends Controller
                 'cep'             => $request->cep,
                 'street'          => $request->street,
                 'number'          => $request->number,
-                'district'        => $request->district,   // Novo campo
-                'complement'      => $request->complement, // Novo campo
+                'district'        => $request->district,
+                'complement'      => $request->complement,
                 'observations'    => $request->observations,
                 'shipping'        => $request->shipping,
                 'store'           => $request->store,
@@ -184,7 +198,6 @@ class OrderController extends Controller
                 'order_note'      => $request->order_note,
                 'internal_note'   => $request->internal_note,
                 
-                // Dados de Shipping (Entrega)
                 'shipping_name'     => $request->shipping_name ?? $request->name,
                 'shipping_email'    => $request->shipping_email ?? $request->email,
                 'shipping_phone'    => $request->shipping_phone ?? $request->phone,
@@ -199,7 +212,6 @@ class OrderController extends Controller
                 'shipping_document'       => $request->shipping_document ?? $request->document,
             ]);
 
-            // Cria itens do pedido se existirem no request
             if ($request->filled('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
                     OrderItem::create([

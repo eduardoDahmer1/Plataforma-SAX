@@ -12,20 +12,31 @@
             <div class="col-md-12">
                 <h4 class="mb-3"><i class="fas fa-box-open me-2"></i> Produtos</h4>
 
-                <x-sidebar-filters :request="request()" :brands="$brands" :categories="$categories" :subcategories="$subcategories" :categorias-filhas="$categoriasfilhas" />
+                {{-- Ajustado para passar a variável categoriasfilhas corretamente --}}
+                <x-sidebar-filters 
+                    :request="request()" 
+                    :brands="$brands" 
+                    :categories="$categories" 
+                    :subcategories="$subcategories" 
+                    :categoriasfilhas="$categoriasfilhas" 
+                />
 
                 @if ($paginated->count())
                     <div class="row">
                         @foreach ($paginated as $item)
-                            <x-product-card :item="$item" :cartItems="$cartItems" />
+                            <x-product-card :item="$item" :cartItems="$cartItems ?? []" />
                         @endforeach
                     </div>
 
                     <div class="d-flex justify-content-center mt-4">
-                        <x-pagination :links="$paginated" />
+                        {{-- Certifique-se que o componente de paginação recebe os links corretamente --}}
+                        {{ $paginated->links() }}
                     </div>
                 @else
-                    <p class="text-muted">Nenhum produto encontrado para "{{ $query }}".</p>
+                    <div class="text-center py-5">
+                        <p class="text-muted">Nenhum produto encontrado para "<strong>{{ $query }}</strong>".</p>
+                        <a href="{{ route('search') }}" class="btn btn-outline-dark btn-sm">Limpar busca</a>
+                    </div>
                 @endif
             </div>
         </div>

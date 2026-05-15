@@ -3,30 +3,52 @@
         <h4 class="sax-step-title">
             <span class="step-number">02</span> {{ __('messages.passo_dados_pessoais') }}
         </h4>
-        
+
         <div class="row g-4">
             <div class="col-md-6 sax-input-group">
                 <label>{{ __('messages.nome_completo') }} *</label>
-                <input type="text" name="name" class="sax-form-control" 
-                       value="{{ old('name') ?? auth()->user()->name }}">
+                <input type="text" name="name" class="sax-form-control"
+                    value="{{ old('name') ?? auth()->user()->name }}">
             </div>
 
             <div class="col-md-6 sax-input-group">
                 <label>{{ __('messages.documento_identidade') }} *</label>
-                <input type="text" name="document" class="sax-form-control" 
-                       value="{{ old('document') ?? auth()->user()->document }}">
+                <input type="text" name="document" class="sax-form-control"
+                    value="{{ old('document') ?? auth()->user()->document }}">
             </div>
 
             <div class="col-md-6 sax-input-group">
                 <label>{{ __('messages.email') }} *</label>
-                <input type="email" name="email" class="sax-form-control" 
-                       value="{{ old('email') ?? auth()->user()->email }}">
+                <input type="email" name="email" class="sax-form-control"
+                    value="{{ old('email') ?? auth()->user()->email }}">
             </div>
 
             <div class="col-md-6 sax-input-group">
                 <label>{{ __('messages.telefone') }} *</label>
-                <input type="text" name="phone" class="sax-form-control" 
-                       value="{{ old('phone') ?? auth()->user()->phone_number }}">
+
+                <div class="sax-auth-phone-row d-flex">
+                    <select name="phone_country"
+                        style="width: auto;margin-right: 5px;border: none;border-bottom: 1px solid #00000024;"
+                        class="sax-auth-phone-country @error('phone_country') is-invalid @enderror" required
+                        style="width: auto; margin-right: 5px;">
+                        <option value="595"
+                            {{ (old('phone_country') ?? (auth()->user()->phone_country ?? '595')) == '595' ? 'selected' : '' }}>
+                            PRY (+595)</option>
+                        <option value="55"
+                            {{ (old('phone_country') ?? auth()->user()->phone_country) == '55' ? 'selected' : '' }}>BRA
+                            (+55)</option>
+                    </select>
+
+                    <input id="register_phone_number" type="text" name="phone"
+                        value="{{ old('phone') ?? auth()->user()->phone_number }}" placeholder="Telefone" required
+                        class="sax-form-control sax-auth-phone-number @error('phone') is-invalid @enderror" />
+                </div>
+
+                @error('phone')
+                    <span class="invalid-feedback" role="alert" style="display: block;">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                @enderror
             </div>
         </div>
     </div>

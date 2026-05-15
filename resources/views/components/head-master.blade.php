@@ -32,7 +32,9 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <link href="{{ asset('css/app.css') }}?v={{ file_exists(public_path('css/app.css')) ? filemtime(public_path('css/app.css')) : time() }}" rel="stylesheet">
-<link href="{{ asset('css/auth.css') }}?v={{ file_exists(public_path('css/auth.css')) ? filemtime(public_path('css/auth.css')) : time() }}" rel="stylesheet">
+@if(!Request::is('*cafe*') && !Request::is('*bistro*') && !Request::is('*bridal*') && !Request::is('*palace*') && !Request::is('*institucional*'))
+    <link href="{{ asset('css/auth.css') }}?v={{ file_exists(public_path('css/auth.css')) ? filemtime(public_path('css/auth.css')) : time() }}" rel="stylesheet">
+@endif
 
 {{-- Temáticas: Café & Bistrô, Bridal, Palace, Institucional (solo público, nunca en admin) --}}
 @if(!Route::is('admin.*') && (Request::is('*cafe*') || Request::is('*bistro*') || Request::is('*bridal*') || Request::is('*palace*') || Request::is('*institucional*')))

@@ -12,6 +12,8 @@ use App\Models\Cupon;
 use App\Http\Controllers\PagoParController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderStatusMail;
 
 class CheckoutController extends Controller
 {
@@ -25,9 +27,7 @@ class CheckoutController extends Controller
         $cart->transform(function ($item) {
             if ($item->product) {
                 $item->product->formatted_price = currency_format($item->product->price);
-                $item->product->formatted_previous_price = $item->product->previous_price
-                    ? currency_format($item->product->previous_price)
-                    : null;
+                $item->product->formatted_previous_price = $item->product->previous_price ? currency_format($item->product->previous_price) : null;
             }
             return $item;
         });
@@ -40,52 +40,47 @@ class CheckoutController extends Controller
 
         // 1. Validações
         $request->validate([
-            'name'            => 'required|string|max:255',
-            'document'        => 'required|string|max:50', 
-            'email'           => 'required|email',
-            'phone'           => 'required|string',
-            'shipping'        => 'required|in:1,2,3',
-            'payment_method'  => 'required|in:deposito,bancard,bancard_v2,whatsapp,pagopar',
+            'name' => 'required|string|max:255',
+            'document' => 'required|string|max:50',
+            'email' => 'required|email',
+            'phone' => 'required|string',
+            'shipping' => 'required|in:1,2,3',
+            'payment_method' => 'required|in:deposito,bancard,bancard_v2,whatsapp,pagopar',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
-            
+
             // Campos de endereço (Obrigatórios apenas se shipping for 2 - Novo Endereço)
-            'street'          => 'required_if:shipping,2',
-            'number'          => 'required_if:shipping,2',
-            'district'        => 'required_if:shipping,2', 
-            'city'            => 'nullable|string',
-            'state'           => 'nullable|string',
-            'country'         => 'required_if:shipping,2',
-            'cep'             => 'required_if:shipping,2', 
-            
-            'store'           => 'required_if:shipping,3',
-            'observations'    => 'nullable|string',
-            'cupon'           => 'nullable|string',
+            'street' => 'required_if:shipping,2',
+            'number' => 'required_if:shipping,2',
+            'district' => 'required_if:shipping,2',
+            'city' => 'nullable|string',
+            'state' => 'nullable|string',
+            'country' => 'required_if:shipping,2',
+            'cep' => 'required_if:shipping,2',
+
+            'store' => 'required_if:shipping,3',
+            'observations' => 'nullable|string',
+            'cupon' => 'nullable|string',
         ]);
 
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
-        if ($cart->isEmpty()) return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
+        if ($cart->isEmpty()) {
+            return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
+        }
 
-        $total         = $cart->sum(fn($item) => $item->quantity * $item->product->price);
+        $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
         $paymentMethod = $request->input('payment_method');
-        $cupon         = null;
-        $desconto      = 0;
+        $cupon = null;
+        $desconto = 0;
 
         // 2. Lógica de Cupom
         if ($request->filled('cupon') && in_array($paymentMethod, ['deposito', 'pagopar', 'bancard'])) {
-            $cupon = Cupon::where('codigo', $request->input('cupon'))
-                ->where('data_inicio', '<=', now())
-                ->where('data_final', '>=', now())
-                ->first();
+            $cupon = Cupon::where('codigo', $request->input('cupon'))->where('data_inicio', '<=', now())->where('data_final', '>=', now())->first();
 
             if ($cupon) {
-                if (($cupon->valor_minimo && $total < $cupon->valor_minimo) ||
-                    ($cupon->valor_maximo && $total > $cupon->valor_maximo)
-                ) {
+                if (($cupon->valor_minimo && $total < $cupon->valor_minimo) || ($cupon->valor_maximo && $total > $cupon->valor_maximo)) {
                     return back()->with('error', 'Este cupom não se aplica ao valor do seu pedido.');
                 }
-                $desconto = $cupon->tipo === 'percentual'
-                    ? $total * ($cupon->montante / 100)
-                    : $cupon->montante;
+                $desconto = $cupon->tipo === 'percentual' ? $total * ($cupon->montante / 100) : $cupon->montante;
 
                 $total -= $desconto;
                 $total = max(0, $total);
@@ -100,76 +95,76 @@ class CheckoutController extends Controller
             // Separação Nome / Sobrenome
             $nameParts = explode(' ', trim($request->input('name')));
             $firstName = array_shift($nameParts);
-            $lastName  = implode(' ', $nameParts) ?: $firstName;
+            $lastName = implode(' ', $nameParts) ?: $firstName;
 
             $observations = match ($request->shipping) {
                 '1', '2' => $request->input('observations') ?? '',
-                '3'      => "Retirada na Loja ID: " . $request->input('store'),
-                default  => ''
+                '3' => 'Retirada na Loja ID: ' . $request->input('store'),
+                default => '',
             };
 
             // 3. Criar pedido inicial
             $order = Order::create([
-                'user_id'        => $user->id,
-                'status'         => 'pending',
-                'total'          => $total,
+                'user_id' => $user->id,
+                'status' => 'pending',
+                'total' => $total,
                 'payment_method' => $paymentMethod,
-                'cupon_id'       => $cupon->id ?? null,
-                'discount'       => $desconto,
-                'name'           => $firstName,
-                'surname'        => $lastName,
-                'document'       => $request->input('document'),
-                'email'          => $request->input('email'),
-                'phone'          => $request->input('phone'),
-                'observations'   => $observations,
-                'shipping'       => $request->input('shipping'),
-                'order_number'   => strtoupper(Str::random(10)),
-                'currency_sign'  => 'R$', 
+                'cupon_id' => $cupon->id ?? null,
+                'discount' => $desconto,
+                'name' => $firstName,
+                'surname' => $lastName,
+                'document' => $request->input('document'),
+                'email' => $request->input('email'),
+                'phone' => $request->input('phone'),
+                'observations' => $observations,
+                'shipping' => $request->input('shipping'),
+                'order_number' => strtoupper(Str::random(10)),
+                'currency_sign' => 'R$',
                 'currency_value' => 1,
             ]);
 
             // 4. Lógica de Endereço/Loja (Mantida original)
-                switch ($request->shipping) {
-                    case '1':
-                        $order->update([
-                    'street'     => $user->street,
-                    'number'     => $user->number,
-                    'district'   => $user->district,
-                    'complement' => $user->complement,
-                    'city'       => $user->city,
-                    'state'      => $user->state,
-                    'cep'        => $user->cep,
-                    'country' => $user->country == 'paraguai' ? 'PY' : 'BR',
-                ]);
-                        break;
-                    case '2':
-                        $order->update([
-                    'street'     => $request->input('street'),
-                    'number'     => $request->input('number'),
-                    'district'   => $request->input('district'),
-                    'complement' => $request->input('complement'),
-                    'city'    => $request->input('city') ?? '',
-                    'state'   => $request->input('state') ?? '',
-                        'cep'     => $request->input('cep') ?? '',
-                    'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
-                                    ]);
-                        break;
-                    case '3':
-                        $order->update(['store' => $request->input('store')]);
-                        break;
-                }
+            switch ($request->shipping) {
+                case '1':
+                    $order->update([
+                        'street' => $user->street,
+                        'number' => $user->number,
+                        'district' => $user->district,
+                        'complement' => $user->complement,
+                        'city' => $user->city,
+                        'state' => $user->state,
+                        'cep' => $user->cep,
+                        'country' => $user->country == 'paraguai' ? 'PY' : 'BR',
+                    ]);
+                    break;
+                case '2':
+                    $order->update([
+                        'street' => $request->input('street'),
+                        'number' => $request->input('number'),
+                        'district' => $request->input('district'),
+                        'complement' => $request->input('complement'),
+                        'city' => $request->input('city') ?? '',
+                        'state' => $request->input('state') ?? '',
+                        'cep' => $request->input('cep') ?? '',
+                        'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
+                    ]);
+                    break;
+                case '3':
+                    $order->update(['store' => $request->input('store')]);
+                    break;
+            }
 
-                // 5. Salvar itens do pedido
+            // 5. Salvar itens do pedido
             foreach ($cart as $cartItem) {
                 OrderItem::create([
-                    'order_id'      => $order->id,
-                    'product_id'    => $cartItem->product_id,
-                    'quantity'      => $cartItem->quantity,
-                    'price'         => $cartItem->product->price,
-                    'name'          => $cartItem->product->name ?? $cartItem->product->external_name ?? 'Produto',
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->product->price,
+                    'name' => $cartItem->product->name ?? ($cartItem->product->external_name ?? 'Produto'),
                     'external_name' => $cartItem->product->external_name,
-                    'slug'          => $cartItem->product->slug,
-                    'sku'           => $cartItem->product->sku,
+                    'slug' => $cartItem->product->slug,
+                    'sku' => $cartItem->product->sku,
                 ]);
             }
 
@@ -183,11 +178,22 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            // 7. Limpeza do Carrinho (Apenas métodos offline)
-            if (!in_array($paymentMethod, ['bancard', 'pagopar', 'bancard_v2'])) {
-                Cart::where('user_id', $user->id)->delete();
-                session()->forget('applied_cupon');
+            /**
+             * DISPARO DE E-MAILS DE ACORDO COM O MÉTODO
+             */
+            if ($paymentMethod === 'deposito') {
+                $msg = $request->hasFile('deposit_receipt') ? 'Recebemos o seu comprovante de depósito! Nossa equipe financeira irá validá-lo em breve para liberar seu pedido.' : 'Seu pedido foi reservado! Para concluir, realize o depósito nas contas indicadas e envie o comprovante pelo nosso painel.';
+
+                Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
+            } elseif (in_array($paymentMethod, ['bancard', 'bancard_v2', 'pagopar'])) {
+                $msg = 'Seu pedido foi gerado com sucesso! Estamos aguardando a confirmação de pagamento do sistema para darmos continuidade ao envio.';
+
+                Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
             }
+
+            // 7. Limpeza do Carrinho (Para todos os métodos, incluindo gateways)
+            Cart::where('user_id', $user->id)->delete();
+            session()->forget('applied_cupon');
 
             // 8. Redirecionamentos Finais
             if ($paymentMethod === 'bancard_v2') {
@@ -199,7 +205,8 @@ class CheckoutController extends Controller
             }
 
             if ($paymentMethod === 'deposito') {
-                return redirect()->route('checkout.deposito', ['order' => $order->id])
+                return redirect()
+                    ->route('checkout.deposito', ['order' => $order->id])
                     ->with('success', 'Pedido criado com sucesso!');
             }
 
@@ -208,11 +215,12 @@ class CheckoutController extends Controller
             }
 
             return redirect()->route('checkout.success')->with('success', 'Pedido concluído!');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Erro crítico no checkout: " . $e->getMessage());
-            return back()->with('error', 'Erro ao processar pedido: ' . $e->getMessage())->withInput();
+            Log::error('Erro crítico no checkout: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Erro ao processar pedido: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
@@ -220,30 +228,32 @@ class CheckoutController extends Controller
     {
         $user = auth()->user();
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
-        if ($cart->isEmpty()) return back()->with('error', 'Carrinho vazio');
+        if ($cart->isEmpty()) {
+            return back()->with('error', 'Carrinho vazio');
+        }
 
         $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
 
         DB::beginTransaction();
         try {
             $order = Order::create([
-                'user_id'       => $user->id,
-                'status'        => 'pending',
-                'total'         => $total,
+                'user_id' => $user->id,
+                'status' => 'pending',
+                'total' => $total,
                 'payment_method' => 'whatsapp',
-                'name'          => $user->name,
-                'document'      => $user->document ?? '',
-                'email'         => $user->email,
-                'phone'         => $user->phone_number,
+                'name' => $user->name,
+                'document' => $user->document ?? '',
+                'email' => $user->email,
+                'phone' => $user->phone_number,
             ]);
 
             foreach ($cart as $cartItem) {
                 OrderItem::create([
-                    'order_id'      => $order->id,
-                    'product_id'    => $cartItem->product_id,
-                    'quantity'      => $cartItem->quantity,
-                    'price'         => $cartItem->product->price,
-                    'name'          => $cartItem->product->name,
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->product->price,
+                    'name' => $cartItem->product->name,
                 ]);
             }
 
@@ -256,45 +266,52 @@ class CheckoutController extends Controller
         $message = "Olá! Quero finalizar minha compra:\n\n";
         foreach ($cart as $cartItem) {
             $p = $cartItem->product;
-            $message .= "Produto: " . ($p->external_name ?? $p->name ?? 'Produto não encontrado') . "\n";
-            $message .= "SKU: " . ($p->sku ?? 'N/A') . "\n";
-            $message .= "Link: " . route('produto.show', $p->id) . "\n";
-            $message .= "Preço: " . currency($cartItem->product->price) . "\n";
+            $message .= 'Produto: ' . ($p->external_name ?? ($p->name ?? 'Produto não encontrado')) . "\n";
+            $message .= 'SKU: ' . ($p->sku ?? 'N/A') . "\n";
+            $message .= 'Link: ' . route('produto.show', $p->id) . "\n";
+            $message .= 'Preço: ' . currency($cartItem->product->price) . "\n";
             $message .= "Qtd: {$cartItem->quantity}\n------------------------\n";
         }
-        $message .= "Total: " . currency($total) . "\nCliente: {$user->name}\nTelefone: +{$user->phone_country}{$user->phone_number}\n";
+        $message .= 'Total: ' . currency($total) . "\nCliente: {$user->name}\nTelefone: +{$user->phone_country}{$user->phone_number}\n";
 
         Cart::where('user_id', $user->id)->delete();
 
-        return redirect("https://wa.me/595984167575?text=" . urlencode($message));
+        return redirect('https://wa.me/595984167575?text=' . urlencode($message));
     }
 
     // Página de depósito
     public function deposito(Order $order)
     {
         $user = auth()->user();
-        if ($order->user_id !== $user->id) abort(403, 'Acesso negado ao pedido.');
+        if ($order->user_id !== $user->id) {
+            abort(403, 'Acesso negado ao pedido.');
+        }
 
         $bankAccounts = PaymentMethod::where('type', 'bank')->where('active', 1)->get();
-        $orderItems   = $order->items;
+        $orderItems = $order->items;
 
         return view('layout.deposito', compact('order', 'bankAccounts', 'orderItems'));
     }
 
-    // Upload do comprovante
+    /**
+     * UPLOAD DO COMPROVANTE (Quando o cara envia depois, pela página de detalhes)
+     */
     public function submitDeposito(Request $request, Order $order)
     {
         $request->validate([
-            'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'deposit_receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         if ($request->hasFile('deposit_receipt')) {
             $filePath = $request->file('deposit_receipt')->store('deposit_receipts', 'public');
             $order->deposit_receipt = $filePath;
             $order->save();
+
+            $msg = 'Seu comprovante foi enviado com sucesso! Nossa equipe já foi notificada e estamos analisando o pagamento para liberar seu pedido o mais rápido possível.';
+
+            Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
         }
 
-        return redirect()->route('user.orders.show', $order->id)
-            ->with('success', 'Comprovante enviado com sucesso!');
+        return redirect()->route('user.orders.show', $order->id)->with('success', 'Comprovante enviado com sucesso!');
     }
 }

@@ -5,14 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem; // Importante para o método store
+use App\Services\ReceiptService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB; // Faltava essa importação para as transactions
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    public function __construct(private ReceiptService $receiptService) {}
     // Lista pedidos
     public function index(Request $request)
     {
@@ -51,6 +54,8 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
 
+        $wasPaid = $order->isPaid();
+
         // Validação flexível: exige um OU outro
         $request->validate([
             'status' => 'nullable|in:pending,processing,shipped,completed,canceled',
@@ -85,13 +90,24 @@ class OrderController extends Controller
 
         $order->save();
 
+        if (!$wasPaid && $order->isPaid()) {
+            try {
+                $this->receiptService->issueForOrder($order);
+            } catch (\Throwable $e) {
+                Log::error('Error al emitir recibo para pedido de depósito', [
+                    'order_id' => $order->id,
+                    'message'  => $e->getMessage(),
+                ]);
+            }
+        }
+
         return redirect()->back()->with('success', 'Pedido atualizedo com sucesso!');
     }
 
     // Mostra detalhes do pedido
     public function show($id)
     {
-        $order = Order::with(['user', 'items.product'])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'receipt'])->findOrFail($id);
         return view('admin.orders.show', compact('order'));
     }
 

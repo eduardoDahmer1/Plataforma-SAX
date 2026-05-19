@@ -188,6 +188,24 @@
                     </div>
                 </div>
 
+                {{-- Recibo --}}
+                @if ($order->receipt)
+                <div class="border p-4 mb-4 bg-white shadow-sm rounded">
+                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">Recibo SAX</h6>
+                    <p class="x-small text-secondary mb-3">
+                        {{ $order->receipt->receipt_number }} &mdash; {{ $order->receipt->issued_at->format('d/m/Y') }}
+                    </p>
+                    <a href="{{ route('receipts.show', $order->receipt) }}" class="btn btn-dark btn-sm w-100 rounded-0 fw-bold text-uppercase mb-2">
+                        Ver recibo
+                    </a>
+                    @if ($order->receipt->pdf_path && \Storage::exists($order->receipt->pdf_path))
+                    <a href="{{ route('receipts.download', $order->receipt) }}" class="btn btn-outline-dark btn-sm w-100 rounded-0 fw-bold text-uppercase">
+                        Descargar PDF
+                    </a>
+                    @endif
+                </div>
+                @endif
+
                 {{-- Financeiro --}}
                 <div class="border p-4 bg-dark text-white rounded shadow">
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-4 border-bottom border-secondary pb-2">Pagamento</h6>

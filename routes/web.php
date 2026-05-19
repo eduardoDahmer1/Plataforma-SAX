@@ -18,6 +18,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CuponUserController;
 use App\Http\Controllers\PalaceController;
@@ -131,6 +132,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');
     Route::put('admin/orders/{order}', [OrderController::class, 'update'])->name('admin.orders.update');
+
+    // Recibos
+    Route::get('/receipts/{receipt}', [ReceiptController::class, 'show'])->name('receipts.show');
+    Route::get('/receipts/{receipt}/download', [ReceiptController::class, 'download'])->name('receipts.download');
 
     Route::get('/meus-preferidos', [UserPreferenceController::class, 'index'])->name('user.preferences');
     Route::post('/user/preferences/toggle', [UserPreferenceController::class, 'toggle'])->name('user.preferences.toggle');

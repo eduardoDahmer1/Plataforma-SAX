@@ -90,4 +90,14 @@ class Order extends Model
     {
         return $this->belongsTo(Cupon::class);
     }
+
+    public function receipt()
+    {
+        return $this->hasOne(Receipt::class);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === 'paid' || $this->payment_status === 'paid';
+    }
 }

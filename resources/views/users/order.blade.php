@@ -91,6 +91,21 @@
                         <span class="value fw-bold text-dark fs-4">{{ currency_format($order->total) }}</span>
                     </div>
 
+                    {{-- Recibo SAX --}}
+                    @if ($order->receipt)
+                    <div class="mt-3 pt-3 border-top">
+                        <label class="sax-label d-block mb-2 text-uppercase" style="font-size:9px">Recibo de compra</label>
+                        <a href="{{ route('receipts.show', $order->receipt) }}" class="btn btn-dark btn-sax-sm w-100 py-2 mb-2">
+                            <i class="fas fa-receipt me-2"></i> Ver recibo
+                        </a>
+                        @if ($order->receipt->pdf_path && \Storage::exists($order->receipt->pdf_path))
+                        <a href="{{ route('receipts.download', $order->receipt) }}" class="btn btn-outline-dark btn-sax-sm w-100 py-2">
+                            <i class="fas fa-download me-2"></i> Descargar PDF
+                        </a>
+                        @endif
+                    </div>
+                    @endif
+
                     {{-- --- LOGICA BANCARD --- --}}
                     @if (($order->payment_method ?? null) === 'bancard_v2')
                         @if ($order->payment_status === 'paid' && !empty($order->shop_process_id))

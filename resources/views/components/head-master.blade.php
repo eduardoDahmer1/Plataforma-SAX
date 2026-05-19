@@ -74,12 +74,12 @@
 @endif
 
 {{-- 6. Admin --}}
-@if(Route::is('admin.*') || Route::is('manutencao'))
+@if(Route::is('admin.*') || Route::is('manutencao') || (Route::is('receipts.*') && auth()->user()?->user_type == 1))
     <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
 @endif
 
 {{-- 7. User / Dashboard (Adicionado aqui) --}}
-@if(Route::is('user.*') || Route::is('dashboard'))
+@if(Route::is('user.*') || Route::is('dashboard') || (Route::is('receipts.*') && auth()->user()?->user_type != 1))
     <link href="{{ asset('css/user.css') }}?v={{ file_exists(public_path('css/user.css')) ? filemtime(public_path('css/user.css')) : time() }}" rel="stylesheet">
 @endif
 

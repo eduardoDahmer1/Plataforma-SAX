@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Services\BancardV2Service;
+use App\Services\ReceiptService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,14 +19,16 @@ class BancardV2Controller extends Controller
     private const FAILURE_STATUSES = ['cancelled', 'failed', 'rejected', 'payment_fail', 'payment_failed'];
     private const CURRENCY = 'PYG';
     private BancardV2Service $bancard;
+    private ReceiptService $receiptService;
 
-    public function __construct()
+    public function __construct(ReceiptService $receiptService)
     {
         $gateway = PaymentMethod::query()
             ->where('type', 'gateway')
             ->whereRaw('LOWER(name) = ?', ['bancard v2'])
             ->first();
         $this->bancard = BancardV2Service::fromPaymentMethod($gateway);
+        $this->receiptService = $receiptService;
     }
 
     public function checkoutPage(Order $order): View|RedirectResponse
@@ -357,6 +360,15 @@ class BancardV2Controller extends Controller
             $order->save();
 
             $this->reduceOrderStock($order);
+
+            try { 
+                $this->receiptService->issueForOrder($order);
+            } catch (\Throwable $e) {
+                Log::error('Error al emitir recibo para pedido Bancard V2', [
+                    'order_id' => $order->id,
+                    'message'  => $e->getMessage(),
+                ]);
+            }
         }
 
         Cart::where('user_id', $order->user_id)->delete();

@@ -299,7 +299,7 @@ class CheckoutController extends Controller
     public function submitDeposito(Request $request, Order $order)
     {
         $request->validate([
-            'deposit_receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         if ($request->hasFile('deposit_receipt')) {
@@ -308,10 +308,13 @@ class CheckoutController extends Controller
             $order->save();
 
             $msg = 'Seu comprovante foi enviado com sucesso! Nossa equipe já foi notificada e estamos analisando o pagamento para liberar seu pedido o mais rápido possível.';
-
             Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
+
+            return redirect()->route('user.orders.show', $order->id)
+                ->with('success', __('messages.deposito_comprovante_recebido'));
         }
 
-        return redirect()->route('user.orders.show', $order->id)->with('success', 'Comprovante enviado com sucesso!');
+        return redirect()->route('user.orders.show', $order->id)
+            ->with('info', __('messages.deposito_em_verificacao'));
     }
 }

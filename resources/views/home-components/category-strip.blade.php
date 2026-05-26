@@ -3,12 +3,11 @@
         <div class="category-wrapper">
             @foreach($categories as $cat)
                 @php
-                    $displayName = $cat->name;
-                    if($cat->slug == 'feminino')  $displayName = __('messages.mulher');
-                    if($cat->slug == 'masculino') $displayName = __('messages.homem');
-                    if($cat->slug == 'infantil')  $displayName = __('messages.criancas');
-                    if($cat->slug == 'optico')    $displayName = __('messages.lente');
-                    if($cat->slug == 'casa')      $displayName = __('messages.casa');
+                    $displayName = __("messages.{$cat->slug}");
+                    if ($displayName === "messages.{$cat->slug}") {
+                        $displayName = $cat->name;
+                    }
+
                     $photoPath = ltrim($cat->photo, '/');
                     
                     if (!empty($photoPath)) {

@@ -34,38 +34,41 @@ class PalaceAdminController extends Controller
     {
         $palace = Palace::findOrFail($id);
 
-        // Aumentamos os limites de validação e tipos de arquivos (mais de 10 tipos suportados)
+        // Aumentamos os limites de validação e tipos de arquivos (incluindo o novo campo PDF)
         $data = $request->validate([
-            'hero_titulo'             => 'nullable|string|max:255',
-            'hero_descricao'          => 'nullable|string',
-            'bar_titulo'              => 'nullable|string|max:255',
-            'bar_descricao'           => 'nullable|string',
-            'eventos_titulo'          => 'nullable|string|max:255',
-            'eventos_descricao'       => 'nullable|string',
-            'tematica_tag'            => 'nullable|string|max:255',
-            'tematica_titulo'         => 'nullable|string|max:255',
-            'tematica_descricao'      => 'nullable|string',
-            'tematica_preco'          => 'nullable|string|max:255',
-            'gastronomia_titulo'      => 'nullable|string|max:255',
-            'gastronomia_cafe_desc'   => 'nullable|string',
+            'hero_titulo' => 'nullable|string|max:255',
+            'hero_descricao' => 'nullable|string',
+            'bar_titulo' => 'nullable|string|max:255',
+            'bar_descricao' => 'nullable|string',
+            'eventos_titulo' => 'nullable|string|max:255',
+            'eventos_descricao' => 'nullable|string',
+            'tematica_tag' => 'nullable|string|max:255',
+            'tematica_titulo' => 'nullable|string|max:255',
+            'tematica_descricao' => 'nullable|string',
+            'tematica_preco' => 'nullable|string|max:255',
+            'gastronomia_titulo' => 'nullable|string|max:255',
+            'gastronomia_cafe_desc' => 'nullable|string',
             'gastronomia_almoco_desc' => 'nullable|string',
             'gastronomia_jantar_desc' => 'nullable|string',
-            'contato_endereco'        => 'nullable|string',
+            'contato_endereco' => 'nullable|string',
             'contato_horario_segunda' => 'nullable|string',
-            'contato_horario_sabado'  => 'nullable|string',
+            'contato_horario_sabado' => 'nullable|string',
             'contato_horario_domingo' => 'nullable|string',
-            'contato_whatsapp'        => 'nullable|string',
-            'contato_mapa_iframe'     => 'nullable|string',
+            'contato_whatsapp' => 'nullable|string',
+            'contato_mapa_iframe' => 'nullable|string',
 
             // Aceita uma vasta gama de formatos de imagem
-            'hero_imagem'     => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
-            'bar_imagem_1'    => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'bar_imagem_2'    => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'bar_imagem_3'    => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'hero_imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
+            'bar_imagem_1' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'bar_imagem_2' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'bar_imagem_3' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
             'tematica_imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            
-            'eventos_galeria'   => 'nullable|array',
+
+            'eventos_galeria' => 'nullable|array',
             'eventos_galeria.*' => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+
+            // Validação do Novo Campo de Menu em PDF (Até 10MB)
+            'gastronomia_menu_pdf' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
         // 1. Processar Imagens Individuais (Substituição com Conversão WebP)
@@ -74,7 +77,7 @@ class PalaceAdminController extends Controller
             if ($request->hasFile($field)) {
                 // Remove arquivo antigo se existir
                 if ($palace->$field) {
-                    Storage::disk('public')->delete($palace->$field);
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($palace->$field);
                 }
                 // Converte e salva
                 $data[$field] = $this->convertToWebp($request->file($field), 'palace');
@@ -87,7 +90,7 @@ class PalaceAdminController extends Controller
             if ($palace->eventos_galeria) {
                 $oldGallery = is_array($palace->eventos_galeria) ? $palace->eventos_galeria : json_decode($palace->eventos_galeria, true);
                 foreach ($oldGallery ?? [] as $oldPath) {
-                    Storage::disk('public')->delete($oldPath);
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
                 }
             }
 
@@ -96,6 +99,18 @@ class PalaceAdminController extends Controller
                 $galleryPaths[] = $this->convertToWebp($image, 'palace/galeria');
             }
             $data['eventos_galeria'] = $galleryPaths;
+        }
+
+        // 3. Processar o Arquivo do Cardápio em PDF
+        if ($request->hasFile('gastronomia_menu_pdf')) {
+            // Remove o PDF antigo se ele existir no banco e no disco
+            if ($palace->gastronomia_menu_pdf && \Illuminate\Support\Facades\Storage::disk('public')->exists($palace->gastronomia_menu_pdf)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($palace->gastronomia_menu_pdf);
+            }
+
+            // Salva o novo PDF na pasta 'menus' dentro do disco public
+            $pdfPath = $request->file('gastronomia_menu_pdf')->store('menus', 'public');
+            $data['gastronomia_menu_pdf'] = $pdfPath;
         }
 
         $palace->update($data);
@@ -133,13 +148,13 @@ class PalaceAdminController extends Controller
         // Cria recurso de imagem suportando os 10+ tipos solicitados
         $imageResource = match ($extension) {
             'jpeg', 'jpg', 'jfif' => @imagecreatefromjpeg($tempPath),
-            'png'                 => @imagecreatefrompng($tempPath),
-            'gif'                 => @imagecreatefromgif($tempPath),
-            'bmp'                 => @imagecreatefrombmp($tempPath),
-            'webp'                => @imagecreatefromwebp($tempPath),
-            'tga'                 => @imagecreatefromtga($tempPath),
+            'png' => @imagecreatefrompng($tempPath),
+            'gif' => @imagecreatefromgif($tempPath),
+            'bmp' => @imagecreatefrombmp($tempPath),
+            'webp' => @imagecreatefromwebp($tempPath),
+            'tga' => @imagecreatefromtga($tempPath),
             // Para outros formatos (TIFF, HEIC, etc), tenta via string ou fallback original
-            default               => @imagecreatefromstring(file_get_contents($tempPath)),
+            default => @imagecreatefromstring(file_get_contents($tempPath)),
         };
 
         if (!$imageResource) {
@@ -157,8 +172,6 @@ class PalaceAdminController extends Controller
         // Salva otimizado em WebP
         imagewebp($imageResource, $fullPath, 80);
         imagedestroy($imageResource);
-
-
 
         return "{$directory}{$filename}";
     }

@@ -113,7 +113,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-
 // ======== Brands Grid: Carrusel 3D ========
 // Requiere window.saxBrandsData (inyectado desde brands-grid.blade.php)
 (function() {
@@ -128,24 +127,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var currentIndex = 0;
 
-        // Obtener baseUrl y marcasUrl de data-attributes
+        // Obtener baseUrl, marcasUrl y fallbackBanner de data-attributes
         var storageBase = container.getAttribute('data-storage-base') || '/storage';
         var marcasUrl = container.getAttribute('data-marcas-url') || '/marcas';
+        var fallbackBanner = container.getAttribute('data-fallback-banner') || (storageBase + '/uploads/banner_horizontal.webp');
 
         brands.forEach(function(brand, i) {
             var div = document.createElement('div');
             div.className = 'sax-item hidden';
             div.setAttribute('data-name', brand.name);
 
-            var imgFile = (brand.banner || '').replace(/^\/+/, '');
-            var imgPath = imgFile.startsWith('http')
-                ? imgFile
-                : storageBase + '/' + imgFile;
+            // Se o banner vier vazio ou nulo do banco, aplica o fallback diretamente
+            var imgPath;
+            if (!brand.banner || brand.banner.trim() === '') {
+                imgPath = fallbackBanner;
+            } else {
+                var imgFile = brand.banner.replace(/^\/+/, '');
+                imgPath = imgFile.startsWith('http')
+                    ? imgFile
+                    : storageBase + '/' + imgFile;
+            }
 
             div.innerHTML =
                 '<a href="' + marcasUrl + '/' + (brand.slug || brand.id) + '">' +
                     '<img src="' + imgPath + '" alt="' + brand.name + '" ' +
-                         'onerror="this.src=\'https://placehold.co/320x480/222/fff?text=' + brand.name.replace(/\s/g, '+') + '\'">' +
+                         'onerror="this.src=\'' + fallbackBanner + '\'">' +
                 '</a>';
             container.appendChild(div);
 

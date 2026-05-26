@@ -43,6 +43,7 @@ class Palace extends Model
         'gastronomia_cafe_desc',
         'gastronomia_almoco_desc',
         'gastronomia_jantar_desc',
+        'gastronomia_menu_pdf',
 
         // SEÇÃO 06: LOCALIZAÇÃO
         'contato_endereco',

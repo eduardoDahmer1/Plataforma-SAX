@@ -189,18 +189,18 @@
                 </div>
 
                 {{-- Recibo --}}
-                @if ($order->receipt)
+                @if ($order->receipt && $order->payment_status === 'paid')
                 <div class="border p-4 mb-4 bg-white shadow-sm rounded">
-                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">Recibo SAX</h6>
+                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.recibo_de_compra') }}</h6>
                     <p class="x-small text-secondary mb-3">
                         {{ $order->receipt->receipt_number }} &mdash; {{ $order->receipt->issued_at->format('d/m/Y') }}
                     </p>
                     <a href="{{ route('receipts.show', $order->receipt) }}" class="btn btn-dark btn-sm w-100 rounded-0 fw-bold text-uppercase mb-2">
-                        Ver recibo
+                        {{ __('messages.ver_recibo') }}
                     </a>
                     @if ($order->receipt->pdf_path && \Storage::exists($order->receipt->pdf_path))
                     <a href="{{ route('receipts.download', $order->receipt) }}" class="btn btn-outline-dark btn-sm w-100 rounded-0 fw-bold text-uppercase">
-                        Descargar PDF
+                        {{ __('messages.descargar_pdf') }}
                     </a>
                     @endif
                 </div>

@@ -22,7 +22,7 @@ class HomeController extends Controller
         // 2. Atributos do Sistema
         $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
 
-        // 3. Tipos de destaques MANUAIS (Removido 'lancamentos' daqui pois agora é automático)
+        // 3. Tipos de destaques MANUAIS
         $highlightTypes = [
             'destaque', 'mais_vendidos', 'melhores_avaliacoes', 'super_desconto',
             'famosos', 'tendencias', 'promocoes', 'ofertas_relampago', 'navbar'
@@ -42,15 +42,14 @@ class HomeController extends Controller
             });
         }
 
-        // --- NOVO: 4.1 LANÇAMENTOS (Produtos Editados Recentemente) ---
-        // Agora busca os últimos que foram salvos/editados no Admin
+        // --- 4.1 LANÇAMENTOS (Produtos Editados Recentemente) ---
         $lancamentos = Cache::remember('home_products_updated_at', 600, function () {
             return Product::where('status', 1)
                 ->where('product_role', 'P')
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
                 ->with('brand')
-                ->orderBy('updated_at', 'DESC') // Ordem pelos editados recentemente
+                ->orderBy('updated_at', 'DESC')
                 ->take(12)
                 ->get();
         });
@@ -67,25 +66,23 @@ class HomeController extends Controller
                 ->get();
         });
 
-        // 5. Categorias Strip
-        $categoriesStrip = Cache::remember('categories_home_strip_v4', 600, function () {
-            $targetSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
+        // 5. Categorias Strip - Aleatório mudando a cada 15 minutos (900 segundos)
+        $categoriesStrip = Cache::remember('categories_home_strip_random_15min', 900, function () {
             return Category::select('id', 'name', 'slug', 'photo')
-                ->whereIn('slug', $targetSlugs)
-                ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'optico', 'casa')")
+                ->where('status', 1)
+                ->inRandomOrder()
+                ->take(5)
                 ->get();
         });
 
-        // 6. Marcas Slider 3D
-        $brandsSlider = Cache::remember('home_brands_3d_v2', 600, function () {
-            $selectedNames = [
-                'Baccarat', 'Boss', 'Celine', 'JW-PEI', 'Paul & Shark',
-                'Stokke', 'Valentino', 'Veja', 'Vilebrequin', 'Zadig&Voltaire'
-            ];
+        // 6. Marcas Slider 3D - Sorteia 10 marcas ativas aleatoriamente a cada 15 minutos (900 segundos)
+        $brandsSlider = Cache::remember('home_brands_3d_random_15min', 900, function () {
             return Brand::select('id', 'name', 'slug', 'image', 'banner')
-                ->whereIn('name', $selectedNames)
                 ->where('status', 1)
-                ->orderByRaw("FIELD(name, '".implode("','", $selectedNames)."')")
+                ->whereNotNull('image')
+                ->where('image', '!=', '')
+                ->inRandomOrder()
+                ->take(10) // Mantém um número fixo ideal para a fluidez do carrossel 3D
                 ->get();
         });
 
@@ -104,7 +101,7 @@ class HomeController extends Controller
             'settings'        => $settings,
             'attribute'       => $attribute,
             'highlights'      => $highlights,
-            'lancamentos'     => $lancamentos, // Enviando a nova query automática
+            'lancamentos'     => $lancamentos,
             'mostViewed'      => $mostViewed,
             'categories'      => $categoriesStrip,
             'allCategories'   => $allCategories,

@@ -42,6 +42,16 @@
         <i class="fas fa-exclamation-triangle me-2"></i> {{ session('warning') }}
     </div>
     @endif
+    @if (session('success'))
+    <div class="alert alert-success mb-4 shadow-sm border-0" role="alert">
+        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+    </div>
+    @endif
+    @if (session('info'))
+    <div class="alert alert-info mb-4 shadow-sm border-0" role="alert">
+        <i class="fas fa-info-circle me-2"></i> {{ session('info') }}
+    </div>
+    @endif
 
     {{-- Header --}}
     <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
@@ -92,15 +102,15 @@
                     </div>
 
                     {{-- Recibo SAX --}}
-                    @if ($order->receipt)
+                    @if ($order->receipt && $order->payment_status === 'paid')
                     <div class="mt-3 pt-3 border-top">
-                        <label class="sax-label d-block mb-2 text-uppercase" style="font-size:9px">Recibo de compra</label>
+                        <label class="sax-label d-block mb-2 text-uppercase" style="font-size:9px">{{ __('messages.recibo_de_compra') }}</label>
                         <a href="{{ route('receipts.show', $order->receipt) }}" class="btn btn-dark btn-sax-sm w-100 py-2 mb-2">
-                            <i class="fas fa-receipt me-2"></i> Ver recibo
+                            <i class="fas fa-receipt me-2"></i> {{ __('messages.ver_recibo') }}
                         </a>
                         @if ($order->receipt->pdf_path && \Storage::exists($order->receipt->pdf_path))
                         <a href="{{ route('receipts.download', $order->receipt) }}" class="btn btn-outline-dark btn-sax-sm w-100 py-2">
-                            <i class="fas fa-download me-2"></i> Descargar PDF
+                            <i class="fas fa-download me-2"></i> {{ __('messages.descargar_pdf') }}
                         </a>
                         @endif
                     </div>

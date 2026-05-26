@@ -221,71 +221,47 @@ class ProductController extends Controller
     {
         $limit = 8;
 
-        return Cache::remember("pdp_similares_{$product->id}_v10", now()->addMinutes(10), function () use ($product, $limit) {
-            $similares = collect();
+        return Cache::remember("pdp_similares_{$product->id}_v11", now()->addMinutes(10), function () use ($product, $limit) {
             $palabraClave = $this->palabraClaveSimilar($product);
 
-            $baseQuery = Product::where('status', 1)->where('product_role', 'P')->where('stock', '>', 0)->where('id', '!=', $product->id)->whereNotNull('photo')->where('photo', '!=', '')->with('brand');
+            $baseQuery = Product::where('status', 1)
+                ->where('product_role', 'P')
+                ->where('stock', '>', 0)
+                ->where('id', '!=', $product->id)
+                ->whereNotNull('photo')
+                ->where('photo', '!=', '')
+                ->with('brand');
 
-            if ($palabraClave && $product->childcategory_id) {
-                $porCategoriaFilha = $this->filtrarPorPalabraClave((clone $baseQuery)->where('childcategory_id', $product->childcategory_id), $palabraClave)
-                    ->inRandomOrder()
-                    ->take($limit)
-                    ->get();
+            // Escalera de búsqueda: del filtro más específico al más amplio.
+            // Si tiene palabraClave: primero busca con ella; si queda corto, baja al fallback sin palabra.
+            $niveles = [];
 
-                $similares = $similares->merge($porCategoriaFilha);
+            if ($palabraClave) {
+                $niveles[] = ['childcategory_id', $product->childcategory_id, $palabraClave];
+                $niveles[] = ['subcategory_id',   $product->subcategory_id,   $palabraClave];
+                $niveles[] = ['category_id',      $product->category_id,      $palabraClave];
             }
 
-            if ($palabraClave && $similares->count() < $limit && $product->subcategory_id) {
-                $porSubcategoria = $this->filtrarPorPalabraClave((clone $baseQuery)->where('subcategory_id', $product->subcategory_id), $palabraClave)
+            $niveles[] = ['childcategory_id', $product->childcategory_id, null];
+            $niveles[] = ['subcategory_id',   $product->subcategory_id,   null];
+            $niveles[] = ['category_id',      $product->category_id,      null];
+
+            $similares = collect();
+
+            foreach ($niveles as [$campo, $id, $palabra]) {
+                $faltan = $limit - $similares->count();
+                if ($faltan <= 0) break;
+                if (!$id) continue;
+
+                $resultado = (clone $baseQuery)
+                    ->where($campo, $id)
+                    ->when($palabra, fn($q) => $q->where('external_name', 'LIKE', "%{$palabra}%"))
                     ->whereNotIn('id', $similares->pluck('id'))
                     ->inRandomOrder()
-                    ->take($limit - $similares->count())
+                    ->take($faltan)
                     ->get();
 
-                $similares = $similares->merge($porSubcategoria);
-            }
-
-            if ($palabraClave && $similares->count() < $limit && $product->category_id) {
-                $porCategoria = $this->filtrarPorPalabraClave((clone $baseQuery)->where('category_id', $product->category_id), $palabraClave)
-                    ->whereNotIn('id', $similares->pluck('id'))
-                    ->inRandomOrder()
-                    ->take($limit - $similares->count())
-                    ->get();
-
-                $similares = $similares->merge($porCategoria);
-            }
-
-            if (!$palabraClave && $product->childcategory_id) {
-                $categoriaFilha = (clone $baseQuery)
-                    ->where('childcategory_id', $product->childcategory_id)
-                    ->inRandomOrder()
-                    ->take($limit)
-                    ->get();
-
-                $similares = $similares->merge($categoriaFilha);
-            }
-
-            if (!$palabraClave && $similares->count() < $limit && $product->subcategory_id) {
-                $subcategoria = (clone $baseQuery)
-                    ->where('subcategory_id', $product->subcategory_id)
-                    ->whereNotIn('id', $similares->pluck('id'))
-                    ->inRandomOrder()
-                    ->take($limit - $similares->count())
-                    ->get();
-
-                $similares = $similares->merge($subcategoria);
-            }
-
-            if (!$palabraClave && $similares->count() < $limit && $product->category_id) {
-                $categoria = (clone $baseQuery)
-                    ->where('category_id', $product->category_id)
-                    ->whereNotIn('id', $similares->pluck('id'))
-                    ->inRandomOrder()
-                    ->take($limit - $similares->count())
-                    ->get();
-
-                $similares = $similares->merge($categoria);
+                $similares = $similares->merge($resultado);
             }
 
             return $similares->take($limit);
@@ -302,11 +278,6 @@ class ProductController extends Controller
         }
 
         return null;
-    }
-
-    private function filtrarPorPalabraClave($query, string $palabraClave)
-    {
-        return $query->where('external_name', 'LIKE', "%{$palabraClave}%");
     }
 
     private function palabrasClaveProductos(): array

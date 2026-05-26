@@ -3,7 +3,11 @@
         <h2 class="sax-main-title">{{ __('messages.marcas_recomendadas') }}</h2>
 
         <div class="sax-carousel-master">
-            <div class="sax-carousel-3d" id="brandsCarousel" data-storage-base="{{ asset('storage') }}" data-marcas-url="{{ url('marcas') }}">
+            <div class="sax-carousel-3d" 
+                 id="brandsCarousel" 
+                 data-storage-base="{{ asset('storage') }}" 
+                 data-marcas-url="{{ url('marcas') }}"
+                 data-fallback-banner="{{ asset('storage/uploads/banner_horizontal.webp') }}">
                 {{-- Injetado via JS --}}
             </div>
 
@@ -20,8 +24,8 @@
         </div>
     </section>
 
-{{-- Datos del server para el carrusel 3D (lógica en home.js) --}}
-<script>
-    window.saxBrandsData = {!! $brands->toJson() !!};
-</script>
+    {{-- Datos del server para el carrusel 3D (lógica en home.js) --}}
+    <script>
+        window.saxBrandsData = {!! $brands->toJson() !!};
+    </script>
 @endif

@@ -65,7 +65,7 @@
                 {{-- 3. GASTRONOMIA --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.gastronomia_menus_sec') }}</h6>
-                    <div class="row g-3">
+                    <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="x-small fw-bold text-warning text-uppercase">{{ __('messages.cafe_manha_label') }}</label>
                             <textarea name="gastronomia_cafe_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_cafe_desc }}</textarea>
@@ -79,6 +79,41 @@
                             <textarea name="gastronomia_jantar_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_jantar_desc }}</textarea>
                         </div>
                     </div>
+
+                    {{-- NOVO CAMPO: UPLOAD DO CARDÁPIO EM PDF --}}
+                    <div class="border-top pt-3 mt-2">
+                        <label class="sax-form-label d-block mb-2 fw-bold text-dark text-uppercase letter-spacing-1" style="font-size: 11px;">
+                            <i class="fas fa-file-pdf text-danger me-1"></i> Arquivo do Cardápio Completo (PDF)
+                        </label>
+                        
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-7">
+                                <div class="asset-upload-zone py-3 px-3 border border-dashed rounded bg-light text-center position-relative">
+                                    <i class="fas fa-cloud-upload-alt mb-1 text-secondary opacity-75 fa-lg"></i>
+                                    <input type="file" name="gastronomia_menu_pdf" class="sax-input-file" accept="application/pdf" style="opacity: 0; position: absolute; top:0; left:0; width:100%; height:100%; cursor:pointer;">
+                                    <p class="x-small text-secondary m-0">Clique ou arraste o arquivo .pdf para substituir</p>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                @if($palace->gastronomia_menu_pdf)
+                                    <div class="p-2 border border-info-subtle rounded bg-info-soft d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center overflow-hidden me-2">
+                                            <i class="fas fa-check-circle text-info me-2 fa-lg flex-shrink-0"></i>
+                                            <span class="x-small text-dark text-truncate fw-bold">Cardápio Cadastrado</span>
+                                        </div>
+                                        <a href="{{ asset('storage/' . $palace->gastronomia_menu_pdf) }}" target="_blank" class="btn btn-sm btn-outline-info px-2 py-1 rounded-0" style="font-size: 10px;">
+                                            <i class="fas fa-eye"></i> Ver PDF
+                                        </a>
+                                    </div>
+                                @else
+                                    <div class="p-2 border border-warning-subtle rounded bg-light d-flex align-items-center">
+                                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                        <span class="x-small text-muted italic">Nenhum arquivo PDF enviado ainda.</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- 4. GALERIA --}}
@@ -89,7 +124,7 @@
                         <input type="file" name="eventos_galeria[]" class="sax-input-file" multiple>
                         <p class="sax-form-label m-0">{{ __('messages.upload_fotos_instrucao') }}</p>
                     </div>
-                                        <div class="gallery-preview-grid mt-3">
+                    <div class="gallery-preview-grid mt-3">
                         @php $fotos = is_array($palace->eventos_galeria) ? $palace->eventos_galeria : json_decode($palace->eventos_galeria, true); @endphp
                         @foreach($fotos ?? [] as $foto)
                             <div class="gallery-preview-item shadow-sm border">
@@ -131,7 +166,7 @@
                             <input type="text" name="tematica_tag" class="form-control sax-input bg-transparent text-white border-secondary small" value="{{ $palace->tematica_tag }}">
                         </div>
                     </div>
-                                        <div class="asset-upload-zone py-3 bg-white-10 border-secondary mb-3">
+                    <div class="asset-upload-zone py-3 bg-white-10 border-secondary mb-3">
                         <input type="file" name="tematica_imagem" class="sax-input-file img-trigger" data-prev="preview-tematica">
                         <p class="x-small fw-bold m-0 text-white">CAMBIAR FOTO</p>
                     </div>

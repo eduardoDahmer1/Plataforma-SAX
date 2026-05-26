@@ -1,5 +1,15 @@
 @extends($layout)
 
+@push('styles')
+<style>
+    @media print {
+        header, footer, aside, .sax-sidebar-card, .offcanvas, .sax-admin-header, #backToTop, [data-bs-target="#userMenu"] { display: none !important; }
+        .col-md-9, .col-md-3 { width: 100% !important; }
+        .d-print-none { display: none !important; }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container py-4" style="max-width: 56rem;">
 
@@ -11,24 +21,24 @@
             <ol class="breadcrumb small mb-0">
                 @if (auth()->user()->user_type == 1)
                     <li class="breadcrumb-item">
-                        <a href="{{ route('admin.dashboard') }}" class="text-secondary text-decoration-none">Inicio</a>
+                        <a href="{{ route('admin.dashboard') }}" class="text-secondary text-decoration-none">{{ __('messages.inicio') }}</a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('admin.orders.index') }}" class="text-secondary text-decoration-none">Pedidos</a>
+                        <a href="{{ route('admin.orders.index') }}" class="text-secondary text-decoration-none">{{ __('messages.menu_pedidos') }}</a>
                     </li>
                     <li class="breadcrumb-item">
                         <a href="{{ route('admin.orders.show', $order->id) }}" class="text-secondary text-decoration-none">Pedido #{{ $order->id }}</a>
                     </li>
                 @else
                     <li class="breadcrumb-item">
-                        <a href="{{ route('user.dashboard') }}" class="text-secondary text-decoration-none">Mi cuenta</a>
+                        <a href="{{ route('user.dashboard') }}" class="text-secondary text-decoration-none">{{ __('messages.minha_conta') }}</a>
                     </li>
                     <li class="breadcrumb-item">
                         <a href="{{ route('user.orders.show', $order->id) }}" class="text-secondary text-decoration-none">Pedido #{{ $order->id }}</a>
                     </li>
                 @endif
                 <li class="breadcrumb-item active fw-semibold text-dark" aria-current="page">
-                    Recibo {{ $receipt->receipt_number }}
+                    {{ __('messages.ver_recibo') }} {{ $receipt->receipt_number }}
                 </li>
             </ol>
         </nav>
@@ -37,11 +47,11 @@
         <div class="d-flex gap-2">
             @if ($receipt->pdf_path)
                 <a href="{{ route('receipts.download', $receipt) }}" class="btn btn-dark btn-sm">
-                    Descargar PDF
+                    {{ __('messages.descargar_pdf') }}
                 </a>
             @endif
             <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-                Imprimir
+                {{ __('messages.imprimir') }}
             </button>
         </div>
 
@@ -61,9 +71,9 @@
             </div>
             <div class="text-end">
                 <div class="fw-bold fs-5 text-dark">{{ $receipt->receipt_number }}</div>
-                <div class="text-muted small">Emitido el {{ $receipt->issued_at->format('d/m/Y') }}</div>
+                <div class="text-muted small">{{ __('messages.emitido_el') }} {{ $receipt->issued_at->format('d/m/Y') }}</div>
                 <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle text-uppercase mt-1">
-                    Pago confirmado
+                    {{ __('messages.pago_confirmado') }}
                 </span>
             </div>
         </div>
@@ -73,35 +83,35 @@
             <div class="col-md-6">
                 <div class="bg-light rounded p-3 h-100">
                     <div class="text-uppercase text-muted small fw-bold mb-2" style="letter-spacing: 0.1em;">
-                        Datos del pedido
+                        {{ __('messages.dados_do_pedido') }}
                     </div>
                     <dl class="row mb-0 small">
-                        <dt class="col-5 fw-normal text-muted">N° de pedido</dt>
+                        <dt class="col-5 fw-normal text-muted">{{ __('messages.numero_pedido') }}</dt>
                         <dd class="col-7 text-end fw-semibold mb-1">{{ $order->order_number ?? '#' . $order->id }}</dd>
 
-                        <dt class="col-5 fw-normal text-muted">Fecha</dt>
+                        <dt class="col-5 fw-normal text-muted">{{ __('messages.col_data') }}</dt>
                         <dd class="col-7 text-end fw-semibold mb-1">{{ $order->created_at->format('d/m/Y') }}</dd>
 
-                        <dt class="col-5 fw-normal text-muted">Método de pago</dt>
+                        <dt class="col-5 fw-normal text-muted">{{ __('messages.metodo_de_pago') }}</dt>
                         <dd class="col-7 text-end fw-semibold mb-1">
                             {{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}
                         </dd>
 
                         @if ($order->shop_process_id)
-                            <dt class="col-5 fw-normal text-muted">Referencia</dt>
+                            <dt class="col-5 fw-normal text-muted">{{ __('messages.referencia') }}</dt>
                             <dd class="col-7 text-end fw-semibold mb-1">{{ $order->shop_process_id }}</dd>
                         @endif
 
                         @if ($order->shipping == 3)
-                            <dt class="col-5 fw-normal text-muted">Entrega</dt>
-                            <dd class="col-7 text-end fw-semibold mb-1">Retiro en tienda</dd>
+                            <dt class="col-5 fw-normal text-muted">{{ __('messages.passo_metodo_entrega') }}</dt>
+                            <dd class="col-7 text-end fw-semibold mb-1">{{ __('messages.retiro_en_tienda') }}</dd>
                         @elseif ($order->street)
-                            <dt class="col-5 fw-normal text-muted">Dirección</dt>
+                            <dt class="col-5 fw-normal text-muted">{{ __('messages.direccion') }}</dt>
                             <dd class="col-7 text-end fw-semibold mb-1">
                                 {{ $order->street }}{{ $order->number ? ', ' . $order->number : '' }}
                                 @if ($order->district) — {{ $order->district }} @endif
                             </dd>
-                            <dt class="col-5 fw-normal text-muted">Ciudad</dt>
+                            <dt class="col-5 fw-normal text-muted">{{ __('messages.ciudad') }}</dt>
                             <dd class="col-7 text-end fw-semibold mb-1">
                                 {{ $order->city }}{{ $order->country ? ', ' . $order->country : '' }}
                             </dd>
@@ -113,22 +123,22 @@
             <div class="col-md-6">
                 <div class="bg-light rounded p-3 h-100">
                     <div class="text-uppercase text-muted small fw-bold mb-2" style="letter-spacing: 0.1em;">
-                        Datos del cliente
+                        {{ __('messages.dados_do_cliente') }}
                     </div>
                     <dl class="row mb-0 small">
-                        <dt class="col-5 fw-normal text-muted">Nombre</dt>
+                        <dt class="col-5 fw-normal text-muted">{{ __('messages.nome_label') }}</dt>
                         <dd class="col-7 text-end fw-semibold mb-1">{{ $order->name }}</dd>
 
                         @if ($order->document)
-                            <dt class="col-5 fw-normal text-muted">Documento</dt>
+                            <dt class="col-5 fw-normal text-muted">{{ __('messages.label_documento') }}</dt>
                             <dd class="col-7 text-end fw-semibold mb-1">{{ $order->document }}</dd>
                         @endif
 
-                        <dt class="col-5 fw-normal text-muted">Email</dt>
+                        <dt class="col-5 fw-normal text-muted">{{ __('messages.email_label') }}</dt>
                         <dd class="col-7 text-end fw-semibold mb-1 text-break">{{ $order->email }}</dd>
 
                         @if ($order->phone)
-                            <dt class="col-5 fw-normal text-muted">Teléfono</dt>
+                            <dt class="col-5 fw-normal text-muted">{{ __('messages.phone_label') }}</dt>
                             <dd class="col-7 text-end fw-semibold mb-1">{{ $order->phone }}</dd>
                         @endif
                     </dl>
@@ -138,17 +148,17 @@
 
         {{-- Productos --}}
         <div class="text-uppercase text-muted small fw-bold mb-2" style="letter-spacing: 0.1em;">
-            Productos
+            {{ __('messages.produtos_seccao') }}
         </div>
         <div class="table-responsive mb-3">
             <table class="table align-middle small mb-0">
                 <thead class="table-dark">
                     <tr>
                         <th style="width: 4rem;"></th>
-                        <th>Producto</th>
+                        <th>{{ __('messages.produto_col') }}</th>
                         <th>SKU</th>
-                        <th class="text-end">Precio unit.</th>
-                        <th class="text-end">Cant.</th>
+                        <th class="text-end">{{ __('messages.precio_unitario') }}</th>
+                        <th class="text-end">{{ __('messages.cant_abrev') }}</th>
                         <th class="text-end">Total</th>
                     </tr>
                 </thead>
@@ -180,13 +190,13 @@
         <div class="border-top pt-3 mb-4">
             @if ($order->discount > 0)
                 <div class="d-flex justify-content-end gap-5 small text-muted px-2 py-1">
-                    <span>Descuento</span>
+                    <span>{{ __('messages.descuento') }}</span>
                     <span>- {{ currency_format($order->discount) }}</span>
                 </div>
             @endif
             @if ($order->shipping_cost > 0)
                 <div class="d-flex justify-content-end gap-5 small text-muted px-2 py-1">
-                    <span>Envío</span>
+                    <span>{{ __('messages.envio') }}</span>
                     <span>{{ currency_format($order->shipping_cost) }}</span>
                 </div>
             @endif
@@ -198,7 +208,7 @@
 
         {{-- Footer --}}
         <div class="text-center text-muted small border-top pt-3">
-            Este documento es un comprobante oficial de compra emitido por SAX.<br>
+            {{ __('messages.comprobante_oficial') }}<br>
             {{ $receipt->receipt_number }} &mdash; {{ $receipt->issued_at->format('d/m/Y H:i') }}
         </div>
 

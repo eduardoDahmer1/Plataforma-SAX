@@ -27,6 +27,14 @@ function setFormType(type) {
 
     contactType.value = type;
 
+    // Gerencia o sublinhado/estado ativo dos botões
+    document.querySelectorAll('.btn-sax-tab').forEach(btn => btn.classList.remove('active'));
+    if (type === 1) {
+        document.getElementById('btn-atendimento')?.classList.add('active');
+    } else if (type === 2) {
+        document.getElementById('btn-curriculo')?.classList.add('active');
+    }
+
     document.querySelectorAll('.form-field').forEach(el => {
         const types = el.dataset.type.split(' ');
         const show = types.includes(String(type));
@@ -38,7 +46,6 @@ function setFormType(type) {
     document.querySelector('input[name="email"]').required = true;
 }
 setFormType(1);
-
 
 // ======== Bootstrap Carousel Touch Swipe ========
 document.querySelectorAll('.carousel').forEach(carousel => {
@@ -237,6 +244,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    if(new URLSearchParams(location.search).get('open') === 'login'){
+        if(loginModal && typeof bootstrap !== 'undefined'){
+            bootstrap.Modal.getOrCreateInstance(loginModal).show();
+            history.replaceState(null, '', location.pathname);
+        }
+    }
+
     document.querySelectorAll('.js-requires-login').forEach(trigger => {
         trigger.addEventListener('click', function(event) {
             event.preventDefault();
@@ -289,6 +303,46 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
             (registerEmail?.classList.contains('is-invalid') ? registerEmail : registerPasswordConfirmation)?.focus();
         }
+    });
+
+    // Login via AJAX — evita redirect ao falhar
+    loginForm?.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const loginError = document.getElementById('loginError');
+        const submitBtn  = this.querySelector('[type="submit"]');
+        const formData   = new FormData(this);
+
+        submitBtn.disabled         = true;
+        loginError.style.display   = 'none';
+        loginError.textContent     = '';
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': formData.get('_token'),
+            },
+            body: formData,
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const redirectTo = formData.get('redirect_to');
+                window.location.href = (redirectTo && redirectTo !== window.location.href)
+                    ? redirectTo
+                    : (data.redirect || '/');
+            } else {
+                loginError.textContent   = window.saxLang?.dados_incorretos || 'Dados incorretos.';
+                loginError.style.display = 'block';
+                submitBtn.disabled       = false;
+            }
+        })
+        .catch(() => {
+            loginError.textContent   = 'Erro inesperado. Tente novamente.';
+            loginError.style.display = 'block';
+            submitBtn.disabled       = false;
+        });
     });
 
     // Gerador de senha

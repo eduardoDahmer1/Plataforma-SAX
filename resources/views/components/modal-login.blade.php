@@ -168,6 +168,7 @@
     window.saxLang = window.saxLang || {};
     window.saxLang.entrar          = "{{ __('messages.entrar') }}";
     window.saxLang.cadastrar       = "{{ __('messages.cadastrar') }}";
-    window.saxLang.recuperar_senha = "{{ __('messages.recuperar_senha') }}";
+    window.saxLang.recuperar_senha  = "{{ __('messages.recuperar_senha') }}";
+    window.saxLang.dados_incorretos = "{{ __('messages.dados_incorretos') }}";
     window.saxAuthModalForm        = @json(session('auth_modal'));
 </script>

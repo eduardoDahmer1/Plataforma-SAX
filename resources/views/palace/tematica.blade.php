@@ -43,14 +43,14 @@
                             class="img-main" 
                             alt="{{ $palace->tematica_titulo }}">
                         
-                        {{-- Badge de Preço Desktop Flutuante --}}
+                        {{-- Badge de Preço Desktop Flutuante
                         <div class="floating-price-card d-none d-md-block">
                             <div class="card-inner">
                                 <span class="label">Inversión</span>
                                 <span class="amount">{{ $palace->tematica_preco }}</span>
                                 <span class="sub">Por Persona</span>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

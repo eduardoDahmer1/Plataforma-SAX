@@ -28,8 +28,7 @@
                         @endforeach
                     </div>
 
-                    <div class="d-flex justify-content-center mt-4">
-                        {{-- Certifique-se que o componente de paginação recebe os links corretamente --}}
+                    <div class="d-flex justify-content-center mt-4 pagination-sax">
                         {{ $paginated->links() }}
                     </div>
                 @else

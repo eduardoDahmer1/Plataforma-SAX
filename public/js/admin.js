@@ -210,8 +210,6 @@ document.addEventListener('change', function(e) {
 
 
 // ======== Categoría / Subcategoría / Hija (Cascada) ========
-// Pendiente de activar: requiere data-categories, data-subcategories,
-// data-categoriasfilhas en los <select> correspondientes de las vistas.
 document.addEventListener('DOMContentLoaded', function () {
     const categorySelect = document.getElementById('category_id');
     const subcategorySelect = document.getElementById('subcategory_id');

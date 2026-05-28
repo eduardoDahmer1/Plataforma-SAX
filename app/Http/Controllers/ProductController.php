@@ -181,7 +181,9 @@ class ProductController extends Controller
             $query->where('parent_id', $masterId)->orWhere('id', $masterId);
         })
             ->where('status', 1)
-            ->get();
+            ->get()
+            ->sortBy(fn($s) => $this->sizeWeight($s->size))
+            ->values();
 
         // --- LÓGICA DE CORES RELACIONADAS ---
         $colorGroupId = !empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
@@ -355,5 +357,38 @@ class ProductController extends Controller
         }
         $descontoMax = $cupons->max(fn($c) => $c->tipo === 'percentual' ? $p->price * ($c->montante / 100) : $c->montante);
         return $descontoMax ? max(0, $p->price - $descontoMax) : $p->price;
+    }
+
+    /**
+     * Helper: Devuelve un orden numérico para tamaños, considerando tanto formatos numéricos como alfanuméricos 
+     */
+    private function sizeWeight(?string $size): float
+    {
+        if ($size === null || $size === '') { 
+            return PHP_INT_MAX;
+        }
+
+        $normalized = strtoupper(trim($size));
+
+        // Tallas tipo "6M", "7M" → 6 ½, 7 ½ (M = Meio)
+        if (preg_match('/^(\d+)\s*M$/', $normalized, $m)) {
+            return (float) $m[1] + 0.5;
+        }
+
+        if (is_numeric($normalized)) {
+            return (float) $normalized;
+        }
+
+        $map = [
+            'PP' => 1, 'XS' => 1,
+            'P'  => 2, 'S'  => 2,
+            'M'  => 3,
+            'G'  => 4, 'L'  => 4,
+            'GG' => 5, 'XL' => 5,
+            'XGG'=> 6, 'XXL'=> 6,
+            'XXG'=> 7, 'XXXL'=> 7,
+        ];
+
+        return $map[$normalized] ?? PHP_INT_MAX - 1;
     }
 }

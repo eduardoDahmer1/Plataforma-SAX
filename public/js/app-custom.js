@@ -246,8 +246,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if(new URLSearchParams(location.search).get('open') === 'login'){
         if(loginModal && typeof bootstrap !== 'undefined'){
-            bootstrap.Modal.getOrCreateInstance(loginModal).show();
             history.replaceState(null, '', location.pathname);
+            bootstrap.Modal.getOrCreateInstance(loginModal).show();
         }
     }
 

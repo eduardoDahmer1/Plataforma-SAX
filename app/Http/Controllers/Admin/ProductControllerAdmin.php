@@ -274,14 +274,9 @@ class ProductControllerAdmin extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        $subcategories = $item->category_id
-            ? Subcategory::where('category_id', $item->category_id)->get()
-            : collect();
-
-        $categoriasfilhas = $item->subcategory_id
-            ? CategoriasFilhas::whereIn('subcategory_id', $subcategories->pluck('id'))->get()
-            : collect();
-
+        $subcategories = Subcategory::orderBy('name')->get();
+        $categoriasfilhas = CategoriasFilhas::orderBy('name')->get();
+            
         $products = Product::select('id', 'name', 'sku')
             ->where('id', '!=', $id)
             ->orderBy('name', 'asc')

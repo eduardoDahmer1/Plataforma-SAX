@@ -190,7 +190,7 @@
 
     <!-- Paginação -->
     @if ($products->hasPages())
-        <div class="d-flex justify-content-center mt-4">
+        <div class="d-flex justify-content-center mt-4 pagination-sax">
             {{ $products->links() }}
         </div>
     @endif

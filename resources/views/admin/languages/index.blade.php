@@ -83,7 +83,7 @@
     </div>
 
     {{-- PAGINAÇÃO --}}
-    <div class="d-flex justify-content-center mt-4 pagination-custom">
+    <div class="d-flex justify-content-center mt-4 pagination-sax">
         {{ $languages->links() }}
     </div>
 

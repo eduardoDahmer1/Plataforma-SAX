@@ -6,9 +6,16 @@
 
             {{-- Col 1: Logo + Descrição + Redes --}}
             <div class="col-lg-4 col-md-12">
-                {{-- Placeholder logo --}}
-                <div class="footer-logo-placeholder mb-3">
-                    SAX <span>Café & Bistrô</span>
+                {{-- Logo --}}
+                <div class="mb-3">
+                    @if(!empty($attributes->logo_cafe_bistro))
+                        <img src="{{ asset('storage/uploads/' . $attributes->logo_cafe_bistro) }}"
+                             alt="SAX Café & Bistrô" style="height:3.5rem;width:auto;">
+                    @else
+                        <div class="footer-logo-placeholder">
+                            SAX <span>Café & Bistrô</span>
+                        </div>
+                    @endif
                 </div>
 
                 <p class="footer-descricao">
@@ -74,7 +81,7 @@
 
                 <p class="footer-telefone">
                     <i class="bi bi-telephone me-2"></i>
-                    {{ $cafeBistro->telefono ?? '+595 000 000 000' }}
+                    {{ $cafeBistro->telefono ?? '+595 993 011502' }}
                 </p>
 
                 <a href="{{ $cafeBistro->whatsapp_link }}" target="_blank" rel="noopener" class="btn-reservar-cafe d-inline-block mt-2">

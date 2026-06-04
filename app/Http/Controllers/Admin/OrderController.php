@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB; // Faltava essa importação para as transactions
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderPaidMail;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -95,6 +97,16 @@ class OrderController extends Controller
                 $this->receiptService->issueForOrder($order);
             } catch (\Throwable $e) {
                 Log::error('Error al emitir recibo para pedido de depósito', [
+                    'order_id' => $order->id,
+                    'message'  => $e->getMessage(),
+                ]);
+            }
+
+            try {
+                $order->loadMissing('receipt');
+                Mail::to($order->email)->send(new OrderPaidMail($order));
+            } catch (\Throwable $e) {
+                Log::error('Error al enviar correo de confirmación de pago', [
                     'order_id' => $order->id,
                     'message'  => $e->getMessage(),
                 ]);

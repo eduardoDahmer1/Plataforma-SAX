@@ -12,7 +12,10 @@ class BridalController extends Controller
 {
     public function index()
     {
-        $bridal = Cache::remember('bridal_data', 28800, fn() => Bridal::first()) ?? new Bridal();
+        // Cache por 28800 minutos (20 dias) trazendo as traduções polimórficas associadas ao Bridal
+        $bridal = Cache::remember('bridal_data', 28800, function () {
+            return Bridal::with('translations')->first() ?: new Bridal();
+        });
 
         // IDs de las marcas específicas para Bridal(brand ticker)
         $idbrands = [641, 1444, 1237, 1236, 664, 951, 610];

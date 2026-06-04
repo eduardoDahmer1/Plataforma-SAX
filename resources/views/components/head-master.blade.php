@@ -48,10 +48,10 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
     @endif
 
-    @if(Request::is('*bridal*')) <link href="{{ asset('css/bridal.css') }}" rel="stylesheet"> @endif
-    @if(Request::is('*palace*')) <link href="{{ asset('css/palace.css') }}" rel="stylesheet"> @endif
+    @if(Request::is('*bridal*')) <link href="{{ asset('css/bridal.css') }}?v={{ filemtime(public_path('css/bridal.css')) }}" rel="stylesheet"> @endif
+    @if(Request::is('*palace*')) <link href="{{ asset('css/palace.css') }}?v={{ filemtime(public_path('css/palace.css')) }}" rel="stylesheet"> @endif
     @if(Request::is('*institucional*'))
-        <link href="{{ asset('css/institucional.css') }}" rel="stylesheet">
+        <link href="{{ asset('css/institucional.css') }}?v={{ filemtime(public_path('css/institucional.css')) }}" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
     @endif
 @endif

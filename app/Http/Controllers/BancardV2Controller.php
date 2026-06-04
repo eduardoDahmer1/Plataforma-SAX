@@ -11,6 +11,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderPaidMail;
 use Illuminate\View\View;
 
 class BancardV2Controller extends Controller
@@ -361,10 +363,20 @@ class BancardV2Controller extends Controller
 
             $this->reduceOrderStock($order);
 
-            try { 
+            try {
                 $this->receiptService->issueForOrder($order);
             } catch (\Throwable $e) {
                 Log::error('Error al emitir recibo para pedido Bancard V2', [
+                    'order_id' => $order->id,
+                    'message'  => $e->getMessage(),
+                ]);
+            }
+
+            try {
+                $order->loadMissing('receipt');
+                Mail::to($order->email)->send(new OrderPaidMail($order));
+            } catch (\Throwable $e) {
+                Log::error('Error al enviar correo de confirmación Bancard V2', [
                     'order_id' => $order->id,
                     'message'  => $e->getMessage(),
                 ]);

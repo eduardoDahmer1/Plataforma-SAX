@@ -10,8 +10,9 @@ class PalaceController extends Controller
 {
     public function index()
     {
-        // Alterado de $conteudos para $palace para alinhar com a View
-        $palace = Cache::remember('palace_data', 28800, fn() => Palace::first()) ?? new Palace();
+        $palace = Cache::remember('palace_data', 28800, function () {
+            return Palace::with('translations')->first() ?: new Palace();
+        });
 
         return view('palace.index', compact('palace'));
     }

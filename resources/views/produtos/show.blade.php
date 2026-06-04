@@ -4,22 +4,33 @@
     <div class="product-page-wrapper">
         <div class="container-fluid px-lg-5 py-4">
             {{-- Breadcrumb Dinâmico e Completo --}}
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb x-small text-uppercase">
-                    <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">Home</a></li>
-                    @if($product->category)
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('categories.show', $product->category->slug) }}" class="text-muted text-decoration-none">{{ $product->category->name }}</a>
-                        </li>
-                    @endif
-                    @if($product->subcategory)
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('subcategories.show', $product->subcategory->slug) }}" class="text-muted text-decoration-none">{{ $product->subcategory->name }}</a>
-                        </li>
-                    @endif
-                    <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">{{ $product->name }}</li>
-                </ol>
-            </nav>
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb x-small text-uppercase">
+                        <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">{{ __('messages.home') }}</a></li>
+                        @if($product->category)
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('categories.show', $product->category->slug) }}" class="text-muted text-decoration-none">{{ $product->category->name }}</a>
+                            </li>
+                        @endif
+                        @if($product->subcategory)
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('subcategories.show', $product->subcategory->slug) }}" class="text-muted text-decoration-none">{{ $product->subcategory->name }}</a>
+                            </li>
+                        @endif
+                        
+                        @php
+                            $currentLocale = app()->getLocale(); 
+                            
+                            $translation = $product->translations->where('locale', $currentLocale)->first();
+                            
+                            $displayName = ($translation && !empty($translation->name)) 
+                                ? $translation->name 
+                                : $product->name;
+                        @endphp
+
+                        <li class="breadcrumb-item active text-dark fw-bold" aria-current="page">{{ $displayName }}</li>
+                    </ol>
+                </nav>
 
             <div class="row g-5">
                 {{-- COLUNA ESQUERDA: Galeria de Imagens --}}
@@ -62,9 +73,10 @@
                                 {{ $product->brand->name ?? 'Luxury Selection' }}
                             </div>
                             @if($product->stock > 0 && $product->stock <= 5)
-                                <span class="text-danger extra-small fw-bold text-uppercase"><i class="fas fa-exclamation-circle"></i> Únicas {{ $product->stock }} unidades</span>
+                                <span class="text-danger extra-small fw-bold text-uppercase">
+                                <i class="fas fa-exclamation-circle"></i>{{ __('messages.unicas_unidades', ['count' => $product->stock]) }}</span>
                             @elseif($product->stock > 5)
-                                <span class="text-success extra-small fw-bold text-uppercase"><i class="fas fa-check"></i> Em estoque</span>
+                                <span class="text-success extra-small fw-bold text-uppercase"><i class="fas fa-check"></i>{{ __('messages.em_estoque') }}</span>
                             @endif
                         </div>
 
@@ -84,7 +96,7 @@
                         {{-- Seleção de Cores --}}
                         <div class="color-selection-wrapper mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="section-label text-uppercase extra-small fw-bold">Cor: <span class="text-muted fw-normal">{{ $product->color }}</span></span>
+                                <span class="section-label text-uppercase extra-small fw-bold">{{ __('messages.cor') }}: <span class="text-muted fw-normal">{{ $product->color }}</span></span>
                             </div>
                             <div class="color-grid d-flex flex-wrap gap-2">
                                 @if (isset($colorSiblings) && $colorSiblings->count() > 0)
@@ -107,7 +119,7 @@
                         <div class="size-selection-wrapper mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="section-label text-uppercase extra-small fw-bold">Tamanho</span>
-                                <a href="#" class="text-muted text-decoration-underline extra-small" data-bs-toggle="modal" data-bs-target="#sizeGuideModal">Guia de Medidas</a>
+                                <a href="#" class="text-muted text-decoration-underline extra-small" data-bs-toggle="modal" data-bs-target="#sizeGuideModal">{{ __('messages.guia_de_medidas') }}</a>
                             </div>
                             <div class="size-grid d-flex flex-wrap gap-2">
                                 @if (isset($siblings) && $siblings->count() > 0)
@@ -154,14 +166,26 @@
                                 @endif
                             </div>
                         </div>
+                        
+                            {{-- Accordion Detalhes --}}
+                            <div class="product-details-accordion border-top">
+                                <div class="accordion-item-sax">
+                                    <div class="accordion-trigger">{{ __('messages.descricao_produto') }} <i class="fas fa-plus small"></i></div>
+                                    <div class="accordion-content show">
+                                        <div class="rich-text-content">
+                                            @php
 
-                        {{-- Accordion Detalhes --}}
-                        <div class="product-details-accordion border-top">
-                            <div class="accordion-item-sax">
-                                <div class="accordion-trigger">{{ __('messages.descricao_produto') }} <i class="fas fa-plus small"></i></div>
-                                <div class="accordion-content show">
-                                    <div class="rich-text-content">
-                                        {!! $product->description !!}
+                                                $currentLocale = app()->getLocale(); 
+                                                
+                                                $translation = $product->translations->where('locale', $currentLocale)->first();
+                                                
+                                                $displayDescription = ($translation && !empty($translation->details)) 
+                                                    ? $translation->details 
+                                                    : $product->description;
+                                            @endphp
+                                            
+                                            {!! $displayDescription !!}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -239,7 +263,7 @@
         @if (isset($mostViewed) && $mostViewed->isNotEmpty())
             <section class="sax-section-container py-5 border-top bg-light">
                 <div class="container-fluid px-lg-5">
-                    <h2 class="sax-section-title mb-4">MAIS VISTOS</h2>
+                    <h2 class="sax-section-title mb-4">{{ __('messages.mais_vistos') }}</h2>
                     <div class="swiper productSwiper">
                         <div class="swiper-wrapper">
                             @foreach ($mostViewed as $item)

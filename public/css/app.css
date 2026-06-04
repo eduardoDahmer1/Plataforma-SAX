@@ -2061,7 +2061,6 @@ display: flex;
 align-items: center;
 justify-content: center;
 margin-bottom: 20px;
-background-color: #fcfcfc; /* Fundo muito leve para as fotos */
 overflow: hidden;
 }
 
@@ -2992,12 +2991,12 @@ align-items: center;
 text-decoration: none !important;
 flex: 0 0 18%; 
 max-width: 220px;
+border: 1px solid #f2f2f2;
 }
 
 .category-img-box {
 width: 100%;
 aspect-ratio: 1 / 1;
-background-color: #f2f2f2;
 display: flex;
 justify-content: center;
 align-items: center;

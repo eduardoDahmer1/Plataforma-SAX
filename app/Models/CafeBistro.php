@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class CafeBistro extends Model
 {
@@ -68,5 +69,10 @@ class CafeBistro extends Model
     public function getHasMapaAttribute(): bool
     {
         return !empty($this->mapa_embed);
+    }
+
+    public function translations(): MorphMany
+    {
+        return $this->morphMany(PageTranslation::class, 'pageable', 'page_type', 'page_id');
     }
 }

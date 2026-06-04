@@ -337,7 +337,7 @@
                                     <label class="sax-form-label">{{ __('messages.whatsapp_phone_label') }}</label>
                                     <input type="text" name="locations_items[{{ $i }}][phone]"
                                            class="form-control sax-input"
-                                           value="{{ old("locations_items.$i.phone", '') }}"
+                                           value="{{ old("locations_items.$i.phone", $loc['phone'] ?? '') }}" 
                                            placeholder="+595 XXX XXX XXX">
                                 </div>
                             </div>

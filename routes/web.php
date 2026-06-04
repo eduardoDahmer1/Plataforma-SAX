@@ -65,6 +65,12 @@ Route::get('/testar-email', function () {
     }
 });
 
+// TEMPORAL - borrar después de revisar el diseño del correo
+Route::get('/mail-preview/order-paid', function () {
+    $order = \App\Models\Order::latest()->first();
+    return new \App\Mail\OrderPaidMail($order);
+});
+
 // --- Public Routes ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');

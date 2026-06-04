@@ -15,7 +15,7 @@ class BridalAdminController extends Controller
      */
     public function index()
     {
-        $bridal = Bridal::first() ?? Bridal::create(['hero_title' => 'SAX Bridal']);
+        $bridal = Bridal::with('translations')->first() ?? Bridal::create(['hero_title' => 'SAX Bridal']);
         return view('admin.bridal.index', compact('bridal'));
     }
 
@@ -24,18 +24,20 @@ class BridalAdminController extends Controller
      */
     public function edit($id)
     {
-        $bridal = Bridal::findOrFail($id);
+        $bridal = Bridal::with('translations')->findOrFail($id);
         return view('admin.bridal.edit', compact('bridal'));
     }
 
     /**
-     * Procesa la actualización de todos los campos e imágenes.
+     * Procesa la actualización de todos los campos, imágenes y traducciones.
      */
     public function update(Request $request, $id)
     {
         $bridal = Bridal::findOrFail($id);
 
         $data = $request->validate([
+            'locale'    => 'required|string|in:pt-br,es,en', // Define o idioma enviado pelo form
+
             // Básicos
             'title'     => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
@@ -111,6 +113,8 @@ class BridalAdminController extends Controller
             'testimonials_items.*.foto'      => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:2048',
         ]);
 
+        $locale = $data['locale'];
+
         // 1. Procesar imágenes individuales (con conversión WebP)
         $fileFields = ['hero_image', 'palace_image'];
         foreach ($fileFields as $field) {
@@ -123,8 +127,8 @@ class BridalAdminController extends Controller
         }
 
         // 2. Construir JSON de services (4 bloques fijos, con imagen)
+        $services = [];
         if ($request->has('services_items')) {
-            $services = [];
             foreach ($request->input('services_items', []) as $index => $item) {
                 $imagePath = $item['image_path'] ?? null;
                 if ($request->hasFile("services_items.$index.image")) {
@@ -141,13 +145,11 @@ class BridalAdminController extends Controller
                     ];
                 }
             }
-            $data['services'] = $services;
         }
-        unset($data['services_items']);
 
         // 3. Construir JSON de promos (3 bloques fijos, con imagen por ítem)
+        $promos = [];
         if ($request->has('promos_items')) {
-            $promos = [];
             foreach ($request->input('promos_items', []) as $index => $item) {
                 $imagePath = $item['image_path'] ?? null;
                 if ($request->hasFile("promos_items.$index.image")) {
@@ -166,13 +168,11 @@ class BridalAdminController extends Controller
                     ];
                 }
             }
-            $data['promos'] = $promos;
         }
-        unset($data['promos_items']);
 
         // 4. Construir JSON de brands (N dinámico, con logo opcional)
+        $brands = [];
         if ($request->has('brands_items')) {
-            $brands = [];
             foreach ($request->input('brands_items', []) as $index => $item) {
                 $logoPath = $item['logo_path'] ?? null;
                 if ($request->hasFile("brands_items.$index.logo_imagen")) {
@@ -188,13 +188,11 @@ class BridalAdminController extends Controller
                     ];
                 }
             }
-            $data['brands'] = $brands;
         }
-        unset($data['brands_items']);
 
         // 5. Construir JSON de locations (N dinámico, con imagen)
+        $locations = [];
         if ($request->has('locations_items')) {
-            $locations = [];    
             foreach ($request->input('locations_items', []) as $index => $item) {
                 $imagePath = $item['image_path'] ?? null;
                 if ($request->hasFile("locations_items.$index.image")) {
@@ -219,13 +217,11 @@ class BridalAdminController extends Controller
                     ];
                 }
             }
-            $data['locations'] = $locations;
         }
-        unset($data['locations_items']);
 
         // 6. Construir JSON de testimonials (4 bloques fijos, con foto opcional)
+        $testimonials = [];
         if ($request->has('testimonials_items')) {
-            $testimonials = [];
             foreach ($request->input('testimonials_items', []) as $index => $item) {
                 $fotoPath = $item['foto_path'] ?? null;
                 if ($request->hasFile("testimonials_items.$index.foto")) {
@@ -234,7 +230,7 @@ class BridalAdminController extends Controller
                         'bridal/testimonials'
                     );
                 }
-                if (!empty($item['quote']) || !empty($item['author'])) { // Solo se requiere quote o author para mostrar el bloque
+                if (!empty($item['quote']) || !empty($item['author'])) {
                     $testimonials[] = [
                         'quote'     => $item['quote'] ?? '',
                         'author'    => $item['author'] ?? '',
@@ -243,18 +239,58 @@ class BridalAdminController extends Controller
                     ];
                 }
             }
-            $data['testimonials'] = $testimonials;
         }
-        unset($data['testimonials_items']);
 
-        $bridal->update($data);
+        // Salva os dados estruturais e de controle globais na tabela pai
+        $bridal->update([
+            'title'             => $data['title'] ?? $bridal->title,
+            'is_active'         => $data['is_active'] ?? $bridal->is_active,
+            'services_cta_link' => $data['services_cta_link'] ?? $bridal->services_cta_link,
+            'palace_link'        => $data['palace_link'] ?? $bridal->palace_link,
+            'social_instagram'  => $data['social_instagram'] ?? $bridal->social_instagram,
+            'hero_image'        => $data['hero_image'] ?? $bridal->hero_image,
+            'palace_image'      => $data['palace_image'] ?? $bridal->palace_image,
+            'promos'            => !empty($promos) ? $promos : $bridal->promos,
+            'brands'            => !empty($brands) ? $brands : $bridal->brands,
+        ]);
+
+        // SALVA OU ATUALIZA TODOS OS TEXTOS TRADUZIDOS E ARRAYS MULTILÍNGUES NA TABELA ÚNICA
+        $bridal->translations()->updateOrCreate(
+            [
+                'locale' => $locale,
+                'page_type' => 'bridal',
+            ],
+            [
+                'bridal_title'             => $data['title'] ?? null,
+                'bridal_meta_title'        => $data['meta_title'] ?? null,
+                'bridal_meta_description'   => $data['meta_description'] ?? null,
+                'bridal_hero_title'        => $data['hero_title'] ?? null,
+                'bridal_hero_subtitle'     => $data['hero_subtitle'] ?? null,
+                'bridal_hero_description'  => $data['hero_description'] ?? null,
+                'bridal_services_label'    => $data['services_label'] ?? null,
+                'bridal_services_title'    => $data['services_title'] ?? null,
+                'bridal_services_cta_text' => $data['services_cta_text'] ?? null,
+                'bridal_palace_subtitle'   => $data['palace_subtitle'] ?? null,
+                'bridal_palace_title'      => $data['palace_title'] ?? null,
+                'bridal_palace_description'=> $data['palace_description'] ?? null,
+                'bridal_testimonials_label'=> $data['testimonials_label'] ?? null,
+                'bridal_testimonials_title'=> $data['testimonials_title'] ?? null,
+                
+                // Estruturas complexas salvas localizadas por idioma
+                'bridal_services'          => !empty($services) ? json_encode($services) : null,
+                'bridal_testimonials'      => !empty($testimonials) ? json_encode($testimonials) : null,
+                'bridal_locations'         => !empty($locations) ? json_encode($locations) : null,
+            ]
+        );
+
+        // Limpa o cache do front-end
         Cache::forget('bridal_data');
 
-        return redirect()->route('admin.bridal.index', $id)->with('success', 'Contenido de SAX Bridal actualizado con éxito.');
+        return redirect()->route('admin.bridal.index')->with('success', 'Contenido y traducción (' . strtoupper($locale) . ') de SAX Bridal actualizados con éxito.');
     }
 
     /**
-     * Conversor Universal para WebP (Suporta >10 formatos via fallback)
+     * Conversor Universal para WebP
      */
     private function convertToWebp($image, $type)
     {

@@ -8,8 +8,12 @@
                         <i class="bi bi-gem"></i>
                     </div>
                     <div class="feature-divider"></div>
-                    <h3 class="feature-title">{{ $institucional->text_section_one_title }}</h3>
-                    <p class="feature-body">{{ $institucional->text_section_one_body }}</p>
+                    <h3 class="feature-title">
+                        {{ $translation->inst_text_section_one_title ?? $institucional->text_section_one_title }}
+                    </h3>
+                    <p class="feature-body">
+                        {{ $translation->inst_text_section_one_body ?? $institucional->text_section_one_body }}
+                    </p>
                 </div>
             </div>
 
@@ -20,8 +24,12 @@
                         <i class="bi bi-star"></i>
                     </div>
                     <div class="feature-divider"></div>
-                    <h3 class="feature-title">{{ $institucional->text_section_two_title }}</h3>
-                    <p class="feature-body">{{ $institucional->text_section_two_body }}</p>
+                    <h3 class="feature-title">
+                        {{ $translation->inst_text_section_two_title ?? $institucional->text_section_two_title }}
+                    </h3>
+                    <p class="feature-body">
+                        {{ $translation->inst_text_section_two_body ?? $institucional->text_section_two_body }}
+                    </p>
                 </div>
             </div>
 
@@ -32,8 +40,12 @@
                         <i class="bi bi-shield-check"></i>
                     </div>
                     <div class="feature-divider"></div>
-                    <h3 class="feature-title">{{ $institucional->text_section_three_title }}</h3>
-                    <p class="feature-body">{{ $institucional->text_section_three_body }}</p>
+                    <h3 class="feature-title">
+                        {{ $translation->inst_text_section_three_title ?? $institucional->text_section_three_title }}
+                    </h3>
+                    <p class="feature-body">
+                        {{ $translation->inst_text_section_three_body ?? $institucional->text_section_three_body }}
+                    </p>
                 </div>
             </div>
         </div>

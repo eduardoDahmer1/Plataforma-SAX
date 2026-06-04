@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Palace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class PalaceAdminController extends Controller
 {
@@ -14,7 +15,8 @@ class PalaceAdminController extends Controller
      */
     public function index()
     {
-        $palace = Palace::first() ?? Palace::create(['hero_titulo' => 'SAX Palace']);
+        // Traz o registro junto com as traduções para a listagem
+        $palace = Palace::with('translations')->first() ?? Palace::create(['hero_titulo' => 'SAX Palace']);
         return view('admin.palace.index', compact('palace'));
     }
 
@@ -23,19 +25,22 @@ class PalaceAdminController extends Controller
      */
     public function edit($id)
     {
-        $palace = Palace::findOrFail($id);
+        // Carrega o Palace com suas traduções existentes para preencher o form
+        $palace = Palace::with('translations')->findOrFail($id);
         return view('admin.palace.edit', compact('palace'));
     }
 
     /**
-     * Processa a atualização de todos os campos e imagens.
+     * Processa a atualização de todos os campos, imagens e traduções.
      */
     public function update(Request $request, $id)
     {
         $palace = Palace::findOrFail($id);
 
-        // Aumentamos os limites de validação e tipos de arquivos (incluindo o novo campo PDF)
+        // Validamos também o campo obrigatório do idioma que está sendo editado/salvo
         $data = $request->validate([
+            'locale' => 'required|string|in:pt-br,es,en', // Define qual idioma o form está enviando
+
             'hero_titulo' => 'nullable|string|max:255',
             'hero_descricao' => 'nullable|string',
             'bar_titulo' => 'nullable|string|max:255',
@@ -57,7 +62,6 @@ class PalaceAdminController extends Controller
             'contato_whatsapp' => 'nullable|string',
             'contato_mapa_iframe' => 'nullable|string',
 
-            // Aceita uma vasta gama de formatos de imagem
             'hero_imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
             'bar_imagem_1' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
             'bar_imagem_2' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
@@ -67,30 +71,29 @@ class PalaceAdminController extends Controller
             'eventos_galeria' => 'nullable|array',
             'eventos_galeria.*' => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
 
-            // Validação do Novo Campo de Menu em PDF (Até 10MB)
             'gastronomia_menu_pdf' => 'nullable|file|mimes:pdf|max:10240',
         ]);
+
+        // Separa o idioma selecionado
+        $locale = $data['locale'];
 
         // 1. Processar Imagens Individuais (Substituição com Conversão WebP)
         $fileFields = ['hero_imagem', 'bar_imagem_1', 'bar_imagem_2', 'bar_imagem_3', 'tematica_imagem'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
-                // Remove arquivo antigo se existir
                 if ($palace->$field) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($palace->$field);
+                    Storage::disk('public')->delete($palace->$field);
                 }
-                // Converte e salva
                 $data[$field] = $this->convertToWebp($request->file($field), 'palace');
             }
         }
 
         // 2. Processar Galeria de Eventos
         if ($request->hasFile('eventos_galeria')) {
-            // Limpa galeria antiga física
             if ($palace->eventos_galeria) {
                 $oldGallery = is_array($palace->eventos_galeria) ? $palace->eventos_galeria : json_decode($palace->eventos_galeria, true);
                 foreach ($oldGallery ?? [] as $oldPath) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                    Storage::disk('public')->delete($oldPath);
                 }
             }
 
@@ -103,35 +106,61 @@ class PalaceAdminController extends Controller
 
         // 3. Processar o Arquivo do Cardápio em PDF
         if ($request->hasFile('gastronomia_menu_pdf')) {
-            // Remove o PDF antigo se ele existir no banco e no disco
-            if ($palace->gastronomia_menu_pdf && \Illuminate\Support\Facades\Storage::disk('public')->exists($palace->gastronomia_menu_pdf)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($palace->gastronomia_menu_pdf);
+            if ($palace->gastronomia_menu_pdf && Storage::disk('public')->exists($palace->gastronomia_menu_pdf)) {
+                Storage::disk('public')->delete($palace->gastronomia_menu_pdf);
             }
 
-            // Salva o novo PDF na pasta 'menus' dentro do disco public
             $pdfPath = $request->file('gastronomia_menu_pdf')->store('menus', 'public');
             $data['gastronomia_menu_pdf'] = $pdfPath;
         }
 
+        // 4. Salva os dados globais na tabela pai (links, imagens, PDFs, etc)
         $palace->update($data);
 
-        return redirect()->route('admin.palace.index')->with('success', 'Conteúdo do SAX Palace atualizado com sucesso e imagens otimizadas!');
+        // 5. SALVA OU ATUALIZA A TRADUÇÃO NA TABELA POLIMÓRFICA ÚNICA
+        $palace->translations()->updateOrCreate(
+            [
+                'locale' => $locale,
+                'page_type' => 'palace', // ou o nome da Model se usar o morphMap do Laravel
+            ],
+            [
+                'palace_hero_titulo'             => $data['hero_titulo'] ?? null,
+                'palace_hero_descricao'          => $data['hero_descricao'] ?? null,
+                'palace_bar_titulo'              => $data['bar_titulo'] ?? null,
+                'palace_bar_descricao'           => $data['bar_descricao'] ?? null,
+                'palace_eventos_titulo'          => $data['eventos_titulo'] ?? null,
+                'palace_eventos_descricao'       => $data['eventos_descricao'] ?? null,
+                'palace_tematica_tag'            => $data['tematica_tag'] ?? null,
+                'palace_tematica_titulo'         => $data['tematica_titulo'] ?? null,
+                'palace_tematica_descricao'      => $data['tematica_descricao'] ?? null,
+                'palace_tematica_preco'          => $data['tematica_preco'] ?? null,
+                'palace_gastronomia_titulo'      => $data['gastronomia_titulo'] ?? null,
+                'palace_gastronomia_cafe_desc'   => $data['gastronomia_cafe_desc'] ?? null,
+                'palace_gastronomia_almoco_desc' => $data['gastronomia_almoco_desc'] ?? null,
+                'palace_gastronomia_jantar_desc' => $data['gastronomia_jantar_desc'] ?? null,
+                'palace_contato_endereco'        => $data['contato_endereco'] ?? null,
+                'palace_contato_horario_segunda' => $data['contato_horario_segunda'] ?? null,
+                'palace_contato_horario_sabado'  => $data['contato_horario_sabado'] ?? null,
+                'palace_contato_horario_domingo' => $data['contato_horario_domingo'] ?? null,
+            ]
+        );
+
+        // 6. Limpa o Cache do Front-end para refletir as alterações instantaneamente
+        Cache::forget('palace_data');
+
+        return redirect()->route('admin.palace.index')->with('success', 'Conteúdo e tradução (' . strtoupper($locale) . ') do SAX Palace atualizados com sucesso!');
     }
 
     /**
-     * Conversor Universal para WebP (Suporta >10 formatos via fallback)
+     * Conversor Universal para WebP
      */
     private function convertToWebp($image, $type)
     {
-        // Aumenta memória para processar banners ou imagens de alta resolução
         ini_set('memory_limit', '512M');
 
         $tempPath = $image->getRealPath();
         $extension = strtolower($image->getClientOriginalExtension());
-
-        // Define o diretório baseado no contexto enviado (palace, palace/galeria, etc)
         $directory = rtrim($type, '/') . '/';
-
         $filename = uniqid() . '.webp';
         $fullPath = storage_path('app/public/' . $directory . $filename);
 
@@ -139,13 +168,11 @@ class PalaceAdminController extends Controller
             Storage::disk('public')->makeDirectory($directory);
         }
 
-        // Se já for webp ou avif (formatos de próxima geração), salva sem reprocessar para manter qualidade
         if ($extension === 'webp' || $extension === 'avif') {
             Storage::disk('public')->putFileAs($directory, $image, $filename);
             return "{$directory}{$filename}";
         }
 
-        // Cria recurso de imagem suportando os 10+ tipos solicitados
         $imageResource = match ($extension) {
             'jpeg', 'jpg', 'jfif' => @imagecreatefromjpeg($tempPath),
             'png' => @imagecreatefrompng($tempPath),
@@ -153,23 +180,19 @@ class PalaceAdminController extends Controller
             'bmp' => @imagecreatefrombmp($tempPath),
             'webp' => @imagecreatefromwebp($tempPath),
             'tga' => @imagecreatefromtga($tempPath),
-            // Para outros formatos (TIFF, HEIC, etc), tenta via string ou fallback original
             default => @imagecreatefromstring(file_get_contents($tempPath)),
         };
 
         if (!$imageResource) {
-            // Fallback: se o GD não conseguir converter o formato exótico, salva o original para não perder o upload
             $origFilename = uniqid() . '.' . $extension;
             Storage::disk('public')->putFileAs($directory, $image, $origFilename);
             return "{$directory}{$origFilename}";
         }
 
-        // Mantém transparência (essencial para PNG e GIF)
         imagepalettetotruecolor($imageResource);
         imagealphablending($imageResource, true);
         imagesavealpha($imageResource, true);
 
-        // Salva otimizado em WebP
         imagewebp($imageResource, $fullPath, 80);
         imagedestroy($imageResource);
 

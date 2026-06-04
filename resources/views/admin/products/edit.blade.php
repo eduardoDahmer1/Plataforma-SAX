@@ -38,11 +38,23 @@
                     </div>
 
                     <!-- Nome -->
-                    <div class="col-md-6">
-                        <label for="name" class="form-label"><i class="fas fa-pencil-alt me-1"></i>Nome</label>
-                        @php $nameValue = old('name') ?? ($item->name ?? ($item->external_name ?? '')); @endphp
-                        <input type="text" id="name" name="name" class="form-control"
-                            value="{{ $nameValue }}">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-pencil-alt me-1"></i>Nome do Produto</label>
+                        
+                        <input type="hidden" id="real-name-pt" name="translate[pt-br][name]" value="{{ old('translate.pt-br.name', $item->translations->where('locale', 'pt-br')->first()->name ?? ($item->name ?? ($item->external_name ?? ''))) }}">
+                        <input type="hidden" id="real-name-es" name="translate[es][name]" value="{{ old('translate.es.name', $item->translations->where('locale', 'es')->first()->name ?? '') }}">
+                        <input type="hidden" id="real-name-en" name="translate[en][name]" value="{{ old('translate.en.name', $item->translations->where('locale', 'en')->first()->name ?? '') }}">
+
+                        <div>
+                            <input type="text" id="visual-name-input" class="form-control" value="">
+                        </div>
+
+                        <div class="mt-1">
+                            <span class="small text-muted me-2">Editar idioma:</span>
+                            <a href="javascript:void(0)" class="badge bg-primary name-lang-btn text-decoration-none" data-lang="pt" onclick="switchLanguage('name', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary name-lang-btn text-decoration-none" data-lang="es" onclick="switchLanguage('name', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary name-lang-btn text-decoration-none" data-lang="en" onclick="switchLanguage('name', 'en', this)">EN</a>
+                        </div>
                     </div>
 
                     <!-- Marca -->
@@ -292,11 +304,22 @@
                     </div>
 
                     <!-- Descrição -->
-                    <div class="col-12">
-                        <label for="editor-product" class="sax-label"><i
-                                class="fas fa-align-left me-1"></i>Descrição</label>
+                    <div class="col-12 mb-3">
+                        <label class="sax-label"><i class="fas fa-align-left me-1"></i>Descrição do Produto</label>
+                        
+                        <textarea id="real-desc-pt" name="translate[pt-br][details]" class="d-none">{{ old('translate.pt-br.details', $item->translations->where('locale', 'pt-br')->first()->details ?? ($item->description ?? '')) }}</textarea>
+                        <textarea id="real-desc-es" name="translate[es][details]" class="d-none">{{ old('translate.es.details', $item->translations->where('locale', 'es')->first()->details ?? '') }}</textarea>
+                        <textarea id="real-desc-en" name="translate[en][details]" class="d-none">{{ old('translate.en.details', $item->translations->where('locale', 'en')->first()->details ?? '') }}</textarea>
+
                         <div class="editor-rich-wrapper">
-                            <textarea name="description" id="editor-product" class="form-control" rows="5">{{ old('description', $item->description ?? '') }}</textarea>
+                            <textarea id="editor-product" class="form-control"></textarea>
+                        </div>
+
+                        <div class="mt-1">
+                            <span class="small text-muted me-2">Editar idioma:</span>
+                            <a href="javascript:void(0)" class="badge bg-primary desc-lang-btn text-decoration-none" onclick="switchLanguage('desc', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" onclick="switchLanguage('desc', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" onclick="switchLanguage('desc', 'en', this)">EN</a>
                         </div>
                     </div>
 

@@ -119,6 +119,11 @@ class Product extends Model
         return $this->belongsTo(Brand::class);
     }
 
+    public function translations()
+    {
+        return $this->hasMany(ProductTranslation::class, 'product_id', 'id');
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

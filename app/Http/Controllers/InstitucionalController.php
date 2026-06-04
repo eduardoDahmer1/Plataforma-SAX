@@ -13,7 +13,7 @@ class InstitucionalController extends Controller
         // Cache por 1440 minutos (24 horas)
         $data = Cache::remember('institucional_page_data', 1440, function () {
             return [
-                'institucional' => Institucional::first() ?: new Institucional(),
+                'institucional' => Institucional::with('translations')->first() ?: new Institucional(),
                 'brands' => Brand::whereNotNull('image')
                     ->where('status', 1)
                     ->get()

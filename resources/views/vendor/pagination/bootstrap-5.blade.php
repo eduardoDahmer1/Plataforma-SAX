@@ -1,7 +1,7 @@
 @if ($paginator->hasPages())
-    <nav class="d-flex justify-items-center justify-content-between">
+    <nav class="d-flex justify-content-between align-items-center sax-pagination-wrapper">
         <div class="d-flex justify-content-between flex-fill d-sm-none">
-            <ul class="pagination">
+            <ul class="pagination pagination-sm mb-0">
                 {{-- Previous Page Link --}}
                 @if ($paginator->onFirstPage())
                     <li class="page-item disabled" aria-disabled="true">
@@ -26,21 +26,21 @@
             </ul>
         </div>
 
-        <div class="d-none flex-sm-fill d-sm-flex align-items-sm-center justify-content-sm-between">
-            <div>
-                <p class="small text-muted">
-                    {!! __('Showing') !!}
-                    <span class="fw-semibold">{{ $paginator->firstItem() }}</span>
-                    {!! __('to') !!}
-                    <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
-                    {!! __('of') !!}
-                    <span class="fw-semibold">{{ $paginator->total() }}</span>
-                    {!! __('results') !!}
+        <div class="d-none flex-sm-fill d-sm-flex align-items-sm-center justify-content-sm-between width-full-pagination">
+            <div class="pagination-text-info">
+                <p class="small text-muted mb-0">
+                    Mostrando de 
+                    <span class="font-weight-bold font-dark-info">{{ $paginator->firstItem() }}</span>
+                    a 
+                    <span class="font-weight-bold font-dark-info">{{ $paginator->lastItem() }}</span>
+                    de um total de 
+                    <span class="font-weight-bold font-dark-info">{{ $paginator->total() }}</span>
+                    registros
                 </p>
             </div>
 
-            <div>
-                <ul class="pagination">
+            <div class="pagination-buttons-box">
+                <ul class="pagination pagination-sm mb-0">
                     {{-- Previous Page Link --}}
                     @if ($paginator->onFirstPage())
                         <li class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')">
@@ -86,3 +86,71 @@
         </div>
     </nav>
 @endif
+
+<style>
+    /* Container Geral da Paginação */
+.sax-pagination-wrapper {
+    padding: 10px 0;
+    width: 100%;
+}
+
+.width-full-pagination {
+    width: 100%;
+}
+
+/* Customização do texto "Mostrando de X a Y" */
+.pagination-text-info p {
+    font-size: 14px;
+    color: #333333 !important;
+}
+
+.font-dark-info {
+    color: #333333;
+    font-weight: 700;
+}
+
+/* ===================================================
+   RESET E ESTILIZAÇÃO COMPLETA DA PAGINAÇÃO (SEM BORDAS)
+   =================================================== */
+
+/* Remove as bordas, arredondamentos e fundos de toda a lista */
+.sax-pagination-wrapper .pagination .page-link {
+    color: #333333 !important; /* Texto preto para os botões */
+    background-color: transparent !important; /* Sem fundo */
+    border: none !important; /* Remove TODAS as bordas */
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 2px; /* Pequeno espaçamento entre os números */
+    transition: all 0.2s ease;
+}
+
+/* Efeito ao passar o mouse (Hover) nos botões numéricos */
+.sax-pagination-wrapper .pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+    background-color: #e9ecef !important; /* Fundo cinza sutil ao passar o mouse */
+    color: #333333 !important;
+    border-radius: 4px !important;
+}
+
+/* Página Atual Ativa (A caixinha azul do print) */
+.sax-pagination-wrapper .pagination .page-item.active .page-link {
+    z-index: 3;
+    color: black !important;
+    border-bottom: 1px solid black !important;
+}
+
+/* Botões Desabilitados (Setas apagadas quando não há mais páginas) */
+.sax-pagination-wrapper .pagination .page-item.disabled .page-link {
+    color: #c0c0c0 !important; /* Cinza bem clarinho/apagado */
+    background-color: transparent !important;
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Remove os arredondamentos padrão dos cantos do Bootstrap nas pontas */
+.sax-pagination-wrapper .pagination .page-item:first-child .page-link,
+.sax-pagination-wrapper .pagination .page-item:last-child .page-link {
+    border-radius: 0 !important;
+}
+</style>

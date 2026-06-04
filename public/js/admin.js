@@ -128,21 +128,146 @@ if (document.getElementById('editor-blog') && typeof tinymce !== 'undefined') {
     });
 }
 
-// ── TinyMCE: editor de producto ───────────────────────────────
-if (document.getElementById('editor-product') && typeof tinymce !== 'undefined') {
-    tinymce.init({
-        selector: '#editor-product',
-        height: 400,
-        menubar: false,
-        branding: false,
-        statusbar: true,
-        plugins: ['advlist autolink lists link image charmap print preview anchor',
-                  'searchreplace visualblocks code fullscreen',
-                  'insertdatetime media table paste code help wordcount'],
-        toolbar: 'formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | link image | code fullscreen',
-        content_style: 'body { font-family: -apple-system, sans-serif; font-size: 14px; }',
-        setup: function(editor) { editor.on('change', function() { editor.save(); }); }
+// 1. Inicialização segura do Objeto de Estados
+var currentLangs = {
+    title: 'pt', content: 'pt', desc: 'pt',
+    pilar1: 'pt', pilar2: 'pt', pilar3: 'pt', name: 'pt'
+};
+
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // ==========================================
+    // 2. INICIALIZAÇÃO DE CAMPOS (Títulos e Inputs)
+    // ==========================================
+    const inputsParaInicializar = {
+        'visual-title-input': 'real-title-pt',
+        'visual-name-input': 'real-name-pt', 
+        'visual-pilar1t-input': 'real-pilar1t-pt', 'visual-pilar1b-input': 'real-pilar1b-pt',
+        'visual-pilar2t-input': 'real-pilar2t-pt', 'visual-pilar2b-input': 'real-pilar2b-pt',
+        'visual-pilar3t-input': 'real-pilar3t-pt', 'visual-pilar3b-input': 'real-pilar3b-pt'
+    };
+
+    Object.keys(inputsParaInicializar).forEach(visualId => {
+        const vEl = document.getElementById(visualId);
+        const rEl = document.getElementById(inputsParaInicializar[visualId]);
+        if (vEl && rEl) vEl.value = rEl.value;
     });
+
+// ==========================================
+    // 3. INICIALIZAÇÃO DOS EDITORES (TinyMCE)
+    // ==========================================
+    if (typeof tinymce !== 'undefined') {
+        const editorConfig = {
+            height: 300, menubar: false, branding: false,
+            plugins: ['advlist autolink lists link image charmap preview anchor', 'searchreplace visualblocks code fullscreen', 'table paste code help wordcount'],
+            toolbar: 'formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | link | code fullscreen'
+        };
+
+        // Editor 1: Conteúdo Geral
+        tinymce.init({
+            ...editorConfig, 
+            selector: '#editor-content',
+            setup: (ed) => {
+                ed.on('init', () => {
+                    const real = document.getElementById('real-content-pt');
+                    if (real) ed.setContent(real.value);
+                });
+                ed.on('change keyup', () => { 
+                    ed.save(); 
+                    const t = document.getElementById('real-content-' + currentLangs.content);
+                    if (t) t.value = ed.getContent(); 
+                });
+            }
+        });
+
+        // Editor 2: Descrição do Produto
+        tinymce.init({
+            ...editorConfig, 
+            selector: '#editor-product',
+            setup: (ed) => {
+                ed.on('init', () => {
+                    const real = document.getElementById('real-desc-pt');
+                    if (real) ed.setContent(real.value);
+                });
+                ed.on('change keyup', () => { 
+                    ed.save(); 
+                    const t = document.getElementById('real-desc-' + currentLangs.desc);
+                    if (t) t.value = ed.getContent(); 
+                });
+            }
+        });
+    }
+
+    // ==========================================
+    // 4. OUVINTES DE INPUTS (Sincronização simples)
+    // ==========================================
+    const simpleInputs = ['title', 'name'];
+    simpleInputs.forEach(type => {
+        const vEl = document.getElementById(`visual-${type}-input`);
+        if (vEl) vEl.addEventListener('input', function() {
+            const target = document.getElementById(`real-${type}-${currentLangs[type]}`);
+            if (target) target.value = this.value;
+        });
+    });
+});
+
+// ==========================================
+// 5. MECANISMO SWITCHER UNIFICADO
+// ==========================================
+function switchLanguage(type, nextLang, element) {
+    const prevLang = currentLangs[type];
+    if (prevLang === nextLang) return;
+
+    // A. Tratamento para Editores (content e desc)
+    if (type === 'content' || type === 'desc') {
+        const editorId = (type === 'content') ? 'editor-content' : 'editor-product';
+        const realPrefix = (type === 'content') ? 'real-content-' : 'real-desc-';
+        
+        const editor = tinymce.get(editorId);
+        if (editor) {
+            const prevArea = document.getElementById(realPrefix + prevLang);
+            const nextArea = document.getElementById(realPrefix + nextLang);
+            if (prevArea) prevArea.value = editor.getContent();
+            editor.setContent(nextArea ? nextArea.value : '');
+        }
+    } 
+    // B. Tratamento para Inputs Visuais (title, name)
+    else if (type === 'title' || type === 'name') {
+        const prevInput = document.getElementById(`real-${type}-` + prevLang);
+        const nextInput = document.getElementById(`real-${type}-` + nextLang);
+        const vEl = document.getElementById(`visual-${type}-input`);
+        
+        if (vEl && prevInput) prevInput.value = vEl.value;
+        if (vEl) vEl.value = nextInput ? nextInput.value : '';
+    }
+    // C. Tratamento para Pilares
+    else if (type.startsWith('pilar')) {
+        const vTitle = document.getElementById(`visual-${type}t-input`);
+        const vBody = document.getElementById(`visual-${type}b-input`);
+        
+        // Salva o atual
+        const prevT = document.getElementById(`real-${type}t-${prevLang}`);
+        const prevB = document.getElementById(`real-${type}b-${prevLang}`);
+        if (vTitle && prevT) prevT.value = vTitle.value;
+        if (vBody && prevB) prevB.value = vBody.value;
+        
+        // Carrega o próximo
+        const nextT = document.getElementById(`real-${type}t-${nextLang}`);
+        const nextB = document.getElementById(`real-${type}b-${nextLang}`);
+        if (vTitle) vTitle.value = nextT ? nextT.value : '';
+        if (vBody) vBody.value = nextB ? nextB.value : '';
+    }
+
+    currentLangs[type] = nextLang;
+
+    // Atualiza classes dos botões
+    const container = element.closest('.mb-3') || element.closest('.group-container');
+    if (container) {
+        container.querySelectorAll('.' + type + '-lang-btn').forEach(b => {
+            b.classList.remove('bg-primary'); b.classList.add('bg-secondary');
+        });
+        element.classList.remove('bg-secondary'); element.classList.add('bg-primary');
+    }
 }
 
 // ── Image preview genérico (.img-trigger + data-prev) ─────────

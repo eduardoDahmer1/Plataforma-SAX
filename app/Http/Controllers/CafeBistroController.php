@@ -9,7 +9,9 @@ class CafeBistroController extends Controller
 {
     public function index()
     {
-        $cafeBistro = Cache::remember('cafe_bistro_data', 28800, fn() => CafeBistro::first()) ?? new CafeBistro();
+        $cafeBistro = Cache::remember('cafe_bistro_data', 28800, function () {
+            return CafeBistro::with('translations')->first() ?: new CafeBistro();
+        });
 
         return view('cafe_bistro.index', compact('cafeBistro'));
     }

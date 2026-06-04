@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Bridal extends Model
 {
@@ -54,4 +55,9 @@ class Bridal extends Model
         'created_at'   => 'datetime',
         'updated_at'   => 'datetime',
     ];
+
+    public function translations(): MorphMany
+    {
+        return $this->morphMany(PageTranslation::class, 'pageable', 'page_type', 'page_id');
+    }
 }

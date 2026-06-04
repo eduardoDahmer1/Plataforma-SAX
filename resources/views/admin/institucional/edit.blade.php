@@ -30,13 +30,45 @@
                 {{-- 1. SEÇÃO SOBRE NOSOTROS --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.secao_principal_nosotros') }}</h6>
-                    <div class="mb-4">
-                        <label class="sax-form-label">{{ __('messages.titulo_secao_label') }}</label>
-                        <input type="text" name="section_one_title" class="form-control sax-input" value="{{ $institucional->section_one_title }}">
+                    
+                    {{-- Campo: Título da Seção --}}
+                    <div class="mb-4 group-container">
+                        <label class="sax-form-label"><i class="fas fa-pencil-alt me-1"></i> {{ __('messages.titulo_secao_label') }}</label>
+                        
+                        {{-- Corrigido: Names alterados para refletir os prefixos inst_ da tabela polimórfica --}}
+                        <input type="hidden" id="real-title-pt" name="translate[pt-br][inst_section_one_title]" value="{{ old('translate.pt-br.inst_section_one_title', $institucional->translations->where('locale', 'pt-br')->first()->inst_section_one_title ?? $institucional->inst_section_one_title) }}">
+                        <input type="hidden" id="real-title-es" name="translate[es][inst_section_one_title]" value="{{ old('translate.es.inst_section_one_title', $institucional->translations->where('locale', 'es')->first()->inst_section_one_title ?? '') }}">
+                        <input type="hidden" id="real-title-en" name="translate[en][inst_section_one_title]" value="{{ old('translate.en.inst_section_one_title', $institucional->translations->where('locale', 'en')->first()->inst_section_one_title ?? '') }}">
+
+                        <input type="text" id="visual-title-input" class="form-control sax-input" value="">
+
+                        <div class="mt-1">
+                            <span class="small text-muted me-2">Editar idioma:</span>
+                            <a href="javascript:void(0)" class="badge bg-primary title-lang-btn text-decoration-none" onclick="switchLanguage('title', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary title-lang-btn text-decoration-none" onclick="switchLanguage('title', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary title-lang-btn text-decoration-none" onclick="switchLanguage('title', 'en', this)">EN</a>
+                        </div>
                     </div>
-                    <div class="mb-0">
-                        <label class="sax-form-label">{{ __('messages.conteudo_narrativo_label') }}</label>
-                        <textarea name="section_one_content" class="form-control sax-input" rows="6">{{ $institucional->section_one_content }}</textarea>
+
+                    {{-- Campo: Conteúdo Narrativo (TinyMCE) --}}
+                    <div class="mb-0 group-container">
+                        <label class="sax-form-label"><i class="fas fa-align-left me-1"></i> {{ __('messages.conteudo_narrativo_label') }}</label>
+                        
+                        {{-- Corrigido: Names alterados para inst_section_one_content --}}
+                        <textarea id="real-content-pt" name="translate[pt-br][inst_section_one_content]" class="d-none">{{ old('translate.pt-br.inst_section_one_content', $institucional->translations->where('locale', 'pt-br')->first()->inst_section_one_content ?? $institucional->inst_section_one_content) }}</textarea>
+                        <textarea id="real-content-es" name="translate[es][inst_section_one_content]" class="d-none">{{ old('translate.es.inst_section_one_content', $institucional->translations->where('locale', 'es')->first()->inst_section_one_content ?? '') }}</textarea>
+                        <textarea id="real-content-en" name="translate[en][inst_section_one_content]" class="d-none">{{ old('translate.en.inst_section_one_content', $institucional->translations->where('locale', 'en')->first()->inst_section_one_content ?? '') }}</textarea>
+
+                        <div class="editor-rich-wrapper">
+                            <textarea id="editor-content" class="form-control"></textarea>
+                        </div>
+
+                        <div class="mt-1">
+                            <span class="small text-muted me-2">Editar idioma:</span>
+                            <a href="javascript:void(0)" class="badge bg-primary content-lang-btn text-decoration-none" onclick="switchLanguage('content', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary content-lang-btn text-decoration-none" onclick="switchLanguage('content', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary content-lang-btn text-decoration-none" onclick="switchLanguage('content', 'en', this)">EN</a>
+                        </div>
                     </div>
                 </div>
 
@@ -46,13 +78,34 @@
                     
                     @for ($i = 1; $i <= 3; $i++)
                         @php 
-                            $titleField = "text_section_" . ($i == 1 ? 'one' : ($i == 2 ? 'two' : 'three')) . "_title";
-                            $bodyField = "text_section_" . ($i == 1 ? 'one' : ($i == 2 ? 'two' : 'three')) . "_body";
+                            $slug = $i == 1 ? 'one' : ($i == 2 ? 'two' : 'three');
+                            // Corrigido: Mapeamento dos campos com o prefixo inst_ idêntico ao banco de dados
+                            $titleField = "inst_text_section_{$slug}_title";
+                            $bodyField = "inst_text_section_{$slug}_body";
                         @endphp
-                        <div class="p-3 mb-3 rounded bg-light border-start border-gold">
+                        <div class="p-3 mb-3 rounded bg-light border-start border-gold group-container">
                             <label class="sax-form-label text-gold">{{ __('messages.pilar_label') }} 0{{ $i }}: {{ __('messages.titulo_secao_label') }} & {{ __('messages.conteudo_narrativo_label') }}</label>
-                            <input type="text" name="{{ $titleField }}" class="form-control sax-input mb-2 font-weight-bold" value="{{ $institucional->$titleField }}">
-                            <textarea name="{{ $bodyField }}" class="form-control sax-input small" rows="2">{{ $institucional->$bodyField }}</textarea>
+                            
+                            {{-- Inputs Ocultos Dinâmicos - Título do Pilar --}}
+                            <input type="hidden" id="real-pilar{{ $i }}t-pt" name="translate[pt-br][{{ $titleField }}]" value="{{ old('translate.pt-br.'.$titleField, $institucional->translations->where('locale', 'pt-br')->first()->$titleField ?? $institucional->$titleField) }}">
+                            <input type="hidden" id="real-pilar{{ $i }}t-es" name="translate[es][{{ $titleField }}]" value="{{ old('translate.es.'.$titleField, $institucional->translations->where('locale', 'es')->first()->$titleField ?? '') }}">
+                            <input type="hidden" id="real-pilar{{ $i }}t-en" name="translate[en][{{ $titleField }}]" value="{{ old('translate.en.'.$titleField, $institucional->translations->where('locale', 'en')->first()->$titleField ?? '') }}">
+
+                            {{-- Inputs Ocultos Dinâmicos - Corpo do Pilar --}}
+                            <input type="hidden" id="real-pilar{{ $i }}b-pt" name="translate[pt-br][{{ $bodyField }}]" value="{{ old('translate.pt-br.'.$bodyField, $institucional->translations->where('locale', 'pt-br')->first()->$bodyField ?? $institucional->$bodyField) }}">
+                            <input type="hidden" id="real-pilar{{ $i }}b-es" name="translate[es][{{ $bodyField }}]" value="{{ old('translate.es.'.$bodyField, $institucional->translations->where('locale', 'es')->first()->$bodyField ?? '') }}">
+                            <input type="hidden" id="real-pilar{{ $i }}b-en" name="translate[en][{{ $bodyField }}]" value="{{ old('translate.en.'.$bodyField, $institucional->translations->where('locale', 'en')->first()->$bodyField ?? '') }}">
+
+                            {{-- Inputs Visuais Espelho --}}
+                            <input type="text" id="visual-pilar{{ $i }}t-input" class="form-control sax-input mb-2 font-weight-bold" value="">
+                            <textarea id="visual-pilar{{ $i }}b-input" class="form-control sax-input small mb-2" rows="2"></textarea>
+
+                            <div class="mt-1">
+                                <span class="small text-muted me-2">Editar idioma:</span>
+                                <a href="javascript:void(0)" class="badge bg-primary pilar{{ $i }}-lang-btn text-decoration-none" onclick="switchLanguage('pilar{{ $i }}', 'pt', this)">PT</a>
+                                <a href="javascript:void(0)" class="badge bg-secondary pilar{{ $i }}-lang-btn text-decoration-none" onclick="switchLanguage('pilar{{ $i }}', 'es', this)">ES</a>
+                                <a href="javascript:void(0)" class="badge bg-secondary pilar{{ $i }}-lang-btn text-decoration-none" onclick="switchLanguage('pilar{{ $i }}', 'en', this)">EN</a>
+                            </div>
                         </div>
                     @endfor
                 </div>
@@ -86,7 +139,7 @@
                         <input type="file" name="gallery_images[]" class="sax-input-file" multiple>
                         <p class="sax-form-label m-0">{{ __('messages.upload_fotos_instrucao') }}</p>
                     </div>
-                                        <div class="gallery-preview-grid mt-3">
+                    <div class="gallery-preview-grid mt-3">
                         @php $fotos = is_array($institucional->gallery_images) ? $institucional->gallery_images : json_decode($institucional->gallery_images, true); @endphp
                         @foreach($fotos ?? [] as $foto)
                             <div class="gallery-preview-item shadow-sm border">
@@ -135,7 +188,7 @@
                         <input type="file" name="top_sliders[]" class="sax-input-file" multiple>
                         <p class="x-small fw-bold m-0 text-gold"><i class="fas fa-plus-circle me-1"></i> {{ __('messages.subir_banners_btn') }}</p>
                     </div>
-                                        <div class="gallery-preview-grid">
+                    <div class="gallery-preview-grid">
                         @php $sliders = is_array($institucional->top_sliders) ? $institucional->top_sliders : json_decode($institucional->top_sliders, true); @endphp
                         @foreach($sliders ?? [] as $slide)
                             <div class="gallery-preview-item shadow-sm">

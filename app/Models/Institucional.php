@@ -4,21 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Institucional extends Model
 {
     use HasFactory;
 
-    /**
-     * Define explicitamente a tabela associada à model.
-     * Necessário porque o nome da tabela é singular ('institucional').
-     */
     protected $table = 'institucional';
 
-    /**
-     * Atributos que podem ser preenchidos em massa (Mass Assignment).
-     * Inclui todos os campos originais e os novos campos de iframes.
-     */
     protected $fillable = [
         'top_sliders',
         'section_one_title',
@@ -35,16 +28,11 @@ class Institucional extends Model
         'stat_brands_count',
         'stat_sqm_count',
         'stat_employees_count',
-        // Novos campos adicionados via migration
         'iframe_tour_360',
         'iframe_ponte_amizade',
         'iframe_centro_cde',
     ];
 
-    /**
-     * Conversão de tipos (Casting).
-     * Transforma automaticamente as strings JSON do banco em Arrays do PHP.
-     */
     protected $casts = [
         'top_sliders'    => 'array',
         'brand_logos'    => 'array',
@@ -52,4 +40,17 @@ class Institucional extends Model
         'created_at'     => 'datetime',
         'updated_at'     => 'datetime',
     ];
+
+    /**
+     * Relação polimórfica com a tabela de traduções.
+     * Certifique-se de que o segundo parâmetro 'page' (o nome da relação) 
+     * bata com a lógica de salvamento.
+     */
+    public function translations(): MorphMany
+    {
+        // O Laravel espera que, ao usar 'page', exista uma relação 'pageable' ou similar.
+        // Como no seu banco a coluna se chama 'page_type' e 'page_id', 
+        // usamos 'page' para que o Laravel busque por 'page_type' e 'page_id' automaticamente.
+        return $this->morphMany(PageTranslation::class, 'page', 'page_type', 'page_id');
+    }
 }

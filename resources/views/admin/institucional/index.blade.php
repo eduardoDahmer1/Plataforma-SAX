@@ -2,6 +2,20 @@
 
 @section('content')
 @php
+    // Busca a tradução ativa ou retorna um objeto vazio para evitar erro de null
+    $locale = app()->getLocale();
+    $translation = $institucional->translations->where('locale', $locale)->first();
+    
+    // Fallback: se não achar a tradução, usa o que estiver na tabela pai
+    $title = $translation->inst_section_one_title ?? $institucional->section_one_title;
+    $content = $translation->inst_section_one_content ?? $institucional->section_one_content;
+    $pilar1T = $translation->inst_text_section_one_title ?? $institucional->text_section_one_title;
+    $pilar1B = $translation->inst_text_section_one_body ?? $institucional->text_section_one_body;
+    $pilar2T = $translation->inst_text_section_two_title ?? $institucional->text_section_two_title;
+    $pilar2B = $translation->inst_text_section_two_body ?? $institucional->text_section_two_body;
+    $pilar3T = $translation->inst_text_section_three_title ?? $institucional->text_section_three_title;
+    $pilar3B = $translation->inst_text_section_three_body ?? $institucional->text_section_three_body;
+
     $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
         <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">'.__('messages.visao_geral_inst_breadcrumb').'</li>
@@ -29,8 +43,8 @@
                 <div class="row g-0 h-100">
                     <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
                         <span class="badge-gold-soft mb-3 text-uppercase letter-spacing-1">{{ __('messages.historia_identidade_badge') }}</span>
-                        <h1 class="display-5 font-weight-bold text-dark mb-3">{{ $institucional->section_one_title }}</h1>
-                        <p class="text-muted lead-sm mb-4">{{ Str::limit($institucional->section_one_content, 300) }}</p>
+                        <h1 class="display-5 font-weight-bold text-dark mb-3">{{ $title }}</h1>
+                        <p class="text-muted lead-sm mb-4">{!! Str::limit($content, 300) !!}</p>
                         <div class="d-flex align-items-center">
                             <div class="status-indicator active"></div>
                             <span class="x-small fw-bold text-uppercase tracking-wider text-success">{{ __('messages.conteudo_ativo_site') }}</span>
@@ -89,23 +103,23 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-4">
-                        <h6 class="font-weight-bold text-dark mb-1">{{ $institucional->text_section_one_title }}</h6>
-                        <p class="x-small text-muted mb-0">{{ Str::limit($institucional->text_section_one_body, 120) }}</p>
+                        <h6 class="font-weight-bold text-dark mb-1">{{ $pilar1T }}</h6>
+                        <p class="x-small text-muted mb-0">{{ Str::limit($pilar1B, 120) }}</p>
                     </div>
                     <div class="col-md-6 mb-4">
-                        <h6 class="font-weight-bold text-dark mb-1">{{ $institucional->text_section_two_title }}</h6>
-                        <p class="x-small text-muted mb-0">{{ Str::limit($institucional->text_section_two_body, 120) }}</p>
+                        <h6 class="font-weight-bold text-dark mb-1">{{ $pilar2T }}</h6>
+                        <p class="x-small text-muted mb-0">{{ Str::limit($pilar2B, 120) }}</p>
                     </div>
                     <div class="col-12">
                         <div class="p-3 rounded-lg bg-light border-left border-gold">
-                            <h6 class="font-weight-bold text-dark mb-1">{{ $institucional->text_section_three_title }}</h6>
-                            <p class="x-small text-muted mb-0">{{ Str::limit($institucional->text_section_three_body, 150) }}</p>
+                            <h6 class="font-weight-bold text-dark mb-1">{{ $pilar3T }}</h6>
+                            <p class="x-small text-muted mb-0">{{ Str::limit($pilar3B, 150) }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
+        
         {{-- 04. EXPERIÊNCIA VIRTUAL --}}
         <div class="col-12">
             <div class="sax-premium-card p-4 shadow-sm bg-white">

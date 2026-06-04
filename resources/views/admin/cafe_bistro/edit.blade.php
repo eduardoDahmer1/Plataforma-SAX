@@ -361,7 +361,60 @@
             </div>
         </div>
 
-        {{-- 07. SEO                                                   --}}
+        {{-- 07. CONTATO E LOCALIZAÇÃO                                --}}
+        <div class="sax-premium-card shadow-sm overflow-hidden">
+            <x-admin.block-header icon="fas fa-location-dot" theme="bistro" number="07"
+                                  title="Contato e Localização"
+                                  subtitle="Endereço, telefone, redes sociais e mapa" />
+            <div class="p-4">
+                <div class="row g-3">
+                    {{-- Endereço --}}
+                    <div class="col-md-6">
+                        <label class="sax-form-label">Endereço</label>
+                        <input type="text" name="direccion" class="form-control sax-input"
+                               value="{{ old('direccion', $cafeBistro->direccion) }}"
+                               placeholder="Shopping Dubai, Pedro Juan Caballero — Paraguai">
+                    </div>
+
+                    {{-- Telefone --}}
+                    <div class="col-md-6">
+                        <label class="sax-form-label">Telefone</label>
+                        <input type="text" name="telefono" class="form-control sax-input"
+                               value="{{ old('telefono', $cafeBistro->telefono) }}"
+                               placeholder="+595 993 011502">
+                    </div>
+
+                    {{-- Instagram --}}
+                    <div class="col-md-6">
+                        <label class="sax-form-label">Instagram</label>
+                        <input type="url" name="instagram_url" class="form-control sax-input"
+                               value="{{ old('instagram_url', $cafeBistro->instagram_url) }}"
+                               placeholder="https://instagram.com/seu_perfil">
+                    </div>
+
+                    {{-- Facebook --}}
+                    <div class="col-md-6">
+                        <label class="sax-form-label">Facebook</label>
+                        <input type="url" name="facebook_url" class="form-control sax-input"
+                               value="{{ old('facebook_url', $cafeBistro->facebook_url) }}"
+                               placeholder="https://facebook.com/sua_pagina">
+                    </div>
+
+                    {{-- Mapa: iframe google maps --}}
+                    <div class="col-12">
+                        <label class="sax-form-label">Google Maps (Iframe)</label>
+                        <textarea name="mapa_embed" class="form-control sax-input x-small" rows="3"
+                                  placeholder="Cole aqui o código <iframe> do Google Maps">{{ old('mapa_embed', $cafeBistro->mapa_embed) }}</textarea>
+                        <p class="x-small text-muted mt-2 mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Cole o código &lt;iframe&gt; completo gerado em "Partilhar → Incorporar um mapa".
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 08. SEO                                                   --}}
 
         {{-- ── FOOTER ACCIONES ────────────────────────────────────── --}}
         <div class="d-flex justify-content-between align-items-center pt-3 pb-4 border-top">

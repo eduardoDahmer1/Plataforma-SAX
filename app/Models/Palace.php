@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Palace extends Model
 {
@@ -79,6 +80,11 @@ class Palace extends Model
     public function getHasMapaAttribute()
     {
         return !empty($this->contato_mapa_iframe) && str_contains($this->contato_mapa_iframe, '<iframe');
+    }
+
+    public function translations(): MorphMany
+    {
+        return $this->morphMany(PageTranslation::class, 'pageable', 'page_type', 'page_id');
     }
 
     /**

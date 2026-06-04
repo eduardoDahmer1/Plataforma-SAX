@@ -38,7 +38,9 @@ class LanguageControllerAdmin extends Controller
     {
         $request->validate([
             'key' => 'required|unique:languages,key',
-            'pt'  => 'required',
+            'pt'  => 'required|string',
+            'en'  => 'nullable|string',
+            'es'  => 'nullable|string',
         ]);
 
         Language::create($request->all());
@@ -56,6 +58,14 @@ class LanguageControllerAdmin extends Controller
     public function update(Request $request, $id)
     {
         $language = Language::findOrFail($id);
+        
+        $request->validate([
+            'key' => 'required|unique:languages,key,' . $language->id,
+            'pt'  => 'required|string',
+            'en'  => 'nullable|string',
+            'es'  => 'nullable|string',
+        ]);
+
         $language->update($request->all());
         $this->clearLanguageCache();
 

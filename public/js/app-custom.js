@@ -328,10 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                const redirectTo = formData.get('redirect_to');
-                window.location.href = (redirectTo && redirectTo !== window.location.href)
-                    ? redirectTo
-                    : (data.redirect || '/');
+                window.location.href = data.redirect || '/';
             } else {
                 loginError.textContent   = window.saxLang?.dados_incorretos || 'Dados incorretos.';
                 loginError.style.display = 'block';

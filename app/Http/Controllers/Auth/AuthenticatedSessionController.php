@@ -71,9 +71,13 @@ class AuthenticatedSessionController extends Controller
         session()->put('cart', $cart);
 
         if ($request->expectsJson()) {
+            $redirect = session()->pull('url.intended')
+                ?? $request->input('redirect_to')
+                ?? RouteServiceProvider::HOME;
+
             return response()->json([
-                'success' => true,
-                'redirect' => route('home')
+                'success'  => true,
+                'redirect' => $redirect,
             ]);
         }
 

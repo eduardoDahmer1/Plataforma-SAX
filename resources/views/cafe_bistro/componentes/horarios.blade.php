@@ -62,8 +62,9 @@
                         {!! $cafeBistro->mapa_embed !!}
                     </div>
                 @else
-                    <div class="img-placeholder rounded mb-4" style="height: 18.75rem; background: #2a3d5e;">
-                        MAPA
+                    <div class="rounded mb-4" style="height: 18.75rem; overflow: hidden;">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3684.4988971012544!2d-55.716205223985995!3d-22.560436679500363!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94626f16bb7dfb53%3A0xcbc528c284304baa!2sShopping%20Dubai!5e0!3m2!1ses!2spy!4v1780077206910!5m2!1ses!2spy"
+                                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
                 @endif
 

@@ -3,19 +3,21 @@
         <div class="row align-items-center g-5">
             <div class="col-lg-6 order-2 order-lg-1" data-aos="fade-up">
                 <div class="pe-lg-5">
-                    <h2 class="display-5 mb-4 font-serif">{{ $palace->hero_titulo }}</h2>
-                    <p class="text-secondary fs-5 mb-4">{{ $palace->hero_descricao }}</p>
+                    {{-- Campos dinâmicos com tradução --}}
+                    <h2 class="display-5 mb-4 font-serif">{{ $t->palace_hero_titulo ?? $palace->hero_titulo }}</h2>
+                    <p class="text-secondary fs-5 mb-4">{{ $t->palace_hero_descricao ?? $palace->hero_descricao }}</p>
+                    
                     <div class="row g-4 pt-3">
                         <div class="col-6">
                             <div class="border-start border-gold border-3 ps-3">
                                 <h3 class="h2 mb-0">1000+</h3>
-                                <p class="small text-uppercase mb-0 text-secondary">Rótulos</p>
+                                <p class="small text-uppercase mb-0 text-secondary">{{ __('messages.rotulos_label') }}</p>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="border-start border-gold border-3 ps-3">
-                                <h3 class="h2 mb-0">Piso 11</h3>
-                                <p class="small text-uppercase mb-0 text-secondary">Vista Prime</p>
+                                <h3 class="h2 mb-0">{{ __('messages.piso_label') }}</h3>
+                                <p class="small text-uppercase mb-0 text-secondary">{{ __('messages.vista_prime_label') }}</p>
                             </div>
                         </div>
                     </div>

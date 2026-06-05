@@ -48,9 +48,6 @@ class Institucional extends Model
      */
     public function translations(): MorphMany
     {
-        // O Laravel espera que, ao usar 'page', exista uma relação 'pageable' ou similar.
-        // Como no seu banco a coluna se chama 'page_type' e 'page_id', 
-        // usamos 'page' para que o Laravel busque por 'page_type' e 'page_id' automaticamente.
         return $this->morphMany(PageTranslation::class, 'page', 'page_type', 'page_id');
     }
 }

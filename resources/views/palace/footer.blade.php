@@ -11,7 +11,7 @@
                     @endif
                 </a>
                 <p class="text-secondary small lh-lg mb-4 opacity-75">
-                    {{ $palace->hero_descricao }}
+                    {{ $t->palace_hero_descricao ?? $palace->hero_descricao }}
                 </p>
                 <div class="d-flex gap-3">
                     <a href="https://www.instagram.com/saxpalace" target="_blank" class="text-gold social-link-minimal">INSTAGRAM</a>
@@ -21,30 +21,30 @@
             </div>
 
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                <h6 class="text-uppercase tracking-widest fw-bold small mb-4 text-white">Horários</h6>
+                <h6 class="text-uppercase tracking-widest fw-bold small mb-4 text-white">{{ __('messages.horarios_label') }}</h6>
                 <div class="text-secondary small">
                     <div class="d-flex justify-content-between border-bottom border-secondary border-opacity-10 py-2">
-                        <span>Segunda:</span>
+                        <span>{{ __('messages.segunda_label') }}:</span>
                         <span class="text-white">{{ $palace->contato_horario_segunda }}</span>
                     </div>
                     <div class="d-flex justify-content-between border-bottom border-secondary border-opacity-10 py-2">
-                        <span>Terça a Sábado:</span>
+                        <span>{{ __('messages.terca_sabado_label') }}:</span>
                         <span class="text-white">{{ $palace->contato_horario_sabado }}</span>
                     </div>
                     <div class="d-flex justify-content-between py-2">
-                        <span>Domingo:</span>
+                        <span>{{ __('messages.domingo_label') }}:</span>
                         <span class="text-white">{{ $palace->contato_horario_domingo }}</span>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                <h6 class="text-uppercase tracking-widest fw-bold small mb-4 text-white">Localização</h6>
+                <h6 class="text-uppercase tracking-widest fw-bold small mb-4 text-white">{{ __('messages.localizacao_label') }}</h6>
                 <p class="text-secondary small mb-4">
-                    {{ $palace->contato_endereco }}
+                    {{ $t->palace_contato_endereco ?? $palace->contato_endereco }}
                 </p>
                 <div class="bg-gold-soft p-3 rounded-1">
-                    <span class="d-block x-small text-uppercase fw-bold text-secondary opacity-75">Reservas Diretas:</span>
+                    <span class="d-block x-small text-uppercase fw-bold text-secondary opacity-75">{{ __('messages.reservas_diretas_label') }}:</span>
                     <a href="tel:{{ $palace->contato_whatsapp }}" class="text-secondary fs-5 fw-bold text-decoration-none lh-1">
                         {{ $palace->contato_whatsapp }}
                     </a>
@@ -56,7 +56,7 @@
         <div class="row mt-5 pt-4 border-top border-secondary border-opacity-10">
             <div class="col-md-6 text-center text-md-start">
                 <p class="x-small text-secondary mb-0 uppercase tracking-widest">
-                    &copy; {{ date('Y') }} Sax Palace • Todos os direitos reservados
+                    &copy; {{ date('Y') }} Sax Palace • {{ __('messages.direitos_reservados_label') }}
                 </p>
             </div>
             <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">

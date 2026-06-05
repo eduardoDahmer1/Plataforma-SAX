@@ -33,7 +33,9 @@ class HomeController extends Controller
         foreach ($highlightTypes as $key) {
             $highlights[$key] = Cache::remember("highlight_products_{$key}", 600, function () use ($key) {
                 return Product::where("highlights->{$key}", "1")
+                    ->where('status', 1)
                     ->where('product_role', 'P')
+                    ->where('stock', '>', 0)
                     ->whereNotNull('photo')
                     ->where('photo', '!=', '')
                     ->with('brand')
@@ -46,6 +48,7 @@ class HomeController extends Controller
         $lancamentos = Cache::remember('home_products_updated_at', 600, function () {
             return Product::where('status', 1)
                 ->where('product_role', 'P')
+                ->where('stock', '>', 0)
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
                 ->with('brand')
@@ -58,6 +61,7 @@ class HomeController extends Controller
         $mostViewed = Cache::remember('home_most_viewed_products', 600, function () {
             return Product::where('status', 1)
                 ->where('views', '>', 0)
+                ->where('stock', '>', 0)
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
                 ->with('brand')

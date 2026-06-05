@@ -130,8 +130,9 @@ if (document.getElementById('editor-blog') && typeof tinymce !== 'undefined') {
 
 // 1. Inicialização segura do Objeto de Estados
 var currentLangs = {
-    title: 'pt', content: 'pt', desc: 'pt',
-    pilar1: 'pt', pilar2: 'pt', pilar3: 'pt', name: 'pt'
+    title: 'pt', content: 'pt', desc: 'pt', pilar1: 'pt', 
+    pilar2: 'pt', pilar3: 'pt', name: 'pt',heroT: 'pt',
+    heroD: 'pt', barT: 'pt', barD: 'pt', gastT: 'pt', gastD: 'pt'
 };
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -245,17 +246,30 @@ function switchLanguage(type, nextLang, element) {
         const vTitle = document.getElementById(`visual-${type}t-input`);
         const vBody = document.getElementById(`visual-${type}b-input`);
         
-        // Salva o atual
         const prevT = document.getElementById(`real-${type}t-${prevLang}`);
         const prevB = document.getElementById(`real-${type}b-${prevLang}`);
         if (vTitle && prevT) prevT.value = vTitle.value;
         if (vBody && prevB) prevB.value = vBody.value;
         
-        // Carrega o próximo
         const nextT = document.getElementById(`real-${type}t-${nextLang}`);
         const nextB = document.getElementById(`real-${type}b-${nextLang}`);
         if (vTitle) vTitle.value = nextT ? nextT.value : '';
         if (vBody) vBody.value = nextB ? nextB.value : '';
+    }
+    
+    // D. Tratamento para Novos Campos (heroT, heroD, barT, barD, gastT, gastD)
+    else {
+        const vEl = document.getElementById(`visual-${type}-input`); // Ex: visual-gastD-input
+        
+        // O erro pode estar aqui: o ID no seu Blade é real-gastD-pt
+        // Certifique-se que o 'type' que você passa no onclick seja EXATAMENTE 
+        // a parte do meio do ID (ex: gastD)
+        
+        const prevInput = document.getElementById(`real-${type}-${prevLang}`); 
+        const nextInput = document.getElementById(`real-${type}-${nextLang}`);
+
+        if (vEl && prevInput) prevInput.value = vEl.value; // Salva o atual
+        if (vEl) vEl.value = nextInput ? nextInput.value : ''; // Carrega o novo
     }
 
     currentLangs[type] = nextLang;

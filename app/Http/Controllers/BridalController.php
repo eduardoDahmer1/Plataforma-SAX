@@ -24,11 +24,14 @@ class BridalController extends Controller
         // obtener los productos relacionados con las marcas específicas, asegurando que tengan una foto válida
         $bridalProducts = Product::with('brand')
             ->whereIn('brand_id', $idbrands)
+            ->where('status', 1)
+            ->where('product_role', 'P')
+            ->where('stock', '>', 0)
             ->latest()
             ->whereNotNull('photo')
             ->where('photo', '!=', '')
             ->take(10)
-            ->get(); 
+            ->get();
 
         return view('bridal.index', compact('bridal', 'brands', 'bridalProducts'));
     }

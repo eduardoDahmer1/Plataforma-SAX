@@ -6,41 +6,83 @@
         @csrf
         @method('PUT')
 
-        {{-- Header Estilo Dashboard Marcas --}}
-        <x-admin.sticky-header
-            :title="__('messages.editar_palace_titulo')"
-            :cancelRoute="route('admin.palace.index')"
-            :cancelLabel="__('messages.cancelar_btn')"
-            :submitLabel="__('messages.guardar_cambios_btn')"
-            :updatedAt="__('messages.ultima_atualizacao_label').' '.$palace->updated_at->format('d/m H:i')"
-        />
+        {{-- Header --}}
+        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5 sticky-header px-4 py-3 bg-white border-bottom shadow-sm">
+            <div>
+                <h2 class="sax-title text-uppercase letter-spacing-2 m-0">{{ __('messages.editar_palace_titulo') }}</h2>
+                <div class="sax-divider-gold"></div>
+                <span class="text-muted x-small">{{ __('messages.ultima_atualizacao_label') }} {{ $palace->updated_at ? $palace->updated_at->format('d/m H:i') : '' }}</span>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.palace.index') }}" class="btn-back-minimal me-3 d-none d-md-flex align-items-center">
+                    <i class="fas fa-times me-1"></i> {{ __('messages.cancelar_btn') }}
+                </a>
+                <button type="submit" class="btn btn-dark-gold rounded-pill px-4 shadow-sm transition fw-bold">
+                    {{ __('messages.guardar_cambios_btn') }} <i class="fas fa-check-circle ms-2"></i>
+                </button>
+            </div>
+        </div>
 
         <div class="row px-3 g-4">
-            {{-- Coluna Principal --}}
             <div class="col-lg-8">
                 
                 {{-- 1. SEÇÃO HERO --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.identificacao_hero_sec') }}</h6>
-                    <div class="mb-4">
+                    
+                    <div class="mb-4 group-container">
                         <label class="sax-form-label">{{ __('messages.titulo_impacto_label') }}</label>
-                        <input type="text" name="hero_titulo" class="form-control sax-input" value="{{ $palace->hero_titulo }}">
+                        <input type="hidden" id="real-heroT-pt" name="translate[pt-br][palace_hero_titulo]" value="{{ old('translate.pt-br.palace_hero_titulo', $palace->translations->where('locale', 'pt-br')->first()->palace_hero_titulo ?? $palace->hero_titulo) }}">
+                        <input type="hidden" id="real-heroT-es" name="translate[es][palace_hero_titulo]" value="{{ old('translate.es.palace_hero_titulo', $palace->translations->where('locale', 'es')->first()->palace_hero_titulo ?? '') }}">
+                        <input type="hidden" id="real-heroT-en" name="translate[en][palace_hero_titulo]" value="{{ old('translate.en.palace_hero_titulo', $palace->translations->where('locale', 'en')->first()->palace_hero_titulo ?? '') }}">
+                        <input type="text" id="visual-heroT-input" class="form-control sax-input" value="{{ old('translate.pt-br.palace_hero_titulo', $palace->translations->where('locale', 'pt-br')->first()->palace_hero_titulo ?? $palace->hero_titulo) }}">
+                        <div class="mt-2">
+                            <span class="small text-muted me-2">Editar idioma:</span>
+                            <a href="javascript:void(0)" class="badge bg-primary heroT-lang-btn text-decoration-none" onclick="switchLanguage('heroT', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary heroT-lang-btn text-decoration-none" onclick="switchLanguage('heroT', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary heroT-lang-btn text-decoration-none" onclick="switchLanguage('heroT', 'en', this)">EN</a>
+                        </div>
                     </div>
-                    <div class="mb-0">
+
+                    <div class="mb-0 group-container">
                         <label class="sax-form-label">{{ __('messages.desc_boas_vindas_label') }}</label>
-                        <textarea name="hero_descricao" class="form-control sax-input" rows="4">{{ $palace->hero_descricao }}</textarea>
+                        <textarea id="real-heroD-pt" name="translate[pt-br][palace_hero_descricao]" class="d-none">{{ old('translate.pt-br.palace_hero_descricao', $palace->translations->where('locale', 'pt-br')->first()->palace_hero_descricao ?? $palace->hero_descricao) }}</textarea>
+                        <textarea id="real-heroD-es" name="translate[es][palace_hero_descricao]" class="d-none">{{ old('translate.es.palace_hero_descricao', $palace->translations->where('locale', 'es')->first()->palace_hero_descricao ?? '') }}</textarea>
+                        <textarea id="real-heroD-en" name="translate[en][palace_hero_descricao]" class="d-none">{{ old('translate.en.palace_hero_descricao', $palace->translations->where('locale', 'en')->first()->palace_hero_descricao ?? '') }}</textarea>
+                        <textarea id="visual-heroD-input" class="form-control sax-input" rows="4">{{ old('translate.pt-br.palace_hero_descricao', $palace->translations->where('locale', 'pt-br')->first()->palace_hero_descricao ?? $palace->hero_descricao) }}</textarea>
+                        <div class="mt-2">
+                            <span class="small text-muted me-2">Editar idioma:</span>
+                            <a href="javascript:void(0)" class="badge bg-primary heroD-lang-btn text-decoration-none" onclick="switchLanguage('heroD', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary heroD-lang-btn text-decoration-none" onclick="switchLanguage('heroD', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary heroD-lang-btn text-decoration-none" onclick="switchLanguage('heroD', 'en', this)">EN</a>
+                        </div>
                     </div>
                 </div>
 
                 {{-- 2. BAR & BODEGA --}}
-                <div class="sax-premium-card p-4 mb-4 shadow-sm">
+                <div class="sax-premium-card p-4 mb-4 shadow-sm group-container">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.bar_bodega_fotos_sec') }}</h6>
+                    
+                    <input type="hidden" id="real-barT-pt" name="translate[pt-br][palace_bar_titulo]" value="{{ old('translate.pt-br.palace_bar_titulo', $palace->translations->where('locale', 'pt-br')->first()->palace_bar_titulo ?? $palace->bar_titulo) }}">
+                    <input type="hidden" id="real-barT-es" name="translate[es][palace_bar_titulo]" value="{{ old('translate.es.palace_bar_titulo', $palace->translations->where('locale', 'es')->first()->palace_bar_titulo ?? '') }}">
+                    <input type="hidden" id="real-barT-en" name="translate[en][palace_bar_titulo]" value="{{ old('translate.en.palace_bar_titulo', $palace->translations->where('locale', 'en')->first()->palace_bar_titulo ?? '') }}">
+                    
+                    <textarea id="real-barD-pt" name="translate[pt-br][palace_bar_descricao]" class="d-none">{{ old('translate.pt-br.palace_bar_descricao', $palace->translations->where('locale', 'pt-br')->first()->palace_bar_descricao ?? $palace->bar_descricao) }}</textarea>
+                    <textarea id="real-barD-es" name="translate[es][palace_bar_descricao]" class="d-none">{{ old('translate.es.palace_bar_descricao', $palace->translations->where('locale', 'es')->first()->palace_bar_descricao ?? '') }}</textarea>
+                    <textarea id="real-barD-en" name="translate[en][palace_bar_descricao]" class="d-none">{{ old('translate.en.palace_bar_descricao', $palace->translations->where('locale', 'en')->first()->palace_bar_descricao ?? '') }}</textarea>
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="sax-form-label">{{ __('messages.titulo_bar_label') }}</label>
-                            <input type="text" name="bar_titulo" class="form-control sax-input mb-3" value="{{ $palace->bar_titulo }}">
+                            <input type="text" id="visual-barT-input" class="form-control sax-input mb-3" value="{{ old('translate.pt-br.palace_bar_titulo', $palace->translations->where('locale', 'pt-br')->first()->palace_bar_titulo ?? $palace->bar_titulo) }}">
                             <label class="sax-form-label">{{ __('messages.desc_bar_label') }}</label>
-                            <textarea name="bar_descricao" class="form-control sax-input" rows="3">{{ $palace->bar_descricao }}</textarea>
+                            <textarea id="visual-barD-input" class="form-control sax-input" rows="3">{{ old('translate.pt-br.palace_bar_descricao', $palace->translations->where('locale', 'pt-br')->first()->palace_bar_descricao ?? $palace->bar_descricao) }}</textarea>
+                            <div class="mt-2">
+                                <span class="small text-muted me-2">Editar idioma:</span>
+                                <a href="javascript:void(0)" class="badge bg-primary barT-lang-btn barD-lang-btn text-decoration-none" onclick="switchLanguage('barT', 'pt', this); switchLanguage('barD', 'pt', this)">PT</a>
+                                <a href="javascript:void(0)" class="badge bg-secondary barT-lang-btn barD-lang-btn text-decoration-none" onclick="switchLanguage('barT', 'es', this); switchLanguage('barD', 'es', this)">ES</a>
+                                <a href="javascript:void(0)" class="badge bg-secondary barT-lang-btn barD-lang-btn text-decoration-none" onclick="switchLanguage('barT', 'en', this); switchLanguage('barD', 'en', this)">EN</a>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <div class="row g-2">
@@ -50,10 +92,9 @@
                                     <div class="preview-box-sm mb-2 rounded border overflow-hidden" style="height: 80px;">
                                         <img id="preview-bar-{{$i}}" src="{{ $palace->$field ? asset('storage/'.$palace->$field) : 'https://placehold.co/200x200' }}" class="w-100 h-100 object-fit-cover">
                                     </div>
-                                    <div class="asset-upload-zone p-1 py-2">
-                                        <input type="file" name="bar_imagem_{{$i}}" class="sax-input-file img-trigger" data-prev="preview-bar-{{$i}}">
+                                    <div class="asset-upload-zone p-1 py-2 text-center">
+                                        <input type="file" name="{{$field}}" class="sax-input-file img-trigger" data-prev="preview-bar-{{$i}}">
                                         <i class="fas fa-camera fa-xs opacity-50"></i>
-                                        <span style="font-size: 8px;" class="fw-bold">FOTO {{$i}}</span>
                                     </div>
                                 </div>
                                 @endfor
@@ -62,24 +103,35 @@
                     </div>
                 </div>
 
-                {{-- 3. GASTRONOMIA --}}
-                <div class="sax-premium-card p-4 mb-4 shadow-sm">
-                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.gastronomia_menus_sec') }}</h6>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="x-small fw-bold text-warning text-uppercase">{{ __('messages.cafe_manha_label') }}</label>
-                            <textarea name="gastronomia_cafe_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_cafe_desc }}</textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="x-small fw-bold text-primary text-uppercase">{{ __('messages.almoco_label') }}</label>
-                            <textarea name="gastronomia_almoco_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_almoco_desc }}</textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="x-small fw-bold text-danger text-uppercase">{{ __('messages.jantar_label') }}</label>
-                            <textarea name="gastronomia_jantar_desc" class="form-control sax-input small" rows="4">{{ $palace->gastronomia_jantar_desc }}</textarea>
+                {{-- 3. SEÇÃO GASTRONOMIA --}}
+                <div class="sax-premium-card p-4 mb-4 shadow-sm group-container">
+                    <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.gastronomia_sec') }}</h6>
+                    
+                    <input type="hidden" id="real-gastT-pt" name="translate[pt-br][palace_gastronomia_titulo]" value="{{ old('translate.pt-br.palace_gastronomia_titulo', $palace->translations->where('locale', 'pt-br')->first()->palace_gastronomia_titulo ?? $palace->gastronomia_titulo) }}">
+                    <input type="hidden" id="real-gastT-es" name="translate[es][palace_gastronomia_titulo]" value="{{ old('translate.es.palace_gastronomia_titulo', $palace->translations->where('locale', 'es')->first()->palace_gastronomia_titulo ?? '') }}">
+                    <input type="hidden" id="real-gastT-en" name="translate[en][palace_gastronomia_titulo]" value="{{ old('translate.en.palace_gastronomia_titulo', $palace->translations->where('locale', 'en')->first()->palace_gastronomia_titulo ?? '') }}">
+                    
+                    <textarea id="real-gastD-pt" name="translate[pt-br][palace_tematica_descricao]" class="d-none">{{ old('translate.pt-br.palace_tematica_descricao', $palace->translations->where('locale', 'pt-br')->first()->palace_tematica_descricao ?? $palace->gastronomia_descricao) }}</textarea>
+                    <textarea id="real-gastD-es" name="translate[es][palace_tematica_descricao]" class="d-none">{{ old('translate.es.palace_tematica_descricao', $palace->translations->where('locale', 'es')->first()->palace_tematica_descricao ?? '') }}</textarea>
+                    <textarea id="real-gastD-en" name="translate[en][palace_tematica_descricao]" class="d-none">{{ old('translate.en.palace_tematica_descricao', $palace->translations->where('locale', 'en')->first()->palace_tematica_descricao ?? '') }}</textarea>
+
+                    <div class="mb-3">
+                        <label class="sax-form-label">{{ __('messages.titulo_gastronomia_label') }}</label>
+                        <input type="text" id="visual-gastT-input" class="form-control sax-input" value="{{ old('translate.pt-br.palace_gastronomia_titulo', $palace->translations->where('locale', 'pt-br')->first()->palace_gastronomia_titulo ?? $palace->gastronomia_titulo) }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="sax-form-label">{{ __('messages.desc_gastronomia_label') }}</label>
+                        <textarea id="visual-gastD-input" class="form-control sax-input" rows="3">{{ old('translate.pt-br.palace_tematica_descricao', $palace->translations->where('locale', 'pt-br')->first()->palace_tematica_descricao ?? $palace->gastronomia_descricao) }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="mt-1">
+                            <span class="small text-muted me-2">Editar idioma:</span>
+                            <a href="javascript:void(0)" class="badge bg-primary gastT-lang-btn gastD-lang-btn text-decoration-none" onclick="switchLanguage('gastT', 'pt', this); switchLanguage('gastD', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary gastT-lang-btn gastD-lang-btn text-decoration-none" onclick="switchLanguage('gastT', 'es', this); switchLanguage('gastD', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary gastT-lang-btn gastD-lang-btn text-decoration-none" onclick="switchLanguage('gastT', 'en', this); switchLanguage('gastD', 'en', this)">EN</a>
                         </div>
                     </div>
-
                     {{-- NOVO CAMPO: UPLOAD DO CARDÁPIO EM PDF --}}
                     <div class="border-top pt-3 mt-2">
                         <label class="sax-form-label d-block mb-2 fw-bold text-dark text-uppercase letter-spacing-1" style="font-size: 11px;">
@@ -137,7 +189,7 @@
 
             {{-- Coluna Lateral --}}
             <div class="col-lg-4">
-                {{-- BANNER PRINCIPAL --}}
+                {{-- Banner Principal --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">{{ __('messages.imagem_capa_label') }} (Hero)</h6>
                     <div class="preview-box mb-3 shadow-sm border rounded overflow-hidden">

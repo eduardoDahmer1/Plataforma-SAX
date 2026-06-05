@@ -7,12 +7,16 @@
     <div class="container position-relative z-1 text-white py-5">
         <div class="row">
             <div class="col-lg-8 col-xl-7" data-aos="fade-right">
-                <span class="text-gold fw-bold text-uppercase tracking-widest mb-3 d-block">Experiência Exclusiva</span>
-                <h1 class="display-2 fw-light mb-4">{{ $palace->hero_titulo ?? 'SAX PALACE' }}</h1>
-                <p class="lead mb-5 opacity-75 d-none d-md-block">{{ $palace->hero_descricao }}</p>
+                <span class="text-gold fw-bold text-uppercase tracking-widest mb-3 d-block">{{ __('messages.seccion_principal_badge') }}</span>
+                <h1 class="display-2 fw-light mb-4">{{ $t->palace_hero_titulo ?? $palace->hero_titulo }}</h1>
+                <p class="lead mb-5 opacity-75 d-none d-md-block">{{ $t->palace_hero_descricao ?? $palace->hero_descricao }}</p>
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $palace->contato_whatsapp) }}" class="btn btn-gold btn-lg px-5 py-3 rounded-0 text-uppercase fw-bold">Reservar</a>
-                    <a href="#sobre" class="btn btn-outline-light btn-lg px-5 py-3 rounded-0 text-uppercase fw-bold">Descobrir</a>
+                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $palace->contato_whatsapp) }}" class="btn btn-gold btn-lg px-5 py-3 rounded-0 text-uppercase fw-bold">
+                        {{ __('messages.reservar_btn') ?? 'Reservar' }}
+                    </a>
+                    <a href="#sobre" class="btn btn-outline-light btn-lg px-5 py-3 rounded-0 text-uppercase fw-bold">
+                        {{ __('messages.descobrir_btn') ?? 'Descobrir' }}
+                    </a>
                 </div>
             </div>
         </div>

@@ -60,6 +60,7 @@ class SubcategoryController extends Controller
                 ->products()
                 ->where('status', 1)
                 ->where('product_role', 'P')
+                ->where('stock', '>', 0)
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
                 ->with(['brand', 'category'])

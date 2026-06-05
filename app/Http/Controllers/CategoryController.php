@@ -62,6 +62,7 @@ class CategoryController extends Controller
                 ->with(['brand', 'category']) // Eager loading para evitar N+1 no card
                 ->where('status', 1)
                 ->where('product_role', 'P')
+                ->where('stock', '>', 0)
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
                 ->paginate(12)

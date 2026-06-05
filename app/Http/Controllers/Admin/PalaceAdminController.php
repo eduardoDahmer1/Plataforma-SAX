@@ -11,11 +11,10 @@ use Illuminate\Support\Facades\Cache;
 class PalaceAdminController extends Controller
 {
     /**
-     * Exibe a visão geral dos dados atuais.
+     * Exibe a visão geral dos dados do Palace.
      */
     public function index()
     {
-        // Traz o registro junto com as traduções para a listagem
         $palace = Palace::with('translations')->first() ?? Palace::create(['hero_titulo' => 'SAX Palace']);
         return view('admin.palace.index', compact('palace'));
     }
@@ -25,21 +24,20 @@ class PalaceAdminController extends Controller
      */
     public function edit($id)
     {
-        // Carrega o Palace com suas traduções existentes para preencher o form
         $palace = Palace::with('translations')->findOrFail($id);
         return view('admin.palace.edit', compact('palace'));
     }
 
     /**
-     * Processa a atualização de todos os campos, imagens e traduções.
+     * Processa a atualização de imagens e traduções (PT, ES, EN).
      */
     public function update(Request $request, $id)
     {
         $palace = Palace::findOrFail($id);
 
-        // Validamos também o campo obrigatório do idioma que está sendo editado/salvo
+        // 1. Validação
         $data = $request->validate([
-            'locale' => 'required|string|in:pt-br,es,en', // Define qual idioma o form está enviando
+                        'locale' => 'required|string|in:pt-br,es,en', // Define qual idioma o form está enviando
 
             'hero_titulo' => 'nullable|string|max:255',
             'hero_descricao' => 'nullable|string',
@@ -61,94 +59,87 @@ class PalaceAdminController extends Controller
             'contato_horario_domingo' => 'nullable|string',
             'contato_whatsapp' => 'nullable|string',
             'contato_mapa_iframe' => 'nullable|string',
-
             'hero_imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
             'bar_imagem_1' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
             'bar_imagem_2' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
             'bar_imagem_3' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
             'tematica_imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-
-            'eventos_galeria' => 'nullable|array',
-            'eventos_galeria.*' => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-
+            'eventos_galeria'      => 'nullable|array',
+            'eventos_galeria.*'    => 'image|mimes:jpg,jpeg,png,webp,avif,gif|max:4096',
             'gastronomia_menu_pdf' => 'nullable|file|mimes:pdf|max:10240',
+            'translate'            => 'required|array',
         ]);
 
-        // Separa o idioma selecionado
-        $locale = $data['locale'];
-
-        // 1. Processar Imagens Individuais (Substituição com Conversão WebP)
+        // 2. Processamento de Imagens Individuais
         $fileFields = ['hero_imagem', 'bar_imagem_1', 'bar_imagem_2', 'bar_imagem_3', 'tematica_imagem'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
-                if ($palace->$field) {
-                    Storage::disk('public')->delete($palace->$field);
-                }
-                $data[$field] = $this->convertToWebp($request->file($field), 'palace');
+                if ($palace->$field) Storage::disk('public')->delete($palace->$field);
+                $palace->$field = $this->convertToWebp($request->file($field), 'palace');
             }
         }
 
-        // 2. Processar Galeria de Eventos
+        // 3. Galeria de Eventos
         if ($request->hasFile('eventos_galeria')) {
-            if ($palace->eventos_galeria) {
-                $oldGallery = is_array($palace->eventos_galeria) ? $palace->eventos_galeria : json_decode($palace->eventos_galeria, true);
-                foreach ($oldGallery ?? [] as $oldPath) {
-                    Storage::disk('public')->delete($oldPath);
-                }
+            $oldGallery = is_array($palace->eventos_galeria) ? $palace->eventos_galeria : json_decode($palace->eventos_galeria ?? '[]', true);
+            foreach ($oldGallery as $oldPath) {
+                Storage::disk('public')->delete($oldPath);
             }
-
             $galleryPaths = [];
             foreach ($request->file('eventos_galeria') as $image) {
                 $galleryPaths[] = $this->convertToWebp($image, 'palace/galeria');
             }
-            $data['eventos_galeria'] = $galleryPaths;
+            $palace->eventos_galeria = $galleryPaths;
         }
 
-        // 3. Processar o Arquivo do Cardápio em PDF
+        // 4. PDF do Cardápio
         if ($request->hasFile('gastronomia_menu_pdf')) {
-            if ($palace->gastronomia_menu_pdf && Storage::disk('public')->exists($palace->gastronomia_menu_pdf)) {
-                Storage::disk('public')->delete($palace->gastronomia_menu_pdf);
-            }
-
-            $pdfPath = $request->file('gastronomia_menu_pdf')->store('menus', 'public');
-            $data['gastronomia_menu_pdf'] = $pdfPath;
+            if ($palace->gastronomia_menu_pdf) Storage::disk('public')->delete($palace->gastronomia_menu_pdf);
+            $palace->gastronomia_menu_pdf = $request->file('gastronomia_menu_pdf')->store('menus', 'public');
         }
 
-        // 4. Salva os dados globais na tabela pai (links, imagens, PDFs, etc)
-        $palace->update($data);
+        $palace->save();
 
-        // 5. SALVA OU ATUALIZA A TRADUÇÃO NA TABELA POLIMÓRFICA ÚNICA
-        $palace->translations()->updateOrCreate(
-            [
-                'locale' => $locale,
-                'page_type' => 'palace', // ou o nome da Model se usar o morphMap do Laravel
-            ],
-            [
-                'palace_hero_titulo'             => $data['hero_titulo'] ?? null,
-                'palace_hero_descricao'          => $data['hero_descricao'] ?? null,
-                'palace_bar_titulo'              => $data['bar_titulo'] ?? null,
-                'palace_bar_descricao'           => $data['bar_descricao'] ?? null,
-                'palace_eventos_titulo'          => $data['eventos_titulo'] ?? null,
-                'palace_eventos_descricao'       => $data['eventos_descricao'] ?? null,
-                'palace_tematica_tag'            => $data['tematica_tag'] ?? null,
-                'palace_tematica_titulo'         => $data['tematica_titulo'] ?? null,
-                'palace_tematica_descricao'      => $data['tematica_descricao'] ?? null,
-                'palace_tematica_preco'          => $data['tematica_preco'] ?? null,
-                'palace_gastronomia_titulo'      => $data['gastronomia_titulo'] ?? null,
-                'palace_gastronomia_cafe_desc'   => $data['gastronomia_cafe_desc'] ?? null,
-                'palace_gastronomia_almoco_desc' => $data['gastronomia_almoco_desc'] ?? null,
-                'palace_gastronomia_jantar_desc' => $data['gastronomia_jantar_desc'] ?? null,
-                'palace_contato_endereco'        => $data['contato_endereco'] ?? null,
-                'palace_contato_horario_segunda' => $data['contato_horario_segunda'] ?? null,
-                'palace_contato_horario_sabado'  => $data['contato_horario_sabado'] ?? null,
-                'palace_contato_horario_domingo' => $data['contato_horario_domingo'] ?? null,
-            ]
-        );
+        // 5. ATUALIZAÇÃO DAS TRADUÇÕES (Multilíngue)
+        $translationsInput = $request->input('translate', []);
+        $localesMapeados = ['pt-br' => 'pt-br', 'es' => 'es', 'en' => 'en'];
 
-        // 6. Limpa o Cache do Front-end para refletir as alterações instantaneamente
+        foreach ($localesMapeados as $formLocale => $dbLocale) {
+            $fields = $translationsInput[$formLocale] ?? [];
+            dd($fields);
+
+            // Ajuste aqui: force o page_type como string fixa para coincidir com o banco
+            $palace->translations()->updateOrCreate(
+                [
+                    'locale' => $dbLocale,
+                    'page_type' => 'App\Models\Palace', // <--- Garanta que esta string é igual à do banco
+                ],
+                [
+                    'palace_hero_titulo'           => $fields['palace_hero_titulo'] ?? null,
+                    'palace_hero_descricao'        => $fields['palace_hero_descricao'] ?? null,
+                    'palace_bar_titulo'            => $fields['palace_bar_titulo'] ?? null,
+                    'palace_bar_descricao'         => $fields['palace_bar_descricao'] ?? null,
+                    'palace_eventos_titulo'        => $fields['palace_eventos_titulo'] ?? null,
+                    'palace_eventos_descricao'     => $fields['palace_eventos_descricao'] ?? null,
+                    'palace_tematica_tag'          => $fields['palace_tematica_tag'] ?? null,
+                    'palace_tematica_titulo'       => $fields['palace_tematica_titulo'] ?? null,
+                    'palace_tematica_descricao'    => $fields['palace_tematica_descricao'] ?? null,
+                    'palace_tematica_preco'        => $fields['palace_tematica_preco'] ?? null,
+                    'palace_gastronomia_titulo'    => $fields['palace_gastronomia_titulo'] ?? null,
+                    'palace_gastronomia_cafe_desc' => $fields['palace_gastronomia_cafe_desc'] ?? null,
+                    'palace_gastronomia_almoco_desc'=> $fields['palace_gastronomia_almoco_desc'] ?? null,
+                    'palace_gastronomia_jantar_desc'=> $fields['palace_gastronomia_jantar_desc'] ?? null,
+                    'palace_contato_endereco'      => $fields['palace_contato_endereco'] ?? null,
+                    'palace_contato_horario_segunda'=> $fields['palace_contato_horario_segunda'] ?? null,
+                    'palace_contato_horario_sabado'=> $fields['palace_contato_horario_sabado'] ?? null,
+                    'palace_contato_horario_domingo'=> $fields['palace_contato_horario_domingo'] ?? null,
+                ]
+            );
+        }
+
         Cache::forget('palace_data');
 
-        return redirect()->route('admin.palace.index')->with('success', 'Conteúdo e tradução (' . strtoupper($locale) . ') do SAX Palace atualizados com sucesso!');
+        return redirect()->route('admin.palace.index')->with('success', 'SAX Palace atualizado com sucesso em todos os idiomas!');
     }
 
     /**

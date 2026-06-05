@@ -2,6 +2,10 @@
 
 @section('content')
 @php
+    // Define a tradução atual ou usa o modelo principal como fallback
+    $currentLang = app()->getLocale();
+    $t = $palace->translations->where('locale', $currentLang)->first() ?? $palace;
+
     $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
         <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
         <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">'.__('messages.visao_geral_label').'</li>
@@ -29,8 +33,8 @@
                 <div class="row g-0 h-100">
                     <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
                         <span class="badge-gold-soft mb-3 text-uppercase letter-spacing-1">{{ __('messages.seccion_principal_badge') }}</span>
-                        <h1 class="display-5 font-weight-bold text-dark mb-3">{{ $palace->hero_titulo }}</h1>
-                        <p class="text-muted lead-sm mb-4">{{ $palace->hero_descricao }}</p>
+                        <h1 class="display-5 font-weight-bold text-dark mb-3">{{ $t->palace_hero_titulo ?? $palace->hero_titulo }}</h1>
+                        <p class="text-muted lead-sm mb-4">{{ $t->palace_hero_descricao ?? $palace->hero_descricao }}</p>
                         <div class="d-flex align-items-center">
                             <div class="status-indicator active"></div>
                             <span class="x-small fw-bold text-uppercase tracking-wider text-success">{{ __('messages.whatsapp_ativo_status') }}</span>
@@ -52,9 +56,9 @@
                     <div class="icon-circle-gold mr-3"><i class="fas fa-glass-martini-alt"></i></div>
                     <h6 class="m-0 font-weight-bold text-uppercase letter-spacing-1">{{ __('messages.bar_bodega_label') }}</h6>
                 </div>
-                <h5 class="text-dark font-weight-bold">{{ $palace->bar_titulo }}</h5>
-                <p class="small text-muted mb-4">{{ Str::limit($palace->bar_descricao, 150) }}</p>
-                                <div class="gallery-stack-modern">
+                <h5 class="text-dark font-weight-bold">{{ $t->palace_bar_titulo ?? $palace->bar_titulo }}</h5>
+                <p class="small text-muted mb-4">{{ Str::limit($t->palace_bar_descricao ?? $palace->bar_descricao, 150) }}</p>
+                <div class="gallery-stack-modern">
                     @for($i=1; $i<=3; $i++)
                         @php $img = "bar_imagem_$i"; @endphp
                         <div class="stack-item shadow-sm">
@@ -75,15 +79,15 @@
                 <div class="meal-timeline-premium">
                     <div class="meal-point border-warning">
                         <span class="x-small fw-bold text-warning text-uppercase">{{ __('messages.meal_timeline_cafe') }}</span>
-                        <p class="small text-dark mb-0 mt-1">{{ $palace->gastronomia_cafe_desc }}</p>
+                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_cafe_desc ?? $palace->gastronomia_cafe_desc }}</p>
                     </div>
                     <div class="meal-point border-primary">
                         <span class="x-small fw-bold text-primary text-uppercase">{{ __('messages.meal_timeline_almoco') }}</span>
-                        <p class="small text-dark mb-0 mt-1">{{ $palace->gastronomia_almoco_desc }}</p>
+                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_almoco_desc ?? $palace->gastronomia_almoco_desc }}</p>
                     </div>
                     <div class="meal-point border-danger">
                         <span class="x-small fw-bold text-danger text-uppercase">{{ __('messages.meal_timeline_jantar') }}</span>
-                        <p class="small text-dark mb-0 mt-1">{{ $palace->gastronomia_jantar_desc }}</p>
+                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_jantar_desc ?? $palace->gastronomia_jantar_desc }}</p>
                     </div>
                 </div>
             </div>
@@ -95,7 +99,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-4 border-right">
                         <h6 class="font-weight-bold text-uppercase letter-spacing-1 mb-1">{{ __('messages.eventos_galeria_label') }}</h6>
-                        <p class="x-small text-muted text-uppercase mb-0">{{ $palace->eventos_titulo }}</p>
+                        <p class="x-small text-muted text-uppercase mb-0">{{ $t->palace_eventos_titulo ?? $palace->eventos_titulo }}</p>
                     </div>
                     <div class="col-md-8 pt-3 pt-md-0">
                         <div class="avatar-stack-premium d-flex align-items-center flex-wrap">
@@ -106,7 +110,7 @@
                                 </div>
                             @empty
                                 <span class="text-muted x-small italic">{{ __('messages.sin_imagenes_status') }}</span>
-                                                        @endforelse
+                            @endforelse
                             @if(count($fotos ?? []) > 10)
                                 <div class="avatar-item plus-count">+{{ count($fotos) - 10 }}</div>
                             @endif
@@ -115,7 +119,8 @@
                 </div>
             </div>
         </div>
-                {{-- 05. NOITE ÁRABE --}}
+
+        {{-- 05. NOITE ÁRABE --}}
         <div class="col-lg-7">
             <div class="sax-premium-card overflow-hidden h-100 shadow-sm border-0">
                 <div class="d-flex flex-column flex-sm-row h-100">
@@ -127,8 +132,8 @@
                             <span class="badge-gold-soft text-uppercase x-small">{{ $palace->tematica_tag }}</span>
                             <span class="text-gold fw-bold h5 mb-0">{{ $palace->tematica_preco }}</span>
                         </div>
-                        <h4 class="font-weight-bold text-dark mb-2">{{ $palace->tematica_titulo }}</h4>
-                        <p class="small text-muted lh-base mb-0">{{ $palace->tematica_descricao }}</p>
+                        <h4 class="font-weight-bold text-dark mb-2">{{ $t->palace_tematica_titulo ?? $palace->tematica_titulo }}</h4>
+                        <p class="small text-muted lh-base mb-0">{{ $t->palace_tematica_descricao ?? $palace->tematica_descricao }}</p>
                     </div>
                 </div>
             </div>

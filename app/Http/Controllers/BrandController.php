@@ -27,7 +27,7 @@ class BrandController extends Controller
             $query = Brand::where('status', 1) // Adicionado: Somente marcas ativas
                 ->withCount([
                     'products' => function ($q) {
-                        $q->where('status', 1)->where('product_role', 'P');
+                        $q->where('status', 1)->where('product_role', 'P')->where('stock', '>', 0);
                     },
                 ])
                 ->orderBy('name')
@@ -63,6 +63,7 @@ class BrandController extends Controller
                 ->products()
                 ->where('status', 1)
                 ->where('product_role', 'P')
+                ->where('stock', '>', 0)
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
                 ->with(['brand', 'category'])

@@ -1178,6 +1178,7 @@ right: -100%;
 /* Começa fora da tela */
 width: 400px;
 height: 100vh;
+height: 100dvh;
 background: #fff;
 z-index: 9999;
 transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -1322,6 +1323,7 @@ color: #d9534f;
 .cart-footer {
 padding: 25px;
 border-top: 1px solid #eee;
+flex-shrink: 0;
 }
 
 .btn-go-to-cart {
@@ -1690,14 +1692,9 @@ border: 1px solid #f8f8f8 !important;
 opacity: 0.85;
 }
 
-/* Ajustes Mobile */
-@media (max-width: 991px) {
-.col-lg-3 {
-display: none;
-}
 
 /* Esconde o banner vertical no mobile para não poluir */
-}
+
 /* Container Geral */
 .child-categories-wrapper {
 background-color: #ffffff;
@@ -2275,10 +2272,6 @@ font-weight: bold;
 height: 35vh;
 }
 
-.col-lg-3 {
-display: none;
-}
-
 /* Oculta banner lateral no mobile */
 }
 /* Estilo Base SAX */
@@ -2632,10 +2625,6 @@ color: #ccc;
 @media (max-width: 991px) {
 .category-hero-fullwidth {
 height: 35vh;
-}
-
-.col-lg-3 {
-display: none;
 }
 }
 .sax-product-card {

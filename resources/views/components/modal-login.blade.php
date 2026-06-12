@@ -98,6 +98,7 @@
                   value="{{ old('phone_number') }}"
                   placeholder="Telefone"
                   required
+                  inputmode="tel"
                   class="form-control sax-auth-phone-number @error('phone_number') is-invalid @enderror"
                 />
               </div>
@@ -155,6 +156,36 @@
             <div class="text-center sax-auth-form-link-row">
               <a href="#" id="showLoginFromForgot">{{ __('messages.voltar_para_o_login') }}</a>
             </div>
+          </form>
+
+          <form method="POST" action="{{ route('password.store') }}" class="login-form d-none" id="resetForm">
+            @csrf
+            <input type="hidden" name="token" id="reset_token">
+            <input type="hidden" name="email" id="reset_email">
+
+            <div class="sax-auth-forgot-copy">
+              {{ __('messages.nova_senha') }}
+            </div>
+
+            <div class="sax-auth-field position-relative">
+              <input id="reset_password" type="password" name="password" placeholder="{{ __('messages.nova_senha') }}" required minlength="5" class="form-control"/>
+              <button type="button" class="btn btn-sm btn-secondary position-absolute top-50 end-0 translate-middle-y me-2 toggle-password" data-target="reset_password">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+
+            <div class="sax-auth-field position-relative">
+              <input id="reset_password_confirmation" type="password" name="password_confirmation" placeholder="{{ __('messages.confirmar_senha') }}" required minlength="5" class="form-control"/>
+              <button type="button" class="btn btn-sm btn-secondary position-absolute top-50 end-0 translate-middle-y me-2 toggle-password" data-target="reset_password_confirmation">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+
+            <div id="resetMessage" class="small mb-3" style="display:none;"></div>
+
+            <button type="submit" class="btn btn-primary w-100" id="btnReset">
+              {{ __('messages.atualizar_senha') }}
+            </button>
           </form>
 
         </div>

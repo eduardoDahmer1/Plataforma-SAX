@@ -42,12 +42,7 @@
                     <i class="fas fa-chevron-left me-1"></i> {{ __('messages.voltar_categorias') }}
                 </a>
                 <div class="category-logo-container mt-3">
-                    @if ($category->photo)
-                        <img src="{{ Storage::url($category->photo) }}" alt="{{ $category->name }}"
-                            class="category-main-logo">
-                    @else
                         <h1 class="category-name-text">{{ $category->name }}</h1>
-                    @endif
                 </div>
             </div>
         </div>

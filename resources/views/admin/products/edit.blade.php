@@ -215,15 +215,21 @@
                         </div>
                     </div>
 
-                    <!-- Container de cores -->
                     <div class="mb-3 col-md-6">
-                        <label for="color" class="form-label"><i class="fas fa-palette me-1"></i>Cor do
-                            Produto</label>
-                        <input type="color" id="color" name="colors_values[]"
-                            value="{{ old('color', $item->color ?? '#000000') }}"
-                            class="form-control form-control-color">
-                        <small class="form-text text-muted">Escolha a cor do produto. A cor será salva
-                            automaticamente.</small>
+                        <label class="form-label"><i class="fas fa-palette me-1"></i> Cor do Produto</label>
+                        
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="color" id="color-input" name="colors_values[]"
+                                value="{{ old('color', $item->color ?? '#000000') }}"
+                                class="form-control form-control-color">
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="no_color" id="no_color" 
+                                    {{ empty($item->color) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="no_color">Sem cor definida</label>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Se marcar "Sem cor", a seleção ao lado será ignorada.</small>
                     </div>
 
                     <!-- Tamanho do Produto -->

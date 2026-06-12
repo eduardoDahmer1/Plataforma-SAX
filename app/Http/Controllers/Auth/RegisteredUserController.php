@@ -32,14 +32,16 @@ class RegisteredUserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:'.User::class],
-            'document' => ['required', 'string', 'max:50'],
+            'document' => ['required', 'string', 'regex:/^[A-Za-z0-9.\/\-\s]{5,30}$/'],
             'phone_country' => ['required', 'string', 'in:55,595'],
-            'phone_number' => ['required', 'string', 'max:30'],
+            'phone_number' => ['required', 'string', 'regex:/^[0-9\s()+\-]{7,20}$/'],
             'password' => ['required', 'confirmed', 'min:5'],
         ], [
             'email.email' => 'Informe um e-mail valido.',
             'email.unique' => 'Este e-mail ja esta cadastrado.',
             'phone_country.in' => 'Selecione um codigo de pais valido.',
+            'phone_number.regex' => 'Informe um telefone valido, sem letras.',
+            'document.regex' => 'Informe um documento valido.',
             'password.confirmed' => 'A confirmacao da senha nao confere.',
             'password.min' => 'A senha deve ter pelo menos :min caracteres.',
         ]);
@@ -58,7 +60,7 @@ class RegisteredUserController extends Controller
             'email' => $validated['email'],
             'document' => $validated['document'],
             'phone_country' => str_replace('+', '', $validated['phone_country']),
-            'phone_number' => $validated['phone_number'],
+            'phone_number' => preg_replace('/\D/', '', $validated['phone_number']),
             'password' => Hash::make($validated['password']),
         ]);
     

@@ -2,14 +2,21 @@
 
 @section('content')
 <x-admin.card>
-    <x-admin.page-header
-        title="{{ __('messages.performance_edicao_titulo') }}"
-        description="{{ __('messages.performance_edicao_desc') }}">
-    </x-admin.page-header>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <x-admin.page-header title="{{ __('messages.performance_edicao_titulo') }}" description="{{ __('messages.performance_edicao_desc') }}"></x-admin.page-header>
+        
+        <select class="form-select w-auto" onchange="window.location.href='?mes=' + this.value">
+            @foreach($mesesDisponiveis as $m)
+                <option value="{{ $m['value'] }}" {{ $mesSelecionado == $m['value'] ? 'selected' : '' }}>
+                    {{ ucfirst($m['label']) }}
+                </option>
+            @endforeach
+        </select>
+    </div>
 
     <div class="sax-stats-wrapper">
         <div class="row g-4">
-            @foreach ($edicoesPorDia as $linha)
+            @forelse ($edicoesPorDia as $linha)
                 <div class="col-12 col-sm-6 col-md-4 col-xl-3">
                     <div class="sax-stat-card border-0 shadow-sm h-100" 
                          onclick="abrirModalLocal('{{ $linha->dia }}')" 
@@ -17,23 +24,23 @@
                         <div class="card-content p-4">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <span class="date-badge text-uppercase">
-                                    {{-- O Carbon traduz o mês automaticamente se o setLocale estiver correto no middleware --}}
                                     {{ \Carbon\Carbon::parse($linha->dia)->translatedFormat('d M Y') }}
                                 </span>
-                                <div class="trend-icon"><i class="fas fa-eye opacity-25"></i></div>
                             </div>
                             <div class="stat-value-container">
                                 <h2 class="display-5 fw-bold text-dark m-0">{{ $linha->total }}</h2>
                                 <p class="stat-label text-muted text-uppercase letter-spacing-1 m-0">{{ __('messages.produtos_editados_label') }}</p>
                             </div>
                         </div>
-                        <div class="card-progress-bar"></div>
                     </div>
                 </div>
-            @endforeach
+            @empty
+                <p class="text-center p-5">Nenhum registro encontrado para este mês.</p>
+            @endforelse
         </div>
     </div>
 
+    
     {{-- Modal Único --}}
     <div class="modal fade" id="modalDetalhesLocal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -59,8 +66,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Datos inyectados desde el controller --}}
     <script>var dadosProdutos = @json($detalhesProdutos);</script>
 </x-admin.card>
 @endsection

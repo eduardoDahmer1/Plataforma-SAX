@@ -34,11 +34,11 @@ class CheckoutController extends Controller
 
         return view('checkout.index', compact('paymentMethods', 'cart'));
     }
+
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        // 1. Validações
         $request->validate([
             'name' => 'required|string|max:255',
             'document' => 'required|string|max:50',
@@ -47,8 +47,6 @@ class CheckoutController extends Controller
             'shipping' => 'required|in:1,2,3',
             'payment_method' => 'required|in:deposito,bancard,bancard_v2,whatsapp,pagopar',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
-
-            // Campos de endereço (Obrigatórios apenas se shipping for 2 - Novo Endereço)
             'street' => 'required_if:shipping,2',
             'number' => 'required_if:shipping,2',
             'district' => 'required_if:shipping,2',
@@ -56,7 +54,7 @@ class CheckoutController extends Controller
             'state' => 'nullable|string',
             'country' => 'required_if:shipping,2',
             'cep' => 'required_if:shipping,2',
-
+            'frete_valor' => 'nullable|numeric', // Validamos o campo que enviamos via JS
             'store' => 'required_if:shipping,3',
             'observations' => 'nullable|string',
             'cupon' => 'nullable|string',
@@ -67,32 +65,35 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
         }
 
-        $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
-        $paymentMethod = $request->input('payment_method');
-        $cupon = null;
-        $desconto = 0;
+        $frete = (float) $request->input('frete_valor', 0);
 
-        // 2. Lógica de Cupom
+        $subtotal = $cart->sum(fn($item) => $item->quantity * $item->product->price);
+        $paymentMethod = $request->input('payment_method');
+        $desconto = 0;
+        $cupon = null;
+
         if ($request->filled('cupon') && in_array($paymentMethod, ['deposito', 'pagopar', 'bancard'])) {
-            $cupon = Cupon::where('codigo', $request->input('cupon'))->where('data_inicio', '<=', now())->where('data_final', '>=', now())->first();
+            $cupon = Cupon::where('codigo', $request->input('cupon'))
+                        ->where('data_inicio', '<=', now())
+                        ->where('data_final', '>=', now())
+                        ->first();
 
             if ($cupon) {
-                if (($cupon->valor_minimo && $total < $cupon->valor_minimo) || ($cupon->valor_maximo && $total > $cupon->valor_maximo)) {
+                if (($cupon->valor_minimo && $subtotal < $cupon->valor_minimo) || ($cupon->valor_maximo && $subtotal > $cupon->valor_maximo)) {
                     return back()->with('error', 'Este cupom não se aplica ao valor do seu pedido.');
                 }
-                $desconto = $cupon->tipo === 'percentual' ? $total * ($cupon->montante / 100) : $cupon->montante;
-
-                $total -= $desconto;
-                $total = max(0, $total);
+                $desconto = $cupon->tipo === 'percentual' ? $subtotal * ($cupon->montante / 100) : $cupon->montante;
                 session(['applied_cupon' => $cupon]);
             } else {
                 return back()->with('error', 'Cupom inválido ou expirado.');
             }
         }
 
+        $total = ($subtotal - $desconto) + $frete;
+        $total = max(0, $total);
+
         DB::beginTransaction();
         try {
-            // Separação Nome / Sobrenome
             $nameParts = explode(' ', trim($request->input('name')));
             $firstName = array_shift($nameParts);
             $lastName = implode(' ', $nameParts) ?: $firstName;
@@ -103,11 +104,11 @@ class CheckoutController extends Controller
                 default => '',
             };
 
-            // 3. Criar pedido inicial
             $order = Order::create([
                 'user_id' => $user->id,
                 'status' => 'pending',
                 'total' => $total,
+                'shipping_cost' => $frete,
                 'payment_method' => $paymentMethod,
                 'cupon_id' => $cupon->id ?? null,
                 'discount' => $desconto,
@@ -123,30 +124,35 @@ class CheckoutController extends Controller
                 'currency_value' => 1,
             ]);
 
-            // 4. Lógica de Endereço/Loja (Mantida original)
             switch ($request->shipping) {
                 case '1':
+                    // 1. Atualiza os dados do pedido com o endereço do usuário
                     $order->update([
-                        'street' => $user->street,
-                        'number' => $user->number,
+                        'street' => $user->street, 
+                        'number' => $user->number, 
                         'district' => $user->district,
-                        'complement' => $user->complement,
-                        'city' => $user->city,
+                        'complement' => $user->complement, 
+                        'city' => $user->city, 
                         'state' => $user->state,
-                        'cep' => $user->cep,
+                        'cep' => $user->cep, 
                         'country' => $user->country == 'paraguai' ? 'PY' : 'BR',
                     ]);
+
+                    if ($user->country === 'paraguai' && !empty($user->city)) {
+                        $valorFrete = $this->calcularFrete($user->city);
+                        
+                        $order->update(['shipping_cost' => $valorFrete]);
+                        
+                        $novoTotal = $order->total + $valorFrete;
+                        $order->update(['total' => $novoTotal]);
+                    }
                     break;
                 case '2':
                     $order->update([
-                        'street' => $request->input('street'),
-                        'number' => $request->input('number'),
-                        'district' => $request->input('district'),
-                        'complement' => $request->input('complement'),
-                        'city' => $request->input('city') ?? '',
-                        'state' => $request->input('state') ?? '',
-                        'cep' => $request->input('cep') ?? '',
-                        'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
+                        'street' => $request->input('street'), 'number' => $request->input('number'),
+                        'district' => $request->input('district'), 'complement' => $request->input('complement'),
+                        'city' => $request->input('city') ?? '', 'state' => $request->input('state') ?? '',
+                        'cep' => $request->input('cep') ?? '', 'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
                     ]);
                     break;
                 case '3':
@@ -175,9 +181,7 @@ class CheckoutController extends Controller
                 $file->storeAs('deposits', $filename, 'public');
                 $order->update(['deposit_receipt' => $filename]);
             }
-
             DB::commit();
-
             /**
              * DISPARO DE E-MAILS DE ACORDO COM O MÉTODO
              */
@@ -218,10 +222,45 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro crítico no checkout: ' . $e->getMessage());
-            return back()
-                ->with('error', 'Erro ao processar pedido: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', 'Erro ao processar pedido.')->withInput();
         }
+    }
+
+    private function calcularFrete($cidade)
+    {
+        $cidades5Dolares = [
+            'asuncion', 'san lorenzo', 'luque', 'fernando de la mora', 'nemby', 
+            'mariano roque alonso', 'limpio', 'villa elisa', 'san antonio', 'ypane', 
+            'capiata', 'j. augusto saldivar', 'aregua', 
+            'ciudad del este', 'presidente franco', 'hernandarias', 'minga guazu', 
+            'pedro juan caballero'
+        ];
+
+        $cidadeNormalizada = strtolower(
+            preg_replace(
+                ['/(á|à|ã|â|ä)/', '/(é|è|ê|ë)/', '/(í|ì|î|ï)/', '/(ó|ò|õ|ô|ö)/', '/(ú|ù|û|ü)/', '/ñ/'],
+                ['a', 'e', 'i', 'o', 'u', 'n'],
+                trim($cidade)
+            )
+        );
+
+        return in_array($cidadeNormalizada, $cidades5Dolares) ? 5.00 : 10.00;
+    }
+    
+    public function ajaxCalcularFrete(Request $request)
+    {
+        if (!$request->has(['city', 'country'])) {
+            return response()->json(['error' => 'Dados insuficientes'], 400);
+        }
+
+        $cidade = $request->input('city');
+        $pais = $request->input('country');
+        
+        if ($pais !== 'paraguai' || empty(trim($cidade))) {
+            return response()->json(['frete' => 0]);
+        }
+        
+        return response()->json(['frete' => $this->calcularFrete($cidade)]);
     }
 
     public function whatsapp(Request $request)
@@ -279,7 +318,6 @@ class CheckoutController extends Controller
         return redirect('https://wa.me/595984167575?text=' . urlencode($message));
     }
 
-    // Página de depósito
     public function deposito(Order $order)
     {
         $user = auth()->user();
@@ -289,7 +327,7 @@ class CheckoutController extends Controller
 
         $bankAccounts = PaymentMethod::where('type', 'bank')->where('active', 1)->get();
         $orderItems = $order->items;
-
+        
         return view('layout.deposito', compact('order', 'bankAccounts', 'orderItems'));
     }
 
@@ -299,11 +337,11 @@ class CheckoutController extends Controller
     public function submitDeposito(Request $request, Order $order)
     {
         $request->validate([
-            'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'deposit_receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         if ($request->hasFile('deposit_receipt')) {
-            $filePath = $request->file('deposit_receipt')->store('deposit_receipts', 'public');
+            $filePath = $request->file('deposit_receipt')->store('deposits', 'public');
             $order->deposit_receipt = $filePath;
             $order->save();
 
@@ -314,7 +352,6 @@ class CheckoutController extends Controller
                 ->with('success', __('messages.deposito_comprovante_recebido'));
         }
 
-        return redirect()->route('user.orders.show', $order->id)
-            ->with('info', __('messages.deposito_em_verificacao'));
+        return back()->with('info', __('messages.deposito_em_verificacao'));
     }
 }

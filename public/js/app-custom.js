@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const forgotForm = document.getElementById('forgotForm');
+    const resetForm = document.getElementById('resetForm');
     const modalTitle = document.getElementById('modalTitle');
     const loginModal = document.getElementById('loginModal');
     const authRedirectFields = document.querySelectorAll('[data-auth-redirect-field]');
@@ -206,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showForm(form) {
-        [loginForm, registerForm, forgotForm].forEach(f => f.classList.add('d-none'));
+        [loginForm, registerForm, forgotForm, resetForm].forEach(f => f.classList.add('d-none'));
         form.classList.remove('d-none');
 
         if (modalTitle) modalTitle.textContent = 'SAX';
@@ -244,11 +245,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    if(new URLSearchParams(location.search).get('open') === 'login'){
-        if(loginModal && typeof bootstrap !== 'undefined'){
-            history.replaceState(null, '', location.pathname);
-            bootstrap.Modal.getOrCreateInstance(loginModal).show();
-        }
+    const urlParams  = new URLSearchParams(location.search);
+    const openTarget = urlParams.get('open');
+
+    if (openTarget === 'login' && loginModal && typeof bootstrap !== 'undefined') {
+        history.replaceState(null, '', location.pathname);
+        bootstrap.Modal.getOrCreateInstance(loginModal).show();
+    }
+
+    if (openTarget === 'reset' && loginModal && typeof bootstrap !== 'undefined') {
+        document.getElementById('reset_token').value = urlParams.get('token') || '';
+        document.getElementById('reset_email').value = urlParams.get('email') || '';
+        history.replaceState(null, '', location.pathname);
+
+        // OJO con el orden: .show() dispara 'show.bs.modal', que llama showForm(loginForm).
+        // Por eso showForm(resetForm) va DESPUÉS, para que el último gane y quede el reset visible.
+        bootstrap.Modal.getOrCreateInstance(loginModal).show();
+        showForm(resetForm);
     }
 
     document.querySelectorAll('.js-requires-login').forEach(trigger => {
@@ -325,8 +338,18 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: formData,
         })
-        .then(res => res.json())
+        .then(res => {
+            // 419 = sessão/CSRF expirou. Recarrega para obter um token novo.
+            if (res.status === 419) {
+                loginError.textContent   = 'Sua sessão expirou. Recarregando a página…';
+                loginError.style.display = 'block';
+                setTimeout(() => location.reload(), 1500);
+                return null;
+            }
+            return res.json();
+        })
         .then(data => {
+            if (!data) return; // 419 já tratado acima
             if (data.success) {
                 window.location.href = data.redirect || '/';
             } else {
@@ -339,6 +362,111 @@ document.addEventListener('DOMContentLoaded', function () {
             loginError.textContent   = 'Erro inesperado. Tente novamente.';
             loginError.style.display = 'block';
             submitBtn.disabled       = false;
+        });
+    });
+
+    // Forgot Password via AJAX — mostra feedback sem fechar o modal
+    forgotForm?.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const forgotMessage = document.getElementById('forgotMessage');
+        const btnForgot     = document.getElementById('btnForgot');
+        const formData      = new FormData(this);
+
+        btnForgot.disabled           = true;
+        forgotMessage.style.display  = 'none';
+        forgotMessage.textContent    = '';
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': formData.get('_token'),
+            },
+            body: formData,
+        })
+        .then(res => {
+            // 419 = sessão/CSRF expirou. Recarrega para obter um token novo.
+            if (res.status === 419) {
+                forgotMessage.textContent   = 'Sua sessão expirou. Recarregando a página…';
+                forgotMessage.style.display = 'block';
+                forgotMessage.className     = 'small mb-3 text-danger';
+                setTimeout(() => location.reload(), 1500);
+                return null;
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (!data) return; // 419 já tratado acima
+            forgotMessage.textContent   = data.message;
+            forgotMessage.style.display = 'block';
+            forgotMessage.className     = data.success
+                ? 'small mb-3 text-success'
+                : 'small mb-3 text-danger';
+
+            if (!data.success) {
+                btnForgot.disabled = false;
+            }
+        })
+        .catch(() => {
+            forgotMessage.textContent   = 'Erro inesperado. Tente novamente.';
+            forgotMessage.style.display = 'block';
+            forgotMessage.className     = 'small mb-3 text-danger';
+            btnForgot.disabled          = false;
+        });
+    });
+
+    // Reset Password via AJAX — define nova senha sem sair do modal
+    resetForm?.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const resetMessage = document.getElementById('resetMessage');
+        const btnReset     = document.getElementById('btnReset');
+        const formData     = new FormData(this);
+
+        btnReset.disabled          = true;
+        resetMessage.style.display = 'none';
+        resetMessage.textContent   = '';
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': formData.get('_token'),
+            },
+            body: formData,
+        })
+        .then(res => {
+            // 419 = sessão expirou. Aqui NÃO recarregamos: a URL já foi limpa
+            // (replaceState), então o token do link se perderia. Pedimos um novo link.
+            if (res.status === 419) {
+                resetMessage.textContent   = 'Sua sessão expirou. Solicite o link novamente.';
+                resetMessage.style.display = 'block';
+                resetMessage.className     = 'small mb-3 text-danger';
+                btnReset.disabled          = false;
+                return null;
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (!data) return; // 419 já tratado acima
+            resetMessage.textContent   = data.message;
+            resetMessage.style.display = 'block';
+            resetMessage.className     = data.success
+                ? 'small mb-3 text-success'
+                : 'small mb-3 text-danger';
+
+            if (data.success) {
+                setTimeout(() => { window.location.href = '/'; }, 1500);
+            } else {
+                btnReset.disabled = false;
+            }
+        })
+        .catch(() => {
+            resetMessage.textContent   = 'Erro inesperado. Tente novamente.';
+            resetMessage.style.display = 'block';
+            resetMessage.className     = 'small mb-3 text-danger';
+            btnReset.disabled          = false;
         });
     });
 

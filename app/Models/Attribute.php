@@ -31,4 +31,15 @@ class Attribute extends Model
         'icon_cabide',
         'icon_help',
     ];
+
+    public static function logoUrl(): ?string
+    {
+        // TODO: descomentar en produccion cuando el dominio sea publico
+        // $attribute = static::first();
+        // return $attribute?->header_image
+        //     ? asset('storage/uploads/' . $attribute->header_image)
+        //     : null;
+
+        return null;
+    }
 }

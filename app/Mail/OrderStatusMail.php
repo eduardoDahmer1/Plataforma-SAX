@@ -15,6 +15,7 @@ class OrderStatusMail extends Mailable
 
     public $order;
     public $messageCustom;
+    public ?string $logoUrl;
 
     /**
      * @param Order $order
@@ -24,6 +25,7 @@ class OrderStatusMail extends Mailable
     {
         $this->order = $order;
         $this->messageCustom = $messageCustom;
+        $this->logoUrl = \App\Models\Attribute::logoUrl();
     }
 
     public function envelope(): Envelope

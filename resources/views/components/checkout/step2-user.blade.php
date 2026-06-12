@@ -8,19 +8,19 @@
             <div class="col-md-6 sax-input-group">
                 <label>{{ __('messages.nome_completo') }} *</label>
                 <input type="text" name="name" class="sax-form-control"
-                    value="{{ old('name') ?? auth()->user()->name }}">
+                    value="{{ old('name') ?? auth()->user()->name }}" required>
             </div>
 
             <div class="col-md-6 sax-input-group">
                 <label>{{ __('messages.documento_identidade') }} *</label>
                 <input type="text" name="document" class="sax-form-control"
-                    value="{{ old('document') ?? auth()->user()->document }}">
+                    value="{{ old('document') ?? auth()->user()->document }}" required>
             </div>
 
             <div class="col-md-6 sax-input-group">
                 <label>{{ __('messages.email') }} *</label>
                 <input type="email" name="email" class="sax-form-control"
-                    value="{{ old('email') ?? auth()->user()->email }}">
+                    value="{{ old('email') ?? auth()->user()->email }}" required>
             </div>
 
             <div class="col-md-6 sax-input-group">
@@ -28,19 +28,20 @@
 
                 <div class="sax-auth-phone-row d-flex">
                     <select name="phone_country"
-                        style="width: auto;margin-right: 5px;border: none;border-bottom: 1px solid #00000024;"
-                        class="sax-auth-phone-country @error('phone_country') is-invalid @enderror" required
-                        style="width: auto; margin-right: 5px;">
-                        <option value="595"
-                            {{ (old('phone_country') ?? (auth()->user()->phone_country ?? '595')) == '595' ? 'selected' : '' }}>
-                            PRY (+595)</option>
-                        <option value="55"
-                            {{ (old('phone_country') ?? auth()->user()->phone_country) == '55' ? 'selected' : '' }}>BRA
-                            (+55)</option>
+                        class="sax-auth-phone-country @error('phone_country') is-invalid @enderror" 
+                        required
+                        style="width: auto; margin-right: 5px; border: none; border-bottom: 1px solid #00000024;">
+                        <option value="595" {{ (old('phone_country') ?? (auth()->user()->phone_country ?? '595')) == '595' ? 'selected' : '' }}>
+                            PRY (+595)
+                        </option>
+                        <option value="55" {{ (old('phone_country') ?? auth()->user()->phone_country) == '55' ? 'selected' : '' }}>
+                            BRA (+55)
+                        </option>
                     </select>
 
                     <input id="register_phone_number" type="text" name="phone"
-                        value="{{ old('phone') ?? auth()->user()->phone_number }}" placeholder="Telefone" required
+                        value="{{ old('phone') ?? auth()->user()->phone_number }}" 
+                        placeholder="{{ __('messages.telefone') }}" required
                         class="sax-form-control sax-auth-phone-number @error('phone') is-invalid @enderror" />
                 </div>
 
@@ -55,10 +56,10 @@
 
     <div class="d-flex justify-content-between mt-4">
         <button type="button" class="sax-btn-prev" onclick="prevStep(1)">
-            {{ __('messages.voltar') }}
+            <i class="fa fa-arrow-left me-2"></i> {{ __('messages.voltar') }}
         </button>
         <button type="button" class="sax-btn-next" onclick="nextStep(2)">
-            {{ __('messages.continuar_envio') }}
+            {{ __('messages.continuar_envio') }} <i class="fa fa-arrow-right ms-2"></i>
         </button>
     </div>
 </div>

@@ -69,9 +69,11 @@
                     <div class="product-sticky-info ps-lg-4">
                         {{-- Marca e Tag de Estoque --}}
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="brand-name text-uppercase fw-bold text-muted" style="letter-spacing: 2px; font-size: 0.85rem;">
-                                {{ $product->brand->name ?? 'Luxury Selection' }}
-                            </div>
+                            <a href="{{ route('brands.show', $product->brand->slug) }}" class="text-decoration-none">
+                                <div class="brand-name text-uppercase fw-bold text-muted" style="letter-spacing: 2px; font-size: 0.85rem;">
+                                    {{ $product->brand->name ?? 'Luxury Selection' }}
+                                </div>
+                            </a>
                             @if($product->stock > 0 && $product->stock <= 5)
                                 <span class="text-danger extra-small fw-bold text-uppercase">
                                 <i class="fas fa-exclamation-circle"></i>{{ __('messages.unicas_unidades', ['count' => $product->stock]) }}</span>
@@ -81,7 +83,7 @@
                         </div>
 
                         <h1 class="product-title h3 text-uppercase mb-1 fw-light" style="letter-spacing: 1px;">{{ $product->name }}</h1>
-                        <p class="text-muted extra-small mb-4">REF: {{ $product->sku }} | Vistas: {{ number_format($product->views) }}</p>
+                        <p class="text-muted extra-small mb-4">REF: {{ $product->sku }}</p>
 
                         {{-- Preço com lógica de promoção --}}
                         <div class="product-price-wrapper mb-4">
@@ -96,20 +98,39 @@
                         {{-- Seleção de Cores --}}
                         <div class="color-selection-wrapper mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="section-label text-uppercase extra-small fw-bold">{{ __('messages.cor') }}: <span class="text-muted fw-normal">{{ $product->color }}</span></span>
+                                <span class="section-label text-uppercase extra-small fw-bold">
+                                    {{ __('messages.cor') }}: 
+                                    <span class="text-muted fw-normal">
+                                        {{ $product->color ? : __('messages.sem_cor_definida') }}
+                                    </span>
+                                </span>
                             </div>
                             <div class="color-grid d-flex flex-wrap gap-2">
                                 @if (isset($colorSiblings) && $colorSiblings->count() > 0)
                                     @foreach ($colorSiblings as $colorSib)
                                         <a href="{{ route('produto.show', $colorSib->slug ?? $colorSib->id) }}" 
                                         class="color-box-link {{ $product->id == $colorSib->id ? 'active' : '' }}"
-                                        title="{{ $colorSib->color }}">
-                                            <div class="color-dot" style="background-color: {{ $colorSib->color ?? '#ccc' }};"></div>
+                                        title="{{ $colorSib->color ?: __('messages.sem_cor_definida') }}">
+                                            
+                                            @if(!empty($colorSib->color))
+                                                <div class="color-dot" style="background-color: {{ $colorSib->color }};"></div>
+                                            @else
+                                                {{-- Estilo especial para quando não tem cor --}}
+                                                <div class="color-dot empty-color d-flex align-items-center justify-content-center">
+                                                    <span style="font-size: 8px; line-height: 1;">?</span>
+                                                </div>
+                                            @endif
                                         </a>
                                     @endforeach
                                 @else
                                     <div class="color-box-link active">
-                                        <div class="color-dot" style="background-color: {{ $product->color ?? '#ccc' }};"></div>
+                                        @if(!empty($product->color))
+                                            <div class="color-dot" style="background-color: {{ $product->color }};"></div>
+                                        @else
+                                            <div class="color-dot empty-color d-flex align-items-center justify-content-center">
+                                                <span style="font-size: 8px;">?</span>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -121,16 +142,25 @@
                                 <span class="section-label text-uppercase extra-small fw-bold">Tamanho</span>
                                 <a href="#" class="text-muted text-decoration-underline extra-small" data-bs-toggle="modal" data-bs-target="#sizeGuideModal">{{ __('messages.guia_de_medidas') }}</a>
                             </div>
+                            
                             <div class="size-grid d-flex flex-wrap gap-2">
+                                {{-- 1. Prioridade: Se houver irmãos (variantes), exibe a grade de tamanhos --}}
                                 @if (isset($siblings) && $siblings->count() > 0)
                                     @foreach ($siblings as $sib)
                                         <a href="{{ route('produto.show', $sib->slug ?? $sib->id) }}"
                                             class="size-box text-decoration-none {{ $product->id == $sib->id ? 'active' : '' }} {{ $sib->stock <= 0 ? 'disabled' : '' }}">
-                                            {{ $sib->size ?? 'U' }}
+                                            {{-- Exibe o tamanho, se for null/vazio, usa a tradução --}}
+                                            {{ $sib->size ?: __('messages.sem_tamanho_definido') }}
                                         </a>
                                     @endforeach
+
+                                {{-- 2. Se não houver irmãos, mas o produto tiver um tamanho definido --}}
+                                @elseif (!empty($product->size))
+                                    <div class="size-box active">{{ $product->size }}</div>
+
+                                {{-- 3. Caso contrário, exibe que não tem tamanho definido --}}
                                 @else
-                                    <div class="size-box active">{{ $product->size ?? 'U' }}</div>
+                                    <span class="text-muted extra-small">{{ __('messages.sem_tamanho_definido') }}</span>
                                 @endif
                             </div>
                         </div>
@@ -209,7 +239,7 @@
                             @endif
                         </div>
 
-                        {{-- Disponibilidade em Lojas --}}
+                        {{-- Disponibilidade em Lojas
                         <div class="store-availability mt-5 p-4 bg-light">
                             <div class="section-label mb-3 text-uppercase fw-bold" style="font-size: 0.7rem; color: #1a1a1a; letter-spacing: 1px;">
                                 <i class="fas fa-store me-2"></i> {{ __('messages.disponivel_retirada') }}
@@ -235,7 +265,7 @@
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

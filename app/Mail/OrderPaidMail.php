@@ -21,10 +21,7 @@ class OrderPaidMail extends Mailable
     {
         $this->order = $order;
 
-        $attribute = Attribute::first();
-        $this->logoUrl = $attribute?->header_image
-            ? asset('storage/uploads/' . $attribute->header_image)
-            : null;
+        $this->logoUrl = Attribute::logoUrl();
     }
 
     public function envelope(): Envelope

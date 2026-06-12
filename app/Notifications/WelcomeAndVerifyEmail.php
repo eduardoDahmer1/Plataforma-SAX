@@ -27,12 +27,11 @@ class WelcomeAndVerifyEmail extends Notification
         );
 
         return (new MailMessage)
-            ->subject('Bem-vindo à Sax Department! Confirme seu e-mail')
-            ->greeting('Olá, ' . $notifiable->name . '!')
-            ->line('Estamos muito felizes em ter você conosco na Sax Department.')
-            ->line('Para começar a aproveitar nossa plataforma e realizar suas compras, por favor, confirme seu endereço de e-mail clicando no botão abaixo.')
-            ->action('Confirmar E-mail', $verificationUrl)
-            ->line('Se você não criou uma conta, ignore este e-mail.')
-            ->salutation('Atenciosamente, Equipe Sax.');
+            ->subject('Bem-vindo à SAX Department! Confirme seu e-mail')
+            ->view('emails.welcome', [
+                'user'            => $notifiable,
+                'verificationUrl' => $verificationUrl,
+                'logoUrl'         => \App\Models\Attribute::logoUrl(),
+            ]);
     }
 }

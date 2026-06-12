@@ -19,7 +19,6 @@
         <h5 class="mb-4 text-uppercase tracking-wider">{{ __('messages.forma_pagamento') }}</h5>
         
         <div class="d-flex justify-content-center flex-wrap gap-3">
-            {{-- Opção: Depósito --}}
             <button type="button" class="sax-payment-method" id="btn-deposito" data-payment-method="deposito" aria-pressed="false">
                 <i class="fa fa-university mb-2 d-block"></i>
                 {{ __('messages.deposito_transferencia') }}
@@ -49,7 +48,7 @@
                 <div class="d-flex align-items-center gap-3 mb-2 border-bottom pb-2">
                     <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
                          style="width: 50px; height: 50px; object-fit: contain; background: #f5f5f5;">
-                    <div class="flex-grow-1">
+                    <div class="flex-grow-1 text-start">
                         <small class="d-block fw-bold">{{ $item->product->external_name ?? 'Produto' }}</small>
                         <small class="text-muted">{{ $item->quantity }}x {{ currency_format($item->product->price ?? 0) }}</small>
                     </div>
@@ -63,16 +62,16 @@
         <div class="sax-summary-total">
             <div class="d-flex justify-content-between mb-2">
                 <span>{{ __('messages.subtotal') }}</span>
-                <span>{{ currency_format($totalPedido) }}</span>
+                <span id="subtotal-display">{{ currency_format($totalPedido) }}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
                 <span>{{ __('messages.envio') }}</span>
-                <span class="text-success fw-bold">{{ __('messages.a_combinar') }}</span>
+                <span id="frete-display" class="text-success fw-bold">{{ __('messages.selecione_entrega') }}</span>
             </div>
             <hr>
             <div class="d-flex justify-content-between align-items-center total-row">
                 <strong>{{ __('messages.total') }}</strong>
-                <strong style="font-size: 1.5rem;">{{ currency_format($totalPedido) }}</strong>
+                <strong id="total-geral-display" style="font-size: 1.5rem;">{{ currency_format($totalPedido) }}</strong>
             </div>
         </div>
     </div>
@@ -94,8 +93,7 @@
 </script>
 
 <style>
-    .flex-wrap .active{
-        background: #000000;
-        color: white;
-    }
+    .sax-payment-method { border: 2px solid #eee; padding: 15px; border-radius: 8px; background: white; transition: 0.3s; width: 150px; }
+    .sax-payment-method.active { background: #000000; color: white; border-color: #000; }
+    .sax-payment-method:hover { border-color: #000; }
 </style>

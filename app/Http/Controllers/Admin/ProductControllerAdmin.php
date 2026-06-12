@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Carbon\Carbon;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ProductTranslations;
@@ -348,6 +349,13 @@ class ProductControllerAdmin extends Controller
                     $data['color'] = reset($colors);
                 }
 
+                if ($request->has('no_color')) {
+                    $data['color'] = null; // Limpa a cor no banco
+                } elseif ($request->has('colors_values')) {
+                    $colors = (array) $request->input('colors_values');
+                    $data['color'] = reset($colors); // Pega a cor selecionada
+                }
+
                 // --- IMAGEM PRINCIPAL ---
                 if ($request->hasFile('photo')) {
                     if ($product->photo && Storage::disk('public')->exists($product->photo)) {
@@ -442,7 +450,7 @@ class ProductControllerAdmin extends Controller
                         $childData = [
                             'parent_id' => $product->id,
                             'color_parent_id' => $targetFamilyRootId,
-                            'color' => $resolvedParentColor,
+                            'color' => $data['color'] ?? null,
                             'product_role' => 'F',
                             'brand_id' => $product->brand_id,
                             'category_id' => $product->category_id,
@@ -735,19 +743,36 @@ class ProductControllerAdmin extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Destaques atualizados com sucesso!');
     }
 
-    public function review()
+    public function review(Request $request)
     {
-        // Dados para os Cards (o que você já tinha)
-        $edicoesPorDia = Product::selectRaw('DATE(updated_at) as dia, COUNT(*) as total')->whereNotNull('updated_at')->groupBy('dia')->orderBy('dia', 'desc')->get();
+        // 1. Define o mês atual ou o selecionado
+        $mesSelecionado = $request->get('mes', Carbon::now()->format('Y-m'));
+        $dataInicio = Carbon::parse($mesSelecionado)->startOfMonth();
+        $dataFim = Carbon::parse($mesSelecionado)->endOfMonth();
 
-        // Dados para os Modais (Busca os detalhes dos produtos editados nos últimos dias)
-        // Limitamos a busca para não pesar o carregamento inicial
-        $detalhesProdutos = Product::whereNotNull('updated_at')
-            ->where('updated_at', '>=', now()->subDays(30)) // Pega os últimos 30 dias por segurança
+        // 2. Lista de meses para o select de navegação (ex: últimos 6 meses)
+        $mesesDisponiveis = [];
+        for ($i = 0; $i < 6; $i++) {
+            $data = Carbon::now()->subMonths($i);
+            $mesesDisponiveis[] = [
+                'value' => $data->format('Y-m'),
+                'label' => $data->translatedFormat('F Y') // Ex: Junho 2026
+            ];
+        }
+
+        // 3. Busca apenas os dados do mês selecionado
+        $edicoesPorDia = Product::selectRaw('DATE(updated_at) as dia, COUNT(*) as total')
+            ->whereBetween('updated_at', [$dataInicio, $dataFim])
+            ->groupBy('dia')
+            ->orderBy('dia', 'desc')
+            ->get();
+
+        // 4. Detalhes (ajuste conforme necessário para não sobrecarregar)
+        $detalhesProdutos = Product::whereBetween('updated_at', [$dataInicio, $dataFim])
             ->selectRaw('DATE(updated_at) as dia, name, sku, ref_code')
             ->get()
-            ->groupBy('dia'); // Agrupa por data para o JS encontrar fácil
+            ->groupBy('dia');
 
-        return view('admin.products.review', compact('edicoesPorDia', 'detalhesProdutos'));
+        return view('admin.products.review', compact('edicoesPorDia', 'detalhesProdutos', 'mesesDisponiveis', 'mesSelecionado'));
     }
 }

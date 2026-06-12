@@ -7,11 +7,15 @@
         <div class="sax-cart-list">
             @php $totalCarrinho = 0; @endphp
             @foreach ($cart as $item)
+                @php 
+                    $subtotalItem = ($item->product->price ?? 0) * $item->quantity;
+                    $totalCarrinho += $subtotalItem; 
+                @endphp
                 <div class="sax-cart-item d-flex align-items-center gap-4 py-3 border-bottom">
                     <div class="sax-cart-img-wrapper">
                         <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
                              alt="{{ $item->product->external_name }}" 
-                             class="img-fluid">
+                             class="img-fluid" style="width: 80px;">
                     </div>
 
                     <div class="flex-grow-1">
@@ -24,16 +28,18 @@
                     </div>
 
                     <div class="text-end">
-                        <span class="sax-item-subtotal">{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</span>
+                        <span class="sax-item-subtotal">{{ currency_format($subtotalItem) }}</span>
                     </div>
                 </div>
-                @php $totalCarrinho += ($item->product->price ?? 0) * $item->quantity; @endphp
             @endforeach
         </div>
 
         <div class="sax-total-section d-flex justify-content-between align-items-center mt-4">
             <span class="total-label">{{ __('messages.subtotal') }}</span>
-            <span class="total-value">{{ currency_format($totalCarrinho) }}</span>
+            {{-- ID adicionado para o JS conseguir ler o valor base --}}
+            <span class="total-value" id="subtotal-valor" data-valor="{{ $totalCarrinho }}">
+                {{ currency_format($totalCarrinho) }}
+            </span>
         </div>
 
         <button type="button" class="sax-btn-next mt-4" onclick="nextStep(1)">

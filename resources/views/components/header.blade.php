@@ -202,56 +202,54 @@
 
     {{-- 5. DRAWER MOBILE (MULTINÍVEL) --}}
     <div id="saxDrawer" class="sax-drawer">
-        <div class="drawer-header border-bottom p-3 d-flex justify-content-between align-items-center bg-white sticky-top">
-            <span class="fw-bold tracking-2">{{ __('messages.menu') }}</span>
-            <button class="btn-close-drawer" id="closeDrawer">&times;</button>
-        </div>
+    <div class="drawer-header p-3 d-flex justify-content-between align-items-center bg-white">
+        <span class="fw-bold text-uppercase tracking-2">Menu</span>
+        <button class="btn-close-drawer" id="closeDrawer"><i class="fa fa-times"></i></button>
+    </div>
 
-        <div class="drawer-body">
-            {{-- Login/User Mobile --}}
-            <div class="p-3 bg-light border-bottom">
-                @if (Auth::check())
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <i class="fa-regular fa-user"></i>
-                    <span class="fw-bold small">{{ __('messages.ola') }}, {{ explode(' ', Auth::user()->name)[0] }}</span>
+    <div class="drawer-body">
+        {{-- Área de Login/Perfil --}}
+        <div class="drawer-auth-section p-3">
+            @if (Auth::check())
+                <div class="d-flex align-items-center mb-3">
+                    <div class="user-avatar"><i class="fa fa-user"></i></div>
+                    <div class="ms-2">
+                        <small class="d-block text-muted">Olá,</small>
+                        <span class="fw-bold">{{ explode(' ', Auth::user()->name)[0] }}</span>
+                    </div>
                 </div>
                 <div class="d-grid gap-2">
-                    <a href="{{ auth()->user()->user_type == 1 ? route('admin.index') : route('user.dashboard') }}"
-                        class="btn btn-dark btn-sm rounded-0">{{ __('messages.inicio_menu') }}</a>
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-0">{{ __('messages.sair') }}</button>
-                    </form>
+                    <a href="{{ auth()->user()->user_type == 1 ? route('admin.index') : route('user.dashboard') }}" class="btn btn-dark w-100 rounded-0"><i class="fa fa-cog me-2"></i> {{ __('messages.meu_painel') }}</a>
+                    <form action="{{ route('logout') }}" method="POST"><button type="submit" class="btn btn-outline-danger w-100 rounded-0">Sair</button></form>
                 </div>
-                @else
-                <button class="btn btn-dark btn-sm w-100 rounded-0 py-2 tracking-1" data-bs-toggle="modal"
-                    data-bs-target="#loginModal">{{ __('messages.iniciar_sessao') }}</button>
-                @endif
-            </div>
-
-            {{-- Categorias Mobile --}}
-            <div class="drawer-menu-list">
-                @foreach ($headerCategories as $cat)
-                <div class="drawer-item border-bottom">
-                    <div class="d-flex justify-content-between align-items-center p-3">
-                        <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}"
-                            class="fw-bold text-dark text-decoration-none small uppercase">{{ $cat->name }}</a>
-                        <button class="btn p-0 toggle-sub" data-target="m-sub-{{ $cat->id }}">
-                            <i class="fa fa-chevron-down small text-muted"></i>
-                        </button>
-                    </div>
-                    {{-- Subcategorias omitidas para brevidade, mantendo lógica original --}}
-                </div>
-                @endforeach
-
-                <div class="p-3 bg-light small fw-bold tracking-1">{{ __('messages.institucional') }}</div>
-                <li><a href="{{ route('blogs.index') }}" class="p-3 d-block text-dark text-decoration-none small border-bottom">#SAXNEWS</a></li>
-                <li><a href="{{ route('bridal.index') }}" class="p-3 d-block text-dark text-decoration-none small border-bottom">SAX BRIDAL</a></li>
-                <li><a href="{{ route('contact.form') }}" class="p-3 d-block text-dark text-decoration-none small border-bottom">{{ __('messages.contato') }}</a></li>
-                <li><a href="{{ route('palace.index') }}" class="p-3 d-block text-dark text-decoration-none small border-bottom">SAX PALACE</a></li>
-            </div>
+            @else
+                <button class="btn btn-dark w-100 rounded-0 py-3" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fa fa-sign-in-alt me-2"></i> {{ __('messages.entrar') }}</button>
+            @endif
         </div>
+
+        {{-- Navegação Principal --}}
+        <ul class="list-unstyled mb-0">
+            @foreach ($mainCategories as $cat)
+                <li><a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}" class="drawer-link fw-bold text-uppercase">{{ $labelMap[$cat->slug] ?? $cat->name }}</a></li>
+            @endforeach
+            
+            <hr class="my-2">
+            
+            {{-- Institucional & Extras --}}
+            <li><a href="{{ route('institucional.index') }}" class="drawer-link"><i class="fa fa-info-circle me-3"></i>{{ __('messages.institucional') }}</a></li>
+            <li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>BRIDAL</a></li>
+            <li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>SAX PALACE</a></li>
+            <li><a href="{{ route('cafe_bistro.index') }}" class="drawer-link"><i class="fa fa-coffee me-3"></i>{{ __('messages.cafe_bistro') }}</a></li>
+            <li><a href="{{ route('blogs.index') }}" class="drawer-link"><i class="fa fa-newspaper me-3"></i>#SAXNEWS</a></li>
+            <li><a href="{{ route('contact.form') }}" class="drawer-link"><i class="fa fa-envelope me-3"></i>{{ __('messages.contato') }}</a></li>
+            <li><a href="{{ route('categories.index') }}" class="drawer-link"><i class="fa fa-th me-3"></i>{{ __('messages.categorias') }}</a></li>
+            <li><a href="{{ route('brands.index') }}" class="drawer-link"><i class="fa fa-tag me-3"></i>{{ __('messages.nossas_marcas') }}</a></li>
+            <li><a href="{{ route('search') }}" class="drawer-link"><i class="fa fa-search me-3"></i>{{ __('messages.pesquisar') }}</a></li>
+            <li><a href="{{ route('all-categories.index') }}" class="drawer-link"><i class="fa fa-th me-3"></i>{{ __('messages.categorias_gerais') }}</a></li>
+
+        </ul>
     </div>
+</div>
     <div class="drawer-overlay" id="drawerOverlay"></div>
 
     {{-- 6. SEARCH OVERLAY MOBILE --}}
@@ -334,3 +332,70 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+<style>
+    /* --- Ajustes exclusivos Mobile --- */
+@media (max-width: 991px) {
+    .btn-menu-open {
+        background: transparent;
+        border: none;
+        font-size: 1.25rem;
+        padding: 5px;
+        color: #000;
+    }
+
+    .sax-drawer {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 85%;
+        max-width: 350px;
+        height: 100%;
+        background: #fff;
+        z-index: 1050;
+        transition: 0.3s;
+        overflow-y: auto;
+    }
+
+    .sax-drawer.active { left: 0; }
+
+    .drawer-header { border-bottom: 1px solid #eee; }
+
+    .drawer-auth-section { background: #f8f9fa; border-bottom: 1px solid #eee; }
+
+    .drawer-link {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        color: #333;
+        text-decoration: none;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid #fcfcfc;
+    }
+
+    .drawer-link:hover { background: #fdfdfd; color: #000; }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        background: #eee;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        z-index: 1049;
+    }
+
+    .drawer-overlay.active { display: block; }
+}
+</style>

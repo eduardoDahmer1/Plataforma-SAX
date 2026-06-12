@@ -131,6 +131,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [UserController::class, 'edit'])->name('user.profile.edit');
     Route::put('/profile', [UserController::class, 'update'])->name('user.profile.update');
 
+    Route::post('/checkout/calcular-frete', [CheckoutController::class, 'ajaxCalcularFrete'])->name('checkout.calcular-frete');
+
     // Produtos Auth
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 

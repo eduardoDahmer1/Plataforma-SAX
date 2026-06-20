@@ -43,8 +43,12 @@
             <p class="subtitle">{{ __('messages.registro_promo_texto') }}</p>
 
             <div class="form-wrapper">
-                <form class="newsletter-form">
-                    <input type="email" placeholder="{{ __('messages.seu_email') }}" required>
+                <form class="newsletter-form" action="{{ route('newsletter.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="contact_type" value="3">
+                    <input type="hidden" name="name" value="Newsletter Subscriber">
+                    
+                    <input type="email" name="email" placeholder="{{ __('messages.seu_email') }}" required>
                     <button type="submit">{{ __('messages.inscrever_se') }}</button>
                 </form>
                 <p class="legal-text">

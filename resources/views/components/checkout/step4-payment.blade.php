@@ -37,41 +37,44 @@
         </p>
     </div>
 
-    {{-- Campo oculto essencial para o Controller --}}
     <input type="hidden" name="payment_method" id="payment_method" value="{{ old('payment_method', 'deposito') }}">
+    <input type="hidden" name="total_final" id="total_final" value="{{ $totalPedido }}">
 
     <div class="sax-checkout-box mt-4">
         <h4 class="sax-step-title">{{ __('messages.resumo_final') }}</h4>
         
         <div class="sax-cart-list mb-4">
             @foreach ($cart as $item)
-                <div class="d-flex align-items-center gap-3 mb-2 border-bottom pb-2">
-                    <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
-                         style="width: 50px; height: 50px; object-fit: contain; background: #f5f5f5;">
-                    <div class="flex-grow-1 text-start">
-                        <small class="d-block fw-bold">{{ $item->product->external_name ?? 'Produto' }}</small>
-                        <small class="text-muted">{{ $item->quantity }}x {{ currency_format($item->product->price ?? 0) }}</small>
+                <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-light">
+                    <div class="sax-cart-img-wrapper" style="width: 50px; height: 50px;">
+                        <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
+                             alt="{{ $item->product->external_name ?? 'Produto' }}" class="img-fluid">
                     </div>
-                    <div>
-                        <small class="fw-bold">{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</small>
+                    <div class="flex-grow-1">
+                        <p class="mb-0 sax-item-name text-truncate" style="max-width: 200px;">
+                            {{ $item->product->external_name ?? 'Produto' }}
+                        </p>
+                        <small class="text-muted">{{ __('messages.quantidade') }}: {{ $item->quantity }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="d-block fw-bold">{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</span>
                     </div>
                 </div>
             @endforeach
         </div>
 
-        <div class="sax-summary-total">
+        <div class="sax-summary-total pt-3">
             <div class="d-flex justify-content-between mb-2">
-                <span>{{ __('messages.subtotal') }}</span>
+                <span class="text-muted">{{ __('messages.subtotal') }}</span>
                 <span id="subtotal-display">{{ currency_format($totalPedido) }}</span>
             </div>
-            <div class="d-flex justify-content-between mb-2">
-                <span>{{ __('messages.envio') }}</span>
-                <span id="frete-display" class="text-success fw-bold">{{ __('messages.selecione_entrega') }}</span>
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted">{{ __('messages.envio') }}</span>
+                <span id="frete-display" class="text-success small fw-bold text-uppercase">{{ __('messages.selecione_entrega') }}</span>
             </div>
-            <hr>
-            <div class="d-flex justify-content-between align-items-center total-row">
-                <strong>{{ __('messages.total') }}</strong>
-                <strong id="total-geral-display" style="font-size: 1.5rem;">{{ currency_format($totalPedido) }}</strong>
+            <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                <span class="fw-bold h5 mb-0">{{ __('messages.total') }}</span>
+                <span id="total-geral-display" class="fw-bold h4 mb-0">{{ currency_format($totalPedido) }}</span>
             </div>
         </div>
     </div>
@@ -85,6 +88,7 @@
         </button>
     </div>
 </div>
+
 <script>
     window.translations = {
         payment_bancard: "{{ __('messages.instrucao_pagamento_bancard') }}",

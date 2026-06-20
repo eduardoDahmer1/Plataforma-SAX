@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Contact;
 use App\Models\Cart;
 use App\Models\Blog;
 use App\Models\Generalsetting;
@@ -28,10 +29,13 @@ class HomeController extends Controller
             'famosos', 'tendencias', 'promocoes', 'ofertas_relampago', 'navbar'
         ];
 
-        // 4. Busca produtos destacados (Manuais via JSON)
+        // 4. Busca produtos destacados
         $highlights = [];
         foreach ($highlightTypes as $key) {
-            $highlights[$key] = Cache::remember("highlight_products_{$key}", 600, function () use ($key) {
+            
+            $cacheKey = "highlight_products_{$key}_" . now()->format('Y_W');
+            
+            $highlights[$key] = Cache::remember($cacheKey, now()->addDays(7), function () use ($key) {
                 return Product::where("highlights->{$key}", "1")
                     ->where('status', 1)
                     ->where('product_role', 'P')
@@ -39,7 +43,8 @@ class HomeController extends Controller
                     ->whereNotNull('photo')
                     ->where('photo', '!=', '')
                     ->with('brand')
-                    ->take(5)
+                    ->inRandomOrder()
+                    ->limit(15)
                     ->get();
             });
         }
@@ -58,7 +63,9 @@ class HomeController extends Controller
         });
 
         // --- 4.2 MAIS VISTOS ---
-        $mostViewed = Cache::remember('home_most_viewed_products', 600, function () {
+        $cacheKey = 'home_most_viewed_products_' . now()->format('Y_W');
+
+        $mostViewed = Cache::remember($cacheKey, now()->addDays(7), function () {
             return Product::where('status', 1)
                 ->where('views', '>', 0)
                 ->where('stock', '>', 0)
@@ -66,7 +73,7 @@ class HomeController extends Controller
                 ->where('photo', '!=', '')
                 ->with('brand')
                 ->orderBy('views', 'DESC')
-                ->take(12)
+                ->limit(12)
                 ->get();
         });
 
@@ -118,5 +125,23 @@ class HomeController extends Controller
             'banner4'         => $settings->banner4 ?? null,
             'banner5'         => $settings->banner5 ?? null,
         ]);
+    }
+
+    public function storeNewsletter(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:255',
+            'contact_type' => 'required',
+            'name' => 'required'
+        ]);
+
+        Contact::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'contact_type' => $request->contact_type,
+            'message' => 'Inscrição na Newsletter'
+        ]);
+
+        return redirect()->back()->with('success', 'Inscrição realizada com sucesso!');
     }
 }

@@ -215,99 +215,188 @@
                         </div>
                     </div>
 
-                    <div class="mb-3 col-md-6">
+                    <div class="mb-3 col-md-6" id="color-section">
                         <label class="form-label"><i class="fas fa-palette me-1"></i> Cor do Produto</label>
                         
-                        <div class="d-flex align-items-center gap-2">
-                            <input type="color" id="color-input" name="colors_values[]"
-                                value="{{ old('color', $item->color ?? '#000000') }}"
-                                class="form-control form-control-color">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <input type="color" id="color-input" name="colors_values[]" value="{{ old('color', $item->color ?? '#000000') }}" 
+                                class="form-control form-control-color" oninput="document.getElementById('color-search').value = this.value">
                             
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="no_color" id="no_color" 
-                                    {{ empty($item->color) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="no_color">Sem cor definida</label>
+                            <input type="text" id="color-search" class="form-control" placeholder="Buscar cor ou código..." 
+                                value="{{ old('color', $item->color ?? '#000000') }}" onkeyup="renderColors(this.value)">
+
+                            <div class="form-check ms-2">
+                                <input class="form-check-input" type="checkbox" name="no_color" id="no_color" {{ empty($item->color) ? 'checked' : '' }}
+                                    onchange="if(this.checked) { document.getElementById('color-input').value = ''; }">
+                                <label class="form-check-label" for="no_color">Sem cor</label>
                             </div>
                         </div>
-                        <small class="form-text text-muted">Se marcar "Sem cor", a seleção ao lado será ignorada.</small>
+
+                        <div id="color-palette" class="d-flex flex-wrap gap-1 p-2 border rounded bg-light" style="max-height: 200px; overflow-y: auto;"></div>
+                        <button type="button" class="btn btn-link btn-sm mt-1 p-0" onclick="toggleColors()" id="btn-toggle">Mostrar mais cores...</button>
                     </div>
 
-                    <!-- Tamanho do Produto -->
-                    @php
-                        $sizeOptions = [
-                            'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL',
-                            '3XL', '4XL', '5XL', '6XL', 'U',
-                            '2', '4', '6', '8', '10', '12', '14', '16', '18',
-                        ];
-
-                        for ($sizeNumber = 34; $sizeNumber <= 60; $sizeNumber++) {
-                            $sizeOptions[] = (string) $sizeNumber;
-                        }
-
-                        $sizeOptions = array_values(array_unique(array_merge($sizeOptions, [
-                            '3M', '6M', '9M', '12M', '18M',
-                            '2Y', '3Y', '4Y', '5Y', '6Y', '8Y', '10Y', '12Y',
-                        ])));
-
-                        $currentSize = old('size', $item->size ?? '');
-                        $categorySlug = strtolower($item->category->slug ?? '');
-                        $excludedSizeCategories = [
-                            'optico',
-                            'perfumes-and-cosmeticos',
-                            'casa',
-                            'bebidas',
-                            'electronicos',
-                            'patrimonio',
-                            'propaganda',
-                            'joyas-and-relojes',
-                            'habanos',
-                            'repuestos',
-                            'unisex',
-                        ];
-                        $isFashionCategory = !in_array($categorySlug, $excludedSizeCategories, true)
-                            && (
-                                in_array($categorySlug, ['masculino', 'feminino', 'infantil'], true)
-                                || str_starts_with($categorySlug, 'boss-')
-                                || str_starts_with($categorySlug, 'hugo-')
+                <script>
+                (function() {
+                    // Carrega o JSON. Certifique-se de que o caminho /data/color.json esteja correto
+                    let colorPalette = {};
+                    
+                    // Função para buscar o JSON e inicializar
+                    async function initPalette() {
+                        try {
+                            const response = await fetch('/data/color.json');
+                            const data = await response.json();
+                            
+                            // Inverte o JSON para o formato esperado pelo seu script original { Nome: #HEX }
+                            colorPalette = Object.fromEntries(
+                                Object.entries(data).map(([hex, name]) => [name, hex])
                             );
-
-                        $detectedSize = '';
-                        if (preg_match('/#([^\s*]+)/', $item->external_name ?? '', $sizeMatch)) {
-                            $detectedSize = trim($sizeMatch[1]);
+                            
+                            renderColors();
+                        } catch (error) {
+                            console.error("Erro ao carregar cores:", error);
                         }
+                    }
 
-                        $looksLikeNonFashionMeasure = (bool) preg_match(
-                            '/(?:ML|CM|MM|KG|750|X\d|^\d+X|^H\d+)/i',
-                            $detectedSize
+                    let showAll = false;
+
+                    window.renderColors = function(filter = '') {
+                        const container = document.getElementById('color-palette');
+                        if (!container) return;
+                        
+                        container.innerHTML = '';
+                        const entries = Object.entries(colorPalette);
+                        const filtered = entries.filter(([name, hex]) => 
+                            name.toLowerCase().includes(filter.toLowerCase()) || hex.toLowerCase().includes(filter.toLowerCase())
                         );
-                        $suggestedSize = ($isFashionCategory && !$looksLikeNonFashionMeasure) ? $detectedSize : '';
-                        $initialSize = $currentSize ?: $suggestedSize;
-                        $hasInitialSizeOption = $initialSize !== '' && in_array($initialSize, $sizeOptions, true);
-                    @endphp
-                    <div class="col-md-6">
-                        <label for="size_select" class="form-label"><i
-                                class="fas fa-ruler-combined me-1"></i>Tamanho</label>
-                        <input type="hidden" id="size" name="size" value="{{ $initialSize }}">
-                        <select id="size_select" class="form-select" data-size-select>
-                            <option value="">Selecione o tamanho</option>
-                            @if ($initialSize !== '' && !$hasInitialSizeOption)
-                                <option value="{{ $initialSize }}" selected>
-                                    {{ $currentSize ? 'Atual' : 'Detectada' }}: {{ $initialSize }}
-                                </option>
-                            @endif
-                            @foreach ($sizeOptions as $sizeOption)
-                                <option value="{{ $sizeOption }}" {{ $initialSize === $sizeOption ? 'selected' : '' }}>
-                                    {{ $sizeOption }}
-                                </option>
-                            @endforeach
-                            <option value="__manual__">Outro / manual</option>
-                        </select>
-                        <input type="text" id="size_manual" class="form-control mt-2 d-none"
-                            value="" placeholder="Digite o tamanho do produto" data-size-manual>
-                        @if ($suggestedSize !== '' && $currentSize === '')
-                            <small class="form-text text-muted">Detectado desde integração: #{{ $suggestedSize }}</small>
-                        @endif
+                        
+                        // Ajuste o limite conforme necessário
+                        const limit = showAll ? filtered.length : 20;
+
+                        filtered.slice(0, limit).forEach(([name, hex]) => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-sm border shadow-sm';
+                            btn.style.backgroundColor = hex;
+                            btn.style.width = '32px';
+                            btn.style.height = '32px';
+                            btn.title = `${name} (${hex})`;
+                            btn.onclick = () => {
+                                document.getElementById('color-input').value = hex;
+                                document.getElementById('color-search').value = hex;
+                                document.getElementById('no_color').checked = false;
+                            };
+                            container.appendChild(btn);
+                        });
+                    };
+
+                    window.toggleColors = function() {
+                        showAll = !showAll;
+                        document.getElementById('btn-toggle').innerText = showAll ? 'Mostrar menos...' : 'Mostrar mais cores...';
+                        renderColors(document.getElementById('color-search') ? document.getElementById('color-search').value : '');
+                    };
+
+                    document.addEventListener('DOMContentLoaded', () => initPalette());
+                })();
+                </script>
+
+                @php
+                    $categoryMap = [
+                        'feminino' => 'vestuario', 'masculino' => 'vestuario', 'unisex' => 'vestuario', 'bridal' => 'vestuario',
+                        'tenis' => 'calcados', 'sandalias' => 'calcados', 'sapatos' => 'calcados',
+                        'infantil' => 'infantil',
+                        'perfumaria' => 'perfumes', 'perfumes' => 'perfumes',
+                        'bebidas' => 'bebidas', 'vinhos' => 'bebidas', 'destilados' => 'bebidas',
+                        'optico' => 'oculos', 'oculos' => 'oculos',
+                        'relogios' => 'relogios',
+                        'habanos' => 'habanos',
+                        'acessorios' => 'acessorios'
+                    ];
+                    $categorySlug = strtolower($item->category->slug ?? '');
+                    $activeGroup = $categoryMap[$categorySlug] ?? null;
+                    $currentSize = old('size', $item->size ?? '');
+                    
+                    $detectedSize = '';
+                    if (preg_match('/#([^\s*]+)/', $item->external_name ?? '', $sizeMatch)) {
+                        $detectedSize = trim($sizeMatch[1]);
+                    }
+                @endphp
+
+                <div class="col-md-6" id="size-container">
+                    <label class="form-label"><i class="fas fa-ruler-combined me-1"></i>Tamanho / Especificação</label>
+                    
+                    <select id="type_selector" class="form-select mb-2">
+                        <option value="">Selecione o tipo de produto...</option>
+                        <option value="manual">Outro (Manual)</option>
+                    </select>
+
+                    <select id="size_select" class="form-select d-none">
+                        <option value="">Selecione o tamanho</option>
+                    </select>
+
+                    <input type="text" id="size_manual" class="form-control mt-2 d-none" value="{{ $currentSize }}" placeholder="Digite o tamanho">
+                    
+                    <div id="detection-msg" class="small text-muted mt-1 {{ $detectedSize && !$currentSize ? '' : 'd-none' }}">
+                        Detectado desde integração: #{{ $detectedSize }}
                     </div>
+                </div>
+
+                <script>
+                (async function() {
+                    const typeSelector = document.getElementById('type_selector');
+                    const sizeSelect = document.getElementById('size_select');
+                    const inputManual = document.getElementById('size_manual');
+                    const detectionMsg = document.getElementById('detection-msg');
+                    
+                    const currentSize = "{{ $currentSize }}";
+                    const detectedSize = "{{ $detectedSize }}";
+                    const activeGroup = "{{ $activeGroup }}";
+
+                    const response = await fetch('/data/tamanho.json');
+                    const sizeGroups = await response.json();
+
+                    Object.keys(sizeGroups).forEach(key => {
+                        const opt = document.createElement('option');
+                        opt.value = key; opt.text = key.charAt(0).toUpperCase() + key.slice(1);
+                        if(key === activeGroup) opt.selected = true;
+                        typeSelector.appendChild(opt);
+                    });
+
+                    function populateSizes(group) {
+                        sizeSelect.innerHTML = '<option value="">Selecione o tamanho</option>';
+                        const valToSet = currentSize || detectedSize;
+
+                        if (group && sizeGroups[group]) {
+                            sizeGroups[group].forEach(val => {
+                                const opt = document.createElement('option');
+                                opt.value = val; opt.text = val;
+                                if(val === valToSet) opt.selected = true;
+                                sizeSelect.appendChild(opt);
+                            });
+                            sizeSelect.classList.remove('d-none');
+                            sizeSelect.setAttribute('name', 'size');
+                            inputManual.removeAttribute('name');
+                            inputManual.classList.add('d-none');
+                        } else if (group === 'manual') {
+                            sizeSelect.classList.add('d-none');
+                            sizeSelect.removeAttribute('name');
+                            inputManual.value = valToSet;
+                            inputManual.classList.remove('d-none');
+                            inputManual.setAttribute('name', 'size');
+                        } else {
+                            sizeSelect.classList.add('d-none');
+                            inputManual.classList.add('d-none');
+                        }
+                    }
+
+                    typeSelector.addEventListener('change', (e) => {
+                        detectionMsg.classList.add('d-none');
+                        populateSizes(e.target.value);
+                    });
+                    
+                    if(activeGroup) populateSizes(activeGroup);
+                })();
+                </script>
 
                     <!-- Descrição -->
                     <div class="col-12 mb-3">

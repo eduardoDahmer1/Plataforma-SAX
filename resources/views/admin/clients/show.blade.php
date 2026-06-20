@@ -2,166 +2,135 @@
 
 @section('content')
 <x-admin.card>
-    <x-admin.page-header
-        title="Detalhes do Cliente"
-        description="Perfil de <strong>{{ $client->name }}</strong>">
-        <x-slot:actions>
-            <a href="{{ route('admin.clients.index') }}" class="btn-back-minimal">
-                <i class="fas fa-arrow-left me-1"></i> VOLTAR
-            </a>
-        </x-slot:actions>
-    </x-admin.page-header>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Detalhes do Cliente</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item small"><a href="{{ route('admin.clients.index') }}">Clientes</a></li>
+                    <li class="breadcrumb-item active small">{{ $client->name }}</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{{ route('admin.clients.index') }}" class="btn btn-dark rounded-0 px-4">
+            <i class="fas fa-arrow-left me-2"></i> VOLTAR
+        </a>
+    </div>
 
-        {{-- Card de informações do cliente --}}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <div class="row gy-3">
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted"><i class="fa fa-hashtag me-1"></i> ID</p>
-                        <h6>{{ $client->id }}</h6>
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4">
+            <div class="card h-100 rounded-0 border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ substr($client->name, 0, 1) }}
                     </div>
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted"><i class="fa fa-user me-1"></i> Nome</p>
-                        <h6>{{ $client->name }}</h6>
+                    <h5 class="fw-bold mb-1">{{ $client->name }}</h5>
+                    <p class="text-muted small mb-4">{{ $client->email }}</p>
+                    
+                    <div class="border-top pt-3 text-start">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">ID USUÁRIO</span>
+                            <span class="fw-bold">#{{ $client->id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">DATA CADASTRO</span>
+                            <span>{{ $client->created_at->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small fw-bold">TIPO</span>
+                            <span class="badge bg-light text-dark border">
+                                @if($client->user_type == 1) Cliente
+                                @elseif($client->user_type == 2) Admin
+                                @else Curso @endif
+                            </span>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted"><i class="fa fa-envelope me-1"></i> Email</p>
-                        <h6>{{ $client->email }}</h6>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted"><i class="fa fa-calendar-alt me-1"></i> Data de Cadastro</p>
-                        <h6>{{ $client->created_at->format('d/m/Y H:i') }}</h6>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted"><i class="fa fa-id-badge me-1"></i> Tipo</p>
-                        <h6>
-                            @switch($client->user_type)
-                                @case(1)
-                                    <i class="fa fa-user me-1"></i> Cliente
-                                @break
-
-                                @case(2)
-                                    <i class="fa fa-user-shield me-1"></i> Admin
-                                @break
-
-                                @case(3)
-                                    <i class="fa fa-graduation-cap me-1"></i> Curso
-                                @break
-
-                                @default
-                                    <i class="fa fa-question-circle me-1"></i> Desconhecido
-                            @endswitch
-                        </h6>
-                    </div>
-
-                    @if ($client->phone_country || $client->phone_number)
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fa fa-phone me-1"></i> Telefone</p>
-                            <h6>{{ $client->phone_country ?? '' }} {{ $client->phone_number ?? '' }}</h6>
-                        </div>
-                    @endif
-
-                    @if ($client->address)
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fa fa-home me-1"></i> Endereço</p>
-                            <h6>{{ $client->address }}</h6>
-                        </div>
-                    @endif
-
-                    @if ($client->cep)
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fa fa-map-pin me-1"></i> CEP</p>
-                            <h6>{{ $client->cep }}</h6>
-                        </div>
-                    @endif
-
-                    @if ($client->state)
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fa fa-flag me-1"></i> Estado</p>
-                            <h6>{{ $client->state }}</h6>
-                        </div>
-                    @endif
-
-                    @if ($client->city)
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fa fa-city me-1"></i> Cidade</p>
-                            <h6>{{ $client->city }}</h6>
-                        </div>
-                    @endif
-
-                    @if ($client->additional_info)
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fa fa-id-card me-1"></i> Número do Cadastro</p>
-                            <h6>{{ $client->additional_info }}</h6>
-                        </div>
-                    @endif
-
-                    @if ($client->document)
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fa fa-id-card me-1"></i> Documento</p>
-                            <h6>{{ $client->document }}</h6>
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>
 
-
-        {{-- Pedidos do cliente --}}
-        <h3 class="mt-4 mb-3">Pedidos do Cliente</h3>
-
-        @if ($client->orders && $client->orders->count())
-            <div class="row g-3">
-                @foreach ($client->orders as $order)
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="fa fa-hashtag me-1"></i> Pedido #{{ $order->id }}
-                                </h5>
-                                <p class="mb-2">
-                                    @switch($order->status)
-                                        @case('pending')
-                                            <span class="badge bg-warning text-dark"><i class="fa fa-hourglass-half me-1"></i>
-                                                Pendente</span>
-                                        @break
-
-                                        @case('processing')
-                                            <span class="badge bg-info text-dark"><i class="fa fa-spinner me-1"></i> Em
-                                                Andamento</span>
-                                        @break
-
-                                        @case('completed')
-                                            <span class="badge bg-success"><i class="fa fa-check-circle me-1"></i> Completo</span>
-                                        @break
-
-                                        @case('canceled')
-                                            <span class="badge bg-danger"><i class="fa fa-times-circle me-1"></i> Cancelado</span>
-                                        @break
-
-                                        @default
-                                            <span class="badge bg-secondary"><i class="fa fa-question-circle me-1"></i>
-                                                Desconhecido</span>
-                                    @endswitch
-                                </p>
-                                <p class="mb-1"><i class="fa fa-dollar-sign me-1"></i> <strong>R$
-                                        {{ number_format($order->total, 2, ',', '.') }}</strong></p>
-                                <p class="text-muted mb-3"><i class="fa fa-calendar-alt me-1"></i>
-                                    {{ $order->created_at->format('d/m/Y H:i') }}</p>
-                                <a href="{{ route('admin.orders.show', $order->id) }}"
-                                    class="btn btn-sm btn-outline-primary">
-                                    <i class="fa fa-eye me-1"></i> Ver Pedido
-                                </a>
-                            </div>
-                        </div>
+        <div class="col-lg-8">
+            <div class="card h-100 rounded-0 border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="fw-bold text-uppercase m-0 text-secondary" style="font-size: 0.8rem;">Informações de Perfil</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        @php
+                            $fields = [
+                                'Telefone' => ($client->phone_country ?? '') . ' ' . ($client->phone_number ?? ''),
+                                'Documento' => $client->document,
+                                'Endereço' => $client->address,
+                                'Cidade' => $client->city,
+                                'Estado' => $client->state,
+                                'CEP' => $client->cep,
+                                'Informações Adicionais' => $client->additional_info
+                            ];
+                        @endphp
+                        @foreach($fields as $label => $value)
+                            @if($value && trim($value) !== '')
+                                <div class="col-md-6">
+                                    <label class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.7rem;">{{ $label }}</label>
+                                    <div class="fw-semibold text-dark">{{ $value }}</div>
+                                </div>
+                            @endif
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
             </div>
-        @else
-            <div class="alert alert-info mt-3">
-                <i class="fa fa-info-circle me-1"></i> Este cliente ainda não realizou nenhum pedido.
-            </div>
-        @endif
+        </div>
+    </div>
 
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold m-0">Histórico de Pedidos</h5>
+        <span class="badge bg-dark">{{ $client->orders->count() }} pedidos encontrados</span>
+    </div>
+
+    <div class="card rounded-0 border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle m-0">
+                <thead class="bg-light">
+                    <tr class="text-uppercase text-muted" style="font-size: 0.75rem;">
+                        <th class="py-3 ps-4">ID Pedido</th>
+                        <th class="py-3">Data</th>
+                        <th class="py-3">Status</th>
+                        <th class="py-3">Total</th>
+                        <th class="py-3 text-end pe-4">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($client->orders as $order)
+                        <tr>
+                            <td class="ps-4 fw-bold">#{{ $order->id }}</td>
+                            <td>{{ $order->created_at->format('d/m/Y') }}</td>
+                            <td>
+                                @php
+                                    $statusColors = [
+                                        'pending' => 'bg-warning text-dark',
+                                        'processing' => 'bg-info text-white',
+                                        'completed' => 'bg-success text-white',
+                                        'canceled' => 'bg-danger text-white'
+                                    ];
+                                @endphp
+                                <span class="badge {{ $statusColors[$order->status] ?? 'bg-secondary' }}">
+                                    {{ ucfirst($order->status) }}
+                                </span>
+                            </td>
+                            <td class="fw-bold">R$ {{ number_format($order->total, 2, ',', '.') }}</td>
+                            <td class="text-end pe-4">
+                                <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-outline-dark rounded-0">
+                                    <i class="fa fa-eye me-1"></i> Visualizar
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">Nenhum pedido realizado por este cliente.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 </x-admin.card>
 @endsection

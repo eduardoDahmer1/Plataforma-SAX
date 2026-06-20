@@ -85,6 +85,7 @@ class Product extends Model
         'synced',
         'gtin',
         'promotion_price',
+        'updated_by',
         'name',
         'description',
         'price',

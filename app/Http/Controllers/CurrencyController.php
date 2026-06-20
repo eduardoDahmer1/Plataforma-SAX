@@ -20,7 +20,11 @@ class CurrencyController extends Controller
 
         if ($currency) {
             // 1. Salva a moeda na sessão
-            session(['currency' => $currency->id]);
+            session([
+                'currency'       => $currency->id,
+                'currency_value' => $currency->value,
+                'currency_sign'  => $currency->sign,
+            ]);
 
             // 2. Mapeia a moeda para o idioma
             $locale = match (strtoupper($currency->name)) {

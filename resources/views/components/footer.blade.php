@@ -60,9 +60,9 @@
 
                     <h6 class="footer-title social-title">{{ __('messages.siga_redes') }}</h6>
                     <div class="footer-social-icons">
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://www.instagram.com/saxdepartment/" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/saxdepartmentstore" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.tiktok.com/@saxdepartment" target="_blank" rel="noopener noreferrer"><i class="fab fa-tiktok"></i></a>
                     </div>
                 </div>
             </div>

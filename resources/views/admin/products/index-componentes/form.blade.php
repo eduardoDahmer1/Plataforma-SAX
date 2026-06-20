@@ -78,6 +78,15 @@
         </div>
 
         <div class="sax-filter-item">
+            <label class="sax-filter-label">Tipo de Produto</label>
+            <select name="product_type" class="form-select sax-filter-select">
+                <option value="">Todos</option>
+                <option value="parent" @selected(request('product_type') == 'parent')>Apenas Pais</option>
+                <option value="child" @selected(request('product_type') == 'child')>Apenas Filhos</option>
+            </select>
+        </div>
+
+        <div class="sax-filter-item">
             <label class="sax-filter-label">Destaques</label>
             <select name="highlight_filter" class="form-select sax-filter-select">
                 <option value="">Todos os destaques</option>
@@ -85,6 +94,15 @@
                     <option value="{{ $key }}" @selected(request('highlight_filter') == $key)>
                         {{ $label }}
                     </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="sax-filter-item">
+            <label class="sax-filter-label">Exibir</label>
+            <select name="per_page" class="form-select sax-filter-select" onchange="this.form.submit()">
+                @foreach([20, 30, 50, 100] as $opt)
+                    <option value="{{ $opt }}" @selected(request('per_page') == $opt)>{{ $opt }}</option>
                 @endforeach
             </select>
         </div>

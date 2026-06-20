@@ -843,7 +843,7 @@ letter-spacing: 1px;
 
 .sax-currency-select {
 background-color: transparent;
-color: #fff;
+color: #000000ff;
 border: 1px solid #444;
 border-radius: 4px;
 font-size: 10px;
@@ -2335,13 +2335,14 @@ border-color: #000;
 
 /* Botão de Envio */
 .btn-sax-submit {
-transition: all 0.4s ease;
+transition: all 0.3s ease;
+border-radius: 4px;
 border: 1px solid #000;
 }
 
 .btn-sax-submit:hover {
-background-color: #fff !important;
-color: #000 !important;
+background-color: #333 !important;
+border-color: #333 !important;
 }
 
 /* Estilização dos Mapas */

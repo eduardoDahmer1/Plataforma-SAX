@@ -49,3 +49,21 @@ if (!function_exists('currency')) {
         return currency_format($price);
     }
 }
+  // Função para converter um valor base para todas as moedas disponíveis, ordenando pela moeda padrão primeiro
+if (!function_exists('order_all_currencies')) {
+    function order_all_currencies($valorBase)
+    {
+        $valorBase = (float) $valorBase;
+
+        return Currency::orderByDesc('is_default')->get()->map(function ($currency) use ($valorBase) {
+            $converted = $valorBase * ($currency->value ?? 1);
+
+            return $currency->sign . ' ' . number_format(
+                $converted,
+                $currency->decimal_digits ?? 2,
+                $currency->decimal_separator ?? ',',
+                $currency->thousands_separator ?? '.'
+            );
+        })->all();
+    }
+}

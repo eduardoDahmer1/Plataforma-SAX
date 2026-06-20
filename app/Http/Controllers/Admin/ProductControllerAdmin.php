@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductControllerAdmin extends Controller
 {
+    
     // ================== INDEX ==================
     public function index(Request $request)
     {
@@ -28,20 +29,26 @@ class ProductControllerAdmin extends Controller
         $highlightFilter = $request->get('highlight_filter');
         $stockFilter = $request->get('stock_filter');
         $sortBy = $request->get('sort_by');
+        $productType = $request->get('product_type');
+        $perPage = $request->get('per_page', 20);
 
-        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'product_role', 'highlights'];
+        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'product_role', 'highlights', 'parent_id'];
 
         $products = Product::select($productColumns)
-            ->when(
-                $search,
-                fn($q) => $q->where(function ($q2) use ($search) {
-                    $q2->where('external_name', 'LIKE', "%{$search}%")
-                        ->orWhere('sku', 'LIKE', "%{$search}%")
-                        ->orWhere('slug', 'LIKE', "%{$search}%");
-                }),
-            )
+            ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
+                $q2->where('external_name', 'LIKE', "%{$search}%")
+                    ->orWhere('sku', 'LIKE', "%{$search}%")
+                    ->orWhere('slug', 'LIKE', "%{$search}%");
+            }))
             ->when($brandId, fn($q) => $q->where('brand_id', $brandId))
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($productType, function ($q) use ($productType) {
+                if ($productType === 'parent') {
+                    $q->whereNull('parent_id');
+                } elseif ($productType === 'child') {
+                    $q->whereNotNull('parent_id');
+                }
+            })
             ->when($statusFilter, function ($q) use ($statusFilter) {
                 switch ($statusFilter) {
                     case 'active':
@@ -105,7 +112,7 @@ class ProductControllerAdmin extends Controller
                     $q->orderBy('id', 'desc');
                 },
             )
-            ->paginate(20)
+            ->paginate($perPage)
             ->appends($request->query());
 
         $brands = Brand::where('status', 1)->orderBy('name')->get();
@@ -122,7 +129,7 @@ class ProductControllerAdmin extends Controller
             return $product;
         });
 
-        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'highlights'));
+        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'productType', 'perPage', 'highlights'));
     }
 
     // ================== CREATE ==================
@@ -398,6 +405,10 @@ class ProductControllerAdmin extends Controller
                     $data['parent_id'] = null;
                 }
 
+                if (auth()->check()) {
+                    $data['updated_by'] = auth()->id();
+                }
+
                 // Atualiza o Pai
                 $product->update($data);
                 $resolvedParentColor = $data['color'] ?? $product->color;
@@ -454,6 +465,8 @@ class ProductControllerAdmin extends Controller
                             'product_role' => 'F',
                             'brand_id' => $product->brand_id,
                             'category_id' => $product->category_id,
+                            'subcategory_id' => $product->subcategory_id,
+                            'childcategory_id' => $product->childcategory_id,
                             'status' => $product->status,
                             'stores' => $data['stores'],
                         ];
@@ -750,26 +763,28 @@ class ProductControllerAdmin extends Controller
         $dataInicio = Carbon::parse($mesSelecionado)->startOfMonth();
         $dataFim = Carbon::parse($mesSelecionado)->endOfMonth();
 
-        // 2. Lista de meses para o select de navegação (ex: últimos 6 meses)
+        // 2. Lista de meses para o select de navegação
         $mesesDisponiveis = [];
         for ($i = 0; $i < 6; $i++) {
             $data = Carbon::now()->subMonths($i);
             $mesesDisponiveis[] = [
                 'value' => $data->format('Y-m'),
-                'label' => $data->translatedFormat('F Y') // Ex: Junho 2026
+                'label' => $data->translatedFormat('F Y')
             ];
         }
 
-        // 3. Busca apenas os dados do mês selecionado
+        // 3. Busca apenas os dados do mês selecionado (FILTRADO POR HUMANOS)
         $edicoesPorDia = Product::selectRaw('DATE(updated_at) as dia, COUNT(*) as total')
             ->whereBetween('updated_at', [$dataInicio, $dataFim])
+            ->whereNotNull('updated_by') // Filtra apenas edições manuais
             ->groupBy('dia')
             ->orderBy('dia', 'desc')
             ->get();
 
-        // 4. Detalhes (ajuste conforme necessário para não sobrecarregar)
+        // 4. Detalhes (FILTRADO POR HUMANOS e incluindo o campo updated_by)
         $detalhesProdutos = Product::whereBetween('updated_at', [$dataInicio, $dataFim])
-            ->selectRaw('DATE(updated_at) as dia, name, sku, ref_code')
+            ->selectRaw('DATE(updated_at) as dia, name, sku, ref_code, updated_by') // Adicionado updated_by
+            ->whereNotNull('updated_by') // Filtra apenas edições manuais
             ->get()
             ->groupBy('dia');
 

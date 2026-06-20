@@ -28,44 +28,28 @@
     $attribute = \App\Models\Attribute::first();
     @endphp
 
-    {{-- 1. TOP PROMO (BANNER PRETO) --}}
+    {{-- 1. TOP PROMO (BANNER PRETO)
     <div class="sax-top-promo">
         <div class="container-fluid px-lg-5">
             <div class="row align-items-center py-2">
-                <div class="col-12 col-lg-3 d-flex justify-content-center justify-content-lg-start mb-2 mb-lg-0">
-                    <form action="{{ route('currency.change') }}" method="POST" id="currency-form">
-                        @csrf
-                        <select name="currency_id" class="sax-currency-select" onchange="this.form.submit()">
-                            @foreach ($currencies as $currency)
-                                @php
-                                    $langLabel = '';
-                                    if ($currency->name === 'USD') $langLabel = 'EN';
-                                    elseif ($currency->name === 'BRL') $langLabel = 'PT';
-                                    elseif ($currency->name === 'PYG') $langLabel = 'ES';
-                                @endphp
-                                <option value="{{ $currency->id }}"
-                                    {{ (int) $currency->id === (int) $currentCurrencyId ? 'selected' : '' }}>
-                                    {{ $langLabel }} | {{ $currency->sign }} {{ $currency->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-                </div>
-
                 <div class="col-12 col-lg-6 text-center">
                     <p class="m-0 sax-promo-text">
-                        {{ $attribute->text_topo ?? 'SAX Department Store' }}
+                        {{-- {{ -- $attribute->text_topo ?? 'SAX Department Store' -- }}
                     </p>
                 </div>
                 <div class="col-lg-3 d-none d-lg-block"></div>
             </div>
         </div>
-    </div>
+    </div> 
+    --}}
 
     {{-- 2. AUX NAV (DESKTOP SOMENTE) --}}
     <div class="sax-aux-nav d-none d-lg-block">
         <div class="container text-center py-2">
             <ul class="list-inline m-0 main-nav-list">
+                <li class="list-inline-item">
+                    <x-language-selector variant="desktop" />
+                </li>
                 <li class="list-inline-item"><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                 <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">SAX PALACE</a></li>
                 <li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
@@ -232,6 +216,7 @@
             @foreach ($mainCategories as $cat)
                 <li><a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}" class="drawer-link fw-bold text-uppercase">{{ $labelMap[$cat->slug] ?? $cat->name }}</a></li>
             @endforeach
+            <li><x-language-selector variant="mobile" /></li>
             
             <hr class="my-2">
             

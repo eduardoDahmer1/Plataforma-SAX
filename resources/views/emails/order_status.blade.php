@@ -45,7 +45,9 @@
                             <span style="font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.15rem;color:#888888;">Total</span>
                         </td>
                         <td style="padding:0.75rem 0 0 0;text-align:right;">
-                            <span style="font-size:1.125rem;font-weight:900;color:#000000;">{{ $order->currency_sign }} {{ number_format($order->total, 2, ',', '.') }}</span>
+                            @foreach (order_all_currencies($order->total) as $valor)
+                                <div style="font-size:1.125rem;font-weight:900;color:#000000;line-height:1.5;">{{ $valor }}</div>
+                            @endforeach
                         </td>
                     </tr>
                 </table>

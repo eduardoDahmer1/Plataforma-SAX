@@ -346,6 +346,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(() => location.reload(), 1500);
                 return null;
             }
+            // 429 = muitas tentativas (throttle no login). Pede para aguardar.
+            if (res.status === 429) {
+                loginError.textContent   = 'Muitas tentativas. Aguarde alguns instantes e tente novamente.';
+                loginError.style.display = 'block';
+                submitBtn.disabled       = false;
+                return null;
+            }
             return res.json();
         })
         .then(data => {
@@ -506,6 +513,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     alreadyRegistered.addEventListener('change', function() {
         document.getElementById('sax_number_field').style.display = this.value === '1' ? 'block' : 'none';
+    });
+});
+
+// Toggle Accordion SAX Style
+document.querySelectorAll('.accordion-trigger').forEach(trigger => {
+    trigger.addEventListener('click', function() {
+        const content = this.nextElementSibling;
+        const icon = this.querySelector('i');
+
+        content.classList.toggle('show');
+
+        if (content.classList.contains('show')) {
+            icon.classList.replace('fa-plus', 'fa-minus');
+        } else {
+            icon.classList.replace('fa-minus', 'fa-plus');
+        }
     });
 });
 

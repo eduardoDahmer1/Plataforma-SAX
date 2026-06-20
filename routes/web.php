@@ -80,6 +80,7 @@ Route::get('/manutencao', fn() => view('manutencao.index'))->name('maintenance.p
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
 Route::get('/bridal', [BridalController::class, 'index'])->name('bridal.index');
 Route::get('/bistro', [CafeBistroController::class, 'index'])->name('cafe_bistro.index');
+Route::post('/newsletter', [App\Http\Controllers\HomeController::class, 'storeNewsletter'])->name('newsletter.store');
 
 Route::get('/categorias-gerais', [App\Http\Controllers\AllCategoriesController::class, 'index'])->name('all-categories.index');
 
@@ -139,7 +140,7 @@ Route::middleware('auth')->group(function () {
     // Pedidos
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');
-    Route::put('admin/orders/{order}', [OrderController::class, 'update'])->name('admin.orders.update');
+    
 
     // Recibos
     Route::get('/receipts/{receipt}', [ReceiptController::class, 'show'])->name('receipts.show');
@@ -264,6 +265,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('clients', ClientController::class)->only(['index', 'show']);
     Route::resource('payments', PaymentMethodController::class);
     Route::post('payments/{id}/toggle-active', [PaymentMethodController::class, 'toggleActive'])->name('payments.toggleActive');
+    Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
 
     Route::resource('blogs', BlogControllerAdmin::class);
     Route::post('blogs/upload-image', [BlogControllerAdmin::class, 'uploadImage'])->name('blogs.upload-image');

@@ -2,6 +2,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="currency-sign" content="{{ session('currency_sign', 'US$') }}">
+<meta name="currency-code" content="PYG">
+<meta name="currency-value" content="{{ session('currency_value', 1) }}">
 
 @php
     $titleDefault = 'SAX - E-commerce de Luxo';
@@ -21,6 +24,8 @@
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:type" content="website">
 <meta property="og:image" content="{{ asset('images/sax-og-image.jpg') }}">
+<meta name="currency-sign" content="{{ session('currency_sign', 'US$') }}">
+<meta name="currency-value" content="{{ session('currency_value', 1) }}">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

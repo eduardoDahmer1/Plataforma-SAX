@@ -2,6 +2,22 @@
 
 @section('content')
     <div class="container mt-5 mb-5 sax-checkout-page">
+        @if ($errors->any() || session('error'))
+            <div class="alert alert-danger border-0 rounded-0 mb-4">
+                @if (session('error'))
+                    <div>{{ session('error') }}</div>
+                @endif
+
+                @if ($errors->any())
+                    <ul class="mb-0 ps-3">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+        @endif
+
         <div class="text-center mb-5">
             <h2 class="sax-title-payment text-uppercase">{{ __('messages.pagamento_via_deposito') }}</h2>
             <div class="sax-order-badge mt-2">{{ __('messages.pedido_numero') }} #{{ $order->id }}</div>
@@ -67,6 +83,11 @@
                             {{ __('messages.enviar_comprovante_botao') }}
                         </button>
                     </form>
+
+                    <a href="{{ route('user.orders.show', $order->id) }}"
+                        class="d-block text-center text-muted small mt-3 text-uppercase tracking-wider">
+                        {{ __('messages.enviar_comprovante_depois') }}
+                    </a>
                 </div>
             </div>
 

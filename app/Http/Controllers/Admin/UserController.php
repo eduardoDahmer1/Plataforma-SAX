@@ -64,13 +64,26 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Usuário excluído com sucesso.');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        // mantém cache por 10 minutos
-        $users = Cache::remember('users_all', 600, function () {
-            return User::orderBy('id', 'desc')->get();
-        });
+        $query = User::query();
 
-        return view('admin.users.index', compact('users'));
+        // Filtro por tipo
+        if ($request->filled('user_type')) {
+            $query->where('user_type', $request->user_type);
+        }
+
+        // Filtro por nome ou email
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $users = $query->orderBy('id', 'desc')->paginate(20);
+        $userCount = $users->total();
+
+        return view('admin.users.index', compact('users', 'userCount'));
     }
 }

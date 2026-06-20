@@ -120,7 +120,7 @@ class CheckoutController extends Controller
                 'observations' => $observations,
                 'shipping' => $request->input('shipping'),
                 'order_number' => strtoupper(Str::random(10)),
-                'currency_sign' => 'R$',
+                'currency_sign' => 'US$',
                 'currency_value' => 1,
             ]);
 
@@ -228,13 +228,11 @@ class CheckoutController extends Controller
 
     private function calcularFrete($cidade)
     {
-        $cidades5Dolares = [
-            'asuncion', 'san lorenzo', 'luque', 'fernando de la mora', 'nemby', 
-            'mariano roque alonso', 'limpio', 'villa elisa', 'san antonio', 'ypane', 
-            'capiata', 'j. augusto saldivar', 'aregua', 
-            'ciudad del este', 'presidente franco', 'hernandarias', 'minga guazu', 
-            'pedro juan caballero'
-        ];
+        $cidades10Dolares = [
+    'asuncion', 'san lorenzo', 'luque', 
+    'fernando de la mora', 'ciudad del este', 'presidente franco', 
+    'hernandarias',   'pedro juan caballero'
+    ];
 
         $cidadeNormalizada = strtolower(
             preg_replace(
@@ -244,7 +242,7 @@ class CheckoutController extends Controller
             )
         );
 
-        return in_array($cidadeNormalizada, $cidades5Dolares) ? 5.00 : 10.00;
+        return in_array($cidadeNormalizada, $cidades10Dolares) ? 10.00 : 15.00;
     }
     
     public function ajaxCalcularFrete(Request $request)
@@ -255,12 +253,28 @@ class CheckoutController extends Controller
 
         $cidade = $request->input('city');
         $pais = $request->input('country');
+
+        // Subtotal do carrinho em valor base (USD)
+        $subtotal = Cart::with('product')
+            ->where('user_id', auth()->id())
+            ->get()
+            ->sum(fn($item) => ($item->product->price ?? 0) * $item->quantity);
         
         if ($pais !== 'paraguai' || empty(trim($cidade))) {
-            return response()->json(['frete' => 0]);
+            return response()->json([
+                'frete'           => 0,
+                'frete_formatado' => currency_format(0),
+                'total_formatado' => currency_format($subtotal),
+            ]);
         }
-        
-        return response()->json(['frete' => $this->calcularFrete($cidade)]);
+
+        $frete = $this->calcularFrete($cidade);
+
+        return response()->json([
+            'frete'           => $frete,
+            'frete_formatado' => currency_format($frete),
+            'total_formatado' => currency_format($subtotal + $frete),
+        ]);
     }
 
     public function whatsapp(Request $request)

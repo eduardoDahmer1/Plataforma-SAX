@@ -29,59 +29,76 @@
         {{-- Coluna Principal --}}
         <div class="col-lg-8 order-2 order-lg-1">
             
-            {{-- Itens do Pedido --}}
-            <section class="mb-5 bg-white p-3 p-lg-0 rounded">
-                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-4 pb-2 border-bottom">
-                    <i class="fa fa-shopping-bag me-2"></i>{{ __('messages.produtos_seccao') }}
-                </h6>
-                
-                @if ($order->items->count())
-                    {{-- Tabela Desktop --}}
-                    <div class="table-responsive desktop-table">
-                        <table class="table align-middle">
-                            <thead class="x-small text-secondary text-uppercase border-top-0">
-                                <tr>
-                                    <th class="border-0 ps-0">{{ __('messages.descricao_col') }}</th>
-                                    <th class="border-0 text-center">{{ __('messages.quantidade_col') }}</th>
-                                    <th class="border-0 text-end pe-0">Total</th>
+        <section class="mb-5 bg-white p-3 p-lg-4 rounded shadow-sm border">
+            <h6 class="fw-bold text-uppercase tracking-wider mb-4 pb-2 border-bottom">
+                <i class="fa fa-shopping-bag me-2"></i>{{ __('messages.produtos_seccao') }}
+            </h6>
+            
+            @if ($order->items->count())
+                <div class="table-responsive desktop-table">
+                    <table class="table align-middle">
+                        <thead class="x-small text-secondary text-uppercase">
+                            <tr>
+                                <th class="border-0 ps-0" style="width: 80px;"></th>
+                                <th class="border-0">{{ __('messages.descricao_col') }}</th>
+                                <th class="border-0 text-center">{{ __('messages.quantidade_col') }}</th>
+                                <th class="border-0 text-end pe-0">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($order->items as $item)
+                                @php $product = $item->product; @endphp
+                                <tr class="border-bottom">
+                                    <td class="py-3 ps-0">
+                                        @if($product && $product->thumbnail)
+                                            <img src="{{ asset('storage/products/' . $product->thumbnail) }}" alt="{{ $item->name }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                        @else
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <i class="fa fa-image text-muted"></i>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="d-block fw-bold text-dark">{{ $item->name ?? ($product->name ?? 'Produto') }}</span>
+                                        <span class="x-small text-muted">SKU: {{ $item->sku ?? ($product->sku ?? '-') }}</span>
+                                        @if($product && $product->color) <span class="badge bg-secondary x-small ms-1">{{ $product->color }}</span> @endif
+                                    </td>
+                                    <td class="py-3 text-center text-secondary">{{ $item->quantity }}</td>
+                                    <td class="py-3 text-end pe-0 fw-bold text-dark">
+                                        {{ currency_format($item->quantity * $item->price) }}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($order->items as $item)
-                                    <tr class="border-bottom">
-                                        <td class="py-3 ps-0">
-                                            <span class="d-block fw-bold text-dark">{{ $item->name ?? $item->product->name ?? 'Produto' }}</span>
-                                            <span class="x-small text-muted italic">SKU: {{ $item->sku ?? $item->product_id ?? '-' }}</span>
-                                        </td>
-                                        <td class="py-3 text-center text-secondary">{{ $item->quantity }}</td>
-                                        <td class="py-3 text-end pe-0 fw-bold text-dark">
-                                            {{ currency_format($item->quantity * $item->price) }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
-                    {{-- Lista Mobile --}}
-                    <div class="mobile-view">
-                        @foreach ($order->items as $item)
-                            <div class="mobile-card-item">
-                                <div class="d-flex justify-content-between">
-                                    <span class="fw-bold text-dark d-block mb-1">{{ $item->name ?? $item->product->name ?? 'Produto' }}</span>
-                                    <span class="fw-bold">{{ currency_format($item->quantity * $item->price) }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-1">
-                                    <span class="x-small text-muted">Qtd: {{ $item->quantity }}</span>
-                                    <span class="x-small text-muted">Ref: {{ $item->sku ?? $item->product_id ?? '-' }}</span>
+                <div class="mobile-view">
+                    @foreach ($order->items as $item)
+                        @php $product = $item->product; @endphp
+                        <div class="mobile-card-item border-bottom pb-3 mb-3">
+                            <div class="d-flex align-items-start gap-3">
+                                @if($product && $product->thumbnail)
+                                    <img src="{{ asset('storage/products/' . $product->thumbnail) }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                @endif
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold text-dark">{{ $item->name ?? ($product->name ?? 'Produto') }}</span>
+                                        <span class="fw-bold">{{ currency_format($item->quantity * $item->price) }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <span class="x-small text-muted">Qtd: {{ $item->quantity }}</span>
+                                        <span class="x-small text-muted">Ref: {{ $item->sku ?? ($product->sku ?? '-') }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="text-muted small">{{ __('messages.sem_items_registrados') }}</p>
-                @endif
-            </section>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-muted small">{{ __('messages.sem_items_registrados') }}</p>
+            @endif
+        </section>
 
             {{-- Logística --}}
             <section class="bg-white p-3 p-lg-0 rounded">
@@ -174,17 +191,37 @@
                 {{-- Comprador --}}
                 <div class="border p-4 mb-4 bg-white shadow-sm rounded">
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.comprador_card') }}</h6>
+                    
                     <div class="mb-3">
                         <span class="d-block fw-bold text-dark">{{ $order->name }} {{ $order->surname }}</span>
                         <a href="mailto:{{ $order->email }}" class="d-block small text-primary text-decoration-none mt-1">
                             <i class="fa fa-envelope me-1"></i>{{ $order->email }}
                         </a>
-                        <a href="https://wa.me/{{ preg_replace('/\D/', '', $order->phone) }}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3 rounded-0 fw-bold">
-                            <i class="fab fa-whatsapp me-2"></i>Falar no WhatsApp
-                        </a>
+                        
+                        @if($order->phone)
+                            <a href="https://wa.me/{{ preg_replace('/\D/', '', $order->phone) }}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3 rounded-0 fw-bold">
+                                <i class="fab fa-whatsapp me-2"></i>{{ $order->phone }}
+                            </a>
+                        @endif
                     </div>
+
                     <div class="x-small border-top pt-3 mt-2 text-secondary">
                         <p class="mb-1">Documento: <span class="text-dark fw-bold">{{ $order->document ?? '-' }}</span></p>
+
+                        @if($order->user && $order->user->country)
+                            <p class="mb-1">País: <span class="text-dark">{{ $order->user->country }}</span></p>
+                        @endif
+
+                        @if($order->user && $order->user->additional_info)
+                            <div class="mt-2 p-2 bg-light border">
+                                <span class="d-block fw-bold mb-1">Informações Adicionais:</span>
+                                <span class="text-dark">{{ $order->user->additional_info }}</span>
+                            </div>
+                        @endif
+
+                        @if($order->user && $order->user->created_at)
+                            <p class="mt-2 mb-0">Cliente desde: {{ $order->user->created_at->format('d/m/Y') }}</p>
+                        @endif
                     </div>
                 </div>
 
@@ -221,6 +258,11 @@
                         <span class="small fw-bold">{{ currency_format($subtotal) }}</span>
                     </div>
 
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="x-small text-secondary text-uppercase">Frete</span>
+                        <span class="small fw-bold">{{ currency_format($order->shipping_cost ?? 0) }}</span>
+                    </div>
+
                     @if($order->discount > 0)
                     <div class="d-flex justify-content-between mb-2">
                         <span class="x-small text-danger text-uppercase">Cupom</span>
@@ -234,7 +276,7 @@
                             {{ currency_format($order->total) }}
                         </span>
                     </div>
-
+                    
                     @if ($order->deposit_receipt)
                         <div class="pt-4 mt-4 border-top border-secondary">
                             <label class="x-small fw-bold text-uppercase d-block mb-3 text-secondary text-center">Comprovante</label>

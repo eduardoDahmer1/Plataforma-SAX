@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (radioSelected === '3') {
             if (freteDisplay) freteDisplay.innerText = 'Gratis';
-            if (totalDisplay) totalDisplay.innerText = 'US$ ' + parseFloat(subtotalDisplay?.dataset.valor || 0).toFixed(2);
+            if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
             if (freteValorInput) freteValorInput.value = '0.00';
             return; 
         }
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pais === 'brasil') {
             if (freteDisplay) freteDisplay.innerText = 'A combinar';
             
-            if (totalDisplay) totalDisplay.innerText = 'US$ ' + parseFloat(subtotalDisplay?.dataset.valor || 0).toFixed(2);
+            if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
             if (freteValorInput) freteValorInput.value = '0.00';
             return;
         }
@@ -91,12 +91,9 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(res => res.ok ? res.json() : Promise.reject())
         .then(data => {
-            const frete = parseFloat(data.frete) || 0;
-            const subtotal = parseFloat(subtotalDisplay?.dataset.valor || 0);
-            
-            if (freteDisplay) freteDisplay.innerText = 'US$ ' + frete.toFixed(2);
-            if (totalDisplay) totalDisplay.innerText = 'US$ ' + (subtotal + frete).toFixed(2);
-            if (freteValorInput) freteValorInput.value = frete.toFixed(2);
+            if (freteDisplay) freteDisplay.innerText = data.frete_formatado;
+            if (totalDisplay) totalDisplay.innerText = data.total_formatado;
+            if (freteValorInput) freteValorInput.value = (parseFloat(data.frete) || 0).toFixed(2);
         })
         .catch(error => {
             console.error('Erro no cálculo:', error);
@@ -111,8 +108,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (method == 3) {
             // Retirada na Loja
             infoContent.innerHTML = '<i class="fa fa-shopping-bag me-2"></i> <strong>Retirada na Loja:</strong> Selecione a unidade de preferência no mapa. <strong>Frete Grátis.</strong>';
-            if (freteDisplay) freteDisplay.innerText = 'US$ 0.00';
-            if (totalDisplay) totalDisplay.innerText = 'US$ ' + parseFloat(subtotalDisplay?.dataset.valor || 0).toFixed(2);
+            if (freteDisplay) freteDisplay.innerText = 'Gratis';
+            if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
             if (freteValorInput) freteValorInput.value = '0.00';
 
         } else {
@@ -124,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Envio para o Brasil
                 infoContent.innerHTML = '<i class="fa fa-whatsapp me-2"></i> <strong>Envio Internacional (Brasil):</strong> O valor do frete não está incluso no total. <strong>Será combinado via WhatsApp</strong> após a finalização do pedido.';
                 if (freteDisplay) freteDisplay.innerText = 'A combinar';
-                if (totalDisplay) totalDisplay.innerText = 'US$ ' + parseFloat(subtotalDisplay?.dataset.valor || 0).toFixed(2);
+                if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
                 if (freteValorInput) freteValorInput.value = '0.00';
 
             } else {

@@ -20,7 +20,8 @@ Route::middleware('guest')->group(function () {
     // Login
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:8,1');
 
     // Recuperação de Senha (Esqueci a senha)
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])

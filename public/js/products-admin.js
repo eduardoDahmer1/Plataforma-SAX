@@ -178,10 +178,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var filterForm = document.getElementById('filterForm');
     if (!filterForm) return;
 
-    // Al cambiar cualquier select de filtro, enviar el form automáticamente
+    // Adicionado select[name="per_page"]
     var selects = filterForm.querySelectorAll(
-        'select[name="status_filter"], select[name="sort_by"], select[name="highlight_filter"], select[name="brand_id"], select[name="category_id"]'
+        'select[name="status_filter"], select[name="sort_by"], select[name="highlight_filter"], select[name="brand_id"], select[name="category_id"], select[name="product_type"], select[name="per_page"]'
     );
+    
     selects.forEach(function (select) {
         select.addEventListener('change', function () {
             filterForm.submit();
@@ -257,13 +258,15 @@ function abrirModalLocal(data) {
     corpo.innerHTML = '';
 
     if (produtosDoDia.length === 0) {
-        corpo.innerHTML = '<tr><td colspan="3" class="text-center py-4">Nenhum detalhe encontrado.</td></tr>';
+        corpo.innerHTML = '<tr><td colspan="4" class="text-center py-4">Nenhum detalhe encontrado.</td></tr>';
     } else {
         produtosDoDia.forEach(function (p) {
+            // Adicionamos a coluna do usuário
             corpo.innerHTML +=
                 '<tr>' +
                 '<td class="ps-4"><b>' + p.name + '</b></td>' +
                 '<td class="text-center"><code class="small">' + (p.sku || '-') + '</code></td>' +
+                '<td class="text-center"><span class="badge bg-secondary text-white">' + (p.updated_by || 'Sistema') + '</span></td>' +
                 '<td class="pe-4 text-end"><span class="badge bg-light text-dark border">' + (p.ref_code || '-') + '</span></td>' +
                 '</tr>';
         });

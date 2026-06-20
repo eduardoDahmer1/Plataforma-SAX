@@ -21,10 +21,15 @@ class OrderController extends Controller
     // Lista pedidos
     public function index(Request $request)
     {
+        $perPage = $request->get('per_page', 20);
         $query = Order::with(['user', 'items']);
 
         if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
+            if ($request->payment_method === 'bancard') {
+                $query->whereIn('payment_method', ['bancard', 'bancard_v2']);
+            } else {
+                $query->where('payment_method', $request->payment_method);
+            }
         }
 
         if ($request->filled('status')) {
@@ -37,18 +42,10 @@ class OrderController extends Controller
             });
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
+        $orders = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $orders->appends($request->query());
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        $orders = $query->orderBy('created_at', 'desc')->paginate(20);
-        $orders->appends($request->all());
-
-        return view('admin.orders.index', compact('orders'));
+        return view('admin.orders.index', compact('orders', 'perPage'));
     }
 
     // Atualiza status do pedido ou do pagamento
@@ -93,6 +90,8 @@ class OrderController extends Controller
         $order->save();
 
         if (!$wasPaid && $order->isPaid()) {
+            $this->reduceOrderStock($order);
+
             try {
                 $this->receiptService->issueForOrder($order);
             } catch (\Throwable $e) {
@@ -163,6 +162,27 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Comprovante enviado com sucesso!');
     }
 
+    private function reduceOrderStock(Order $order): void
+    {
+        $order->loadMissing('items.product');
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+
+            if (!$product) {
+                continue;
+            }
+
+            $quantity = max(0, (int) $item->quantity);
+            $availableStock = max(0, (int) $product->stock);
+            $decrementBy = min($quantity, $availableStock);
+
+            if ($decrementBy > 0) {
+                $product->decrement('stock', $decrementBy);
+            }
+        }
+    }
+
     // Cria pedido (Manualmente pelo Admin ou via API)
     public function store(Request $request)
     {
@@ -221,7 +241,7 @@ class OrderController extends Controller
                 'shipping_cost'   => $request->shipping_cost,
                 'packing_cost'    => $request->packing_cost,
                 'tax'             => $request->tax,
-                'currency_sign'   => $request->currency_sign ?? 'R$',
+                'currency_sign'   => $request->currency_sign ?? 'US$',
                 'currency_value'  => $request->currency_value ?? 1,
                 'order_note'      => $request->order_note,
                 'internal_note'   => $request->internal_note,

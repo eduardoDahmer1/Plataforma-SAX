@@ -422,31 +422,45 @@ transition: 0.3s ease;
 box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
-/* --- 5. VOLTAR AO TOPO (Unificado) --- */
+/* ==========================================================================
+   BOTOES FLUTUANTES (Voltar ao Topo & WhatsApp)
+   ========================================================================== */
+
+/* --- 1. Botão Voltar ao Topo --- */
 .sax-back-to-top,
 #backToTop {
-position: fixed;
-bottom: 30px;
-right: 30px;
-width: 50px;
-height: 50px;
-border-radius: 50%;
-display: none;
-/* Controlado via JS */
-align-items: center;
-justify-content: center;
-z-index: 1000;
-transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-background-color: #000;
-color: #fff;
-border: none;
+    position: fixed;
+    bottom: 95px; /* Posicionado exactamente arriba del banner de WhatsApp */
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: none; /* Controlado via JS */
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background-color: #000;
+    color: #fff;
+    border: none;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .sax-back-to-top:hover,
 #backToTop:hover {
-background-color: #e6c200;
-/* Destaque Gold no hover */
-transform: scale(1.1);
+    background-color: #e6c200; /* Destaque Gold no hover */
+    transform: scale(1.1);
+    color: #fff;
+}
+
+/* --- 3. Ajustes Responsivos (Mobile) --- */
+@media (max-width: 768px) {
+    .whatsapp-floating-banner {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1426,7 +1440,6 @@ text-overflow: ellipsis !important;
 .autocomplete-results::-webkit-scrollbar { width: 6px; }
 .autocomplete-results::-webkit-scrollbar-track { background: #f1f1f1; }
 .autocomplete-results::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
-.sax-home-wrapper { background-color: #fff; overflow-x: hidden; }
 
 /* Ajustes Swiper */
 .mySwiper {
@@ -2968,8 +2981,7 @@ text-align: center;
 
 .category-wrapper {
 display: flex;
-justify-content: center;
-gap: 20px;
+justify-content: space-around;
 flex-wrap: nowrap;
 overflow-x: auto;
 }
@@ -3023,7 +3035,7 @@ margin-top: 5px;
 
 @media (max-width: 575px) {
 .category-item { flex: 0 0 45%; }
-.category-wrapper { flex-wrap: wrap; }
+.category-wrapper { flex-wrap: wrap;justify-content: center; }
 }
 /* Reset local e Container Principal */
 .sax-brands-section {

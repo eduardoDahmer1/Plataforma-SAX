@@ -30,6 +30,7 @@ class Attribute extends Model
         'icon_info',
         'icon_cabide',
         'icon_help',
+        'whatsapp_banner'
     ];
 
     public static function logoUrl(): ?string

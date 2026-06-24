@@ -29,18 +29,18 @@ class ImageUploadController extends Controller
             'banner8' => $attribute?->banner8,
             'banner9' => $attribute?->banner9,
             'banner10' => $attribute?->banner10,
+            'whatsapp_banner' => $attribute?->whatsapp_banner,
         ];
 
         // Passando $attribute para que os novos ícones funcionem no seu array do Blade
         return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal', 'logoCafeBistro', 'bannerHorizontal', 'noimage', 'banners', 'attribute'));
     }
 
-    private function processImageUpload($file, $filename)
+private function processImageUpload($file, $filename)
     {
         $tempPath = $file->getRealPath();
         $extension = strtolower($file->getClientOriginalExtension());
 
-        // Se for webp ou svg, salva o arquivo original para manter a transparência/vetor
         if ($extension === 'webp' || $extension === 'svg') {
             Storage::disk('public')->delete("uploads/{$filename}");
             Storage::disk('public')->putFileAs('uploads', $file, $filename);
@@ -65,6 +65,10 @@ class ImageUploadController extends Controller
         }
 
         if (!$imageResource) return null;
+
+        if (!imageistruecolor($imageResource)) {
+            imagepalettetotruecolor($imageResource);
+        }
 
         ob_start();
         imagewebp($imageResource, null, 90);
@@ -190,4 +194,6 @@ class ImageUploadController extends Controller
     public function deleteBanner9() { return $this->deleteImage('banner9'); }
     public function uploadBanner10(Request $request) { return $this->uploadImage($request, 'banner10', 'banner10.webp'); }
     public function deleteBanner10() { return $this->deleteImage('banner10'); }
+    public function uploadWhatsappBanner(Request $request) { return $this->uploadImage($request, 'whatsapp_banner', 'whatsapp_banner.webp'); }
+    public function deleteWhatsappBanner() { return $this->deleteImage('whatsapp_banner'); }
 }

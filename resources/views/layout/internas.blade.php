@@ -13,6 +13,7 @@
     </main>
 
     @yield('footer')
+    @include('components.whatsapp')
 
     <x-scripts-master />
 

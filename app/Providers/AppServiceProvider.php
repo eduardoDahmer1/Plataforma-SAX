@@ -112,25 +112,21 @@ class AppServiceProvider extends ServiceProvider
                 'banner8' => $attribute?->banner8 ?? null,
                 'banner9' => $attribute?->banner9 ?? null,
                 'banner10' => $attribute?->banner10 ?? null,
+                'whatsapp_banner' => $attribute?->whatsapp_banner ?? null,
             ]);
         });
 
-        /**
-         * 8. FILTRO LATERAL GERAL (Sidebar)
-         * Centraliza Marcas e a Hierarquia de Categorias (3 níveis)
-         */
         View::composer(['site.products.index', 'site.categories.show', 'components.sidebar-filters'], function ($view) {
             $sidebarFilters = Cache::remember('sidebar_filters_data', now()->addHours(12), function () {
                 return [
-                    // Hierarquia: Categoria -> Subcategoria -> Categoria Filha
-                    'categories' => Category::where('status', 1) // Mantém aqui se a Category principal tiver status
+                    'categories' => Category::where('status', 1)
                         ->withCount('products')
                         ->with([
                             'subcategories' => function ($q) {
-                                $q->withCount('products') // Removi o where status
+                                $q->withCount('products')
                                     ->with([
                                         'categoriasfilhas' => function ($sq) {
-                                            $sq->withCount('products'); // Removi o where status
+                                            $sq->withCount('products');
                                         },
                                     ]);
                             },
@@ -138,7 +134,6 @@ class AppServiceProvider extends ServiceProvider
                         ->orderBy('name')
                         ->get(),
 
-                    // Marcas
                     'brands' => Brand::where('status', 1)->withCount('products')->orderBy('name')->get(),
                 ];
             });

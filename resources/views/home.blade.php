@@ -49,7 +49,7 @@
         @if ($showEditados && $productsEditados->isNotEmpty())
             <div class="sax-section-container py-4">
                 <div class="container-fluid px-lg-5">
-                    <h2 class="sax-section-title mb-4">RECENTEMENTE ATUALIZADOS</h2>
+                    <h2 class="sax-section-title mb-4">{{ __('messages.recentemente_atualizados') }}</h2>
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsEditados as $item)

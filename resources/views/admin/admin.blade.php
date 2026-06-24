@@ -70,6 +70,7 @@
                 ['field' => 'banner8', 'title' => 'Banner Principal 08', 'category' => 'Home', 'file' => $banners['banner8'] ?? null, 'routeUpload' => 'admin.banner8.upload', 'routeDelete' => 'admin.banner8.delete'],
                 ['field' => 'banner9', 'title' => 'Banner Principal 09', 'category' => 'Home', 'file' => $banners['banner9'] ?? null, 'routeUpload' => 'admin.banner9.upload', 'routeDelete' => 'admin.banner9.delete'],
                 ['field' => 'banner10', 'title' => 'Banners Internas', 'category' => 'Home', 'file' => $banners['banner10'] ?? null, 'routeUpload' => 'admin.banner10.upload', 'routeDelete' => 'admin.banner10.delete'],
+                ['field' => 'whatsapp_banner', 'title' => 'Banner WhatsApp', 'category' => 'Home', 'file' => $banners['whatsapp_banner'] ?? null, 'routeUpload' => 'admin.whatsapp_banner.upload', 'routeDelete' => 'admin.whatsapp_banner.delete'],
         ];
         
         $categories = [$catIdentidade, $catHome, $catSistema];

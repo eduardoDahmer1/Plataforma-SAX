@@ -124,6 +124,7 @@ class HomeController extends Controller
             'banner3'         => $settings->banner3 ?? null,
             'banner4'         => $settings->banner4 ?? null,
             'banner5'         => $settings->banner5 ?? null,
+            'whatsapp_banner' => $attribute->whatsapp_banner ?? null,
         ]);
     }
 

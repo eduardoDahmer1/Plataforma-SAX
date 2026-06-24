@@ -284,6 +284,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('header/delete', [ImageUploadController::class, 'deleteHeader'])->name('header.delete');
     Route::post('noimage/upload', [ImageUploadController::class, 'uploadNoimage'])->name('noimage.upload');
     Route::delete('noimage/delete', [ImageUploadController::class, 'deleteNoimage'])->name('noimage.delete');
+    Route::post('whatsapp_banner/upload', [ImageUploadController::class, 'uploadWhatsappBanner'])->name('whatsapp_banner.upload');
+    Route::delete('whatsapp_banner/delete', [ImageUploadController::class, 'deleteWhatsappBanner'])->name('whatsapp_banner.delete');
 
     // Banners 1 a 10
     foreach (range(1, 10) as $i) {

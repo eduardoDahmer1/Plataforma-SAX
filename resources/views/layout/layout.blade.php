@@ -15,10 +15,11 @@
     </main>
 
     <!-- Botão Voltar ao Topo -->
-    <button id="backToTop" class="btn btn-primary position-fixed"
-        style="bottom:30px; right:1em; display:none; z-index:1050;width: 3em;">
+    <button id="backToTop" class="btn btn-primary position-fixed">
         <i class="fa fa-arrow-up"></i>
     </button>
+
+    @include('components.whatsapp')
 
     {{-- Footer --}}
     @include('components.footer')

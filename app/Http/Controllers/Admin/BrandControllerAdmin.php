@@ -214,4 +214,46 @@ class BrandControllerAdmin extends Controller
         $brand->save();
         return redirect()->back()->with('success', 'Banner interno excluído.');
     }
+
+    public function uploadLogo(Request $request, Brand $brand)
+    {
+        $request->validate(['image' => 'required|image|max:10240']);
+        if ($brand->image && Storage::disk('public')->exists($brand->image)) {
+            Storage::disk('public')->delete($brand->image);
+        }
+
+        $path = $this->convertToWebp($request->file('image'), 'logo');
+        $brand->image = $path;
+        $brand->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
+    public function uploadBanner(Request $request, Brand $brand)
+    {
+        $request->validate(['banner' => 'required|image|max:10240']);
+        if ($brand->banner && Storage::disk('public')->exists($brand->banner)) {
+            Storage::disk('public')->delete($brand->banner);
+        }
+
+        $path = $this->convertToWebp($request->file('banner'), 'banner');
+        $brand->banner = $path;
+        $brand->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
+    public function uploadInternalBanner(Request $request, Brand $brand)
+    {
+        $request->validate(['internal_banner' => 'required|image|max:10240']);
+        if ($brand->internal_banner && Storage::disk('public')->exists($brand->internal_banner)) {
+            Storage::disk('public')->delete($brand->internal_banner);
+        }
+
+        $path = $this->convertToWebp($request->file('internal_banner'), 'internal_banner');
+        $brand->internal_banner = $path;
+        $brand->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
 }

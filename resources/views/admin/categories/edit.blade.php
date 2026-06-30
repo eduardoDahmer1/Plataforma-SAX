@@ -3,8 +3,8 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="Editar Categoria"
-        description="Gerencie as informações principais e identidade visual da categoria <strong>{{ $category->name }}</strong>">
+        title="Editar Categoría"
+        description="Categoría: <strong>{{ $category->name }}</strong>">
         <x-slot:actions>
             <a href="{{ route('admin.categories.index') }}" class="btn-back-minimal">
                 <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
@@ -12,89 +12,97 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-        <div class="row justify-content-center">
-            <div class="col-xl-10">
-                <div class="sax-premium-card shadow-sm border-0">
-                    <div class="card-sax-header border-bottom p-4 bg-light rounded-top-4">
-                        <h6 class="m-0 fw-bold letter-spacing-1 text-muted x-small">FORMULARIO DE CONFIGURACIÓN</h6>
-                    </div>
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="sax-premium-card shadow-sm border-0">
+                <div class="card-sax-header border-bottom p-4 bg-light rounded-top-4">
+                    <h6 class="m-0 fw-bold letter-spacing-1 text-muted x-small">FORMULARIO DE CONFIGURACIÓN</h6>
+                </div>
 
-                    <div class="card-sax-body p-4 p-md-5">
-                        <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data" id="main-edit-form" class="sax-form">
-                            @csrf
-                            @method('PUT')
+                <div class="card-sax-body p-4 p-md-5">
+                    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data" class="sax-form">
+                        @csrf
+                        @method('PUT')
 
-                            <div class="row g-4">
-                                {{-- Lado Esquerdo: Dados --}}
-                                <div class="col-lg-7">
-                                    <div class="mb-4">
-                                        <label for="name" class="sax-label-tiny mb-2">NOMBRE DE LA CATEGORÍA</label>
-                                        <div class="input-group-sax">
-                                            <span class="input-icon"><i class="fas fa-tag"></i></span>
-                                            <input type="text" class="form-control-sax @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $category->name ?? '') }}" required placeholder="Ex: Bebidas">
-                                        </div>
-                                        @error('name') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
+                        <div class="row g-4">
+                            {{-- Datos --}}
+                            <div class="col-lg-7">
+                                <div class="mb-4">
+                                    <label for="name" class="sax-label-tiny mb-2">NOMBRE DE LA CATEGORÍA</label>
+                                    <div class="input-group-sax">
+                                        <span class="input-icon"><i class="fas fa-tag"></i></span>
+                                        <input type="text"
+                                               class="form-control-sax @error('name') is-invalid @enderror"
+                                               id="name" name="name"
+                                               value="{{ old('name', $category->name ?? '') }}"
+                                               required
+                                               placeholder="Ej: Bebidas">
                                     </div>
-
-                                    <div class="mb-4">
-                                        <label for="slug" class="sax-label-tiny mb-2">URL AMIGABLE (SLUG)</label>
-                                        <div class="input-group-sax">
-                                            <span class="input-icon"><i class="fas fa-link"></i></span>
-                                            <input type="text" class="form-control-sax @error('slug') is-invalid @enderror" id="slug" name="slug" value="{{ old('slug', $category->slug ?? '') }}" required placeholder="ex-bebidas-importadas">
-                                        </div>
-                                        @error('slug') <div class="text-danger x-small mt-1">{{ $message }}</div> @enderror
-                                    </div>
+                                    @error('name')
+                                        <div class="text-danger x-small mt-1">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
-                                {{-- Lado Direito: Uploads --}}
-                                <div class="col-lg-5">
-                                    <div class="row g-3">
-                                        {{-- Foto --}}
-                                        <div class="col-6 col-lg-12">
-                                            <label class="sax-label-tiny mb-2 d-block text-center">FOTO (LOGO)</label>
-                                            <div class="media-upload-preview shadow-sm mx-auto">
-                                                @if ($category->photo)
-                                                    <img src="{{ asset('storage/' . $category->photo) }}" id="preview-photo">
-                                                    <button type="button" onclick="confirmDelete('photo')" class="btn-delete-media"><i class="fas fa-times"></i></button>
-                                                @else
-                                                    <div class="empty-upload"><i class="fas fa-cloud-upload-alt"></i></div>
-                                                @endif
-                                                <input type="file" name="photo" class="input-overlay" accept="image/*" onchange="previewImg(this, 'preview-photo')">
-                                            </div>
-                                        </div>
-
-                                        {{-- Banner --}}
-                                        <div class="col-6 col-lg-12">
-                                            <label class="sax-label-tiny mb-2 d-block text-center">BANNER DASHBOARD</label>
-                                            <div class="media-upload-preview banner-ratio shadow-sm mx-auto">
-                                                @if ($category->banner)
-                                                    <img src="{{ asset('storage/' . $category->banner) }}" id="preview-banner">
-                                                    <button type="button" onclick="confirmDelete('banner')" class="btn-delete-media"><i class="fas fa-times"></i></button>
-                                                @else
-                                                    <div class="empty-upload"><i class="fas fa-images"></i></div>
-                                                @endif
-                                                <input type="file" name="banner" class="input-overlay" accept="image/*" onchange="previewImg(this, 'preview-banner')">
-                                            </div>
-                                        </div>
+                                <div class="mb-4">
+                                    <label for="slug" class="sax-label-tiny mb-2">URL AMIGABLE (SLUG)</label>
+                                    <div class="input-group-sax">
+                                        <span class="input-icon"><i class="fas fa-link"></i></span>
+                                        <input type="text"
+                                               class="form-control-sax @error('slug') is-invalid @enderror"
+                                               id="slug" name="slug"
+                                               value="{{ old('slug', $category->slug ?? '') }}"
+                                               required
+                                               placeholder="ex-bebidas-importadas">
                                     </div>
+                                    @error('slug')
+                                        <div class="text-danger x-small mt-1">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
 
-                            {{-- Actions --}}
-                            <x-admin.form-actions :cancelRoute="route('admin.categories.index')" submitLabel="Atualizar dados" submitIcon="fa-sync-alt" />
-                        </form>
-                    </div>
+                            {{-- Multimedia --}}
+                            <div class="col-lg-5">
+                                <div class="row g-3">
+                                    <div class="col-6 col-lg-12">
+                                        <x-admin.media-field
+                                            field="photo"
+                                            label="FOTO (LOGO)"
+                                            :current="$category->photo"
+                                            :uploadUrl="route('admin.categories.uploadPhoto', $category->id)"
+                                            :showDelete="true"
+                                            ratio="square" />
+                                    </div>
+                                    <div class="col-6 col-lg-12">
+                                        <x-admin.media-field
+                                            field="banner"
+                                            label="BANNER DASHBOARD"
+                                            :current="$category->banner"
+                                            :uploadUrl="route('admin.categories.uploadBanner', $category->id)"
+                                            :showDelete="true"
+                                            ratio="banner" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <x-admin.form-actions
+                            :cancelRoute="route('admin.categories.index')"
+                            cancelLabel="Cancelar"
+                            submitLabel="Guardar cambios"
+                            submitIcon="fa-save" />
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-{{-- Formulários Ocultos para Delete --}}
-@if ($category->photo)
-<form id="delete-photo-form" action="{{ route('admin.categories.deletePhoto', $category->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
-@endif
-@if ($category->banner)
-<form id="delete-banner-form" action="{{ route('admin.categories.deleteBanner', $category->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
-@endif
+    {{-- Forms de borrado: fuera del form principal para evitar anidamiento inválido --}}
+    <form id="delete-photo-form" action="{{ route('admin.categories.deletePhoto', $category->id) }}" method="POST" class="d-none">
+        @csrf @method('DELETE')
+    </form>
+    <form id="delete-banner-form" action="{{ route('admin.categories.deleteBanner', $category->id) }}" method="POST" class="d-none">
+        @csrf @method('DELETE')
+    </form>
+
 </x-admin.card>
 @endsection

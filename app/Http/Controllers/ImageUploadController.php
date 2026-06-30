@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\Attribute;
+use App\Services\CacheService;
 
 class ImageUploadController extends Controller
 {
@@ -32,11 +33,10 @@ class ImageUploadController extends Controller
             'whatsapp_banner' => $attribute?->whatsapp_banner,
         ];
 
-        // Passando $attribute para que os novos ícones funcionem no seu array do Blade
         return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal', 'logoCafeBistro', 'bannerHorizontal', 'noimage', 'banners', 'attribute'));
     }
 
-private function processImageUpload($file, $filename)
+    private function processImageUpload($file, $filename)
     {
         $tempPath = $file->getRealPath();
         $extension = strtolower($file->getClientOriginalExtension());
@@ -83,31 +83,52 @@ private function processImageUpload($file, $filename)
 
     private function uploadImage(Request $request, $field, $filename)
     {
-        // Ajustado para aceitar SVG também, já que são ícones
         $request->validate([
             $field => 'required|mimes:jpeg,jpg,png,gif,webp,svg|max:10240',
         ]);
 
         if ($request->hasFile($field) && $request->file($field)->isValid()) {
             $file = $request->file($field);
-            
-            // Manter a extensão original se for SVG para o filename não ficar .webp
             $extension = strtolower($file->getClientOriginalExtension());
-            if($extension === 'svg') {
+            
+            if ($extension === 'svg') {
                 $filename = str_replace('.webp', '.svg', $filename);
             }
 
             $processed = $this->processImageUpload($file, $filename);
 
             if (!$processed) {
-                return back()->with('error', 'Formato de imagem não suportado.');
+                return response()->json(['success' => false, 'message' => 'Formato de imagem não suportado.'], 422);
             }
 
             DB::table('attributes')->where('id', 1)->update([$field => $filename]);
-            return back()->with('success', ucfirst(str_replace('_', ' ', $field)) . ' enviada com sucesso!');
+            
+            \App\Services\CacheService::clearAll();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Enviada com sucesso!',
+                'url' => asset('storage/uploads/' . $filename) . '?v=' . time()
+            ]);
         }
 
-        return back()->with('error', 'Nenhuma imagem válida enviada.');
+        return response()->json(['success' => false, 'message' => 'Nenhuma imagem válida enviada.'], 400);
+    }
+
+    private function deleteImage($field)
+    {
+        $filename = DB::table('attributes')->where('id', 1)->value($field);
+
+        if ($filename && Storage::disk('public')->exists("uploads/{$filename}")) {
+            Storage::disk('public')->delete("uploads/{$filename}");
+            DB::table('attributes')->where('id', 1)->update([$field => null]);
+            
+            \App\Services\CacheService::clearAll();
+            
+            return response()->json(['success' => true, 'message' => 'Excluída com sucesso!']);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Nenhuma imagem para excluir.'], 404);
     }
 
         public function updateTextTopo(Request $request)
@@ -125,19 +146,6 @@ private function processImageUpload($file, $filename)
         }
 
         return redirect()->back()->withErrors('Erro ao encontrar as configurações.');
-    }
-
-    private function deleteImage($field)
-    {
-        $filename = DB::table('attributes')->where('id', 1)->value($field);
-
-        if ($filename && Storage::disk('public')->exists("uploads/{$filename}")) {
-            Storage::disk('public')->delete("uploads/{$filename}");
-            DB::table('attributes')->where('id', 1)->update([$field => null]);
-            return back()->with('success', ucfirst(str_replace('_', ' ', $field)) . ' excluída com sucesso!');
-        }
-
-        return back()->with('error', 'Nenhuma imagem para excluir.');
     }
 
     // --- Métodos Header ---

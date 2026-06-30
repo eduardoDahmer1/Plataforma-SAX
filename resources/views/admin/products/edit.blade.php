@@ -133,21 +133,23 @@
                                 <label for="photo" class="form-label text-bold">
                                     <i class="fas fa-image me-1"></i>Foto Principal
                                 </label>
-                                <div class="d-flex align-items-start gap-2">
-                                    <input type="file" name="photo" class="form-control" id="photoInput">
-                                    @if ($item->photo)
-                                        <div class="position-relative border rounded p-1 bg-white"
-                                            style="width: 80px; height: 50px;">
-                                            <img src="{{ Storage::url($item->photo) }}" class="w-100 h-100"
-                                                style="object-fit: cover;">
+                                <div class="d-flex flex-column gap-2">
+                                    <input type="file" name="photo" class="form-control" id="photoInput" accept="image/*">
+
+                                    {{-- Preview: debajo del input, cuadrado; oculto si el producto no tiene foto --}}
+                                    <div class="position-relative border rounded p-1 bg-white align-self-start" id="photoPreviewBox"
+                                        style="width: 8rem; height: 8rem; {{ $item->photo ? '' : 'display:none;' }}">
+                                        <img src="{{ $item->photo ? Storage::url($item->photo) : '' }}" id="photoPreviewImg"
+                                            class="w-100 h-100 rounded" style="object-fit: cover;">
+                                        @if ($item->photo)
                                             <button type="button"
                                                 class="btn btn-danger btn-xs position-absolute top-0 end-0 m-n1 shadow-sm"
                                                 style="padding: 2px 5px; font-size: 10px;"
                                                 onclick="if(confirm('Excluir foto principal?')) document.getElementById('deletePhotoForm').submit();">
                                                 <i class="fas fa-times"></i>
                                             </button>
-                                        </div>
-                                    @endif
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 
@@ -157,6 +159,10 @@
                                 </label>
                                 <div class="d-flex flex-column gap-2">
                                     <input type="file" name="gallery[]" class="form-control" multiple id="galleryInput">
+
+                                    {{-- Preview en vivo de lo elegido (acumula; no se guarda hasta "Salvar Alterações") --}}
+                                    <div id="galleryPreview" class="row g-2" style="display:none;"></div>
+
                                     @if (!empty($galleryImages))
                                         <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal"
                                             data-bs-target="#modalGerenciarGaleria">

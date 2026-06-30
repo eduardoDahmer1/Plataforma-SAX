@@ -50,8 +50,8 @@
                                 @php $product = $item->product; @endphp
                                 <tr class="border-bottom">
                                     <td class="py-3 ps-0">
-                                        @if($product && $product->thumbnail)
-                                            <img src="{{ asset('storage/products/' . $product->thumbnail) }}" alt="{{ $item->name }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                        @if($product)
+                                            <img src="{{ $product->photo_url }}" alt="{{ $item->name }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
                                         @else
                                             <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
                                                 <i class="fa fa-image text-muted"></i>
@@ -78,8 +78,8 @@
                         @php $product = $item->product; @endphp
                         <div class="mobile-card-item border-bottom pb-3 mb-3">
                             <div class="d-flex align-items-start gap-3">
-                                @if($product && $product->thumbnail)
-                                    <img src="{{ asset('storage/products/' . $product->thumbnail) }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                @if($product)
+                                    <img src="{{ $product->photo_url }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
                                 @endif
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between">
@@ -199,7 +199,12 @@
                         </a>
                         
                         @if($order->phone)
-                            <a href="https://wa.me/{{ preg_replace('/\D/', '', $order->phone) }}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3 rounded-0 fw-bold">
+                            @php
+                                // Prefijo del telefono del perfil del usuario (55=BR, 595=PY). 595 por defecto
+                                $ddi = optional($order->user)->phone_country ?: '595';
+                                $whatsapp = $ddi . preg_replace('/\D/', '', $order->phone);
+                            @endphp
+                            <a href="https://wa.me/{{ $whatsapp }}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3 rounded-0 fw-bold">
                                 <i class="fab fa-whatsapp me-2"></i>{{ $order->phone }}
                             </a>
                         @endif

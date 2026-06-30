@@ -7,7 +7,6 @@
 
 @if($whatsapp_banner)
 @php
-    // Definição das opções usando chaves puras (sem tradução no índice)
     if (Request::is('*bridal*')) {
         $sectionTitle = __('messages.sax_bridal_atendimento_exclusivo');
         $phone = '+595 981 527848';
@@ -59,28 +58,27 @@
             'rastrear_pedido'                    => __('messages.msg_rastrear_pedido')
         ];
     }
+
+    $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
 @endphp
 
-    <!-- O restante do HTML permanece igual -->
     <div class="whatsapp-container" id="whatsappContainer">
         <div class="whatsapp-menu" id="whatsappMenu">
             <div class="whatsapp-menu-header">
                 <strong>{{ $sectionTitle }}</strong>
-                <span>Como podemos te ajudar hoje?</span>
+                <span>Escolha uma opcao e fale com nosso time.</span>
             </div>
-                <div class="whatsapp-menu-body">
-                    @foreach($options as $labelKey => $message)
-                        @php
-                            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-                        @endphp
-                        <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode($message) }}" target="_blank" rel="noopener noreferrer" class="whatsapp-menu-item">
-                            <i class="fab fa-whatsapp"></i> {{ __('messages.' . $labelKey) }}
-                        </a>
-                    @endforeach
-                </div>
+            <div class="whatsapp-menu-body">
+                @foreach($options as $labelKey => $message)
+                    <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode($message) }}" target="_blank" rel="noopener noreferrer" class="whatsapp-menu-item" aria-label="{{ __('messages.' . $labelKey) }}">
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                        <span>{{ __('messages.' . $labelKey) }}</span>
+                    </a>
+                @endforeach
+            </div>
         </div>
 
-        <button type="button" class="whatsapp-floating-banner" id="whatsappToggle">
+        <button type="button" class="whatsapp-floating-banner" id="whatsappToggle" aria-expanded="false" aria-controls="whatsappMenu" aria-label="Abrir atendimento no WhatsApp">
             <img src="{{ asset('storage/uploads/' . $whatsapp_banner) }}" alt="WhatsApp">
         </button>
     </div>
@@ -94,58 +92,59 @@
         }
 
         .whatsapp-floating-banner {
-            background: none !important;
-            background-color: transparent !important;
-            border: none !important;
+            background: transparent;
+            border: 0;
             display: block;
-            width: 50px;
-            height: 50px;
+            width: 54px;
+            height: 54px;
             padding: 0;
             cursor: pointer;
-            transition: transform 0.3s ease, filter 0.3s ease;
-            filter: drop-shadow(0px 4px 10px rgba(0, 0, 0, 0.15));
+            border-radius: 999px;
+            transition: transform 0.24s ease, filter 0.24s ease;
+            filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.2));
+            will-change: transform;
         }
 
         .whatsapp-floating-banner img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            background: none !important;
-            background-color: transparent !important;
+            display: block;
+            border-radius: 999px;
         }
 
         .whatsapp-floating-banner:hover {
-            transform: scale(1.1);
-            filter: drop-shadow(0px 6px 14px rgba(0, 0, 0, 0.25));
+            transform: translateY(-2px) scale(1.03);
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.28));
         }
 
         .whatsapp-menu {
             position: absolute;
-            bottom: 65px;
+            bottom: 72px;
             right: 0;
-            width: 290px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.15);
+            width: 320px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
             display: none;
             opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateY(12px) scale(0.98);
+            transition: opacity 0.2s ease, transform 0.2s ease;
             overflow: hidden;
-            border: 1px solid #f1f1f1;
+            border: 1px solid #e8e8e8;
+            backdrop-filter: blur(2px);
         }
 
-        /* Classe de controle ativa por JavaScript */
         .whatsapp-container.show-menu .whatsapp-menu {
             display: block;
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         .whatsapp-menu-header {
-            background-color: #000000;
-            color: #ffffff;
-            padding: 12px 15px;
+            background: linear-gradient(135deg, #111111 0%, #2a2a2a 100%);
+            color: #fff;
+            padding: 13px 15px;
             display: flex;
             flex-direction: column;
         }
@@ -154,108 +153,140 @@
             font-size: 14px;
             letter-spacing: 0.5px;
             font-family: 'Montserrat', sans-serif;
+            line-height: 1.2;
         }
 
         .whatsapp-menu-header span {
             font-size: 11px;
-            color: #b5b5b5;
-            margin-top: 2px;
+            color: #d4d4d4;
+            margin-top: 5px;
+            line-height: 1.3;
         }
 
         .whatsapp-menu-body {
-            padding: 8px 0;
+            padding: 6px 0;
             background-color: #fff;
+            max-height: min(52vh, 360px);
+            overflow-y: auto;
         }
 
         .whatsapp-menu-item {
             display: flex;
             align-items: center;
-            padding: 10px 15px;
+            gap: 10px;
+            padding: 11px 15px;
             color: #333333 !important;
             text-decoration: none !important;
             font-size: 12px;
-            font-weight: 400;
+            font-weight: 500;
             line-height: 1.4;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: background-color 0.16s ease, color 0.16s ease;
         }
 
         .whatsapp-menu-item i {
             color: #25D366;
-            font-size: 15px;
-            margin-right: 10px;
+            font-size: 16px;
             flex-shrink: 0;
         }
 
+        .whatsapp-menu-item span {
+            display: block;
+            letter-spacing: 0.1px;
+        }
+
         .whatsapp-menu-item:hover {
-            background-color: #f7f7f7;
-            color: #e6c200 !important;
+            background-color: #f4f4f4;
+            color: #191919 !important;
         }
 
         @media (max-width: 768px) {
             .whatsapp-container {
-                bottom: 20px;
-                right: 20px;
+                bottom: 16px;
+                right: 14px;
             }
 
             .whatsapp-floating-banner {
-                width: 45px;
-                height: 45px;
+                width: 48px;
+                height: 48px;
             }
 
             .whatsapp-menu {
-                width: 260px;
-                bottom: 55px;
+                width: min(320px, calc(100vw - 24px));
+                bottom: 62px;
             }
         }
     </style>
 
     <script>
-        if (typeof whatsappScriptLoaded === 'undefined') {
-            var whatsappScriptLoaded = true;
+        (function () {
+            var init = function () {
+                var container = document.getElementById('whatsappContainer');
+                var toggleBtn = document.getElementById('whatsappToggle');
 
-            document.addEventListener('DOMContentLoaded', function () {
-                const container = document.getElementById('whatsappContainer');
-                const toggleBtn = document.getElementById('whatsappToggle');
-                let closeTimeout = null;
+                if (!container || !toggleBtn || container.dataset.bound === '1') {
+                    return;
+                }
 
-                if (container && toggleBtn) {
-                    // Ao passar o mouse: Abre imediatamente e limpa qualquer timer ativo
-                    container.addEventListener('mouseenter', function () {
-                        if (window.innerWidth > 768) {
-                            clearTimeout(closeTimeout);
-                            container.classList.add('show-menu');
-                        }
-                    });
+                container.dataset.bound = '1';
 
-                    // Ao tirar o mouse: Inicia o timer para fechar após 5 segundos (5000ms)
-                    container.addEventListener('mouseleave', function () {
-                        if (window.innerWidth > 768) {
-                            closeTimeout = setTimeout(function () {
-                                container.classList.remove('show-menu');
-                        }, 5000); 
+                var closeTimer = null;
+                var desktopMedia = window.matchMedia('(min-width: 769px)');
+
+                var setOpen = function (open) {
+                    container.classList.toggle('show-menu', open);
+                    toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                };
+
+                var clearCloseTimer = function () {
+                    if (closeTimer) {
+                        window.clearTimeout(closeTimer);
+                        closeTimer = null;
                     }
+                };
+
+                var scheduleClose = function () {
+                    clearCloseTimer();
+                    closeTimer = window.setTimeout(function () {
+                        setOpen(false);
+                    }, 1800);
+                };
+
+                container.addEventListener('mouseenter', function () {
+                    if (!desktopMedia.matches) return;
+                    clearCloseTimer();
+                    setOpen(true);
                 });
 
-                    // Suporte para Click (Mobile & Fallback)
-                    toggleBtn.addEventListener('click', function (e) {
-                        if (window.innerWidth <= 768) {
-                            e.preventDefault();
-                            container.classList.toggle('show-menu');
-                    } else {
-                            clearTimeout(closeTimeout);
-                            container.classList.toggle('show-menu');
-                        }
-                    });
+                container.addEventListener('mouseleave', function () {
+                    if (!desktopMedia.matches) return;
+                    scheduleClose();
+                });
 
-                    // Fechar ao clicar fora do componente
-                    document.addEventListener('click', function (e) {
-                        if (!container.contains(e.target)) {
-                            container.classList.remove('show-menu');
-                            clearTimeout(closeTimeout);
-                        }
-                    });
-                }
-            });
-        }
+                toggleBtn.addEventListener('click', function () {
+                    clearCloseTimer();
+                    setOpen(!container.classList.contains('show-menu'));
+                });
+
+                document.addEventListener('pointerdown', function (event) {
+                    if (!container.contains(event.target)) {
+                        clearCloseTimer();
+                        setOpen(false);
+                    }
+                }, { passive: true });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        clearCloseTimer();
+                        setOpen(false);
+                    }
+                });
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init, { once: true });
+            } else {
+                init();
+            }
+        })();
     </script>
 @endif

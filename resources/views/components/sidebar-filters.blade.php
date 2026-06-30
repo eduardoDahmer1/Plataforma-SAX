@@ -3,135 +3,106 @@
 @php
     use App\Models\Currency;
     $currentCurrencyId = session('currency', Currency::where('is_default', 1)->first()?->id);
-    $currentCurrency = Currency::find($currentCurrencyId);
-    $currencySign = $currentCurrency?->sign ?? '$';
+    $currencySign      = Currency::find($currentCurrencyId)?->sign ?? '$';
 @endphp
 
-<div class="toolbar-container d-flex justify-content-between align-items-center px-2 py-3 border-bottom border-top mb-4">
-    <div class="flex-shrink-0">
-        <button class="btn-filter-trigger" type="button" data-bs-toggle="offcanvas" data-bs-target="#modalFiltros">
-            <span class="fw-bold text-uppercase x-small tracking-widest">{{ __('messages.todos_filtros') }}</span>
-            <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 1H18M0 6H12M0 11H18" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-        </button>
-    </div>
+<div class="toolbar-container d-flex justify-content-between align-items-center py-3 mb-4 border-top border-bottom">
 
-    <div class="flex-shrink-0">
-        <form id="sortForm" method="GET" class="d-flex align-items-center gap-2 gap-md-4">
-            <input type="hidden" name="search" value="{{ $request->search }}">
-            <input type="hidden" name="brand" value="{{ $request->brand }}">
-            <input type="hidden" name="category" value="{{ $request->category }}">
-            <input type="hidden" name="subcategory" value="{{ $request->subcategory }}">
-            <input type="hidden" name="categoriasfilhas" value="{{ $request->categoriasfilhas }}">
-            <input type="hidden" name="min_price" value="{{ $request->min_price }}">
-            <input type="hidden" name="max_price" value="{{ $request->max_price }}">
+    <button class="btn-filter-trigger d-flex align-items-center gap-2" type="button"
+            data-bs-toggle="offcanvas" data-bs-target="#modalFiltros">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 1H18M0 6H12M0 11H18" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <span class="x-small fw-bold text-uppercase tracking-widest">{{ __('messages.todos_filtros') }}</span>
+    </button>
 
-            <div class="d-flex align-items-center gap-1 gap-md-2">
-                <label class="toolbar-label d-none d-lg-block mb-0">{{ __('messages.ordenar_por') }}</label>
-                <select name="sort_by" class="form-select toolbar-select" onchange="this.form.submit()">
-                    <option value="">{{ __('messages.ordenar_padrao') }}</option>
-                    <option value="latest" @selected($request->sort_by == 'latest')>{{ __('messages.ordenar_ultimo') }}</option>
-                    <option value="price_low" @selected($request->sort_by == 'price_low')>{{ __('messages.ordenar_menor_preco') }}</option>
-                    <option value="price_high" @selected($request->sort_by == 'price_high')>{{ __('messages.ordenar_maior_preco') }}</option>
-                    <option value="name_az" @selected($request->sort_by == 'name_az')>A-Z</option>
-                </select>
-            </div>
+    <div class="d-flex align-items-center gap-3" id="sortForm">
+        <input type="hidden" name="search"           data-filter value="{{ $request->search }}">
+        <input type="hidden" name="brand"            data-filter value="{{ $request->brand }}">
+        <input type="hidden" name="category"         data-filter value="{{ $request->category }}">
+        <input type="hidden" name="subcategory"      data-filter value="{{ $request->subcategory }}">
+        <input type="hidden" name="categoriasfilhas" data-filter value="{{ $request->categoriasfilhas }}">
+        <input type="hidden" name="min_price"        data-filter value="{{ $request->min_price }}">
+        <input type="hidden" name="max_price"        data-filter value="{{ $request->max_price }}">
 
-            <div class="d-flex align-items-center gap-1 gap-md-2 border-start ps-2 ps-md-4">
-                <label class="toolbar-label d-none d-lg-block mb-0">{{ __('messages.mostrar') }}</label>
-                <select name="per_page" class="form-select toolbar-select" style="width: 70px;" onchange="this.form.submit()">
-                    <option value="36" @selected($request->per_page == 36)>35</option>
-                    <option value="72" @selected($request->per_page == 72)>70</option>
-                    <option value="102" @selected($request->per_page == 102)>100</option>
-                </select>
-            </div>
-        </form>
+        <div class="d-flex align-items-center gap-2">
+            <label class="toolbar-label d-none d-md-block mb-0">{{ __('messages.ordenar_por') }}</label>
+            <select name="sort_by" data-filter class="form-select toolbar-select">
+                <option value="">{{ __('messages.ordenar_padrao') }}</option>
+                <option value="latest"     @selected($request->sort_by == 'latest')>{{ __('messages.ordenar_ultimo') }}</option>
+                <option value="price_low"  @selected($request->sort_by == 'price_low')>{{ __('messages.ordenar_menor_preco') }}</option>
+                <option value="price_high" @selected($request->sort_by == 'price_high')>{{ __('messages.ordenar_maior_preco') }}</option>
+                <option value="name_az"    @selected($request->sort_by == 'name_az')>A–Z</option>
+            </select>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 border-start ps-3">
+            <label class="toolbar-label d-none d-md-block mb-0">{{ __('messages.mostrar') }}</label>
+            <select name="per_page" data-filter class="form-select toolbar-select" style="width: 68px;">
+                <option value="36"  @selected($request->per_page == 36)>36</option>
+                <option value="72"  @selected($request->per_page == 72)>72</option>
+                <option value="102" @selected($request->per_page == 102)>100</option>
+            </select>
+        </div>
     </div>
 </div>
 
 <div class="offcanvas offcanvas-end offcanvas-filter" tabindex="-1" id="modalFiltros">
-    <div class="offcanvas-header border-bottom px-4 py-4">
-        <h5 class="offcanvas-title text-uppercase fw-bold tracking-widest small">{{ __('messages.filtrar_por') }}</h5>
-        <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
+    <div class="offcanvas-header px-4 py-4 border-bottom">
+        <h5 class="offcanvas-title x-small fw-bold text-uppercase tracking-widest mb-0">{{ __('messages.filtrar_por') }}</h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
     </div>
 
     <div class="offcanvas-body px-4 py-4">
         <form action="{{ route('search') }}" method="GET" id="filterSidebarForm">
-            <input type="hidden" name="search" value="{{ $request->search }}">
-            <input type="hidden" name="sort_by" value="{{ $request->sort_by }}">
+            <input type="hidden" name="sort_by"  value="{{ $request->sort_by }}">
             <input type="hidden" name="per_page" value="{{ $request->per_page }}">
+            <input type="hidden" name="search"   data-filter value="{{ $request->search }}">
 
-            {{-- MARCA --}}
-            <div class="mb-4">
-                <label class="toolbar-label d-block mb-2">{{ __('messages.marca') }}</label>
-                <input type="text" list="list-brands" id="brand-input" class="form-control sax-filter-input" 
-                       placeholder="{{ __('messages.buscar_ou_selecionar') }}"
-                       value="{{ collect($brands)->firstWhere('id', $request->brand)?->name ?? '' }}" autocomplete="off">
-                <input type="hidden" name="brand" id="brand-id" value="{{ $request->brand }}">
-                <datalist id="list-brands">
-                    @foreach ($brands as $brand)
-                        <option data-id="{{ $brand->id }}" value="{{ $brand->name }}">
-                    @endforeach
-                </datalist>
-            </div>
+            @php
+                $filterFields = [
+                    ['label' => __('messages.marca'),           'input' => 'brand-input',         'hidden' => 'brand-id',         'name' => 'brand',           'listId' => 'list-brands',           'items' => $brands],
+                    ['label' => __('messages.categoria'),       'input' => 'category-input',      'hidden' => 'category-id',      'name' => 'category',        'listId' => 'list-categories',       'items' => $categories],
+                    ['label' => __('messages.subcategoria'),    'input' => 'subcategory-input',   'hidden' => 'subcategory-id',   'name' => 'subcategory',     'listId' => 'list-subcategories',    'items' => $subcategories],
+                    ['label' => __('messages.categoria_filha'), 'input' => 'child-category-input','hidden' => 'child-category-id','name' => 'categoriasfilhas','listId' => 'list-child-categories', 'items' => $categoriasfilhas],
+                ];
+            @endphp
 
-            {{-- CATEGORIA --}}
-            <div class="mb-4">
-                <label class="toolbar-label d-block mb-2">{{ __('messages.categoria') }}</label>
-                <input type="text" list="list-categories" id="category-input" class="form-control sax-filter-input" 
-                       placeholder="{{ __('messages.buscar_ou_selecionar') }}"
-                       value="{{ collect($categories)->firstWhere('id', $request->category)?->name ?? '' }}" autocomplete="off">
-                <input type="hidden" name="category" id="category-id" value="{{ $request->category }}">
-                <datalist id="list-categories">
-                    @foreach ($categories as $category)
-                        <option data-id="{{ $category->id }}" value="{{ $category->name }}">
-                    @endforeach
-                </datalist>
-            </div>
+            @foreach ($filterFields as $f)
+                <div class="mb-5">
+                    <label class="x-small fw-bold text-uppercase tracking-widest d-block mb-2">{{ $f['label'] }}</label>
+                    <input type="text"
+                           id="{{ $f['input'] }}"
+                           list="{{ $f['listId'] }}"
+                           class="form-control sax-filter-input"
+                           placeholder="{{ __('messages.buscar_ou_selecionar') }}"
+                           value="{{ collect($f['items'])->firstWhere('id', $request->{$f['name']})?->name ?? '' }}"
+                           autocomplete="off">
+                    <input type="hidden" id="{{ $f['hidden'] }}" name="{{ $f['name'] }}" data-filter value="{{ $request->{$f['name']} }}">
+                    <datalist id="{{ $f['listId'] }}">
+                        @foreach ($f['items'] as $item)
+                            <option data-id="{{ $item->id }}" value="{{ $item->name }}">
+                        @endforeach
+                    </datalist>
+                </div>
+            @endforeach
 
-            {{-- SUBCATEGORIA --}}
-            <div class="mb-4">
-                <label class="toolbar-label d-block mb-2">{{ __('messages.subcategoria') }}</label>
-                <input type="text" list="list-subcategories" id="subcategory-input" class="form-control sax-filter-input" 
-                       placeholder="{{ __('messages.buscar_ou_selecionar') }}"
-                       value="{{ collect($subcategories)->firstWhere('id', $request->subcategory)?->name ?? '' }}" autocomplete="off">
-                <input type="hidden" name="subcategory" id="subcategory-id" value="{{ $request->subcategory }}">
-                <datalist id="list-subcategories">
-                    @foreach ($subcategories as $sub)
-                        <option data-id="{{ $sub->id }}" value="{{ $sub->name }}">
-                    @endforeach
-                </datalist>
-            </div>
-
-            {{-- CATEGORIA FILHA --}}
-            <div class="mb-4">
-                <label class="toolbar-label d-block mb-2">{{ __('messages.categoria_filha') }}</label>
-                <input type="text" list="list-child-categories" id="child-category-input" class="form-control sax-filter-input" 
-                       placeholder="{{ __('messages.buscar_ou_selecionar') }}"
-                       value="{{ collect($categoriasfilhas)->firstWhere('id', $request->categoriasfilhas)?->name ?? '' }}" autocomplete="off">
-                <input type="hidden" name="categoriasfilhas" id="child-category-id" value="{{ $request->categoriasfilhas }}">
-                <datalist id="list-child-categories">
-                    @foreach ($categoriasfilhas as $filha)
-                        <option data-id="{{ $filha->id }}" value="{{ $filha->name }}">
-                    @endforeach
-                </datalist>
-            </div>
-
-            {{-- PREÇO --}}
-            <div class="mb-4">
-                <label class="toolbar-label d-block mb-2">{{ __('messages.preco') }} ({{ $currencySign }})</label>
-                <div class="d-flex align-items-center gap-2">
-                    <input type="number" name="min_price" class="form-control sax-filter-input" placeholder="MIN" value="{{ $request->min_price }}">
-                    <input type="number" name="max_price" class="form-control sax-filter-input" placeholder="MAX" value="{{ $request->max_price }}">
+            <div class="mb-5">
+                <label class="x-small fw-bold text-uppercase tracking-widest d-block mb-2">
+                    {{ __('messages.preco') }} ({{ $currencySign }})
+                </label>
+                <div class="d-flex gap-2">
+                    <input type="number" name="min_price" data-filter class="form-control sax-filter-input" placeholder="MIN" value="{{ $request->min_price }}">
+                    <input type="number" name="max_price" data-filter class="form-control sax-filter-input" placeholder="MAX" value="{{ $request->max_price }}">
                 </div>
             </div>
 
-            <div class="d-grid gap-2 mt-5">
-                <button type="submit" class="btn btn-dark rounded-0 py-3 text-uppercase fw-bold">
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-dark rounded-0 py-3 x-small fw-bold text-uppercase tracking-widest">
                     {{ __('messages.aplicar_filtros') }}
                 </button>
-                <a href="{{ route('search', ['search' => $request->search]) }}" class="btn btn-link text-dark text-decoration-none text-center mt-2">
+                <a href="{{ route('search', ['search' => $request->search]) }}"
+                   class="btn btn-link text-dark text-decoration-none text-center x-small text-uppercase tracking-widest mt-1">
                     {{ __('messages.limpar_tudo') }}
                 </a>
             </div>
@@ -140,38 +111,30 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const setupDatalistSync = (inputId, hiddenId, datalistId) => {
-        const input = document.getElementById(inputId);
-        const hidden = document.getElementById(hiddenId);
+document.addEventListener('DOMContentLoaded', function () {
+    const syncDatalist = (inputId, hiddenId, datalistId) => {
+        const input    = document.getElementById(inputId);
+        const hidden   = document.getElementById(hiddenId);
         const datalist = document.getElementById(datalistId);
-
         if (!input || !hidden || !datalist) return;
 
-        input.addEventListener('input', function() {
-            const val = this.value;
-            const options = datalist.options;
-            let foundId = '';
-
-            for (let i = 0; i < options.length; i++) {
-                if (options[i].value === val) {
-                    foundId = options[i].getAttribute('data-id');
-                    break;
-                }
-            }
-            hidden.value = foundId;
+        input.addEventListener('input', function () {
+            const match  = [...datalist.options].find(o => o.value === this.value);
+            hidden.value = match ? match.getAttribute('data-id') : '';
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
         });
 
-        input.addEventListener('blur', function() {
-            if (this.value === '') {
+        input.addEventListener('blur', function () {
+            if (!this.value) {
                 hidden.value = '';
+                hidden.dispatchEvent(new Event('input', { bubbles: true }));
             }
         });
     };
 
-    setupDatalistSync('brand-input', 'brand-id', 'list-brands');
-    setupDatalistSync('category-input', 'category-id', 'list-categories');
-    setupDatalistSync('subcategory-input', 'subcategory-id', 'list-subcategories');
-    setupDatalistSync('child-category-input', 'child-category-id', 'list-child-categories');
+    syncDatalist('brand-input',         'brand-id',         'list-brands');
+    syncDatalist('category-input',      'category-id',      'list-categories');
+    syncDatalist('subcategory-input',   'subcategory-id',   'list-subcategories');
+    syncDatalist('child-category-input','child-category-id','list-child-categories');
 });
 </script>

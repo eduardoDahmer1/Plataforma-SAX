@@ -4,115 +4,117 @@
 <x-admin.card>
     <x-admin.page-header
         title="Editar Marca"
-        description="ID da Marca: #{{ $brand->id }}">
+        description="Marca: <strong>{{ $brand->name }}</strong>">
         <x-slot:actions>
             <a href="{{ route('admin.brands.index') }}" class="btn-back-minimal">
-                <i class="fas fa-times me-1"></i> CANCELAR
+                <i class="fas fa-chevron-left me-1"></i> VOLVER AL LISTADO
             </a>
         </x-slot:actions>
     </x-admin.page-header>
 
-        <div class="row">
-            <div class="col-lg-10 mx-auto">
-                <form action="{{ route('admin.brands.update', $brand->id) }}" method="POST" enctype="multipart/form-data"
-                    class="sax-form">
-                    @csrf
-                    @method('PUT')
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="sax-premium-card shadow-sm border-0">
+                <div class="card-sax-header border-bottom p-4 bg-light rounded-top-4">
+                    <h6 class="m-0 fw-bold letter-spacing-1 text-muted x-small">FORMULARIO DE CONFIGURACIÓN</h6>
+                </div>
 
-                    <div class="row g-4">
-                        {{-- Informações Textuais --}}
-                        <div class="col-md-6">
-                            <div class="sax-premium-card p-4 h-100 shadow-sm">
-                                <h6 class="sax-label mb-4 text-dark border-bottom pb-2">DATOS DE IDENTIFICACIÓN</h6>
+                <div class="card-sax-body p-4 p-md-5">
+                    <form action="{{ route('admin.brands.update', $brand->id) }}" method="POST" enctype="multipart/form-data" class="sax-form">
+                        @csrf
+                        @method('PUT')
 
+                        <div class="row g-4">
+                            {{-- Datos --}}
+                            <div class="col-lg-7">
                                 <div class="mb-4">
-                                    <label for="name" class="sax-form-label">Nombre de la Marca</label>
-                                    <input type="text" class="form-control sax-input @error('name') is-invalid @enderror"
-                                        id="name" name="name" value="{{ old('name', $brand->name) }}" required>
+                                    <label for="name" class="sax-label-tiny mb-2">NOMBRE DE LA MARCA</label>
+                                    <div class="input-group-sax">
+                                        <span class="input-icon"><i class="fas fa-tag"></i></span>
+                                        <input type="text"
+                                               class="form-control-sax @error('name') is-invalid @enderror"
+                                               id="name" name="name"
+                                               value="{{ old('name', $brand->name) }}"
+                                               required
+                                               placeholder="Ej: Nike">
+                                    </div>
                                     @error('name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger x-small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
 
-                                <div class="mb-3">
-                                    <label for="slug" class="sax-form-label">Slug de Navegación</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0 x-small fw-bold text-muted">/marcas/</span>
-                                        <input type="text" class="form-control sax-input @error('slug') is-invalid @enderror"
-                                            id="slug" name="slug" value="{{ old('slug', $brand->slug) }}" required>
+                                <div class="mb-4">
+                                    <label for="slug" class="sax-label-tiny mb-2">SLUG DE NAVEGACIÓN</label>
+                                    <div class="input-group-sax">
+                                        <span class="input-icon"><i class="fas fa-link"></i></span>
+                                        <input type="text"
+                                               class="form-control-sax @error('slug') is-invalid @enderror"
+                                               id="slug" name="slug"
+                                               value="{{ old('slug', $brand->slug) }}"
+                                               required
+                                               placeholder="nike">
                                     </div>
                                     @error('slug')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        <div class="text-danger x-small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- Upload de Arquivos --}}
-                        <div class="col-md-6">
-                            <div class="sax-premium-card p-4 h-100 shadow-sm">
-                                <h6 class="sax-label mb-4 text-dark border-bottom pb-2">ARCHIVOS MULTIMEDIA</h6>
-
-                                {{-- Logotipo --}}
-                                <div class="mb-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <label for="image" class="sax-form-label m-0">Logotipo Oficial</label>
-                                        @if($brand->image)
-                                            <span class="badge bg-success-soft text-success x-small">
-                                                <i class="fas fa-check-circle"></i> ACTUALMENTE CON LOGO
-                                            </span>
-                                        @endif
+                            {{-- Multimedia --}}
+                            <div class="col-lg-5">
+                                <div class="row g-3">
+                                    <div class="col-6 col-lg-12">
+                                        <x-admin.media-field
+                                            field="image"
+                                            label="LOGOTIPO"
+                                            :current="$brand->image"
+                                            :uploadUrl="route('admin.brands.uploadLogo', $brand->id)"
+                                            :showDelete="true"
+                                            ratio="square" />
                                     </div>
-                                    <div class="asset-upload-zone">
-                                        <i class="fas fa-cloud-upload-alt mb-2 opacity-25"></i>
-                                        <input type="file" name="image" class="form-control sax-input-file" accept="image/*">
-                                        <p class="x-small text-muted mb-0">Haga clic para reemplazar el logo</p>
+                                    <div class="col-6 col-lg-12">
+                                        <x-admin.media-field
+                                            field="banner"
+                                            label="BANNER PROMOCIONAL"
+                                            :current="$brand->banner"
+                                            :uploadUrl="route('admin.brands.uploadBanner', $brand->id)"
+                                            :showDelete="true"
+                                            ratio="banner" />
                                     </div>
-                                </div>
-
-                                {{-- Banner Principal --}}
-                                <div class="mb-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <label for="banner" class="sax-form-label m-0">Banner Promocional</label>
-                                        @if($brand->banner)
-                                            <span class="badge bg-success-soft text-success x-small">
-                                                <i class="fas fa-check-circle"></i> ACTUALMENTE CON BANNER
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="asset-upload-zone">
-                                        <i class="fas fa-image mb-2 opacity-25"></i>
-                                        <input type="file" name="banner" class="form-control sax-input-file" accept="image/*">
-                                        <p class="x-small text-muted mb-0">Haga clic para reemplazar el banner</p>
-                                    </div>
-                                </div>
-
-                                {{-- Internal Banner --}}
-                                <div class="mb-0">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <label for="internal_banner" class="sax-form-label m-0">Banner Interno</label>
-                                        @if($brand->internal_banner)
-                                            <span class="badge bg-success-soft text-success x-small">
-                                                <i class="fas fa-check-circle"></i> ACTUALMENTE CON BANNER INT.
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="asset-upload-zone" style="border-color: #d1d5db; background: #f3f4f6;">
-                                        <i class="fas fa-ad mb-2 opacity-25"></i>
-                                        <input type="file" name="internal_banner" class="form-control sax-input-file" accept="image/*">
-                                        <p class="x-small text-muted mb-0">Haga clic para reemplazar banner interno</p>
+                                    <div class="col-6 col-lg-12">
+                                        <x-admin.media-field
+                                            field="internal_banner"
+                                            label="BANNER INTERNO"
+                                            :current="$brand->internal_banner"
+                                            :uploadUrl="route('admin.brands.uploadInternalBanner', $brand->id)"
+                                            :showDelete="true"
+                                            ratio="banner" />
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Ações Inferiores --}}
-                    <x-admin.form-actions :cancelRoute="route('admin.brands.index')" cancelLabel="Descartar" submitLabel="Salvar alterações" />
-                </form>
+                        <x-admin.form-actions
+                            :cancelRoute="route('admin.brands.index')"
+                            cancelLabel="Cancelar"
+                            submitLabel="Guardar cambios"
+                            submitIcon="fa-save" />
+                    </form>
+                </div>
             </div>
         </div>
+    </div>
+
+    {{-- Forms de borrado: fuera del form principal para evitar anidamiento inválido --}}
+    <form id="delete-image-form" action="{{ route('admin.brands.deleteLogo', $brand->id) }}" method="POST" class="d-none">
+        @csrf @method('DELETE')
+    </form>
+    <form id="delete-banner-form" action="{{ route('admin.brands.deleteBanner', $brand->id) }}" method="POST" class="d-none">
+        @csrf @method('DELETE')
+    </form>
+    <form id="delete-internal_banner-form" action="{{ route('admin.brands.deleteInternalBanner', $brand->id) }}" method="POST" class="d-none">
+        @csrf @method('DELETE')
+    </form>
 
 </x-admin.card>
-
 @endsection

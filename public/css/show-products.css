@@ -1,28 +1,37 @@
+:root {
+    --ink: #1a1a1a;
+    --txt: #333333;
+    --muted: #6b6b6b;
+    --soft: #7a7a7a;
+    --line: #e6e6e6;
+    --paper: #ffffff;
+    --surface: #f7f7f7;
+    --ok: #28a745;
+    --danger: #d9534f;
+}
+
 .store-availability .section-label {
     letter-spacing: 0.1em;
     font-family: 'Montserrat', sans-serif;
-    /* Ou a fonte principal do seu site */
+    
 }
 
 .store-list li {
     transition: all 0.2s ease;
 }
 
-/* Estilo para o ícone de "X" (Indisponível) */
 .text-muted {
-    color: #999 !important;
+    color: var(--soft) !important;
 }
 
-/* Estilo para o ícone de "Check" (Disponível) */
 .text-success {
-    color: #28a745 !important;
+    color: var(--ok) !important;
 }
 
-/* Estrutura Geral */
 .product-page-wrapper {
-    background-color: #fff;
+    background-color: var(--paper);
     font-family: 'Inter', sans-serif;
-    color: #1a1a1a;
+    color: var(--ink);
     overflow-x: hidden;
 }
 
@@ -43,9 +52,9 @@
     gap: 20px;
 }
 
-/* Galeria */
+
 .gallery-frame {
-    background-color: #f9f9f9;
+    background-color: var(--surface);
     transition: 0.3s;
 }
 
@@ -53,7 +62,7 @@
     mix-blend-mode: multiply;
 }
 
-/* Info do Produto */
+
 .product-sticky-info {
     position: sticky;
     top: 100px;
@@ -70,7 +79,7 @@
 .product-title {
     font-size: 20px;
     font-weight: 300;
-    color: #666;
+    color: var(--muted);
     margin-bottom: 20px;
     letter-spacing: 1px;
 }
@@ -82,22 +91,22 @@
 
 .currency {
     font-size: 14px;
-    color: #999;
+    color: var(--soft);
     margin-left: 5px;
 }
 
-/* Seleção de Tamanhos */
+
 .section-label {
     font-size: 11px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--ink);
     letter-spacing: 1.5px;
 }
 
 .size-grid {
     display: flex;
     flex-wrap: wrap;
-    border: 1px solid #eee;
+    border: 1px solid var(--line);
     margin-top: 10px;
 }
 
@@ -106,27 +115,27 @@
     min-width: 60px;
     text-align: center;
     padding: 12px 5px;
-    border-right: 1px solid #eee;
+    border-right: 1px solid var(--line);
     cursor: pointer;
-    color: #1a1a1a;
+    color: var(--ink);
     font-size: 12px;
     transition: 0.2s;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--line);
 }
 
 .size-box:hover {
-    background: #f8f8f8;
+    background: var(--surface);
 }
 
 .size-box.active {
-    background: #999;
-    color: #fff;
-    border-color: #999;
+    background: var(--soft);
+    color: var(--paper);
+    border-color: var(--soft);
 }
 
-/* Botões */
+
 .btn-add-bag {
-    background: #1a1a1a;
+    background: var(--ink);
     border: none;
     border-radius: 0;
     padding: 18px;
@@ -138,26 +147,26 @@
 .btn-wishlist {
     border-radius: 0;
     width: 60px;
-    border-color: #eee;
-    color: #333;
+    border-color: var(--line);
+    color: var(--txt);
 }
 
 .btn-wishlist:hover {
-    background: #f8f8f8;
-    border-color: #333;
+    background: var(--surface);
+    border-color: var(--txt);
 }
 
 .btn-guia-tallas {
     font-size: 10px;
     text-decoration: underline;
-    color: #1a1a1a;
+    color: var(--ink);
     font-weight: 700;
     letter-spacing: 1px;
 }
 
-/* Accordion Custom */
+
 .accordion-item-sax {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--line);
 }
 
 .accordion-trigger {
@@ -168,7 +177,7 @@
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    color: #1a1a1a;
+    color: var(--ink);
     letter-spacing: 1px;
 }
 
@@ -176,7 +185,7 @@
     max-height: 0;
     overflow: hidden;
     transition: 0.4s ease;
-    color: #666;
+    color: var(--muted);
     font-size: 13px;
     line-height: 1.6;
 }
@@ -187,11 +196,11 @@
 }
 
 .help-card {
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--line);
     border-radius: 8px;
     padding: 30px;
     text-align: left;
-    background: #fff;
+    background: var(--paper);
     transition: transform 0.3s ease;
 }
 
@@ -205,7 +214,7 @@
 }
 
 .help-card .red-icon {
-    color: #d9534f;
+    color: var(--danger);
     font-weight: bold;
 }
 
@@ -213,17 +222,17 @@
     font-size: 14px;
     font-weight: 700;
     margin-bottom: 8px;
-    color: #000;
+    color: var(--ink);
     letter-spacing: 0.5px;
 }
 
 .help-card p {
     font-size: 13px;
-    color: #666;
+    color: var(--muted);
     margin: 0;
 }
 
-/* Loja e WhatsApp */
+
 .store-list li {
     font-size: 12px;
     margin-bottom: 10px;
@@ -237,19 +246,19 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    color: #1a1a1a;
+    color: var(--ink);
     text-decoration: underline;
     font-weight: 700;
     font-size: 13px;
     letter-spacing: 0.5px;
 }
 
-/* Seções Inferiores */
+
 .sax-section-title {
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 3px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--line);
     padding-bottom: 15px;
     text-transform: uppercase;
 }
@@ -265,7 +274,6 @@
     }
 }
 
-/* --- RESPONSIVIDADE --- */
 @media (max-width: 992px) {
     .help-grid {
         grid-template-columns: 1fr 1fr;

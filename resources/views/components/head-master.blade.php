@@ -6,6 +6,11 @@
 <meta name="currency-code" content="PYG">
 <meta name="currency-value" content="{{ session('currency_value', 1) }}">
 
+<script>
+  // Configuração global para o Fetch API
+  const headers = { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content };
+</script>
+
 @php
     $titleDefault = 'SAX - E-commerce de Luxo';
     if(Route::is('admin.*')) $titleDefault = 'SAX - Painel Administrativo';

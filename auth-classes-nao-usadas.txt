@@ -1,0 +1,22 @@
+]633;E;while read c\x3b do     classe=${c#.}     if ! rg -q "\\b$classe\\b"         resources         app         routes         public/js         public/*.html 2>/dev/null\x3b     then         echo "$classe"\x3b     fi\x3b done < auth-classes.txt > auth-classes-nao-usadas.txt;cded53af-8c51-4bef-b759-498d5997cb91]633;Csax-auth-actions
+sax-auth-body
+sax-auth-body--center
+sax-auth-button
+sax-auth-button--primary
+sax-auth-button--secondary
+sax-auth-card
+sax-auth-card--md
+sax-auth-card--sm
+sax-auth-close
+sax-auth-description
+sax-auth-header
+sax-auth-header-title
+sax-auth-help
+sax-auth-info-box
+sax-auth-input
+sax-auth-kicker
+sax-auth-link
+sax-auth-link-button
+sax-auth-shell
+sax-auth-status
+sax-auth-title

@@ -1,309 +1,312 @@
-/* Melhorando visual do modal Bancard */
+:root {
+    --ink:     #000000;
+    --txt:     #1a1a1a;
+    --muted:   #444444;
+    --soft:    #555555;
+    --line:    #e5e5e5;
+    --paper:   #ffffff;
+    --surface: #f5f5f5;
+    --bg:      #f8f9fa;
+}
+
 #bancardModal .form-control {
-    border-radius: 8px;
-    padding: 10px;
-    transition: 0.2s;
+border-radius: 8px;
+padding: 10px;
+transition: 0.2s;
 }
 
 #bancardModal .form-control:focus {
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
-    border-color: #007bff;
+box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
+border-color: #007bff;
 }
 
 #bancardModal .modal-footer .btn i {
-    margin-right: 5px;
+margin-right: 5px;
 }
 
-/* ===================== STEPS ===================== */
 .step {
-    display: none;
+display: none;
 }
 
 .step.active {
-    display: block;
+display: block;
 }
 
-/* ===================== CHECKOUT BOX ===================== */
 .checkout-box {
-    border: 1px solid #ddd;
-    padding: 25px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+border: 1px solid var(--line);
+padding: 25px;
+border-radius: 12px;
+margin-bottom: 25px;
+background-color: var(--paper);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+transition: all 0.3s ease;
 }
 
 .checkout-box h4 {
-    margin-bottom: 20px;
-    font-weight: bold;
-    color: #333;
+margin-bottom: 20px;
+font-weight: bold;
+color: var(--txt);
 }
 
-/* ===================== CART ITEMS ===================== */
 .cart-item {
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+padding: 15px;
+border-bottom: 1px solid var(--line);
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-wrap: wrap;
 }
 
 .cart-item p {
-    margin: 0;
+margin: 0;
 }
 
 .total-carrinho {
-    margin-top: 15px;
-    font-weight: bold;
-    font-size: 1.2em;
-    text-align: right;
+margin-top: 15px;
+font-weight: bold;
+font-size: 1.2em;
+text-align: right;
 }
 
-/* ===================== FORM FIELDS ===================== */
 .form-control {
-    margin-bottom: 15px;
-    border-radius: 8px;
-    padding: 10px;
+margin-bottom: 15px;
+border-radius: 8px;
+padding: 10px;
 }
 
 label {
-    font-weight: 500;
+font-weight: 500;
 }
 
-/* ===================== BOTÕES ===================== */
 .btn {
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: bold;
+border-radius: 8px;
+padding: 10px 20px;
+font-weight: bold;
 }
 
-/* ===================== RADIO & PAYMENT ===================== */
 .payment-details .card {
-    border: 1px solid #eee;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    transition: transform 0.2s;
+border: 1px solid var(--line);
+border-radius: 10px;
+margin-bottom: 15px;
+transition: transform 0.2s;
 }
 
 .payment-details .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+transform: translateY(-5px);
+box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
 .payment-details .card-body {
-    padding: 15px;
+padding: 15px;
 }
 
 .payment-details .card-title {
-    font-weight: 600;
-    font-size: 1.1em;
+font-weight: 600;
+font-size: 1.1em;
 }
 
 .payment-details .card-text {
-    font-size: 0.95em;
-    color: #555;
+font-size: 0.95em;
+color: var(--soft);
 }
 
-/* ===================== RESPONSIVO ===================== */
 @media (max-width: 576px) {
-    .cart-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .total-carrinho {
-        text-align: left;
-    }
+.cart-item {
+    flex-direction: column;
+    align-items: flex-start;
 }
-    /* 1. Ajuste de Contraste da Página */
-    body {
-        background-color: #f8f9fa !important; /* Fundo cinza claro para destacar os boxes brancos */
-        color: #1a1a1a;
-    }
 
-    /* 2. Configurações dos Boxes (Checkout Box) */
-    .sax-checkout-box {
-        background: #ffffff;
-        border: 1px solid #e5e5e5;
-        padding: 30px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); /* Sombra suave para dar profundidade */
-    }
+.total-carrinho {
+    text-align: left;
+}
+}
 
-    /* 3. Títulos e Tipografia */
-    .sax-title-payment {
-        font-weight: 800;
-        letter-spacing: 4px;
-        font-size: 1.8rem;
-        color: #000;
-    }
+body {
+    background-color: var(--bg) !important; 
+    color: var(--txt);
+}
 
-    .sax-step-title {
-        font-size: 1rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-bottom: 25px;
-        display: flex;
-        align-items: center;
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 15px;
-    }
 
-    .step-number {
-        background: #000;
-        color: #fff;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        margin-right: 15px;
-        border-radius: 0; /* Quadrado padrão SAX */
-    }
+.sax-checkout-box {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); 
+}
 
-    /* 4. Cartões de Banco */
-    .sax-bank-card {
-        background: #ffffff;
-        border: 1px solid #eee;
-        padding: 20px;
-        transition: all 0.3s ease;
-        border-left: 4px solid #000; /* Detalhe lateral preto */
-    }
 
-    .sax-bank-card:hover {
-        border-color: #000;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    }
+.sax-title-payment {
+    font-weight: 800;
+    letter-spacing: 4px;
+    font-size: 1.8rem;
+    color: var(--ink);
+}
 
-    .sax-bank-details {
-        font-size: 0.8rem;
-        line-height: 1.6;
-        color: #444;
-    }
+.sax-step-title {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 15px;
+}
 
-    /* 5. Resumo do Pedido e Imagens */
-    .sax-cart-img-wrapper {
-        background: #f5f5f5; /* Fundo para as fotos de produtos */
-        padding: 5px;
-        border: 1px solid #eee;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+.step-number {
+    background: var(--ink);
+    color: var(--paper);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    margin-right: 15px;
+    border-radius: 0; 
+}
 
-    /* 6. Botão Preto SAX */
-    .sax-btn-finish {
-        background: #000;
-        color: #fff !important;
-        border: none;
-        padding: 18px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        transition: 0.3s ease;
-        cursor: pointer;
-    }
 
-    .sax-btn-finish:hover {
-        background: #333;
-        transform: translateY(-2px);
-    }
+.sax-bank-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 20px;
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--ink); 
+}
 
-    /* 7. Input de Arquivo */
-    .sax-file-wrapper {
-        border: 2px dashed #ccc;
-        padding: 30px;
-        background: #fafafa;
-        text-align: center;
-        cursor: pointer;
-    }
+.sax-bank-card:hover {
+    border-color: var(--ink);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
 
-    .sax-file-wrapper:hover {
-        border-color: #000;
-        background: #fff;
-    }
+.sax-bank-details {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--muted);
+}
 
-    /* Input de arquivo dentro do dropzone */
-    .sax-form-control-file {
-        border: none;
-        background: transparent;
-        width: 100%;
-        cursor: pointer;
-        font-size: 0.85rem;
-        color: #444;
-    }
 
-    .sax-form-control-file::file-selector-button {
-        background: #000;
-        color: #fff;
-        border: none;
-        padding: 0.5rem 1rem;
-        margin-right: 1rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.0625rem;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: 0.3s ease;
-    }
+.sax-cart-img-wrapper {
+    background: var(--surface); 
+    padding: 5px;
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    .sax-form-control-file::file-selector-button:hover {
-        background: #333;
-    }
 
-    /* 8. Preview do Comprovante */
-    .receipt-preview-link {
-        position: relative;
-        display: block;
-        max-width: 12.5rem;
-        margin: 0 auto;
-        overflow: hidden;
-    }
+.sax-btn-finish {
+    background: var(--ink);
+    color: var(--paper) !important;
+    border: none;
+    padding: 18px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: 0.3s ease;
+    cursor: pointer;
+}
 
-    .receipt-preview-link img {
-        display: block;
-        width: 100%;
-        height: auto;
-    }
+.sax-btn-finish:hover {
+    background: var(--txt);
+    transform: translateY(-2px);
+}
 
-    .receipt-preview-link .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.4);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.0625rem;
-        text-transform: uppercase;
-        opacity: 0;
-        transition: 0.3s ease;
-    }
 
-    .receipt-preview-link:hover .overlay {
-        opacity: 1;
-    }
+.sax-file-wrapper {
+    border: 2px dashed var(--line);
+    padding: 30px;
+    background: var(--surface);
+    text-align: center;
+    cursor: pointer;
+}
 
-    .sax-order-badge {
-        display: inline-block;
-        background: #000;
-        color: #fff;
-        padding: 4px 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 1px;
-    }
+.sax-file-wrapper:hover {
+    border-color: var(--ink);
+    background: var(--paper);
+}
 
-    .tracking-wider {
-        letter-spacing: 2px;
-    }
+
+.sax-form-control-file {
+    border: none;
+    background: transparent;
+    width: 100%;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.sax-form-control-file::file-selector-button {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 0.5rem 1rem;
+    margin-right: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.0625rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.sax-form-control-file::file-selector-button:hover {
+    background: var(--txt);
+}
+
+
+.receipt-preview-link {
+    position: relative;
+    display: block;
+    max-width: 12.5rem;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.receipt-preview-link img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.receipt-preview-link .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.0625rem;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: 0.3s ease;
+}
+
+.receipt-preview-link:hover .overlay {
+    opacity: 1;
+}
+
+.sax-order-badge {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.tracking-wider {
+    letter-spacing: 2px;
+}

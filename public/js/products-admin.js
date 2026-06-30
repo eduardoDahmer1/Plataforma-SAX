@@ -274,3 +274,78 @@ function abrirModalLocal(data) {
 
     new bootstrap.Modal(document.getElementById('modalDetalhesLocal')).show();
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('photoInput');
+    if (!input) return; 
+
+    input.addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+
+        var box = document.getElementById('photoPreviewBox');
+        var img = document.getElementById('photoPreviewImg');
+
+        // libera el objectURL anterior (evita fuga de memoria al cambiar varias veces)
+        if (img.dataset.objectUrl) URL.revokeObjectURL(img.dataset.objectUrl);
+
+        var url = URL.createObjectURL(file);
+        img.src = url;
+        img.dataset.objectUrl = url;
+        box.style.display = '';
+    });
+});
+
+
+
+// Acumula las imágenes elegidas con DataTransfer y reescribe input.files,
+// para que al guardar se manden TODAS. No toca backend (update ya acumula sobre lo guardado).
+document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('galleryInput');
+    if (!input) return; 
+
+    var preview = document.getElementById('galleryPreview');
+    var store = new DataTransfer(); // acumula TODOS los archivos elegidos
+    var urls = [];                  // objectURLs activos, para revocarlos en cada render
+
+    function render() {
+        urls.forEach(function (u) { URL.revokeObjectURL(u); });
+        urls = [];
+        preview.innerHTML = '';
+
+        var files = Array.from(store.files);
+        preview.style.display = files.length ? 'flex' : 'none';
+
+        files.forEach(function (file, index) {
+            var url = URL.createObjectURL(file);
+            urls.push(url);
+
+            var col = document.createElement('div');
+            col.className = 'col-4 col-sm-3 col-md-2 position-relative';
+            col.innerHTML =
+                '<img src="' + url + '" class="w-100 rounded" style="aspect-ratio:1/1;object-fit:cover;">' +
+                '<button type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-1" data-index="' + index + '">' +
+                '<i class="fas fa-times"></i></button>';
+            preview.appendChild(col);
+        });
+    }
+
+    input.addEventListener('change', function () {
+        Array.from(input.files).forEach(function (file) {
+            var dup = Array.from(store.files).some(function (f) {
+                return f.name === file.name && f.size === file.size; // evita duplicados
+            });
+            if (!dup) store.items.add(file);
+        });
+        input.files = store.files; // reescribe el input → al guardar va TODO lo acumulado
+        render();
+    });
+
+    preview.addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-index]');
+        if (!btn) return;
+        store.items.remove(parseInt(btn.dataset.index, 10)); // quita esa foto del set
+        input.files = store.files;
+        render();
+    });
+});

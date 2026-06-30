@@ -124,6 +124,30 @@ class CategoriasFilhasControllerAdmin extends Controller
         return back()->with('success', 'Removido com sucesso');
     }
 
+    public function uploadPhoto(Request $request, CategoriasFilhas $categorias_filha)
+    {
+        $request->validate(['photo' => 'required|image|max:10240']);
+        $this->deleteFileIfExists($categorias_filha->photo);
+
+        $path = $this->convertToWebp($request->file('photo'), 'photo');
+        $categorias_filha->photo = $path;
+        $categorias_filha->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
+    public function uploadBanner(Request $request, CategoriasFilhas $categorias_filha)
+    {
+        $request->validate(['banner' => 'required|image|max:10240']);
+        $this->deleteFileIfExists($categorias_filha->banner);
+
+        $path = $this->convertToWebp($request->file('banner'), 'banner');
+        $categorias_filha->banner = $path;
+        $categorias_filha->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
     // ... (restante dos métodos auxiliares permanecem iguais)
 
     private function convertToWebp($file, $prefix)

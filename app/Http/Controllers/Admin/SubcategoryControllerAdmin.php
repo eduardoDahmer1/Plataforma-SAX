@@ -122,6 +122,30 @@ class SubcategoryControllerAdmin extends Controller
         return back()->with('success', 'Banner excluído com sucesso.');
     }
 
+    public function uploadPhoto(Request $request, Subcategory $subcategory)
+    {
+        $request->validate(['photo' => 'required|image|max:10240']);
+        $this->deleteFileIfExists($subcategory->photo);
+
+        $path = $this->convertToWebp($request->file('photo'), 'photo');
+        $subcategory->photo = $path;
+        $subcategory->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
+    public function uploadBanner(Request $request, Subcategory $subcategory)
+    {
+        $request->validate(['banner' => 'required|image|max:10240']);
+        $this->deleteFileIfExists($subcategory->banner);
+
+        $path = $this->convertToWebp($request->file('banner'), 'banner');
+        $subcategory->banner = $path;
+        $subcategory->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
     public function destroy(Subcategory $subcategory)
     {
         if ($subcategory->photo) {

@@ -6,7 +6,7 @@
         {{-- Título da Página --}}
         <div class="col-12 border-bottom pb-3 mb-4">
             <h1 class="display-6 fw-bold text-uppercase letter-spacing-2 m-0">
-                <i class="fas fa-shopping-bag me-2 small"></i>{{ __('messages.sua_sacola') }}
+                {{ __('messages.sua_sacola') }}
             </h1>
             <p class="text-muted small mt-2">{{ $cart->count() }} {{ __('messages.itens_selecionados') }}</p>
         </div>

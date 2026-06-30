@@ -496,22 +496,58 @@ function toggleUI(btn) {
 }
 
 
-// ======== Categories Edit: Media ========
-// Usado en categories/edit.blade.php — confirmación de borrado y preview de imagen
+// ======== Admin: AJAX image upload genérico ========
+// Activa en cualquier input con data-upload-url (recursos con id: categories, brands, etc.)
+// Sin data-upload-url → el handler ignora el input (compatibilidad con CREATE)
+document.addEventListener('change', function (e) {
+    var input = e.target;
+    if (!input.dataset.uploadUrl) return;
+    if (!input.files || !input.files[0]) return;
+
+    var previewImg = document.getElementById(input.dataset.previewId);
+    var wrapper    = input.closest('.media-upload-preview');
+    var emptyState = wrapper ? wrapper.querySelector('.empty-upload') : null;
+    var deleteBtn  = wrapper ? wrapper.querySelector('.btn-delete-media') : null;
+
+    // Preview instantáneo antes de confirmar la subida
+    var objectUrl = URL.createObjectURL(input.files[0]);
+    if (previewImg) {
+        previewImg.src = objectUrl;
+        previewImg.style.display = '';
+    }
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Nombre del campo: 'preview-photo' → 'photo', 'preview-banner' → 'banner'
+    var fieldName = input.dataset.previewId.replace('preview-', '');
+    var formData  = new FormData();
+    formData.append(fieldName, input.files[0]);
+
+    fetch(input.dataset.uploadUrl, {
+        method:  'POST',
+        headers: headers,
+        body:    formData,
+    })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            URL.revokeObjectURL(objectUrl);
+            if (data.success) {
+                if (previewImg) previewImg.src = data.url;
+                if (deleteBtn)  deleteBtn.style.display = '';
+                // Limpia el input para que el submit del form principal no reenvíe el archivo
+                input.value = '';
+            }
+        })
+        .catch(function (err) {
+            URL.revokeObjectURL(objectUrl);
+            console.error('Erro ao enviar imagem:', err);
+        });
+});
+
+// ======== Categories Edit: confirmación de borrado ========
+// Mantiene compatibilidad con los forms ocultos de delete (full reload)
 function confirmDelete(type) {
     if (confirm('Deseja excluir esta imagem?')) {
         document.getElementById('delete-' + type + '-form').submit();
-    }
-}
-
-function previewImg(input, targetId) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const img = document.getElementById(targetId);
-            if (img) img.src = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
     }
 }
 

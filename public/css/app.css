@@ -1,32 +1,27 @@
-/* --- BASE & TIPOGRAFIA --- */
+:root {
+--blk: #000000;
+--ink: #1a1a1a;
+--muted: #666666;
+--soft: #777777;
+--line: #d8d8d8;
+--paper: #ffffff;
+--surface: #f5f5f5;
+--ok-tx: #007bff;
+--warn: #c8a64b;
+}
+
 body {
 font-family: "Roboto", sans-serif;
 overflow-x: hidden;
 }
-
-/* --- SLIDERS & CAROUSELS (Unificados) --- */
-.slider-product {
-width: 100% !important;
-height: 13em !important;
-object-fit: cover;
-}
-
-.slider-section {
-margin: 60px auto;
-}
-
 .swiper,
 .splide,
 .glide,
-.flickity-carousel,
 #lightgallery {
 margin: auto;
 }
 
 .swiper-slide img,
-.splide__slide img,
-.glide__slide img,
-.flickity-carousel img,
 #lightgallery a img {
 width: 100%;
 border-radius: 10px;
@@ -35,78 +30,23 @@ border-radius: 10px;
 .blogSwiper .swiper-slide {
 width: auto;
 }
-
-.custom-arrow {
-background-color: black !important;
-background-size: 50%, 50%;
-border-radius: 50%;
-}
-
-/* --- COMPONENTES DE PRODUTO --- */
 .product-card {
-border: 1px solid #ddd;
+border: 1px solid var(--line);
 border-radius: 8px;
 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 padding: 20px;
-background-color: #fff;
+background-color: var(--paper);
 }
-
-.product-card-header {
-border-bottom: 2px solid #f0f0f0;
-padding-bottom: 20px;
-margin-bottom: 20px;
-}
-
-.product-card-header h1 {
-font-size: 2.5rem;
-color: #333;
-}
-
-.product-card-body {
-display: flex;
-flex-wrap: wrap;
-}
-
-.product-card-body .row {
-margin-bottom: 20px;
-}
-
-.product-card-body p {
-font-size: 1.1rem;
-color: #555;
-}
-
-.product-card-body .product-images img {
-max-width: 100%;
-border-radius: 8px;
-}
-
 .object-fit-contain {
 -o-object-fit: contain !important;
 object-fit: scale-down !important;
 }
 
-/* --- BOTÕES & ESTILOS DE INTERAÇÃO --- */
 .btn-primary {
---bs-btn-color: #fff;
---bs-btn-bg: #696969 !important;
---bs-btn-border-color: #696969 !important;
+--bs-btn-color: var(--paper);
+--bs-btn-bg: var(--muted) !important;
+--bs-btn-border-color: var(--muted) !important;
 }
-
-.custom-btn {
-background-color: #d4d4d4 !important;
-color: #000 !important;
-border: none !important;
-transition: background-color 0.3s ease !important;
-}
-
-.custom-btn:hover,
-.card-checkout .btn-secondary:hover {
-background-color: #5a6268 !important;
-color: #fff !important;
-}
-
-/* Botões Flutuantes no Card */
 .card:hover .card-add-form,
 .card:hover .card-favorite-form {
 display: flex !important;
@@ -135,57 +75,33 @@ font-size: 16px;
 padding: 0;
 }
 
-/* --- LISTAS & LINKS --- */
 .list-group-item {
 font-size: 1rem;
 }
 
 .list-group-item a {
-color: #007bff !important;
-/* Corrigido de white para azul conforme hover abaixo */
+color: var(--ok-tx) !important;
+
 text-decoration: none;
 }
 
 .list-group-item a:hover {
 text-decoration: underline;
 }
-
-/* --- HEADER, LOGIN & NAV --- */
-.logo-header {
-max-height: 80px;
-transition: transform 0.3s ease;
-}
-
-.logo-header:hover {
-transform: scale(1.05);
-}
-
-.nav-links a,
-.dropdown-style,
 .btn-auth {
 background: transparent !important;
 border: none !important;
-color: #000 !important;
+color: var(--blk) !important;
 font-weight: 500;
 padding: 8px 16px;
 border-radius: 20px;
 transition: all 0.3s ease;
 }
 
-.nav-links a:hover,
 .btn-auth:hover {
-background: #000;
-color: #fff !important;
+background: var(--blk);
+color: var(--paper) !important;
 }
-
-.btn-mobile-menu {
-border: 1px solid #000;
-background: transparent;
-color: #000;
-border-radius: 8px;
-}
-
-/* --- FORMULÁRIOS & INPUTS --- */
 .input-group {
 display: flex;
 flex-wrap: nowrap !important;
@@ -195,38 +111,17 @@ width: 100%;
 .input-group> :not(:first-child) {
 margin-bottom: 0 !important;
 }
-
-.search-bar input {
-border-radius: 30px 0 0 30px;
-border: none;
-padding: 10px 15px;
-}
-
-.search-bar button {
-border-radius: 0 30px 30px 0;
-background: #e7e7e7;
-padding: 0 18px;
-}
-
 .login-container .form-control {
 padding: 0.75rem;
 border-radius: 0.5rem;
 }
-
-/* --- UTILS & MOBILE --- */
-.banner-img {
-width: 100%;
-max-height: 300px;
-object-fit: cover;
-}
-
 .drawer-mobile {
 position: fixed;
 top: 0;
 left: 0;
 width: 250px;
 height: 100vh;
-background: #fff;
+background: var(--paper);
 padding: 20px;
 transform: translateX(-100%);
 transition: 0.3s;
@@ -237,38 +132,15 @@ z-index: 1050;
 .input-group>.form-control {
 width: 100% !important;
 }
-
-.format-header-mobile {
-display: flex;
-justify-content: center;
-gap: 11px;
 }
-}
-
-/* --- 1. INTERFACE DE BUSCA & NAVEGAÇÃO --- */
-.search-bar button:hover {
-background: #cecece;
-}
-
-.nav-links .dropdown:hover .dropdown-menu {
-display: block;
-}
-
-.nav-links .dropdown-toggle::after {
-display: none;
-}
-
-/* Remove seta padrão */
-
-/* --- 2. DRAWER MOBILE & OVERLAY (Unificado) --- */
 .drawer-mobile {
 position: fixed;
 top: 0;
 left: 0;
 width: 260px;
 height: 100%;
-background: #fff;
-/* Adicionado para visibilidade */
+background: var(--paper);
+
 transform: translateX(-100%);
 transition: transform 0.3s ease;
 z-index: 1050;
@@ -280,7 +152,7 @@ transform: translateX(0);
 }
 
 .drawer-mobile h5 {
-color: #000;
+color: var(--blk);
 font-weight: 600;
 }
 
@@ -296,8 +168,6 @@ z-index: 1049;
 display: block;
 }
 
-/* Botões de Menu Mobile */
-.btn-menu-mobile,
 .sax-btn-mobile {
 display: flex;
 align-items: center;
@@ -305,39 +175,26 @@ justify-content: center;
 transition: 0.3s;
 border-radius: 8px;
 }
-
-.btn-menu-mobile {
-border: 1px solid #000;
-color: #000;
-padding: 6px 14px;
-}
-
-.btn-menu-mobile:hover {
-background: #000;
-color: #fff;
-}
-
 .sax-btn-mobile {
-background: #000;
-color: #fff;
+background: var(--blk);
+color: var(--paper);
 width: 45px;
 height: 45px;
 }
 
 .sax-btn-mobile:hover {
-background: #333;
+background: var(--ink);
 }
 
-/* --- 3. PAINEL ADMIN (SAX LAYOUT) --- */
 .sax-admin-layout {
-background-color: #f4f7f6;
+background-color: var(--surface);
 min-height: 100vh;
 font-family: "Inter", sans-serif;
 }
 
 .admin-sidebar .list-group-item {
 background: transparent;
-color: #000;
+color: var(--blk);
 border: none;
 padding: 12px 20px;
 transition: 0.3s;
@@ -347,10 +204,9 @@ transition: 0.3s;
 padding-left: 40px;
 }
 
-/* Cards do Admin */
 .sax-sidebar-card,
 .sax-main-card {
-background: #fff;
+background: var(--paper);
 border-radius: 16px;
 border: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -360,9 +216,9 @@ overflow: hidden;
 }
 
 .sax-card-header {
-background: #fff;
+background: var(--paper);
 padding: 20px 25px;
-border-bottom: 1px solid #f0f0f0;
+border-bottom: 1px solid var(--surface);
 display: flex;
 align-items: center;
 gap: 15px;
@@ -371,7 +227,7 @@ gap: 15px;
 .header-indicator {
 width: 4px;
 height: 18px;
-background-color: #000;
+background-color: var(--blk);
 border-radius: 10px;
 }
 
@@ -379,7 +235,6 @@ border-radius: 10px;
 padding: 30px;
 }
 
-/* Tabelas Admin */
 .table {
 border-collapse: separate;
 border-spacing: 0 10px;
@@ -390,18 +245,11 @@ background: #fff;
 transition: 0.2s;
 }
 
-/* --- 4. UTILITÁRIOS & COMPONENTES --- */
 .object-fit-cover {
 object-fit: cover;
 width: 100%;
 height: 100%;
 }
-
-.z-index-button {
-z-index: 9999;
-}
-
-/* Tipografia */
 .letter-spacing-2 {
 letter-spacing: 2px;
 }
@@ -415,27 +263,21 @@ font-size: 0.7rem;
 font-weight: 600;
 }
 
-/* Efeitos de Card */
 .blogSwiper .card:hover {
 transform: translateY(-3px);
 transition: 0.3s ease;
 box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
-/* ==========================================================================
-   BOTOES FLUTUANTES (Voltar ao Topo & WhatsApp)
-   ========================================================================== */
-
-/* --- 1. Botão Voltar ao Topo --- */
 .sax-back-to-top,
 #backToTop {
     position: fixed;
-    bottom: 95px; /* Posicionado exactamente arriba del banner de WhatsApp */
+    bottom: 95px; 
     right: 30px;
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    display: none; /* Controlado via JS */
+    display: none; 
     align-items: center;
     justify-content: center;
     z-index: 2000;
@@ -448,12 +290,11 @@ box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 
 .sax-back-to-top:hover,
 #backToTop:hover {
-    background-color: #e6c200; /* Destaque Gold no hover */
+    background-color: #e6c200; 
     transform: scale(1.1);
     color: #fff;
 }
 
-/* --- 3. Ajustes Responsivos (Mobile) --- */
 @media (max-width: 768px) {
     .whatsapp-floating-banner {
         bottom: 20px;
@@ -473,15 +314,8 @@ gap: 15px;
 .sax-main-card {
 border-radius: 0;
 margin: 0 -15px;
-/* Sangria mobile */
-}
-}
 
-.swiper-horizontal>.swiper-pagination-bullets,
-.swiper-pagination-bullets.swiper-pagination-horizontal,
-.swiper-horizontal>.swiper-pagination-bullets,
-.swiper-pagination-bullets.swiper-pagination-horizontal {
-display: none !important;
+}
 }
 
 .tracking-widest {
@@ -492,7 +326,6 @@ letter-spacing: 0.15em;
 font-size: 0.65rem;
 }
 
-/* Botão de Filtro Estilo Figma */
 .btn-filter-trigger {
 border: 1px solid #000;
 background: #fff;
@@ -507,7 +340,7 @@ height: 42px;
 color: #000;
 text-decoration: none;
 white-space: nowrap;
-/* Evita que o texto quebre dentro do botão */
+
 }
 
 .btn-filter-trigger:hover {
@@ -515,7 +348,6 @@ background: #000;
 color: #fff;
 }
 
-/* Estilo dos Selects na Toolbar */
 .toolbar-label {
 font-size: 0.7rem;
 font-weight: 800;
@@ -531,13 +363,12 @@ font-size: 0.75rem !important;
 text-transform: uppercase;
 font-weight: 700;
 padding: 8px 24px 8px 10px !important;
-/* Ajuste fino de padding para mobile */
+
 height: 42px;
 background-color: #fff;
 min-width: 80px;
 }
 
-/* Modal / Offcanvas */
 .sax-filter-input {
 border-radius: 0 !important;
 border: 1px solid #e0e0e0 !important;
@@ -549,27 +380,34 @@ text-transform: uppercase;
 .offcanvas-filter {
 width: 350px !important;
 max-width: 90vw;
-/* Garante que em celulares muito pequenos não passe da tela */
+
 border-left: 1px solid #000;
 }
 
-/* Ajuste de responsividade para a barra de ferramentas */
 @media (max-width: 576px) {
 .toolbar-container {
 flex-wrap: wrap;
-/* Permite quebrar linha se não couber */
-gap: 10px;
-justify-content: center !important;
-/* Centraliza no mobile */
+gap: 8px;
+justify-content: space-between !important;
+}
+
+.toolbar-container form {
+flex-wrap: wrap;
+gap: 8px;
+width: 100%;
+justify-content: flex-end;
 }
 
 .btn-filter-trigger {
-padding: 10px 12px;
+padding: 9px 12px;
 font-size: 0.6rem;
+height: 38px;
 }
 
 .toolbar-select {
-padding: 8px 20px 8px 8px !important;
+padding: 6px 18px 6px 8px !important;
+height: 38px;
+font-size: 0.65rem !important;
 }
 }
 
@@ -588,10 +426,10 @@ outline: none !important;
 }
 
 .btn-heart-luxury i {
-/* Cor preta sólida e tamanho refinado */
+
 color: #000000;
 font-size: 1.3rem;
-/* Se usar FontAwesome 5/6, o weight 300 deixa mais fino */
+
 font-weight: 300;
 }
 
@@ -604,12 +442,10 @@ opacity: 0.7;
 transform: scale(0.9);
 }
 
-/* Garante que o ícone preenchido também seja preto se favoritado */
 .btn-heart-luxury .fas.fa-heart {
 color: #000000;
 }
 
-/* Fundo cinza claro idêntico à imagem enviada */
 .jw-product-card {
 background-color: #f2f2f2 !important;
 transition: opacity 0.3s ease;
@@ -642,7 +478,7 @@ text-transform: uppercase;
 
 .jw-img-container {
 aspect-ratio: 4 / 5;
-/* Proporção vertical elegante */
+
 display: flex;
 align-items: center;
 justify-content: center;
@@ -652,43 +488,8 @@ overflow: hidden;
 .jw-img-container img {
 width: 100%;
 object-fit: cover;
-/* Ou 'contain' se as bolsas tiverem muita margem branca */
-}
 
-/* Tipografia JW PEI */
-.jw-brand {
-font-size: 0.75rem;
-letter-spacing: 0.05em;
-color: #000;
 }
-
-.jw-product-name {
-font-size: 0.8rem;
-letter-spacing: 0.02em;
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-}
-
-.jw-price {
-font-size: 0.85rem;
-color: #000;
-}
-
-/* Botão de favorito transparente */
-.btn-favorite-guest {
-background: transparent;
-border: none;
-color: #000;
-padding: 0;
-transition: transform 0.2s ease;
-}
-
-.btn-favorite-guest:hover {
-transform: scale(1.1);
-}
-
-/* Ajuste para o grid colado da imagem */
 .g-1 {
 padding-right: 2px !important;
 padding-left: 2px !important;
@@ -705,26 +506,24 @@ padding: 100px 0 60px 0;
 font-family: 'Inter', sans-serif;
 }
 
-/* O segredo está aqui: limitamos a largura máxima do grid e centralizamos com auto */
 .footer-grid {
 display: flex;
 justify-content: center;
-/* Centraliza as colunas no meio */
+
 max-width: 1100px;
-/* Ajuste este valor para fechar ou abrir mais o conteúdo */
+
 margin: 0 auto;
-/* Centraliza o container do grid */
+
 align-items: stretch;
 }
 
 .footer-column {
 flex: 1;
 padding: 0 40px;
-/* Espaçamento interno entre colunas */
+
 box-sizing: border-box;
 }
 
-/* Removemos o padding exagerado anterior para o conteúdo colar na linha */
 .column-content {
 padding-left: 20px;
 }
@@ -745,7 +544,7 @@ margin-bottom: 25px;
 letter-spacing: 0.2px;
 text-transform: none;
 white-space: nowrap;
-/* Evita que o título quebre linha */
+
 }
 
 .footer-links {
@@ -764,7 +563,7 @@ text-decoration: none;
 font-size: 13.5px;
 transition: color 0.2s ease;
 white-space: nowrap;
-/* Mantém os links em uma linha só como na foto */
+
 }
 
 .footer-links a:hover {
@@ -795,7 +594,6 @@ font-size: 13px;
 color: #999;
 }
 
-/* Responsividade */
 @media (max-width: 991px) {
 .footer-grid {
 flex-direction: column;
@@ -813,7 +611,6 @@ padding-left: 0;
 }
 }
 
-/* --- 1. CONFIGURAÇÕES GERAIS --- */
 .sax-header {
 background: #fff;
 font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -847,33 +644,12 @@ font-size: 10px;
 color: #000;
 }
 
-/* --- 2. TOP PROMO & CURRENCY --- */
 .sax-top-promo {
 background-color: #000;
 color: #fff;
 font-size: 11px;
 letter-spacing: 1px;
 }
-
-.sax-currency-select {
-background-color: transparent;
-color: #000000ff;
-border: 1px solid #444;
-border-radius: 4px;
-font-size: 10px;
-font-weight: bold;
-padding: 2px 8px;
-outline: none;
-cursor: pointer;
-text-transform: uppercase;
-}
-
-.sax-currency-select option {
-background-color: #000;
-color: #fff;
-}
-
-/* --- 3. NAVEGAÇÃO DESKTOP (AUXILIAR & PRINCIPAL) --- */
 .sax-aux-nav {
 font-size: 11px;
 font-weight: 600;
@@ -895,7 +671,6 @@ font-size: 13px;
 font-weight: 700;
 }
 
-/* --- 4. LOGO & BUSCA --- */
 .logo-img {
 height: 55px;
 width: auto;
@@ -929,7 +704,6 @@ text-decoration: none;
 letter-spacing: 0.5px;
 }
 
-/* --- 5. MEGA MENU (SOLUÇÃO PARA NÃO APARECER AO CARREGAR) --- */
 .dropdown-mega-parent {
 position: static;
 }
@@ -944,7 +718,6 @@ border-bottom: 1px solid #eee;
 box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
 z-index: 9999;
 
-/* Estado inicial forçado como invisível */
 display: none;
 visibility: hidden;
 opacity: 0;
@@ -952,7 +725,6 @@ pointer-events: none;
 transition: opacity 0.2s ease-in-out;
 }
 
-/* O !important anula o style="display:none" inline do HTML no hover */
 .dropdown-mega-parent:hover .mega-menu-box {
 display: block !important;
 visibility: visible;
@@ -1003,7 +775,6 @@ visibility: visible;
 opacity: 1;
 }
 
-/* --- 6. DRAWER (MENU MOBILE) --- */
 .sax-drawer {
 position: fixed;
 top: 0;
@@ -1046,60 +817,35 @@ background: none;
 border: none;
 font-size: 30px;
 }
-
-.drawer-menu-list {
-list-style: none;
-padding: 0;
-margin: 0;
-}
-
-.drawer-menu-list li {
-border-bottom: 1px solid #eee;
-}
-
-.drawer-menu-list li a {
-display: block;
-padding: 15px 20px;
-color: #000;
-text-decoration: none;
-font-weight: bold;
-font-size: 14px;
-}
-
-/* --- 7. SEARCH OVERLAY MOBILE --- */
 .mobile-search-overlay {
 position: fixed;
 inset: 0;
 z-index: 2000;
-display: none; /* Alterado para flex via JS quando ativo */
+display: none; 
 
-/* Centralização total */
 align-items: center; 
 justify-content: center;
 padding: 20px;
 
-/* Desfoque do fundo (Site atrás) */
-background: rgba(255, 255, 255, 0.4); /* Um branco bem translúcido */
+background: rgba(255, 255, 255, 0.4); 
 backdrop-filter: blur(15px) saturate(180%);
 -webkit-backdrop-filter: blur(15px) saturate(180%);
 
 transition: all 0.3s ease;
 }
 
-/* Quando o overlay estiver ativo */
 .mobile-search-overlay.active {
 display: flex;
 }
 
-/* Estilizando o container da busca dentro do overlay */
 .mobile-search-overlay .sax-search-container {
 width: 100%;
-max-width: 500px; /* Não deixa ficar gigante em telas maiores */
+max-width: 500px; 
 background: #fff;
 padding: 15px;
 border-radius: 16px;
 box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-transform: translateY(-20px); /* Leve efeito de subida */
+transform: translateY(-20px); 
 animation: slideIn 0.3s forwards;
 }
 
@@ -1122,7 +868,6 @@ font-weight: 300;
 color: #000;
 }
 
-/* --- 8. CORES ESPECIAIS & RESPONSIVO --- */
 .text-bridal {
 color: #b2945e !important;
 }
@@ -1145,12 +890,10 @@ height: 35px;
 }
 }
 
-/* Container Principal */
 .cart-wrapper {
 font-family: 'Inter', sans-serif;
 }
 
-/* Botão de abrir (Estilo Header) */
 .cart-toggle-btn {
 background: none;
 border: none;
@@ -1184,12 +927,11 @@ text-transform: uppercase;
 letter-spacing: 1px;
 }
 
-/* Sidebar (Side Drawer) */
 .cart-sidebar {
 position: fixed;
 top: 0;
 right: -100%;
-/* Começa fora da tela */
+
 width: 400px;
 height: 100vh;
 height: 100dvh;
@@ -1205,14 +947,12 @@ box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
 right: 0;
 }
 
-/* Mobile full width */
 @media (max-width: 576px) {
 .cart-sidebar {
 width: 100%;
 }
 }
 
-/* Overlay */
 .cart-overlay {
 position: fixed;
 top: 0;
@@ -1229,7 +969,6 @@ backdrop-filter: blur(2px);
 display: block;
 }
 
-/* Header do Carrinho */
 .cart-header {
 padding: 25px;
 display: flex;
@@ -1253,7 +992,6 @@ font-weight: 200;
 cursor: pointer;
 }
 
-/* Corpo e Itens */
 .cart-body {
 flex: 1;
 overflow-y: auto;
@@ -1296,7 +1034,6 @@ font-weight: 600;
 margin-bottom: 15px;
 }
 
-/* Controles de Qtd */
 .item-controls {
 display: flex;
 align-items: center;
@@ -1333,7 +1070,6 @@ transition: 0.3s;
 color: #d9534f;
 }
 
-/* Footer */
 .cart-footer {
 padding: 25px;
 border-top: 1px solid #eee;
@@ -1357,13 +1093,12 @@ transition: 0.3s;
 .btn-go-to-cart:hover {
 background: #333;
 }
-/* Garante que o form não esconda o que sai dele */
+
 form.position-relative {
 position: relative !important;
 overflow: visible !important;
 }
 
-/* Container Principal de Resultados */
 .autocomplete-results {
 position: absolute !important;
 top: 100% !important;
@@ -1374,13 +1109,12 @@ border-radius: 0 0 12px 12px !important;
 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
 max-height: 400px !important;
 overflow-y: auto !important;
-z-index: 999999 !important; /* Valor extremo para ficar na frente de tudo */
+z-index: 999999 !important; 
 margin-top: 2px !important;
 border: 1px solid rgba(0, 0, 0, 0.1) !important;
-display: block; /* O d-none do Bootstrap controlará a visibilidade inicial */
+display: block; 
 }
 
-/* Item da Lista */
 .autocomplete-item {
 display: flex !important;
 align-items: center !important;
@@ -1398,7 +1132,6 @@ text-decoration: none !important;
 color: #333 !important;
 }
 
-/* Imagem */
 .autocomplete-img {
 width: 50px !important;
 height: 50px !important;
@@ -1409,7 +1142,6 @@ border: 1px solid #eaeaea !important;
 flex-shrink: 0 !important;
 }
 
-/* Info e Grid */
 .autocomplete-info {
 flex-grow: 1 !important;
 display: grid !important;
@@ -1421,7 +1153,6 @@ align-items: center !important;
 .autocomplete-left { display: flex !important; flex-direction: column !important; min-width: 0 !important; }
 .autocomplete-right { display: flex !important; flex-direction: column !important; text-align: right !important; }
 
-/* Tipografia */
 .autocomplete-title {
 font-size: 14px !important;
 font-weight: 600 !important;
@@ -1436,18 +1167,15 @@ text-overflow: ellipsis !important;
 .autocomplete-brand { font-size: 11px !important; font-weight: bold !important; text-transform: uppercase !important; color: #666 !important; }
 .autocomplete-price { font-size: 14px !important; font-weight: 700 !important; color: #000 !important; }
 
-/* Scrollbar Customizado */
 .autocomplete-results::-webkit-scrollbar { width: 6px; }
 .autocomplete-results::-webkit-scrollbar-track { background: #f1f1f1; }
 .autocomplete-results::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
 
-/* Ajustes Swiper */
 .mySwiper {
 padding-bottom: 50px !important;
 width: 100%;
 }
 
-/* Títulos das Seções */
 .sax-section-title {
 font-size: 1.4rem;
 font-weight: 500;
@@ -1466,7 +1194,6 @@ letter-spacing: 4px;
 text-transform: uppercase;
 }
 
-/* Banners Triplos */
 .sax-triple-banners img {
 height: 450px;
 object-fit: cover;
@@ -1479,13 +1206,12 @@ transition: transform 0.6s ease;
 .sax-brands-title { font-size: 1.4rem; }
 .sax-triple-banners img { height: auto; }
 }
-/* Configurações Gerais */
+
 .brands-page-wrapper {
 background-color: #ffffff;
-font-family: 'Montserrat', sans-serif; /* Certifique-se de carregar esta fonte */
+font-family: 'Montserrat', sans-serif; 
 }
 
-/* Título e Divisor */
 .sax-title {
 font-size: 2.5rem;
 font-weight: 300;
@@ -1501,11 +1227,6 @@ background-color: #000;
 margin-top: 15px;
 }
 
-.tracking-widest {
-letter-spacing: 0.15em;
-}
-
-/* Barra de Busca Premium */
 .sax-search-input {
 display: flex;
 border-bottom: 1px solid #e0e0e0;
@@ -1534,7 +1255,6 @@ color: #000;
 cursor: pointer;
 }
 
-/* Cards das Marcas */
 .brand-sax-card {
 display: block;
 text-decoration: none !important;
@@ -1563,7 +1283,7 @@ margin-bottom: 15px;
 max-width: 80%;
 max-height: 80%;
 object-fit: contain;
-filter: grayscale(100%); /* Mantém o padrão minimalista preto e branco */
+filter: grayscale(100%); 
 transition: filter 0.3s ease;
 }
 
@@ -1586,7 +1306,6 @@ font-size: 0.75rem;
 text-transform: uppercase;
 }
 
-/* Paginação */
 .sax-pagination .pagination {
 justify-content: center;
 }
@@ -1604,7 +1323,6 @@ border-radius: 50%;
 color: #fff;
 }
 
-/* No Results */
 .no-results {
 color: #bbb;
 }
@@ -1616,7 +1334,6 @@ font-size: 3rem;
 background-color: #fff;
 }
 
-/* 1. Banner Horizontal (Edge to Edge) */
 .brand-hero-fullwidth {
 width: 100vw;
 min-height: 300px;
@@ -1660,7 +1377,6 @@ inset: 0;
 background: rgba(0, 0, 0, 0.05);
 }
 
-/* 2. Identidade da Marca */
 .brand-main-logo {
 max-height: 60px;
 width: auto;
@@ -1681,11 +1397,10 @@ text-transform: uppercase;
 letter-spacing: 4px;
 }
 
-/* 3. Banner Lateral (Vertical) */
 .sticky-banner-lateral {
 position: sticky;
 top: 20px;
-/* Faz o banner lateral acompanhar o scroll */
+
 height: fit-content;
 }
 
@@ -1695,7 +1410,6 @@ object-fit: cover;
 border: 1px solid #f0f0f0;
 }
 
-/* 4. Grid de Produtos (Igual Categorias) */
 .jw-product-card {
 transition: opacity 0.3s ease;
 border: 1px solid #f8f8f8 !important;
@@ -1705,16 +1419,11 @@ border: 1px solid #f8f8f8 !important;
 opacity: 0.85;
 }
 
-
-/* Esconde o banner vertical no mobile para não poluir */
-
-/* Container Geral */
 .child-categories-wrapper {
 background-color: #ffffff;
 font-family: 'Montserrat', sans-serif;
 }
 
-/* Tipografia SAX */
 .sax-title {
 font-size: 2.5rem;
 font-weight: 300;
@@ -1734,7 +1443,6 @@ margin-top: 15px;
 letter-spacing: 0.15em;
 }
 
-/* Busca Sax Style */
 .sax-search-input {
 display: flex;
 border-bottom: 1px solid #e0e0e0;
@@ -1763,7 +1471,6 @@ padding: 10px;
 color: #000;
 }
 
-/* Card de Luxo (O mesmo usado em Marcas) */
 .sax-luxury-card {
 display: block;
 text-decoration: none !important;
@@ -1802,7 +1509,6 @@ filter: grayscale(0%);
 transform: scale(1.05);
 }
 
-/* Info Labels */
 .parent-label {
 display: block;
 font-size: 0.65rem;
@@ -1827,7 +1533,6 @@ font-size: 0.7rem;
 text-transform: uppercase;
 }
 
-/* Paginação */
 .sax-pagination .pagination {
 justify-content: center;
 }
@@ -1842,7 +1547,7 @@ background-color: #000;
 border-radius: 50%;
 color: #fff !important;
 }
-/* CSS Unificado para manter a identidade visual identica */
+
 .category-detail-wrapper {
 background-color: #fff;
 overflow-x: hidden;
@@ -1955,25 +1660,6 @@ aspect-ratio: 3 / 4;
 overflow: hidden;
 mix-blend-mode: multiply !important;
 }
-
-.jw-brand {
-font-size: 0.7rem;
-letter-spacing: 1px;
-color: #000;
-}
-
-.jw-product-name {
-font-size: 0.75rem;
-color: #777 !important;
-height: 2.2rem;
-overflow: hidden;
-}
-
-.jw-price {
-font-size: 0.85rem;
-color: #000;
-}
-
 .pagination-sax .page-link {
 color: #000;
 border: none;
@@ -1992,13 +1678,12 @@ font-weight: bold;
 height: 35vh;
 }
 }
-/* Configurações Gerais - IDÊNTICO A MARCAS */
+
 .categories-page-wrapper {
 background-color: #ffffff;
 font-family: 'Montserrat', sans-serif;
 }
 
-/* Título e Divisor - IDÊNTICO A MARCAS */
 .sax-title {
 font-size: 2.5rem;
 font-weight: 300;
@@ -2018,7 +1703,6 @@ margin-top: 15px;
 letter-spacing: 0.15em;
 }
 
-/* Barra de Busca Premium */
 .sax-search-input {
 display: flex;
 border-bottom: 1px solid #e0e0e0;
@@ -2047,7 +1731,6 @@ padding: 10px;
 color: #000;
 }
 
-/* Cards das Categorias - Seguindo o estilo das Marcas */
 .category-sax-card {
 display: block;
 text-decoration: none !important;
@@ -2066,7 +1749,7 @@ transform: translateY(-5px);
 }
 
 .category-img-box {
-height: 150px; /* Um pouco maior que marcas para categorias */
+height: 150px; 
 display: flex;
 align-items: center;
 justify-content: center;
@@ -2102,7 +1785,6 @@ text-transform: uppercase;
 letter-spacing: 1px;
 }
 
-/* Paginação Unificada */
 .sax-pagination .pagination {
 justify-content: center;
 border: none;
@@ -2122,14 +1804,13 @@ border-radius: 50%;
 color: #fff !important;
 }
 
-/* No Results */
 .no-results {
 color: #bbb;
 }
 .no-results i {
 font-size: 3rem;
 }
-/* Reset e Global */
+
 .category-detail-wrapper {
 background-color: #fff;
 overflow-x: hidden;
@@ -2160,7 +1841,6 @@ color: #000;
 letter-spacing: 0.5px;
 }
 
-/* 1. Banner Horizontal Hero */
 .category-hero-fullwidth {
 width: 100vw;
 height: 45vh;
@@ -2184,7 +1864,6 @@ width: 100%;
 background: rgba(0, 0, 0, 0.03);
 }
 
-/* 2. Seção de Identidade */
 .category-main-logo {
 max-height: 60px;
 width: auto;
@@ -2211,11 +1890,10 @@ transition: color 0.2s;
 color: #000;
 }
 
-/* 3. Banner Lateral Sticky */
 .sticky-banner-lateral {
 position: sticky;
 top: 100px;
-/* Ajuste conforme a altura do seu menu fixo */
+
 height: fit-content;
 padding-right: 10px;
 }
@@ -2227,7 +1905,6 @@ object-fit: cover;
 border: 1px solid #f0f0f0;
 }
 
-/* 4. Grid de Produtos (JW PEI Style) */
 .g-1 {
 margin-right: -4px;
 margin-left: -4px;
@@ -2246,26 +1923,6 @@ transition: opacity 0.3s ease;
 .jw-product-link:hover .jw-product-card {
 opacity: 0.8;
 }
-
-.jw-brand {
-font-size: 0.7rem;
-letter-spacing: 1px;
-color: #000;
-}
-
-.jw-product-name {
-font-size: 0.75rem;
-color: #777 !important;
-height: 2.2rem;
-overflow: hidden;
-}
-
-.jw-price {
-font-size: 0.85rem;
-color: #000;
-}
-
-/* Paginação */
 .pagination-sax .page-link {
 color: #000;
 border: none;
@@ -2279,17 +1936,14 @@ text-decoration: underline;
 font-weight: bold;
 }
 
-/* Mobile */
 @media (max-width: 991px) {
 .category-hero-fullwidth {
 height: 35vh;
 }
 
-/* Oculta banner lateral no mobile */
 }
-/* Estilo Base SAX */
+
 .letter-spacing-2 { letter-spacing: 2px; }
-.letter-spacing-3 { letter-spacing: 4px; }
 .x-small { font-size: 0.75rem; }
 
 .sax-divider {
@@ -2298,7 +1952,6 @@ height: 3px;
 background-color: #000;
 }
 
-/* Tabs Estilizadas */
 .btn-sax-tab {
 background: transparent;
 border: none;
@@ -2319,7 +1972,6 @@ border-bottom: 2px solid #000;
 
 .btn-sax-tab:hover { color: #333; }
 
-/* Formulário de Luxo */
 .sax-label {
 display: block;
 font-size: 0.7rem;
@@ -2346,7 +1998,6 @@ border-color: #000;
 
 .sax-input::placeholder { color: #ccc; font-weight: 300; }
 
-/* Botão de Envio */
 .btn-sax-submit {
 transition: all 0.3s ease;
 border-radius: 4px;
@@ -2358,7 +2009,6 @@ background-color: #333 !important;
 border-color: #333 !important;
 }
 
-/* Estilização dos Mapas */
 .map-section-title {
 font-size: 1.2rem;
 font-weight: bold;
@@ -2411,11 +2061,10 @@ border: 0;
 filter: grayscale(0%);
 }
 
-/* Ajuste de Espaçamento Mobile */
 @media (max-width: 768px) {
 .map-card { margin-bottom: 20px; }
 }
-/* Configurações de Tipografia e Espaçamento */
+
 .tracking-2 { letter-spacing: 2px; }
 .tracking-5 { letter-spacing: 5px; }
 .uppercase { text-transform: uppercase; }
@@ -2436,7 +2085,6 @@ height: 3px;
 background-color: #000;
 }
 
-/* Estilização dos Links */
 .category-main-link {
 color: #000;
 text-decoration: none;
@@ -2462,7 +2110,6 @@ color: #000;
 transform: translateX(5px);
 }
 
-/* Card Sutil */
 .subcategory-card {
 border-left: 1px solid #f0f0f0;
 transition: border-color 0.3s ease;
@@ -2472,7 +2119,6 @@ transition: border-color 0.3s ease;
 border-left-color: #000;
 }
 
-/* Ajustes de Responsividade Extra */
 @media (max-width: 768px) {
 .category-header h2 {
 font-size: 1.1rem;
@@ -2597,26 +2243,6 @@ transition: opacity 0.3s ease;
 .jw-product-link:hover .jw-product-card {
 opacity: 0.8;
 }
-
-
-.jw-brand {
-font-size: 0.7rem;
-letter-spacing: 1px;
-color: #000;
-}
-
-.jw-product-name {
-font-size: 0.75rem;
-color: #777 !important;
-height: 2.2rem;
-overflow: hidden;
-}
-
-.jw-price {
-font-size: 0.85rem;
-color: #000;
-}
-
 .pagination-sax .page-link {
 color: #000;
 border: none;
@@ -2751,37 +2377,26 @@ height: 100%;
 background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1));
 }
 
-/* Estilização das áreas de clique */
 .swiper-nav-click {
 position: absolute;
 top: 0;
 z-index: 20;
 height: 100%;
-width: 20%; /* 20% da tela em cada lado troca o slide */
+width: 20%; 
 cursor: pointer;
 }
 
 .swiper-nav-click.prev { left: 0; }
 .swiper-nav-click.next { right: 0; }
-
-/* Paginação */
-.swiper-pagination-bullet {
-background: #fff !important;
-opacity: 0.6;
-}
-.swiper-pagination-bullet-active {
-opacity: 1;
-}
-
 @media (max-width: 768px) {
 .sax-main-slider {
 height: 40vh;
 }
 .swiper-nav-click {
-width: 25%; /* Área um pouco maior no mobile para facilitar o toque */
+width: 25%; 
 }
 }
-/* Reset e Base */
+
 .sax-wrapper {
 font-family: 'Helvetica', Arial, sans-serif;
 margin: 0;
@@ -2797,7 +2412,6 @@ width: 100%;
 box-sizing: inherit;
 }
 
-/* --- SEÇÃO DE CARDS --- */
 .help-section {
 max-width: 1200px;
 margin: 40px auto;
@@ -2847,10 +2461,9 @@ color: #666;
 margin: 0;
 }
 
-/* --- SEÇÃO NEWSLETTER (ESTILIZADA COM BANNER) --- */
 .newsletter-section {
 min-height: 450px;
-/* Aumentado para dar mais destaque ao banner */
+
 background-size: cover !important;
 background-position: center center !important;
 background-repeat: no-repeat !important;
@@ -2860,7 +2473,7 @@ display: flex;
 justify-content: center;
 align-items: center;
 width: 100%;
-/* Cor de fundo caso o banner falhe */
+
 background-color: #333;
 }
 
@@ -2938,7 +2551,6 @@ opacity: 0.8;
 max-width: 90%;
 }
 
-/* --- RESPONSIVIDADE --- */
 @media (max-width: 992px) {
 .help-grid {
 grid-template-columns: 1fr 1fr;
@@ -2976,7 +2588,7 @@ text-align: center;
 text-align: center;
 }
 }
-/* Estilos preservados conforme solicitado */
+
 .sax-category-strip { background-color: #fff; padding-bottom: 2rem !important; }
 
 .category-wrapper {
@@ -3037,7 +2649,7 @@ margin-top: 5px;
 .category-item { flex: 0 0 45%; }
 .category-wrapper { flex-wrap: wrap;justify-content: center; }
 }
-/* Reset local e Container Principal */
+
 .sax-brands-section {
 background-color: #000;
 width: 100%;
@@ -3062,7 +2674,7 @@ text-transform: uppercase;
 
 .sax-carousel-master {
 perspective: 1500px;
-/* Profundidade acentuada para efeito 3D */
+
 width: 100%;
 position: relative;
 display: flex;
@@ -3073,7 +2685,7 @@ align-items: center;
 .sax-carousel-3d {
 position: relative;
 width: 320px;
-/* Largura base idêntica ao seu modelo */
+
 height: 480px;
 transform-style: preserve-3d;
 margin-bottom: 20px;
@@ -3088,7 +2700,7 @@ transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1),
 cursor: pointer;
 backface-visibility: hidden;
 background-color: white;
-/* Reflexo elegante abaixo da imagem */
+
 -webkit-box-reflect: below 4px linear-gradient(transparent 70%, rgba(255, 255, 255, 0.15));
 }
 
@@ -3101,16 +2713,12 @@ box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 background-color: white;
 }
 
-/* POSICIONAMENTO DINÂMICO (3D ESTRITO) */
-
-/* Centro: Grande e Próximo */
 .sax-item.active {
 transform: translate3d(0, 0, 250px);
 z-index: 10;
 opacity: 1;
 }
 
-/* Laterais Imediatas: Curvatura de 45 graus */
 .sax-item.p1 {
 transform: translate3d(-105%, 0, 0);
 z-index: 5;
@@ -3123,7 +2731,6 @@ z-index: 5;
 opacity: 0.6;
 }
 
-/* Longe: Quase sumindo no fundo */
 .sax-item.p2 {
 transform: translate3d(-180%, 0, -250px);
 z-index: 2;
@@ -3143,7 +2750,6 @@ z-index: 0;
 pointer-events: none;
 }
 
-/* Rodapé: Nome da Marca e Botões */
 .sax-carousel-footer {
 display: flex;
 flex-direction: column;
@@ -3182,7 +2788,6 @@ border-color: #fff;
 background: rgba(255, 255, 255, 0.1);
 }
 
-/* Indicadores (Dots) */
 .sax-indicators {
 display: flex;
 gap: 10px;
@@ -3201,7 +2806,6 @@ background: #fff;
 transform: scale(1.5);
 }
 
-/* Optimização mobile do carrusel de marcas */
 @media (max-width: 768px) {
     .sax-brands-section {
         min-height: auto;
@@ -3228,7 +2832,7 @@ transform: scale(1.5);
         max-height: 360px;
     }
 
-    /* Quitar efectos costosos en mobile */
+    
     .sax-item {
         -webkit-box-reflect: unset;
     }
@@ -3237,7 +2841,7 @@ transform: scale(1.5);
         box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
     }
 
-    /* 3D suavizado: Z reducidas */
+    
     .sax-item.active {
         transform: translate3d(0, 0, 100px);
     }

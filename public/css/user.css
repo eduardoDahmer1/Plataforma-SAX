@@ -1,28 +1,38 @@
-/* Estilo Base SAX */
+:root {
+    --ink: #1a1a1a;
+    --txt: #333333;
+    --muted: #6b6b6b;
+    --soft: #7a7a7a;
+    --line: #e6e6e6;
+    --paper: #ffffff;
+    --surface: #f7f7f7;
+    --ok: #198754;
+    --warn: #f1b400;
+    --danger: #dc3545;
+}
+
 .sax-dashboard-wrapper {
 font-family: 'Helvetica Neue', Arial, sans-serif;
-color: #1a1a1a;
+color: var(--ink);
 max-width: 1200px;
 margin: auto;
 padding: 20px;
 }
 
-/* Tipografia */
 .sax-title { font-weight: 700; letter-spacing: 3px; font-size: 1.8rem; text-transform: uppercase; margin-bottom:
 5px; }
-.sax-subtitle { color: #777; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom:
+.sax-subtitle { color: var(--soft); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom:
 15px; }
 .sax-section-title { font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-size: 0.85rem; color:
-#000; }
-.sax-label-min { display: block; font-size: 0.65rem; font-weight: 700; color: #888; letter-spacing: 0.5px;
+var(--ink); }
+.sax-label-min { display: block; font-size: 0.65rem; font-weight: 700; color: var(--soft); letter-spacing: 0.5px;
 margin-bottom: 4px; }
 
-.sax-divider-black { width: 40px; height: 3px; background: #000; }
+.sax-divider-black { width: 40px; height: 3px; background: var(--ink); }
 
-/* Cards de Info */
 .sax-info-card {
-background: #fff;
-border: 1px solid #eee;
+background: var(--paper);
+border: 1px solid var(--line);
 padding: 20px;
 display: flex;
 align-items: center;
@@ -31,60 +41,57 @@ border-radius: 8px;
 height: 100%;
 }
 .card-icon-minimal { color: #808080; font-size: 1.2rem; width: 30px; }
-.card-details .label { display: block; font-size: 0.6rem; text-transform: uppercase; color: #999; font-weight: 700;
+.card-details .label { display: block; font-size: 0.6rem; text-transform: uppercase; color: var(--soft); font-weight: 700;
 }
-.card-details .value { font-size: 0.95rem; font-weight: 600; color: #333; }
+.card-details .value { font-size: 0.95rem; font-weight: 600; color: var(--txt); }
 
-/* Grid de Pedidos (Estilo Card Mobile/Linha Desktop) */
 .order-card-sax {
-background: #fff;
-border: 1px solid #eee;
+background: var(--paper);
+border: 1px solid var(--line);
 border-radius: 12px;
 padding: 25px;
 margin-bottom: 15px;
 transition: transform 0.2s;
 }
-.order-card-sax:hover { transform: translateY(-2px); border-color: #ccc; }
+.order-card-sax:hover { transform: translateY(-2px); border-color: var(--line); }
 
 .order-content {
 display: grid;
-grid-template-columns: 1fr; /* Mobile: Uma coluna */
+grid-template-columns: 1fr; 
 gap: 20px;
 align-items: center;
 }
 
-.order-id { font-size: 1.4rem; font-weight: 800; display: block; color: #1a1a1a; line-height: 1; }
-.order-date { font-size: 0.8rem; color: #777; font-weight: 500; }
+.order-id { font-size: 1.4rem; font-weight: 800; display: block; color: var(--ink); line-height: 1; }
+.order-date { font-size: 0.8rem; color: var(--soft); font-weight: 500; }
 
-/* Badges e Status */
 .badge-payment {
-background: #f0f0f0;
+background: var(--surface);
 padding: 4px 12px;
 border-radius: 4px;
 font-size: 0.75rem;
 font-weight: 700;
-color: #555;
+color: var(--muted);
 }
 .status-indicator { font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 .status-indicator .dot { width: 10px; height: 10px; border-radius: 50%; }
 
-.status-indicator.pending { color: #f1b400; }
-.status-indicator.pending .dot { background: #f1b400; }
-.status-indicator.completed { color: #198754; }
-.status-indicator.completed .dot { background: #198754; }
-.status-indicator.paid { color: #198754; }
-.status-indicator.paid .dot { background: #198754; }
+.status-indicator.pending { color: var(--warn); }
+.status-indicator.pending .dot { background: var(--warn); }
+.status-indicator.completed { color: var(--ok); }
+.status-indicator.completed .dot { background: var(--ok); }
+.status-indicator.paid { color: var(--ok); }
+.status-indicator.paid .dot { background: var(--ok); }
 .status-indicator.failed,
 .status-indicator.canceled,
-.status-indicator.cancelled { color: #dc3545; }
+.status-indicator.cancelled { color: var(--danger); }
 .status-indicator.failed .dot,
 .status-indicator.canceled .dot,
-.status-indicator.cancelled .dot { background: #dc3545; }
+.status-indicator.cancelled .dot { background: var(--danger); }
 
-/* Botões */
 .btn-sax-black {
-background: #222;
-color: #fff;
+background: var(--ink);
+color: var(--paper);
 text-decoration: none;
 padding: 12px 25px;
 border-radius: 6px;
@@ -95,31 +102,30 @@ display: inline-block;
 text-align: center;
 transition: 0.3s;
 }
-.btn-sax-black:hover { background: #000; color: #fff; }
+.btn-sax-black:hover { background: var(--ink); color: var(--paper); }
 
 .btn-link-sax {
-color: #000;
+color: var(--ink);
 font-size: 0.75rem;
 font-weight: 700;
 text-decoration: none;
-border-bottom: 2px solid #000;
+border-bottom: 2px solid var(--ink);
 padding-bottom: 2px;
 }
 
-/* Estado Vazio */
+
 .empty-state {
 padding: 60px;
 text-align: center;
-background: #f9f9f9;
-border: 1px dashed #ccc;
+background: var(--surface);
+border: 1px dashed var(--line);
 border-radius: 12px;
-color: #888;
+color: var(--soft);
 }
 
-/* Media Query para Desktop */
 @media (min-width: 768px) {
 .order-content {
-grid-template-columns: 2fr 1.5fr 1.5fr 1fr; /* Desktop: Layout em linha */
+grid-template-columns: 2fr 1.5fr 1.5fr 1fr; 
 text-align: left;
 }
 .order-action { text-align: right; }
@@ -127,26 +133,24 @@ text-align: left;
 }
 .historySwiper { padding: 10px 0 30px 0; }
 .swiper-slide { height: auto !important; }
-/* Impede que o slide ocupe a tela toda antes do JS rodar */
+
 .swiper-wrapper { display: flex; }
-/* Container do Menu */
+
 .sax-sidebar-menu {
-background: #fff;
+background: var(--paper);
 padding: 20px 0;
 }
 
-/* Rótulos das Seções */
 .sax-menu-label {
 display: block;
 font-size: 0.65rem;
 font-weight: 800;
-color: #999;
+color: var(--soft);
 padding: 0 15px 10px 15px;
-border-bottom: 1px solid #f0f0f0;
+border-bottom: 1px solid var(--surface);
 margin-bottom: 10px;
 }
 
-/* Itens do Menu */
 .sax-menu-items {
 display: flex;
 flex-direction: column;
@@ -154,7 +158,7 @@ flex-direction: column;
 
 .sax-menu-link {
 padding: 12px 15px;
-color: #333;
+color: var(--txt);
 text-decoration: none !important;
 font-size: 0.85rem;
 font-weight: 400;
@@ -166,38 +170,36 @@ transition: all 0.2s ease;
 .sax-menu-link i {
 width: 25px;
 font-size: 0.9rem;
-color: #555;
+color: var(--muted);
 transition: all 0.2s ease;
 }
 
-/* Hover & Active */
 .sax-menu-link:hover {
-background-color: #f8f8f8;
-color: #000;
+background-color: var(--surface);
+color: var(--ink);
 padding-left: 20px;
 }
 
 .sax-menu-link:hover i {
-color: #000;
+color: var(--ink);
 }
 
-/* Estilo do Modal */
 .sax-modal-input {
 border: none;
-border-bottom: 2px solid #eee;
+border-bottom: 2px solid var(--line);
 border-radius: 0;
 font-size: 0.9rem;
 }
 
 .sax-modal-input:focus {
 box-shadow: none;
-border-color: #000;
+border-color: var(--ink);
 }
 
 .letter-spacing-1 { letter-spacing: 1.5px; }
 .letter-spacing-2 { letter-spacing: 3px; }
 .x-small { font-size: 0.7rem; }
-/* Estilo Base */
+
 .sax-wishlist-wrapper {
 font-family: 'Inter', sans-serif;
 }
@@ -219,20 +221,20 @@ text-transform: uppercase;
 
 .sax-brand {
 font-size: 0.8rem;
-color: #000;
+color: var(--ink);
 letter-spacing: 0.5px;
 }
 
 .sax-divider-dark {
 width: 40px;
 height: 3px;
-background: #000;
+background: var(--ink);
 margin-top: 10px;
 }
 
-/* Card JW Style */
+
 .jw-product-card {
-background-color: #f2f2f2 !important;
+background-color: var(--surface) !important;
 transition: opacity 0.3s ease;
 }
 
@@ -246,21 +248,21 @@ display: flex;
 align-items: center;
 justify-content: center;
 overflow: hidden;
-background-color: #f2f2f2;
+background-color: var(--surface);
 }
 
 .jw-img-container img {
 width: 100%;
 object-fit: contain;
-/* 'contain' para bolsas/produtos com fundo limpo */
+
 mix-blend-mode: multiply;
 }
 
-/* Tipografia */
+
 .jw-brand {
 font-size: 0.7rem;
 letter-spacing: 0.1em;
-color: #000;
+color: var(--ink);
 }
 
 .jw-product-name {
@@ -273,14 +275,14 @@ text-overflow: ellipsis;
 
 .jw-price {
 font-size: 0.85rem;
-color: #000;
+color: var(--ink);
 }
 
-/* Botão de Remover */
+
 .btn-remove-jw {
 background: transparent;
 border: none;
-color: #000;
+color: var(--ink);
 padding: 0;
 transition: transform 0.2s ease, opacity 0.2s;
 opacity: 0.6;
@@ -291,7 +293,7 @@ transform: scale(1.2);
 opacity: 1;
 }
 
-/* Utilitários */
+
 .letter-spacing-2 {
 letter-spacing: 3px;
 }
@@ -299,14 +301,14 @@ letter-spacing: 3px;
 .x-small {
 font-size: 0.7rem;
 }
-/* Estilização para deixar o SweetAlert com a cara da SAX (Preto e Branco) */
+
 .swal2-popup {
 border-radius: 0 !important;
 font-family: 'Montserrat', sans-serif !important;
 }
 .swal2-styled.swal2-confirm {
 border-radius: 0 !important;
-background-color: #000 !important;
+background-color: var(--ink) !important;
 letter-spacing: 2px;
 font-size: 12px;
 font-weight: bold;
@@ -316,7 +318,7 @@ border-radius: 0 !important;
 letter-spacing: 2px;
 font-size: 12px;
 }
-/* CSS Adicional para o Modal e Detalhes */
+
 .sax-bank-details {
 line-height: 1.5;
 word-break: break-word;
@@ -326,21 +328,21 @@ word-break: break-word;
 border-radius: 15px;
 }
 
-/* Reaproveitando os seus estilos existentes */
+
 .sax-premium-card {
-background: #fff;
-border: 1px solid #f0f0f0;
+background: var(--paper);
+border: 1px solid var(--surface);
 border-radius: 12px;
 overflow: hidden;
 }
 
 .card-sax-header {
-background: #fafafa;
+background: var(--surface);
 padding: 15px 20px;
 font-size: 0.75rem;
 font-weight: 800;
 letter-spacing: 1px;
-border-bottom: 1px solid #f0f0f0;
+border-bottom: 1px solid var(--surface);
 margin: 0;
 }
 
@@ -358,13 +360,13 @@ margin-bottom: 15px;
 .info-row .label {
 font-size: 0.7rem;
 font-weight: 700;
-color: #999;
+color: var(--soft);
 }
 
 .total-row {
 margin-top: 20px;
 padding-top: 15px;
-border-top: 1px dashed #eee;
+border-top: 1px dashed var(--line);
 }
 
 .receipt-preview-link {
@@ -380,7 +382,7 @@ left: 0;
 width: 100%;
 height: 100%;
 background: rgba(0, 0, 0, 0.4);
-color: #fff;
+color: var(--paper);
 display: flex;
 align-items: center;
 justify-content: center;
@@ -396,14 +398,14 @@ opacity: 1;
 
 .upload-sax-box {
 background: #f8fff9;
-border: 1px dashed #28a745;
+border: 1px dashed var(--ok);
 padding: 15px;
 border-radius: 8px;
 }
 
 .sax-input-file {
 font-size: 0.75rem;
-border: 1px solid #eee;
+border: 1px solid var(--line);
 }
 
 .item-sax-row {
@@ -418,81 +420,77 @@ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
 .sax-title-sub {
 font-size: 0.9rem;
 font-weight: 700;
-border-left: 4px solid #000;
+border-left: 4px solid var(--ink);
 padding-left: 15px;
 }
 
 .x-small {
 font-size: 0.65rem;
 }
-/* Base & Typography */
+
 .sax-orders-wrapper { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 1200px; margin: auto; }
 .sax-title { font-weight: 700; letter-spacing: 3px; font-size: 1.6rem; text-transform: uppercase; margin: 0; }
-.sax-divider-black { width: 40px; height: 3px; background: #000; margin-top: 10px; }
-.sax-label-min { display: block; font-size: 0.65rem; font-weight: 700; color: #888; letter-spacing: 0.5px;
+.sax-divider-black { width: 40px; height: 3px; background: var(--ink); margin-top: 10px; }
+.sax-label-min { display: block; font-size: 0.65rem; font-weight: 700; color: var(--soft); letter-spacing: 0.5px;
 margin-bottom: 4px; }
 
-/* Desktop Table */
-.sax-table-container { background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
+.sax-table-container { background: var(--paper); border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
 .sax-table { margin-bottom: 0; vertical-align: middle; }
 .sax-table thead th {
-background: #fcfcfc;
+background: var(--surface);
 font-size: 0.7rem;
 font-weight: 700;
 padding: 20px;
-color: #999;
-border-bottom: 1px solid #eee;
+color: var(--soft);
+border-bottom: 1px solid var(--line);
 letter-spacing: 1px;
 }
-.sax-table tbody td { padding: 20px; border-bottom: 1px solid #f8f8f8; color: #333; }
+.sax-table tbody td { padding: 20px; border-bottom: 1px solid var(--surface); color: var(--txt); }
 
-/* Badges & Status (Uniformizados) */
 .badge-payment-sax {
-background: #f0f0f0;
+background: var(--surface);
 padding: 5px 12px;
 border-radius: 4px;
 font-size: 0.7rem;
 font-weight: 700;
-color: #555;
+color: var(--muted);
 }
 .status-indicator-sax { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.8rem; }
 .status-indicator-sax .dot { width: 10px; height: 10px; border-radius: 50%; }
 
-.status-indicator-sax.completed { color: #198754; }
-.status-indicator-sax.completed .dot { background: #198754; }
-.status-indicator-sax.paid { color: #198754; }
-.status-indicator-sax.paid .dot { background: #198754; }
-.status-indicator-sax.pending { color: #f1b400; }
-.status-indicator-sax.pending .dot { background: #f1b400; }
+.status-indicator-sax.completed { color: var(--ok); }
+.status-indicator-sax.completed .dot { background: var(--ok); }
+.status-indicator-sax.paid { color: var(--ok); }
+.status-indicator-sax.paid .dot { background: var(--ok); }
+.status-indicator-sax.pending { color: var(--warn); }
+.status-indicator-sax.pending .dot { background: var(--warn); }
 .status-indicator-sax.failed,
 .status-indicator-sax.canceled,
-.status-indicator-sax.cancelled { color: #dc3545; }
+.status-indicator-sax.cancelled { color: var(--danger); }
 .status-indicator-sax.failed .dot,
 .status-indicator-sax.canceled .dot,
-.status-indicator-sax.cancelled .dot { background: #dc3545; }
+.status-indicator-sax.cancelled .dot { background: var(--danger); }
 
-/* Mobile Cards */
 .order-card-sax {
-background: #fff;
-border: 1px solid #eee;
+background: var(--paper);
+border: 1px solid var(--line);
 border-radius: 12px;
 padding: 20px;
 margin-bottom: 15px;
 }
 .order-mobile-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .order-id { font-size: 1.3rem; font-weight: 800; display: block; line-height: 1; margin-bottom: 2px; }
-.order-date { font-size: 0.8rem; color: #777; }
+.order-date { font-size: 0.8rem; color: var(--soft); }
 .status-text-mobile { font-weight: 700; font-size: 0.9rem; }
-.status-text-mobile.paid { color: #198754; }
+.status-text-mobile.paid { color: var(--ok); }
 .status-text-mobile.failed,
 .status-text-mobile.canceled,
-.status-text-mobile.cancelled { color: #dc3545; }
-.status-text-mobile.pending { color: #f1b400; }
+.status-text-mobile.cancelled { color: var(--danger); }
+.status-text-mobile.pending { color: var(--warn); }
 
-/* Buttons */
 .btn-sax-black-sm {
-background: #222;
-color: #fff !important;
+background: var(--ink);
+color: var(--paper) !important;
 padding: 8px 16px;
 font-size: 0.65rem;
 font-weight: 800;
@@ -502,8 +500,8 @@ border-radius: 4px;
 transition: 0.3s;
 }
 .btn-sax-black {
-background: #222;
-color: #fff !important;
+background: var(--ink);
+color: var(--paper) !important;
 padding: 12px;
 font-size: 0.75rem;
 font-weight: 800;
@@ -513,15 +511,15 @@ display: block;
 text-align: center;
 border-radius: 6px;
 }
-.btn-sax-black:hover, .btn-sax-black-sm:hover { background: #000; }
+.btn-sax-black:hover, .btn-sax-black-sm:hover { background: var(--ink); }
 
-.btn-back-minimal { font-size: 0.7rem; font-weight: 700; color: #888; text-decoration: none; border-bottom: 1px solid
+.btn-back-minimal { font-size: 0.7rem; font-weight: 700; color: var(--soft); text-decoration: none; border-bottom: 1px solid
 transparent; }
-.btn-back-minimal:hover { color: #000; border-bottom-color: #000; }
+.btn-back-minimal:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
-.empty-state { padding: 80px; text-align: center; background: #f9f9f9; border-radius: 12px; color: #888; letter-spacing:
+.empty-state { padding: 80px; text-align: center; background: var(--surface); border-radius: 12px; color: var(--soft); letter-spacing:
 1px; }
-/* Container e Header */
+
 .sax-edit-wrapper {
 font-family: 'Inter', sans-serif;
 max-width: 800px;
@@ -530,22 +528,22 @@ max-width: 800px;
 .sax-title {
 font-weight: 700;
 font-size: 1.5rem;
-color: #1a1a1a;
+color: var(--ink);
 }
 
 .sax-divider-dark {
 width: 50px;
 height: 3px;
-background-color: #000;
+background-color: var(--ink);
 margin-top: 15px;
 }
 
-/* Formulário e Inputs */
+
 .sax-label {
 font-size: 0.7rem;
 font-weight: 700;
 letter-spacing: 1.2px;
-color: #888;
+color: var(--soft);
 margin-bottom: 10px;
 }
 
@@ -556,37 +554,36 @@ border-radius: 0 !important;
 padding: 12px 0 !important;
 background-color: transparent !important;
 font-size: 0.95rem;
-color: #1a1a1a;
+color: var(--ink);
 transition: border-color 0.3s ease;
 }
 
 .sax-input:focus {
 box-shadow: none !important;
-border-color: #000 !important;
-color: #000;
+border-color: var(--ink) !important;
+color: var(--ink);
 }
 
-/* Selects */
+
 select.sax-input {
 background-position: right 0 center;
 padding-right: 20px !important;
 }
 
-/* Botão de Envio */
+
 .btn-sax-submit {
 border-radius: 0;
 font-size: 0.8rem;
-background-color: #000;
-border: 1px solid #000;
+background-color: var(--ink);
+border: 1px solid var(--ink);
 transition: all 0.4s ease;
 }
 
 .btn-sax-submit:hover {
-background-color: #fff;
-color: #000;
+background-color: var(--paper);
+color: var(--ink);
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
 .sax-edit-wrapper {
 padding: 0 15px;

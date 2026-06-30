@@ -113,6 +113,38 @@ class CategoryControllerAdmin extends Controller
         return redirect()->route('admin.categories.index')->with('success', 'Categoria excluída com sucesso.');
     }
 
+    public function uploadPhoto(Request $request, $id)
+    {
+        $request->validate(['photo' => 'required|image|max:10240']);
+        $category = Category::findOrFail($id);
+
+        if ($category->photo && Storage::disk('public')->exists($category->photo)) {
+            Storage::disk('public')->delete($category->photo);
+        }
+
+        $path = $this->convertToWebp($request->file('photo'), 'photo');
+        $category->photo = $path;
+        $category->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
+    public function uploadBanner(Request $request, $id)
+    {
+        $request->validate(['banner' => 'required|image|max:10240']);
+        $category = Category::findOrFail($id);
+
+        if ($category->banner && Storage::disk('public')->exists($category->banner)) {
+            Storage::disk('public')->delete($category->banner);
+        }
+
+        $path = $this->convertToWebp($request->file('banner'), 'banner');
+        $category->banner = $path;
+        $category->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
     private function convertToWebp($image, $type)
     {
         $tempPath = $image->getRealPath();

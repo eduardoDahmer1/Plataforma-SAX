@@ -1,14 +1,12 @@
 <footer class="sax-footer-refined">
     <div class="container">
         @php
-            // Slugs das categorias principais
             $menuSlugs = ['feminino', 'masculino', 'infantil', 'otica', 'casa'];
             
             $footerCategories = \App\Models\Category::whereIn('slug', $menuSlugs)
                 ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'otica', 'casa')")
                 ->get();
 
-            // O mapeamento usa as chaves exatas que inserimos no banco de dados
             $labelMap = [
                 'feminino'  => __('messages.feminino'),
                 'masculino' => __('messages.masculino'),
@@ -19,7 +17,6 @@
         @endphp
 
         <div class="footer-grid">
-            {{-- Coluna 1: Categorias --}}
             <div class="footer-column">
                 <h6 class="footer-title">{{ __('messages.categorias') }}</h6>
                 <ul class="footer-links">
@@ -36,7 +33,6 @@
                 </ul>
             </div>
 
-            {{-- Coluna 2: Institucional --}}
             <div class="footer-column border-left">
                 <div class="column-content">
                     <h6 class="footer-title">{{ __('messages.sobre_nos') }}</h6>
@@ -46,11 +42,11 @@
                         <li><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                         <li><a href="{{ route('palace.index') }}">SAX Palace</a></li>
                         <li><a href="{{ route('contact.form') }}">{{ __('messages.trabalhe_conosco') }}</a></li>
+                        <li><a href="https://saxdepartment.com/categorias-filhas/edition-privee">Edition Privee</a></li>
                     </ul>
                 </div>
             </div>
 
-            {{-- Coluna 3: Atendimento e Redes --}}
             <div class="footer-column border-left">
                 <div class="column-content">
                     <h6 class="footer-title">{{ __('messages.atendimento') }}</h6>

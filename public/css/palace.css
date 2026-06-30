@@ -1,53 +1,50 @@
-/* 1. CONFIGURAÇÕES GERAIS (VARIÁVEIS) */
 :root {
-    --palace-dark: #0a0a0a;
-    --text-secondary: #a0a0a0;
-    --palace-dark-soft: #141414;
-    --palace-gold: #c5a059;
-    --palace-gold-hover: #b08d4a; /* Tom mais fechado para o hover */
-    --palace-text: #ffffff;
-    --palace-muted: #a0a0a0;
-    --transition-smooth: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    --nav-transition: all 0.3s ease;
+    --bg: #0a0a0a;
+    --bg-soft: #141414;
+    --gold: #c5a059;
+    --gold-hover: #b08d4a;
+    --txt: #ffffff;
+    --muted: #a0a0a0;
+    --trans: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --nav-trans: all 0.3s ease;
 }
 
-/* 2. RESET & BASE */
 body {
-    background-color: black !important;
-    color: var(--palace-text);
+    background-color: var(--bg) !important;
+    color: var(--txt);
     font-family: "Montserrat", sans-serif;
     overflow-x: hidden;
     line-height: 1.6;
 }
 .unit{
-    color: var(--palace-muted);
+    color: var(--muted);
 }
 .sub{
-    color: var(--palace-muted); 
+    color: var(--muted); 
     font-size: 0.8rem;
     font-weight: 600;
 }
 .amount{
-    color: var(--palace-gold);
+    color: var(--gold);
     font-size: 2rem;
     font-weight: 900;
 }
 .label{
-    color: var(--palace-muted);
+    color: var(--muted);
     font-size: 0.9rem;
     font-weight: 600;
     text-transform: uppercase;
 }
 .price{
-    color: var(--palace-gold);
+    color: var(--gold);
     font-size: 1.5rem;
     font-weight: 700;
 }
 .btn-arabe-gold {
-    background-color: var(--palace-gold);
-    color: #fff !important;
-    border: 1px solid var(--palace-gold);
-    transition: var(--transition-smooth);
+    background-color: var(--gold);
+    color: var(--txt) !important;
+    border: 1px solid var(--gold);
+    transition: var(--trans);
     text-transform: uppercase;
     font-weight: 700;
     padding: 1rem;
@@ -55,14 +52,14 @@ body {
 }
 .arabe-description {
     font-size: 1.1rem;
-    color: var(--palace-muted);
+    color: var(--muted);
     max-width: 600px;
     margin: 20px auto;
 }
-/* 3. HEADER & NAVEGAÇÃO */
+
 .main-header {
     padding: 1.5rem 0;
-    transition: var(--nav-transition);
+    transition: var(--nav-trans);
     z-index: 1050;
     background: transparent;
 }
@@ -80,13 +77,13 @@ body {
     font-size: 0.85rem;
     position: relative;
     opacity: 0.8;
-    transition: var(--nav-transition);
-    color: var(--palace-text);
+    transition: var(--nav-trans);
+    color: var(--txt);
 }
 
 .nav-link:hover,
 .nav-link.active {
-    color: var(--palace-gold) !important;
+    color: var(--gold) !important;
     opacity: 1;
 }
 
@@ -98,8 +95,8 @@ body {
         left: 50%;
         width: 0;
         height: 1px;
-        background: var(--palace-gold);
-        transition: var(--nav-transition);
+        background: var(--gold);
+        transition: var(--nav-trans);
         transform: translateX(-50%);
     }
     .nav-link:hover::after {
@@ -107,44 +104,42 @@ body {
     }
 }
 
-/* 4. BOTÕES PERSONALIZADOS (UNIFICADOS) */
 .btn-gold {
-    background-color: var(--palace-gold);
-    color: #fff !important;
-    border: 1px solid var(--palace-gold);
-    transition: var(--nav-transition);
+    background-color: var(--gold);
+    color: var(--txt) !important;
+    border: 1px solid var(--gold);
+    transition: var(--nav-trans);
     text-transform: uppercase;
     font-weight: 700;
 }
 
 .btn-gold:hover {
     background-color: transparent;
-    color: var(--palace-gold) !important;
+    color: var(--gold) !important;
 }
 
 .btn-outline-gold {
-    color: var(--palace-gold);
-    border: 1px solid var(--palace-gold);
+    color: var(--gold);
+    border: 1px solid var(--gold);
     background: transparent;
-    transition: var(--nav-transition);
+    transition: var(--nav-trans);
 }
 
 .btn-outline-gold:hover {
-    background-color: var(--palace-gold);
+    background-color: var(--gold);
     color: #000 !important;
 }
 
-/* 5. SEÇÃO ARABE PREMIUM (AJUSTADA) */
 .arabe-premium-section {
     padding: 100px 0;
-    background-color: #171717;
+    background-color: var(--bg-soft);
     overflow: hidden;
 }
 
 .arabe-title {
     font-family: "Playfair Display", serif;
     font-size: clamp(2.5rem, 5vw, 4rem);
-    color: #ffffff;
+    color: var(--txt);
     line-height: 1.1;
     font-weight: 700;
 }
@@ -158,14 +153,14 @@ body {
 .premium-badge .line {
     width: 40px;
     height: 2px;
-    background: var(--palace-gold);
+    background: var(--gold);
 }
 
 .premium-badge .text {
     font-size: 0.8rem;
     font-weight: 800;
     letter-spacing: 3px;
-    color: var(--palace-gold);
+    color: var(--gold);
     text-transform: uppercase;
 }
 
@@ -184,25 +179,25 @@ body {
     right: 0;
     width: 80%;
     height: 90%;
-    border: 2px solid var(--palace-gold);
+    border: 2px solid var(--gold);
     z-index: 1;
     transform: translate(30px, -30px);
     border-radius: 10px;
 }
 
 .text-gold {
-    color: var(--palace-gold) !important;
+    color: var(--gold) !important;
 }
 .bg-gold {
-    background-color: var(--palace-gold) !important;
+    background-color: var(--gold) !important;
 }
 .border-gold {
-    border-color: var(--palace-gold) !important;
+    border-color: var(--gold) !important;
 }
 
 .font-serif {
     font-family: "Playfair Display", serif;
-    color: var(--palace-text);
+    color: var(--txt);
 }
 .tracking-widest {
     letter-spacing: 0.2rem;
@@ -214,7 +209,6 @@ body {
     font-size: 0.65rem;
 }
 
-/* 7. FOOTER & SOCIAL */
 .logo-footer {
     filter: brightness(0) invert(1);
     transition: transform 0.3s ease;
@@ -227,7 +221,7 @@ body {
     text-decoration: none;
     position: relative;
     transition: opacity 0.3s;
-    color: var(--palace-text);
+    color: var(--txt);
 }
 
 .social-link-minimal::after {
@@ -237,7 +231,7 @@ body {
     height: 1px;
     bottom: -2px;
     left: 0;
-    background-color: var(--palace-gold);
+    background-color: var(--gold);
     transition: width 0.3s;
 }
 
@@ -245,13 +239,12 @@ body {
     width: 100%;
 }
 .social-link-minimal:hover {
-    color: var(--palace-gold);
+    color: var(--gold);
 }
 
-/* 8. RESPONSIVIDADE (UNIFICADA) */
 @media (max-width: 991px) {
     .navbar-collapse {
-        background: var(--palace-dark);
+        background: var(--bg);
         margin-top: 1rem;
         padding: 1.5rem;
         border-radius: 8px;
@@ -281,7 +274,6 @@ body {
     }
 }
 
-/* MAPA */
 .map-container iframe {
     width: 100% !important;
     height: 100% !important;

@@ -1,20 +1,16 @@
-/* =============================================
-   SAX Bridal – Estilos globales
-   ============================================= */
-
 :root {
-    --bridal-white: #ffffff;
-    --bridal-cream: #FAF8F5;
-    --bridal-gold: #C9A961;
-    --bridal-gold-light: #e2d1b0;
-    --bridal-dark: #2C2C2C;
-    --font-serif: 'Playfair Display', serif;
-    --font-sans: 'Montserrat', sans-serif;
-    --font-display: 'Montserrat', sans-serif;
-    --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    --paper: #ffffff;
+    --cream: #FAF8F5;
+    --gold: #C9A961;
+    --gold-light: #e2d1b0;
+    --ink: #2C2C2C;
+    --muted: #888888;
+    --serif: 'Playfair Display', serif;
+    --sans: 'Montserrat', sans-serif;
+    --display: 'Montserrat', sans-serif;
+    --trans: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* --- Reset & Base --- */
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
@@ -23,9 +19,9 @@ html {
 
 body {
     margin: 0;
-    background-color: var(--bridal-cream);
-    color: var(--bridal-dark);
-    font-family: var(--font-sans);
+    background-color: var(--cream);
+    color: var(--ink);
+    font-family: var(--sans);
     font-size: 0.95rem;
     font-weight: 400;
     line-height: 1.7;
@@ -34,17 +30,16 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-weight: 400;
     line-height: 1.2;
 }
 
 img { max-width: 100%; height: auto; }
 
-/* --- Typography Utilities --- */
 .title-gold {
-    color: var(--bridal-gold);
-    font-family: var(--font-display);
+    color: var(--gold);
+    font-family: var(--display);
     font-size: 0.7rem;
     letter-spacing: 4px;
     text-transform: uppercase;
@@ -54,71 +49,68 @@ img { max-width: 100%; height: auto; }
 }
 
 .section-title {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: clamp(1.8rem, 3vw, 2.8rem);
     line-height: 1.15;
-    color: var(--bridal-dark);
+    color: var(--ink);
     font-weight: 400;
 }
 
 .serif-italic {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-style: italic;
     text-transform: none;
 }
 
-/* --- Sections --- */
 .section-padding { padding: 5rem 0; }
 
 @media (min-width: 768px) {
     .section-padding { padding: 6.25rem 0; }
 }
 
-/* --- Buttons --- */
 .btn-sax {
     padding: 0.875rem 2.25rem;
-    background: var(--bridal-dark);
-    color: var(--bridal-white);
-    font-family: var(--font-sans);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--sans);
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 0.7rem;
     font-weight: 500;
     border: none;
-    transition: var(--transition);
+    transition: var(--trans);
     display: inline-block;
     text-decoration: none;
 }
 
 .btn-sax:hover {
-    background: var(--bridal-gold);
-    color: var(--bridal-white);
+    background: var(--gold);
+    color: var(--paper);
     transform: translateY(-3px);
     box-shadow: 0 0.5rem 1.25rem rgba(201, 169, 97, 0.25);
 }
 
 .btn-sax-outline {
     padding: 0.8125rem 2.125rem;
-    border: 1px solid var(--bridal-gold);
+    border: 1px solid var(--gold);
     background: transparent;
-    color: var(--bridal-gold);
-    font-family: var(--font-sans);
+    color: var(--gold);
+    font-family: var(--sans);
     text-transform: uppercase;
     letter-spacing: 2px;
     font-size: 0.7rem;
     font-weight: 500;
     text-decoration: none;
-    transition: var(--transition);
+    transition: var(--trans);
     display: inline-block;
 }
 
 .btn-sax-outline:hover {
-    background: var(--bridal-gold);
-    color: var(--bridal-white);
+    background: var(--gold);
+    color: var(--paper);
     transform: translateY(-2px);
 }
 
-/* --- Reveal Animations --- */
 [data-reveal] {
     opacity: 0;
     transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
@@ -134,9 +126,6 @@ img { max-width: 100%; height: auto; }
     transform: translate(0) scale(1) !important;
 }
 
-/* =============================================
-   Header / Navigation
-   ============================================= */
 .navbar-bridal {
     position: fixed;
     top: 0;
@@ -144,7 +133,7 @@ img { max-width: 100%; height: auto; }
     width: 100%;
     z-index: 1050;
     padding: 1.5rem 0;
-    transition: var(--transition);
+    transition: var(--trans);
     background: transparent;
 }
 
@@ -170,10 +159,10 @@ img { max-width: 100%; height: auto; }
 .nav-bridal-right { justify-self: end; }
 
 .brand-bridal {
-    font-family: var(--font-display);
+    font-family: var(--display);
     font-size: 1.6rem;
     letter-spacing: 6px;
-    color: var(--bridal-white);
+    color: var(--paper);
     text-decoration: none;
     font-weight: 400;
     justify-self: center;
@@ -187,10 +176,10 @@ img { max-width: 100%; height: auto; }
     width: auto;
 }
 
-.brand-bridal:hover { color: var(--bridal-gold-light); }
+.brand-bridal:hover { color: var(--gold-light); }
 
-.navbar-bridal.scrolled .brand-bridal { color: #C6A76E; }
-.navbar-bridal.scrolled .brand-bridal:hover { color: #C6A76E; }
+.navbar-bridal.scrolled .brand-bridal { color: var(--gold); }
+.navbar-bridal.scrolled .brand-bridal:hover { color: var(--gold); }
 
 .nav-link-bridal {
     font-size: 0.79rem;
@@ -204,19 +193,19 @@ img { max-width: 100%; height: auto; }
     transition: color 0.3s ease;
 }
 
-.navbar-bridal.scrolled .nav-link-bridal { color: #C6A76E; }
-.navbar-bridal.scrolled .nav-link-bridal:hover { color: #C6A76E; }
-#bridalMobileNav .nav-link-bridal { color: var(--bridal-dark); }
+.navbar-bridal.scrolled .nav-link-bridal { color: var(--gold); }
+.navbar-bridal.scrolled .nav-link-bridal:hover { color: var(--gold); }
+#bridalMobileNav .nav-link-bridal { color: var(--ink); }
 
 .hamburger-line {
     display: block;
     width: 1.5rem;
     height: 1px;
     margin-bottom: 0.3125rem;
-    background: var(--bridal-gold);
+    background: var(--gold);
 }
 
-.navbar-bridal.scrolled .hamburger-line { background: var(--bridal-gold); }
+.navbar-bridal.scrolled .hamburger-line { background: var(--gold); }
 
 .nav-link-bridal::after {
     content: '';
@@ -225,11 +214,11 @@ img { max-width: 100%; height: auto; }
     left: 0;
     width: 0;
     height: 1px;
-    background: #C6A76E;
+    background: var(--gold);
     transition: width 0.4s ease;
 }
 
-.nav-link-bridal:hover { color: #C6A76E; }
+.nav-link-bridal:hover { color: var(--gold); }
 .nav-link-bridal:hover::after { width: 100%; }
 
 .hamburger-short {
@@ -261,9 +250,6 @@ img { max-width: 100%; height: auto; }
     }
 }
 
-/* =============================================
-   Hero Section
-   ============================================= */
 .hero-bridal {
     position: relative;
     height: 100vh;
@@ -311,10 +297,10 @@ img { max-width: 100%; height: auto; }
 
 .hero-label {
     display: inline-block;
-    font-family: var(--font-display);
+    font-family: var(--display);
     font-size: 0.75rem;
     letter-spacing: 6px;
-    color: #e2c991;
+    color: var(--gold-light);
     text-transform: uppercase;
     margin-bottom: 0.875rem;
     font-weight: 500;
@@ -322,10 +308,10 @@ img { max-width: 100%; height: auto; }
 }
 
 .hero-heading {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: clamp(3.5rem, 6.5vw, 6.5rem);
     font-weight: 400;
-    color: #FFFFFF;
+    color: var(--paper);
     line-height: 1.1;
     margin-bottom: 1.25rem;
     text-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.45);
@@ -341,31 +327,31 @@ img { max-width: 100%; height: auto; }
 }
 
 .hero-bridal .btn-sax {
-    background: #C6A76E;
-    color: var(--bridal-white);
+    background: var(--gold);
+    color: var(--paper);
     padding: 1rem 2.75rem;
     font-weight: 600;
     box-shadow: 0 0.25rem 1rem rgba(198, 167, 110, 0.35);
 }
 
 .hero-bridal .btn-sax:hover {
-    background: #d4b87e;
-    color: var(--bridal-white);
+    background: var(--gold);
+    color: var(--paper);
     box-shadow: 0 0.375rem 1.5rem rgba(198, 167, 110, 0.45);
 }
 
 .hero-bridal .btn-sax-outline {
     border: 2px solid rgba(255, 255, 255, 0.85);
     background: rgba(255, 255, 255, 0.08);
-    color: #FFFFFF;
+    color: var(--paper);
     padding: 1rem 2.75rem;
     backdrop-filter: blur(4px);
 }
 
 .hero-bridal .btn-sax-outline:hover {
     background: rgba(255, 255, 255, 0.18);
-    border-color: #FFFFFF;
-    color: #FFFFFF;
+    border-color: var(--paper);
+    color: var(--paper);
 }
 
 @media (max-width: 991px) {
@@ -400,11 +386,8 @@ img { max-width: 100%; height: auto; }
     }
 }
 
-/* =============================================
-   Services (Editorial Layout)
-   ============================================= */
 .sv-editorial {
-    background: var(--bridal-white);
+    background: var(--paper);
     padding: 3.75rem 0;
 }
 
@@ -459,13 +442,13 @@ img { max-width: 100%; height: auto; }
 }
 
 .sv-img-placeholder {
-    background: var(--bridal-cream);
+    background: var(--cream);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    color: var(--bridal-gold-light);
+    color: var(--gold-light);
 }
 
 .sv-img-placeholder i {
@@ -474,7 +457,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .sv-img-placeholder span {
-    font-family: var(--font-display);
+    font-family: var(--display);
     font-size: 0.7rem;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -486,9 +469,9 @@ img { max-width: 100%; height: auto; }
 }
 
 .sv-num {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: 0.8rem;
-    color: var(--bridal-gold);
+    color: var(--gold);
     letter-spacing: 2px;
     display: block;
     margin-bottom: 0.25rem;
@@ -496,19 +479,19 @@ img { max-width: 100%; height: auto; }
 }
 
 .sv-title {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: clamp(1.2rem, 2vw, 1.65rem);
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 3px;
-    color: var(--bridal-dark);
+    color: var(--ink);
     line-height: 1.3;
     margin-bottom: 1.125rem;
 }
 
 .sv-desc {
     font-size: 0.88rem;
-    color: var(--bridal-dark);
+    color: var(--ink);
     opacity: 0.5;
     line-height: 1.7;
     max-width: 100%;
@@ -557,14 +540,11 @@ img { max-width: 100%; height: auto; }
     }
 }
 
-/* =============================================
-   Brand Ticker
-   ============================================= */
 .brand-ticker {
-    background: #ffffff;
+    background: var(--paper);
     padding: 1rem 0;
-    border-top: 1px solid #f0ece6;
-    border-bottom: 1px solid #f0ece6;
+    border-top: 1px solid var(--cream);
+    border-bottom: 1px solid var(--cream);
     overflow: hidden;
     display: flex;
 }
@@ -584,10 +564,10 @@ img { max-width: 100%; height: auto; }
 }
 
 .ticker-text {
-    font-family: var(--font-display);
+    font-family: var(--display);
     font-size: 0.72rem;
     letter-spacing: 4px;
-    color: var(--bridal-gold);
+    color: var(--gold);
     font-weight: 400;
 }
 
@@ -632,15 +612,12 @@ img { max-width: 100%; height: auto; }
     }
 }
 
-/* =============================================
-   Promotional Carousel
-   ============================================= */
 .promo-section {
-    background: var(--bridal-white);
+    background: var(--paper);
 }
 
 .promo-card {
-    background: var(--bridal-cream);
+    background: var(--cream);
     border-radius: 2px;
     overflow: hidden;
 }
@@ -681,22 +658,22 @@ img { max-width: 100%; height: auto; }
 }
 
 .promo-title {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: 1.3rem;
-    color: var(--bridal-dark);
+    color: var(--ink);
     margin-bottom: 0.5rem;
     font-weight: 400;
 }
 
 .promo-subtitle {
     font-size: 0.85rem;
-    color: #888;
+    color: var(--muted);
     margin-bottom: 1rem;
     line-height: 1.6;
 }
 
 .promo-link {
-    color: var(--bridal-gold);
+    color: var(--gold);
     text-decoration: none;
     font-size: 0.72rem;
     letter-spacing: 2px;
@@ -706,11 +683,11 @@ img { max-width: 100%; height: auto; }
 }
 
 .promo-link:hover {
-    color: var(--bridal-dark);
+    color: var(--ink);
 }
 
 .promo-pagination .swiper-pagination-bullet {
-    background: var(--bridal-gold);
+    background: var(--gold);
     opacity: 0.3;
     width: 0.5rem;
     height: 0.5rem;
@@ -724,18 +701,12 @@ img { max-width: 100%; height: auto; }
     border-radius: 0.25rem;
 }
 
-/* =============================================
-   Products Carousel
-   ============================================= */
 .bridal-products-section {
-    background: var(--bridal-white);
+    background: var(--paper);
 }
 
-/* =============================================
-   Testimonials (Polaroid Style)
-   ============================================= */
 .testimonials-section {
-    background: var(--bridal-white);
+    background: var(--paper);
     padding: 3rem 0;
 }
 
@@ -744,7 +715,7 @@ img { max-width: 100%; height: auto; }
     align-items: flex-start;
     gap: 2.5rem;
     padding: 2.5rem;
-    background: var(--bridal-cream);
+    background: var(--cream);
     border-radius: 2px;
     box-shadow: 0 2px 0.875rem rgba(0, 0, 0, 0.04);
     min-height: 20rem;
@@ -752,7 +723,7 @@ img { max-width: 100%; height: auto; }
 
 .tq-polaroid {
     flex-shrink: 0;
-    background: #fff;
+    background: var(--paper);
     padding: 0.625rem 0.625rem 2.5rem;
     box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.1);
 }
@@ -790,21 +761,21 @@ img { max-width: 100%; height: auto; }
 .tq-polaroid-placeholder {
     width: 13.75rem;
     aspect-ratio: 4 / 5;
-    background: #f0ece6;
+    background: var(--cream);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--bridal-gold-light);
+    color: var(--gold-light);
     font-size: 2.5rem;
 }
 
 .tq-polaroid-caption {
     display: block;
     text-align: center;
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-style: italic;
     font-size: 0.9rem;
-    color: var(--bridal-dark);
+    color: var(--ink);
     margin-top: 0.625rem;
     opacity: 0.7;
 }
@@ -815,18 +786,18 @@ img { max-width: 100%; height: auto; }
 }
 
 .tq-mark {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: 3.5rem;
-    color: var(--bridal-gold);
+    color: var(--gold);
     line-height: 1;
     margin-bottom: 0.75rem;
     opacity: 0.35;
 }
 
 .tq-quote {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: 0.95rem;
-    color: var(--bridal-dark);
+    color: var(--ink);
     font-style: italic;
     margin-bottom: 1.5rem;
     line-height: 1.6;
@@ -834,7 +805,7 @@ img { max-width: 100%; height: auto; }
 
 .tq-author {
     font-size: 0.78rem;
-    color: var(--bridal-gold);
+    color: var(--gold);
     font-weight: 500;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -843,7 +814,7 @@ img { max-width: 100%; height: auto; }
 
 .tq-location {
     font-size: 0.72rem;
-    color: #999;
+    color: var(--muted);
     margin-bottom: 0;
 }
 
@@ -853,7 +824,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .testimonial-pagination .swiper-pagination-bullet {
-    background: var(--bridal-gold);
+    background: var(--gold);
     opacity: 0.3;
     width: 0.5rem;
     height: 0.5rem;
@@ -878,9 +849,9 @@ img { max-width: 100%; height: auto; }
     width: 2.75rem;
     height: 2.75rem;
     border-radius: 50%;
-    border: 1px solid var(--bridal-gold-light);
+    border: 1px solid var(--gold-light);
     background: rgba(255, 255, 255, 0.9);
-    color: var(--bridal-gold);
+    color: var(--gold);
     font-size: 0.85rem;
     cursor: pointer;
     z-index: 10;
@@ -888,14 +859,14 @@ img { max-width: 100%; height: auto; }
     align-items: center;
     justify-content: center;
     opacity: 0.6;
-    transition: var(--transition);
+    transition: var(--trans);
 }
 
 .tq-nav:hover {
     opacity: 1;
-    background: var(--bridal-gold);
-    color: #fff;
-    border-color: var(--bridal-gold);
+    background: var(--gold);
+    color: var(--paper);
+    border-color: var(--gold);
 }
 
 .tq-nav-prev {
@@ -955,11 +926,8 @@ img { max-width: 100%; height: auto; }
     }
 }
 
-/* =============================================
-   Instagram CTA
-   ============================================= */
 .instagram-cta-section {
-    background: var(--bridal-white);
+    background: var(--paper);
     text-align: center;
     padding: 0 1.25rem 3.75rem;
 }
@@ -972,7 +940,7 @@ img { max-width: 100%; height: auto; }
     font-family: 'Montserrat', sans-serif;
     font-weight: 300;
     font-size: 0.95rem;
-    color: var(--bridal-dark);
+    color: var(--ink);
     font-style: italic;
     line-height: 1.6;
     margin-bottom: 1.5rem;
@@ -983,27 +951,24 @@ img { max-width: 100%; height: auto; }
     font-size: 0.68rem;
     letter-spacing: 2px;
     padding: 0.875rem 2.25rem;
-    background: var(--bridal-gold);
-    color: var(--bridal-white);
-    border-color: var(--bridal-gold);
+    background: var(--gold);
+    color: var(--paper);
+    border-color: var(--gold);
 }
 
 .instagram-cta-btn:hover {
     background: #E1306C;
     border-color: #E1306C;
-    color: #fff;
+    color: var(--paper);
 }
 
-/* =============================================
-   Locations / Contact
-   ============================================= */
 .locations-section {
-    background: var(--bridal-white);
+    background: var(--paper);
     position: relative;
 }
 
 .location-card {
-    background: var(--bridal-cream);
+    background: var(--cream);
     border-radius: 0.375rem 0.375rem 0 0;
     overflow: hidden;
 }
@@ -1047,9 +1012,9 @@ img { max-width: 100%; height: auto; }
 }
 
 .location-name {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: 1.3rem;
-    color: var(--bridal-dark);
+    color: var(--ink);
     margin-bottom: 0.5rem;
     font-weight: 400;
 }
@@ -1057,13 +1022,13 @@ img { max-width: 100%; height: auto; }
 .location-divider {
     width: 1.875rem;
     height: 2px;
-    background: var(--bridal-gold);
+    background: var(--gold);
     margin-bottom: 1.25rem;
 }
 
 .location-info {
     font-size: 0.85rem;
-    color: #888;
+    color: var(--muted);
     margin-bottom: 0.625rem;
     display: flex;
     align-items: flex-start;
@@ -1072,7 +1037,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .location-icon {
-    color: var(--bridal-gold);
+    color: var(--gold);
     margin-top: 0.1875rem;
     flex-shrink: 0;
     font-size: 0.8rem;
@@ -1083,7 +1048,7 @@ img { max-width: 100%; height: auto; }
     align-items: center;
     gap: 0.5rem;
     margin-top: 1.25rem;
-    color: var(--bridal-gold);
+    color: var(--gold);
     text-decoration: none;
     font-size: 0.72rem;
     letter-spacing: 2px;
@@ -1097,7 +1062,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .location-wa-btn:hover {
-    color: var(--bridal-dark);
+    color: var(--ink);
 }
 
 .location-pagination {
@@ -1107,7 +1072,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .location-pagination .swiper-pagination-bullet {
-    background: var(--bridal-gold);
+    background: var(--gold);
     opacity: 0.3;
     width: 0.5rem;
     height: 0.5rem;
@@ -1121,9 +1086,6 @@ img { max-width: 100%; height: auto; }
     border-radius: 0.25rem;
 }
 
-/* =============================================
-   Palace Banner
-   ============================================= */
 .palace-banner {
     position: relative;
     height: 60vh;
@@ -1153,23 +1115,23 @@ img { max-width: 100%; height: auto; }
 .palace-banner-body {
     position: relative;
     z-index: 3;
-    color: var(--bridal-white);
+    color: var(--paper);
     max-width: 37.5rem;
     padding: 0 1.5rem;
 }
 
 .palace-heading {
-    font-family: var(--font-display);
+    font-family: var(--display);
     font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 700;
-    color: #fff;
+    color: var(--paper);
     text-transform: uppercase;
     letter-spacing: 3px;
     margin-bottom: 1rem;
 }
 
 .palace-desc {
-    font-family: var(--font-serif);
+    font-family: var(--serif);
     font-size: 1.05rem;
     font-style: italic;
     margin-bottom: 2rem;
@@ -1178,8 +1140,8 @@ img { max-width: 100%; height: auto; }
 }
 
 .btn-palace-cta {
-    background: var(--bridal-gold);
-    color: var(--bridal-white);
+    background: var(--gold);
+    color: var(--paper);
     padding: 0.875rem 2.25rem;
     border-radius: 2px;
     text-decoration: none;
@@ -1188,12 +1150,12 @@ img { max-width: 100%; height: auto; }
     text-transform: uppercase;
     display: inline-block;
     font-weight: 500;
-    transition: var(--transition);
+    transition: var(--trans);
 }
 
 .btn-palace-cta:hover {
-    background: var(--bridal-white);
-    color: var(--bridal-gold);
+    background: var(--paper);
+    color: var(--gold);
     transform: translateY(-3px);
     box-shadow: 0 0.5rem 1.5rem rgba(255, 255, 255, 0.2);
 }
@@ -1213,22 +1175,19 @@ img { max-width: 100%; height: auto; }
     }
 }
 
-/* =============================================
-   Footer
-   ============================================= */
 .footer-bridal-v2 {
-    background: var(--bridal-white);
-    color: var(--bridal-dark);
+    background: var(--paper);
+    color: var(--ink);
     padding: 5rem 0 2.5rem;
-    border-top: 1px solid #f0ece6;
+    border-top: 1px solid var(--cream);
 }
 
 .footer-brand-v2 {
     display: inline-block;
-    font-family: var(--font-display);
+    font-family: var(--display);
     font-size: 1.6rem;
     letter-spacing: 6px;
-    color: var(--bridal-dark);
+    color: var(--ink);
     text-decoration: none;
     font-weight: 400;
     margin-bottom: 1.25rem;
@@ -1241,11 +1200,11 @@ img { max-width: 100%; height: auto; }
     width: auto;
 }
 
-.footer-brand-v2:hover { color: var(--bridal-gold); }
+.footer-brand-v2:hover { color: var(--gold); }
 
 .footer-desc-v2 {
     font-size: 0.85rem;
-    color: #888;
+    color: var(--muted);
     line-height: 1.8;
     margin-bottom: 1.75rem;
 }
@@ -1257,7 +1216,7 @@ img { max-width: 100%; height: auto; }
 
 .footer-social-link {
     font-size: 1.2rem;
-    color: #888;
+    color: var(--muted);
     text-decoration: none;
     transition: opacity 0.3s, transform 0.3s;
     display: inline-flex;
@@ -1265,15 +1224,15 @@ img { max-width: 100%; height: auto; }
     justify-content: center;
 }
 
-.footer-social-link:hover { opacity: 0.75; color: var(--bridal-dark); transform: translateY(-2px); }
+.footer-social-link:hover { opacity: 0.75; color: var(--ink); transform: translateY(-2px); }
 
 .footer-col-title {
-    font-family: var(--font-sans);
+    font-family: var(--sans);
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 3px;
     font-weight: 600;
-    color: var(--bridal-dark);
+    color: var(--ink);
     margin-bottom: 1.25rem;
 }
 
@@ -1289,13 +1248,13 @@ img { max-width: 100%; height: auto; }
 
 .footer-link {
     font-size: 0.83rem;
-    color: #888;
+    color: var(--muted);
     text-decoration: none;
     transition: color 0.3s;
 }
 
 .footer-link:hover {
-    color: var(--bridal-gold);
+    color: var(--gold);
 }
 
 .footer-hours { font-size: 0.82rem; }
@@ -1304,22 +1263,22 @@ img { max-width: 100%; height: auto; }
     display: flex;
     justify-content: space-between;
     padding: 0.625rem 0;
-    border-bottom: 1px solid #f0ece6;
-    color: #999;
+    border-bottom: 1px solid var(--cream);
+    color: var(--muted);
 }
 
 .footer-hours-row.last { border-bottom: none; }
-.footer-hours-row span:last-child { color: var(--bridal-dark); }
+.footer-hours-row span:last-child { color: var(--ink); }
 
 .footer-address {
     font-size: 0.83rem;
-    color: #888;
+    color: var(--muted);
     line-height: 1.7;
     margin-bottom: 1.25rem;
 }
 
 .footer-contact-box {
-    background: var(--bridal-cream);
+    background: var(--cream);
     border: 1px solid rgba(201, 169, 97, 0.25);
     padding: 1rem 1.25rem;
 }
@@ -1329,31 +1288,31 @@ img { max-width: 100%; height: auto; }
     font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: #aaa;
+    color: var(--muted);
     margin-bottom: 0.375rem;
 }
 
 .footer-contact-phone {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--bridal-dark);
+    color: var(--ink);
     text-decoration: none;
     letter-spacing: 1px;
     transition: color 0.3s;
 }
 
-.footer-contact-phone:hover { color: var(--bridal-gold); }
+.footer-contact-phone:hover { color: var(--gold); }
 
 .footer-copyright {
     margin-top: 5rem;
     padding-top: 1.875rem;
     text-align: center;
-    border-top: 1px solid #f0ece6;
+    border-top: 1px solid var(--cream);
 }
 
 .footer-copyright p {
     font-size: 0.83rem;
-    color: #888;
+    color: var(--muted);
     margin: 0;
 }
 

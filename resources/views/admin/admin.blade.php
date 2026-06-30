@@ -10,7 +10,7 @@
     {{-- Alertas --}}
     <x-admin.alert />
 
-    <div class="card border-0 shadow-sm mb-5">
+    {{-- <div class="card border-0 shadow-sm mb-5">
         <div class="card-body p-4">
             <div class="d-flex align-items-center mb-3">
                 <div class="icon-shape bg-soft-primary text-primary rounded me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #eef2ff;">
@@ -40,7 +40,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> --}}
 
     @php
         // Definimos as categorias traduzidas para os labels
@@ -51,14 +51,14 @@
         $images = [
             ['field' => 'header_image', 'title' => 'Logo Header', 'category' => $catIdentidade, 'file' => $webpImage ?? null, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
             ['field' => 'logo_palace', 'title' => 'Logo SAX Palace', 'category' => $catIdentidade, 'file' => $logoPalace ?? null, 'routeUpload' => 'admin.logopalace.upload', 'routeDelete' => 'admin.logopalace.delete'],
-            ['field' => 'logo_bridal', 'title' => 'Logo SAX Bridal', 'category' => 'Identidad', 'file' => $logoBridal ?? null, 'routeUpload' => 'admin.logobridal.upload', 'routeDelete' => 'admin.logobridal.delete'],
+            ['field' => 'logo_bridal', 'title' => 'Logo SAX Bridal', 'category' => $catIdentidade, 'file' => $logoBridal ?? null, 'routeUpload' => 'admin.logobridal.upload', 'routeDelete' => 'admin.logobridal.delete'],
                 ['field' => 'logo_cafe_bistro', 'title' => 'Logo SAX Café & Bistrô', 'category' => 'Identidad', 'file' => $logoCafeBistro ?? null, 'routeUpload' => 'admin.logocafebistro.upload', 'routeDelete' => 'admin.logocafebistro.delete'],
                 ['field' => 'banner_horizontal', 'title' => 'Banner Horizontal', 'category' => 'Identidad', 'file' => $bannerHorizontal ?? null, 'routeUpload' => 'admin.bannerhorizontal.upload', 'routeDelete' => 'admin.bannerhorizontal.delete'],
 
-                ['field' => 'icon_info', 'title' => 'Ícone Info/Relógio', 'category' => 'Sistema', 'file' => $attribute->icon_info ?? null, 'routeUpload' => 'admin.icon_info.upload', 'routeDelete' => 'admin.icon_info.delete'],
-                ['field' => 'icon_cabide', 'title' => 'Ícone Cabide', 'category' => 'Sistema', 'file' => $attribute->icon_cabide ?? null, 'routeUpload' => 'admin.icon_cabide.upload', 'routeDelete' => 'admin.icon_cabide.delete'],
-                ['field' => 'icon_help', 'title' => 'Ícone Ajuda', 'category' => 'Sistema', 'file' => $attribute->icon_help ?? null, 'routeUpload' => 'admin.icon_help.upload', 'routeDelete' => 'admin.icon_help.delete'],
-                ['field' => 'noimage', 'title' => 'Noimage Default', 'category' => 'Sistema', 'file' => $noimage ?? null, 'routeUpload' => 'admin.noimage.upload', 'routeDelete' => 'admin.noimage.delete'],
+                ['field' => 'icon_info', 'title' => 'Ícone Info/Relógio', 'category' => $catSistema, 'file' => $attribute->icon_info ?? null, 'routeUpload' => 'admin.icon_info.upload', 'routeDelete' => 'admin.icon_info.delete'],
+                ['field' => 'icon_cabide', 'title' => 'Ícone Cabide', 'category' => $catSistema, 'file' => $attribute->icon_cabide ?? null, 'routeUpload' => 'admin.icon_cabide.upload', 'routeDelete' => 'admin.icon_cabide.delete'],
+                ['field' => 'icon_help', 'title' => 'Ícone Ajuda', 'category' => $catSistema, 'file' => $attribute->icon_help ?? null, 'routeUpload' => 'admin.icon_help.upload', 'routeDelete' => 'admin.icon_help.delete'],
+                ['field' => 'noimage', 'title' => 'Noimage Default', 'category' => $catSistema, 'file' => $noimage ?? null, 'routeUpload' => 'admin.noimage.upload', 'routeDelete' => 'admin.noimage.delete'],
 
                 ['field' => 'banner1', 'title' => 'Slider Home 01', 'category' => 'Home', 'file' => $banners['banner1'] ?? null, 'routeUpload' => 'admin.banner1.upload', 'routeDelete' => 'admin.banner1.delete'],
                 ['field' => 'banner2', 'title' => 'Slider Home 02', 'category' => 'Home', 'file' => $banners['banner2'] ?? null, 'routeUpload' => 'admin.banner2.upload', 'routeDelete' => 'admin.banner2.delete'],
@@ -70,7 +70,7 @@
                 ['field' => 'banner8', 'title' => 'Banner Principal 08', 'category' => 'Home', 'file' => $banners['banner8'] ?? null, 'routeUpload' => 'admin.banner8.upload', 'routeDelete' => 'admin.banner8.delete'],
                 ['field' => 'banner9', 'title' => 'Banner Principal 09', 'category' => 'Home', 'file' => $banners['banner9'] ?? null, 'routeUpload' => 'admin.banner9.upload', 'routeDelete' => 'admin.banner9.delete'],
                 ['field' => 'banner10', 'title' => 'Banners Internas', 'category' => 'Home', 'file' => $banners['banner10'] ?? null, 'routeUpload' => 'admin.banner10.upload', 'routeDelete' => 'admin.banner10.delete'],
-                ['field' => 'whatsapp_banner', 'title' => 'Banner WhatsApp', 'category' => 'Home', 'file' => $banners['whatsapp_banner'] ?? null, 'routeUpload' => 'admin.whatsapp_banner.upload', 'routeDelete' => 'admin.whatsapp_banner.delete'],
+                ['field' => 'whatsapp_banner', 'title' => 'Banner WhatsApp', 'category' => $catSistema, 'file' => $banners['whatsapp_banner'] ?? null, 'routeUpload' => 'admin.whatsapp_banner.upload', 'routeDelete' => 'admin.whatsapp_banner.delete'],
         ];
         
         $categories = [$catIdentidade, $catHome, $catSistema];

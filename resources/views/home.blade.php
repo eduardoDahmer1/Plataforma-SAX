@@ -8,43 +8,86 @@
             'destaque' => __('messages.destacados'),
             'mais_vistos' => __('messages.mais_vistos'),
         ];
+
+        $productsEditados = $lancamentos ?? collect();
+        $productsMaisVistos = $mostViewed ?? collect();
+        $productsDest = $highlights['destaque'] ?? collect();
+
+        $showEditados = $settings->show_highlight_lancamentos ?? 0;
+        $showMaisVistos = $settings->show_highlight_famosos ?? 0;
+        $showDest = $settings->show_highlight_destaque ?? 0;
+
+        $exclusiveCategories = collect($categories ?? [])->take(3);
+        $exclusiveDescription = 'Uma seleção pensada para destacar design, acabamentos e marcas que definem o universo SAX com mais profundidade do que um banner sozinho consegue mostrar.';
+        $stackedBanners = collect([
+            ['image' => $banner2 ?? null, 'label' => 'Selecao curada'],
+            ['image' => $banner3 ?? null, 'label' => 'Novidades da temporada'],
+            ['image' => $banner4 ?? null, 'label' => 'Destaques da casa'],
+        ])->filter(fn ($banner) => filled($banner['image']));
     @endphp
 
     <div class="sax-home-wrapper">
-        
-        {{-- 1. Slider Superior --}}
         @include('home-components.main-slider', ['limit' => 5])
 
         <x-alert type="success" :message="session('success')" />
 
-        {{-- 2. Categorias --}}
-        @if(isset($categories) && $categories->count() > 0)
+        @if (isset($categories) && $categories->count() > 0)
             @include('home-components.category-strip')
         @endif
 
-        {{-- 3. Seção Exclusiva --}}
-        <section class="sax-exclusive-banner py-5">
+        <section class="sax-exclusive-section py-5">
             <div class="container-fluid px-lg-5">
-                <div class="exclusive-content text-center">
-                    <h2 class="sax-brands-title text-dark">{{ __('messages.colecao_exclusiva') }}</h2>
-                    @if(isset($banner1) && $banner1)
-                        <div class="mt-4">
-                            <img src="{{ asset('storage/uploads/' . $banner1) }}" 
-                                 class="img-fluid w-100" 
-                                 alt="Exclusivo"
-                                 onerror="this.style.display='none'">
+                <div class="exclusive-shell row g-4 align-items-stretch">
+                    <div class="col-lg-5">
+                        <div class="exclusive-panel h-100">
+                            <span class="exclusive-eyebrow">Curadoria SAX</span>
+                            <h2 class="exclusive-title">{{ __('messages.colecao_exclusiva') }}</h2>
+                            <p class="exclusive-copy">{{ $exclusiveDescription }}</p>
+
+                            @if ($exclusiveCategories->isNotEmpty())
+                                <div class="exclusive-tags">
+                                    @foreach ($exclusiveCategories as $category)
+                                        <a href="{{ route('categories.show', $category->slug ?? $category->id) }}" class="exclusive-tag">
+                                            {{ $category->name }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <div class="exclusive-actions">
+                                <a href="{{ route('categories.index') }}" class="exclusive-btn exclusive-btn--dark">Explorar coleção</a>
+                                <a href="{{ route('blogs.index') }}" class="exclusive-btn exclusive-btn--ghost">Ver editorial</a>
+                            </div>
+
+                            <div class="exclusive-note">
+                                <strong>Seleção com intenção:</strong>
+                                peças, histórias e categorias organizadas para dar mais contexto à vitrine principal.
+                            </div>
                         </div>
-                    @endif
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="exclusive-media-wrap h-100">
+                            @if (isset($banner1) && $banner1)
+                                <img
+                                    src="{{ asset('storage/uploads/' . $banner1) }}"
+                                    class="img-fluid w-100 exclusive-media"
+                                    alt="Coleção exclusiva SAX"
+                                    onerror="this.style.display='none'"
+                                >
+                            @else
+                                <div class="exclusive-media exclusive-media--placeholder">
+                                    <div>
+                                        <span class="exclusive-eyebrow">Coleção exclusiva</span>
+                                        <p class="mb-0">Adicione um banner para destacar esta vitrine com mais força visual.</p>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
-
-        {{-- 4. Seção: Recentemente Editados (Usando a variável do Controller) --}}
-        @php 
-            $showEditados = $settings->show_highlight_lancamentos ?? 0;
-            // AJUSTE: O Controller envia como $lancamentos
-            $productsEditados = $lancamentos ?? collect(); 
-        @endphp
 
         @if ($showEditados && $productsEditados->isNotEmpty())
             <div class="sax-section-container py-4">
@@ -63,29 +106,29 @@
             </div>
         @endif
 
-        {{-- 5. Seção de 3 Banners --}}
-        <section class="sax-triple-banners py-5">
+        <section class="sax-stacked-banners py-5">
             <div class="container-fluid px-lg-5">
-                <div class="row g-2">
-                    <div class="col-md-4">
-                        <img src="{{ asset('storage/uploads/' . ($banner2 ?? 'default.jpg')) }}" class="img-fluid w-100" onerror="this.src='https://placehold.co/600x800?text=Banner+2'">
+                @if ($stackedBanners->isNotEmpty())
+                    <div class="stacked-banners-grid">
+                        @foreach ($stackedBanners as $banner)
+                            <article class="stacked-banner-card">
+                                <div class="stacked-banner-card__media">
+                                    <img
+                                        src="{{ asset('storage/uploads/' . $banner['image']) }}"
+                                        class="img-fluid w-100"
+                                        alt="{{ $banner['label'] }}"
+                                        onerror="this.src='https://placehold.co/1400x680?text=SAX+Banner'"
+                                    >
+                                </div>
+                                <div class="stacked-banner-card__overlay">
+                                    <span>{{ $banner['label'] }}</span>
+                                </div>
+                            </article>
+                        @endforeach
                     </div>
-                    <div class="col-md-4">
-                        <img src="{{ asset('storage/uploads/' . ($banner3 ?? 'default.jpg')) }}" class="img-fluid w-100" onerror="this.src='https://placehold.co/600x800?text=Banner+3'">
-                    </div>
-                    <div class="col-md-4">
-                        <img src="{{ asset('storage/uploads/' . ($banner4 ?? 'default.jpg')) }}" class="img-fluid w-100" onerror="this.src='https://placehold.co/600x800?text=Banner+4'">
-                    </div>
-                </div>
+                @endif
             </div>
         </section>
-
-        {{-- 6. Seção MAIS VISTOS (Ajustado com swiper-slide) --}}
-        @php 
-            $keyMaisVistos = 'famosos'; 
-            $showMaisVistos = $settings->{'show_highlight_' . $keyMaisVistos} ?? 0;
-            $productsMaisVistos = $mostViewed ?? collect();
-        @endphp
 
         @if ($showMaisVistos && $productsMaisVistos->isNotEmpty())
             <div class="sax-section-container py-4">
@@ -94,9 +137,9 @@
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsMaisVistos as $item)
-                                <div class="swiper-slide"> {{-- ADICIONADO --}}
+                                <div class="swiper-slide">
                                     @include('home-components.product-card', ['item' => $item])
-                                </div> {{-- ADICIONADO --}}
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -104,23 +147,16 @@
             </div>
         @endif
 
-        {{-- 7. Seção Destaques (Ajustado com swiper-slide) --}}
-        @php 
-            $keyDest = 'destaque';
-            $productsDest = $highlights[$keyDest] ?? collect();
-            $showDest = $settings->{'show_highlight_' . $keyDest} ?? 0;
-        @endphp
-
         @if ($showDest && $productsDest->isNotEmpty())
             <div class="sax-section-container py-4">
                 <div class="container-fluid px-lg-5">
-                    <h2 class="sax-section-title mb-4">{{ $highlightTitles[$keyDest] }}</h2>
+                    <h2 class="sax-section-title mb-4">{{ $highlightTitles['destaque'] }}</h2>
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsDest as $item)
-                                <div class="swiper-slide"> {{-- ADICIONADO --}}
+                                <div class="swiper-slide">
                                     @include('home-components.product-card', ['item' => $item])
-                                </div> {{-- ADICIONADO --}}
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -131,7 +167,5 @@
         @include('home-components.brands-grid')
         @include('home-components.form-home')
     </div>
-
-    {{-- JS migrado a home.js --}}
 
 @endsection

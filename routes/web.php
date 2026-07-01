@@ -111,6 +111,7 @@ Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/ajax-search', [BlogController::class, 'ajaxSearch'])->name('blogs.ajax-search');
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
 Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');

@@ -490,6 +490,278 @@ width: 100%;
 object-fit: cover;
 
 }
+
+.sax-home-wrapper {
+background: #fff;
+}
+
+.sax-exclusive-section {
+background:
+radial-gradient(circle at top left, rgba(200, 166, 75, 0.14), transparent 30%),
+linear-gradient(180deg, #faf8f2 0%, #ffffff 100%);
+}
+
+.exclusive-shell {
+align-items: stretch;
+}
+
+.exclusive-panel,
+.exclusive-media-wrap,
+.stacked-banner-card {
+position: relative;
+overflow: hidden;
+border-radius: 18px;
+}
+
+.exclusive-panel {
+display: flex;
+flex-direction: column;
+justify-content: center;
+gap: 1.25rem;
+padding: clamp(1.5rem, 3vw, 3rem);
+min-height: 100%;
+background: rgba(255, 255, 255, 0.88);
+border: 1px solid rgba(0, 0, 0, 0.06);
+box-shadow: 0 18px 50px rgba(0, 0, 0, 0.05);
+}
+
+.exclusive-eyebrow {
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+font-size: 0.72rem;
+font-weight: 800;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+color: #8e7441;
+}
+
+.exclusive-title {
+margin: 0;
+font-size: clamp(2rem, 4vw, 3.5rem);
+line-height: 0.98;
+font-weight: 900;
+letter-spacing: -0.04em;
+color: var(--ink);
+}
+
+.exclusive-copy {
+max-width: 34rem;
+margin: 0;
+font-size: 1rem;
+line-height: 1.85;
+color: var(--muted);
+}
+
+.exclusive-tags {
+display: flex;
+flex-wrap: wrap;
+gap: 0.75rem;
+}
+
+.exclusive-tag,
+.exclusive-btn {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+text-decoration: none;
+transition: all 0.25s ease;
+}
+
+.exclusive-tag {
+padding: 0.6rem 0.9rem;
+border-radius: 999px;
+background: #f7f3ea;
+border: 1px solid rgba(0, 0, 0, 0.06);
+font-size: 0.72rem;
+font-weight: 700;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: var(--ink);
+}
+
+.exclusive-tag:hover {
+background: #fff;
+border-color: rgba(0, 0, 0, 0.18);
+}
+
+.exclusive-actions {
+display: flex;
+flex-wrap: wrap;
+gap: 0.9rem;
+}
+
+.exclusive-btn {
+min-height: 48px;
+padding: 0 1.2rem;
+border-radius: 999px;
+font-size: 0.75rem;
+font-weight: 800;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+
+.exclusive-btn--dark {
+background: #000;
+border: 1px solid #000;
+color: #fff;
+}
+
+.exclusive-btn--dark:hover {
+background: #1a1a1a;
+color: #fff;
+}
+
+.exclusive-btn--ghost {
+background: transparent;
+border: 1px solid rgba(0, 0, 0, 0.12);
+color: #000;
+}
+
+.exclusive-btn--ghost:hover {
+border-color: #000;
+background: #fff;
+color: #000;
+}
+
+.exclusive-note {
+padding-top: 1rem;
+border-top: 1px solid rgba(0, 0, 0, 0.08);
+font-size: 0.88rem;
+line-height: 1.8;
+color: #555;
+}
+
+.exclusive-media-wrap {
+height: 100%;
+min-height: 28rem;
+background: #efe9db;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+}
+
+.exclusive-media {
+display: block;
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+
+.exclusive-media--placeholder {
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 2rem;
+text-align: center;
+color: #6a6a6a;
+}
+
+.sax-stacked-banners {
+padding-top: 1rem;
+}
+
+.stacked-banners-grid {
+display: grid;
+gap: 1rem;
+}
+
+.stacked-banner-card {
+min-height: 15rem;
+background: #f5f5f5;
+box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+}
+
+.stacked-banner-card__media,
+.stacked-banner-card__media img {
+width: 100%;
+height: 100%;
+}
+
+.stacked-banner-card__media img {
+object-fit: cover;
+transition: transform 0.5s ease;
+}
+
+.stacked-banner-card:hover .stacked-banner-card__media img {
+transform: scale(1.03);
+}
+
+.stacked-banner-card__overlay {
+position: absolute;
+left: 0;
+right: 0;
+bottom: 0;
+padding: 1.15rem 1.25rem;
+background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.64) 100%);
+}
+
+.stacked-banner-card__overlay span {
+display: inline-flex;
+font-size: 0.78rem;
+font-weight: 800;
+letter-spacing: 0.16em;
+text-transform: uppercase;
+color: #fff;
+}
+
+@media (min-width: 992px) {
+.stacked-banners-grid {
+gap: 1.25rem;
+}
+
+.stacked-banner-card {
+min-height: 18rem;
+}
+}
+
+@media (max-width: 991px) {
+.exclusive-media-wrap {
+min-height: 22rem;
+}
+
+.exclusive-panel {
+gap: 1rem;
+}
+}
+
+@media (max-width: 767px) {
+.sax-exclusive-section,
+.sax-stacked-banners {
+padding-top: 2rem !important;
+padding-bottom: 2rem !important;
+}
+
+.exclusive-panel {
+padding: 1.4rem;
+border-radius: 16px;
+}
+
+.exclusive-title {
+font-size: 2rem;
+}
+
+.exclusive-copy {
+font-size: 0.95rem;
+line-height: 1.75;
+}
+
+.exclusive-actions {
+flex-direction: column;
+}
+
+.exclusive-btn {
+width: 100%;
+}
+
+.exclusive-media-wrap {
+min-height: 16rem;
+border-radius: 16px;
+}
+
+.stacked-banner-card {
+min-height: 12rem;
+border-radius: 14px;
+}
+}
 .g-1 {
 padding-right: 2px !important;
 padding-left: 2px !important;

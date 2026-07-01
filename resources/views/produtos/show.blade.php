@@ -258,13 +258,11 @@
 @if (isset($similares) && $similares->isNotEmpty())
     <section class="py-5 border-top">
         <div class="container-fluid px-3 px-lg-5">
-            <h2 class="sax-section-title mb-4 text-uppercase fw-light" style="letter-spacing: 2px;">{{ __('messages.artigos_similares') }}</h2>
+            <h2 class="sax-section-title mb-4">{{ __('messages.artigos_similares') }}</h2>
             <div class="swiper productSwiper">
                 <div class="swiper-wrapper">
                     @foreach ($similares as $item)
-                        <div class="swiper-slide">
-                            @include('home-components.product-card', ['item' => $item])
-                        </div>
+                        @include('home-components.product-card', ['item' => $item])
                     @endforeach
                 </div>
             </div>
@@ -273,7 +271,7 @@
 @endif
 
 @if (isset($mostViewed) && $mostViewed->isNotEmpty())
-    <section class="py-5 border-top bg-light">
+    <section class="py-5 border-top">
         <div class="container-fluid px-3 px-lg-5">
             <h2 class="sax-section-title mb-4">{{ __('messages.mais_vistos') }}</h2>
             <div class="swiper productSwiper">

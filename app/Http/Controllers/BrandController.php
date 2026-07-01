@@ -3,19 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Subcategory;
-use App\Models\CategoriasFilhas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class BrandController extends Controller
 {
-    /**
-     * Lista marcas públicas com busca e paginação.
-     * O 'internal_banner' pode ser usado aqui se você quiser exibir
-     * cards diferenciados na listagem geral.
-     */
     public function publicIndex(Request $request)
     {
         $page = $request->get('page', 1);
@@ -24,14 +16,12 @@ class BrandController extends Controller
         $cacheKey = "brands_index_{$page}_" . md5($search);
 
         $brands = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            $query = Brand::where('status', 1) // Adicionado: Somente marcas ativas
+            $query = Brand::where('status', 1)
+                ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
                 ->withCount([
-                    'products' => function ($q) {
-                        $q->where('status', 1)->where('product_role', 'P')->where('stock', '>', 0);
-                    },
+                    'products as active_products_count' => fn($q) => $this->applyActiveProductScope($q),
                 ])
-                ->orderBy('name')
-                ->having('products_count', '>', 0);
+                ->orderBy('name');
 
             if (!empty($search)) {
                 $query->where('name', 'like', "%{$search}%");
@@ -43,21 +33,15 @@ class BrandController extends Controller
         return view('brands.index', compact('brands'));
     }
 
-    /**
-     * Exibe o perfil da marca e seus produtos.
-     * Agora o objeto $brand carrega 'banner' e 'internal_banner'.
-     */
     public function publicShow($slug, Request $request)
     {
         $page = $request->get('page', 1);
         $cacheKey = "brand_show_{$slug}_page_{$page}";
 
-        // 1. Busca a marca principal
         $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
             return Brand::where('slug', $slug)->where('status', 1)->firstOrFail();
         });
 
-        // 2. Busca produtos da marca com paginação e cache
         $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand) {
             return $brand
                 ->products()
@@ -72,26 +56,22 @@ class BrandController extends Controller
                 ->withQueryString();
         });
 
-        // --- FILTRO COMPLETO (ARVORE COMPLETA) ---
-        // 3. Carrega Categorias, Subcategorias e Categorias Filhas em uma única query com cache
-        $categoriesTree = Cache::remember('filter_full_tree', now()->addHours(1), function () {
-            return Category::where('status', 1)
-                ->with(['subcategories.categoriasfilhas']) // Carrega toda a hierarquia
-                ->orderBy('name')
-                ->get();
-        });
+        $categoriesTree = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
-        // 4. Carrega todas as Marcas para o filtro lateral
-        $allBrands = Cache::remember('filter_brands_list', now()->addHours(1), function () {
-            return Brand::where('status', 1)->orderBy('name')->get();
-        });
-        // -----------------------------------------
+        $allBrands = Cache::remember('filter_brands_list_active', now()->addHours(1), fn() => $this->buildFilterBrandsList());
 
-        return view('brands.show', [
-            'brand' => $brand,
+        return view('catalog.show', [
+            'entity' => $brand,
             'products' => $products,
-            'categories' => $categoriesTree, // Enviando a árvore completa
-            'brands' => $allBrands, // Enviando a lista de marcas
+            'categories' => $categoriesTree,
+            'brands' => $allBrands,
+            'currentCategory' => null,
+            'currentSub' => null,
+            'currentChild' => null,
+            'backUrl' => route('brands.index'),
+            'backLabel' => __('messages.nossas_marcas'),
+            'breadcrumb' => [],
+            'emptyMessage' => 'No se encontraron productos en esta marca.',
         ]);
     }
 }

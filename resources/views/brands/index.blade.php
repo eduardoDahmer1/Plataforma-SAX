@@ -3,7 +3,6 @@
 @section('content')
     <div class="brands-page-wrapper py-5">
         <div class="container">
-            {{-- Cabeçalho Minimalista --}}
             <div class="text-center mb-5">
                 <h1 class="sax-title">{{ __('messages.nossas_marcas') }}</h1>
                 <div class="sax-divider mx-auto"></div>
@@ -12,7 +11,6 @@
                 </p>
             </div>
 
-            {{-- Busca Elegante --}}
             <div class="search-container mb-5">
                 <form method="GET" class="mx-auto" style="max-width: 600px;">
                     <div class="sax-search-input">
@@ -26,20 +24,20 @@
                 </form>
             </div>
 
-            {{-- Listagem em Grid de Luxo --}}
             <div class="row g-4">
                 @forelse ($brands as $brand)
                     @php
-                        $imagemInvalida = empty($brand->image) || 
-                                          str_contains($brand->image, 'noimage') || 
-                                          !Storage::disk('public')->exists($brand->image);
+                        $brandImage = !empty($brand->image)
+                            ? Storage::url($brand->image)
+                            : asset('storage/uploads/noimage.webp');
+                        $fallbackImage = asset('storage/uploads/noimage.webp');
                     @endphp
 
-                    @if (($brand->products_count ?? 0) > 0 && !$imagemInvalida)
+                    @if (($brand->active_products_count ?? 0) > 0)
                         <div class="col-6 col-md-4 col-lg-3">
                             <a href="{{ route('brands.show', $brand->slug) }}" class="brand-sax-card">
                                 <div class="brand-img-box">
-                                    <img src="{{ Storage::url($brand->image) }}" alt="{{ $brand->name }}" loading="lazy">
+                                    <img src="{{ $brandImage }}" alt="{{ $brand->name }}" loading="lazy" onerror="this.src='{{ $fallbackImage }}'">
                                 </div>
                                 <div class="brand-info">
                                     <h5 class="brand-name">{{ $brand->name ?? $brand->slug }}</h5>
@@ -57,7 +55,6 @@
                 @endforelse
             </div>
 
-            {{-- Paginação Customizada --}}
             <div class="sax-pagination mt-5">
                 {{ $brands->appends(request()->input())->links() }}
             </div>

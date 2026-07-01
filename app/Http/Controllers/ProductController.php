@@ -173,7 +173,8 @@ class ProductController extends Controller
             $similares = collect();
             foreach ($niveles as [$campo, $id, $palavra]) {
                 $faltan = $limit - $similares->count();
-                if ($faltan <= 0 || !$id) break;
+                if ($faltan <= 0) break;
+                if (!$id) continue;
 
                 $similares = $similares->merge(
                     (clone $base)

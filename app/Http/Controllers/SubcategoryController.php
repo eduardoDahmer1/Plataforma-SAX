@@ -2,12 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Brand;
-use App\Models\Category;
 use App\Models\Subcategory;
-use App\Models\CategoriasFilhas;
-
-use App\Models\Attribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -44,12 +39,10 @@ class SubcategoryController extends Controller
         $page = $request->get('page', 1);
         $cacheKey = "subcategory_show_{$idOrSlug}_page_{$page}";
 
-        // 1. Atributos globais
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
         });
 
-        // 2. Dados da subcategoria e produtos
         $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug) {
             $subcategory = Subcategory::with(['category', 'categoriasfilhas'])
                 ->where('slug', $idOrSlug)
@@ -73,28 +66,25 @@ class SubcategoryController extends Controller
             ];
         });
 
-        // 3. Dados para o Filtro Completo (Sidebar)
-        // Buscamos todas as categorias com suas subcategorias e categorias filhas para o menu lateral
-        $allCategories = Cache::remember('filter_full_tree', now()->addHours(1), function () {
-            return Category::where('status', 1)
-                ->with(['subcategories.categoriasfilhas'])
-                ->orderBy('name')
-                ->get();
-        });
+        $allCategories = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
-        $brands = Cache::remember('filter_brands_list', now()->addHours(1), function () {
-            return Brand::where('status', 1)->orderBy('name')->get();
-        });
+        $brands = Cache::remember('filter_brands_list_active', now()->addHours(1), fn() => $this->buildFilterBrandsList());
 
-        return view('subcategories.show', [
-            'subcategory' => $data['subcategory'],
+        return view('catalog.show', [
+            'entity' => $data['subcategory'],
             'products' => $data['products'],
             'attribute' => $attribute,
-            'categories' => $allCategories, // Árvore completa: Cat > Sub > Filha
+            'categories' => $allCategories,
             'brands' => $brands,
-            // Facilitadores para o componente saber onde estamos
-            'currentSubcategory' => $data['subcategory'],
             'currentCategory' => $data['subcategory']->category,
+            'currentSub' => $data['subcategory'],
+            'currentChild' => null,
+            'backUrl' => route('subcategories.index'),
+            'backLabel' => __('VOLVER A SUBCATEGORIAS'),
+            'breadcrumb' => [
+                $data['subcategory']->category->name ?? '',
+            ],
+            'emptyMessage' => 'No se encontraron productos en esta subcategoría.',
         ]);
     }
 }

@@ -2,11 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Subcategory;
-use App\Models\CategoriasFilhas;
-use App\Models\Attribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -73,27 +69,26 @@ class CategoryController extends Controller
 
         // 3. Dados para o Filtro Completo (Sidebar)
         // Carregamos a árvore inteira para que o componente mostre Cat > Sub > Filhas
-        $categoriesTree = Cache::remember('filter_full_tree', now()->addHours(1), function () {
-            return Category::where('status', 1)
-                ->with(['subcategories.categoriasfilhas'])
-                ->orderBy('name')
-                ->get();
-        });
+        $categoriesTree = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
-        $brands = Cache::remember('filter_brands_list', now()->addHours(1), function () {
-            return \App\Models\Brand::where('status', 1)->orderBy('name')->get();
-        });
+        $brands = Cache::remember('filter_brands_list_active', now()->addHours(1), fn() => $this->buildFilterBrandsList());
 
         $cartItems = auth()->check() ? auth()->user()->cart()->pluck('quantity', 'product_id')->toArray() : [];
 
-        return view('categories.show', [
-            'category' => $category,
+        return view('catalog.show', [
+            'entity' => $category,
             'products' => $products,
             'cartItems' => $cartItems,
             'attribute' => $attribute,
-            'categories' => $categoriesTree, // Variável que o componente espera
-            'brands' => $brands, // Variável que o componente espera
-            'currentCategory' => $category, // Identificador para marcar ativo no menu
+            'categories' => $categoriesTree,
+            'brands' => $brands,
+            'currentCategory' => $category,
+            'currentSub' => null,
+            'currentChild' => null,
+            'backUrl' => route('categories.index'),
+            'backLabel' => __('messages.voltar_categorias'),
+            'breadcrumb' => [],
+            'emptyMessage' => 'No se encontraron productos en esta categoría.',
         ]);
     }
 }

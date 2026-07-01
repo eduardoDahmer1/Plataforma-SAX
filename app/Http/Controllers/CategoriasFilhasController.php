@@ -2,15 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
-use App\Models\Attribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class CategoriasFilhasController extends Controller
 {
@@ -40,20 +35,16 @@ class CategoriasFilhasController extends Controller
         $page = $request->get('page', 1);
         $cacheKey = "cat_filha_show_{$idOrSlug}_p{$page}";
 
-        // 1. Atributos globais (sempre carregar para o banner de fallback)
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
         });
 
-        // 2. Busca da Categoria Filha e Produtos (Cacheado)
         $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug) {
-            // Busca por Slug OU ID
             $categoriasfilhas = CategoriasFilhas::with(['subcategory.category'])
                 ->where('slug', $idOrSlug)
                 ->orWhere('id', $idOrSlug)
                 ->firstOrFail();
 
-            // Paginação dos produtos com a marca e categoria carregadas para o card
             $products = $categoriasfilhas
                 ->products()
                 ->where('status', 1)
@@ -71,30 +62,26 @@ class CategoriasFilhasController extends Controller
             ];
         });
 
-        // 3. Dados para o Filtro Completo (Sidebar)
-        // Carregamos a árvore completa: Categoria > Subcategoria > Categoria Filha
-        $categoriesTree = Cache::remember('filter_full_tree', now()->addHours(1), function () {
-            return \App\Models\Category::where('status', 1)
-                ->with(['subcategories.categoriasfilhas'])
-                ->orderBy('name')
-                ->get();
-        });
+        $categoriesTree = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
-        // Carregamos a lista de todas as marcas para o filtro lateral
-        $brands = Cache::remember('filter_brands_list', now()->addHours(1), function () {
-            return \App\Models\Brand::where('status', 1)->orderBy('name')->get();
-        });
+        $brands = Cache::remember('filter_brands_list_active', now()->addHours(1), fn() => $this->buildFilterBrandsList());
 
-        return view('categoriasfilhas.show', [
-            'categoriasfilhas' => $data['categoriasfilhas'],
+        return view('catalog.show', [
+            'entity' => $data['categoriasfilhas'],
             'products' => $data['products'],
             'attribute' => $attribute,
-            'categories' => $categoriesTree, // Variável esperada pelo componente
-            'brands' => $brands, // Variável esperada pelo componente
-            // Auxiliares de contexto para o menu lateral saber o que destacar
-            'currentChild' => $data['categoriasfilhas'],
+            'categories' => $categoriesTree,
+            'brands' => $brands,
+            'currentCategory' => $data['categoriasfilhas']->subcategory->category ?? null,
             'currentSub' => $data['categoriasfilhas']->subcategory,
-            'currentCat' => $data['categoriasfilhas']->subcategory->category ?? null,
+            'currentChild' => $data['categoriasfilhas'],
+            'backUrl' => route('categorias-filhas.index'),
+            'backLabel' => 'VOLVER A CATEGORIAS FILHAS',
+            'breadcrumb' => [
+                $data['categoriasfilhas']->subcategory->category->name ?? '',
+                $data['categoriasfilhas']->subcategory->name ?? '',
+            ],
+            'emptyMessage' => 'No se encontraron productos en esta categoría.',
         ]);
     }
 }

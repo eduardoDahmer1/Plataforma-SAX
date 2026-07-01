@@ -5,9 +5,11 @@ use App\Models\Currency;
 
 $currencies        = Currency::all();
 $sessionCurrency   = session('currency');
+$defaultCurrencyId = Currency::where('name', 'BRL')->value('id')
+    ?? Currency::where('is_default', 1)->value('id');
 $currentCurrencyId = is_object($sessionCurrency)
-    ? $sessionCurrency->id ?? Currency::where('is_default', 1)->value('id')
-    : $sessionCurrency ?? Currency::where('is_default', 1)->value('id');
+    ? $sessionCurrency->id ?? $defaultCurrencyId
+    : $sessionCurrency ?? $defaultCurrencyId;
 
 $currentCurrency = $currencies->firstWhere('id', (int) $currentCurrencyId);
 

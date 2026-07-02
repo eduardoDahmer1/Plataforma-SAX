@@ -10,6 +10,8 @@
     --ok-bd: #dfe7f2;
     --ok-tx: #5a7fa8;
     --warn: #c8a64b;
+    --accent: #b88a2e;
+    --accent-soft: #f3e5c8;
     --sh: 0 24px 44px -18px rgba(0, 0, 0, 0.16);
     --font: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -261,20 +263,36 @@
     --bs-modal-border-width: 0;
 }
 
+.sax-auth-modal .modal-content {
+    animation: saxAuthModalIn 0.22s ease;
+}
+
+@keyframes saxAuthModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .sax-auth-modal .modal-dialog {
     max-width: 460px;
 }
 
 .sax-auth-modal .modal-content {
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    box-shadow: 0 26px 60px -24px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(180deg, #ffffff 0%, #fcfcfc 100%);
+    border: 1px solid #d7d7d7;
+    border-radius: 12px;
+    box-shadow: 0 30px 64px -28px rgba(0, 0, 0, 0.35);
     overflow: hidden;
 }
 
 .sax-auth-modal .modal-header {
     align-items: center;
-    background: var(--blk) !important;
+    background: linear-gradient(135deg, #000 0%, #262626 55%, #4a4a4a 100%) !important;
     border: 0 !important;
     color: var(--paper);
     min-height: 82px;
@@ -322,7 +340,7 @@
 }
 
 .sax-auth-modal-subtitle {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.84);
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 1.4px;
@@ -354,8 +372,8 @@
 }
 
 .sax-auth-tabs {
-    background: var(--paper);
-    border-bottom: 1px solid var(--line);
+    background: #fafafa;
+    border-bottom: 1px solid #e3e3e3;
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
@@ -363,7 +381,7 @@
 .sax-auth-tab {
     background: transparent;
     border: 0;
-    color: var(--soft);
+    color: #707070;
     cursor: pointer;
     font-size: 12px;
     font-weight: 700;
@@ -374,10 +392,10 @@
 }
 
 .sax-auth-tab::after {
-    background: var(--blk);
+    background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
     bottom: -1px;
     content: "";
-    height: 1px;
+    height: 2px;
     left: 18px;
     opacity: 0;
     position: absolute;
@@ -385,7 +403,7 @@
 }
 
 .sax-auth-tab.is-active {
-    color: var(--blk);
+    color: var(--ink);
 }
 
 .sax-auth-tab.is-active::after {
@@ -404,7 +422,8 @@
 
 .sax-auth-modal .form-control,
 .sax-auth-modal .form-select {
-    border: 1px solid var(--line);
+    background: #fff;
+    border: 1px solid #d4d4d4;
     border-radius: 7px;
     color: var(--ink);
     font-size: 14px;
@@ -414,8 +433,8 @@
 
 .sax-auth-modal .form-control:focus,
 .sax-auth-modal .form-select:focus {
-    border-color: var(--blk);
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(184, 138, 46, 0.14);
 }
 
 .sax-auth-modal .toggle-password {
@@ -432,8 +451,8 @@
 .sax-auth-modal .btn-primary,
 .sax-auth-modal .btn-success,
 .sax-auth-modal .btn-warning {
-    background: var(--blk) !important;
-    border-color: var(--blk) !important;
+    background: linear-gradient(180deg, #191919 0%, #000000 100%) !important;
+    border-color: #0f0f0f !important;
     border-radius: 7px;
     color: var(--paper);
     font-size: 12px;
@@ -446,14 +465,14 @@
 .sax-auth-modal .btn-primary:hover,
 .sax-auth-modal .btn-success:hover,
 .sax-auth-modal .btn-warning:hover {
-    background: var(--blk) !important;
-    border-color: var(--blk) !important;
+    background: linear-gradient(180deg, #000000 0%, #2a2a2a 100%) !important;
+    border-color: #111 !important;
     color: var(--paper);
 }
 
 .sax-auth-modal .btn-secondary {
-    background: var(--surface);
-    border-color: var(--line);
+    background: #f4f4f4;
+    border-color: #d5d5d5;
     border-radius: 7px;
     color: var(--ink);
     font-size: 12px;
@@ -461,8 +480,8 @@
 }
 
 .sax-auth-modal .btn-secondary:hover {
-    background: var(--line);
-    border-color: var(--line);
+    background: #ececec;
+    border-color: #cdcdcd;
 }
 
 .sax-auth-modal a {
@@ -481,6 +500,18 @@
 
 .sax-auth-modal .is-invalid {
     border-color: var(--warn) !important;
+}
+
+.sax-auth-password-tip {
+    background: var(--accent-soft);
+    border: 1px solid #e8d3a2;
+    border-left: 3px solid var(--accent);
+    border-radius: 7px;
+    color: #71511b;
+    font-size: 12px;
+    line-height: 1.4;
+    margin: -2px 0 14px;
+    padding: 8px 10px;
 }
 
 .verify-kicker {

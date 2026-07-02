@@ -27,9 +27,40 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email:rfc', 'max:255'],
             'password' => ['required', 'string'],
         ];
+    }
+
+    /**
+     * Mensagens de validacao personalizadas.
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Informe seu e-mail.',
+            'email.email' => 'Informe um e-mail valido.',
+            'email.max' => 'O e-mail deve ter no maximo :max caracteres.',
+            'password.required' => 'Informe sua senha.',
+        ];
+    }
+
+    /**
+     * Nomes amigaveis para campos.
+     */
+    public function attributes(): array
+    {
+        return [
+            'email' => 'e-mail',
+            'password' => 'senha',
+        ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'email' => Str::lower(trim((string) $this->input('email'))),
+        ]);
     }
 
     /**
@@ -59,7 +90,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 8)) {
             return;
         }
 

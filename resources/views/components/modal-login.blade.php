@@ -31,11 +31,18 @@
           <form method="POST" action="{{ route('login') }}" class="login-form" id="loginForm">
             @csrf
             <input type="hidden" name="redirect_to" value="{{ url()->current() }}" data-auth-redirect-field>
+
+            @if ($errors->has('email') && session('auth_modal') !== 'register')
+              <div class="sax-auth-error-summary" role="alert">
+                {{ $errors->first('email') }}
+              </div>
+            @endif
+
             <div class="sax-auth-field">
-              <input id="login_email" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('messages.email') }}" required autofocus class="form-control"/>
+              <input id="login_email" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('messages.email') }}" required autofocus autocomplete="username" maxlength="255" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" title="Informe um e-mail valido, como nome@dominio.com" class="form-control @error('email') is-invalid @enderror"/>
             </div>
             <div class="sax-auth-field position-relative">
-              <input id="login_password" type="password" name="password" placeholder="{{ __('messages.senha') }}" required class="form-control"/>
+              <input id="login_password" type="password" name="password" placeholder="{{ __('messages.senha') }}" required autocomplete="current-password" minlength="8" maxlength="72" class="form-control @error('password') is-invalid @enderror"/>
               <button type="button" class="btn btn-sm btn-secondary position-absolute top-50 end-0 translate-middle-y me-2 toggle-password" data-target="login_password">
                 <i class="fas fa-eye"></i>
               </button>
@@ -45,7 +52,7 @@
                <a href="#" id="showForgot" class="small">{{ __('messages.esqueci_senha') }}</a>
             </div>
 
-            <div id="loginError" class="text-danger mb-3" style="display:none;"></div>
+            <div id="loginError" class="text-danger mb-3" style="display:none;" aria-live="polite"></div>
             
             <button type="submit" class="btn btn-primary w-100">
               {{ __('messages.entrar') }}
@@ -64,13 +71,13 @@
 
             <div class="sax-auth-section-label">Dados da conta</div>
             <div class="sax-auth-field">
-              <input id="name" type="text" name="name" value="{{ old('name') }}" placeholder="{{ __('messages.nome_completo') }}" required class="form-control @error('name') is-invalid @enderror"/>
+              <input id="name" type="text" name="name" value="{{ old('name') }}" placeholder="{{ __('messages.nome_completo') }}" required minlength="2" maxlength="255" class="form-control @error('name') is-invalid @enderror"/>
               @error('name')
                 <div class="sax-auth-field-error">{{ $message }}</div>
               @enderror
             </div>
             <div class="sax-auth-field">
-              <input id="register_email" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('messages.email') }}" required autocomplete="email" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" title="Informe um e-mail completo, como nome@dominio.com" class="form-control @error('email') is-invalid @enderror"/>
+              <input id="register_email" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('messages.email') }}" required autocomplete="email" maxlength="255" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" title="Informe um e-mail completo, como nome@dominio.com" class="form-control @error('email') is-invalid @enderror"/>
               <div id="registerEmailError" class="sax-auth-field-error" style="display:none;"></div>
               @error('email')
                 <div class="sax-auth-field-error">{{ $message }}</div>
@@ -79,7 +86,7 @@
 
             <div class="sax-auth-section-label">Dados para compra</div>
             <div class="sax-auth-field">
-              <input id="register_document" type="text" name="document" value="{{ old('document') }}" placeholder="Documento (RUC/CI/CPF)" required class="form-control @error('document') is-invalid @enderror"/>
+              <input id="register_document" type="text" name="document" value="{{ old('document') }}" placeholder="Documento (RUC/CI/CPF)" required minlength="5" maxlength="30" pattern="^[A-Za-z0-9./\-\s]{5,30}$" title="Informe um documento valido." class="form-control @error('document') is-invalid @enderror"/>
               @error('document')
                 <div class="sax-auth-field-error">{{ $message }}</div>
               @enderror
@@ -99,6 +106,10 @@
                   placeholder="Telefone"
                   required
                   inputmode="tel"
+                  minlength="7"
+                  maxlength="20"
+                  pattern="^[0-9\s()+\-]{7,20}$"
+                  title="Informe um telefone valido, sem letras."
                   class="form-control sax-auth-phone-number @error('phone_number') is-invalid @enderror"
                 />
               </div>
@@ -113,7 +124,7 @@
 
             <div class="sax-auth-section-label">Senha de acesso</div>
             <div class="sax-auth-field position-relative">
-              <input id="register_password" type="password" name="password" placeholder="{{ __('messages.senha') }}" required minlength="5" class="form-control @error('password') is-invalid @enderror"/>
+              <input id="register_password" type="password" name="password" placeholder="{{ __('messages.senha') }}" required minlength="8" maxlength="72" pattern="^(?=.*[A-Za-z])(?=.*\d).+$" title="Use pelo menos 8 caracteres com 1 letra e 1 numero." class="form-control @error('password') is-invalid @enderror"/>
               <button type="button" class="btn btn-sm btn-secondary position-absolute top-50 end-0 translate-middle-y me-2 toggle-password" data-target="register_password">
                 <i class="fas fa-eye"></i>
               </button>
@@ -123,11 +134,15 @@
             </div>
 
             <div class="sax-auth-field position-relative">
-              <input id="password_confirmation" type="password" name="password_confirmation" placeholder="{{ __('messages.confirmar_senha') }}" required minlength="5" class="form-control"/>
+              <input id="password_confirmation" type="password" name="password_confirmation" placeholder="{{ __('messages.confirmar_senha') }}" required minlength="8" maxlength="72" class="form-control"/>
               <button type="button" class="btn btn-sm btn-secondary position-absolute top-50 end-0 translate-middle-y me-2 toggle-password" data-target="password_confirmation">
                 <i class="fas fa-eye"></i>
               </button>
               <div id="registerPasswordError" class="sax-auth-field-error" style="display:none;"></div>
+            </div>
+
+            <div class="sax-auth-password-tip">
+              Use no minimo 8 caracteres com letras e numeros.
             </div>
 
             <div class="text-center sax-auth-form-link-row">
@@ -147,9 +162,9 @@
               {{ __('messages.recuperar_senha') }}
             </div>
             <div class="sax-auth-field">
-              <input id="forgot_email" type="email" name="email" placeholder="{{ __('messages.email') }}" required class="form-control"/>
+              <input id="forgot_email" type="email" name="email" placeholder="{{ __('messages.email') }}" required maxlength="255" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" title="Informe um e-mail valido, como nome@dominio.com" class="form-control"/>
             </div>
-            <div id="forgotMessage" class="small mb-3" style="display:none;"></div>
+            <div id="forgotMessage" class="small mb-3" style="display:none;" aria-live="polite"></div>
             <button type="submit" class="btn btn-warning w-100" id="btnForgot">
               {{ __('messages.enviar_link') }}
             </button>
@@ -168,14 +183,14 @@
             </div>
 
             <div class="sax-auth-field position-relative">
-              <input id="reset_password" type="password" name="password" placeholder="{{ __('messages.nova_senha') }}" required minlength="5" class="form-control"/>
+              <input id="reset_password" type="password" name="password" placeholder="{{ __('messages.nova_senha') }}" required minlength="8" maxlength="72" pattern="^(?=.*[A-Za-z])(?=.*\d).+$" title="Use pelo menos 8 caracteres com 1 letra e 1 numero." class="form-control"/>
               <button type="button" class="btn btn-sm btn-secondary position-absolute top-50 end-0 translate-middle-y me-2 toggle-password" data-target="reset_password">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
 
             <div class="sax-auth-field position-relative">
-              <input id="reset_password_confirmation" type="password" name="password_confirmation" placeholder="{{ __('messages.confirmar_senha') }}" required minlength="5" class="form-control"/>
+              <input id="reset_password_confirmation" type="password" name="password_confirmation" placeholder="{{ __('messages.confirmar_senha') }}" required minlength="8" maxlength="72" class="form-control"/>
               <button type="button" class="btn btn-sm btn-secondary position-absolute top-50 end-0 translate-middle-y me-2 toggle-password" data-target="reset_password_confirmation">
                 <i class="fas fa-eye"></i>
               </button>

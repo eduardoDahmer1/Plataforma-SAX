@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Notifications\WelcomeAndVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -46,6 +47,27 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => mb_strtolower(trim((string) $value))
+        );
+    }
+
+    protected function phoneCountry(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => preg_replace('/\D/', '', (string) $value)
+        );
+    }
+
+    protected function phoneNumber(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => preg_replace('/\D/', '', (string) $value)
+        );
+    }
 
     /**
      * Sobrescreve o envio da notificação de verificação de e-mail.

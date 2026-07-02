@@ -12,15 +12,27 @@
             <div class="login-body">
                 <x-auth-session-status class="mb-4" :status="session('status')" />
 
+                @if ($errors->any())
+                    <div class="sax-auth-error-summary" role="alert">
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
 
                     <div class="form-group">
-                        <input id="email" class="form-input" type="email" name="email" placeholder="Email" required autofocus />
+                        <input id="email" class="form-input @error('email') is-invalid @enderror" type="email" name="email" value="{{ old('email') }}" placeholder="Email" required autofocus autocomplete="username" maxlength="255" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" title="Informe um e-mail valido, como nome@dominio.com" />
+                        @error('email')
+                            <div class="sax-auth-field-error">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
-                        <input id="password" class="form-input" type="password" name="password" placeholder="{{ __('messages.senha') }}" required />
+                        <input id="password" class="form-input @error('password') is-invalid @enderror" type="password" name="password" placeholder="{{ __('messages.senha') }}" required autocomplete="current-password" minlength="8" maxlength="72" />
+                        @error('password')
+                            <div class="sax-auth-field-error">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="forgot-password-container">

@@ -1,11 +1,11 @@
 @php
     $slides = array_filter([
-        $banner1 ?? null,
-        $banner2 ?? null,
-        $banner3 ?? null,
-        $banner4 ?? null,
-        $banner5 ?? null,
-    ]);
+        ['image' => $banner1 ?? null, 'link' => $banner1_link ?? null],
+        ['image' => $banner2 ?? null, 'link' => $banner2_link ?? null],
+        ['image' => $banner3 ?? null, 'link' => $banner3_link ?? null],
+        ['image' => $banner4 ?? null, 'link' => $banner4_link ?? null],
+        ['image' => $banner5 ?? null, 'link' => $banner5_link ?? null],
+    ], fn ($slide) => filled($slide['image']));
     $slides = array_slice($slides, 0, $limit ?? 5);
 @endphp
 
@@ -13,10 +13,16 @@
 <section class="sax-main-slider">
     <div class="swiper-container mainSwiper">
         <div class="swiper-wrapper">
-            @foreach($slides as $img)
+            @foreach($slides as $slide)
                 <div class="swiper-slide">
                     <div class="slide-inner">
-                        <img src="{{ asset('storage/uploads/' . $img) }}" alt="Banner SAX">
+                        @if(!empty($slide['link']))
+                            <a href="{{ $slide['link'] }}" target="_blank" rel="noopener noreferrer">
+                                <img src="{{ asset('storage/uploads/' . $slide['image']) }}" alt="Banner SAX">
+                            </a>
+                        @else
+                            <img src="{{ asset('storage/uploads/' . $slide['image']) }}" alt="Banner SAX">
+                        @endif
                         <div class="slide-overlay"></div>
                     </div>
                 </div>

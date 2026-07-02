@@ -52,6 +52,26 @@ function copyToClipboard() {
 // ── DOMContentLoaded ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Sticky Header (Desktop + Mobile)
+    const siteHeader = document.querySelector('.sax-header');
+    if (siteHeader) {
+        const stickyThreshold = 80;
+
+        const applyStickyState = () => {
+            const shouldStick = window.scrollY > stickyThreshold;
+            siteHeader.classList.toggle('is-sticky', shouldStick);
+            document.body.style.paddingTop = shouldStick ? `${siteHeader.offsetHeight}px` : '';
+        };
+
+        applyStickyState();
+        window.addEventListener('scroll', applyStickyState, { passive: true });
+        window.addEventListener('resize', () => {
+            if (siteHeader.classList.contains('is-sticky')) {
+                document.body.style.paddingTop = `${siteHeader.offsetHeight}px`;
+            }
+        });
+    }
+
     // Back to Top
     const backToTop = document.getElementById('backToTop');
     if (backToTop) {
@@ -96,7 +116,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const toggleDrawer = () => {
             drawer.classList.toggle('active');
             overlay.classList.toggle('active');
-            document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : '';
+            const isOpen = drawer.classList.contains('active');
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+            siteHeader?.classList.toggle('menu-open', isOpen);
         };
         document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleDrawer);
         document.getElementById('closeDrawer')?.addEventListener('click', toggleDrawer);
@@ -107,14 +129,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchOverlay = document.getElementById('mobileSearchOverlay');
     const searchInput   = document.getElementById('mobileSearchInput');
     if (searchOverlay) {
-        document.getElementById('mobileSearchBtn')?.addEventListener('click', () => {
+        const openSearch = () => {
             searchOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
-            setTimeout(() => searchInput?.focus(), 300);
-        });
-        document.getElementById('closeSearch')?.addEventListener('click', () => {
+            setTimeout(() => searchInput?.focus(), 120);
+        };
+
+        const closeSearch = () => {
             searchOverlay.classList.remove('active');
             document.body.style.overflow = '';
+        };
+
+        document.getElementById('mobileSearchBtn')?.addEventListener('click', openSearch);
+        document.getElementById('closeSearch')?.addEventListener('click', closeSearch);
+
+        searchOverlay.addEventListener('click', e => {
+            if (e.target === searchOverlay) {
+                closeSearch();
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && searchOverlay.classList.contains('active')) {
+                closeSearch();
+            }
         });
     }
 

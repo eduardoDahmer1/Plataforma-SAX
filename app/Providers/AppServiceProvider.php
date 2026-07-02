@@ -112,6 +112,16 @@ class AppServiceProvider extends ServiceProvider
                 'banner8' => $attribute?->banner8 ?? null,
                 'banner9' => $attribute?->banner9 ?? null,
                 'banner10' => $attribute?->banner10 ?? null,
+                'banner1_link' => $attribute?->banner1_link ?? null,
+                'banner2_link' => $attribute?->banner2_link ?? null,
+                'banner3_link' => $attribute?->banner3_link ?? null,
+                'banner4_link' => $attribute?->banner4_link ?? null,
+                'banner5_link' => $attribute?->banner5_link ?? null,
+                'banner6_link' => $attribute?->banner6_link ?? null,
+                'banner7_link' => $attribute?->banner7_link ?? null,
+                'banner8_link' => $attribute?->banner8_link ?? null,
+                'banner9_link' => $attribute?->banner9_link ?? null,
+                'banner10_link' => $attribute?->banner10_link ?? null,
                 'whatsapp_banner' => $attribute?->whatsapp_banner ?? null,
             ]);
         });

@@ -31,10 +31,48 @@ class HomeController extends Controller
             ->with('brand');
     }
 
+    private function weeklyRotatedHomeBanners(?Attribute $attribute): array
+    {
+        if (!$attribute) {
+            return [];
+        }
+
+        $weekSeed = now()->startOfWeek()->format('o-W');
+        $attributeSignature = optional($attribute->updated_at)?->timestamp ?? 'no-update';
+
+        return Cache::remember(
+            "home_banner_rotation_{$weekSeed}_{$attributeSignature}",
+            now()->endOfWeek(),
+            function () use ($attribute, $weekSeed) {
+                $available = collect(range(1, 10))
+                    ->map(function ($index) use ($attribute) {
+                        return [
+                            'origin' => $index,
+                            'image' => $attribute->{"banner{$index}"} ?? null,
+                            'link' => $attribute->{"banner{$index}_link"} ?? null,
+                        ];
+                    })
+                    ->filter(fn ($banner) => filled($banner['image']))
+                    ->sortBy(fn ($banner) => sha1($weekSeed . '|' . $banner['origin'] . '|' . $banner['image']))
+                    ->values();
+
+                $result = [];
+                foreach (range(1, 10) as $position) {
+                    $entry = $available->get($position - 1);
+                    $result["banner{$position}"] = $entry['image'] ?? null;
+                    $result["banner{$position}_link"] = $entry['link'] ?? null;
+                }
+
+                return $result;
+            }
+        );
+    }
+
     public function index(Request $request)
     {
         $settings  = Cache::remember('general_settings',  600, fn() => Generalsetting::first());
         $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
+        $weeklyBanners = $this->weeklyRotatedHomeBanners($attribute);
 
         $highlightTypes = [
             'destaque', 'mais_vendidos', 'melhores_avaliacoes', 'super_desconto',
@@ -101,11 +139,26 @@ class HomeController extends Controller
             'brands'          => $brandsSlider,
             'blogs'           => $blogs,
             'cartItems'       => $cartItems,
-            'banner1'         => $settings->banner1 ?? null,
-            'banner2'         => $settings->banner2 ?? null,
-            'banner3'         => $settings->banner3 ?? null,
-            'banner4'         => $settings->banner4 ?? null,
-            'banner5'         => $settings->banner5 ?? null,
+            'banner1'         => $weeklyBanners['banner1'] ?? null,
+            'banner2'         => $weeklyBanners['banner2'] ?? null,
+            'banner3'         => $weeklyBanners['banner3'] ?? null,
+            'banner4'         => $weeklyBanners['banner4'] ?? null,
+            'banner5'         => $weeklyBanners['banner5'] ?? null,
+            'banner6'         => $weeklyBanners['banner6'] ?? null,
+            'banner7'         => $weeklyBanners['banner7'] ?? null,
+            'banner8'         => $weeklyBanners['banner8'] ?? null,
+            'banner9'         => $weeklyBanners['banner9'] ?? null,
+            'banner10'        => $weeklyBanners['banner10'] ?? null,
+            'banner1_link'    => $weeklyBanners['banner1_link'] ?? null,
+            'banner2_link'    => $weeklyBanners['banner2_link'] ?? null,
+            'banner3_link'    => $weeklyBanners['banner3_link'] ?? null,
+            'banner4_link'    => $weeklyBanners['banner4_link'] ?? null,
+            'banner5_link'    => $weeklyBanners['banner5_link'] ?? null,
+            'banner6_link'    => $weeklyBanners['banner6_link'] ?? null,
+            'banner7_link'    => $weeklyBanners['banner7_link'] ?? null,
+            'banner8_link'    => $weeklyBanners['banner8_link'] ?? null,
+            'banner9_link'    => $weeklyBanners['banner9_link'] ?? null,
+            'banner10_link'   => $weeklyBanners['banner10_link'] ?? null,
             'whatsapp_banner' => $attribute->whatsapp_banner ?? null,
         ]);
     }

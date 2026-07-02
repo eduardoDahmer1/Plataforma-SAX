@@ -4,6 +4,17 @@
             <div>
                 <span class="category-tag">{{ $img['category'] }}</span>
                 <h6 class="fw-bold m-0 mt-1 text-truncate" style="max-width: 150px;">{{ $img['title'] }}</h6>
+                @if(!empty($img['linkField']))
+                    <a href="{{ $img['link'] ?: '#' }}" target="_blank" rel="noopener noreferrer" class="banner-active-link d-inline-flex align-items-center gap-1 small text-decoration-none mt-1 {{ empty($img['link']) ? 'd-none' : '' }}">
+                        <i class="fas fa-link"></i>
+                        <span class="text-truncate" style="max-width: 150px;">Link ativo</span>
+                    </a>
+                @elseif(!empty($img['link']))
+                    <a href="{{ $img['link'] }}" target="_blank" rel="noopener noreferrer" class="d-inline-flex align-items-center gap-1 small text-decoration-none mt-1">
+                        <i class="fas fa-link"></i>
+                        <span class="text-truncate" style="max-width: 150px;">Link ativo</span>
+                    </a>
+                @endif
             </div>
             <div class="preview-overlay">
                 <form action="{{ route($img['routeDelete']) }}" method="POST" class="delete-form">
@@ -40,50 +51,30 @@
                     {{ __('messages.atualizar_btn') }}
                 </button>
             </form>
+
+            @if(!empty($img['linkField']))
+                <hr class="my-3">
+                <form action="{{ route('admin.attributes.update_banner_links') }}" method="POST" class="banner-link-form">
+                    @csrf
+                    @method('PUT')
+
+                    <label for="{{ $img['linkField'] }}" class="form-label small text-uppercase fw-semibold mb-1">
+                        Link deste banner
+                    </label>
+                    <input
+                        type="url"
+                        id="{{ $img['linkField'] }}"
+                        name="{{ $img['linkField'] }}"
+                        class="form-control form-control-sm banner-link-input"
+                        placeholder="https://exemplo.com/campanha"
+                        value="{{ old($img['linkField'], $img['link'] ?? '') }}"
+                    >
+
+                    <button type="submit" class="btn btn-outline-dark btn-sm w-100 mt-2 fw-semibold btn-link-submit">
+                        <i class="fas fa-link me-1"></i>Salvar link
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 </div>
-
-<script>
-document.querySelectorAll('.upload-form').forEach(form => {
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        const card = form.closest('.banner-admin-card');
-        const btn = form.querySelector('.btn-submit');
-        const img = card.querySelector('.banner-preview-img');
-        const empty = card.querySelector('.empty-state');
-        const delBtn = card.querySelector('.btn-delete');
-        
-        btn.disabled = true;
-        const res = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-        const data = await res.json();
-        
-        if (data.success) {
-            img.src = data.url;
-            img.style.display = 'block';
-            empty.style.display = 'none';
-            delBtn.style.display = 'block';
-        }
-        btn.disabled = false;
-    };
-});
-
-document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.onclick = async () => {
-        if (!confirm('{{ __('messages.confirmar_exclusao_imagem') }}')) return;
-        const form = btn.closest('.delete-form');
-        const card = form.closest('.banner-admin-card');
-        const img = card.querySelector('.banner-preview-img');
-        const empty = card.querySelector('.empty-state');
-        
-        const res = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-        const data = await res.json();
-        
-        if (data.success) {
-            img.style.display = 'none';
-            empty.style.display = 'block';
-            btn.style.display = 'none';
-        }
-    };
-});
-</script>

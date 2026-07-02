@@ -2,12 +2,15 @@
 
 @section('content')
     @php
-        // Isso garante que a variável exista para o restante da página
         $galleryImages = [];
         if (isset($item->gallery)) {
             $galleryImages = is_array($item->gallery) ? $item->gallery : json_decode($item->gallery, true);
             $galleryImages = is_array($galleryImages) ? array_values($galleryImages) : [];
         }
+        $translationsByLocale = $translationsByLocale ?? collect();
+        $ptTranslation = $translationsByLocale->get('pt-br');
+        $esTranslation = $translationsByLocale->get('es');
+        $enTranslation = $translationsByLocale->get('en');
     @endphp
     @php
         $type = $type ?? 'product';
@@ -16,7 +19,9 @@
     <x-admin.card>
     <x-admin.page-header title="Editar Produto" description="Edite as informações do produto no catálogo"></x-admin.page-header>
 
-        <form action="{{ isset($item) ? route('admin.products.update', $item->id) : route('admin.products.store') }}"
+        <div id="productEditFeedback" class="d-none"></div>
+
+        <form id="productEditForm" class="product-edit-form" action="{{ isset($item) ? route('admin.products.update', $item->id) : route('admin.products.store') }}"
             method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
@@ -24,7 +29,6 @@
 
             <div class="row g-4 product-edit-grid">
                 @if ($type === 'product')
-                    <!-- SKU e Nome Externo -->
                     <div class="col-md-6">
                         <label for="sku" class="form-label"><i class="fas fa-barcode me-1"></i>SKU</label>
                         <input readonly type="text" id="sku" name="sku" class="form-control"
@@ -37,13 +41,12 @@
                             value="{{ old('external_name', $item->external_name ?? '') }}">
                     </div>
 
-                    <!-- Nome -->
                     <div class="col-md-6 mb-3">
                         <label class="form-label"><i class="fas fa-pencil-alt me-1"></i>Nome do Produto</label>
                         
-                        <input type="hidden" id="real-name-pt" name="translate[pt-br][name]" value="{{ old('translate.pt-br.name', $item->translations->where('locale', 'pt-br')->first()->name ?? ($item->name ?? ($item->external_name ?? ''))) }}">
-                        <input type="hidden" id="real-name-es" name="translate[es][name]" value="{{ old('translate.es.name', $item->translations->where('locale', 'es')->first()->name ?? '') }}">
-                        <input type="hidden" id="real-name-en" name="translate[en][name]" value="{{ old('translate.en.name', $item->translations->where('locale', 'en')->first()->name ?? '') }}">
+                        <input type="hidden" id="real-name-pt" name="translate[pt-br][name]" value="{{ old('translate.pt-br.name', $ptTranslation->name ?? ($item->name ?? ($item->external_name ?? ''))) }}">
+                        <input type="hidden" id="real-name-es" name="translate[es][name]" value="{{ old('translate.es.name', $esTranslation->name ?? '') }}">
+                        <input type="hidden" id="real-name-en" name="translate[en][name]" value="{{ old('translate.en.name', $enTranslation->name ?? '') }}">
 
                         <div>
                             <input type="text" id="visual-name-input" class="form-control" value="">
@@ -57,7 +60,6 @@
                         </div>
                     </div>
 
-                    <!-- Marca -->
                     <div class="col-md-6">
                         <label for="brand_id" class="form-label"><i class="fas fa-industry me-1"></i>Marca</label>
                         <select name="brand_id" id="brand_id" class="form-select">
@@ -71,7 +73,6 @@
                         </select>
                     </div>
 
-                    <!-- Categoria / Subcategoria / CategoriasFilhas -->
                     <div class="col-md-4">
                         <label for="category_id" class="form-label"><i class="fas fa-folder me-1"></i>Categoria</label>
                         <select name="category_id" id="category_id" class="form-select">
@@ -113,7 +114,6 @@
                         </select>
                     </div>
 
-                    <!-- Preço / Estoque -->
                     <div class="col-md-6">
                         <label for="price" class="form-label"><i class="fas fa-dollar-sign me-1"></i>Preço</label>
                         <input type="number" step="0.01" id="price" name="price" class="form-control"
@@ -126,7 +126,6 @@
                             value="{{ old('stock', $item->stock ?? 0) }}">
                     </div>
 
-                    {{-- 2. INTERFACE --}}
                     <div class="col-12">
                         <div class="row g-4">
                             <div class="col-md-6">
@@ -136,7 +135,6 @@
                                 <div class="d-flex flex-column gap-2">
                                     <input type="file" name="photo" class="form-control" id="photoInput" accept="image/*">
 
-                                    {{-- Preview: debajo del input, cuadrado; oculto si el producto no tiene foto --}}
                                     <div class="position-relative border rounded p-1 bg-white align-self-start" id="photoPreviewBox"
                                         style="width: 8rem; height: 8rem; {{ $item->photo ? '' : 'display:none;' }}">
                                         <img src="{{ $item->photo ? Storage::url($item->photo) : '' }}" id="photoPreviewImg"
@@ -160,7 +158,6 @@
                                 <div class="d-flex flex-column gap-2">
                                     <input type="file" name="gallery[]" class="form-control" multiple id="galleryInput">
 
-                                    {{-- Preview en vivo de lo elegido (acumula; no se guarda hasta "Salvar Alterações") --}}
                                     <div id="galleryPreview" class="row g-2" style="display:none;"></div>
 
                                     @if (!empty($galleryImages))
@@ -175,7 +172,6 @@
                         </div>
                     </div>
 
-                    {{-- 3. MODAL --}}
                     <div class="modal fade" id="modalGerenciarGaleria" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content">
@@ -239,61 +235,173 @@
                         </div>
 
                         <div id="color-palette" class="d-flex flex-wrap gap-1 p-2 border rounded bg-light" style="max-height: 200px; overflow-y: auto;"></div>
+                        <div id="color-suggestions" class="small text-muted mt-2"></div>
                         <button type="button" class="btn btn-link btn-sm mt-1 p-0" onclick="toggleColors()" id="btn-toggle">Mostrar mais cores...</button>
                     </div>
 
                 <script>
                 (function() {
-                    // Carrega o JSON. Certifique-se de que o caminho /data/color.json esteja correto
-                    let colorPalette = {};
+                    let colorEntries = [];
+                    let showAll = false;
                     
-                    // Função para buscar o JSON e inicializar
                     async function initPalette() {
                         try {
                             const response = await fetch('/data/color.json');
                             const data = await response.json();
-                            
-                            // Inverte o JSON para o formato esperado pelo seu script original { Nome: #HEX }
-                            colorPalette = Object.fromEntries(
-                                Object.entries(data).map(([hex, name]) => [name, hex])
-                            );
-                            
+
+                            colorEntries = Object.entries(data).map(([hex, name]) => ({
+                                hex: String(hex).toUpperCase(),
+                                name: String(name),
+                            }));
+
                             renderColors();
                         } catch (error) {
                             console.error("Erro ao carregar cores:", error);
                         }
                     }
 
-                    let showAll = false;
+                    function normalizeHex(value) {
+                        if (!value) return null;
+                        let hex = String(value).trim().replace('#', '').toUpperCase();
+
+                        if (/^[0-9A-F]{3}$/.test(hex)) {
+                            hex = hex.split('').map(ch => ch + ch).join('');
+                        }
+
+                        if (!/^[0-9A-F]{6}$/.test(hex)) {
+                            return null;
+                        }
+
+                        return `#${hex}`;
+                    }
+
+                    function hexToRgb(hex) {
+                        return {
+                            r: parseInt(hex.slice(1, 3), 16),
+                            g: parseInt(hex.slice(3, 5), 16),
+                            b: parseInt(hex.slice(5, 7), 16),
+                        };
+                    }
+
+                    function colorDistance(a, b) {
+                        const dr = a.r - b.r;
+                        const dg = a.g - b.g;
+                        const db = a.b - b.b;
+                        return dr * dr + dg * dg + db * db;
+                    }
+
+                    function closestByHex(hex, limit = 6) {
+                        const target = hexToRgb(hex);
+
+                        return colorEntries
+                            .map(entry => ({
+                                ...entry,
+                                dist: colorDistance(target, hexToRgb(entry.hex))
+                            }))
+                            .sort((a, b) => a.dist - b.dist)
+                            .slice(0, limit);
+                    }
+
+                    function closestByName(term, limit = 6) {
+                        const query = term.toLowerCase().trim();
+                        if (!query) return [];
+
+                        const words = query.split(/\s+/).filter(Boolean);
+
+                        return colorEntries
+                            .map(entry => {
+                                const name = entry.name.toLowerCase();
+                                const score = words.reduce((acc, word) => {
+                                    if (name === word) return acc + 120;
+                                    if (name.startsWith(word)) return acc + 50;
+                                    if (name.includes(word)) return acc + 25;
+                                    return acc;
+                                }, 0);
+
+                                return { ...entry, score };
+                            })
+                            .filter(entry => entry.score > 0)
+                            .sort((a, b) => b.score - a.score)
+                            .slice(0, limit);
+                    }
+
+                    function applyColor(hex) {
+                        const colorInput = document.getElementById('color-input');
+                        const colorSearch = document.getElementById('color-search');
+                        const noColor = document.getElementById('no_color');
+
+                        if (colorInput) colorInput.value = hex;
+                        if (colorSearch) colorSearch.value = hex;
+                        if (noColor) noColor.checked = false;
+                    }
+
+                    function renderSuggestions(filter, filteredCount) {
+                        const suggestionsContainer = document.getElementById('color-suggestions');
+                        if (!suggestionsContainer) return;
+
+                        suggestionsContainer.innerHTML = '';
+
+                        const normalizedHex = normalizeHex(filter);
+                        let suggestions = [];
+
+                        if (normalizedHex) {
+                            const exact = colorEntries.some(entry => entry.hex === normalizedHex);
+                            if (!exact) {
+                                suggestions = closestByHex(normalizedHex, 8);
+                            }
+                        } else if (String(filter).trim() && filteredCount === 0) {
+                            suggestions = closestByName(filter, 8);
+                        }
+
+                        if (!suggestions.length) {
+                            return;
+                        }
+
+                        const wrap = document.createElement('div');
+                        wrap.className = 'd-flex flex-wrap align-items-center gap-2';
+
+                        const title = document.createElement('span');
+                        title.className = 'text-muted';
+                        title.textContent = 'Nomes parecidos:';
+                        wrap.appendChild(title);
+
+                        suggestions.forEach(entry => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-outline-secondary btn-sm py-1 px-2';
+                            btn.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${entry.hex};margin-right:6px;"></span>${entry.name}`;
+                            btn.onclick = () => applyColor(entry.hex);
+                            wrap.appendChild(btn);
+                        });
+
+                        suggestionsContainer.appendChild(wrap);
+                    }
 
                     window.renderColors = function(filter = '') {
                         const container = document.getElementById('color-palette');
                         if (!container) return;
                         
                         container.innerHTML = '';
-                        const entries = Object.entries(colorPalette);
-                        const filtered = entries.filter(([name, hex]) => 
-                            name.toLowerCase().includes(filter.toLowerCase()) || hex.toLowerCase().includes(filter.toLowerCase())
+                        const normalizedFilter = String(filter).toLowerCase();
+                        const filtered = colorEntries.filter(entry => 
+                            entry.name.toLowerCase().includes(normalizedFilter) || entry.hex.toLowerCase().includes(normalizedFilter)
                         );
                         
-                        // Ajuste o limite conforme necessário
                         const limit = showAll ? filtered.length : 20;
 
-                        filtered.slice(0, limit).forEach(([name, hex]) => {
+                        filtered.slice(0, limit).forEach(entry => {
                             const btn = document.createElement('button');
                             btn.type = 'button';
                             btn.className = 'btn btn-sm border shadow-sm';
-                            btn.style.backgroundColor = hex;
+                            btn.style.backgroundColor = entry.hex;
                             btn.style.width = '32px';
                             btn.style.height = '32px';
-                            btn.title = `${name} (${hex})`;
-                            btn.onclick = () => {
-                                document.getElementById('color-input').value = hex;
-                                document.getElementById('color-search').value = hex;
-                                document.getElementById('no_color').checked = false;
-                            };
+                            btn.title = `${entry.name} (${entry.hex})`;
+                            btn.onclick = () => applyColor(entry.hex);
                             container.appendChild(btn);
                         });
+
+                        renderSuggestions(filter, filtered.length);
                     };
 
                     window.toggleColors = function() {
@@ -302,7 +410,28 @@
                         renderColors(document.getElementById('color-search') ? document.getElementById('color-search').value : '');
                     };
 
-                    document.addEventListener('DOMContentLoaded', () => initPalette());
+                    document.addEventListener('DOMContentLoaded', () => {
+                        initPalette();
+
+                        const colorSearch = document.getElementById('color-search');
+                        const colorInput = document.getElementById('color-input');
+
+                        if (colorSearch) {
+                            colorSearch.addEventListener('input', function() {
+                                renderColors(this.value);
+                            });
+                        }
+
+                        if (colorInput) {
+                            colorInput.addEventListener('input', function() {
+                                const colorSearchField = document.getElementById('color-search');
+                                if (colorSearchField) {
+                                    colorSearchField.value = this.value;
+                                    renderColors(this.value);
+                                }
+                            });
+                        }
+                    });
                 })();
                 </script>
 
@@ -404,13 +533,12 @@
                 })();
                 </script>
 
-                    <!-- Descrição -->
                     <div class="col-12 mb-3">
                         <label class="sax-label"><i class="fas fa-align-left me-1"></i>Descrição do Produto</label>
                         
-                        <textarea id="real-desc-pt" name="translate[pt-br][details]" class="d-none">{{ old('translate.pt-br.details', $item->translations->where('locale', 'pt-br')->first()->details ?? ($item->description ?? '')) }}</textarea>
-                        <textarea id="real-desc-es" name="translate[es][details]" class="d-none">{{ old('translate.es.details', $item->translations->where('locale', 'es')->first()->details ?? '') }}</textarea>
-                        <textarea id="real-desc-en" name="translate[en][details]" class="d-none">{{ old('translate.en.details', $item->translations->where('locale', 'en')->first()->details ?? '') }}</textarea>
+                        <textarea id="real-desc-pt" name="translate[pt-br][details]" class="d-none">{{ old('translate.pt-br.details', $ptTranslation->details ?? ($item->description ?? '')) }}</textarea>
+                        <textarea id="real-desc-es" name="translate[es][details]" class="d-none">{{ old('translate.es.details', $esTranslation->details ?? '') }}</textarea>
+                        <textarea id="real-desc-en" name="translate[en][details]" class="d-none">{{ old('translate.en.details', $enTranslation->details ?? '') }}</textarea>
 
                         <div class="editor-rich-wrapper">
                             <textarea id="editor-product" class="form-control"></textarea>
@@ -430,7 +558,6 @@
                         </label>
 
                         <div class="d-flex flex-column gap-2 bg-light p-3 border">
-                            {{-- Loja Asunción --}}
                             <div class="form-check d-flex align-items-center">
                                 <input class="form-check-input sax-checkbox me-2" type="checkbox" name="stores[]"
                                     value="asuncion" id="store_asuncion"
@@ -441,7 +568,6 @@
                                 </label>
                             </div>
 
-                            {{-- Loja Ciudad Del Este --}}
                             <div class="form-check d-flex align-items-center">
                                 <input class="form-check-input sax-checkbox me-2" type="checkbox" name="stores[]"
                                     value="cde" id="store_cde"
@@ -452,7 +578,6 @@
                                 </label>
                             </div>
 
-                            {{-- Loja Pedro Juan Caballero --}}
                             <div class="form-check d-flex align-items-center">
                                 <input class="form-check-input sax-checkbox me-2" type="checkbox" name="stores[]"
                                     value="pjc" id="store_pjc"
@@ -491,7 +616,6 @@
                         </div>
                     @endif
 
-                    <!-- RELACIONAMENTO POR TALLA -->
                     <div class="col-12 mb-4">
                         <label class="form-label"><i class="fas fa-link me-1"></i>Variantes de talla</label>
                         <div class="input-group mb-2">
@@ -507,7 +631,7 @@
                                     $parentIds = $item->selected_size_children;
                                 @endphp
                                 @foreach ($parentIds as $pid)
-                                    @php $parentProduct = App\Models\Product::find($pid); @endphp
+                                    @php $parentProduct = $sizeChildrenProducts->get((int) $pid); @endphp
                                     @if ($parentProduct && (int) $parentProduct->id !== (int) $item->id)
                                         <div class="col-6 col-md-4 col-lg-2" data-id="{{ $parentProduct->id }}">
                                             <div class="card border-success h-100 position-relative">
@@ -546,7 +670,6 @@
                         </small>
                     </div>
 
-                    <!-- FAMÍLIA DE COLOR -->
                     <div class="col-12 mb-4">
                         <label class="form-label"><i class="fas fa-palette me-1"></i>Familia de color</label>
                         <div class="input-group mb-2">
@@ -562,7 +685,7 @@
                                     $colorIds = $item->selected_color_family_members;
                                 @endphp
                                 @foreach ($colorIds as $cid)
-                                    @php $colorProduct = App\Models\Product::find($cid); @endphp
+                                    @php $colorProduct = $colorFamilyProducts->get((int) $cid); @endphp
                                     @if ($colorProduct && (int) $colorProduct->id !== (int) $item->id)
                                         <div class="col-6 col-md-4 col-lg-2" data-id="{{ $colorProduct->id }}">
                                             <div class="card border-success h-100 position-relative">
@@ -606,14 +729,16 @@
                 @endif
             </div>
 
-            <button type="submit" class="btn btn-success mt-4"><i class="fas fa-save me-2"></i>Salvar
-                Alterações</button>
-            <a href="{{ request('return_to') ?: route('admin.products.index') }}"
-               class="btn btn-secondary mt-4">
-                <i class="fas fa-times me-2"></i>Cancelar
-            </a>
+            <div class="product-edit-actions mt-4">
+                <button id="saveProductBtn" type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                </button>
+                <a href="{{ request('return_to') ?: route('admin.products.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </a>
+            </div>
         </form>
-    {{-- 1. FORMULÁRIOS DE APOIO (Apenas uma vez aqui) --}}
+
     @if ($item->photo)
         <form action="{{ route('admin.products.deletePhoto', $item->id) }}" method="POST" style="display:none;"
             id="deletePhotoForm">
@@ -635,7 +760,6 @@
         </form>
     @endforeach
 
-    {{-- ESTE É O ÚNICO QUE DEVE EXISTIR --}}
     <form id="formMultiDeleteGallery" action="{{ route('admin.products.gallery.multiDelete', $item->id) }}"
         method="POST" style="display:none !important;">
         @csrf
@@ -646,3 +770,99 @@
     </x-admin.card>
 
 @endsection
+
+@push('styles')
+<style>
+    .product-edit-form {
+        position: relative;
+    }
+
+    .product-edit-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .product-edit-actions .btn {
+        min-width: 12rem;
+    }
+
+    @media (max-width: 991px) {
+        .product-edit-actions {
+            position: sticky;
+            bottom: 0;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(6px);
+            border-top: 1px solid #e5e7eb;
+            margin-left: -0.75rem;
+            margin-right: -0.75rem;
+            z-index: 5;
+        }
+
+        .product-edit-actions .btn,
+        .product-edit-actions a {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('productEditForm');
+        const saveBtn = document.getElementById('saveProductBtn');
+        const feedback = document.getElementById('productEditFeedback');
+
+        if (!form || !saveBtn || !feedback) {
+            return;
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const originalHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+
+            feedback.className = 'd-none';
+            feedback.innerHTML = '';
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new FormData(form)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const firstError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+                    throw new Error(firstError || data?.message || 'Erro ao salvar produto.');
+                }
+
+                feedback.className = 'alert alert-success';
+                feedback.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + (data.message || 'Produto atualizado com sucesso!');
+
+                if (data.redirect) {
+                    setTimeout(function () {
+                        window.location.href = data.redirect;
+                    }, 650);
+                }
+            } catch (error) {
+                feedback.className = 'alert alert-danger';
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + (error.message || 'Erro ao salvar.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalHtml;
+            }
+        });
+    });
+</script>
+@endpush

@@ -122,53 +122,7 @@
                     @if ($products->count())
                         <div class="row g-1">
                             @foreach ($products as $item)
-                                @php
-                                    $itemPhoto = $item->photo_url ?? null;
-
-                                    if (!$itemPhoto && !empty($item->photo)) {
-                                        $itemPhoto = Storage::disk('public')->exists($item->photo)
-                                            ? Storage::url($item->photo)
-                                            : null;
-                                    }
-
-                                    if (!$itemPhoto) {
-                                        $itemPhoto = asset('storage/uploads/noimage.webp');
-                                    }
-                                @endphp
-                                <div class="col-6 col-md-4 col-xl-3">
-                                    <a href="{{ route('produto.show', $item->slug ?? $item->id) }}" class="text-decoration-none jw-product-link">
-                                        <div class="card h-100 border-0 rounded-0 jw-product-card bg-transparent">
-                                            <div class="jw-img-container position-relative bg-light">
-                                                <img src="{{ $itemPhoto }}" class="card-img-top img-fluid rounded-0" alt="{{ $item->name ?? $item->external_name }}">
-
-                                                <div class="position-absolute top-0 end-0 p-3 z-index-2">
-                                                    @auth
-                                                        <x-product-favorite-button :item="$item" />
-                                                    @endauth
-                                                </div>
-                                            </div>
-
-                                            <div class="card-body px-2 py-3 d-flex flex-column">
-                                                <div class="sax-brand fw-bold text-uppercase mb-1">
-                                                    {{ $item->brand->name ?? 'SAX' }}
-                                                </div>
-
-                                                <div class="sax-product-name text-muted mb-3 small">
-                                                    {{ $item->name ?? $item->external_name }}
-                                                </div>
-
-                                                <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                    <div class="sax-price fw-bold text-dark">
-                                                        {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
-                                                    </div>
-                                                    <div class="sax-sku text-muted extra-small">
-                                                        SKU: {{ $item->sku ?? 'N/A' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
+                                <x-product-card :item="$item" :cartItems="$cartItems ?? []" gridClass="col-6 col-md-4 col-xl-3" />
                             @endforeach
                         </div>
 

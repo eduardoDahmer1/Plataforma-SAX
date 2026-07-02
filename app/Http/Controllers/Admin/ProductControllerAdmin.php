@@ -7,10 +7,9 @@ use App\Models\Product;
 use Carbon\Carbon;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\ProductTranslations;
+use App\Models\ProductTranslation;
 use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
-use App\Models\Attribute;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +17,6 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductControllerAdmin extends Controller
 {
-    
-    // ================== INDEX ==================
     public function index(Request $request)
     {
         $search = $request->get('search');
@@ -123,7 +120,6 @@ class ProductControllerAdmin extends Controller
             'lancamentos' => 'Lançamentos',
         ];
 
-        // Ajuste das URLs das imagens
         $products->getCollection()->transform(function ($product) {
             $product->imageUrl = $product->photo_url;
             return $product;
@@ -132,16 +128,15 @@ class ProductControllerAdmin extends Controller
         return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'productType', 'perPage', 'highlights'));
     }
 
-    // ================== CREATE ==================
     public function create()
     {
         $brands = Brand::all();
         $categories = Category::all();
         $subcategories = collect();
         $categoriasfilhas = collect();
-        $products = Product::all(); // adiciona aqui também
+        $products = Product::all();
 
-        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'categorias-filhas', 'products'));
+        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'categoriasfilhas', 'products'));
     }
 
     public function search(Request $request)
@@ -171,7 +166,6 @@ class ProductControllerAdmin extends Controller
         return response()->json($products);
     }
 
-    // ================== STORE ==================
     public function store(Request $request)
     {
         $request->validate([
@@ -203,7 +197,6 @@ class ProductControllerAdmin extends Controller
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
 
-        // Salva a cor selecionada
         if ($request->has('colors_values')) {
             $data['color'] = $request->input('colors_values')[0];
         }
@@ -220,10 +213,16 @@ class ProductControllerAdmin extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Produto criado com sucesso!');
     }
 
-    // ================== EDIT ==================
     public function edit($id)
     {
-        $item = Product::with(['brand', 'category', 'subcategory', 'categoriasfilhas'])->findOrFail($id);
+        $item = Product::with([
+            'brand:id,name,slug',
+            'category:id,name,slug',
+            'subcategory:id,name,slug,category_id',
+            'categoriasfilhas:id,name,slug,subcategory_id',
+            'translations:id,product_id,locale,name,details',
+            'parent:id,name,external_name',
+        ])->findOrFail($id);
 
         $brands = Brand::where('status', 1)->orWhere('id', $item->brand_id)->orderBy('name', 'asc')->get();
 
@@ -238,6 +237,16 @@ class ProductControllerAdmin extends Controller
         $familyRootId = !empty($item->color_parent_id) ? (int) $item->color_parent_id : (int) $item->id;
         $item->selected_color_family_members = Product::where('color_parent_id', $familyRootId)->where('product_role', 'P')->where('id', '!=', $item->id)->pluck('id')->toArray();
 
+        $sizeChildrenProducts = Product::whereIn('id', $item->selected_size_children)
+            ->get(['id', 'name', 'external_name', 'photo', 'color', 'size'])
+            ->keyBy('id');
+
+        $colorFamilyProducts = Product::whereIn('id', $item->selected_color_family_members)
+            ->get(['id', 'name', 'external_name', 'photo', 'color', 'size'])
+            ->keyBy('id');
+
+        $translationsByLocale = $item->translations->keyBy('locale');
+
         if (is_string($item->parent_id) && str_contains($item->parent_id, ',')) {
             $item->parent_id =
                 collect(explode(',', $item->parent_id))
@@ -248,10 +257,9 @@ class ProductControllerAdmin extends Controller
             $item->parent_id = collect($item->parent_id)->map(fn($parentId) => (int) $parentId)->first(fn($parentId) => $parentId > 0) ?: null;
         }
 
-        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'products'));
+        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'products', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale'));
     }
 
-    // ================== UPDATE ==================
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
@@ -273,7 +281,6 @@ class ProductControllerAdmin extends Controller
             'stores' => 'nullable|array',
             'size' => 'nullable|string|max:50',
 
-            // --- NOVA VALIDAÇÃO DOS CAMPOS TRADUZIDOS ---
             'translate' => 'nullable|array',
             'translate.*.name' => 'nullable|string|max:255',
             'translate.*.details' => 'nullable|string|max:5000',
@@ -281,21 +288,16 @@ class ProductControllerAdmin extends Controller
 
         try {
             return DB::transaction(function () use ($request, $product) {
-                // guardamos los datos anteriores para ver si el producto F ya tenia datos y no cambiarlos
                 $previousDescription = $product->description;
                 $previousPhoto = $product->photo;
                 $previousGallery = is_string($product->gallery) ? json_encode(array_values(json_decode($product->gallery, true) ?: [])) : json_encode(array_values($product->gallery ?: []));
                 $isCurrentlySizeVariant = ($product->product_role ?? null) === 'F' || !empty($product->parent_id);
                 $promoteToParent = $request->boolean('force_as_parent') && $isCurrentlySizeVariant;
-                // `parent_id[]` = variantes de talla.
-                // `color_parent_id[]` = miembros P de la familia de colores.
                 $originalFamilyRootId = !empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
                 $existingSizeChildIds = Product::where('parent_id', $product->id)->where('product_role', 'F')->pluck('id')->map(fn($childId) => (int) $childId)->toArray();
                 $selectedSizeChildIds = array_values(array_filter(array_unique(array_filter((array) $request->input('parent_id', []))), fn($childId) => (int) $childId !== (int) $product->id));
                 $selectedColorFamilyMemberIds = array_values(array_filter(array_unique(array_filter((array) $request->input('color_parent_id', []))), fn($memberId) => (int) $memberId !== (int) $product->id));
 
-                // Mientras el producto siga siendo `F`, sus relaciones actuales se conservan.
-                // El switch lo devuelve a `P` y a su propio ancla para poder rearmarlo luego.
                 if ($isCurrentlySizeVariant) {
                     $selectedSizeChildIds = [];
                     $selectedColorFamilyMemberIds = [];
@@ -343,27 +345,23 @@ class ProductControllerAdmin extends Controller
 
                 $data = $request->only(['sku', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'size', 'price', 'stock']);
 
-                // --- TRATAMENTO DOS CAMPOS FALLBACK (MANTÉM O PT-BR COMO PADRÃO NA TABELA PRINCIPAL) ---
                 if ($request->has('translate.pt-br')) {
                     $data['name'] = $request->input('translate.pt-br.name');
                     $data['description'] = $request->input('translate.pt-br.details');
                 }
 
-                // AJUSTE DA COR: O formulário envia 'colors_values' como array.
-                // Pegamos el primer valor para el campo 'color'.
                 if ($request->has('colors_values')) {
                     $colors = (array) $request->input('colors_values');
                     $data['color'] = reset($colors);
                 }
 
                 if ($request->has('no_color')) {
-                    $data['color'] = null; // Limpa a cor no banco
+                    $data['color'] = null;
                 } elseif ($request->has('colors_values')) {
                     $colors = (array) $request->input('colors_values');
-                    $data['color'] = reset($colors); // Pega a cor selecionada
+                    $data['color'] = reset($colors);
                 }
 
-                // --- IMAGEM PRINCIPAL ---
                 if ($request->hasFile('photo')) {
                     if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                         $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
@@ -375,7 +373,6 @@ class ProductControllerAdmin extends Controller
                     $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
                 }
 
-                // --- GALERIA ---
                 $currentGallery = is_string($product->gallery) ? json_decode($product->gallery, true) : $product->gallery ?? [];
                 if (!is_array($currentGallery)) {
                     $currentGallery = [];
@@ -391,12 +388,10 @@ class ProductControllerAdmin extends Controller
                 }
                 $data['gallery'] = json_encode(array_values($currentGallery));
 
-                // --- STATUS AUTOMÁTICO ---
                 $hasPhoto = !empty($data['photo']) || !empty($product->photo);
                 $productNameForStatus = $data['name'] ?? $product->name;
                 $data['status'] = $hasPhoto && !empty($productNameForStatus) && $data['price'] > 5 && $data['stock'] > 0 ? 1 : 0;
 
-                // --- OUTROS DADOS ---
                 $data['highlights'] = json_encode($request->input('highlights', []));
                 $data['stores'] = json_encode($request->input('stores', []));
                 $data['color_parent_id'] = $targetFamilyRootId;
@@ -409,34 +404,28 @@ class ProductControllerAdmin extends Controller
                     $data['updated_by'] = auth()->id();
                 }
 
-                // Atualiza o Pai
                 $product->update($data);
                 $resolvedParentColor = $data['color'] ?? $product->color;
 
-                // --- SALVAR AS TRADUÇÕES NO BANCO DE DADOS ---
                 if ($request->has('translate')) {
                     foreach ($request->input('translate') as $locale => $translationData) {
-                        // Se o nome e a descrição estiverem totalmente vazios para esse idioma, ignora
                         if (empty($translationData['name']) && empty($translationData['details'])) {
                             continue;
                         }
 
-                        // Isso vincula o ID do produto ($product->id) com o idioma ($locale)
-                        \App\Models\ProductTranslation::updateOrCreate(
+                        ProductTranslation::updateOrCreate(
                             [
-                                'product_id' => $product->id, // <--- AQUI ESTÁ A INTERLIGAÇÃO
-                                'locale'     => $locale,      // 'pt-br', 'es' ou 'en'
+                                'product_id' => $product->id,
+                                'locale'     => $locale,
                             ],
                             [
                                 'name'    => $translationData['name'] ?? null,
-                                'details' => $translationData['details'] ?? null, // Salva a descrição no campo 'details'
+                                'details' => $translationData['details'] ?? null,
                             ]
                         );
                     }
                 }
 
-                // --- LÓGICA DE VARIANTES POR TALLA ---
-                // 1. Quem DEIXCOU de ser variante de talla: vuelve a ser ' P '.
                 Product::where('parent_id', $product->id)
                     ->whereNotIn('id', $selectedSizeChildIds)
                     ->update([
@@ -448,10 +437,9 @@ class ProductControllerAdmin extends Controller
                         'gallery' => null,
                     ]);
 
-                // 2. Quem é variante de talla hereda datos do Pai, mas só os campos vazios ou iguais ao anterior para evitar sobreescrever customizaciones manuais.
                 if (!empty($selectedSizeChildIds)) {
                     $children = Product::whereIn('id', $selectedSizeChildIds)
-                        ->where('id', '!=', $product->id) // Evita que el producto sea hijo de si mismo
+                        ->where('id', '!=', $product->id)
                         ->get();
 
                     foreach ($children as $child) {
@@ -485,10 +473,9 @@ class ProductControllerAdmin extends Controller
 
                         Product::where('id', $child->id)->update($childData);
 
-                        // Sincroniza as traduções do Pai para as variantes filhas também
                         if ($request->has('translate')) {
                             foreach ($request->input('translate') as $locale => $translationData) {
-                                \App\Models\ProductTranslation::updateOrCreate(
+                                ProductTranslation::updateOrCreate(
                                     [
                                         'product_id' => $child->id,
                                         'locale' => $locale,
@@ -503,8 +490,6 @@ class ProductControllerAdmin extends Controller
                     }
                 }
 
-                // --- LÓGICA DE FAMILIA DE COLOR ---
-                // Cada ancla P arrastra toda su rama: el propio P y sus variantes F por talla.
                 if ($shouldSyncColorFamily) {
                     $shouldDetachCurrentFamilyBranches = $targetFamilyRootId === $originalFamilyRootId || (int) $product->id === $originalFamilyRootId;
                     $colorAnchorsToDetach = $shouldDetachCurrentFamilyBranches ? array_values(array_diff($currentFamilyAnchorIds, $desiredColorAnchorIds)) : [];
@@ -540,6 +525,16 @@ class ProductControllerAdmin extends Controller
                 }
 
                 $returnTo = $request->input('return_to');
+                $redirectUrl = $returnTo && str_starts_with($returnTo, config('app.url')) ? $returnTo : route('admin.products.index');
+
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Produto e variações atualizados!',
+                        'redirect' => $redirectUrl,
+                    ]);
+                }
+
                 if ($returnTo && str_starts_with($returnTo, config('app.url'))) {
                     return redirect($returnTo)->with('success', 'Produto e variações atualizados!');
                 }
@@ -547,22 +542,35 @@ class ProductControllerAdmin extends Controller
                 return redirect()->route('admin.products.index')->with('success', 'Produto actualizado con éxito!');
             });
         } catch (ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dados inválidos.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             \Log::error('Erro no Update de Produto: ' . $e->getMessage());
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao salvar: ' . $e->getMessage(),
+                ], 500);
+            }
+
             return back()
                 ->with('error', 'Erro ao salvar: ' . $e->getMessage())
                 ->withInput();
         }
     }
 
-    // ================== AUX ==================
     private function convertToWebp($image, $type)
     {
         try {
             $temp = $image->getRealPath();
 
-            // imagecreatefromstring identifica automaticamente se é JPG, PNG ou WEBP
             $imgRes = @imagecreatefromstring(file_get_contents($temp));
 
             if (!$imgRes) {
@@ -590,12 +598,8 @@ class ProductControllerAdmin extends Controller
         }
     }
 
-    /**
-     * Função auxiliar para deletar imagens de um produto sem afetar outros
-     */
     private function deleteProductImages($product)
     {
-        // Foto principal
         if ($product->photo && Storage::disk('public')->exists($product->photo)) {
             $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
             if (!$usedElsewhere) {
@@ -603,7 +607,6 @@ class ProductControllerAdmin extends Controller
             }
         }
 
-        // Galeria
         if ($product->gallery) {
             $gallery = is_string($product->gallery) ? json_decode($product->gallery, true) : (array) $product->gallery;
             foreach ($gallery as $img) {
@@ -619,7 +622,6 @@ class ProductControllerAdmin extends Controller
         }
     }
 
-    // ================== DELETE GALLERY IMAGE ==================
     public function deleteGalleryImage(Request $request, $productId, $imageName)
     {
         $product = Product::findOrFail($productId);
@@ -628,10 +630,8 @@ class ProductControllerAdmin extends Controller
             return redirect()->back()->with('error', 'Produto não possui galeria.');
         }
 
-        // Garante que seja array
         $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
 
-        // Segurança caso o decode falhe
         if (!is_array($gallery)) {
             $gallery = [];
         }
@@ -655,7 +655,6 @@ class ProductControllerAdmin extends Controller
             }
         }
 
-        // IMPORTANTE: array_values reindexa [0, 1, 2] evitando chaves puladas no JSON
         $product->gallery = array_values($gallery);
         $product->save();
 
@@ -665,7 +664,7 @@ class ProductControllerAdmin extends Controller
     public function multiDeleteGalleryImage(Request $request, $productId)
     {
         $product = Product::findOrFail($productId);
-        $imagesToDelete = explode(',', $request->image_names); // Recebe nomes separados por vírgula
+        $imagesToDelete = explode(',', $request->image_names);
 
         $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
         if (!is_array($gallery)) {
@@ -697,7 +696,6 @@ class ProductControllerAdmin extends Controller
             ->with('success', count($imagesToDelete) . ' imagens removidas.');
     }
 
-    // ================== DELETE MAIN PHOTO ==================
     public function deletePhoto($productId)
     {
         $product = Product::findOrFail($productId);
@@ -715,7 +713,6 @@ class ProductControllerAdmin extends Controller
         return redirect()->back()->with('error', 'Produto não possui foto principal.');
     }
 
-    // ================== DESTROY ==================
     public function destroy($id)
     {
         $product = Product::find($id);
@@ -728,12 +725,20 @@ class ProductControllerAdmin extends Controller
 
     public function getSubcategories($categoryId)
     {
-        return Subcategory::where('category_id', $categoryId)->get();
+        return response()->json(
+            Subcategory::where('category_id', $categoryId)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'category_id'])
+        );
     }
 
     public function getChildcategories($subcategoryId)
     {
-        return CategoriasFilhas::where('subcategory_id', $subcategoryId)->get();
+        return response()->json(
+            CategoriasFilhas::where('subcategory_id', $subcategoryId)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'subcategory_id'])
+        );
     }
 
     public function toggleStatus($id)
@@ -741,6 +746,14 @@ class ProductControllerAdmin extends Controller
         $product = Product::findOrFail($id);
         $product->status = !$product->status;
         $product->save();
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'status' => (int) $product->status,
+                'message' => 'Status do produto atualizado!',
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Status do produto atualizado!');
     }
@@ -753,17 +766,22 @@ class ProductControllerAdmin extends Controller
         $product->highlights = json_encode($highlights);
         $product->save();
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Destaques atualizados com sucesso!',
+            ]);
+        }
+
         return redirect()->route('admin.products.index')->with('success', 'Destaques atualizados com sucesso!');
     }
 
     public function review(Request $request)
     {
-        // 1. Define o mês atual ou o selecionado
         $mesSelecionado = $request->get('mes', Carbon::now()->format('Y-m'));
         $dataInicio = Carbon::parse($mesSelecionado)->startOfMonth();
         $dataFim = Carbon::parse($mesSelecionado)->endOfMonth();
 
-        // 2. Lista de meses para o select de navegação
         $mesesDisponiveis = [];
         for ($i = 0; $i < 6; $i++) {
             $data = Carbon::now()->subMonths($i);
@@ -773,18 +791,16 @@ class ProductControllerAdmin extends Controller
             ];
         }
 
-        // 3. Busca apenas os dados do mês selecionado (FILTRADO POR HUMANOS)
         $edicoesPorDia = Product::selectRaw('DATE(updated_at) as dia, COUNT(*) as total')
             ->whereBetween('updated_at', [$dataInicio, $dataFim])
-            ->whereNotNull('updated_by') // Filtra apenas edições manuais
+            ->whereNotNull('updated_by')
             ->groupBy('dia')
             ->orderBy('dia', 'desc')
             ->get();
 
-        // 4. Detalhes (FILTRADO POR HUMANOS e incluindo o campo updated_by)
         $detalhesProdutos = Product::whereBetween('updated_at', [$dataInicio, $dataFim])
-            ->selectRaw('DATE(updated_at) as dia, name, sku, ref_code, updated_by') // Adicionado updated_by
-            ->whereNotNull('updated_by') // Filtra apenas edições manuais
+            ->selectRaw('DATE(updated_at) as dia, name, sku, ref_code, updated_by')
+            ->whereNotNull('updated_by')
             ->get()
             ->groupBy('dia');
 

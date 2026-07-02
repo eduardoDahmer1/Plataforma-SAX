@@ -154,22 +154,25 @@ if ($currentCurrency && !$currentCurrency->is_default) {
         flex-direction: column;
         align-items: flex-start;
         position: relative;
-        font-size: 0.9rem;
-        padding: 15px 20px 15px 20px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        padding: 0.9rem 1.1rem;
         padding-right: 2.5rem;
-        color: #333;
-        border-bottom: 1px solid #fcfcfc;
+        color: #1f2937;
+        border-bottom: 1px solid #f1f5f9;
         width: 100%;
+        letter-spacing: 0.04em;
     }
     .sax-lang--mobile .sax-lang-trigger::after {
         position: absolute;
-        right: 20px;
-        top: 1.25rem;
+        right: 1.1rem;
+        top: 1.05rem;
+        border-top-color: #94a3b8;
     }
     .sax-lang--mobile .sax-lang-rate-inner {
         display: block;
-        font-size: 0.62rem;
-        color: #666;
+        font-size: 0.66rem;
+        color: #64748b;
         font-weight: 400;
         text-transform: none;
         letter-spacing: 0.2px;
@@ -179,7 +182,17 @@ if ($currentCurrency && !$currentCurrency->is_default) {
         border-top: none !important;
         background: transparent;
     }
-    .sax-lang--mobile .sax-lang-option { font-size: 0.85rem; color: #444; }
+    .sax-lang--mobile .sax-lang-option {
+        font-size: 0.8rem;
+        color: #334155;
+        padding: 0.55rem 1.1rem;
+        letter-spacing: 0.04em;
+    }
+    .sax-lang--mobile .sax-lang-option:hover {
+        color: #0f172a;
+        background: #f8fafc;
+        padding-left: 1.1rem;
+    }
     .sax-lang--mobile .sax-lang-rate   { display: none; }
 </style>
 

@@ -3,6 +3,7 @@
     $vendasOpen = request()->routeIs('admin.orders.*', 'admin.clients.*');
     $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*');
     $sistemaOpen = request()->routeIs(
+        'admin.index',
         'admin.sections_home.*',
         'admin.currencies.*',
         'admin.payments.*',
@@ -18,12 +19,7 @@
 
 <div class="sax-admin-sidebar">
     <nav class="sax-nav-container">
-        <a href="{{ route('admin.index') }}" class="sax-nav-item {{ request()->routeIs('admin.index') ? 'active' : '' }}">
-            <div class="nav-icon-box bg-soft-warning">
-                <i class="fa-solid fa-gauge-high"></i>
-            </div>
-            <span class="nav-text">{{ __('messages.menu_banners_home') }}</span>
-        </a>
+        <p class="sax-sidebar-heading">Gestao</p>
 
         {{-- Catálogos --}}
         <div class="nav-group">
@@ -75,6 +71,7 @@
         </div>
 
         {{-- Sistema --}}
+        <p class="sax-sidebar-heading mt-3">Sistema</p>
         <div class="nav-group">
             <a class="sax-nav-item has-collapse {{ $sistemaOpen ? '' : 'collapsed' }} {{ $sistemaOpen ? 'active' : '' }}" data-bs-toggle="collapse" href="#menuSistema" aria-expanded="{{ $sistemaOpen ? 'true' : 'false' }}">
                 <div class="nav-icon-box bg-soft-danger">
@@ -84,6 +81,9 @@
                 <i class="fa-solid fa-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="collapse sax-submenu {{ $sistemaOpen ? 'show' : '' }}" id="menuSistema">
+                <a href="{{ route('admin.index') }}" class="submenu-link {{ request()->routeIs('admin.index') ? 'active' : '' }}">
+                    <i class="fa-solid fa-images"></i> {{ __('messages.menu_banners_home') }}
+                </a>
                 <a href="{{ route('admin.sections_home.index') }}" class="submenu-link {{ request()->routeIs('admin.sections_home.*') ? 'active' : '' }}"><i class="fas fa-sliders-h"></i> {{ __('messages.menu_secoes_home') }}</a>
                 <button id="clearCacheBtn" data-url="{{ secure_url('admin/clear-cache') }}" data-csrf="{{ csrf_token() }}" class="submenu-link border-0 bg-transparent w-100 text-start">
                     <i class="fa-solid fa-broom"></i> {{ __('messages.menu_limpar_cache') }}

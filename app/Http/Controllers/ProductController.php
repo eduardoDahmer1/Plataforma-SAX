@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Category;
-use App\Models\Subcategory;
-use App\Models\CategoriasFilhas;
 use App\Models\Generalsetting;
 use App\Models\Attribute;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
@@ -26,33 +22,6 @@ class ProductController extends Controller
     private function withCupons($query)
     {
         return $query->with(['cupons' => fn($q) => $q->ativos()]);
-    }
-
-    public function index(Request $request)
-    {
-        $search  = $request->get('search');
-        $page    = $request->get('page', 1);
-        $perPage = 12;
-
-        $products = Cache::remember(
-            "products_page_{$page}_" . md5($search ?? ''),
-            now()->addMinutes(5),
-            fn() => $this->withCupons(
-                Product::where('product_role', 'P')
-                    ->when($search, fn($q) => $q
-                        ->where('external_name', 'LIKE', "%{$search}%")
-                        ->orWhere('sku', 'LIKE', "%{$search}%")
-                        ->orWhere('slug', 'LIKE', "%{$search}%")
-                    )
-                    ->orderByDesc('id')
-            )->paginate($perPage)
-        );
-
-        foreach ($products as $p) {
-            $p->price_final = $this->calcularPrecoComCupon($p);
-        }
-
-        return view('produtos.index', compact('products'));
     }
 
     public function show($id_or_slug)
@@ -120,34 +89,6 @@ class ProductController extends Controller
             'settings'          => $settings,
             'attribute'         => $attribute,
         ]);
-    }
-
-    public function byCategory(Category $category)
-    {
-        return $this->listByScope('category_id', $category->id, compact('category'));
-    }
-
-    public function bySubcategory(Subcategory $subcategory)
-    {
-        return $this->listByScope('subcategory_id', $subcategory->id, compact('subcategory'));
-    }
-
-    public function byCategoriasFilhas(CategoriasFilhas $CategoriasFilhas)
-    {
-        return $this->listByScope('childcategory_id', $CategoriasFilhas->id, compact('CategoriasFilhas'));
-    }
-
-    private function listByScope(string $field, int $id, array $extra = [])
-    {
-        $products = $this->withCupons(
-            Product::where($field, $id)->where('product_role', 'P')
-        )->paginate(12);
-
-        foreach ($products as $p) {
-            $p->price_final = $this->calcularPrecoComCupon($p);
-        }
-
-        return view('produtos.index', array_merge(compact('products'), $extra));
     }
 
     private function getSimilares(Product $product)

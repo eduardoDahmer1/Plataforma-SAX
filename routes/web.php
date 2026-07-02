@@ -93,7 +93,7 @@ Route::get('/bridal', [BridalController::class, 'index'])->name('bridal.index');
 Route::get('/bistro', [CafeBistroController::class, 'index'])->name('cafe_bistro.index');
 Route::post('/newsletter', [HomeController::class, 'storeNewsletter'])->name('newsletter.store');
 Route::get('/categorias-gerais', [AllCategoriesController::class, 'index'])->name('all-categories.index');
-Route::get('/produtos', [ProductController::class, 'index'])->name('produtos.index');
+Route::redirect('/produtos', '/search')->name('produtos.index');
 Route::get('/produto/{id_or_slug}', [ProductController::class, 'show'])->name('produto.show');
 Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->name('products.byCategory');
 Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
@@ -163,6 +163,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::resource('languages', \App\Http\Controllers\Admin\LanguageControllerAdmin::class);
     Route::put('attributes/text-topo', [ImageUploadController::class, 'updateTextTopo'])->name('attributes.update_text');
+    Route::put('attributes/banner-links', [ImageUploadController::class, 'updateBannerLinks'])->name('attributes.update_banner_links');
     Route::resource('palace', PalaceAdminController::class);
     Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');
     Route::resource('bridal', BridalAdminController::class);

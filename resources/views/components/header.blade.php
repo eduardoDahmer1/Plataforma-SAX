@@ -1,15 +1,6 @@
 <header class="sax-header">
     @php
         use App\Models\Category;
-        use App\Models\Currency;
-
-        $currencies = Currency::all();
-        $sessionCurrency = session('currency');
-        $defaultCurrencyId = Currency::where('name', 'BRL')->value('id')
-            ?? Currency::where('is_default', 1)->value('id');
-        $currentCurrencyId = is_object($sessionCurrency)
-            ? ($sessionCurrency->id ?? $defaultCurrencyId)
-            : ($sessionCurrency ?? $defaultCurrencyId);
 
         $menuSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
 
@@ -28,26 +19,8 @@
         $currentUser = Auth::check() ? Auth::user() : null;
         $userName = $currentUser ? explode(' ', $currentUser->name)[0] : null;
         $isAdminUser = $currentUser && $currentUser->user_type == 1;
-        $attribute = \App\Models\Attribute::first();
     @endphp
 
-    {{-- 1. TOP PROMO (BANNER PRETO) --}}
-    {{--
-    <div class="sax-top-promo">
-        <div class="container-fluid px-lg-5">
-            <div class="row align-items-center py-2">
-                <div class="col-12 col-lg-6 text-center">
-                    <p class="m-0 sax-promo-text">
-                        {{ $attribute->text_topo ?? 'SAX Department Store' }}
-                    </p>
-                </div>
-                <div class="col-lg-3 d-none d-lg-block"></div>
-            </div>
-        </div>
-    </div>
-    --}}
-
-    {{-- 2. AUX NAV (DESKTOP SOMENTE) --}}
     <div class="sax-aux-nav d-none d-lg-block">
         <div class="container text-center py-2">
             <ul class="list-inline m-0 main-nav-list">
@@ -97,23 +70,20 @@
         </div>
     </div>
 
-    {{-- 3. MAIN HEADER (LOGO E BUSCA) --}}
-    <div class="container-fluid px-lg-5 py-3 border-top border-bottom bg-white">
-        <div class="row align-items-center">
-            {{-- Mobile: Botões Hamburguer e Busca --}}
+    <div class="sax-header-main container-fluid px-lg-5 py-3 border-top border-bottom bg-white">
+        <div class="row align-items-center g-2">
             <div class="col-3 d-lg-none">
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn-menu-open" id="mobileMenuBtn">
+                <div class="sax-mobile-actions d-flex align-items-center gap-2">
+                    <button class="btn-menu-open" id="mobileMenuBtn" type="button" aria-label="Abrir menu">
                         <i class="fa fa-bars"></i>
                     </button>
-                    <button class="btn-menu-open" id="mobileSearchBtn">
+                    <button class="btn-menu-open" id="mobileSearchBtn" type="button" aria-label="Abrir busca">
                         <i class="fa fa-search"></i>
                     </button>
                 </div>
             </div>
 
-            {{-- Logo --}}
-            <div class="col-6 col-lg-2 text-center text-lg-start">
+            <div class="col-6 col-lg-2 text-center text-lg-start sax-header-logo-col">
                 <a href="{{ route('home') }}">
                     @if ($webpImage)
                         <img src="{{ asset('storage/uploads/' . $webpImage) }}" alt="SAX" class="logo-img">
@@ -123,13 +93,11 @@
                 </a>
             </div>
 
-            {{-- Busca Desktop --}}
             <div class="col-lg-7 d-none d-lg-block">
                 <x-search />
             </div>
 
-            {{-- Ícones de Ação --}}
-            <div class="col-3 col-lg-3 text-end d-flex justify-content-end align-items-center gap-3">
+            <div class="col-3 col-lg-3 text-end d-flex justify-content-end align-items-center gap-3 sax-header-actions">
                 <div class="sax-auth-links d-none d-lg-flex align-items-center">
                     <i class="fa-regular fa-user me-2"></i>
                     @if ($currentUser)
@@ -169,7 +137,6 @@
         </div>
     </div>
 
-    {{-- 4. NAV PRINCIPAL (DESKTOP) --}}
     <nav class="sax-main-nav d-none d-lg-block">
         <div class="container text-center py-3">
             <ul class="list-inline m-0">
@@ -193,7 +160,6 @@
         </div>
     </nav>
 
-    {{-- 5. DRAWER MOBILE (MULTINÍVEL) --}}
     <div id="saxDrawer" class="sax-drawer">
         <div class="drawer-header p-3 d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-uppercase tracking-2">Menu</span>
@@ -201,7 +167,6 @@
         </div>
 
         <div class="drawer-body">
-            {{-- Área de Login/Perfil --}}
             <div class="drawer-auth-section p-3">
                 @if ($currentUser)
                     <div class="d-flex align-items-center mb-3">
@@ -226,7 +191,6 @@
                 @endif
             </div>
 
-            {{-- Navegação Principal --}}
             <ul class="list-unstyled mb-0">
                 @foreach ($mainCategories as $cat)
                     <li>
@@ -239,7 +203,6 @@
 
                 <hr class="my-2">
 
-                {{-- Institucional & Extras --}}
                 <li><a href="{{ route('institucional.index') }}" class="drawer-link"><i class="fa fa-info-circle me-3"></i>{{ __('messages.institucional') }}</a></li>
                 <li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>BRIDAL</a></li>
                 <li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>SAX PALACE</a></li>
@@ -256,13 +219,10 @@
 
     <div class="drawer-overlay" id="drawerOverlay"></div>
 
-    {{-- 6. SEARCH OVERLAY MOBILE --}}
     <x-search-mobile />
 </header>
 
 @include('components.modal-login')
-
-{{-- JS migrado a app-custom.js --}}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const searchInputs = document.querySelectorAll('.search-autocomplete-input');
@@ -323,80 +283,16 @@
                         });
                 }, 300);
             });
+        });
 
-            document.addEventListener('click', function (e) {
-                if (!form.contains(e.target)) {
+        document.addEventListener('click', function (e) {
+            searchInputs.forEach(input => {
+                const form = input.closest('form');
+                const resultsContainer = form?.querySelector('.autocomplete-results');
+                if (form && resultsContainer && !form.contains(e.target)) {
                     resultsContainer.classList.add('d-none');
                 }
             });
         });
     });
 </script>
-
-<style>
-    /* --- Ajustes exclusivos Mobile --- */
-    @media (max-width: 991px) {
-        .btn-menu-open {
-            background: transparent;
-            border: none;
-            font-size: 1.25rem;
-            padding: 5px;
-            color: #000;
-        }
-
-        .sax-drawer {
-            position: fixed;
-            top: 0;
-            left: -100%;
-            width: 85%;
-            max-width: 350px;
-            height: 100%;
-            background: #fff;
-            z-index: 1050;
-            transition: 0.3s;
-            overflow-y: auto;
-        }
-
-        .sax-drawer.active { left: 0; }
-
-        .drawer-header { border-bottom: 1px solid #eee; }
-
-        .drawer-auth-section { background: #f8f9fa; border-bottom: 1px solid #eee; }
-
-        .drawer-link {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            color: #333;
-            text-decoration: none;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            border-bottom: 1px solid #fcfcfc;
-        }
-
-        .drawer-link:hover { background: #fdfdfd; color: #000; }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #eee;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .drawer-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1049;
-        }
-
-        .drawer-overlay.active { display: block; }
-    }
-</style>

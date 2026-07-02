@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\Attribute;
-use App\Services\CacheService;
 
 class ImageUploadController extends Controller
 {
@@ -33,7 +32,20 @@ class ImageUploadController extends Controller
             'whatsapp_banner' => $attribute?->whatsapp_banner,
         ];
 
-        return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal', 'logoCafeBistro', 'bannerHorizontal', 'noimage', 'banners', 'attribute'));
+        $bannerLinks = [
+            'banner1_link' => $attribute?->banner1_link,
+            'banner2_link' => $attribute?->banner2_link,
+            'banner3_link' => $attribute?->banner3_link,
+            'banner4_link' => $attribute?->banner4_link,
+            'banner5_link' => $attribute?->banner5_link,
+            'banner6_link' => $attribute?->banner6_link,
+            'banner7_link' => $attribute?->banner7_link,
+            'banner8_link' => $attribute?->banner8_link,
+            'banner9_link' => $attribute?->banner9_link,
+            'banner10_link' => $attribute?->banner10_link,
+        ];
+
+        return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal', 'logoCafeBistro', 'bannerHorizontal', 'noimage', 'banners', 'bannerLinks', 'attribute'));
     }
 
     private function processImageUpload($file, $filename)
@@ -146,6 +158,32 @@ class ImageUploadController extends Controller
         }
 
         return redirect()->back()->withErrors('Erro ao encontrar as configurações.');
+    }
+
+    public function updateBannerLinks(Request $request)
+    {
+        $rules = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $rules["banner{$i}_link"] = 'nullable|url|max:255';
+        }
+
+        $validated = $request->validate($rules);
+
+        Attribute::query()->updateOrCreate(
+            ['id' => 1],
+            $validated
+        );
+
+        \App\Services\CacheService::clearAll();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Link do banner atualizado com sucesso!',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Links dos banners atualizados com sucesso!');
     }
 
     // --- Métodos Header ---

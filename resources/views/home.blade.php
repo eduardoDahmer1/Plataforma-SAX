@@ -20,9 +20,9 @@
         $exclusiveCategories = collect($categories ?? [])->take(3);
         $exclusiveDescription = 'Uma seleção pensada para destacar design, acabamentos e marcas que definem o universo SAX com mais profundidade do que um banner sozinho consegue mostrar.';
         $stackedBanners = collect([
-            ['image' => $banner2 ?? null, 'label' => 'Selecao curada'],
-            ['image' => $banner3 ?? null, 'label' => 'Novidades da temporada'],
-            ['image' => $banner4 ?? null, 'label' => 'Destaques da casa'],
+            ['image' => $banner6 ?? null, 'link' => $banner6_link ?? null, 'label' => 'Selecao curada'],
+            ['image' => $banner7 ?? null, 'link' => $banner7_link ?? null, 'label' => 'Novidades da temporada'],
+            ['image' => $banner8 ?? null, 'link' => $banner8_link ?? null, 'label' => 'Destaques da casa'],
         ])->filter(fn ($banner) => filled($banner['image']));
     @endphp
 
@@ -69,12 +69,23 @@
                     <div class="col-lg-7">
                         <div class="exclusive-media-wrap h-100">
                             @if (isset($banner1) && $banner1)
-                                <img
-                                    src="{{ asset('storage/uploads/' . $banner1) }}"
-                                    class="img-fluid w-100 exclusive-media"
-                                    alt="Coleção exclusiva SAX"
-                                    onerror="this.style.display='none'"
-                                >
+                                @if (!empty($banner1_link))
+                                    <a href="{{ $banner1_link }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir banner principal">
+                                        <img
+                                            src="{{ asset('storage/uploads/' . $banner1) }}"
+                                            class="img-fluid w-100 exclusive-media"
+                                            alt="Coleção exclusiva SAX"
+                                            onerror="this.style.display='none'"
+                                        >
+                                    </a>
+                                @else
+                                    <img
+                                        src="{{ asset('storage/uploads/' . $banner1) }}"
+                                        class="img-fluid w-100 exclusive-media"
+                                        alt="Coleção exclusiva SAX"
+                                        onerror="this.style.display='none'"
+                                    >
+                                @endif
                             @else
                                 <div class="exclusive-media exclusive-media--placeholder">
                                     <div>
@@ -113,12 +124,23 @@
                         @foreach ($stackedBanners as $banner)
                             <article class="stacked-banner-card">
                                 <div class="stacked-banner-card__media">
-                                    <img
-                                        src="{{ asset('storage/uploads/' . $banner['image']) }}"
-                                        class="img-fluid w-100"
-                                        alt="{{ $banner['label'] }}"
-                                        onerror="this.src='https://placehold.co/1400x680?text=SAX+Banner'"
-                                    >
+                                    @if (!empty($banner['link']))
+                                        <a href="{{ $banner['link'] }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir {{ $banner['label'] }}">
+                                            <img
+                                                src="{{ asset('storage/uploads/' . $banner['image']) }}"
+                                                class="img-fluid w-100"
+                                                alt="{{ $banner['label'] }}"
+                                                onerror="this.src='https://placehold.co/1400x680?text=SAX+Banner'"
+                                            >
+                                        </a>
+                                    @else
+                                        <img
+                                            src="{{ asset('storage/uploads/' . $banner['image']) }}"
+                                            class="img-fluid w-100"
+                                            alt="{{ $banner['label'] }}"
+                                            onerror="this.src='https://placehold.co/1400x680?text=SAX+Banner'"
+                                        >
+                                    @endif
                                 </div>
                                 <div class="stacked-banner-card__overlay">
                                     <span>{{ $banner['label'] }}</span>

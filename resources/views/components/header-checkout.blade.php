@@ -4,8 +4,8 @@
         {{-- Seletor de Moeda e Links de Topo --}}
         <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
             <div class="d-none d-lg-flex gap-3">
-                <span class="sax-top-text">#SAXNEWS</span>
-                <span class="sax-top-text">SERVICIOS SAX PALACE</span>
+                <span class="sax-top-text">{{ __('messages.sax_news_tag') }}</span>
+                <span class="sax-top-text">{{ __('messages.servicios_sax_palace') }}</span>
             </div>
             <x-currency-selector />
         </div>
@@ -30,17 +30,17 @@
             <div class="col-12 col-md-4 text-center text-md-end mt-3 mt-md-0">
                 @if (Auth::check())
                     <div class="d-flex justify-content-center justify-content-md-end align-items-center gap-3">
-                        <span class="sax-user-name">HOLA, {{ explode(' ', Auth::user()->name)[0] }}</span>
+                        <span class="sax-user-name">{{ __('messages.ola') }} {{ explode(' ', Auth::user()->name)[0] }}</span>
                         <form action="{{ route('logout') }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="sax-btn-link text-danger">
-                                <i class="fa fa-sign-out-alt"></i> SALIR
+                                <i class="fa fa-sign-out-alt"></i> {{ __('messages.sair') }}
                             </button>
                         </form>
                     </div>
                 @else
                     <button class="sax-btn-auth" data-bs-toggle="modal" data-bs-target="#loginModal">
-                        <i class="fa fa-user me-2"></i> INICIAR SESIÓN
+                        <i class="fa fa-user me-2"></i> {{ __('messages.entrar') }}
                     </button>
                 @endif
             </div>
@@ -56,7 +56,7 @@
                 @if(auth()->user()->user_type == 1)
                     <a href="{{ route('admin.index') }}" class="sax-nav-item sax-gold">ADMIN</a>
                 @else
-                    <a href="{{ route('user.dashboard') }}" class="sax-nav-item sax-gold">MEU PAINEL</a>
+                    <a href="{{ route('user.dashboard') }}" class="sax-nav-item sax-gold">{{ __('messages.meu_painel') }}</a>
                 @endif
             @endif
         </div>

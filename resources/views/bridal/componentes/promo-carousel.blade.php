@@ -2,8 +2,8 @@
 <section class="promo-section section-padding">
     <div class="container">
         <div class="text-center mb-5">
-            <span class="title-gold">COLECCION EXCLUSIVA</span>
-            <h2 class="section-title">La elegancia en cada momento</h2>
+            <span class="title-gold">{{ __('messages.coleccion_exclusiva') }}</span>
+            <h2 class="section-title">{{ __('messages.la_elegancia_en_cada_momento') }}</h2>
         </div>
         <div class="swiper promoSwiper">
             <div class="swiper-wrapper">

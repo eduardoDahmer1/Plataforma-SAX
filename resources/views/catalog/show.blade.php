@@ -142,8 +142,8 @@
 
         <div class="offcanvas offcanvas-end catalog-filter-offcanvas d-lg-none" tabindex="-1" id="{{ $mobileFilterId }}" aria-labelledby="{{ $mobileFilterId }}Label">
             <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="{{ $mobileFilterId }}Label">Filtrar Produtos</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                <h5 class="offcanvas-title" id="{{ $mobileFilterId }}Label">{{ __('messages.filtrar_produtos') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="{{ __('messages.fechar') }}"></button>
             </div>
             <div class="offcanvas-body">
                 <div class="mobile-filter-shell">

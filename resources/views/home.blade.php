@@ -18,11 +18,11 @@
         $showDest = $settings->show_highlight_destaque ?? 0;
 
         $exclusiveCategories = collect($categories ?? [])->take(3);
-        $exclusiveDescription = 'Uma seleção pensada para destacar design, acabamentos e marcas que definem o universo SAX com mais profundidade do que um banner sozinho consegue mostrar.';
+        $exclusiveDescription = __('messages.exclusive_description');
         $stackedBanners = collect([
-            ['image' => $banner6 ?? null, 'link' => $banner6_link ?? null, 'label' => 'Selecao curada'],
-            ['image' => $banner7 ?? null, 'link' => $banner7_link ?? null, 'label' => 'Novidades da temporada'],
-            ['image' => $banner8 ?? null, 'link' => $banner8_link ?? null, 'label' => 'Destaques da casa'],
+            ['image' => $banner6 ?? null, 'link' => $banner6_link ?? null, 'label' => __('messages.selecao_curada')],
+            ['image' => $banner7 ?? null, 'link' => $banner7_link ?? null, 'label' => __('messages.novidades_da_temporada')],
+            ['image' => $banner8 ?? null, 'link' => $banner8_link ?? null, 'label' => __('messages.destaques_da_casa')],
         ])->filter(fn ($banner) => filled($banner['image']));
     @endphp
 
@@ -40,7 +40,7 @@
                 <div class="exclusive-shell row g-4 align-items-stretch">
                     <div class="col-lg-5">
                         <div class="exclusive-panel h-100">
-                            <span class="exclusive-eyebrow">Curadoria SAX</span>
+                            <span class="exclusive-eyebrow">{{ __('messages.curadoria_sax') }}</span>
                             <h2 class="exclusive-title">{{ __('messages.colecao_exclusiva') }}</h2>
                             <p class="exclusive-copy">{{ $exclusiveDescription }}</p>
 
@@ -55,13 +55,13 @@
                             @endif
 
                             <div class="exclusive-actions">
-                                <a href="{{ route('categories.index') }}" class="exclusive-btn exclusive-btn--dark">Explorar coleção</a>
-                                <a href="{{ route('blogs.index') }}" class="exclusive-btn exclusive-btn--ghost">Ver editorial</a>
+                                <a href="{{ route('categories.index') }}" class="exclusive-btn exclusive-btn--dark">{{ __('messages.explorar_colecao') }}</a>
+                                <a href="{{ route('blogs.index') }}" class="exclusive-btn exclusive-btn--ghost">{{ __('messages.ver_editorial') }}</a>
                             </div>
 
                             <div class="exclusive-note">
-                                <strong>Seleção com intenção:</strong>
-                                peças, histórias e categorias organizadas para dar mais contexto à vitrine principal.
+                                <strong>{{ __('messages.selecao_com_intencao') }}</strong>
+                                {{ __('messages.exclusive_note_text') }}
                             </div>
                         </div>
                     </div>
@@ -70,11 +70,11 @@
                         <div class="exclusive-media-wrap h-100">
                             @if (isset($banner1) && $banner1)
                                 @if (!empty($banner1_link))
-                                    <a href="{{ $banner1_link }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir banner principal">
+                                    <a href="{{ $banner1_link }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('messages.abrir_banner_principal') }}">
                                         <img
                                             src="{{ asset('storage/uploads/' . $banner1) }}"
                                             class="img-fluid w-100 exclusive-media"
-                                            alt="Coleção exclusiva SAX"
+                                            alt="{{ __('messages.colecao_exclusiva_sax') }}"
                                             onerror="this.style.display='none'"
                                         >
                                     </a>
@@ -82,15 +82,15 @@
                                     <img
                                         src="{{ asset('storage/uploads/' . $banner1) }}"
                                         class="img-fluid w-100 exclusive-media"
-                                        alt="Coleção exclusiva SAX"
+                                        alt="{{ __('messages.colecao_exclusiva_sax') }}"
                                         onerror="this.style.display='none'"
                                     >
                                 @endif
                             @else
                                 <div class="exclusive-media exclusive-media--placeholder">
                                     <div>
-                                        <span class="exclusive-eyebrow">Coleção exclusiva</span>
-                                        <p class="mb-0">Adicione um banner para destacar esta vitrine com mais força visual.</p>
+                                        <span class="exclusive-eyebrow">{{ __('messages.colecao_exclusiva') }}</span>
+                                        <p class="mb-0">{{ __('messages.adicione_banner_destaque') }}</p>
                                     </div>
                                 </div>
                             @endif
@@ -155,7 +155,7 @@
         @if ($showMaisVistos && $productsMaisVistos->isNotEmpty())
             <div class="sax-section-container py-4">
                 <div class="container-fluid px-lg-5">
-                    <h2 class="sax-section-title mb-4">{{ $highlightTitles['mais_vistos'] ?? 'MAIS VISTOS' }}</h2>
+                    <h2 class="sax-section-title mb-4">{{ $highlightTitles['mais_vistos'] ?? __('messages.mais_vistos') }}</h2>
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsMaisVistos as $item)

@@ -81,7 +81,7 @@
         }
 
         $closest = $nearestColorName($normalized);
-        return $closest ? ($closest . ' (aprox.)') : $normalized;
+        return $closest ? ($closest . ' ' . __('messages.aprox_suffix')) : $normalized;
     };
 
     $sizeOptions = isset($siblings) && $siblings->count() > 0
@@ -186,7 +186,7 @@
                         @foreach ($thumbs as $i => $img)
                             <div class="col-3">
                                 <div class="thumb-item" onclick="window.mySwiper?.slideToLoop({{ $i }})">
-                                    <img src="{{ Storage::url($img) }}" alt="Thumb {{ $i + 1 }}">
+                                    <img src="{{ Storage::url($img) }}" alt="{{ __('messages.thumb_prefix') }} {{ $i + 1 }}">
                                 </div>
                             </div>
                         @endforeach
@@ -200,7 +200,7 @@
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <a href="{{ route('brands.show', $product->brand->slug) }}" class="text-decoration-none">
                             <span class="text-uppercase fw-bold text-muted" style="letter-spacing: 2px; font-size: .8rem;">
-                                {{ $product->brand->name ?? 'Luxury Selection' }}
+                                {{ $product->brand->name ?? __('messages.luxury_selection') }}
                             </span>
                         </a>
                         @if ($product->stock > 0 && $product->stock <= 5)
@@ -219,7 +219,7 @@
                             <div class="mb-2">
                                 <a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => request()->fullUrl()]) }}"
                                    class="btn btn-sm btn-outline-warning rounded-0" style="font-size: .7rem;">
-                                    <i class="fa fa-edit me-1"></i>Editar no Admin
+                                    <i class="fa fa-edit me-1"></i>{{ __('messages.editar_no_admin') }}
                                 </a>
                             </div>
                         @endif
@@ -236,7 +236,7 @@
                             <span class="cat-badge {{ $catBadgeModifier }}">{{ \Str::upper($product->category->name) }}</span>
                         @endif
                     </div>
-                    <p class="text-muted extra-small mb-3">REF: {{ $product->sku }}</p>
+                    <p class="text-muted extra-small mb-3">{{ __('messages.ref_prefix') }} {{ $product->sku }}</p>
 
                     <div class="mb-4">
                         @if ($product->previous_price > $product->price)
@@ -271,7 +271,7 @@
 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <p class="extra-small fw-bold text-uppercase mb-0">Tamanho</p>
+                            <p class="extra-small fw-bold text-uppercase mb-0">{{ __('messages.tamanho') }}</p>
                             <a href="#" class="extra-small text-muted text-decoration-underline"
                                data-bs-toggle="modal" data-bs-target="#sizeGuideModal">
                                 {{ __('messages.guia_de_medidas') }}
@@ -297,7 +297,7 @@
 
                                 @if ($hasHiddenSizes)
                                     <button type="button" class="size-more-btn" data-bs-toggle="modal" data-bs-target="#allSizesModal">
-                                        Ver todos
+                                        {{ __('messages.ver_todos') }}
                                     </button>
                                 @endif
                             @else
@@ -308,7 +308,7 @@
 
                     <div class="mb-5">
                         @if ($isBridal)
-                            <a href="https://wa.me/{{ config('settings.whatsapp') }}?text={{ urlencode('Olá, gostaria de agendar uma consulta para o produto '.$product->name) }}"
+                                     <a href="https://wa.me/{{ config('settings.whatsapp') }}?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $product->name) }}"
                                target="_blank"
                                class="btn btn-outline-dark w-100 text-uppercase fw-bold rounded-0 bridal-btn">
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.agendar_consulta_bridal') }}
@@ -415,34 +415,34 @@
         <div class="modal-content rounded-0 border-0 shadow">
             <div class="modal-header border-bottom">
                 <div>
-                    <h5 class="modal-title text-uppercase mb-1" style="font-size:.95rem; letter-spacing:.9px;">Guia de medidas</h5>
-                    <p class="mb-0 size-guide-note">Referência aproximada para ajudar na escolha do tamanho. Pode variar conforme modelagem e marca.</p>
+                    <h5 class="modal-title text-uppercase mb-1" style="font-size:.95rem; letter-spacing:.9px;">{{ __('messages.guia_de_medidas') }}</h5>
+                    <p class="mb-0 size-guide-note">{{ __('messages.size_guide_reference_note') }}</p>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('messages.fechar') }}"></button>
             </div>
             <div class="modal-body p-3 p-md-4">
                 <div class="row g-4">
                     <div class="col-12">
-                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">Como medir em casa</h6>
-                        <p class="size-guide-note mb-2"><strong>Peito/Busto:</strong> contorne a parte mais larga do tórax com fita métrica, sem apertar.</p>
-                        <p class="size-guide-note mb-2"><strong>Cintura:</strong> meça a parte mais fina do abdômen, mantendo postura reta.</p>
-                        <p class="size-guide-note mb-2"><strong>Quadril:</strong> meça na parte mais larga do quadril/glúteos.</p>
-                        <p class="size-guide-note mb-2"><strong>Comprimento do braço:</strong> do ombro até o punho, com braço levemente flexionado.</p>
-                        <p class="size-guide-note mb-0"><strong>Calçado:</strong> meça o comprimento do pé do calcanhar até o dedo mais longo.</p>
+                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">{{ __('messages.como_medir_em_casa') }}</h6>
+                        <p class="size-guide-note mb-2"><strong>{{ __('messages.peito_busto_label') }}</strong> {{ __('messages.peito_busto_instruction') }}</p>
+                        <p class="size-guide-note mb-2"><strong>{{ __('messages.cintura_label') }}</strong> {{ __('messages.cintura_instruction') }}</p>
+                        <p class="size-guide-note mb-2"><strong>{{ __('messages.quadril_label') }}</strong> {{ __('messages.quadril_instruction') }}</p>
+                        <p class="size-guide-note mb-2"><strong>{{ __('messages.comprimento_braco_label') }}</strong> {{ __('messages.comprimento_braco_instruction') }}</p>
+                        <p class="size-guide-note mb-0"><strong>{{ __('messages.calcado_label') }}</strong> {{ __('messages.calcado_instruction') }}</p>
                     </div>
 
                     <div class="col-12 col-lg-6">
-                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">Feminino (aprox.)</h6>
+                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">{{ __('messages.feminino_aprox') }}</h6>
                         <div class="table-responsive">
                             <table class="table table-sm align-middle size-guide-table">
                                 <thead>
                                     <tr>
-                                        <th>Tam</th>
-                                        <th>Brasil</th>
-                                        <th>Busto (cm)</th>
-                                        <th>Cintura (cm)</th>
-                                        <th>Quadril (cm)</th>
-                                        <th>Braço (cm)</th>
+                                        <th>{{ __('messages.tam_abrev') }}</th>
+                                        <th>{{ __('messages.brasil') }}</th>
+                                        <th>{{ __('messages.busto_cm') }}</th>
+                                        <th>{{ __('messages.cintura_cm') }}</th>
+                                        <th>{{ __('messages.quadril_cm') }}</th>
+                                        <th>{{ __('messages.braco_cm') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -457,17 +457,17 @@
                     </div>
 
                     <div class="col-12 col-lg-6">
-                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">Masculino (aprox.)</h6>
+                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">{{ __('messages.masculino_aprox') }}</h6>
                         <div class="table-responsive">
                             <table class="table table-sm align-middle size-guide-table">
                                 <thead>
                                     <tr>
-                                        <th>Tam</th>
-                                        <th>Brasil</th>
-                                        <th>Peito (cm)</th>
-                                        <th>Cintura (cm)</th>
-                                        <th>Calça</th>
-                                        <th>Braço (cm)</th>
+                                        <th>{{ __('messages.tam_abrev') }}</th>
+                                        <th>{{ __('messages.brasil') }}</th>
+                                        <th>{{ __('messages.peito_cm') }}</th>
+                                        <th>{{ __('messages.cintura_cm') }}</th>
+                                        <th>{{ __('messages.calca') }}</th>
+                                        <th>{{ __('messages.braco_cm') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -482,41 +482,41 @@
                     </div>
 
                     <div class="col-12 col-lg-6">
-                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">Infantil (aprox.)</h6>
+                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">{{ __('messages.infantil_aprox') }}</h6>
                         <div class="table-responsive">
                             <table class="table table-sm align-middle size-guide-table">
                                 <thead>
                                     <tr>
-                                        <th>Tam</th>
-                                        <th>Idade</th>
-                                        <th>Altura (cm)</th>
-                                        <th>Peito (cm)</th>
-                                        <th>Cintura (cm)</th>
+                                        <th>{{ __('messages.tam_abrev') }}</th>
+                                        <th>{{ __('messages.idade') }}</th>
+                                        <th>{{ __('messages.altura_cm') }}</th>
+                                        <th>{{ __('messages.peito_cm') }}</th>
+                                        <th>{{ __('messages.cintura_cm') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td>RN</td><td>Recém-nascido</td><td>45-52</td><td>38-42</td><td>38-42</td></tr>
-                                    <tr><td>3M-6M</td><td>3 a 6 meses</td><td>58-68</td><td>42-46</td><td>42-46</td></tr>
-                                    <tr><td>9M-12M</td><td>9 a 12 meses</td><td>68-76</td><td>46-50</td><td>45-49</td></tr>
-                                    <tr><td>18M-24M</td><td>18 a 24 meses</td><td>76-90</td><td>50-54</td><td>48-52</td></tr>
-                                    <tr><td>2Y-4Y</td><td>2 a 4 anos</td><td>90-104</td><td>54-58</td><td>52-55</td></tr>
-                                    <tr><td>5Y-8Y</td><td>5 a 8 anos</td><td>104-128</td><td>58-66</td><td>55-61</td></tr>
-                                    <tr><td>10Y-14Y</td><td>10 a 14 anos</td><td>134-164</td><td>68-82</td><td>62-70</td></tr>
+                                    <tr><td>RN</td><td>{{ __('messages.recem_nascido') }}</td><td>45-52</td><td>38-42</td><td>38-42</td></tr>
+                                    <tr><td>3M-6M</td><td>{{ __('messages.meses_3_a_6') }}</td><td>58-68</td><td>42-46</td><td>42-46</td></tr>
+                                    <tr><td>9M-12M</td><td>{{ __('messages.meses_9_a_12') }}</td><td>68-76</td><td>46-50</td><td>45-49</td></tr>
+                                    <tr><td>18M-24M</td><td>{{ __('messages.meses_18_a_24') }}</td><td>76-90</td><td>50-54</td><td>48-52</td></tr>
+                                    <tr><td>2Y-4Y</td><td>{{ __('messages.anos_2_a_4') }}</td><td>90-104</td><td>54-58</td><td>52-55</td></tr>
+                                    <tr><td>5Y-8Y</td><td>{{ __('messages.anos_5_a_8') }}</td><td>104-128</td><td>58-66</td><td>55-61</td></tr>
+                                    <tr><td>10Y-14Y</td><td>{{ __('messages.anos_10_a_14') }}</td><td>134-164</td><td>68-82</td><td>62-70</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <div class="col-12 col-lg-6">
-                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">Calçados (aprox.)</h6>
+                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">{{ __('messages.calcados_aprox') }}</h6>
                         <div class="table-responsive">
                             <table class="table table-sm align-middle size-guide-table">
                                 <thead>
                                     <tr>
                                         <th>BR</th>
-                                        <th>Comprimento do pé (cm)</th>
-                                        <th>US (ref.)</th>
-                                        <th>EU (ref.)</th>
+                                        <th>{{ __('messages.comprimento_pe_cm') }}</th>
+                                        <th>{{ __('messages.us_ref') }}</th>
+                                        <th>{{ __('messages.eu_ref') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -533,23 +533,23 @@
                     </div>
 
                     <div class="col-12">
-                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">Padrões de tamanho usados na loja</h6>
+                        <h6 class="text-uppercase fw-bold mb-2" style="font-size:.78rem; letter-spacing:.8px;">{{ __('messages.padroes_tamanho_usados_loja') }}</h6>
                         <div class="mb-3">
                             @if (!empty($sizeCatalog['vestuario']))
-                                <span class="size-guide-badge">Vestuário: {{ implode(', ', array_slice($sizeCatalog['vestuario'], 0, 12)) }}{{ count($sizeCatalog['vestuario']) > 12 ? '...' : '' }}</span>
+                                <span class="size-guide-badge">{{ __('messages.vestuario_label') }} {{ implode(', ', array_slice($sizeCatalog['vestuario'], 0, 12)) }}{{ count($sizeCatalog['vestuario']) > 12 ? '...' : '' }}</span>
                             @endif
                             @if (!empty($sizeCatalog['calcados']))
-                                <span class="size-guide-badge">Calçados: {{ implode(', ', array_slice($sizeCatalog['calcados'], 0, 12)) }}{{ count($sizeCatalog['calcados']) > 12 ? '...' : '' }}</span>
+                                <span class="size-guide-badge">{{ __('messages.calcados_label') }} {{ implode(', ', array_slice($sizeCatalog['calcados'], 0, 12)) }}{{ count($sizeCatalog['calcados']) > 12 ? '...' : '' }}</span>
                             @endif
                             @if (!empty($sizeCatalog['infantil']))
-                                <span class="size-guide-badge">Infantil: {{ implode(', ', array_slice($sizeCatalog['infantil'], 0, 12)) }}{{ count($sizeCatalog['infantil']) > 12 ? '...' : '' }}</span>
+                                <span class="size-guide-badge">{{ __('messages.infantil_label') }} {{ implode(', ', array_slice($sizeCatalog['infantil'], 0, 12)) }}{{ count($sizeCatalog['infantil']) > 12 ? '...' : '' }}</span>
                             @endif
                             @if (!empty($sizeCatalog['acessorios']))
-                                <span class="size-guide-badge">Acessórios: {{ implode(', ', $sizeCatalog['acessorios']) }}</span>
+                                <span class="size-guide-badge">{{ __('messages.acessorios_label') }} {{ implode(', ', $sizeCatalog['acessorios']) }}</span>
                             @endif
                         </div>
-                        <p class="size-guide-note mb-2"><strong>Importante:</strong> as medidas acima são estimativas. Peças slim, oversized ou tecidos com elastano podem vestir de forma diferente.</p>
-                        <p class="size-guide-note mb-0">Em caso de dúvida entre dois tamanhos, escolha com base na medida que ficar mais confortável para o seu uso.</p>
+                        <p class="size-guide-note mb-2"><strong>{{ __('messages.importante_label') }}</strong> {{ __('messages.size_guide_estimates_note') }}</p>
+                        <p class="size-guide-note mb-0">{{ __('messages.size_guide_doubt_note') }}</p>
                     </div>
                 </div>
             </div>
@@ -562,8 +562,8 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-0">
                 <div class="modal-header">
-                    <h5 class="modal-title text-uppercase" style="font-size:.9rem; letter-spacing:.8px;">Todos os tamanhos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title text-uppercase" style="font-size:.9rem; letter-spacing:.8px;">{{ __('messages.todos_os_tamanhos') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('messages.fechar') }}"></button>
                 </div>
                 <div class="modal-body">
                     <div class="d-flex flex-wrap gap-2">

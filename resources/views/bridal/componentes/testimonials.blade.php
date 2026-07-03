@@ -46,10 +46,10 @@
             </div>
 
             {{-- Flechas de navegación --}}
-            <button class="tq-nav tq-nav-prev" aria-label="Anterior">
+            <button class="tq-nav tq-nav-prev" aria-label="{{ __('messages.anterior') }}">
                 <i class="fa-solid fa-chevron-left"></i>
             </button>
-            <button class="tq-nav tq-nav-next" aria-label="Siguiente">
+            <button class="tq-nav tq-nav-next" aria-label="{{ __('messages.siguiente') }}">
                 <i class="fa-solid fa-chevron-right"></i>
             </button>
         </div>

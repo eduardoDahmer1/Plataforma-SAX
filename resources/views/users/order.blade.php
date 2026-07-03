@@ -336,7 +336,7 @@
                                 class="sax-label d-block text-muted">{{ __('messages.unitario') }}</label><span
                                 class="text-muted small">{{ currency_format($item->price) }}</span></div>
                         <div class="col-4 col-md-2 mt-3 mt-md-0 text-end pe-4"><label
-                                class="sax-label d-block text-muted">SUBTOTAL</label><span
+                            class="sax-label d-block text-muted">{{ __('messages.subtotal') }}</label><span
                                 class="fw-bold text-dark fs-6">{{ currency_format($item->price * $item->quantity) }}</span>
                         </div>
                     </div>
@@ -352,7 +352,7 @@
                                 <i class="fas fa-university me-2"></i> {{ __('messages.dados_bancarios') }}
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+                                aria-label="{{ __('messages.fechar') }}"></button>
                         </div>
                         <div class="modal-body p-4 bg-light">
                             <div class="alert alert-info border-0 rounded-0 x-small text-uppercase fw-bold mb-4">
@@ -383,7 +383,7 @@
 
         <div class="help-footer-sax text-center mt-5 py-5 border-top">
             <p class="text-muted small mb-3 text-uppercase letter-spacing-1">{{ __('messages.necesitas_ayuda') }}</p>
-            <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Hola, necesito ayuda con mi pedido #' . $order->id) }}"
+            <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode(__('messages.whatsapp_help_order_prefix') . $order->id) }}"
                 target="_blank" class="btn btn-outline-success rounded-pill px-5 py-2 btn-sm fw-bold shadow-sm">
                 <i class="fab fa-whatsapp me-2"></i> {{ __('messages.contactar_suporte') }}
             </a>

@@ -14,9 +14,9 @@
                     {{ $t->palace_hero_descricao ?? $palace->hero_descricao }}
                 </p>
                 <div class="d-flex gap-3">
-                    <a href="https://www.instagram.com/saxpalace" target="_blank" class="text-gold social-link-minimal">INSTAGRAM</a>
-                    <a href="#" class="text-gold social-link-minimal">FACEBOOK</a>
-                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $palace->contato_whatsapp) }}" class="text-gold social-link-minimal">WHATSAPP</a>
+                    <a href="https://www.instagram.com/saxpalace" target="_blank" class="text-gold social-link-minimal">{{ __('messages.instagram') }}</a>
+                    <a href="#" class="text-gold social-link-minimal">{{ __('messages.facebook') }}</a>
+                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $palace->contato_whatsapp) }}" class="text-gold social-link-minimal">{{ __('messages.whatsapp') }}</a>
                 </div>
             </div>
 
@@ -61,7 +61,7 @@
             </div>
             <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
                 <p class="x-small text-secondary mb-0">
-                    MADE BY <span class="text-white fw-bold">SAX FULL SERVICE</span>
+                    {{ __('messages.made_by') }} <span class="text-white fw-bold">SAX FULL SERVICE</span>
                 </p>
             </div>
         </div>

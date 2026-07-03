@@ -3,18 +3,18 @@
 @section('content')
 <div class="container py-4">
 
-    <h1 class="mb-4 text-center fw-bold">Subcategorias / Refinar / Seções</h1>
+    <h1 class="mb-4 text-center fw-bold">{{ __('messages.subcategorias_refinar_secoes') }}</h1>
 
     {{-- Busca --}}
     <form method="GET" class="mb-4 mx-auto" style="max-width: 500px;">
         <div class="input-group">
             <input type="text" name="search" class="form-control"
-                   placeholder="Buscar subcategoria..." value="{{ request('search') }}">
+                     placeholder="{{ __('messages.buscar_subcategoria') }}" value="{{ request('search') }}">
             @if(request('category'))
                 <input type="hidden" name="category" value="{{ request('category') }}">
             @endif
             <button class="btn btn-primary">
-                <i class="fas fa-search me-1"></i> Buscar
+                <i class="fas fa-search me-1"></i> {{ __('messages.buscar') }}
             </button>
         </div>
     </form>
@@ -46,13 +46,13 @@
                     @if($subcategory->categoriasfilhas)
                         <small class="text-muted mb-2">
                             <i class="fas fa-list-ul me-1"></i>
-                            {{ $subcategory->categoriasfilhas->count() }} itens
+                            {{ $subcategory->categoriasfilhas->count() }} {{ __('messages.itens') }}
                         </small>
                     @endif
 
                     <a href="{{ route('subcategories.show', $subcategory->id) }}"
                        class="btn btn-outline-primary btn-sm mt-auto">
-                       <i class="fas fa-eye me-1"></i> Ver detalhes
+                              <i class="fas fa-eye me-1"></i> {{ __('messages.ver_detalhes') }}
                     </a>
                 </div>
             </div>
@@ -60,7 +60,7 @@
         @empty
         <div class="col-12">
             <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle me-1"></i> Nenhuma subcategoria encontrada.
+                <i class="fas fa-info-circle me-1"></i> {{ __('messages.nenhuma_subcategoria_encontrada') }}
             </div>
         </div>
         @endforelse

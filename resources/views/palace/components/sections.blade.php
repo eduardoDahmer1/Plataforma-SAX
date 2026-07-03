@@ -1,7 +1,7 @@
 <section class="py-5 bg-black text-white">
     <div class="container py-5">
         <div class="text-center mb-5">
-            <h2 class="display-6 font-serif text-uppercase tracking-wider">{{ $t->palace_gastronomia_titulo ?? $palace->gastronomia_titulo ?? 'A Arte de Servir' }}</h2>
+            <h2 class="display-6 font-serif text-uppercase tracking-wider">{{ $t->palace_gastronomia_titulo ?? $palace->gastronomia_titulo ?? __('messages.a_arte_de_servir') }}</h2>
             <div class="bg-gold mx-auto mt-3" style="width: 50px; height: 2px;"></div>
         </div>
         
@@ -72,7 +72,7 @@
                             <h5 class="modal-title font-serif text-uppercase text-gold tracking-wide" id="pdfMenuModalLabel">
                                 <i class="fas fa-utensils me-2"></i> {{ __('messages.cardapio_sax_palace_title') }}
                             </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ __('messages.fechar') }}"></button>
                         </div>
                         <div class="modal-body p-0 bg-black">
                             <div class="ratio ratio-16x9 pdf-container">

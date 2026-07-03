@@ -8,10 +8,10 @@
 @endphp
 
 <div class="product-filters-wrapper" id="{{ $uid }}" data-filter-root>
-    <h6 class="filter-title">Filtrar</h6>
+    <h6 class="filter-title">{{ __('messages.filtrar') }}</h6>
 
     <div class="filter-group mb-4">
-        <label class="filter-label" for="{{ $uid }}_category_search">Categorias</label>
+        <label class="filter-label" for="{{ $uid }}_category_search">{{ __('messages.categorias') }}</label>
 
         <div class="filter-search-wrap mb-2">
             <input
@@ -19,7 +19,7 @@
                 id="{{ $uid }}_category_search"
                 class="filter-search-input"
                 data-filter-search="category"
-                placeholder="Buscar categoria, subcategoria ou filha">
+                placeholder="{{ __('messages.buscar_categoria_subcategoria_filha') }}">
             <i class="fas fa-search filter-search-icon" aria-hidden="true"></i>
         </div>
 
@@ -40,7 +40,7 @@
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#collapse-cat-{{ $uid }}-{{ $cat->id }}"
-                                aria-label="Expandir {{ $cat->name }}">
+                                aria-label="{{ __('messages.expandir') }} {{ $cat->name }}">
                                 <i class="fas fa-chevron-down small-icon"></i>
                             </button>
                         @endif
@@ -69,7 +69,7 @@
                                                     type="button"
                                                     data-bs-toggle="collapse"
                                                     data-bs-target="#collapse-sub-{{ $uid }}-{{ $sub->id }}"
-                                                    aria-label="Expandir {{ $sub->name }}">
+                                                    aria-label="{{ __('messages.expandir') }} {{ $sub->name }}">
                                                     <i class="fas fa-chevron-down extra-small-icon"></i>
                                                 </button>
                                             @endif
@@ -102,14 +102,14 @@
             @endforeach
 
             <div class="filter-empty d-none" data-filter-empty="category">
-                Nenhuma categoria encontrada.
+                {{ __('messages.nenhuma_categoria_encontrada') }}
             </div>
         </div>
     </div>
 
     @if(isset($brands) && $brands->count() > 0)
         <div class="filter-group mb-0 border-top pt-3">
-            <label class="filter-label" for="{{ $uid }}_brand_search">Marcas</label>
+            <label class="filter-label" for="{{ $uid }}_brand_search">{{ __('messages.nossas_marcas') }}</label>
 
             <div class="filter-search-wrap mb-2">
                 <input
@@ -117,7 +117,7 @@
                     id="{{ $uid }}_brand_search"
                     class="filter-search-input"
                     data-filter-search="brand"
-                    placeholder="Buscar marca">
+                    placeholder="{{ __('messages.buscar_marca') }}">
                 <i class="fas fa-search filter-search-icon" aria-hidden="true"></i>
             </div>
 
@@ -136,7 +136,7 @@
                 </ul>
 
                 <div class="filter-empty d-none" data-filter-empty="brand">
-                    Nenhuma marca encontrada.
+                    {{ __('messages.nenhuma_marca_encontrada') }}
                 </div>
             </div>
         </div>

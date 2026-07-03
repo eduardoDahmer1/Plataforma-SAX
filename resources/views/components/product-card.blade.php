@@ -67,7 +67,7 @@
 
             <div class="card-body product-card-standard__body d-flex flex-column">
                 <div class="product-card-standard__brand">
-                    {{ $item->brand->name ?? 'BRAND NAME' }}
+                    {{ $item->brand->name ?? __('messages.brand_name') }}
                 </div>
 
                 <div class="product-card-standard__name" title="{{ $item->name ?? $item->name }}">
@@ -79,13 +79,13 @@
                         {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
                     </div>
                     <div class="product-card-standard__sku">
-                        SKU: {{ $item->sku ?? 'N/A' }}
+                        {{ __('messages.sku_prefix') }} {{ $item->sku ?? __('messages.not_available_short') }}
                     </div>
                 </div>
 
                 <div class="product-card-standard__variants">
                     @if ($colorDots->isNotEmpty())
-                        <div class="product-card-standard__colors" aria-label="Cores disponíveis">
+                        <div class="product-card-standard__colors" aria-label="{{ __('messages.cores_disponiveis') }}">
                             @foreach ($colorDots as $hex)
                                 <span class="product-card-standard__color-dot" style="background-color: {{ $hex }};" title="{{ $hex }}"></span>
                             @endforeach
@@ -93,7 +93,7 @@
                     @endif
 
                     @if ($productSize !== '')
-                        <span class="product-card-standard__size">Tam: {{ $productSize }}</span>
+                        <span class="product-card-standard__size">{{ __('messages.tam_prefix') }} {{ $productSize }}</span>
                     @endif
                 </div>
             </div>

@@ -19,7 +19,7 @@
         'brand_name' => $isBridal ? 'Bridal' : ($isPalace ? 'Palace' : ($isBistro ? 'Café & Bistrô' : ($isInst ? 'Institucional' : 'SAX'))),
         'logo_key'   => $isBridal ? 'logo_bridal' : ($isPalace ? 'logo_palace' : ($isBistro ? 'logo_cafe_bistro' : ($isInst ? 'header_image' : ''))),
         'whatsapp'   => $whatsapp,
-        'cta_label'  => ($isPalace || $isBistro) ? 'Reservar' : 'Fale Conosco',
+        'cta_label'  => ($isPalace || $isBistro) ? __('messages.reservar') : __('messages.fale_conosco'),
         'cta_icon'   => ($isPalace || $isBistro) ? 'bi-calendar-check' : 'bi-whatsapp',
         'logo_filter'=> $isInst ? 'brightness(0) invert(1)' : 'none',
         'color' => [
@@ -39,7 +39,7 @@
     $currentCurrency  = $currencies->firstWhere('id', (int) $currentCurrencyId);
     $currentLangLabel = $currentCurrency
         ? ($langMap[strtoupper($currentCurrency->name)] ?? $currentCurrency->name)
-        : 'Idioma';
+        : __('messages.idioma');
 @endphp
 
 <header class="navbar navbar-expand-lg fixed-top exp-header transition-all" id="mainHeader">
@@ -67,31 +67,31 @@
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0 text-uppercase">
                 <li class="nav-item"><a class="nav-link {{ Request::is('/') ? 'active' : '' }}" href="/">{{ __('messages.inicio') }}</a></li>
                 <li class="nav-item dropdown exp-dropdown-mega">
-                    <a class="nav-link dropdown-toggle" href="#" id="catDropDesk">Shop</a>
+                    <a class="nav-link dropdown-toggle" href="#" id="catDropDesk">{{ __('messages.shop') }}</a>
                     <div class="dropdown-menu border-0 shadow-lg">
                         <div class="container-fluid p-4">
                             <div class="row">
                                 <div class="col-lg-6 border-end">
-                                    <h6 class="dropdown-header-title">Departamentos</h6>
+                                    <h6 class="dropdown-header-title">{{ __('messages.departamentos') }}</h6>
                                     <div class="row">
                                         <div class="col-6">
-                                            <a class="dropdown-item" href="{{ route('categories.show', 'feminino') }}">Mulher</a>
-                                            <a class="dropdown-item" href="{{ route('categories.show', 'masculino') }}">Homem</a>
-                                            <a class="dropdown-item" href="{{ route('categories.show', 'infantil') }}">Crianças</a>
+                                            <a class="dropdown-item" href="{{ route('categories.show', 'feminino') }}">{{ __('messages.mulher') }}</a>
+                                            <a class="dropdown-item" href="{{ route('categories.show', 'masculino') }}">{{ __('messages.homem') }}</a>
+                                            <a class="dropdown-item" href="{{ route('categories.show', 'infantil') }}">{{ __('messages.criancas') }}</a>
                                         </div>
                                         <div class="col-6">
-                                            <a class="dropdown-item" href="{{ route('categories.show', 'optico') }}">Lente</a>
-                                            <a class="dropdown-item" href="{{ route('categories.show', 'casa') }}">Casa</a>
-                                            <a class="dropdown-item text-gold fw-bold" href="{{ route('categories.index') }}">Ver Todas</a>
+                                            <a class="dropdown-item" href="{{ route('categories.show', 'optico') }}">{{ __('messages.lente') }}</a>
+                                            <a class="dropdown-item" href="{{ route('categories.show', 'casa') }}">{{ __('messages.casa') }}</a>
+                                            <a class="dropdown-item text-gold fw-bold" href="{{ route('categories.index') }}">{{ __('messages.ver_todas') }}</a>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-6 ps-4">
-                                    <h6 class="dropdown-header-title">Experiências</h6>
-                                    <a class="dropdown-item" href="{{ route('palace.index') }}">SAX Palace</a>
-                                    <a class="dropdown-item" href="{{ route('bridal.index') }}">SAX Bridal</a>
-                                    <a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">Café & Bistrô</a>
-                                    <a class="dropdown-item" href="{{ route('institucional.index') }}">SAX Institucional</a>
+                                    <h6 class="dropdown-header-title">{{ __('messages.experiencias') }}</h6>
+                                    <a class="dropdown-item" href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a>
+                                    <a class="dropdown-item" href="{{ route('bridal.index') }}">{{ __('messages.sax_bridal') }}</a>
+                                    <a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">{{ __('messages.cafe_bistro') }}</a>
+                                    <a class="dropdown-item" href="{{ route('institucional.index') }}">{{ __('messages.sax_institucional') }}</a>
                                 </div>
                             </div>
                         </div>
@@ -99,11 +99,11 @@
                 </li>
                 @if(Request::is('institucional'))
                     <li class="nav-item">
-                        <a class="nav-link" href="#sobre">Sobre Nós</a>
+                        <a class="nav-link" href="#sobre">{{ __('messages.sobre_nos') }}</a>
                     </li>
                 @endif
-                <li class="nav-item"><a class="nav-link" href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('contact.form') }}">Contato</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
 
                 {{-- Seletor de idioma --}}
                 <li class="nav-item dropdown">
@@ -127,7 +127,7 @@
             </ul>
 
             <div class="d-flex align-items-center gap-3">
-                <a href="{{ route('home') }}" class="btn-shop-link">IR PARA LOJA <i class="bi bi-arrow-right"></i></a>
+                <a href="{{ route('home') }}" class="btn-shop-link">{{ __('messages.ir_para_loja') }} <i class="bi bi-arrow-right"></i></a>
                 <a href="{{ $config['whatsapp'] }}" target="_blank" class="btn-contact-gold">{{ strtoupper($config['cta_label']) }} <i class="bi {{ $config['cta_icon'] }}"></i></a>
             </div>
         </div>
@@ -137,20 +137,20 @@
             <ul class="navbar-nav pt-4 text-uppercase">
                 <li class="nav-item"><a class="nav-link" href="/">{{ __('messages.inicio') }}</a></li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="shopDropMobile" data-bs-toggle="dropdown">Shop</a>
+                    <a class="nav-link dropdown-toggle" href="#" id="shopDropMobile" data-bs-toggle="dropdown">{{ __('messages.shop') }}</a>
                     <ul class="dropdown-menu bg-transparent border-0 ps-3">
-                        <li><a class="dropdown-item text-gold small" href="{{ route('categories.index') }}">Ver Tudo</a></li>
-                        <li><a class="dropdown-item" href="{{ route('categories.show', 'feminino') }}">Mulher</a></li>
-                        <li><a class="dropdown-item" href="{{ route('categories.show', 'masculino') }}">Homem</a></li>
-                        <li><a class="dropdown-item" href="{{ route('palace.index') }}">SAX Palace</a></li>
-                        <li><a class="dropdown-item" href="{{ route('bridal.index') }}">SAX Bridal</a></li>
-                        <li><a class="dropdown-item" href="{{ route('institucional.index') }}">SAX Institucional</a></li>
-                        <li><a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">SAX Bistro</a></li>
+                        <li><a class="dropdown-item text-gold small" href="{{ route('categories.index') }}">{{ __('messages.ver_tudo') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('categories.show', 'feminino') }}">{{ __('messages.mulher') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('categories.show', 'masculino') }}">{{ __('messages.homem') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('bridal.index') }}">{{ __('messages.sax_bridal') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('institucional.index') }}">{{ __('messages.sax_institucional') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">{{ __('messages.sax_bistro') }}</a></li>
                     </ul>
                 </li>
-                <li class="nav-item"><a class="nav-link" href="#sobre">Sobre Nós</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('contact.form') }}">Contato</a></li>
+                <li class="nav-item"><a class="nav-link" href="#sobre">{{ __('messages.sobre_nos') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
 
                 {{-- Seletor de idioma --}}
                 <li class="nav-item dropdown">
@@ -173,7 +173,7 @@
                 </li>
             </ul>
             <div class="d-grid gap-2 mt-4 pb-4">
-                <a href="{{ route('home') }}" class="btn-shop-link text-center">IR PARA LOJA</a>
+                <a href="{{ route('home') }}" class="btn-shop-link text-center">{{ __('messages.ir_para_loja') }}</a>
                 <a href="{{ $config['whatsapp'] }}" target="_blank" class="btn-contact-gold text-center">{{ strtoupper($config['cta_label']) }}</a>
             </div>
         </div>

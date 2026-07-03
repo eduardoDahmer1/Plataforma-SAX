@@ -27,8 +27,8 @@
                 <li class="list-inline-item">
                     <x-language-selector variant="desktop" />
                 </li>
-                <li class="list-inline-item"><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">SAX PALACE</a></li>
+                <li class="list-inline-item"><a href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>
+                <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a></li>
                 <li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
 
                 <li class="list-inline-item border-start ps-3 dropdown-mega-parent">
@@ -74,10 +74,10 @@
         <div class="row align-items-center g-2">
             <div class="col-3 d-lg-none">
                 <div class="sax-mobile-actions d-flex align-items-center gap-2">
-                    <button class="btn-menu-open" id="mobileMenuBtn" type="button" aria-label="Abrir menu">
+                    <button class="btn-menu-open" id="mobileMenuBtn" type="button" aria-label="{{ __('messages.abrir_menu') }}">
                         <i class="fa fa-bars"></i>
                     </button>
-                    <button class="btn-menu-open" id="mobileSearchBtn" type="button" aria-label="Abrir busca">
+                    <button class="btn-menu-open" id="mobileSearchBtn" type="button" aria-label="{{ __('messages.abrir_busca') }}">
                         <i class="fa fa-search"></i>
                     </button>
                 </div>
@@ -150,19 +150,19 @@
                 <li class="list-inline-item">
                     <a href="{{ route('institucional.index') }}" class="text-institucional">{{ __('messages.institucional') }}</a>
                 </li>
-                <li class="list-inline-item"><a href="{{ route('bridal.index') }}" class="text-bridal">BRIDAL</a></li>
-                <li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">PALACE</a></li>
+                <li class="list-inline-item"><a href="{{ route('bridal.index') }}" class="text-bridal">{{ __('messages.bridal') }}</a></li>
+                <li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">{{ __('messages.palace') }}</a></li>
                 <li class="list-inline-item">
                     <a href="{{ route('cafe_bistro.index') }}" class="text-bistro">{{ __('messages.cafe_bistro') }}</a>
                 </li>
-                <li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">#SAXNEWS</a></li>
+                <li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">{{ __('messages.sax_news_tag') }}</a></li>
             </ul>
         </div>
     </nav>
 
     <div id="saxDrawer" class="sax-drawer">
         <div class="drawer-header p-3 d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-uppercase tracking-2">Menu</span>
+            <span class="fw-bold text-uppercase tracking-2">{{ __('messages.menu') }}</span>
             <button class="btn-close-drawer" id="closeDrawer"><i class="fa fa-times"></i></button>
         </div>
 
@@ -172,7 +172,7 @@
                     <div class="d-flex align-items-center mb-3">
                         <div class="user-avatar"><i class="fa fa-user"></i></div>
                         <div class="ms-2">
-                            <small class="d-block text-muted">Olá,</small>
+                            <small class="d-block text-muted">{{ __('messages.ola') }}</small>
                             <span class="fw-bold">{{ $userName }}</span>
                         </div>
                     </div>
@@ -182,7 +182,7 @@
                         </a>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn btn-outline-danger w-100 rounded-0">Sair</button>
+                            <button type="submit" class="btn btn-outline-danger w-100 rounded-0">{{ __('messages.sair') }}</button>
                         </form>
                     </div>
                 @else
@@ -205,10 +205,10 @@
                 <hr class="my-2">
 
                 <li><a href="{{ route('institucional.index') }}" class="drawer-link"><i class="fa fa-info-circle me-3"></i>{{ __('messages.institucional') }}</a></li>
-                <li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>BRIDAL</a></li>
-                <li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>SAX PALACE</a></li>
+                <li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>{{ __('messages.bridal') }}</a></li>
+                <li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>{{ __('messages.sax_palace') }}</a></li>
                 <li><a href="{{ route('cafe_bistro.index') }}" class="drawer-link"><i class="fa fa-coffee me-3"></i>{{ __('messages.cafe_bistro') }}</a></li>
-                <li><a href="{{ route('blogs.index') }}" class="drawer-link"><i class="fa fa-newspaper me-3"></i>#SAXNEWS</a></li>
+                <li><a href="{{ route('blogs.index') }}" class="drawer-link"><i class="fa fa-newspaper me-3"></i>{{ __('messages.sax_news_tag') }}</a></li>
                 <li><a href="{{ route('contact.form') }}" class="drawer-link"><i class="fa fa-envelope me-3"></i>{{ __('messages.contato') }}</a></li>
                 <li><a href="{{ route('categories.index') }}" class="drawer-link"><i class="fa fa-th me-3"></i>{{ __('messages.categorias') }}</a></li>
                 <li><a href="{{ route('brands.index') }}" class="drawer-link"><i class="fa fa-tag me-3"></i>{{ __('messages.nossas_marcas') }}</a></li>
@@ -225,6 +225,12 @@
 
 @include('components.modal-login')
 <script>
+    window.saxSearchLang = {
+        sku_prefix: @json(__('messages.sku_prefix')),
+        usd_prefix: @json(__('messages.usd_prefix')),
+        no_products: @json(__('messages.nenhum_produto_encontrado')),
+    };
+
     document.addEventListener("DOMContentLoaded", function () {
         const searchInputs = document.querySelectorAll('.search-autocomplete-input');
 
@@ -262,11 +268,11 @@
                                                 <div class="autocomplete-left">
                                                     <span class="autocomplete-title">${product.name}</span>
                                                     ${secondaryName}
-                                                    <span class="autocomplete-sku">SKU: ${product.sku}</span>
+                                                    <span class="autocomplete-sku">${window.saxSearchLang.sku_prefix} ${product.sku}</span>
                                                 </div>
                                                 <div class="autocomplete-right">
                                                     <span class="autocomplete-brand">${product.brand}</span>
-                                                    <span class="autocomplete-price">U$ ${product.price}</span>
+                                                    <span class="autocomplete-price">${window.saxSearchLang.usd_prefix} ${product.price}</span>
                                                 </div>
                                             </div>
                                         </a>`;
@@ -274,7 +280,7 @@
                                 resultsContainer.innerHTML = html;
                                 resultsContainer.classList.remove('d-none');
                             } else {
-                                resultsContainer.innerHTML = '<div class="p-3 text-center text-muted">Nenhum produto encontrado.</div>';
+                                resultsContainer.innerHTML = '<div class="p-3 text-center text-muted">' + window.saxSearchLang.no_products + '</div>';
                                 resultsContainer.classList.remove('d-none');
                             }
                         })

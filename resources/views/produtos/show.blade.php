@@ -116,6 +116,8 @@
 .product-page-wrapper .size-box.active { background: #000; border-color: #000; color: #fff; }
 .product-page-wrapper .size-box.disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; pointer-events: none; }
 .extra-small { font-size: .65rem; letter-spacing: .5px; }
+.cat-badge { display: inline-flex; align-items: center; line-height: 1; font-size: .7rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; color: #fff; background: #616161; padding: .35rem .65rem; border-radius: .5rem; }
+.cat-badge--infantil { background: #FB8C00; color: #212121; }
 .breadcrumb-item + .breadcrumb-item::before { content: "/"; font-size: 10px; color: #ccc; }
 .size-more-btn { border: 1px dashed #111; background: #fff; color: #111; height: 34px; padding: 0 12px; min-width: 88px; font-size: .66rem; text-transform: uppercase; letter-spacing: .5px; display: inline-flex; align-items: center; justify-content: center; }
 .size-more-btn:hover { background: #111; color: #fff; }
@@ -223,7 +225,17 @@
                         @endif
                     @endauth
 
-                    <h1 class="h4 text-uppercase fw-light mb-1" style="letter-spacing: 1px; line-height: 1.3;">{{ $product->name }}</h1>
+                    @php
+                        $categoryBadgeMap = ['infantil' => 'cat-badge--infantil'];
+                        $catKey = \Str::slug($product->category->name ?? '');
+                        $catBadgeModifier = $categoryBadgeMap[$catKey] ?? '';
+                    @endphp
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h1 class="h4 text-uppercase fw-light mb-0" style="letter-spacing: 1px; line-height: 1.3;">{{ $product->name }}</h1>
+                        @if ($product->category)
+                            <span class="cat-badge {{ $catBadgeModifier }}">{{ \Str::upper($product->category->name) }}</span>
+                        @endif
+                    </div>
                     <p class="text-muted extra-small mb-3">REF: {{ $product->sku }}</p>
 
                     <div class="mb-4">

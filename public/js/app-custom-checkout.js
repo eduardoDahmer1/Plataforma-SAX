@@ -1,18 +1,211 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // =========================
-    // ====== STEPS ===========
-    // =========================
+    const checkoutForm = document.getElementById('checkoutForm');
     const currentStepInput = document.getElementById('currentStep');
     let currentStep = Number(currentStepInput?.value || 1);
     const steps = document.querySelectorAll('.step');
+    const progressSteps = document.querySelectorAll('.sax-checkout-progress-step');
 
     function showStep(step) {
         steps.forEach((s, i) => s.classList.toggle('active', i === step - 1));
+        progressSteps.forEach((item, i) => item.classList.toggle('is-current', i <= step - 1));
         if (currentStepInput) currentStepInput.value = step;
         window.scrollTo(0, 0);
     }
 
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const paymentMethodsAllowed = ['deposito', 'bancard', 'bancard_v2', 'whatsapp', 'pagopar'];
+
+    function getStepElement(stepNumber) {
+        return document.getElementById(`step${stepNumber}`);
+    }
+
+    function clearStepAlert(stepNumber) {
+        const stepEl = getStepElement(stepNumber);
+        if (!stepEl) return;
+        const alertEl = stepEl.querySelector('.sax-step-validation-alert');
+        if (alertEl) alertEl.remove();
+    }
+
+    function showStepAlert(stepNumber, message) {
+        const stepEl = getStepElement(stepNumber);
+        if (!stepEl) return;
+
+        let alertEl = stepEl.querySelector('.sax-step-validation-alert');
+        if (!alertEl) {
+            alertEl = document.createElement('div');
+            alertEl.className = 'sax-step-validation-alert';
+            const box = stepEl.querySelector('.sax-checkout-box') || stepEl;
+            box.insertBefore(alertEl, box.firstChild);
+        }
+
+        alertEl.textContent = message;
+    }
+
+    function fieldValue(selector) {
+        return (document.querySelector(selector)?.value || '').trim();
+    }
+
+    function markFieldInvalid(selector, shouldFocus = false) {
+        const field = document.querySelector(selector);
+        if (!field) return;
+        field.classList.add('is-invalid');
+        if (shouldFocus) field.focus();
+    }
+
+    function clearInvalid(selector) {
+        const field = document.querySelector(selector);
+        if (!field) return;
+        field.classList.remove('is-invalid');
+    }
+
+    function validateStep1() {
+        clearStepAlert(1);
+        return true;
+    }
+
+    function validateStep2() {
+        clearStepAlert(2);
+
+        const name = fieldValue('#step2 input[name="name"]');
+        const documentValue = fieldValue('#step2 input[name="document"]');
+        const email = fieldValue('#step2 input[name="email"]');
+        const phone = fieldValue('#step2 input[name="phone"]');
+        const phoneCountry = fieldValue('#step2 select[name="phone_country"]');
+
+        ['#step2 input[name="name"]', '#step2 input[name="document"]', '#step2 input[name="email"]', '#step2 input[name="phone"]', '#step2 select[name="phone_country"]']
+            .forEach(clearInvalid);
+
+        if (name.length < 2) {
+            showStepAlert(2, 'Informe o nome completo para continuar.');
+            markFieldInvalid('#step2 input[name="name"]', true);
+            return false;
+        }
+
+        if (!documentValue) {
+            showStepAlert(2, 'Informe o documento do cliente para continuar.');
+            markFieldInvalid('#step2 input[name="document"]', true);
+            return false;
+        }
+
+        if (!emailPattern.test(email)) {
+            showStepAlert(2, 'Informe um e-mail valido para continuar.');
+            markFieldInvalid('#step2 input[name="email"]', true);
+            return false;
+        }
+
+        if (!phoneCountry) {
+            const phoneCountryField = document.querySelector('#step2 select[name="phone_country"]');
+            if (phoneCountryField) {
+                phoneCountryField.value = '595';
+            }
+        }
+
+        if (!phone) {
+            showStepAlert(2, 'Informe o telefone para continuar.');
+            markFieldInvalid('#step2 input[name="phone"]', true);
+            return false;
+        }
+
+        return true;
+    }
+
+    function validateStep3() {
+        clearStepAlert(3);
+
+        const shipping = document.querySelector('input[name="shipping"]:checked')?.value;
+        if (!shipping || !['1', '2', '3'].includes(shipping)) {
+            showStepAlert(3, 'Selecione um metodo de entrega para continuar.');
+            return false;
+        }
+
+        const selectorsToClear = [
+            '#country', '#postal_code', 'input[name="street"]', 'input[name="number"]', 'input[name="district"]',
+            '#state-select', '#city-select', '#storeSelect'
+        ];
+        selectorsToClear.forEach(clearInvalid);
+
+        if (shipping === '1') {
+            return true;
+        }
+
+        if (shipping === '2') {
+            const country = fieldValue('#country');
+            const cep = fieldValue('#postal_code');
+            const street = fieldValue('input[name="street"]');
+            const number = fieldValue('input[name="number"]');
+            const district = fieldValue('input[name="district"]');
+
+            if (!country) {
+                showStepAlert(3, 'Selecione o pais de entrega para continuar.');
+                markFieldInvalid('#country', true);
+                return false;
+            }
+
+            if (!cep) {
+                showStepAlert(3, 'Informe o CEP/Codigo postal para continuar.');
+                markFieldInvalid('#postal_code', true);
+                return false;
+            }
+
+            if (!street) {
+                showStepAlert(3, 'Informe a rua para continuar.');
+                markFieldInvalid('input[name="street"]', true);
+                return false;
+            }
+
+            if (!number) {
+                showStepAlert(3, 'Informe o numero do endereco para continuar.');
+                markFieldInvalid('input[name="number"]', true);
+                return false;
+            }
+
+            if (!district) {
+                showStepAlert(3, 'Informe o bairro para continuar.');
+                markFieldInvalid('input[name="district"]', true);
+                return false;
+            }
+
+            return true;
+        }
+
+        if (shipping === '3') {
+            const store = fieldValue('#storeSelect');
+            if (!store) {
+                showStepAlert(3, 'Selecione a loja para retirada.');
+                markFieldInvalid('#storeSelect', true);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function validateStep4() {
+        clearStepAlert(4);
+
+        const paymentMethod = fieldValue('#payment_method');
+        if (!paymentMethodsAllowed.includes(paymentMethod)) {
+            showStepAlert(4, 'Selecione uma forma de pagamento valida para concluir.');
+            return false;
+        }
+
+        return true;
+    }
+
+    function validateStep(stepNumber) {
+        if (stepNumber === 1) return validateStep1();
+        if (stepNumber === 2) return validateStep2();
+        if (stepNumber === 3) return validateStep3();
+        if (stepNumber === 4) return validateStep4();
+        return true;
+    }
+
     window.nextStep = function(step) {
+        if (!validateStep(step)) {
+            showStep(step);
+            return;
+        }
+
         currentStep = step + 1;
         showStep(currentStep);
     }
@@ -24,9 +217,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     showStep(currentStep);
 
-    // =========================
-    // ====== ENDEREÇO & FRETE =
-    // =========================
     const shippingRadios = document.querySelectorAll('input[name="shipping"]');
     const shippingRegistered = document.getElementById('shipping_registered');
     const shippingAlternative = document.getElementById('shipping_alternative');
@@ -106,7 +296,6 @@ document.addEventListener('DOMContentLoaded', function () {
         infoBox.style.display = 'block';
 
         if (method == 3) {
-            // Retirada na Loja
             infoContent.innerHTML = '<i class="fa fa-shopping-bag me-2"></i> <strong>Retirada na Loja:</strong> Selecione a unidade de preferência no mapa. <strong>Frete Grátis.</strong>';
             if (freteDisplay) freteDisplay.innerText = 'Gratis';
             if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
@@ -118,16 +307,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 : (countrySelect?.value || 'brasil');
 
             if (country.toLowerCase() === 'brasil') {
-                // Envio para o Brasil
                 infoContent.innerHTML = '<i class="fa fa-whatsapp me-2"></i> <strong>Envio Internacional (Brasil):</strong> O valor do frete não está incluso no total. <strong>Será combinado via WhatsApp</strong> após a finalização do pedido.';
                 if (freteDisplay) freteDisplay.innerText = 'A combinar';
                 if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
                 if (freteValorInput) freteValorInput.value = '0.00';
 
             } else {
-                // Envio no Paraguai
                 infoContent.innerHTML = '<i class="fa fa-truck me-2"></i> <strong>Envio Nacional (Paraguai):</strong> O custo do frete será calculado com base na sua cidade e adicionado ao total abaixo.';
-                // O calcularFrete() será chamado em seguida para preencher os valores reais
                 if (freteDisplay) freteDisplay.innerText = 'Calculando...';
             }
         }
@@ -197,9 +383,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updateShippingMessage(document.querySelector('input[name="shipping"]:checked')?.value);
     }
 
-    // ==========================================
-    // ====== AUTOCOMPLETE CEP (VIA CEP) ========
-    // ==========================================
     if (postalInput) {
         postalInput.addEventListener('input', function(e) {
             if (countrySelect.value === 'brasil') {
@@ -270,9 +453,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (checkedRadio && checkedRadio.value !== '3') {
         calcularFrete();
     }
-    // =========================
-    // ====== PAGAMENTO =======
-    // =========================
 
     window.selectPayment = function(method) {
         const paymentInput = document.getElementById('payment_method');
@@ -306,5 +486,34 @@ document.addEventListener('DOMContentLoaded', function () {
     
     if (typeof window.toggleCountryFields === 'function') {
         window.toggleCountryFields();
+    }
+
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(e) {
+            clearStepAlert(4);
+
+            if (!validateStep1()) {
+                e.preventDefault();
+                showStep(1);
+                return;
+            }
+
+            if (!validateStep2()) {
+                e.preventDefault();
+                showStep(2);
+                return;
+            }
+
+            if (!validateStep3()) {
+                e.preventDefault();
+                showStep(3);
+                return;
+            }
+
+            if (!validateStep4()) {
+                e.preventDefault();
+                showStep(4);
+            }
+        });
     }
 });

@@ -42,11 +42,12 @@
     {{-- 🚪 Ações de Conta --}}
     <div class="sax-menu-group mt-5 pt-3 border-top">
         <div class="sax-menu-items">
-            <a href="{{ route('logout') }}" 
-               onclick="event.preventDefault();document.getElementById('logout-form').submit();"
-               class="sax-menu-link text-dark fw-bold">
-                <i class="fa fa-sign-out-alt"></i> {{ __('messages.menu_sair') }}
-            </a>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="sax-menu-link text-dark fw-bold border-0 bg-transparent w-100 text-start">
+                    <i class="fa fa-sign-out-alt"></i> {{ __('messages.menu_sair') }}
+                </button>
+            </form>
             
             <button type="button" class="sax-menu-link border-0 bg-transparent text-danger w-100 text-start" 
                     data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
@@ -54,11 +55,6 @@
             </button>
         </div>
     </div>
-
-    {{-- Formulário de Logout --}}
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-        @csrf
-    </form>
 </div>
 
 {{-- Modal de Confirmação Minimalista --}}

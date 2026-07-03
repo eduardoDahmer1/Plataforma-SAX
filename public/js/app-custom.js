@@ -212,6 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const registerPasswordConfirmation   = document.getElementById('password_confirmation');
     const registerEmailError             = document.getElementById('registerEmailError');
     const registerPasswordError          = document.getElementById('registerPasswordError');
+    const registerError                  = document.getElementById('registerError');
     const forgotEmail                    = document.getElementById('forgot_email');
     const resetPassword                  = document.getElementById('reset_password');
     const resetPasswordConfirmation      = document.getElementById('reset_password_confirmation');
@@ -324,12 +325,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!this.value || this.value === registerPassword?.value) showFieldError(registerPasswordConfirmation, registerPasswordError, '');
     });
 
-    registerForm?.addEventListener('submit', function (e) {
-        if (!this.checkValidity()) {
-            e.preventDefault();
-            this.reportValidity();
-            return;
-        }
+    const validateRegisterForm = () => {
+        showMessage(registerError, '');
 
         const nameValue     = registerName?.value.trim() || '';
         const docValue      = registerDocument?.value.trim() || '';
@@ -376,11 +373,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (hasError) {
-            e.preventDefault();
             const firstInvalid = registerForm.querySelector('.is-invalid');
             firstInvalid?.focus();
         }
-    });
+
+        return !hasError;
+    };
 
     forgotForm?.addEventListener('submit', function (e) {
         if (!this.checkValidity()) {
@@ -423,11 +421,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    const ajaxForm = (form, { messageEl, btnEl, onSuccess }) => {
+    const ajaxForm = (form, { messageEl, btnEl, validate, onSuccess }) => {
         form?.addEventListener('submit', function (e) {
             e.preventDefault();
             if (!this.checkValidity()) {
                 this.reportValidity();
+                return;
+            }
+
+            if (typeof validate === 'function' && !validate()) {
                 return;
             }
 
@@ -504,6 +506,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (submitBtn) submitBtn.disabled = false;
             }
+        },
+    });
+
+    ajaxForm(registerForm, {
+        messageEl: 'registerError',
+        btnEl: 'btnRegister',
+        validate: validateRegisterForm,
+        onSuccess(data, msg, btn, _status, ok) {
+            if (ok && data.success) {
+                window.location.href = data.redirect || '/';
+                return;
+            }
+
+            const errors = data.errors || {};
+
+            if (errors.name) registerName?.classList.add('is-invalid');
+            if (errors.document) registerDocument?.classList.add('is-invalid');
+            if (errors.phone_country) registerPhoneCountry?.classList.add('is-invalid');
+            if (errors.phone_number) registerPhoneNumber?.classList.add('is-invalid');
+            if (errors.email) showFieldError(registerEmail, registerEmailError, errors.email[0]);
+            if (errors.password) showFieldError(registerPassword, registerPasswordError, errors.password[0]);
+
+            if (msg) {
+                msg.textContent   = data.message || firstErrorMessage(errors) || 'Nao foi possivel concluir o cadastro agora.';
+                msg.style.display = 'block';
+                msg.className     = 'small mb-3 text-danger';
+            }
+
+            if (btn) btn.disabled = false;
         },
     });
 

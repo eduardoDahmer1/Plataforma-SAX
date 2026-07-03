@@ -5,6 +5,7 @@
     <div class="dashboard-header d-flex justify-content-between align-items-end mb-5">
         <div>
             <h2 class="sax-title text-uppercase">{{ __('messages.historico_pedidos_titulo') }}</h2>
+            <p class="text-muted mb-2">Acompanhe o status, pagamento e detalhes de cada compra.</p>
             <div class="sax-divider-black"></div>
         </div>
         <a href="{{ route('user.dashboard') }}" class="btn-back-minimal">
@@ -13,7 +14,6 @@
     </div>
 
     @if ($orders->count())
-        {{-- Versão Desktop --}}
         <div class="d-none d-md-block shadow-sm sax-table-container">
             <table class="table sax-table">
                 <thead>
@@ -60,11 +60,10 @@
             </table>
         </div>
 
-        {{-- Versão Mobile --}}
         <div class="d-md-none">
             @foreach ($orders as $order)
                 @php($status = strtolower((string) $order->status))
-                <div class="order-card-sax shadow-sm">
+                <div class="order-card-sax shadow-sm border rounded-3 bg-white mb-3">
                     <div class="order-mobile-header">
                         <div>
                             <span class="sax-label-min">{{ __('messages.num_pedido') }}</span>
@@ -104,10 +103,17 @@
                 </div>
             @endforeach
         </div>
+
+        @if(method_exists($orders, 'links'))
+            <div class="d-flex justify-content-center mt-4">
+                {{ $orders->links() }}
+            </div>
+        @endif
     @else
-        <div class="empty-state">
+        <div class="empty-state border rounded-3 py-5 bg-white">
             <i class="fas fa-shopping-bag fa-2x mb-3 opacity-50"></i>
             <p>{{ __('messages.sem_pedidos') }}</p>
+            <a href="{{ route('home') }}" class="btn btn-dark btn-sm mt-2 px-4">Continuar comprando</a>
         </div>
     @endif
 </div>

@@ -181,6 +181,7 @@
                             <i class="fa fa-cog me-2"></i> {{ __('messages.meu_painel') }}
                         </a>
                         <form action="{{ route('logout') }}" method="POST">
+                            @csrf
                             <button type="submit" class="btn btn-outline-danger w-100 rounded-0">Sair</button>
                         </form>
                     </div>

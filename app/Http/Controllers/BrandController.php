@@ -39,7 +39,10 @@ class BrandController extends Controller
         $cacheKey = "brand_show_{$slug}_page_{$page}";
 
         $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
-            return Brand::where('slug', $slug)->where('status', 1)->firstOrFail();
+            return Brand::where('slug', $slug)
+                ->where('status', 1)
+                ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
+                ->firstOrFail();
         });
 
         $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand) {

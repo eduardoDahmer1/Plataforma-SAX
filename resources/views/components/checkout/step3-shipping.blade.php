@@ -17,6 +17,8 @@
             <span class="step-number">03</span> {{ __('messages.passo_metodo_entrega') }}
         </h4>
 
+        <p class="sax-step-helper">Escolha a forma de entrega e confirme o destino do pedido.</p>
+
         <input type="hidden" name="frete_valor" id="frete_valor" value="0">
 
         <div class="sax-shipping-grid mb-4">
@@ -40,9 +42,9 @@
         </div>
 
         <div id="shipping-info-box" class="mb-4" style="display:none;">
-            <div class="p-3 rounded border" style="background-color: #f8f9fa; border-color: #dee2e6;">
+            <div class="sax-shipping-info-wrap">
                 <div class="d-flex align-items-center">
-                    <i class="fa fa-info-circle me-3 text-dark" style="font-size: 1.2rem;"></i>
+                    <i class="fa fa-info-circle me-3 text-dark"></i>
                     <div id="shipping-info-content" class="small text-dark"></div>
                 </div>
             </div>
@@ -58,7 +60,7 @@
             </p>
         </div>
 
-        <div id="shipping_alternative" class="mt-4" style="{{ $selectedShipping === 2 ? '' : 'display:none;' }}">
+        <div id="shipping_alternative" class="mt-4 sax-shipping-alt" style="{{ $selectedShipping === 2 ? '' : 'display:none;' }}">
             <div class="row g-3">
                 <div class="col-12">
                     <label class="sax-label">{{ __('messages.escolha_o_pais') }}</label>
@@ -109,9 +111,9 @@
                 <option value="3" {{ (string) $selectedStore === '3' ? 'selected' : '' }}>SAX Pedro Juan</option>
             </select>
             <div id="storeMaps" class="sax-map-container rounded overflow-hidden">
-                <div class="store-map" id="map-1"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3258.616280422656!2d-54.60985242460801!3d-25.508774677511763!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94f69aaaec5ef03d%3A0xff12a8b090a63ebd!2sSAX%20Department%20Store!5e1!3m2!1spt-BR!2spy!4v1776287352177!5m2!1spt-BR!2spy" width="100%" height="250" style="border:0;" allowfullscreen=""></iframe></div>
-                <div class="store-map" id="map-2" style="display:none;"><iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d104484.94404298229!2d-57.59599500000001!3d-25.266778!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x945da76681b0d661%3A0x2e9754f73b54e3a5!2sSAX%20Department%20Store%20-%20Asunci%C3%B3n!5e1!3m2!1spt-BR!2spy!4v1776287413217!5m2!1spt-BR!2spy" width="100%" height="250" style="border:0;" allowfullscreen=""></iframe></div>
-                <div class="store-map" id="map-3" style="display:none;"><iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d213394.1864020946!2d-55.713620000000006!3d-22.560248!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94626f0079a38969%3A0xc5b346bd463b3b48!2sSAX%20Department%20Store%20-%20Pedro%20Juan%20Caballero!5e1!3m2!1spt-BR!2spy!4v1776287454037!5m2!1spt-BR!2spy" width="100%" height="250" style="border:0;" allowfullscreen=""></iframe></div>
+                <div class="store-map" id="map-1"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3258.616280422656!2d-54.60985242460801!3d-25.508774677511763!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94f69aaaec5ef03d%3A0xff12a8b090a63ebd!2sSAX%20Department%20Store!5e1!3m2!1spt-BR!2spy!4v1776287352177!5m2!1spt-BR!2spy" width="100%" height="250" class="sax-map-frame" allowfullscreen=""></iframe></div>
+                <div class="store-map" id="map-2" style="display:none;"><iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d104484.94404298229!2d-57.59599500000001!3d-25.266778!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x945da76681b0d661%3A0x2e9754f73b54e3a5!2sSAX%20Department%20Store%20-%20Asunci%C3%B3n!5e1!3m2!1spt-BR!2spy!4v1776287413217!5m2!1spt-BR!2spy" width="100%" height="250" class="sax-map-frame" allowfullscreen=""></iframe></div>
+                <div class="store-map" id="map-3" style="display:none;"><iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d213394.1864020946!2d-55.713620000000006!3d-22.560248!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94626f0079a38969%3A0xc5b346bd463b3b48!2sSAX%20Department%20Store%20-%20Pedro%20Juan%20Caballero!5e1!3m2!1spt-BR!2spy!4v1776287454037!5m2!1spt-BR!2spy" width="100%" height="250" class="sax-map-frame" allowfullscreen=""></iframe></div>
             </div>
         </div>
 

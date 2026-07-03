@@ -1,4 +1,3 @@
-{{-- STEP 4: PAGAMENTO --}}
 <div class="step" id="step4">
     @php 
         $totalPedido = 0;
@@ -17,17 +16,19 @@
 
     <div class="sax-checkout-box text-center py-5">
         <h5 class="mb-4 text-uppercase tracking-wider">{{ __('messages.forma_pagamento') }}</h5>
-        
-        <div class="d-flex justify-content-center flex-wrap gap-3">
+
+        <div class="d-flex justify-content-center flex-wrap gap-3 sax-payment-grid">
             <button type="button" class="sax-payment-method" id="btn-deposito" data-payment-method="deposito" aria-pressed="false">
                 <i class="fa fa-university mb-2 d-block"></i>
                 {{ __('messages.deposito_transferencia') }}
+                <span class="sax-payment-caption">Transferencia o deposito bancario</span>
             </button>
 
             @if ($hasBancardV2)
                 <button type="button" class="sax-payment-method" id="btn-bancard_v2" data-payment-method="bancard_v2" aria-pressed="false">
                     <i class="fa fa-credit-card mb-2 d-block"></i>
                     {{ __('messages.cartao_qr_bancard') }}
+                    <span class="sax-payment-caption">Cartao e QR em ambiente seguro</span>
                 </button>
             @endif
         </div>
@@ -42,19 +43,42 @@
 
     <div class="sax-checkout-box mt-4">
         <h4 class="sax-step-title">{{ __('messages.resumo_final') }}</h4>
-        
+
         <div class="sax-cart-list mb-4">
             @foreach ($cart as $item)
-                <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-light">
-                    <div class="sax-cart-img-wrapper" style="width: 50px; height: 50px;">
+                @php
+                    $productSize = trim((string) ($item->product->size ?? $item->product->product_size ?? ''));
+                    $productColor = trim((string) ($item->product->color ?? ''));
+                    $isHexColor = preg_match('/^#?[0-9A-Fa-f]{6}$/', $productColor) === 1;
+                    $normalizedColor = $isHexColor ? ('#' . ltrim($productColor, '#')) : null;
+                @endphp
+                <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-light sax-order-item-row">
+                    <div class="sax-cart-img-wrapper sax-order-item-image-wrap">
                         <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
                              alt="{{ $item->product->external_name ?? 'Produto' }}" class="img-fluid">
                     </div>
                     <div class="flex-grow-1">
-                        <p class="mb-0 sax-item-name text-truncate" style="max-width: 200px;">
+                        <p class="mb-0 sax-item-name text-truncate sax-order-item-name">
                             {{ $item->product->external_name ?? 'Produto' }}
                         </p>
-                        <small class="text-muted">{{ __('messages.quantidade') }}: {{ $item->quantity }}</small>
+                        <small class="text-muted d-block">{{ __('messages.quantidade') }}: {{ $item->quantity }}</small>
+                        <small class="text-muted d-block">SKU: {{ $item->product->sku ?? '-' }}</small>
+
+                        @if ($productSize !== '')
+                            <small class="text-muted d-block">Tamanho: {{ $productSize }}</small>
+                        @endif
+
+                        @if ($productColor !== '')
+                            <small class="text-muted d-block sax-item-color-wrap">
+                                Cor:
+                                @if ($isHexColor)
+                                    <i class="sax-item-color-dot" style="--item-color: {{ $normalizedColor }};"></i>
+                                    {{ $normalizedColor }}
+                                @else
+                                    {{ $productColor }}
+                                @endif
+                            </small>
+                        @endif
                     </div>
                     <div class="text-end">
                         <span class="d-block fw-bold">{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</span>
@@ -95,9 +119,3 @@
         payment_deposito: "{{ __('messages.instrucao_pagamento_deposito') }}"
     };
 </script>
-
-<style>
-    .sax-payment-method { border: 2px solid #eee; padding: 15px; border-radius: 8px; background: white; transition: 0.3s; width: 150px; }
-    .sax-payment-method.active { background: #000000; color: white; border-color: #000; }
-    .sax-payment-method:hover { border-color: #000; }
-</style>

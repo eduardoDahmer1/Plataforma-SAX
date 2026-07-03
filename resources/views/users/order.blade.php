@@ -178,7 +178,6 @@
                                 class="badge-payment-sax {{ $order->payment_method }} shadow-sm">{{ ucfirst($order->payment_method) }}</span>
                         </div>
                         <div class="mt-4 p-3 bg-light rounded-3">
-                            {{-- Valor do Frete --}}
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="label m-0">{{ __('messages.frete') }}:</span>
                                 <span class="value fw-bold text-dark">
@@ -188,7 +187,6 @@
                             
                             <hr class="my-2">
                             
-                            {{-- Total Geral (Soma correta) --}}
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="label m-0 fw-bold">{{ __('messages.total_geral') }}:</span>
                                 <span class="value fw-bold text-dark fs-4">
@@ -197,7 +195,6 @@
                             </div>
                         </div>
 
-                        {{-- Recibo SAX --}}
                         @if ($order->receipt && $order->payment_status === 'paid')
                             <div class="mt-3 pt-3 border-top">
                                 <label class="sax-label d-block mb-2 text-uppercase"
@@ -215,7 +212,6 @@
                             </div>
                         @endif
 
-                        {{-- --- LOGICA BANCARD --- --}}
                         @if (($order->payment_method ?? null) === 'bancard_v2')
                             @if ($order->payment_status === 'paid' && !empty($order->shop_process_id))
                                 <div class="mt-3">
@@ -317,7 +313,6 @@
             </div>
         </div>
 
-        {{-- Seção de Itens --}}
         <h5 class="sax-title-sub text-uppercase letter-spacing-2 mb-4 d-flex align-items-center">
             <i class="fas fa-shopping-bag me-2"></i> {{ __('messages.produtos_do_pedido') }}
         </h5>
@@ -348,7 +343,6 @@
                 </div>
             @endforeach
         </div>
-        {{-- MODAL DE CONTAS BANCÁRIAS --}}
         @if ($order->payment_method === 'deposito')
             <div class="modal fade" id="modalContasBancarias" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -387,7 +381,6 @@
             </div>
         @endif
 
-        {{-- Suporte --}}
         <div class="help-footer-sax text-center mt-5 py-5 border-top">
             <p class="text-muted small mb-3 text-uppercase letter-spacing-1">{{ __('messages.necesitas_ayuda') }}</p>
             <a href="https://wa.me/{{ env('WHATSAPP_NUMBER') }}?text={{ urlencode('Hola, necesito ayuda con mi pedido #' . $order->id) }}"

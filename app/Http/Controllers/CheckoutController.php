@@ -120,8 +120,8 @@ class CheckoutController extends Controller
                 'observations' => $observations,
                 'shipping' => $request->input('shipping'),
                 'order_number' => strtoupper(Str::random(10)),
-                'currency_sign' => 'US$',
-                'currency_value' => 1,
+                'currency_sign' => session('currency_sign', 'US$'),
+                'currency_value' => (float) session('currency_value', 1),
             ]);
 
             switch ($request->shipping) {
@@ -186,11 +186,13 @@ class CheckoutController extends Controller
              * DISPARO DE E-MAILS DE ACORDO COM O MÉTODO
              */
             if ($paymentMethod === 'deposito') {
-                $msg = $request->hasFile('deposit_receipt') ? 'Recebemos o seu comprovante de depósito! Nossa equipe financeira irá validá-lo em breve para liberar seu pedido.' : 'Seu pedido foi reservado! Para concluir, realize o depósito nas contas indicadas e envie o comprovante pelo nosso painel.';
+                $msg = $request->hasFile('deposit_receipt')
+                    ? $this->checkoutEmailMessage($order, 'deposito_recebido')
+                    : $this->checkoutEmailMessage($order, 'deposito_reservado');
 
                 Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
             } elseif (in_array($paymentMethod, ['bancard', 'bancard_v2', 'pagopar'])) {
-                $msg = 'Seu pedido foi gerado com sucesso! Estamos aguardando a confirmação de pagamento do sistema para darmos continuidade ao envio.';
+                $msg = $this->checkoutEmailMessage($order, 'gateway_aguardando');
 
                 Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
             }
@@ -359,7 +361,7 @@ class CheckoutController extends Controller
             $order->deposit_receipt = $filePath;
             $order->save();
 
-            $msg = 'Seu comprovante foi enviado com sucesso! Nossa equipe já foi notificada e estamos analisando o pagamento para liberar seu pedido o mais rápido possível.';
+            $msg = $this->checkoutEmailMessage($order, 'comprovante_enviado');
             Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
 
             return redirect()->route('user.orders.show', $order->id)
@@ -367,5 +369,49 @@ class CheckoutController extends Controller
         }
 
         return back()->with('info', __('messages.deposito_em_verificacao'));
+    }
+
+    private function emailLocaleByOrder(Order $order): string
+    {
+        $sign = strtoupper(trim((string) ($order->currency_sign ?? '')));
+
+        if ($sign === 'R$') {
+            return 'pt_BR';
+        }
+
+        if ($sign === 'G$') {
+            return 'es';
+        }
+
+        return 'en';
+    }
+
+    private function checkoutEmailMessage(Order $order, string $messageType): string
+    {
+        $locale = $this->emailLocaleByOrder($order);
+
+        return match ($locale) {
+            'es' => match ($messageType) {
+                'deposito_recebido' => 'Recibimos tu comprobante de deposito. Nuestro equipo financiero lo validara pronto para liberar tu pedido.',
+                'deposito_reservado' => 'Tu pedido fue reservado. Para finalizar, realiza el deposito en las cuentas indicadas y envia el comprobante desde tu panel.',
+                'gateway_aguardando' => 'Tu pedido fue generado con exito. Estamos esperando la confirmacion de pago del sistema para continuar con el envio.',
+                'comprovante_enviado' => 'Tu comprobante fue enviado con exito. Nuestro equipo ya fue notificado y estamos revisando el pago para liberar tu pedido lo antes posible.',
+                default => 'Actualizamos tu pedido. Puedes revisar los detalles desde tu panel.',
+            },
+            'en' => match ($messageType) {
+                'deposito_recebido' => 'We received your deposit receipt. Our finance team will validate it shortly to release your order.',
+                'deposito_reservado' => 'Your order has been reserved. To complete it, make the deposit to the indicated accounts and upload the receipt from your panel.',
+                'gateway_aguardando' => 'Your order was created successfully. We are waiting for payment confirmation from the gateway to proceed with shipping.',
+                'comprovante_enviado' => 'Your receipt was sent successfully. Our team has already been notified and we are reviewing the payment to release your order as soon as possible.',
+                default => 'Your order was updated. You can check the details from your panel.',
+            },
+            default => match ($messageType) {
+                'deposito_recebido' => 'Recebemos o seu comprovante de deposito. Nossa equipe financeira ira valida-lo em breve para liberar seu pedido.',
+                'deposito_reservado' => 'Seu pedido foi reservado. Para concluir, realize o deposito nas contas indicadas e envie o comprovante pelo nosso painel.',
+                'gateway_aguardando' => 'Seu pedido foi gerado com sucesso. Estamos aguardando a confirmacao de pagamento do sistema para dar continuidade ao envio.',
+                'comprovante_enviado' => 'Seu comprovante foi enviado com sucesso. Nossa equipe ja foi notificada e estamos analisando o pagamento para liberar seu pedido o mais rapido possivel.',
+                default => 'Seu pedido foi atualizado. Voce pode revisar os detalhes no seu painel.',
+            },
+        };
     }
 }

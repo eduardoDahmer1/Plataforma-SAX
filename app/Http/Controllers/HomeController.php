@@ -115,6 +115,7 @@ class HomeController extends Controller
             fn() => Brand::select('id', 'name', 'slug', 'image', 'banner')
                 ->where('status', 1)
                 ->whereNotNull('image')->where('image', '!=', '')
+                ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
                 ->inRandomOrder()->take(10)->get()
         );
 

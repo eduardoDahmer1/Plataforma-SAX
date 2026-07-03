@@ -35,7 +35,6 @@ class CartController extends Controller
             return redirect()->route('login')->with('error', 'Você precisa estar logado para adicionar ao carrinho.');
         }
 
-        // 🚨 Bloqueia carrinho para user_type = 1
         if ($user->user_type == 1) {
             return back()->with('error', 'Seu perfil não tem permissão para adicionar produtos ao carrinho.');
         }
@@ -70,7 +69,18 @@ class CartController extends Controller
     public function view()
     {
         $user = auth()->user();
-        $cart = $user ? Cart::with('product')->where('user_id', $user->id)->get() : collect();
+        $cart = collect();
+
+        if ($user) {
+            $cart = Cart::query()
+                ->select(['id', 'user_id', 'product_id', 'quantity', 'created_at', 'updated_at'])
+                ->where('user_id', $user->id)
+                ->with([
+                    'product:id,brand_id,external_name,photo,price,previous_price,sku,stock,parent_id,color_parent_id,status,product_role',
+                    'product.brand:id,name',
+                ])
+                ->get();
+        }
 
         $currency = $this->getCurrency();
         $symbol = $currency->sign ?? 'R$';
@@ -110,10 +120,8 @@ class CartController extends Controller
             return back()->with('error', 'Produto não encontrado.');
         }
 
-        // Busca itens do carrinho do usuário
         $cart = Cart::where('user_id', $user->id)->get();
 
-        // Se carrinho estiver vazio -> adiciona
         if ($cart->isEmpty()) {
             Cart::create([
                 'user_id'    => $user->id,
@@ -122,7 +130,6 @@ class CartController extends Controller
             ]);
         }
 
-        // Vai direto pro checkout
         return redirect()->route('checkout.index');
     }
 
@@ -146,6 +153,10 @@ class CartController extends Controller
 
         if ($quantity > 0) {
             $product = Product::find($productId);
+            if (!$product) {
+                return back()->with('error', 'Produto não encontrado.');
+            }
+
             $cartItem->update(['quantity' => min($quantity, $product->stock)]);
         } else {
             $cartItem->delete();

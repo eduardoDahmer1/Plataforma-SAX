@@ -30,8 +30,12 @@ if ($currentCurrency && !$currentCurrency->is_default) {
 
 <div class="sax-lang-wrap sax-lang--{{ $variant }}">
     <div class="dropdown">
+        @php $dropdownId = 'saxLangMenu_' . $variant; @endphp
         <button class="sax-lang-trigger dropdown-toggle" type="button"
+            id="{{ $dropdownId }}_btn"
             data-bs-toggle="dropdown" aria-expanded="false"
+            data-bs-auto-close="outside"
+            data-bs-target="#{{ $dropdownId }}"
             {{ $variant === 'mobile' ? 'data-bs-display=static' : '' }}>
             <span class="sax-lang-trigger-top">
                 <span class="sax-twemoji">{{ $currentLang['flag'] }}</span>
@@ -41,7 +45,7 @@ if ($currentCurrency && !$currentCurrency->is_default) {
                 <span class="sax-lang-rate-inner">Taxa de câmbio: {{ $rateText }}</span>
             @endif
         </button>
-        <ul class="dropdown-menu sax-lang-menu border-0 shadow {{ $variant === 'mobile' ? 'position-static shadow-none' : '' }}">
+        <ul id="{{ $dropdownId }}" class="dropdown-menu sax-lang-menu border-0 shadow {{ $variant === 'mobile' ? 'position-static shadow-none' : '' }}" aria-labelledby="{{ $dropdownId }}_btn">
             @foreach ($currencies as $currency)
                 @php $lang = $langMap[strtoupper($currency->name)] ?? null; @endphp
                 @if ($lang)
@@ -201,6 +205,12 @@ if ($currentCurrency && !$currentCurrency->is_default) {
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.sax-twemoji').forEach(function (el) {
         twemoji.parse(el, { folder: 'svg', ext: '.svg' });
+    });
+
+    document.querySelectorAll('.sax-lang-option.active').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+        });
     });
 });
 </script>

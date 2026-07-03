@@ -3,11 +3,18 @@
 @section('content')
 <div class="sax-edit-wrapper">
     <div class="dashboard-header mb-5">
-        <h2 class="sax-title text-uppercase letter-spacing-2">{{ __('messages.actualizar_registro') }}</h2>
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+            <div>
+                <h2 class="sax-title text-uppercase letter-spacing-2 mb-2">{{ __('messages.actualizar_registro') }}</h2>
+                <p class="text-muted mb-0">Mantenha seus dados atualizados para agilizar pedidos e entregas.</p>
+            </div>
+            <a href="{{ route('user.dashboard') }}" class="btn-back-minimal">
+                <i class="fas fa-chevron-left me-1"></i> {{ __('messages.voltar') }}
+            </a>
+        </div>
         <div class="sax-divider-dark"></div>
     </div>
 
-    {{-- BLOCO DE ALERTAS - ESSENCIAL PARA SABER POR QUE NÃO SALVOU --}}
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm mb-4">
             <ul class="mb-0">
@@ -24,25 +31,21 @@
         </div>
     @endif
 
-    {{-- Verifique se a rota é PUT e se o @method('PUT') está presente --}}
-    <form action="{{ route('user.profile.update') }}" method="POST" class="sax-premium-form">
+    <form action="{{ route('user.profile.update') }}" method="POST" class="sax-premium-form card border-0 shadow-sm rounded-4 p-4 p-md-5">
         @csrf
         @method('PUT')
 
         <div class="row g-4">
-            {{-- Nome --}}
             <div class="col-md-6 mb-3">
                 <label class="sax-label">{{ __('messages.nome_completo') }}</label>
                 <input type="text" name="name" class="form-control sax-input" value="{{ old('name', auth()->user()->name) }}" required>
             </div>
 
-            {{-- Email --}}
             <div class="col-md-6 mb-3">
                 <label class="sax-label">{{ __('messages.email') }}</label>
                 <input type="email" name="email" class="form-control sax-input" value="{{ old('email', auth()->user()->email) }}" required>
             </div>
 
-            {{-- Telefone --}}
             <div class="col-md-12 mb-3">
                 <label class="sax-label">{{ __('messages.telefone') }}</label>
                 <div class="d-flex gap-2">
@@ -54,12 +57,9 @@
                 </div>
             </div>
 
-            {{-- Bloco de Endereço Dinâmico --}}
             <div class="col-12">
                 <label class="sax-label mb-3">{{ __('messages.localizacao_endereco') }}</label>
-                <div class="row g-3 p-3 rounded" style="background: #f9f9f9;">
-                    
-                    {{-- País --}}
+                <div class="row g-3 p-3 rounded-3 border" style="background: #fbfbfb;">
                     <div class="col-md-12">
                         <label class="small text-muted text-uppercase fw-bold">País</label>
                         <select name="country" id="country" class="form-select sax-input">
@@ -68,14 +68,11 @@
                         </select>
                     </div>
 
-                    {{-- CEP / Código Postal --}}
                     <div class="col-md-4">
                         <label class="small text-muted text-uppercase fw-bold" id="label-postal">CEP</label>
-                        {{-- MUDANÇA: name="postal_code" para bater com o seu script --}}
                         <input type="text" name="postal_code" id="postal_code" class="form-control sax-input" value="{{ old('cep', auth()->user()->cep) }}" placeholder="00000-000">
                     </div>
 
-                    {{-- Estado / Departamento --}}
                     <div class="col-md-4">
                         <label class="small text-muted text-uppercase fw-bold" id="label-state">Estado</label>
                         <select id="state-select" name="state" class="form-select sax-input" data-selected="{{ old('state', auth()->user()->state) }}">
@@ -83,7 +80,6 @@
                         </select>
                     </div>
 
-                    {{-- Cidade --}}
                     <div class="col-md-4">
                         <label class="small text-muted text-uppercase fw-bold">Cidade</label>
                         <select id="city-select" name="city" class="form-select sax-input" data-selected="{{ old('city', auth()->user()->city) }}" disabled>
@@ -91,25 +87,21 @@
                         </select>
                     </div>
 
-                    {{-- Rua --}}
                     <div class="col-md-8">
                         <label class="small text-muted text-uppercase fw-bold">Rua / Endereço</label>
                         <input type="text" name="address" class="form-control sax-input" value="{{ old('address', auth()->user()->address) }}">
                     </div>
 
-                    {{-- Número --}}
                     <div class="col-md-4">
                         <label class="small text-muted text-uppercase fw-bold">Número</label>
                         <input type="text" name="number" class="form-control sax-input" value="{{ old('number', auth()->user()->number) }}">
                     </div>
 
-                    {{-- Bairro --}}
                     <div class="col-md-6">
                         <label class="small text-muted text-uppercase fw-bold">Bairro</label>
                         <input type="text" name="district" class="form-control sax-input" value="{{ old('district', auth()->user()->district) }}">
                     </div>
 
-                    {{-- Complemento --}}
                     <div class="col-md-6">
                         <label class="small text-muted text-uppercase fw-bold">Complemento</label>
                         <input type="text" name="complement" class="form-control sax-input" value="{{ old('complement', auth()->user()->complement) }}">
@@ -117,13 +109,11 @@
                 </div>
             </div>
 
-            {{-- Documento --}}
             <div class="col-md-6 mb-3 mt-4">
                 <label class="sax-label">{{ __('messages.num_documento') }}</label>
                 <input type="text" name="document" class="form-control sax-input" value="{{ old('document', auth()->user()->document) }}">
             </div>
 
-            {{-- Cadastro na Sax --}}
             <div class="col-md-6 mb-3 mt-4">
                 <label class="sax-label">{{ __('messages.ja_possui_registro') }}</label>
                 <select name="already_registered" id="already_registered" class="form-select sax-input">
@@ -132,7 +122,6 @@
                 </select>
             </div>
 
-            {{-- Número do cadastro --}}
             <div class="col-md-12 mb-3" id="sax_number_field" style="display: {{ auth()->user()->already_registered ? 'block' : 'none' }};">
                 <label class="sax-label">{{ __('messages.num_registro_interno') }}</label>
                 <input type="text" name="additional_info" class="form-control sax-input" value="{{ old('additional_info', auth()->user()->additional_info ?? '') }}">
@@ -147,7 +136,6 @@
     </form>
 </div>
 
-{{-- SCRIPT PARA O TOGGLE DO CAMPO SAX NUMBER --}}
 <script>
     document.getElementById('already_registered').addEventListener('change', function() {
         const field = document.getElementById('sax_number_field');
@@ -155,7 +143,6 @@
     });
 </script>
 
-{{-- JS migrado a app-custom.js --}}
 @endsection
 
 <script>
@@ -170,7 +157,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!countryEl || !stateEl || !cityEl) return;
 
         function updateLabels() {
-            // Se o país mudar, resetamos os selects
             stateEl.innerHTML = '<option value="">Carregando...</option>';
             cityEl.innerHTML = '<option value="">Selecione o estado...</option>';
             cityEl.disabled = true;
@@ -197,8 +183,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         options += `<option value="${uf.sigla}" data-id="${uf.id}" ${sel}>${uf.nome}</option>`;
                     });
                     stateEl.innerHTML = options;
-                    
-                    // Dispara a carga das cidades se houver estado selecionado
                     if (stateEl.value) {
                         stateEl.dispatchEvent(new Event('change'));
                     }
@@ -251,7 +235,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             options += `<option value="${c.nome}" ${sel}>${c.nome}</option>`;
                         });
                         cityEl.innerHTML = options;
-                        // Limpa o data-selected após a primeira carga para não travar em mudanças manuais
                         cityEl.removeAttribute('data-selected');
                     });
             } else if (country === 'paraguai') {
@@ -278,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         countryEl.addEventListener('change', updateLabels);
 
-        // Inicialização
         if (countryEl.value) {
             updateLabels();
         }

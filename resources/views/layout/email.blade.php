@@ -1,43 +1,47 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="{{ $emailLocale ?? 'pt-BR' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
     <title>@yield('title', 'SAX Department Store')</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f0ece6;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<body style="margin:0;padding:0;background:linear-gradient(180deg,#efebe5 0%,#f8f6f2 100%);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
 
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f0ece6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,#efebe5 0%,#f8f6f2 100%);">
         <tr>
-            <td align="center" style="padding:2rem 1rem;">
+            <td align="center" style="padding:2.5rem 1rem;">
 
-                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
+                <table width="700" cellpadding="0" cellspacing="0" border="0" style="max-width:700px;width:100%;">
 
-                    {{-- Header negro: logo si existe, fallback de texto SAX si no --}}
+                    @php
+                        $logoRel = 'storage/images/email_header_logo.png';
+                    @endphp
                     <tr>
-                        <td style="background-color:#000000;padding:2rem;text-align:center;">
-                            @if (!empty($logoUrl))
-                                <img src="{{ $logoUrl }}" alt="SAX" style="max-height:3rem;width:auto;display:block;margin:0 auto;filter:invert(1);">
+                        <td style="background-color:#000000;padding:0;text-align:center;border-radius:12px 12px 0 0;">
+                            @if (file_exists(public_path($logoRel)))
+                                <img src="{{ asset($logoRel) }}"
+                                     alt="SAX"
+                                     width="700"
+                                     style="width:100%;max-width:700px;height:auto;display:block;border-radius:12px 12px 0 0;">
                             @else
-                                <p style="margin:0;color:#ffffff;font-size:2rem;font-weight:900;letter-spacing:0.5rem;">SAX</p>
-                                <p style="margin:0.25rem 0 0 0;color:#cccccc;font-size:0.625rem;letter-spacing:0.3rem;">STYLE &bull; ARTS &bull; XTRAS</p>
+                                <p style="margin:0;padding:2.2rem 0;color:#ffffff;font-size:2.1rem;font-weight:900;letter-spacing:0.5rem;">SAX</p>
                             @endif
                         </td>
                     </tr>
 
-                    {{-- Cuerpo blanco: cada email define su propio contenido --}}
                     <tr>
-                        <td style="background-color:#ffffff;padding:2.5rem 2rem;">
+                        <td style="background-color:#ffffff;padding:3rem 2.4rem;box-shadow:0 18px 32px rgba(0,0,0,0.06);">
                             @yield('content')
                         </td>
                     </tr>
 
-                    {{-- Footer --}}
                     <tr>
-                        <td style="background-color:#eeebe7;padding:1.5rem;text-align:center;">
-                            <p style="margin:0;font-size:0.75rem;color:#888888;letter-spacing:0.1rem;">SAX Department Store</p>
-                            <p style="margin:0.25rem 0 0 0;font-size:0.6875rem;color:#aaaaaa;">Ciudad del Este, Paraguai &bull; Foz do Iguaçu, Brasil</p>
-                            <p style="margin:0.5rem 0 0 0;font-size:0.6875rem;color:#bbbbbb;">&copy; {{ date('Y') }} SAX. Todos os direitos reservados.</p>
+                        <td style="background-color:#eeebe7;padding:1.75rem;text-align:center;border-radius:0 0 12px 12px;">
+                            <p style="margin:0;font-size:0.8rem;color:#777777;letter-spacing:0.12rem;">SAX Department Store</p>
+                            <p style="margin:0.4rem 0 0 0;font-size:0.72rem;color:#9b9b9b;">Ciudad del Este, Paraguai &bull; Foz do Iguacu, Brasil</p>
+                            <p style="margin:0.55rem 0 0 0;font-size:0.72rem;color:#b3b3b3;">&copy; {{ date('Y') }} SAX. Todos os direitos reservados.</p>
                         </td>
                     </tr>
 

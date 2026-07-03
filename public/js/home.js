@@ -95,19 +95,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const marcasUrl      = container.dataset.marcasUrl     || '/marcas';
         const fallbackBanner = container.dataset.fallbackBanner || `${storageBase}/uploads/banner_horizontal.webp`;
 
+        const normalizeImagePath = (rawPath) => {
+            if (!rawPath || !String(rawPath).trim()) return fallbackBanner;
+
+            const clean = String(rawPath).trim().replace(/^\/+/, '');
+            if (/^https?:\/\//i.test(clean)) return clean;
+
+            const withoutStoragePrefix = clean.replace(/^storage\//i, '');
+            return `${storageBase}/${withoutStoragePrefix}`;
+        };
+
         brands.forEach((brand, i) => {
-            let imgPath;
-            if (!brand.banner || !brand.banner.trim()) {
-                imgPath = fallbackBanner;
-            } else {
-                const clean = brand.banner.replace(/^\/+/, '');
-                imgPath = clean.startsWith('http') ? clean : `${storageBase}/${clean}`;
-            }
+            const imgPath = normalizeImagePath(brand.banner);
 
             const div = document.createElement('div');
             div.className = 'sax-item hidden';
             div.dataset.name = brand.name;
-            div.innerHTML = `<a href="${marcasUrl}/${brand.slug || brand.id}"><img src="${imgPath}" alt="${brand.name}" onerror="this.src='${fallbackBanner}'"></a>`;
+            div.innerHTML = `<a href="${marcasUrl}/${brand.slug || brand.id}"><img src="${imgPath}" alt="${brand.name}" loading="lazy" decoding="async" onerror="this.src='${fallbackBanner}'"></a>`;
             container.appendChild(div);
 
             const dot = document.createElement('div');

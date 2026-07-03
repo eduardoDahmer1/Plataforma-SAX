@@ -16,6 +16,7 @@ class OrderStatusMail extends Mailable
     public $order;
     public $messageCustom;
     public ?string $logoUrl;
+    public string $emailLocale;
 
     /**
      * @param Order $order
@@ -26,24 +27,49 @@ class OrderStatusMail extends Mailable
         $this->order = $order;
         $this->messageCustom = $messageCustom;
         $this->logoUrl = \App\Models\Attribute::logoUrl();
+        $this->emailLocale = $this->resolveLocaleFromOrder($order);
     }
 
     public function envelope(): Envelope
     {
+        $subjectPrefix = match ($this->emailLocale) {
+            'en' => 'Order #',
+            'es' => 'Pedido #',
+            default => 'Pedido #',
+        };
+
         return new Envelope(
-            subject: 'Pedido #' . $this->order->order_number . ' - ' . config('app.name'),
+            subject: $subjectPrefix . $this->order->order_number . ' - ' . config('app.name'),
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.order_status', // Certifique-se de criar este arquivo
+            view: 'emails.order_status',
+            with: [
+                'emailLocale' => $this->emailLocale,
+            ],
         );
     }
 
     public function attachments(): array
     {
         return [];
+    }
+
+    private function resolveLocaleFromOrder(Order $order): string
+    {
+        $sign = strtoupper(trim((string) ($order->currency_sign ?? '')));
+
+        if ($sign === 'R$') {
+            return 'pt_BR';
+        }
+
+        if ($sign === 'G$') {
+            return 'es';
+        }
+
+        return 'en';
     }
 }

@@ -2,16 +2,43 @@
 
 @section('content')
 <div class="sax-dashboard-wrapper">
-    {{-- Cabeçalho de Boas-vindas --}}
-    <div class="dashboard-header mb-5">
-        <h1 class="sax-title">{{ __('messages.ola') }}, {{ explode(' ', auth()->user()->name)[0] }}</h1>
-        <p class="sax-subtitle">{{ __('messages.gerencie_infos') }}</p>
-        <div class="sax-divider-black"></div>
+    <div class="dashboard-header mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+            <div>
+                <h1 class="sax-title mb-2">{{ __('messages.ola') }}, {{ explode(' ', auth()->user()->name)[0] }}</h1>
+                <p class="sax-subtitle mb-0">{{ __('messages.gerencie_infos') }}</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('user.orders') }}" class="btn btn-outline-dark btn-sm px-3">{{ __('messages.historico_pedidos_titulo') }}</a>
+                <a href="{{ route('user.profile.edit') }}" class="btn btn-dark btn-sm px-3">{{ __('messages.actualizar_registro') }}</a>
+            </div>
+        </div>
+        <div class="sax-divider-black mt-3"></div>
     </div>
 
-    {{-- Perfil e Dados --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="border rounded-3 p-3 h-100 bg-white">
+                <div class="small text-muted text-uppercase fw-semibold">{{ __('messages.pedidos_recentes') }}</div>
+                <div class="fs-4 fw-bold mt-1">{{ $orders->count() }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="border rounded-3 p-3 h-100 bg-white">
+                <div class="small text-muted text-uppercase fw-semibold">{{ __('messages.wishlist_titulo') }}</div>
+                <div class="fs-4 fw-bold mt-1">{{ isset($favoriteProductsCount) ? $favoriteProductsCount : 0 }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="border rounded-3 p-3 h-100 bg-white">
+                <div class="small text-muted text-uppercase fw-semibold">Vistos recentemente</div>
+                <div class="fs-4 fw-bold mt-1">{{ isset($userHistory) ? $userHistory->count() : 0 }}</div>
+            </div>
+        </div>
+    </div>
+
     <div class="section-label mb-3">
-        <h6 class="sax-section-title">{{ __('messages.infos_conta') }}</h6>
+        <h6 class="sax-section-title mb-0">{{ __('messages.infos_conta') }}</h6>
     </div>
 
     <div class="row g-3 mb-5">
@@ -51,7 +78,6 @@
         @endforeach
     </div>
 
-    {{-- Seção de Pedidos --}}
     <div class="section-label d-flex justify-content-between align-items-end mb-4">
         <h6 class="sax-section-title m-0">{{ __('messages.pedidos_recentes') }}</h6>
         @if ($orders->count() > 0)
@@ -62,9 +88,9 @@
     </div>
 
     @if ($orders->count())
-        <div class="order-container mb-5">
+        <div class="order-container mb-5 d-flex flex-column gap-3">
             @foreach ($orders->take(5) as $order)
-                <div class="order-card-sax shadow-sm">
+                <div class="order-card-sax shadow-sm border rounded-3 bg-white">
                     <div class="order-content">
                         <div class="order-block">
                             <span class="sax-label-min">{{ __('messages.num_pedido') }}</span>
@@ -106,44 +132,46 @@
         </div>
     @endif
 
-<div class="section-label mb-3 mt-5">
-    <h6 class="sax-section-title">VISTOS RECENTEMENTE</h6>
-</div>
-
-@if(isset($userHistory) && $userHistory->count() > 0)
-    <div class="history-slider-wrapper" style="overflow: hidden;">
-        <div class="swiper historySwiper">
-            <div class="swiper-wrapper">
-                @foreach($userHistory as $item)
-                    <div class="swiper-slide" style="width: 200px;"> {{-- Largura inicial para evitar 'gigantismo' --}}
-                        @include('home-components.product-card', ['item' => $item])
-                    </div>
-                @endforeach
-            </div>
-        </div>
+    <div class="section-label mb-3 mt-5">
+        <h6 class="sax-section-title mb-0">Vistos recentemente</h6>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Pequeno delay para garantir que o arquivo swiper-bundle.min.js foi lido
-            setTimeout(function() {
-                if (typeof Swiper !== 'undefined') {
-                    new Swiper(".historySwiper", {
-                        slidesPerView: 2,
-                        spaceBetween: 10,
-                        breakpoints: {
-                            640: { slidesPerView: 3 },
-                            1024: { slidesPerView: 5 },
-                            1400: { slidesPerView: 5 }
-                        }
-                    });
-                } else {
-                    console.error("Swiper não carregado! Verifique o arquivo de scripts master.");
-                }
-            }, 200);
-        });
-    </script>
-@endif
+    @if(isset($userHistory) && $userHistory->count() > 0)
+        <div class="history-slider-wrapper" style="overflow: hidden;">
+            <div class="swiper historySwiper">
+                <div class="swiper-wrapper">
+                    @foreach($userHistory as $item)
+                        <div class="swiper-slide" style="width: 200px;">
+                            @include('home-components.product-card', ['item' => $item])
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    if (typeof Swiper !== 'undefined') {
+                        new Swiper('.historySwiper', {
+                            slidesPerView: 2,
+                            spaceBetween: 10,
+                            breakpoints: {
+                                640: { slidesPerView: 3 },
+                                1024: { slidesPerView: 5 },
+                                1400: { slidesPerView: 5 }
+                            }
+                        });
+                    }
+                }, 200);
+            });
+        </script>
+    @else
+        <div class="empty-state mb-2">
+            <i class="fas fa-eye fa-2x mb-3 opacity-50"></i>
+            <p class="mb-0">Nenhum produto visualizado recentemente.</p>
+        </div>
+    @endif
 
 </div>
 @endsection

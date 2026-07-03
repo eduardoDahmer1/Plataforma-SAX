@@ -26,12 +26,35 @@ class WelcomeAndVerifyEmail extends Notification
             ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
         );
 
+        $locale = $this->resolveLocaleFromUser($notifiable);
+        $subject = match ($locale) {
+            'en' => 'Welcome to SAX Department! Verify your email',
+            'es' => 'Bienvenido a SAX Department! Verifica tu correo',
+            default => 'Bem-vindo à SAX Department! Confirme seu e-mail',
+        };
+
         return (new MailMessage)
-            ->subject('Bem-vindo à SAX Department! Confirme seu e-mail')
+            ->subject($subject)
             ->view('emails.welcome', [
                 'user'            => $notifiable,
                 'verificationUrl' => $verificationUrl,
                 'logoUrl'         => \App\Models\Attribute::logoUrl(),
+                'emailLocale'     => $locale,
             ]);
+    }
+
+    private function resolveLocaleFromUser($user): string
+    {
+        $country = strtolower((string) ($user->country ?? ''));
+
+        if (in_array($country, ['brasil', 'br', 'brazil'], true)) {
+            return 'pt_BR';
+        }
+
+        if (in_array($country, ['paraguai', 'paraguay', 'py'], true)) {
+            return 'es';
+        }
+
+        return 'en';
     }
 }

@@ -151,7 +151,9 @@
               </button>
             </div>
 
-            <button type="submit" class="btn btn-success w-100">
+            <div id="registerError" class="text-danger mb-3" style="display:none;" aria-live="polite"></div>
+
+            <button type="submit" class="btn btn-success w-100" id="btnRegister">
               {{ __('messages.cadastrar') }}
             </button>
           </form>

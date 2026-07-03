@@ -66,8 +66,8 @@
     @endif
 @endif
 
-{{-- 3. Checkout --}}
-@if(Route::is('checkout.*'))
+{{-- 3. Checkout + Carrinho --}}
+@if(Route::is('checkout.*') || Route::is('cart.*'))
     <link href="{{ asset('css/checkout.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 @endif

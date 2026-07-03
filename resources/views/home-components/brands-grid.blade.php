@@ -8,10 +8,8 @@
                  data-storage-base="{{ asset('storage') }}" 
                  data-marcas-url="{{ url('marcas') }}"
                  data-fallback-banner="{{ asset('storage/uploads/banner_horizontal.webp') }}">
-                {{-- Injetado via JS --}}
             </div>
 
-            {{-- Overlay de Nome e Navegação --}}
             <div class="sax-carousel-footer">
                 <div id="saxBrandName" class="sax-brand-label"></div>
 
@@ -24,7 +22,6 @@
         </div>
     </section>
 
-    {{-- Datos del server para el carrusel 3D (lógica en home.js) --}}
     <script>
         window.saxBrandsData = {!! $brands->toJson() !!};
     </script>

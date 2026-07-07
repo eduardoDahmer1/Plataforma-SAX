@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -147,50 +148,13 @@ class CategoryControllerAdmin extends Controller
 
     private function convertToWebp($image, $type)
     {
-        $tempPath = $image->getRealPath();
-        $extension = strtolower($image->getClientOriginalExtension());
+        // Mapea el tipo a su carpeta destino; la conversión la hace el service.
+        $directory = ($type === 'banner') ? 'categories/banner' : 'categories/photo';
 
-        switch ($extension) {
-            case 'jpeg':
-            case 'jpg':
-                $imageResource = imagecreatefromjpeg($tempPath);
-                break;
-            case 'png':
-                $imageResource = imagecreatefrompng($tempPath);
-                break;
-            case 'gif':
-                $imageResource = imagecreatefromgif($tempPath);
-                break;
-            case 'webp':
-            case 'avif':
-                // Se já for WEBP, só salva direto
-                $directory = ($type === 'banner') ? 'categories/banner/' : 'categories/photo/';
-                $filename = uniqid() . '.webp';
-                Storage::disk('public')->putFileAs($directory, $image, $filename);
-                return "{$directory}{$filename}";
-            default:
-                throw new \Exception('Formato de imagem não suportado.');
-        }
-
-        if (!$imageResource) {
-            throw new \Exception('Falha ao criar recurso de imagem.');
-        }
-
-        ob_start();
-        imagewebp($imageResource, null, 85); // qualidade 45
-        $webpData = ob_get_clean();
-        imagedestroy($imageResource);
-
-        $directory = ($type === 'banner') ? 'categories/banner/' : 'categories/photo/';
-        $filename = uniqid() . '.webp';
-
-        if (!Storage::disk('public')->exists($directory)) {
-            Storage::disk('public')->makeDirectory($directory);
-        }
-
-        Storage::disk('public')->put("{$directory}{$filename}", $webpData);
-
-        return "{$directory}{$filename}";
+        return app(ImageConverterService::class)->toWebp($image, $directory, [
+            'quality' => 85,
+            'strict'  => true,
+        ]);
     }
 
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Services\ImageConverterService;
 use Illuminate\Support\Facades\Storage;
 
 class SubcategoryControllerAdmin extends Controller
@@ -168,54 +169,13 @@ class SubcategoryControllerAdmin extends Controller
 
     private function convertToWebp($image, $type)
     {
-        $tempPath = $image->getRealPath();
-        $extension = strtolower($image->getClientOriginalExtension());
-    
-        $directory = ($type === 'banner') ? 'subcategories/banner/' : 'subcategories/photo/';
-        
-        // Se já for webp ou avif, só salvar o arquivo sem conversão
-        if (in_array($extension, ['webp', 'avif'])) {
-            $finalName = uniqid() . '.' . $extension;
-    
-            if (!Storage::disk('public')->exists($directory)) {
-                Storage::disk('public')->makeDirectory($directory);
-            }
-    
-            Storage::disk('public')->putFileAs($directory, $image, $finalName);
-            return "{$directory}{$finalName}";
-        }
-    
-        // Conversão para webp
-        switch ($extension) {
-            case 'jpeg':
-            case 'jpg':
-                $imageResource = imagecreatefromjpeg($tempPath);
-                break;
-            case 'png':
-                $imageResource = imagecreatefrompng($tempPath);
-                break;
-            case 'gif':
-                $imageResource = imagecreatefromgif($tempPath);
-                break;
-            default:
-                throw new \Exception('Formato de imagem não suportado.');
-        }
-    
-        if (!$imageResource) {
-            throw new \Exception('Falha ao criar recurso de imagem.');
-        }
-    
-        $filename = uniqid() . '.webp';
-        $fullPath = storage_path("app/public/{$directory}{$filename}");
-    
-        if (!Storage::disk('public')->exists($directory)) {
-            Storage::disk('public')->makeDirectory($directory);
-        }
-    
-        imagewebp($imageResource, $fullPath, 85);
-        imagedestroy($imageResource);
-    
-        return "{$directory}{$filename}";
+        // Mapea el tipo a su carpeta destino; la conversión la hace el service.
+        $directory = ($type === 'banner') ? 'subcategories/banner' : 'subcategories/photo';
+
+        return app(ImageConverterService::class)->toWebp($image, $directory, [
+            'quality' => 85,
+            'strict'  => true,
+        ]);
     }
     
 }

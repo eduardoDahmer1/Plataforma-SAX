@@ -27,11 +27,11 @@
 
             {{-- Texto --}}
             <div class="col-lg-6" data-reveal="right">
-                <span class="eyebrow">{{ $cafeBistro->eventos_subtitulo ?? 'Celebrações' }}</span>
+                <span class="eyebrow">{{ $t?->cafe_eventos_subtitulo ?? $cafeBistro->eventos_subtitulo ?? 'Celebrações' }}</span>
                 <div class="divider"></div>
-                <h2 class="section-title mb-4">{{ $cafeBistro->eventos_titulo ?? 'O lugar perfeito para as suas celebrações' }}</h2>
+                <h2 class="section-title mb-4">{{ $t?->cafe_eventos_titulo ?? $cafeBistro->eventos_titulo ?? 'O lugar perfeito para as suas celebrações' }}</h2>
 
-                {!! nl2br(e($cafeBistro->eventos_texto ?? 'Um espaço onde as ideias ganham vida e cada celebração se transforma em uma experiência única.')) !!}
+                {!! nl2br(e($t?->cafe_eventos_texto ?? $cafeBistro->eventos_texto ?? 'Um espaço onde as ideias ganham vida e cada celebração se transforma em uma experiência única.')) !!}
 
                 {{-- Tipos de evento --}}
                 @if($cafeBistro->eventos_tipos)

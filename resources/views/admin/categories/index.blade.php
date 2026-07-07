@@ -54,7 +54,7 @@
                                 </a>
                             </div>
                             <div class="col-12">
-                                <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('{{ __('messages.confirmar_eliminar_categoria') }}')">
+                                <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" data-confirm="{{ __('messages.confirmar_eliminar_categoria') }}">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-delete-sax w-100 mt-1">
                                         <i class="fa fa-trash-alt me-1"></i> {{ __('messages.eliminar_categoria') }}

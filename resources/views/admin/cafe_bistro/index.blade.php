@@ -5,17 +5,12 @@
     $horarios       = $cafeBistro->horarios ?? [];
     $eventosTipos   = $cafeBistro->eventos_tipos ?? [];
     $eventosGaleria = $cafeBistro->eventos_galeria ?? [];
-
-    $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
-        <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-        <li class="breadcrumb-item x-small text-uppercase active text-bistro" aria-current="page">' . __('messages.visao_geral_label') . '</li>
-    </ol></nav>';
 @endphp
 
 <x-admin.card>
     <x-admin.page-header
         title="SAX Café & Bistrô"
-        :description="$breadcrumb"
+        description=""
         divider="sax-divider-bistro">
         <x-slot:actions>
             <a href="{{ route('admin.cafe_bistro.edit', $cafeBistro->id) }}" class="btn btn-dark-bistro px-4 shadow-sm rounded-pill fw-bold">
@@ -141,26 +136,26 @@
             <div class="sax-premium-card p-0 shadow-sm bg-white h-100">
                 <x-admin.block-header icon="fas fa-clock" theme="bistro" number="05" :title="__('messages.opening_hours_title')" :subtitle="__('messages.opening_hours_desc')" />
                 <div class="p-4">
-                    @if(count($horarios) > 0)
-                        <table class="w-100">
-                            <tbody>
-                                @foreach($horarios as $h)
-                                    @php $abertura = $h['apertura'] ?? ''; @endphp
-                                    <tr class="border-bottom">
-                                        <td class="py-2 small fw-bold">{{ $h['dia'] ?? '' }}</td>
-                                        <td class="py-2 small text-end {{ $abertura ? 'text-muted' : 'text-danger' }}">
-                                            {{ $abertura ? $abertura . ' — ' . ($h['cierre'] ?? '') : __('messages.closed_status') }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @else
-                        <div class="empty-state-mini">
-                            <i class="fas fa-clock empty-icon d-block"></i>
-                            <p class="x-small text-muted mb-0">{{ __('messages.no_hours_configured_status') }}</p>
-                        </div>
-                    @endif
+                    <table class="w-100">
+                        <tbody>
+                            <tr class="border-bottom">
+                                <td class="py-2 small fw-bold">Segunda-feira</td>
+                                <td class="py-2 small text-end text-muted">{{ $horarios['segunda'] ?? '—' }}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="py-2 small fw-bold">Terça-feira — Quinta-feira</td>
+                                <td class="py-2 small text-end text-muted">{{ $horarios['terca_quinta'] ?? '—' }}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="py-2 small fw-bold">Sexta-feira — Sábado</td>
+                                <td class="py-2 small text-end text-muted">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
+                            </tr>
+                            <tr class="border-bottom">
+                                <td class="py-2 small fw-bold">Domingo</td>
+                                <td class="py-2 small text-end text-muted">{{ $horarios['domingo'] ?? '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -2,20 +2,14 @@
 
 @section('content')
 @php
-    // Define a tradução atual ou usa o modelo principal como fallback
     $currentLang = app()->getLocale();
     $t = $palace->translations->where('locale', $currentLang)->first() ?? $palace;
-
-    $breadcrumb = '<nav aria-label="breadcrumb"><ol class="breadcrumb bg-transparent p-0 mb-0">
-        <li class="breadcrumb-item x-small text-uppercase"><a href="#" class="text-muted">Admin</a></li>
-        <li class="breadcrumb-item x-small text-uppercase active text-gold" aria-current="page">'.__('messages.visao_geral_label').'</li>
-    </ol></nav>';
 @endphp
 
 <x-admin.card>
     <x-admin.page-header
         title="SAX Palace"
-        :description="$breadcrumb"
+        :description="$breadcrumb ?? ''"
         divider="sax-divider-gold">
         <x-slot:actions>
             <a href="{{ route('admin.palace.edit', $palace->id) }}" class="btn btn-dark-gold px-4 shadow-sm rounded-pill transition fw-bold">
@@ -27,7 +21,6 @@
     <x-admin.alert />
 
     <div class="row g-4">
-        {{-- 01. HERO PREVIEW --}}
         <div class="col-12 mb-2">
             <div class="sax-premium-card overflow-hidden border-0 shadow-sm">
                 <div class="row g-0 h-100">
@@ -36,8 +29,10 @@
                         <h1 class="display-5 font-weight-bold text-dark mb-3">{{ $t->palace_hero_titulo ?? $palace->hero_titulo }}</h1>
                         <p class="text-muted lead-sm mb-4">{{ $t->palace_hero_descricao ?? $palace->hero_descricao }}</p>
                         <div class="d-flex align-items-center">
-                            <div class="status-indicator active"></div>
-                            <span class="x-small fw-bold text-uppercase tracking-wider text-success">{{ __('messages.whatsapp_ativo_status') }}</span>
+                            <div class="status-indicator {{ $palace->contato_whatsapp ? 'active' : 'inactive' }}"></div>
+                            <span class="x-small fw-bold text-uppercase tracking-wider {{ $palace->contato_whatsapp ? 'text-success' : 'text-warning' }}">
+                                {{ $palace->contato_whatsapp ? __('messages.whatsapp_ativo_status') : __('messages.whatsapp_inativo_status') }}
+                            </span>
                         </div>
                     </div>
                     <div class="col-lg-5">
@@ -49,7 +44,6 @@
             </div>
         </div>
 
-        {{-- 02. BAR & BODEGA --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-4 h-100 shadow-sm bg-white">
                 <div class="d-flex align-items-center mb-4 border-bottom pb-3">
@@ -62,14 +56,13 @@
                     @for($i=1; $i<=3; $i++)
                         @php $img = "bar_imagem_$i"; @endphp
                         <div class="stack-item shadow-sm">
-                            <img src="{{ asset('storage/'.$palace->$img) }}" class="rounded-lg">
+                            <img src="{{ $palace->$img ? asset('storage/'.$palace->$img) : 'https://placehold.co/200x200' }}" class="rounded-lg">
                         </div>
                     @endfor
                 </div>
             </div>
         </div>
 
-        {{-- 03. GASTRONOMIA --}}
         <div class="col-lg-6">
             <div class="sax-premium-card p-4 h-100 shadow-sm bg-white">
                 <div class="d-flex align-items-center mb-4 border-bottom pb-3">
@@ -79,21 +72,20 @@
                 <div class="meal-timeline-premium">
                     <div class="meal-point border-warning">
                         <span class="x-small fw-bold text-warning text-uppercase">{{ __('messages.meal_timeline_cafe') }}</span>
-                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_cafe_desc ?? $palace->gastronomia_cafe_desc }}</p>
+                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_cafe_desc ?? $palace->gastronomia_cafe_desc ?: __('messages.nao_configurado') }}</p>
                     </div>
                     <div class="meal-point border-primary">
                         <span class="x-small fw-bold text-primary text-uppercase">{{ __('messages.meal_timeline_almoco') }}</span>
-                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_almoco_desc ?? $palace->gastronomia_almoco_desc }}</p>
+                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_almoco_desc ?? $palace->gastronomia_almoco_desc ?: __('messages.nao_configurado') }}</p>
                     </div>
                     <div class="meal-point border-danger">
                         <span class="x-small fw-bold text-danger text-uppercase">{{ __('messages.meal_timeline_jantar') }}</span>
-                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_jantar_desc ?? $palace->gastronomia_jantar_desc }}</p>
+                        <p class="small text-dark mb-0 mt-1">{{ $t->palace_gastronomia_jantar_desc ?? $palace->gastronomia_jantar_desc ?: __('messages.nao_configurado') }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- 04. GALERIA SOCIAL --}}
         <div class="col-12">
             <div class="sax-premium-card p-4 shadow-sm bg-white">
                 <div class="row align-items-center">
@@ -120,17 +112,16 @@
             </div>
         </div>
 
-        {{-- 05. NOITE ÁRABE --}}
         <div class="col-lg-7">
             <div class="sax-premium-card overflow-hidden h-100 shadow-sm border-0">
                 <div class="d-flex flex-column flex-sm-row h-100">
                     <div class="arab-visual">
-                        <img src="{{ asset('storage/'.$palace->tematica_imagem) }}" class="w-100 h-100 object-fit-cover">
+                        <img src="{{ $palace->tematica_imagem ? asset('storage/'.$palace->tematica_imagem) : 'https://placehold.co/600x400' }}" class="w-100 h-100 object-fit-cover">
                     </div>
                     <div class="p-4 d-flex flex-column justify-content-center bg-white">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="badge-gold-soft text-uppercase x-small">{{ $palace->tematica_tag }}</span>
-                            <span class="text-gold fw-bold h5 mb-0">{{ $palace->tematica_preco }}</span>
+                            <span class="badge-gold-soft text-uppercase x-small">{{ $palace->tematica_tag ?: __('messages.sem_etiqueta') }}</span>
+                            <span class="text-gold fw-bold h5 mb-0">{{ $palace->tematica_preco ?: __('messages.a_definir') }}</span>
                         </div>
                         <h4 class="font-weight-bold text-dark mb-2">{{ $t->palace_tematica_titulo ?? $palace->tematica_titulo }}</h4>
                         <p class="small text-muted lh-base mb-0">{{ $t->palace_tematica_descricao ?? $palace->tematica_descricao }}</p>
@@ -139,7 +130,6 @@
             </div>
         </div>
 
-        {{-- 06. INFO BOX (DARK) --}}
         <div class="col-lg-5">
             <div class="sax-premium-card p-4 h-100 bg-dark text-white border-0 shadow-lg position-relative overflow-hidden">
                 <div class="position-absolute" style="top: -10px; right: -10px; opacity: 0.1;">
@@ -150,21 +140,32 @@
                     <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">{{ __('messages.whatsapp_reservas_label') }}</label>
                     <div class="d-flex align-items-center">
                         <i class="fab fa-whatsapp text-success mr-2"></i>
-                        <span class="fw-bold">{{ $palace->contato_whatsapp }}</span>
+                        <span class="fw-bold">{{ $palace->contato_whatsapp ?: __('messages.nao_informado') }}</span>
                     </div>
                 </div>
                 <div class="contact-item mb-4">
                     <label class="x-small text-uppercase opacity-50 fw-bold d-block mb-1">{{ __('messages.horarios_label') }}</label>
                     <div class="small lh-lg">
-                        <div class="d-flex justify-content-between border-bottom border-secondary pb-1"><span>{{ __('messages.segunda_label') }}:</span> <span>{{ $palace->contato_horario_segunda }}</span></div>
-                        <div class="d-flex justify-content-between border-bottom border-secondary pb-1 mt-1"><span>{{ __('messages.terca_sabado_label') }}:</span> <span>{{ $palace->contato_horario_sabado }}</span></div>
-                        <div class="d-flex justify-content-between mt-1"><span>{{ __('messages.domingo_label') }}:</span> <span>{{ $palace->contato_horario_domingo }}</span></div>
+                        <div class="d-flex justify-content-between border-bottom border-secondary pb-1">
+                            <span>{{ __('messages.segunda_label') }}:</span> 
+                            <span>{{ $palace->contato_horario_segunda ?: __('messages.fechado') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom border-secondary pb-1 mt-1">
+                            <span>{{ __('messages.terca_sabado_label') }}:</span> 
+                            <span>{{ $palace->contato_horario_sabado ?: __('messages.fechado') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span>{{ __('messages.domingo_label') }}:</span> 
+                            <span>{{ $palace->contato_horario_domingo ?: __('messages.fechado') }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="mt-auto">
                     <div class="p-3 rounded bg-white-10 text-center">
                         <i class="fas {{ $palace->contato_mapa_iframe ? 'fa-map-pin text-gold' : 'fa-exclamation-triangle text-warning' }} mr-2"></i>
-                        <span class="x-small fw-bold text-uppercase">{{ $palace->contato_mapa_iframe ? __('messages.mapa_integrado_status') : __('messages.mapa_nao_configurado_status') }}</span>
+                        <span class="x-small fw-bold text-uppercase">
+                            {{ $palace->contato_mapa_iframe ? __('messages.mapa_integrado_status') : __('messages.mapa_nao_configurado_status') }}
+                        </span>
                     </div>
                 </div>
             </div>

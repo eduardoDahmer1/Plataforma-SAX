@@ -6,7 +6,7 @@
         <div class="text-center mb-5" data-reveal="up">
             <span class="eyebrow">Cardápio</span>
             <div class="divider mx-auto"></div>
-            <h2 class="section-title">{{ $cafeBistro->cardapio_titulo ?? 'Sabor Autêntico' }}</h2>
+            <h2 class="section-title">{{ $t?->cafe_cardapio_titulo ?? $cafeBistro->cardapio_titulo ?? 'Sabor Autêntico' }}</h2>
         </div>
 
         {{-- Bento Grid dinámico --}}

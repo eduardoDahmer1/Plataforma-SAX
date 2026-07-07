@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CafeBistro;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -35,40 +36,30 @@ class CafeBistroAdminController extends Controller
         $cafeBistro = CafeBistro::findOrFail($id);
 
         $data = $request->validate([
-            'locale'                  => 'required|string|in:pt-br,es,en',
-            'is_active'               => 'nullable|boolean',
-            'whatsapp'                => 'nullable|string|max:255',
-            'meta_title'              => 'nullable|string|max:255',
-            'meta_description'        => 'nullable|string',
-            'hero_imagen'             => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
-            'hero_titulo'             => 'nullable|string|max:255',
-            'hero_subtitulo'          => 'nullable|string|max:255',
-            'sobre_imagen'            => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'sobre_titulo'            => 'nullable|string|max:255',
-            'sobre_texto'             => 'nullable|string',
-            'cardapio_titulo'         => 'nullable|string|max:255',
-            'cardapio_subtitulo'      => 'nullable|string',
-            'cardapio_pdf'            => 'nullable|mimes:pdf|max:8192',
-            'cardapio_galeria'        => 'nullable|array|max:8',
-            'cardapio_galeria.*'      => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'cardapio_galeria_actual' => 'nullable|array',
-            'eventos_titulo'          => 'nullable|string|max:255',
-            'eventos_subtitulo'       => 'nullable|string|max:255',
-            'eventos_texto'           => 'nullable|string',
-            'eventos_tipos'           => 'nullable|array',
-            'eventos_tipos.*'         => 'nullable|string|max:255',
-            'eventos_galeria'         => 'nullable|array',
-            'eventos_galeria.*'       => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'eventos_galeria_actual'  => 'nullable|array',
-            'horarios'                => 'nullable|array',
-            'direccion'               => 'nullable|string|max:255',
+            // No traducibles (tabla principal)
             'telefono'                => 'nullable|string|max:255',
             'instagram_url'           => 'nullable|string|max:255',
             'facebook_url'            => 'nullable|string|max:255',
             'mapa_embed'              => 'nullable|string',
-        ]);
+            'hero_imagen'             => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
+            'sobre_imagen'            => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'cardapio_pdf'            => 'nullable|mimes:pdf|max:8192',
+            'cardapio_galeria'        => 'nullable|array|max:8',
+            'cardapio_galeria.*'      => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'cardapio_galeria_actual' => 'nullable|array',
+            'eventos_galeria'         => 'nullable|array',
+            'eventos_galeria.*'       => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'eventos_galeria_actual'  => 'nullable|array',
+            'eventos_tipos'           => 'nullable|array',
+            'eventos_tipos.*'         => 'nullable|string|max:255',
+            'horario_segunda'         => 'nullable|string|max:255',
+            'horario_terca_quinta'    => 'nullable|string|max:255',
+            'horario_sexta_sabado'    => 'nullable|string|max:255',
+            'horario_domingo'         => 'nullable|string|max:255',
 
-        $locale = $data['locale'];
+            // Traducibles: llegan como translate[locale][cafe_campo]
+            'translate'               => 'nullable|array',
+        ]);
 
         // 1. Imagens individuais (hero, sobre)
         $imageFields = ['hero_imagen', 'sobre_imagen'];
@@ -96,8 +87,6 @@ class CafeBistroAdminController extends Controller
                 $galeriaFinal[] = $this->convertToWebp($img, 'cafe_bistro/eventos');
             }
         }
-        $cafeBistro->eventos_galeria = $galeriaFinal; // Atualiza o objeto para verificar exclusões
-        $data['eventos_galeria'] = $galeriaFinal;
 
         // 4. Galeria do Cardápio
         $cardapioGaleriaFinal = is_array($request->input('cardapio_galeria_actual')) ? $request->input('cardapio_galeria_actual') : [];
@@ -106,99 +95,64 @@ class CafeBistroAdminController extends Controller
                 $cardapioGaleriaFinal[] = $this->convertToWebp($img, 'cafe_bistro/cardapio');
             }
         }
-        $data['cardapio_galeria'] = $cardapioGaleriaFinal;
 
-        // 5. Atualiza campos globais
-        $cafeBistro->update(array_filter([
-            'is_active'     => $request->boolean('is_active'),
-            'whatsapp'      => $data['whatsapp'] ?? $cafeBistro->whatsapp,
-            'hero_imagen'   => $data['hero_imagen'] ?? $cafeBistro->hero_imagen,
-            'sobre_imagen'  => $data['sobre_imagen'] ?? $cafeBistro->sobre_imagen,
-            'cardapio_pdf'  => $data['cardapio_pdf'] ?? $cafeBistro->cardapio_pdf,
-            'instagram_url' => $data['instagram_url'] ?? $cafeBistro->instagram_url,
-            'facebook_url'  => $data['facebook_url'] ?? $cafeBistro->facebook_url,
-            'mapa_embed'    => $data['mapa_embed'] ?? $cafeBistro->mapa_embed,
-        ]));
-
-        // 6. Persistência na tabela polimórfica (Garantindo o page_id)
-        $cafeBistro->translations()->updateOrCreate(
-            [
-                'locale'    => $locale,
-                'page_type' => 'cafe_bistro',
+        // 5. Campos NO traducibles → tabla principal (comunes a todos los idiomas)
+        $cafeBistro->update([
+            'telefono'         => $request->input('telefono'),
+            'instagram_url'    => $request->input('instagram_url'),
+            'facebook_url'     => $request->input('facebook_url'),
+            'mapa_embed'       => $request->input('mapa_embed'),
+            'hero_imagen'      => $data['hero_imagen'] ?? $cafeBistro->hero_imagen,
+            'sobre_imagen'     => $data['sobre_imagen'] ?? $cafeBistro->sobre_imagen,
+            'cardapio_pdf'     => $data['cardapio_pdf'] ?? $cafeBistro->cardapio_pdf,
+            'cardapio_galeria' => $cardapioGaleriaFinal,
+            'eventos_galeria'  => $galeriaFinal,
+            'eventos_tipos'    => $request->input('eventos_tipos', []),
+            'horarios'         => [
+                'segunda'      => $request->input('horario_segunda'),
+                'terca_quinta' => $request->input('horario_terca_quinta'),
+                'sexta_sabado' => $request->input('horario_sexta_sabado'),
+                'domingo'      => $request->input('horario_domingo'),
             ],
-            [
-                'page_id'                => $cafeBistro->id,
-                'cafe_meta_title'        => $data['meta_title'] ?? null,
-                'cafe_meta_description'  => $data['meta_description'] ?? null,
-                'cafe_hero_titulo'       => $data['hero_titulo'] ?? null,
-                'cafe_hero_subtitulo'    => $data['hero_subtitulo'] ?? null,
-                'cafe_sobre_titulo'      => $data['sobre_titulo'] ?? null,
-                'cafe_sobre_texto'       => $data['sobre_texto'] ?? null,
-                'cafe_cardapio_titulo'   => $data['cardapio_titulo'] ?? null,
-                'cafe_cardapio_subtitulo'=> $data['cardapio_subtitulo'] ?? null,
-                'cafe_eventos_titulo'    => $data['eventos_titulo'] ?? null,
-                'cafe_eventos_subtitulo' => $data['eventos_subtitulo'] ?? null,
-                'cafe_eventos_texto'     => $data['eventos_texto'] ?? null,
-                'cafe_direccion'         => $data['direccion'] ?? null,
-                'cafe_telefono'          => $data['telefono'] ?? null,
-                'cafe_eventos_tipos'     => isset($data['eventos_tipos']) ? json_encode($data['eventos_tipos']) : null,
-                'cafe_horarios'          => isset($data['horarios']) ? json_encode($data['horarios']) : null,
-                'cafe_cardapio_galeria'  => !empty($data['cardapio_galeria']) ? json_encode($data['cardapio_galeria']) : null,
-                'cafe_eventos_galeria'   => !empty($data['eventos_galeria']) ? json_encode($data['eventos_galeria']) : null,
-            ]
-        );
+        ]);
+
+        // 6. Campos traducibles → una fila de tradução por idioma
+        $translate = $request->input('translate', []);
+        foreach (['pt-br', 'es', 'en'] as $loc) {
+            $fields = $translate[$loc] ?? [];
+
+            $cafeBistro->translations()->updateOrCreate(
+                [
+                    'locale' => $loc,
+                ],
+                [
+                    'cafe_meta_title'         => $fields['cafe_meta_title'] ?? null,
+                    'cafe_meta_description'   => $fields['cafe_meta_description'] ?? null,
+                    'cafe_hero_titulo'        => $fields['cafe_hero_titulo'] ?? null,
+                    'cafe_hero_subtitulo'     => $fields['cafe_hero_subtitulo'] ?? null,
+                    'cafe_sobre_titulo'       => $fields['cafe_sobre_titulo'] ?? null,
+                    'cafe_sobre_texto'        => $fields['cafe_sobre_texto'] ?? null,
+                    'cafe_cardapio_titulo'    => $fields['cafe_cardapio_titulo'] ?? null,
+                    'cafe_cardapio_subtitulo' => $fields['cafe_cardapio_subtitulo'] ?? null,
+                    'cafe_eventos_titulo'     => $fields['cafe_eventos_titulo'] ?? null,
+                    'cafe_eventos_subtitulo'  => $fields['cafe_eventos_subtitulo'] ?? null,
+                    'cafe_eventos_texto'      => $fields['cafe_eventos_texto'] ?? null,
+                    'cafe_direccion'          => $fields['cafe_direccion'] ?? null,
+                ]
+            );
+        }
 
         Cache::forget('cafe_bistro_data');
 
         return redirect()->route('admin.cafe_bistro.index')
-            ->with('success', 'Conteúdo e tradução (' . strtoupper($locale) . ') atualizados com sucesso.');
+            ->with('success', 'Conteúdo e traduções atualizados com sucesso.');
     }
 
     /**
-     * Conversor Universal para WebP com suporte a alta resolução e múltiplos formatos.
+     * Conversor a WebP: el service centraliza la lógica; aquí solo se pasa la ruta.
      */
     private function convertToWebp($image, $type)
     {
-        ini_set('memory_limit', '512M');
-
-        $tempPath  = $image->getRealPath();
-        $extension = strtolower($image->getClientOriginalExtension());
-        $directory = rtrim($type, '/') . '/';
-        $filename  = uniqid() . '.webp';
-        $fullPath  = storage_path('app/public/' . $directory . $filename);
-
-        if (!Storage::disk('public')->exists($directory)) {
-            Storage::disk('public')->makeDirectory($directory);
-        }
-
-        if ($extension === 'webp' || $extension === 'avif') {
-            Storage::disk('public')->putFileAs($directory, $image, $filename);
-            return "{$directory}{$filename}";
-        }
-
-        $imageResource = match ($extension) {
-            'jpeg', 'jpg', 'jfif' => @imagecreatefromjpeg($tempPath),
-            'png'                 => @imagecreatefrompng($tempPath),
-            'gif'                 => @imagecreatefromgif($tempPath),
-            'bmp'                 => @imagecreatefrombmp($tempPath),
-            'webp'                => @imagecreatefromwebp($tempPath),
-            'tga'                 => @imagecreatefromtga($tempPath),
-            default               => @imagecreatefromstring(file_get_contents($tempPath)),
-        };
-
-        if (!$imageResource) {
-            $origFilename = uniqid() . '.' . $extension;
-            Storage::disk('public')->putFileAs($directory, $image, $origFilename);
-            return "{$directory}{$origFilename}";
-        }
-
-        imagepalettetotruecolor($imageResource);
-        imagealphablending($imageResource, true);
-        imagesavealpha($imageResource, true);
-
-        imagewebp($imageResource, $fullPath, 80);
-        imagedestroy($imageResource);
-
-        return "{$directory}{$filename}";
+        return app(ImageConverterService::class)->toWebp($image, $type);
     }
 }

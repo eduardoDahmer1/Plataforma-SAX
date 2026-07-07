@@ -44,28 +44,25 @@
             <div class="col-lg-4 col-md-6">
                 <h6 class="footer-col-title">Horários</h6>
 
-                @php
-                    $grupos = [];
-                    foreach ($cafeBistro->horarios ?? [] as $h) {
-                        $abertura = $h['apertura'] ?? '';
-                        $cierre   = $h['cierre']   ?? '';
-                        $horario  = $abertura ? "$abertura — $cierre" : 'Fechado';
-                        $ultimo   = count($grupos) - 1;
-                        if ($ultimo >= 0 && $grupos[$ultimo]['horario'] === $horario) {
-                            $grupos[$ultimo]['fim'] = $h['dia'] ?? '';
-                        } else {
-                            $grupos[] = ['inicio' => $h['dia'] ?? '', 'fim' => '', 'horario' => $horario, 'fechado' => !$abertura];
-                        }
-                    }
-                @endphp
+                @php $horarios = $cafeBistro->horarios ?? []; @endphp
                 <table class="footer-horarios w-100">
                     <tbody>
-                        @foreach($grupos as $g)
-                            <tr>
-                                <td class="footer-dia">{{ $g['inicio'] }}{{ $g['fim'] ? ' — ' . $g['fim'] : '' }}</td>
-                                <td class="footer-hora {{ $g['fechado'] ? 'footer-fechado' : '' }}">{{ $g['horario'] }}</td>
-                            </tr>
-                        @endforeach
+                        <tr>
+                            <td class="footer-dia">Segunda-feira</td>
+                            <td class="footer-hora">{{ $horarios['segunda'] ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="footer-dia">Terça-feira — Quinta-feira</td>
+                            <td class="footer-hora">{{ $horarios['terca_quinta'] ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="footer-dia">Sexta-feira — Sábado</td>
+                            <td class="footer-hora">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="footer-dia">Domingo</td>
+                            <td class="footer-hora">{{ $horarios['domingo'] ?? '—' }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

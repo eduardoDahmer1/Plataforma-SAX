@@ -21,9 +21,9 @@
             <div class="col-lg-5" data-reveal="right">
                 <span class="eyebrow">Sobre Nós</span>
                 <div class="divider"></div>
-                <h2 class="section-title mb-4">{{ $cafeBistro->sobre_titulo ?? 'Um espaço para desfrutar sem pressa.' }}</h2>
+                <h2 class="section-title mb-4">{{ $t?->cafe_sobre_titulo ?? $cafeBistro->sobre_titulo ?? 'Um espaço para desfrutar sem pressa.' }}</h2>
                 <p class="sobre-texto">
-                    {{ $cafeBistro->sobre_texto ?? 'No SAX Café & Bistro, o aroma do café se encontra com sabores de diversas culturas. Ingredientes de primeira linha, um ambiente acolhedor e o cuidado em cada detalhe transformam cada visita em uma experiência para recordar.' }}
+                    {{ $t?->cafe_sobre_texto ?? $cafeBistro->sobre_texto ?? 'No SAX Café & Bistro, o aroma do café se encontra com sabores de diversas culturas. Ingredientes de primeira linha, um ambiente acolhedor e o cuidado em cada detalhe transformam cada visita em uma experiência para recordar.' }}
                 </p>
             </div>
 

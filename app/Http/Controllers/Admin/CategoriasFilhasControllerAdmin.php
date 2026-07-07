@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CategoriasFilhas;
 use App\Models\Subcategory;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -152,45 +153,13 @@ class CategoriasFilhasControllerAdmin extends Controller
 
     private function convertToWebp($file, $prefix)
     {
+        // Mapea el prefijo a su carpeta destino; la conversión la hace el service.
         $directory = ($prefix === 'banner') ? 'categorias-filhas/banner' : 'categorias-filhas/photo';
-        $filename = $prefix . '_' . time() . '.webp';
 
-        if (!Storage::disk('public')->exists($directory)) {
-            Storage::disk('public')->makeDirectory($directory);
-        }
-
-        $tempPath = $file->getRealPath();
-        $extension = strtolower($file->getClientOriginalExtension());
-
-        switch ($extension) {
-            case 'jpeg':
-            case 'jpg':
-                $imageResource = imagecreatefromjpeg($tempPath);
-                break;
-            case 'png':
-                $imageResource = imagecreatefrompng($tempPath);
-                break;
-            case 'gif':
-                $imageResource = imagecreatefromgif($tempPath);
-                break;
-            case 'webp':
-            case 'avif':
-                $finalName = $prefix . '_' . time() . '.' . $extension;
-                Storage::disk('public')->putFileAs($directory, $file, $finalName);
-                return "{$directory}/{$finalName}";
-            default:
-                throw new \Exception('Formato de imagem não suportado.');
-        }
-
-        if (!$imageResource) {
-            throw new \Exception('Falha ao criar recurso de imagem.');
-        }
-
-        $fullPath = storage_path("app/public/{$directory}/{$filename}");
-        imagewebp($imageResource, $fullPath, 85);
-        imagedestroy($imageResource);
-
-        return "{$directory}/{$filename}";
+        return app(ImageConverterService::class)->toWebp($file, $directory, [
+            'quality' => 85,
+            'strict'  => true,
+        ]);
     }
 
     private function deleteFileIfExists($path)

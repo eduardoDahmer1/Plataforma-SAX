@@ -1,8 +1,66 @@
-// ============================
-// ADMIN.JS
-// Scripts exclusivos del panel administrativo.
-// Se carga DESPUÉS de app-custom.js, solo en rutas admin.*
-// ============================
+// ======== Feedback global: toast, loading y confirmación ========
+// saxToast(type, message) — type: 'success' | 'error'
+window.saxToast = function (type, message) {
+    const toast = document.createElement('div');
+    toast.className = `toast sax-toast align-items-center text-bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    new bootstrap.Toast(toast).show();
+    setTimeout(() => toast.remove(), 5000);
+};
+
+// saxButtonLoading(btn, true, 'Salvando...') → spinner + disabled; (btn, false) → restaura
+window.saxButtonLoading = function (btn, loading, label) {
+    if (!btn) return;
+    if (loading) {
+        btn.dataset.originalHtml = btn.innerHTML;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> ${label || 'Aguarde...'}`;
+        btn.disabled = true;
+    } else {
+        if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+        delete btn.dataset.originalHtml;
+        btn.disabled = false;
+    }
+};
+
+// Confirmación vía modal para <form data-confirm="mensaje">.
+// Reemplaza los onsubmit="return confirm(...)" — migración opt-in por vista.
+document.addEventListener('submit', function (e) {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-confirm')) return;
+
+    // Segundo submit (ya confirmado desde el modal): dejar pasar
+    if (form.dataset.confirmed === '1') {
+        delete form.dataset.confirmed;
+        return;
+    }
+
+    const modalEl = document.getElementById('saxConfirmModal');
+    if (!modalEl || typeof bootstrap === 'undefined') {
+        // Fallback: sin modal en el layout, confirm nativo
+        if (!confirm(form.dataset.confirm)) e.preventDefault();
+        return;
+    }
+
+    e.preventDefault();
+    document.getElementById('saxConfirmMessage').textContent = form.dataset.confirm;
+
+    // onclick (no addEventListener) para no acumular handlers entre aperturas
+    document.getElementById('saxConfirmAccept').onclick = function () {
+        bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+        form.dataset.confirmed = '1';
+        form.requestSubmit();
+    };
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+});
 
 
 // ======== Back to Top + Drawer Mobile (Layout Admin) ========
@@ -456,29 +514,6 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 
 
-// ======== Cafe Bistro: Checkbox "Fechado" deshabilita inputs de horario ========
-(function () {
-    var checks = document.querySelectorAll('.horario-fechado-check');
-    if (!checks.length) return;
-
-    checks.forEach(function (check) {
-        var row = check.closest('.horario-row');
-        var timeInputs = row.querySelectorAll('input[type="time"]');
-
-        function toggle() {
-            timeInputs.forEach(function (input) {
-                input.disabled = check.checked;
-                if (check.checked) input.value = '';
-                input.style.opacity = check.checked ? '0.4' : '1';
-            });
-        }
-
-        toggle();
-        check.addEventListener('change', toggle);
-    });
-})();
-
-
 // ======== Activate: Toggle Status ========
 // Usado en activate/index.blade.php — botones de status de categorías y marcas
 function toggleUI(btn) {
@@ -521,10 +556,10 @@ document.addEventListener('change', function (e) {
     var fieldName = input.dataset.previewId.replace('preview-', '');
     var formData  = new FormData();
     formData.append(fieldName, input.files[0]);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
 
     fetch(input.dataset.uploadUrl, {
         method:  'POST',
-        headers: headers,
         body:    formData,
     })
         .then(function (res) { return res.json(); })
@@ -574,3 +609,49 @@ document.addEventListener('change', function (e) {
         if (label) label.innerHTML = `<i class="fas fa-file-image me-1"></i> ${fileName}`;
     }
 });
+
+
+/* Switcher de idioma por-campo para forms traducibles. Usado por <x-admin.lang-field>. */
+(function () {
+    function visualToHidden(field, lang) {
+        var visual = field.querySelector('[data-lang-visual]');
+        var hidden = field.querySelector('[data-lang-real="' + lang + '"]');
+        if (visual && hidden) hidden.value = visual.value;
+    }
+
+    function hiddenToVisual(field, lang) {
+        var visual = field.querySelector('[data-lang-visual]');
+        var hidden = field.querySelector('[data-lang-real="' + lang + '"]');
+        if (visual && hidden) visual.value = hidden.value;
+    }
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-lang-field-btn]');
+        if (!btn) return;
+
+        var field = btn.closest('[data-lang-field]');
+        if (!field) return;
+
+        var next = btn.getAttribute('data-lang-field-btn');
+        var current = field.getAttribute('data-current-lang') || 'pt-br';
+        if (next === current) return;
+
+        visualToHidden(field, current);
+        hiddenToVisual(field, next);
+        field.setAttribute('data-current-lang', next);
+
+        field.querySelectorAll('[data-lang-field-btn]').forEach(function (b) {
+            var isActive = b.getAttribute('data-lang-field-btn') === next;
+            b.classList.toggle('active', isActive);
+            b.classList.toggle('bg-primary', isActive);
+            b.classList.toggle('bg-secondary', !isActive);
+        });
+    });
+
+    document.addEventListener('submit', function (e) {
+        if (!e.target.querySelectorAll) return;
+        e.target.querySelectorAll('[data-lang-field]').forEach(function (field) {
+            visualToHidden(field, field.getAttribute('data-current-lang') || 'pt-br');
+        });
+    });
+})();

@@ -59,10 +59,10 @@ class CafeBistro extends Model
         'horarios'        => 'array',
     ];
 
-    // Genera el link de WhatsApp listo para usar en href
+    // Genera el link de WhatsApp a partir del teléfono (un solo campo de contacto)
     public function getWhatsappLinkAttribute(): string
     {
-        return 'https://wa.me/' . preg_replace('/\D/', '', $this->whatsapp);
+        return 'https://wa.me/' . preg_replace('/\D/', '', $this->telefono);
     }
 
     // Verifica si hay un embed de mapa cargado

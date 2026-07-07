@@ -5,10 +5,10 @@
     <x-head-master />
 </head>
 
-<body>
+<body class="palace-page">
     <x-header-internas />
 
-    <main>
+    <main class="palace-main">
         @yield('content')
 
         @include('palace.tematica')

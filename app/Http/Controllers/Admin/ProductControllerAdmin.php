@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\ProductTranslation;
 use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
@@ -568,30 +569,12 @@ class ProductControllerAdmin extends Controller
 
     private function convertToWebp($image, $type)
     {
+       
         try {
-            $temp = $image->getRealPath();
-
-            $imgRes = @imagecreatefromstring(file_get_contents($temp));
-
-            if (!$imgRes) {
-                return null;
-            }
-
-            ob_start();
-            imagewebp($imgRes, null, 85);
-            $webpData = ob_get_clean();
-            imagedestroy($imgRes);
-
-            $dir = "products/{$type}/";
-            $fileName = uniqid() . '.webp';
-
-            if (!Storage::disk('public')->exists($dir)) {
-                Storage::disk('public')->makeDirectory($dir);
-            }
-
-            Storage::disk('public')->put($dir . $fileName, $webpData);
-
-            return $dir . $fileName;
+            return app(ImageConverterService::class)->toWebp($image, "products/{$type}", [
+                'quality' => 85,
+                'strict'  => true,
+            ]);
         } catch (\Exception $e) {
             \Log::error('Erro na conversão WebP: ' . $e->getMessage());
             return null;

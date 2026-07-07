@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bridal;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -290,50 +291,10 @@ class BridalAdminController extends Controller
     }
 
     /**
-     * Conversor Universal para WebP
+     * Conversor a WebP: el service centraliza la lógica; aquí solo se pasa la ruta.
      */
     private function convertToWebp($image, $type)
     {
-        ini_set('memory_limit', '512M');
-
-        $tempPath  = $image->getRealPath();
-        $extension = strtolower($image->getClientOriginalExtension());
-        $directory = rtrim($type, '/') . '/';
-        $filename  = uniqid() . '.webp';
-        $fullPath  = storage_path('app/public/' . $directory . $filename);
-
-        if (!Storage::disk('public')->exists($directory)) {
-            Storage::disk('public')->makeDirectory($directory);
-        }
-
-        if ($extension === 'webp' || $extension === 'avif') {
-            Storage::disk('public')->putFileAs($directory, $image, $filename);
-            return "{$directory}{$filename}";
-        }
-
-        $imageResource = match ($extension) {
-            'jpeg', 'jpg', 'jfif' => @imagecreatefromjpeg($tempPath),
-            'png'                 => @imagecreatefrompng($tempPath),
-            'gif'                 => @imagecreatefromgif($tempPath),
-            'bmp'                 => @imagecreatefrombmp($tempPath),
-            'webp'                => @imagecreatefromwebp($tempPath),
-            'tga'                 => @imagecreatefromtga($tempPath),
-            default               => @imagecreatefromstring(file_get_contents($tempPath)),
-        };
-
-        if (!$imageResource) {
-            $origFilename = uniqid() . '.' . $extension;
-            Storage::disk('public')->putFileAs($directory, $image, $origFilename);
-            return "{$directory}{$origFilename}";
-        }
-
-        imagepalettetotruecolor($imageResource);
-        imagealphablending($imageResource, true);
-        imagesavealpha($imageResource, true);
-
-        imagewebp($imageResource, $fullPath, 80);
-        imagedestroy($imageResource);
-
-        return "{$directory}{$filename}";
+        return app(ImageConverterService::class)->toWebp($image, $type);
     }
 }

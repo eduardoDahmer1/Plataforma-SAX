@@ -54,6 +54,9 @@
     {{-- Footer --}}
     @include('components.footer')
 
+    {{-- Modal global de confirmación (forms con data-confirm) --}}
+    <x-admin.confirm-modal />
+
     <x-scripts-master />
 
 

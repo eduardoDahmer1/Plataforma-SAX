@@ -6,7 +6,6 @@
         @csrf
         @method('PUT')
 
-        {{-- Header --}}
         <div class="dashboard-header d-flex justify-content-between align-items-center mb-5 sticky-header px-4 py-3 bg-white border-bottom shadow-sm">
             <div>
                 <h2 class="sax-title text-uppercase letter-spacing-2 m-0">{{ __('messages.editar_palace_titulo') }}</h2>
@@ -23,10 +22,11 @@
             </div>
         </div>
 
+        <x-admin.alert />
+
         <div class="row px-3 g-4">
             <div class="col-lg-8">
-                
-                {{-- 1. SEÇÃO HERO --}}
+
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.identificacao_hero_sec') }}</h6>
                     
@@ -59,7 +59,6 @@
                     </div>
                 </div>
 
-                {{-- 2. BAR & BODEGA --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm group-container">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.bar_bodega_fotos_sec') }}</h6>
                     
@@ -103,7 +102,6 @@
                     </div>
                 </div>
 
-                {{-- 3. SEÇÃO GASTRONOMIA --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm group-container">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.gastronomia_sec') }}</h6>
                     
@@ -132,7 +130,7 @@
                             <a href="javascript:void(0)" class="badge bg-secondary gastT-lang-btn gastD-lang-btn text-decoration-none" onclick="switchLanguage('gastT', 'en', this); switchLanguage('gastD', 'en', this)">EN</a>
                         </div>
                     </div>
-                    {{-- NOVO CAMPO: UPLOAD DO CARDÁPIO EM PDF --}}
+                    
                     <div class="border-top pt-3 mt-2">
                         <label class="sax-form-label d-block mb-2 fw-bold text-dark text-uppercase letter-spacing-1" style="font-size: 11px;">
                             <i class="fas fa-file-pdf text-danger me-1"></i> Arquivo do Cardápio Completo (PDF)
@@ -168,7 +166,6 @@
                     </div>
                 </div>
 
-                {{-- 4. GALERIA --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-4 text-dark border-bottom pb-2 text-uppercase letter-spacing-1">{{ __('messages.galeria_eventos_sec') }}</h6>
                     <div class="asset-upload-zone mb-3" style="min-height: 120px;">
@@ -187,9 +184,7 @@
                 </div>
             </div>
 
-            {{-- Coluna Lateral --}}
             <div class="col-lg-4">
-                {{-- Banner Principal --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">{{ __('messages.imagem_capa_label') }} (Hero)</h6>
                     <div class="preview-box mb-3 shadow-sm border rounded overflow-hidden">
@@ -201,7 +196,6 @@
                     </div>
                 </div>
 
-                {{-- EXPERIÊNCIA TEMÁTICA --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm bg-dark text-white">
                     <h6 class="sax-label mb-3 text-gold border-bottom border-secondary pb-2 text-uppercase letter-spacing-1">{{ __('messages.noche_arabe_sec') }}</h6>
                     <div class="mb-3">
@@ -227,7 +221,6 @@
                     </div>
                 </div>
 
-                {{-- HORÁRIOS --}}
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">{{ __('messages.horarios_atencao_sec') }}</h6>
                     <div class="mb-2">
@@ -244,7 +237,6 @@
                     </div>
                 </div>
 
-                {{-- CONTATO --}}
                 <div class="sax-premium-card p-4 shadow-sm">
                     <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">{{ __('messages.ubicacion_mapa_sec') }}</h6>
                     <div class="mb-3">
@@ -259,7 +251,6 @@
             </div>
         </div>
 
-        {{-- Botão Mobile Fixo --}}
         <div class="d-md-none fixed-bottom p-3 bg-white border-top shadow-lg" style="z-index: 1030;">
             <button type="submit" class="btn btn-dark-gold w-100 py-3 rounded-pill fw-bold">
                 {{ __('messages.guardar_cambios_btn') }} <i class="fas fa-check-circle ms-2"></i>

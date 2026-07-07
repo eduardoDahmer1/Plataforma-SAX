@@ -9,39 +9,25 @@
                 <div class="divider"></div>
                 <h2 class="section-title mb-4">Horários</h2>
 
-                @php
-                    // Agrupar días consecutivos con el mismo horario
-                    $horarios = $cafeBistro->horarios ?? [];
-                    $grupos = [];
-                    foreach ($horarios as $h) {
-                        $abertura = $h['apertura'] ?? '';
-                        $cierre   = $h['cierre']   ?? '';
-                        $horario  = $abertura ? "$abertura — $cierre" : 'Fechado';
-                        $ultimo   = count($grupos) - 1;
-                        if ($ultimo >= 0 && $grupos[$ultimo]['horario'] === $horario) {
-                            $grupos[$ultimo]['fim'] = $h['dia'] ?? '';
-                        } else {
-                            $grupos[] = [
-                                'inicio'  => $h['dia'] ?? '',
-                                'fim'     => '',
-                                'horario' => $horario,
-                                'fechado' => !$abertura,
-                            ];
-                        }
-                    }
-                @endphp
+                @php $horarios = $cafeBistro->horarios ?? []; @endphp
                 <table class="horarios-table w-100">
                     <tbody>
-                        @foreach($grupos as $g)
-                            <tr>
-                                <td class="horarios-dia">
-                                    {{ $g['inicio'] }}{{ $g['fim'] ? ' — ' . $g['fim'] : '' }}
-                                </td>
-                                <td class="horarios-hora {{ $g['fechado'] ? 'horarios-fechado' : '' }}">
-                                    {{ $g['horario'] }}
-                                </td>
-                            </tr>
-                        @endforeach
+                        <tr>
+                            <td class="horarios-dia">Segunda-feira</td>
+                            <td class="horarios-hora">{{ $horarios['segunda'] ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="horarios-dia">Terça-feira — Quinta-feira</td>
+                            <td class="horarios-hora">{{ $horarios['terca_quinta'] ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="horarios-dia">Sexta-feira — Sábado</td>
+                            <td class="horarios-hora">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="horarios-dia">Domingo</td>
+                            <td class="horarios-hora">{{ $horarios['domingo'] ?? '—' }}</td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -71,7 +57,7 @@
                 {{-- Endereço --}}
                 <address class="horarios-endereco">
                     <i class="bi bi-geo-alt me-2"></i>
-                    {{ $cafeBistro->direccion ?? 'Shopping Dubai, Pedro Juan Caballero — Paraguai' }}
+                    {{ $t?->cafe_direccion ?? $cafeBistro->direccion ?? 'Shopping Dubai, Pedro Juan Caballero — Paraguai' }}
                 </address>
             </div>
 

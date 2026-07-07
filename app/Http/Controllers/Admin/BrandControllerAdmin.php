@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -126,57 +127,14 @@ class BrandControllerAdmin extends Controller
 
     private function convertToWebp($image, $type)
     {
-        // Aumenta memória para processar banners grandes
-        ini_set('memory_limit', '512M');
-
-        $tempPath = $image->getRealPath();
-        $extension = strtolower($image->getClientOriginalExtension());
-
-        // Define o diretório baseado no tipo (Adicionado internal_banner)
+        // Mapea el tipo a su carpeta destino; la conversión la hace el service.
         $directory = match ($type) {
-            'banner' => 'brands/banner/',
-            'internal_banner' => 'brands/internal_banner/',
-            default => 'brands/logo/',
+            'banner' => 'brands/banner',
+            'internal_banner' => 'brands/internal_banner',
+            default => 'brands/logo',
         };
 
-        $filename = uniqid() . '.webp';
-        $fullPath = storage_path('app/public/' . $directory . $filename);
-
-        if (!Storage::disk('public')->exists($directory)) {
-            Storage::disk('public')->makeDirectory($directory);
-        }
-
-        // Se já for webp ou avif, salva sem reprocessar
-        if ($extension === 'webp' || $extension === 'avif') {
-            Storage::disk('public')->putFileAs($directory, $image, $filename);
-            return "{$directory}{$filename}";
-        }
-
-        // Cria recurso de imagem conforme extensão
-        $imageResource = match ($extension) {
-            'jpeg', 'jpg' => imagecreatefromjpeg($tempPath),
-            'png' => imagecreatefrompng($tempPath),
-            'gif' => imagecreatefromgif($tempPath),
-            default => null,
-        };
-
-        if (!$imageResource) {
-            // Fallback: se não conseguir converter, salva o original
-            $origFilename = uniqid() . '.' . $extension;
-            Storage::disk('public')->putFileAs($directory, $image, $origFilename);
-            return "{$directory}{$origFilename}";
-        }
-
-        // Processa transparência para PNGs
-        imagepalettetotruecolor($imageResource);
-        imagealphablending($imageResource, true);
-        imagesavealpha($imageResource, true);
-
-        // Salva direto no disco (mais rápido e seguro que ob_start)
-        imagewebp($imageResource, $fullPath, 80);
-        imagedestroy($imageResource);
-
-        return "{$directory}{$filename}";
+        return app(ImageConverterService::class)->toWebp($image, $directory);
     }
 
     public function show($id)

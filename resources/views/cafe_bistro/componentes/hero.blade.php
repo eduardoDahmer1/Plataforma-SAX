@@ -14,11 +14,11 @@
         <span class="eyebrow">SAX Café & Bistrô · PJC</span>
 
         <h1 class="hero-title" data-reveal="up">
-            {{ $cafeBistro->hero_titulo ?? 'Um lugar para saborear o momento.' }}
+            {{ $t?->cafe_hero_titulo ?? $cafeBistro->hero_titulo ?? 'Um lugar para saborear o momento.' }}
         </h1>
 
         <p class="hero-subtitle" data-reveal="up">
-            {{ $cafeBistro->hero_subtitulo ?? 'Frescor ao amanhecer, cafés de origem e jantares para recordar.' }}
+            {{ $t?->cafe_hero_subtitulo ?? $cafeBistro->hero_subtitulo ?? 'Frescor ao amanhecer, cafés de origem e jantares para recordar.' }}
         </p>
 
         <div class="hero-actions" data-reveal="up">

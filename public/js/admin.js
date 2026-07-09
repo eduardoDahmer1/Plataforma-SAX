@@ -169,22 +169,169 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// ── TinyMCE: editor de blog ───────────────────────────────────
-if (document.getElementById('editor-blog') && typeof tinymce !== 'undefined') {
+// ── TinyMCE: editor de blog (com upload real de imagens) ──────
+(function () {
+    const editorEl = document.getElementById('editor-blog');
+    if (!editorEl || typeof tinymce === 'undefined') return;
+
+    const uploadUrl = editorEl.dataset.uploadUrl;
+
     tinymce.init({
         selector: '#editor-blog',
-        height: 450,
+        height: 550,
         menubar: false,
         branding: false,
         statusbar: true,
         plugins: ['advlist autolink lists link image charmap print preview anchor',
                   'searchreplace visualblocks code fullscreen',
-                  'insertdatetime media table paste code help wordcount'],
-        toolbar: 'formatselect | bold italic | forecolor backcolor | alignleft aligncenter alignright alignjustify | table | link image | code fullscreen',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }',
-        setup: function(editor) { editor.on('change', function() { editor.save(); }); }
+                  'insertdatetime media table paste code help wordcount', 'quickbars'],
+        toolbar: 'formatselect | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist | blockquote hr | table | link image media | removeformat | code fullscreen',
+        quickbars_selection_toolbar: 'bold italic | quicklink blockquote',
+        quickbars_insert_toolbar: false,
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; } img { max-width: 100%; height: auto; }',
+        image_caption: true,
+        image_title: true,
+        automatic_uploads: true,
+        paste_data_images: true,
+        images_reuse_filename: true,
+        convert_urls: true,
+        relative_urls: false,
+        remove_script_host: false,
+        setup: function (editor) {
+            editor.on('change keyup', function () { editor.save(); });
+            editor.on('init', function () {
+                const form = editorEl.closest('form');
+                if (form) {
+                    form.addEventListener('submit', function () { editor.save(); });
+                }
+            });
+        },
+        images_upload_handler: uploadUrl ? function (blobInfo, success, failure) {
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+
+            fetch(uploadUrl, { method: 'POST', headers: headers, body: formData })
+                .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok && data.location) {
+                        success(data.location);
+                    } else {
+                        const message = data.message || 'Falha ao enviar imagem.';
+                        failure(message);
+                        if (window.saxToast) saxToast('error', message);
+                    }
+                })
+                .catch(() => {
+                    failure('Erro de rede ao enviar imagem.');
+                    if (window.saxToast) saxToast('error', 'Erro ao enviar imagem.');
+                });
+        } : undefined,
     });
-}
+})();
+
+// ── Blog: salvar formulário inteiro via AJAX (sem reload) ──────
+(function () {
+    const form = document.getElementById('blogForm');
+    if (!form) return;
+
+    function galleryItemHtml(path, url) {
+        return '<div class="gallery-preview-item shadow-sm border">' +
+            '<img src="' + url + '" class="w-100 h-100 object-fit-cover">' +
+            '<input type="hidden" name="gallery_actual[]" value="' + path + '">' +
+            '<button type="button" class="gallery-remove-btn"><i class="fas fa-times"></i></button>' +
+            '</div>';
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const submitBtns = form.querySelectorAll('button[type="submit"]');
+        submitBtns.forEach(function (btn) {
+            btn.disabled = true;
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Salvando...';
+        });
+
+        form.querySelectorAll('.is-invalid').forEach(function (el) { el.classList.remove('is-invalid'); });
+        form.querySelectorAll('[data-ajax-error]').forEach(function (el) { el.remove(); });
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: Object.assign({ 'Accept': 'application/json' }, headers),
+            body: formData,
+        })
+            .then(function (res) {
+                return res.json().then(function (data) { return { status: res.status, data: data }; });
+            })
+            .then(function (result) {
+                const status = result.status;
+                const data = result.data;
+
+                if (status === 200 && data.success) {
+                    if (window.saxToast) saxToast('success', data.message || 'Salvo com sucesso!');
+
+                    if (data.redirect) {
+                        setTimeout(function () { window.location.href = data.redirect; }, 500);
+                        return;
+                    }
+
+                    if (data.blog) {
+                        const slugInput = document.getElementById('slug');
+                        if (slugInput && data.blog.slug) slugInput.value = data.blog.slug;
+
+                        const updatedLabel = document.querySelector('.sticky-header .x-small');
+                        if (updatedLabel && data.blog.updated_at) {
+                            updatedLabel.textContent = 'Última atualização: ' + data.blog.updated_at;
+                        }
+
+                        const imageInput = form.querySelector('input[name="image"]');
+                        if (imageInput) imageInput.value = '';
+                        if (data.blog.image_url) {
+                            const coverPreview = document.getElementById('blogCoverPreview');
+                            if (coverPreview) coverPreview.src = data.blog.image_url;
+                        }
+
+                        const galleryInput = form.querySelector('input[name="gallery[]"]');
+                        if (galleryInput) galleryInput.value = '';
+
+                        const galleryPreview = document.getElementById('blogGaleriaPreview');
+                        if (galleryPreview && data.blog.gallery) {
+                            galleryPreview.innerHTML = data.blog.gallery.map(function (item) {
+                                return galleryItemHtml(item.path, item.url);
+                            }).join('');
+                            const counter = document.getElementById('blogGaleriaCount');
+                            if (counter) counter.textContent = data.blog.gallery.length;
+                        }
+                    }
+                } else if (status === 422 && data.errors) {
+                    Object.keys(data.errors).forEach(function (field) {
+                        const input = form.querySelector('[name="' + field + '"]');
+                        if (!input) return;
+                        input.classList.add('is-invalid');
+                        const feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback d-block';
+                        feedback.setAttribute('data-ajax-error', '1');
+                        feedback.textContent = data.errors[field][0];
+                        input.insertAdjacentElement('afterend', feedback);
+                    });
+                    if (window.saxToast) saxToast('error', 'Verifique os campos destacados.');
+                } else {
+                    if (window.saxToast) saxToast('error', data.message || 'Erro ao salvar o artigo.');
+                }
+            })
+            .catch(function () {
+                if (window.saxToast) saxToast('error', 'Erro de rede ao salvar.');
+            })
+            .finally(function () {
+                submitBtns.forEach(function (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = btn.dataset.originalHtml;
+                });
+            });
+    });
+})();
 
 // 1. Inicialização segura do Objeto de Estados
 var currentLangs = {
@@ -470,14 +617,15 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// ======== Cafe Bistro: Eliminar imagen de galería (cardápio y eventos) ========
-// Delegación en document — cubre items renderizados por Blade y nuevos
+// ======== Galerías (cardápio, eventos, blog, ...): eliminar imagen ========
+// Delegación en document — cubre items renderizados por Blade y nuevos.
+// Convención: cada grid de preview con id "xGaleriaPreview" tem um contador
+// opcional "xGaleriaCount" que é atualizado automaticamente ao remover.
 (function () {
-    function updateCardapioCount() {
-        var preview = document.getElementById('cardapioGaleriaPreview');
-        var counter = document.getElementById('cardapioGaleriaCount');
-        if (!preview || !counter) return;
-        counter.textContent = preview.querySelectorAll('.gallery-preview-item').length;
+    function updateCounter(preview) {
+        if (!preview || !preview.id) return;
+        var counter = document.getElementById(preview.id.replace(/Preview$/, 'Count'));
+        if (counter) counter.textContent = preview.querySelectorAll('.gallery-preview-item').length;
     }
 
     document.addEventListener('click', function (e) {
@@ -485,9 +633,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!btn) return;
         var item = btn.closest('.gallery-preview-item');
         if (!item) return;
-        var isCardapio = !!item.closest('#cardapioGaleriaPreview');
+        var preview = item.closest('[id$="GaleriaPreview"]');
         item.remove();
-        if (isCardapio) updateCardapioCount();
+        updateCounter(preview);
     });
 })();
 
@@ -653,5 +801,17 @@ document.addEventListener('change', function (e) {
         e.target.querySelectorAll('[data-lang-field]').forEach(function (field) {
             visualToHidden(field, field.getAttribute('data-current-lang') || 'pt-br');
         });
+    });
+})();
+
+
+// ======== Blog: contador de caracteres da meta description ========
+(function () {
+    var field = document.getElementById('meta_description');
+    var counter = document.getElementById('metaDescCount');
+    if (!field || !counter) return;
+
+    field.addEventListener('input', function () {
+        counter.textContent = field.value.length;
     });
 })();

@@ -5,10 +5,35 @@ namespace App\Http\Controllers;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use App\Services\CategoryDisplayService;
+use Illuminate\Support\Facades\View;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
+
+    protected $displayService;
+
+    public function __construct()
+    {
+        $this->displayService = app(CategoryDisplayService::class);
+
+        if (request()->is('*edition-privee*')) {
+            $customCss = "
+                <style>
+                    h1, .breadcrumb, .title, h2, span, a { 
+                        text-transform: none !important; 
+                    }
+                    .product-grid-title, .catalog-title {
+                        text-transform: lowercase !important;
+                    }
+                </style>
+            ";
+            View::share('custom_category_css', $customCss);
+        } else {
+            View::share('custom_category_css', '');
+        }
+    }
 
     protected function applyActiveProductScope($query)
     {
@@ -49,9 +74,16 @@ class Controller extends BaseController
 
         return $categories
             ->map(function ($category) {
+                $this->displayService->format($category);
+
                 $filteredSubs = $category->subcategories
                     ->map(function ($subcategory) {
+                        $this->displayService->format($subcategory);
+
                         $filteredChildren = $subcategory->categoriasfilhas
+                            ->map(function ($child) {
+                                return $this->displayService->format($child);
+                            })
                             ->filter(fn($child) => (int) $child->active_products_count > 0)
                             ->values();
 

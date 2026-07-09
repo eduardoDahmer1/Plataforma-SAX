@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Services\CategoryDisplayService;
 
 class Category extends Model
 {
@@ -15,6 +16,13 @@ class Category extends Model
     public function subcategories()
     {
         return $this->hasMany(Subcategory::class);
+    }
+    public function getNameAttribute($value)
+    {
+        // Instancia o service diretamente do container do Laravel
+        $displayService = app(CategoryDisplayService::class);
+        
+        return $displayService->formatName($value, $this->attributes['slug'] ?? null);
     }
 }
 

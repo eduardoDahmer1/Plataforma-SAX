@@ -11,6 +11,8 @@
 @endsection
 
 @section('content')
+<div class="reading-progress-bar"></div>
+
 <div class="blog-article-page">
     <section class="blog-article-hero">
         <div class="container">
@@ -56,12 +58,29 @@
                         {!! $blog->content !!}
                     </article>
 
+                    @if (!empty($blog->gallery))
+                        <div class="blog-gallery">
+                            <h3 class="blog-gallery__title">Galeria <span class="blog-gallery__count">{{ count($blog->gallery) }}</span></h3>
+                            <div class="blog-gallery__grid">
+                                @foreach ($blog->gallery as $img)
+                                    <a href="{{ Storage::url($img) }}" class="blog-gallery__item" data-lightbox>
+                                        <img src="{{ Storage::url($img) }}" alt="{{ $blog->title }}" loading="lazy">
+                                        <span class="blog-gallery__zoom"><i class="fas fa-expand"></i></span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="blog-share-panel">
                         <div class="blog-chip">Compartilhar</div>
                         <div class="sax-social-share">
                             <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}" target="_blank" rel="noopener" class="share-btn"><i class="fab fa-facebook-f"></i></a>
                             <a href="https://api.whatsapp.com/send?text={{ rawurlencode($blog->title) }}%20{{ url()->current() }}" target="_blank" rel="noopener" class="share-btn"><i class="fab fa-whatsapp"></i></a>
                             <a href="https://twitter.com/intent/tweet?text={{ rawurlencode($blog->title) }}&url={{ rawurlencode(url()->current()) }}" target="_blank" rel="noopener" class="share-btn"><i class="fab fa-x-twitter"></i></a>
+                            <button type="button" class="share-btn" id="blog-copy-link" data-url="{{ url()->current() }}" title="Copiar link">
+                                <i class="fas fa-link"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -76,7 +95,12 @@
                                 </a>
                                 @foreach ($categories as $category)
                                     <a href="{{ route('blogs.index', ['category' => $category->id]) }}" class="blog-sidebar__link">
-                                        <span>{{ $category->name }}</span>
+                                        <span class="d-flex align-items-center gap-2">
+                                            @if ($category->banner)
+                                                <img src="{{ Storage::url($category->banner) }}" alt="" class="blog-filter-chip__avatar">
+                                            @endif
+                                            {{ $category->name }}
+                                        </span>
                                     </a>
                                 @endforeach
                             </div>
@@ -139,4 +163,59 @@
         </div>
     </section>
 </div>
+
+<div id="blogLightbox" class="blog-lightbox">
+    <button type="button" class="blog-lightbox__close" aria-label="Fechar">&times;</button>
+    <img src="" alt="">
+</div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const lightbox = document.getElementById('blogLightbox');
+    if (!lightbox) return;
+
+    const lightboxImg = lightbox.querySelector('img');
+    const closeBtn = lightbox.querySelector('.blog-lightbox__close');
+
+    const open = (src, alt) => {
+        lightboxImg.src = src;
+        lightboxImg.alt = alt || '';
+        lightbox.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const close = () => {
+        lightbox.classList.remove('is-open');
+        document.body.style.overflow = '';
+    };
+
+    document.querySelectorAll('[data-lightbox]').forEach((link) => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            open(this.href, this.querySelector('img')?.alt);
+        });
+    });
+
+    closeBtn.addEventListener('click', close);
+    lightbox.addEventListener('click', function (e) {
+        if (e.target === lightbox) close();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') close();
+    });
+
+    const copyBtn = document.getElementById('blog-copy-link');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            navigator.clipboard.writeText(this.dataset.url).then(() => {
+                const icon = this.querySelector('i');
+                icon.className = 'fas fa-check';
+                setTimeout(() => { icon.className = 'fas fa-link'; }, 1500);
+            });
+        });
+    }
+});
+</script>
+@endpush

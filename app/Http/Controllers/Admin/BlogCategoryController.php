@@ -12,7 +12,7 @@ class BlogCategoryController extends Controller
     // Index: lista todas as categorias
     public function index()
     {
-        $categories = BlogCategory::orderBy('name')->get();
+        $categories = BlogCategory::withCount('blogs')->orderBy('name')->get();
         return view('admin.blogs.categories.index', compact('categories'));
     }
 
@@ -45,6 +45,7 @@ class BlogCategoryController extends Controller
     // Edit: mostra formulário para editar
     public function edit(BlogCategory $category)
     {
+        $category->loadCount('blogs');
         return view('admin.blogs.categories.edit', compact('category'));
     }
 

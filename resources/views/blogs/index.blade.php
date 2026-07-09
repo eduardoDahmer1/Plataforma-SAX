@@ -30,6 +30,9 @@
                 <a href="{{ route('blogs.index') }}" class="blog-filter-chip {{ !$currentCategory ? 'active' : '' }}">{{ __('messages.todos') }}</a>
                 @foreach ($categories as $cat)
                     <a href="{{ route('blogs.index', ['category' => $cat->id]) }}" class="blog-filter-chip {{ (string) $currentCategory === (string) $cat->id ? 'active' : '' }}">
+                        @if ($cat->banner)
+                            <img src="{{ Storage::url($cat->banner) }}" alt="" class="blog-filter-chip__avatar">
+                        @endif
                         {{ $cat->name }}
                     </a>
                 @endforeach

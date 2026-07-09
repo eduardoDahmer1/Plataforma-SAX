@@ -57,7 +57,7 @@ class BlogController extends Controller
 
         $categories = Cache::remember('blog_categories_list', now()->addHours(6), function () {
             return BlogCategory::query()
-                ->select('id', 'name', 'slug')
+                ->select('id', 'name', 'slug', 'banner')
                 ->orderBy('name')
                 ->get();
         });
@@ -111,7 +111,7 @@ class BlogController extends Controller
     {
         $blog = Cache::remember("blog_show_{$slug}", now()->addMinutes(30), function () use ($slug) {
             return Blog::query()
-                ->select('id', 'title', 'subtitle', 'slug', 'image', 'image_caption', 'content', 'meta_description', 'read_time', 'featured', 'published_at', 'author', 'category_id')
+                ->select('id', 'title', 'subtitle', 'slug', 'image', 'image_caption', 'gallery', 'content', 'meta_description', 'read_time', 'featured', 'published_at', 'author', 'category_id')
                 ->with('category:id,name,slug')
                 ->published()
                 ->where('slug', $slug)
@@ -120,7 +120,7 @@ class BlogController extends Controller
 
         $categories = Cache::remember('blog_sidebar_categories', now()->addHours(6), function () {
             return BlogCategory::query()
-                ->select('id', 'name', 'slug')
+                ->select('id', 'name', 'slug', 'banner')
                 ->orderBy('name')
                 ->get();
         });

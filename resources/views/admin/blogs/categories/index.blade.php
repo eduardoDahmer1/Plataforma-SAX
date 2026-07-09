@@ -4,7 +4,7 @@
 <x-admin.card>
     <x-admin.page-header
         title="{{ __('messages.categorias_blog_titulo') }}"
-        description="{{ __('messages.organizacao_editorial_desc') }}"
+        description="Exibindo <span class='text-dark fw-bold'>{{ $categories->count() }}</span> {{ __('messages.categorias') }} · <span class='text-dark fw-bold'>{{ $categories->sum('blogs_count') }}</span> {{ __('messages.artigos') }}"
         actionUrl="{{ route('admin.blog-categories.create') }}"
         actionLabel="{{ __('messages.nova_categoria') }}" />
 
@@ -26,10 +26,12 @@
                             </div>
                         @endif
 
+                        <span class="category-count-badge">{{ $cat->blogs_count }} {{ Str::plural(__('messages.artigo'), $cat->blogs_count) }}</span>
+
                         {{-- Overlay de Ações (Aparece no hover) --}}
                         <div class="category-overlay">
                             <a href="{{ route('admin.blog-categories.edit', $cat) }}" class="btn btn-light btn-sm rounded-0 x-small fw-bold border">
-                                {{ __('messages.editar_btn') }}
+                                <i class="far fa-edit me-1"></i> {{ __('messages.editar_btn') }}
                             </a>
                         </div>
                     </div>
@@ -60,7 +62,11 @@
 
     @else
         <div class="py-5 text-center border">
-            <p class="text-muted small italic mb-0">{{ __('messages.nenhuma_categoria_blog') }}</p>
+            <i class="far fa-folder-open empty-icon d-block"></i>
+            <p class="text-muted small italic mb-3">{{ __('messages.nenhuma_categoria_blog') }}</p>
+            <a href="{{ route('admin.blog-categories.create') }}" class="btn btn-dark rounded-0 btn-sm fw-bold x-small tracking-wider px-4">
+                <i class="fa fa-plus me-1"></i> {{ __('messages.nova_categoria') }}
+            </a>
         </div>
     @endif
 </x-admin.card>

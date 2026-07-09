@@ -14,6 +14,7 @@ class Blog extends Model
         'slug',
         'image',
         'image_caption',
+        'gallery',
         'content',
         'meta_description',
         'is_active',
@@ -28,6 +29,7 @@ class Blog extends Model
         'featured' => 'boolean',
         'published_at' => 'datetime',
         'read_time' => 'integer',
+        'gallery' => 'array',
     ];
 
     protected static function booted(): void

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Services\CategoryDisplayService;
 
 class CategoriasFilhas extends Model
 {
@@ -21,6 +22,13 @@ class CategoriasFilhas extends Model
     public function subcategory()
     {
         return $this->belongsTo(Subcategory::class, 'subcategory_id');
+    }
+
+    public function getNameAttribute($value)
+    {
+        $displayService = app(CategoryDisplayService::class);
+        
+        return $displayService->formatName($value, $this->attributes['slug'] ?? null);
     }
 
     public function category()

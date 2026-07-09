@@ -216,8 +216,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
     Route::resource('blogs', BlogControllerAdmin::class);
     Route::post('blogs/upload-image', [BlogControllerAdmin::class, 'uploadImage'])->name('blogs.upload-image');
-    Route::resource('blog-categories', BlogCategoryController::class);
-    Route::get('admin/blog-categories/{category}', [BlogCategoryController::class, 'show'])->name('admin.blog-categories.show');
+    Route::resource('blog-categories', BlogCategoryController::class)->parameter('blog-categories', 'category');
     Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');
     Route::post('users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
     Route::post('users/{id}/update-type', [\App\Http\Controllers\Admin\UserController::class, 'updateType'])->name('users.updateType');

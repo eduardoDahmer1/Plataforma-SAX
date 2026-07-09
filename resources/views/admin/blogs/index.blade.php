@@ -4,7 +4,7 @@
 <x-admin.card>
     <x-admin.page-header
         title="{{ __('messages.conteudo_editorial_titulo') }}"
-        description="{{ __('messages.gestao_blog_desc') }}">
+        description="Exibindo <span class='text-dark fw-bold'>{{ $blogs->count() }}</span> de {{ $blogs->total() }} artigos registrados">
         <x-slot:actions>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.blog-categories.index') }}" class="btn btn-white border rounded-0 btn-sm fw-bold x-small tracking-wider px-3">
@@ -17,34 +17,102 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    {{-- Lista de Cards --}}
+    <form action="{{ route('admin.blogs.index') }}" method="GET" id="filterForm">
+        <div class="sax-search-wrapper mb-3">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-0 px-3">
+                            <i class="fa fa-search text-muted"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-0 sax-search-input"
+                            placeholder="Buscar por título, subtítulo ou slug..." value="{{ request('search') }}">
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-dark rounded-3 px-3" type="submit">
+                        <i class="fa fa-sliders-h me-2"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sax-filter-bar">
+            <div class="sax-filter-item">
+                <label class="sax-filter-label">{{ __('messages.categorias') }}</label>
+                <select name="category_id" class="form-select sax-filter-select" onchange="this.form.submit()">
+                    <option value="">Todas as Categorias</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" @selected(request('category_id') == $category->id)>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="sax-filter-item">
+                <label class="sax-filter-label">Status</label>
+                <select name="status_filter" class="form-select sax-filter-select" onchange="this.form.submit()">
+                    <option value="">Todos os status</option>
+                    <option value="active" @selected(request('status_filter') == 'active')>{{ __('messages.status_publicado') }}</option>
+                    <option value="draft" @selected(request('status_filter') == 'draft')>{{ __('messages.status_rascunho') }}</option>
+                </select>
+            </div>
+
+            <div class="sax-filter-item">
+                <label class="sax-filter-label">{{ __('messages.ordenar_por') }}</label>
+                <select name="sort_by" class="form-select sax-filter-select" onchange="this.form.submit()">
+                    <option value="">Mais recentes</option>
+                    <option value="oldest" @selected(request('sort_by') == 'oldest')>Mais antigos</option>
+                    <option value="title_az" @selected(request('sort_by') == 'title_az')>Título (A–Z)</option>
+                    <option value="title_za" @selected(request('sort_by') == 'title_za')>Título (Z–A)</option>
+                </select>
+            </div>
+
+            <div class="sax-filter-item">
+                <label class="sax-filter-label">Exibir</label>
+                <select name="per_page" class="form-select sax-filter-select" onchange="this.form.submit()">
+                    @foreach([30, 40, 50] as $opt)
+                        <option value="{{ $opt }}" @selected(request('per_page', 30) == $opt)>{{ $opt }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        @if(request()->hasAny(['search', 'category_id', 'status_filter', 'sort_by']))
+            <div class="mt-2 text-end">
+                <a href="{{ route('admin.blogs.index') }}" class="sax-clear-filters">
+                    <i class="fa fa-times me-1"></i> Limpar filtros
+                </a>
+            </div>
+        @endif
+    </form>
+
     <div class="sax-admin-list">
         @forelse($blogs as $blog)
-        <div class="sax-admin-card mb-3">
+        <div class="sax-admin-card mb-2">
             <div class="row align-items-center g-0">
-                {{-- Imagem --}}
                 <div class="col-auto">
                     <div class="sax-card-img-box">
                         <img src="{{ $blog->image ? Storage::url($blog->image) : asset('storage/uploads/noimage.webp') }}" alt="">
                     </div>
                 </div>
 
-                {{-- Conteúdo --}}
-                <div class="col ps-3">
-                    <div class="mb-1">
+                <div class="col ps-3 min-w-0">
+                    <div class="mb-1 d-flex align-items-center gap-2">
                         <span class="badge bg-light text-muted border rounded-0 x-small-7 fw-bold">
                             {{ $blog->category->name ?? 'STYLE' }}
                         </span>
-                    </div>
-                    <h6 class="fw-bold mb-1 text-uppercase small tracking-tight">{{ $blog->title }}</h6>
-                    <div class="d-flex align-items-center gap-2">
                         <span class="status-pill {{ $blog->is_active ? 'active' : 'draft' }}">
                             {{ $blog->is_active ? __('messages.status_publicado') : __('messages.status_rascunho') }}
                         </span>
                     </div>
+                    <h6 class="fw-bold mb-1 text-uppercase small tracking-tighter text-truncate">{{ $blog->title }}</h6>
+                    @if($blog->subtitle)
+                        <p class="x-small text-muted mb-0 text-truncate">{{ $blog->subtitle }}</p>
+                    @endif
                 </div>
 
-                {{-- Data --}}
                 <div class="col-auto px-4 d-none d-lg-block border-start h-100">
                     <div class="text-center">
                         <span class="d-block x-small-7 text-muted fw-bold tracking-wider">{{ __('messages.publicacao_label') }}</span>
@@ -52,7 +120,6 @@
                     </div>
                 </div>
 
-                {{-- Ações --}}
                 <div class="col-auto px-4 border-start">
                     <div class="d-flex gap-3">
                         <a href="{{ route('blogs.show', $blog->slug) }}" target="_blank" class="action-icon" title="{{ __('messages.vista_previa') }}">

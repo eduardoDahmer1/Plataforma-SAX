@@ -11,21 +11,62 @@ use Illuminate\Support\Str;
 
 class BlogControllerAdmin extends Controller
 {
-    // Lista blogs
-    public function index()
+    public function index(Request $request)
     {
-        $blogs = Blog::with('category')->latest()->paginate(10);
-        return view('admin.blogs.index', compact('blogs'));
+        $search = $request->get('search');
+        $categoryId = $request->get('category_id');
+        $statusFilter = $request->get('status_filter');
+        $sortBy = $request->get('sort_by');
+        $perPage = $request->get('per_page', 30);
+
+        $blogs = Blog::with('category')
+            ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
+                $q2->where('title', 'LIKE', "%{$search}%")
+                    ->orWhere('subtitle', 'LIKE', "%{$search}%")
+                    ->orWhere('slug', 'LIKE', "%{$search}%");
+            }))
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($statusFilter, function ($q) use ($statusFilter) {
+                if ($statusFilter === 'active') {
+                    $q->where('is_active', 1);
+                } elseif ($statusFilter === 'draft') {
+                    $q->where('is_active', 0);
+                }
+            })
+            ->when(
+                $sortBy,
+                function ($q) use ($sortBy) {
+                    switch ($sortBy) {
+                        case 'oldest':
+                            $q->orderBy('created_at', 'asc');
+                            break;
+                        case 'title_az':
+                            $q->orderBy('title', 'asc');
+                            break;
+                        case 'title_za':
+                            $q->orderBy('title', 'desc');
+                            break;
+                        default:
+                            $q->orderBy('created_at', 'desc');
+                            break;
+                    }
+                },
+                fn($q) => $q->orderBy('created_at', 'desc'),
+            )
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        $categories = BlogCategory::orderBy('name')->get();
+
+        return view('admin.blogs.index', compact('blogs', 'categories'));
     }
 
-    // Form para criar blog
     public function create()
     {
         $categories = BlogCategory::orderBy('name')->get();
         return view('admin.blogs.create', compact('categories'));
     }
 
-    // Salva blog novo
     public function store(Request $request)
     {
         $data = $this->validateBlog($request);
@@ -34,24 +75,31 @@ class BlogControllerAdmin extends Controller
             $data['image'] = $this->processImage($request->file('image'));
         }
 
-        Blog::create($data);
+        $data['gallery'] = $this->processGalleryUploads($request);
+
+        $blog = Blog::create($data);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Blog criado com sucesso!',
+                'redirect' => route('admin.blogs.edit', $blog),
+            ]);
+        }
 
         return redirect()->route('admin.blogs.index')->with('success', 'Blog criado com sucesso!');
     }
 
-    // Form para editar
     public function edit(Blog $blog)
     {
         $categories = BlogCategory::orderBy('name')->get();
         return view('admin.blogs.edit', compact('blog', 'categories'));
     }
 
-    // Atualiza blog
     public function update(Request $request, Blog $blog)
     {
         $data = $this->validateBlog($request, $blog->id);
 
-        // Remove imagens antigas do conteúdo
         $oldImages = $this->extractImageUrls($blog->content);
         $newImages = $this->extractImageUrls($data['content']);
         $removedImages = array_diff($oldImages, $newImages);
@@ -59,18 +107,38 @@ class BlogControllerAdmin extends Controller
             $this->deleteImageByUrl($url);
         }
 
-        // Atualiza imagem principal
         if ($request->hasFile('image')) {
             if ($blog->image) Storage::disk('public')->delete($blog->image);
             $data['image'] = $this->processImage($request->file('image'));
         }
 
+        $keptGallery = array_values(array_filter((array) $request->input('gallery_actual', [])));
+        foreach (array_diff($blog->gallery ?? [], $keptGallery) as $removed) {
+            Storage::disk('public')->delete($removed);
+        }
+        $data['gallery'] = array_merge($keptGallery, $this->processGalleryUploads($request));
+
         $blog->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Blog atualizado com sucesso!',
+                'blog' => [
+                    'slug' => $blog->slug,
+                    'updated_at' => $blog->updated_at->format('d/m/Y H:i'),
+                    'image_url' => $blog->image ? Storage::url($blog->image) : null,
+                    'gallery' => collect($blog->gallery ?? [])->map(fn($path) => [
+                        'path' => $path,
+                        'url' => Storage::url($path),
+                    ])->values(),
+                ],
+            ]);
+        }
 
         return redirect()->route('admin.blogs.index')->with('success', 'Blog atualizado com sucesso!');
     }
 
-    // Remove blog
     public function destroy(Blog $blog)
     {
         if ($blog->image) Storage::disk('public')->delete($blog->image);
@@ -85,13 +153,22 @@ class BlogControllerAdmin extends Controller
         return redirect()->route('admin.blogs.index')->with('success', 'Blog removido com sucesso!');
     }
 
-    // Retorna blog JSON (útil para modal preview)
     public function show(Blog $blog)
     {
         return response()->json($blog->load('category'));
     }
 
-    /*** Helpers ***/
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|max:5120',
+        ]);
+
+        $path = $this->processImage($request->file('file'), 'blogs/content');
+
+        return response()->json(['location' => Storage::url($path)]);
+    }
+
     private function validateBlog(Request $request, $id = null)
     {
         $data = $request->validate([
@@ -99,13 +176,21 @@ class BlogControllerAdmin extends Controller
             'subtitle' => 'nullable|string|max:2000',
             'slug' => 'nullable|unique:blogs,slug' . ($id ? ",$id" : ''),
             'image' => 'nullable|image',
+            'image_caption' => 'nullable|string|max:255',
             'content' => 'required|string',
+            'meta_description' => 'nullable|string|max:160',
+            'read_time' => 'nullable|integer|min:0|max:999',
+            'author' => 'nullable|string|max:255',
             'published_at' => 'nullable|date',
             'is_active' => 'sometimes|boolean',
+            'featured' => 'sometimes|boolean',
             'category_id' => 'required|exists:blog_categories,id',
+            'gallery' => 'nullable|array|max:12',
+            'gallery.*' => 'nullable|image|max:4096',
         ]);
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
+        $data['featured'] = $request->has('featured') ? 1 : 0;
         $data['published_at'] = $data['published_at'] ?? null;
 
         if (empty($data['slug'])) {
@@ -115,9 +200,21 @@ class BlogControllerAdmin extends Controller
         return $data;
     }
 
-    private function processImage($file)
+    private function processGalleryUploads(Request $request)
     {
-        $originalPath = $file->store('blogs', 'public');
+        if (!$request->hasFile('gallery')) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            fn($file) => $this->processImage($file, 'blogs/gallery'),
+            $request->file('gallery'),
+        )));
+    }
+
+    private function processImage($file, $folder = 'blogs')
+    {
+        $originalPath = $file->store($folder, 'public');
         $fullPath = storage_path('app/public/' . $originalPath);
         $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
         $image = null;
@@ -162,9 +259,22 @@ class BlogControllerAdmin extends Controller
     private function deleteImageByUrl($url)
     {
         $path = parse_url($url, PHP_URL_PATH);
+        if (!$path) {
+            return;
+        }
+
         $relative = ltrim(str_replace('/storage/', '', $path), '/');
-        if (Storage::disk('public')->exists($relative)) {
-            Storage::disk('public')->delete($relative);
+
+        if (str_contains($relative, '..') || !str_starts_with($relative, 'blogs/')) {
+            return;
+        }
+
+        try {
+            if (Storage::disk('public')->exists($relative)) {
+                Storage::disk('public')->delete($relative);
+            }
+        } catch (\Throwable $e) {
+            // Ignora URLs malformadas/externas — nunca deve bloquear a exclusão do blog.
         }
     }
 }

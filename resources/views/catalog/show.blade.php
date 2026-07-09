@@ -44,6 +44,8 @@
 
             $entityName = $entity->name ?? '';
             $mobileFilterId = 'catalogMobileFilter_' . ($entity->id ?? uniqid());
+            
+            $isEditionPrivee = (isset($entity->slug) && $entity->slug === 'edition-privee') || (request()->is('*edition-privee*'));
         @endphp
 
         @if ($heroBannerUrl)
@@ -62,7 +64,7 @@
                 </a>
 
                 <div class="category-logo-container mt-3">
-                    <h1 class="category-name-text text-uppercase fw-light">
+                    <h1 class="category-name-text fw-light {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}">
                         {{ $entityName }}
                     </h1>
                 </div>
@@ -70,7 +72,7 @@
                 @if (!empty($breadcrumb ?? []))
                     <div class="child-breadcrumb mt-2">
                         @foreach ($breadcrumb as $index => $crumb)
-                            <span class="text-muted small text-uppercase" style="letter-spacing: 1px;">
+                            <span class="text-muted small {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}" style="letter-spacing: 1px;">
                                 {{ $crumb }}
                             </span>
                             @if (!$loop->last)
@@ -105,7 +107,7 @@
 
                 <div class="col-12 col-lg-9">
                     <div class="catalog-toolbar d-flex align-items-center justify-content-between mb-3">
-                        <p class="catalog-toolbar-label mb-0">
+                        <p class="catalog-toolbar-label mb-0 {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}">
                             {{ $entityName }}
                         </p>
                         <button
@@ -167,6 +169,10 @@
 
 @push('styles')
     <style>
+        .font-edition-privee {
+            text-transform: none !important;
+        }
+
         .extra-small {
             font-size: 0.65rem;
         }
@@ -212,7 +218,6 @@
 
         .catalog-toolbar-label {
             font-size: 10px;
-            text-transform: uppercase;
             letter-spacing: 1.8px;
             color: #696255;
             font-weight: 700;

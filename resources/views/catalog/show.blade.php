@@ -57,26 +57,27 @@
             <div class="py-3"></div>
         @endif
 
-        <div class="category-identity-section py-4 border-bottom bg-white">
+        <div class="category-identity-section">
             <div class="container text-center">
-                <a href="{{ $backUrl }}" class="back-link-minimal">
-                    <i class="fas fa-chevron-left me-1"></i> {{ $backLabel }}
-                </a>
-
-                <div class="category-logo-container mt-3">
-                    <h1 class="category-name-text fw-light {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}">
+                <div class="category-logo-container">
+                    <h1 class="category-name-text {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}">
                         {{ $entityName }}
                     </h1>
+                    <span class="category-name-accent" aria-hidden="true"></span>
                 </div>
 
                 @if (!empty($breadcrumb ?? []))
-                    <div class="child-breadcrumb mt-2">
+                    <div class="child-breadcrumb mt-3">
                         @foreach ($breadcrumb as $index => $crumb)
-                            <span class="text-muted small {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}" style="letter-spacing: 1px;">
-                                {{ $crumb }}
-                            </span>
                             @if (!$loop->last)
-                                <i class="fas fa-chevron-right mx-2 extra-small opacity-25"></i>
+                                <a href="{{ $crumb['url'] }}" class="breadcrumb-crumb breadcrumb-crumb-link {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}">
+                                    {{ $crumb['label'] }}
+                                </a>
+                                <span class="breadcrumb-sep">/</span>
+                            @else
+                                <span class="breadcrumb-crumb {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}">
+                                    {{ $crumb['label'] }}
+                                </span>
                             @endif
                         @endforeach
                     </div>
@@ -183,11 +184,14 @@
 
         .category-identity-section {
             background: linear-gradient(180deg, #ffffff 0%, #faf9f7 100%) !important;
+            padding: 2.75rem 0 2.5rem;
+            border-bottom: 1px solid #efede8;
         }
 
         .category-logo-container {
             min-height: 46px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
@@ -198,17 +202,47 @@
             object-fit: contain;
         }
 
-        .back-link-minimal {
-            text-decoration: none;
-            color: #000;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: opacity 0.3s;
+        .category-name-accent {
+            display: block;
+            width: 42px;
+            height: 2px;
+            margin: 0.9rem auto 0;
+            background: #b2945e;
         }
 
-        .back-link-minimal:hover {
-            opacity: 0.6;
+        .child-breadcrumb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .breadcrumb-crumb {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            color: #928c7e;
+        }
+
+        .breadcrumb-crumb:last-child {
+            color: #29251f;
+            font-weight: 700;
+        }
+
+        a.breadcrumb-crumb-link {
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a.breadcrumb-crumb-link:hover {
+            color: #29251f;
+            text-decoration: underline;
+        }
+
+        .breadcrumb-sep {
+            color: #cbc3b6;
+            font-size: 0.7rem;
         }
 
         .catalog-toolbar {
@@ -297,9 +331,17 @@
         }
 
         .category-name-text {
-            font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+            font-family: 'Playfair Display', Georgia, serif;
+            font-weight: 700;
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
             margin-bottom: 0;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            color: #1a1a1a;
+        }
+
+        .category-name-text.font-edition-privee {
+            font-weight: 400;
+            font-style: italic;
         }
 
         @media (max-width: 991px) {

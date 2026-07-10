@@ -53,6 +53,11 @@ class AppServiceProvider extends ServiceProvider
             require_once app_path('Helpers/CurrencyHelper.php');
         }
 
+        // 3b. Carrega helper de locale (normaliza pt_BR -> pt-br para page_translations)
+        if (file_exists(app_path('Helpers/LocaleHelper.php'))) {
+            require_once app_path('Helpers/LocaleHelper.php');
+        }
+
         // 4. Força HTTPS em produção
         if (config('app.env') === 'production') {
             URL::forceScheme('https');

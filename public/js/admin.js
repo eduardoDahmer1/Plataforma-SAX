@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!form) return;
 
     function galleryItemHtml(path, url) {
-        return '<div class="gallery-preview-item shadow-sm border">' +
+        return '<div class="gallery-preview-item is-existing shadow-sm border">' +
             '<img src="' + url + '" class="w-100 h-100 object-fit-cover">' +
             '<input type="hidden" name="gallery_actual[]" value="' + path + '">' +
             '<button type="button" class="gallery-remove-btn"><i class="fas fa-times"></i></button>' +
@@ -304,11 +304,20 @@ document.addEventListener('DOMContentLoaded', function () {
                             const counter = document.getElementById('blogGaleriaCount');
                             if (counter) counter.textContent = data.blog.gallery.length;
                         }
+
+                        // Os arquivos pendentes já foram enviados e viraram imagens salvas acima —
+                        // limpa o acumulador para não reenviá-los na próxima vez que o form for salvo.
+                        if (window.resetBlogGalleryStore) window.resetBlogGalleryStore();
                     }
                 } else if (status === 422 && data.errors) {
+                    const unmatchedMessages = [];
+
                     Object.keys(data.errors).forEach(function (field) {
                         const input = form.querySelector('[name="' + field + '"]');
-                        if (!input) return;
+                        if (!input) {
+                            unmatchedMessages.push(data.errors[field][0]);
+                            return;
+                        }
                         input.classList.add('is-invalid');
                         const feedback = document.createElement('div');
                         feedback.className = 'invalid-feedback d-block';
@@ -316,7 +325,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         feedback.textContent = data.errors[field][0];
                         input.insertAdjacentElement('afterend', feedback);
                     });
-                    if (window.saxToast) saxToast('error', 'Verifique os campos destacados.');
+
+                    if (window.saxToast) {
+                        // Erros de "gallery.N"/"image" não têm um input com esse name exato no DOM
+                        // (são arquivos dentro de um input múltiplo) — mostra a mensagem real em vez
+                        // do aviso genérico, senão o usuário nunca descobre que o motivo foi o tamanho do arquivo.
+                        saxToast('error', unmatchedMessages[0] || 'Verifique os campos destacados.');
+                    }
                 } else {
                     if (window.saxToast) saxToast('error', data.message || 'Erro ao salvar o artigo.');
                 }
@@ -331,6 +346,85 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
     });
+})();
+
+// ── Blog: Galeria — acumula arquivos entre seleções, gera preview e trava em 10 imagens ──
+// Sem isto, cada nova seleção no <input multiple> substitui a anterior (perdendo fotos)
+// e não havia nenhuma pré-visualização das imagens ainda não enviadas.
+(function () {
+    var input = document.getElementById('blogGalleryInput');
+    var preview = document.getElementById('blogGaleriaPreview');
+    var counter = document.getElementById('blogGaleriaCount');
+    if (!input || !preview) return;
+
+    var MAX_TOTAL = 10;
+    var store = new DataTransfer();
+    var urls = [];
+
+    function existingCount() {
+        return preview.querySelectorAll('.gallery-preview-item.is-existing').length;
+    }
+
+    function renderPending() {
+        urls.forEach(function (u) { URL.revokeObjectURL(u); });
+        urls = [];
+        preview.querySelectorAll('.gallery-preview-item.is-pending').forEach(function (el) { el.remove(); });
+
+        Array.from(store.files).forEach(function (file, index) {
+            var url = URL.createObjectURL(file);
+            urls.push(url);
+
+            var item = document.createElement('div');
+            item.className = 'gallery-preview-item is-pending shadow-sm border';
+            item.dataset.fileIndex = index;
+            item.innerHTML =
+                '<img src="' + url + '" class="w-100 h-100 object-fit-cover">' +
+                '<button type="button" class="gallery-remove-btn"><i class="fas fa-times"></i></button>';
+            preview.appendChild(item);
+        });
+
+        if (counter) counter.textContent = existingCount() + store.files.length;
+    }
+
+    input.addEventListener('change', function () {
+        var incoming = Array.from(input.files);
+        var room = MAX_TOTAL - existingCount() - store.files.length;
+
+        if (incoming.length > room) {
+            if (window.saxToast) saxToast('error', 'Você pode ter no máximo ' + MAX_TOTAL + ' imagens na galeria.');
+            incoming = incoming.slice(0, Math.max(room, 0));
+        }
+
+        incoming.forEach(function (file) {
+            var dup = Array.from(store.files).some(function (f) {
+                return f.name === file.name && f.size === file.size;
+            });
+            if (!dup) store.items.add(file);
+        });
+
+        input.files = store.files;
+        renderPending();
+    });
+
+    preview.addEventListener('click', function (e) {
+        var btn = e.target.closest('.gallery-remove-btn');
+        if (!btn) return;
+        var item = btn.closest('.gallery-preview-item.is-pending');
+        if (!item) return;
+
+        e.stopPropagation();
+        store.items.remove(parseInt(item.dataset.fileIndex, 10));
+        input.files = store.files;
+        renderPending();
+    });
+
+    // Chamado após um save AJAX bem-sucedido: os pendentes já foram persistidos no servidor.
+    window.resetBlogGalleryStore = function () {
+        store = new DataTransfer();
+        input.files = store.files;
+        input.value = '';
+        renderPending();
+    };
 })();
 
 // 1. Inicialização segura do Objeto de Estados

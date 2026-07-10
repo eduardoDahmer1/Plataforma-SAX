@@ -126,7 +126,7 @@
                     @endif
                 </div>
 
-                @if ($currentUser)
+                @if ($currentUser && !$isAdminUser)
                     <a href="{{ route('user.preferences') }}" class="d-none d-sm-inline fs-5 color-black">
                         <i class="fa-regular fa-heart"></i>
                     </a>

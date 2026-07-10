@@ -6,6 +6,12 @@
         title="{{ __('messages.menu_produtos') }}"
         description="Exibindo <span class='text-dark fw-bold'>{{ $products->count() }}</span> de {{ $products->total() }} produtos registrados">
         <x-slot:actions>
+            <button type="button" id="btnRevalidateProducts" class="btn btn-outline-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1"
+                data-url="{{ route('admin.products.revalidateStatus') }}"
+                data-label-active="{{ __('messages.status_ativo') }}"
+                data-label-inactive="{{ __('messages.status_inativo') }}">
+                <i class="fa fa-sync me-2"></i> Verificar produtos
+            </button>
             <a href="{{ route('admin.products.review') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
                 <i class="fa fa-file-alt me-2"></i> Ver relatório de edições
             </a>
@@ -25,7 +31,7 @@
                     <a href="{{ route('admin.products.index') }}" class="btn btn-primary">Ver todos os produtos</a>
                 </div>
             @else
-                <div class="row g-3">
+                <div class="sax-admin-list">
                     @foreach ($products as $product)
                         @php
                             $highlightsValues = json_decode($product->highlights ?? '{}', true);
@@ -44,86 +50,75 @@
                                     }
                                 }
                                 if (!$imageUrl) {
-                                    $imageUrl = 'https://plataforma.cloudcrow.com.br/storage/uploads/noimage.webp';
+                                    $imageUrl = asset('storage/uploads/noimage.webp');
                                 }
                             } else {
-                                $imageUrl = 'https://plataforma.cloudcrow.com.br/storage/uploads/noimage.webp';
+                                $imageUrl = asset('storage/uploads/noimage.webp');
                             }
                         @endphp
 
-                        <div class="col-12">
-                            <div class="border rounded p-3 d-flex flex-column flex-md-row align-items-center gap-3 hover-shadow transition">
+                        <div class="sax-product-card mb-2" id="product-card-{{ $product->id }}">
+                            <div class="row align-items-center g-2 g-md-0">
                                 <!-- Imagem -->
-                                <div class="flex-shrink-0 text-center position-relative" style="width: 150px;">
-                                    <img src="{{ $imageUrl }}" alt="{{ $product->name }}"
-                                        class="img-fluid rounded shadow-sm"
-                                        style="max-height:9em; object-fit:cover; display:block; margin:auto;">
-                                    @if (!$product->status)
-                                        <span class="position-absolute top-0 start-0 badge bg-danger">{{ __('messages.status_inativo') }}</span>
-                                    @endif
+                                <div class="col-auto">
+                                    <div class="sax-product-img-box">
+                                        <img src="{{ $imageUrl }}" alt="{{ $product->name }}"
+                                            class="{{ $product->status ? '' : 'is-inactive' }}">
+                                    </div>
                                 </div>
 
                                 <!-- Informações -->
-                                <div class="flex-grow-1 d-flex flex-column justify-content-between h-100 w-100">
-                                    <div>
-                                        <h6 class="fw-bold mb-1 text-center text-md-start">
-                                            {{ $product->name }}
-                                        </h6>
-                                        <p class="small text-muted mb-1 text-center text-md-start">
-                                            {{ $product->external_name }}
-                                        </p>
-                                        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-2">
-                                            <span class="badge bg-secondary">SKU: {{ $product->sku }}</span>
-                                            @if ($product->product_role)
-                                                <span class="badge {{ $product->product_role === 'P' ? 'bg-primary' : 'bg-dark' }}">
-                                                    {{ $product->product_role === 'P' ? 'P' : 'F' }}
-                                                </span>
-                                            @endif
-                                            @if ($product->brand)
-                                                <span class="badge bg-dark">{{ $product->brand->name }}</span>
-                                            @endif
-                                        </div>
-                                        <p class="fw-semibold text-success mb-1 text-center text-md-start fs-5">
-                                            {{ currency_format($product->price) }}
-                                        </p>
-                                        <p class="small {{ $product->stock > 0 ? 'text-primary' : 'text-danger' }} mb-2 text-center text-md-start">
-                                            <i class="fa {{ $product->stock > 0 ? 'fa-check-circle' : 'fa-times-circle' }} me-1"></i>
+                                <div class="col ps-3 min-w-0">
+                                    <div class="mb-1 d-flex flex-wrap align-items-center gap-2">
+                                        <span class="badge bg-light text-muted border rounded-0 x-small-7 fw-bold">SKU: {{ $product->sku }}</span>
+                                        @if ($product->product_role)
+                                            <span class="badge bg-light text-muted border rounded-0 x-small-7 fw-bold">
+                                                {{ $product->product_role === 'P' ? 'P' : 'F' }}
+                                            </span>
+                                        @endif
+                                        @if ($product->brand)
+                                            <span class="badge bg-light text-muted border rounded-0 x-small-7 fw-bold">{{ $product->brand->name }}</span>
+                                        @endif
+                                        <span class="product-status-pill {{ $product->status ? 'is-on' : 'is-off' }}">
+                                            {{ $product->status ? __('messages.status_ativo') : __('messages.status_inativo') }}
+                                        </span>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 small text-truncate">{{ $product->name }}</h6>
+                                    <p class="x-small text-muted mb-1 text-truncate">{{ $product->external_name }}</p>
+                                    <div class="d-flex align-items-center gap-2 x-small fw-bold text-dark">
+                                        <span>{{ currency_format($product->price) }}</span>
+                                        <span class="text-muted">•</span>
+                                        <span class="text-muted fw-normal">
                                             {{ $product->stock > 0 ? 'Estoque: ' . $product->stock : 'Sem estoque' }}
-                                        </p>
+                                        </span>
                                     </div>
+                                </div>
 
-                                    <!-- Ações -->
-                                    <div class="d-flex flex-wrap gap-2 mt-2">
-                                        <form action="{{ route('admin.products.toggleStatus', $product->id) }}"
-                                            method="POST" class="flex-grow-1">
-                                            @csrf
-                                            <button class="btn btn-sm w-100 {{ $product->status ? 'btn-success' : 'btn-secondary' }}" type="submit">
-                                                <i class="fa {{ $product->status ? 'fa-toggle-on' : 'fa-toggle-off' }} me-1"></i>
-                                                {{ $product->status ? __('messages.status_ativo') : __('messages.status_inativo') }}
-                                            </button>
-                                        </form>
+                                <!-- Ações -->
+                                <div class="col-12 col-md-auto sax-product-actions">
+                                    <button type="button" class="action-icon action-icon-lg btn-toggle-status {{ $product->status ? 'is-on' : '' }}"
+                                        title="Ativar/Desativar"
+                                        data-url="{{ route('admin.products.toggleStatus', $product->id) }}"
+                                        data-label-active="{{ __('messages.status_ativo') }}"
+                                        data-label-inactive="{{ __('messages.status_inativo') }}">
+                                        <i class="fa {{ $product->status ? 'fa-toggle-on' : 'fa-toggle-off' }} icon-toggle"></i>
+                                    </button>
 
-                                        <a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => request()->fullUrl()]) }}"
-                                            class="btn btn-sm btn-warning flex-grow-1">
-                                            <i class="fa fa-edit me-1"></i> {{ __('messages.editar') }}
-                                        </a>
+                                    <button type="button" class="action-icon action-icon-lg" title="Destaques"
+                                        data-bs-toggle="modal" data-bs-target="#highlightsModal{{ $product->id }}">
+                                        <i class="far fa-star"></i>
+                                    </button>
 
-                                        <button type="button" class="btn btn-sm btn-info flex-grow-1"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#highlightsModal{{ $product->id }}">
-                                            <i class="fa fa-star me-1"></i> Destaques
-                                        </button>
+                                    <a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => request()->fullUrl()]) }}"
+                                        class="action-icon action-icon-lg" title="{{ __('messages.editar') }}">
+                                        <i class="far fa-edit"></i>
+                                    </a>
 
-                                        <form action="{{ route('admin.products.destroy', $product->id) }}"
-                                            method="POST" class="flex-grow-1">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-danger w-100"
-                                                onclick="return confirm('Tem certeza que deseja excluir este produto?')">
-                                                <i class="fa fa-trash me-1"></i> Excluir
-                                            </button>
-                                        </form>
-                                    </div>
+                                    <button type="button" class="action-icon action-icon-lg btn-delete-product" title="Excluir"
+                                        data-url="{{ route('admin.products.destroy', $product->id) }}"
+                                        data-product-id="{{ $product->id }}">
+                                        <i class="far fa-trash-alt"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -140,7 +135,7 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title">
-                                                <i class="fa fa-star text-warning me-2"></i>
+                                                <i class="far fa-star me-2"></i>
                                                 Destaques do Produto
                                             </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -174,7 +169,7 @@
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                                 Fechar
                                             </button>
-                                            <button type="submit" class="btn btn-primary">
+                                            <button type="submit" class="btn btn-dark">
                                                 <i class="fa fa-save me-1"></i> Salvar
                                             </button>
                                         </div>

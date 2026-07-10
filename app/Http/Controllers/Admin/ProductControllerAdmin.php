@@ -389,9 +389,14 @@ class ProductControllerAdmin extends Controller
                 }
                 $data['gallery'] = json_encode(array_values($currentGallery));
 
-                $hasPhoto = !empty($data['photo']) || !empty($product->photo);
-                $productNameForStatus = $data['name'] ?? $product->name;
-                $data['status'] = $hasPhoto && !empty($productNameForStatus) && $data['price'] > 5 && $data['stock'] > 0 ? 1 : 0;
+                $photoForStatus = $data['photo'] ?? $product->photo;
+                $galleryForStatus = $data['gallery'] ?? $product->gallery;
+                $descriptionForStatus = $data['description'] ?? $product->description;
+                $data['status'] = Product::hasUsableImage($photoForStatus, $galleryForStatus)
+                    && (float) $data['price'] > 0
+                    && (int) $data['stock'] > 0
+                    && trim((string) $descriptionForStatus) !== ''
+                    ? 1 : 0;
 
                 $data['highlights'] = json_encode($request->input('highlights', []));
                 $data['stores'] = json_encode($request->input('stores', []));
@@ -703,7 +708,51 @@ class ProductControllerAdmin extends Controller
             $this->deleteProductImages($product);
             $product->delete();
         }
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Produto excluído com sucesso!',
+            ]);
+        }
+
         return redirect()->route('admin.products.index')->with('success', 'Produto excluído com sucesso!');
+    }
+
+    // Revalida em massa: ativa quem passa nas regras mínimas e desativa quem não passa.
+    // Existe porque o status normalmente já é recalculado ao editar um produto (update()),
+    // mas atualizações que não passam por lá (ex.: ajuste de estoque direto) podem deixá-lo desatualizado.
+    public function revalidateStatus()
+    {
+        $products = Product::select(['id', 'photo', 'gallery', 'description', 'price', 'stock', 'status'])->get();
+
+        $toActivate = [];
+        $toDeactivate = [];
+
+        foreach ($products as $product) {
+            $shouldBeActive = $product->meetsActiveRequirements();
+
+            if ($shouldBeActive && !$product->status) {
+                $toActivate[] = $product->id;
+            } elseif (!$shouldBeActive && $product->status) {
+                $toDeactivate[] = $product->id;
+            }
+        }
+
+        if (!empty($toActivate)) {
+            Product::whereIn('id', $toActivate)->update(['status' => 1]);
+        }
+
+        if (!empty($toDeactivate)) {
+            Product::whereIn('id', $toDeactivate)->update(['status' => 0]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'activated_ids' => $toActivate,
+            'deactivated_ids' => $toDeactivate,
+            'message' => count($toActivate) . ' produto(s) ativado(s) e ' . count($toDeactivate) . ' desativado(s).',
+        ]);
     }
 
     public function getSubcategories($categoryId)

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\SlugRedirect;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -36,8 +38,17 @@ class CategoryController extends Controller
         return view('categories.index', compact('categories', 'attribute'));
     }
 
-    public function show(Category $category)
+    public function show($slug)
     {
+        try {
+            $category = Category::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        } catch (ModelNotFoundException $e) {
+            if ($redirectUrl = SlugRedirect::resolveUrl('category', $slug)) {
+                return redirect($redirectUrl, 301);
+            }
+            throw $e;
+        }
+
         if ($category->status != 1) {
             abort(404);
         }

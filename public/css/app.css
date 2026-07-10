@@ -504,7 +504,7 @@ box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
 }
 
 .product-card-standard__media {
-background: #f3f3f3;
+background: var(--surface);
 border-bottom: 1px solid #ececec;
 aspect-ratio: 4 / 5;
 display: flex;
@@ -516,7 +516,8 @@ overflow: hidden;
 .product-card-standard__media img {
 width: 100%;
 height: 100%;
-object-fit: cover;
+object-fit: contain;
+mix-blend-mode: multiply;
 }
 
 .product-card-standard__body {
@@ -654,7 +655,7 @@ align-items: stretch;
 .stacked-banner-card {
 position: relative;
 overflow: hidden;
-border-radius: 18px;
+border-radius: 5px;
 }
 
 .exclusive-panel {
@@ -665,7 +666,6 @@ gap: 1.25rem;
 padding: clamp(1.5rem, 3vw, 3rem);
 min-height: 100%;
 background: rgba(255, 255, 255, 0.88);
-border: 1px solid rgba(0, 0, 0, 0.06);
 box-shadow: 0 18px 50px rgba(0, 0, 0, 0.05);
 }
 
@@ -714,7 +714,7 @@ transition: all 0.25s ease;
 
 .exclusive-tag {
 padding: 0.6rem 0.9rem;
-border-radius: 999px;
+border-radius: 5px;
 background: #f7f3ea;
 border: 1px solid rgba(0, 0, 0, 0.06);
 font-size: 0.72rem;
@@ -738,7 +738,7 @@ gap: 0.9rem;
 .exclusive-btn {
 min-height: 48px;
 padding: 0 1.2rem;
-border-radius: 999px;
+border-radius: 5px;
 font-size: 0.75rem;
 font-weight: 800;
 letter-spacing: 0.12em;
@@ -876,7 +876,7 @@ padding-bottom: 2rem !important;
 
 .exclusive-panel {
 padding: 1.4rem;
-border-radius: 16px;
+border-radius: 5px;
 }
 
 .exclusive-title {
@@ -1257,7 +1257,7 @@ width: 100%;
 max-width: 560px;
 background: #fff;
 padding: 16px;
-border-radius: 16px;
+border-radius: 5px;
 box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
 transform: translateY(-12px);
 animation: slideIn 0.3s forwards;
@@ -1903,8 +1903,6 @@ color: #0f172a;
     .btn-menu-open {
         width: 2.2rem;
         height: 2.2rem;
-        border-radius: 999px;
-        border: 1px solid #e5e7eb;
         display: inline-flex;
         align-items: center;
         justify-content: center;

@@ -44,7 +44,7 @@ class CategoriasFilhasControllerAdmin extends Controller
         ]);
 
         $data = $request->only(['name', 'subcategory_id']);
-        $data['slug'] = Str::slug($request->name);
+        $data['slug'] = $this->resolveUniqueSlug($request->name);
 
         if (!empty($request->subcategory_id)) {
             $subcategory = Subcategory::find($request->subcategory_id);
@@ -90,7 +90,7 @@ class CategoriasFilhasControllerAdmin extends Controller
         ]);
 
         $data = $request->only(['name', 'subcategory_id']);
-        $data['slug'] = Str::slug($request->name);
+        $data['slug'] = $this->resolveUniqueSlug($request->name, $categorias_filha->id);
 
         if (!empty($request->subcategory_id)) {
             $subcategory = Subcategory::find($request->subcategory_id);
@@ -150,6 +150,22 @@ class CategoriasFilhasControllerAdmin extends Controller
     }
 
     // ... (restante dos métodos auxiliares permanecem iguais)
+
+    // Gera um slug único (globalmente, entre todas as categorias filhas) em vez de deixar colidir
+    // quando o mesmo nome (ex: "Pantalones") é usado em subcategorias diferentes.
+    private function resolveUniqueSlug(string $name, $exceptId = null): string
+    {
+        $base = Str::slug($name) ?: 'categoria-filha';
+        $slug = $base;
+        $suffix = 2;
+
+        while (CategoriasFilhas::where('slug', $slug)->when($exceptId, fn($q) => $q->where('id', '!=', $exceptId))->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
+    }
 
     private function convertToWebp($file, $prefix)
     {

@@ -8,7 +8,7 @@
 
     @if ($query)
         <div class="mb-5">
-            <p class="x-small text-uppercase text-muted tracking-widest mb-1">{{ __('messages.resultados_para') }}</p>
+            <p class="x-small text-uppercase text-muted tracking-widest mb-1">{{ __('messages.results_for') }}</p>
             <h1 class="h4 fw-light text-uppercase" style="letter-spacing: 2px;">"{{ $query }}"</h1>
         </div>
     @endif

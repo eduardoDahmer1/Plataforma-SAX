@@ -393,7 +393,8 @@
 
 .blog-article-hero__media {
     position: relative;
-    min-height: 28rem;
+    aspect-ratio: 4 / 3;
+    max-height: 22rem;
     border-radius: 1.5rem;
     overflow: hidden;
     background: var(--surface);
@@ -678,9 +679,13 @@
         grid-template-columns: 1fr;
     }
 
-    .blog-featured__media,
-    .blog-article-hero__media {
+    .blog-featured__media {
         min-height: 22rem;
+    }
+
+    .blog-article-hero__media {
+        aspect-ratio: 16 / 9;
+        max-height: 20rem;
     }
 }
 
@@ -712,9 +717,14 @@
         padding: 1rem;
     }
 
-    .blog-featured__media,
-    .blog-article-hero__media {
+    .blog-featured__media {
         min-height: 16rem;
+        border-radius: 1rem;
+    }
+
+    .blog-article-hero__media {
+        aspect-ratio: 16 / 9;
+        max-height: 14rem;
         border-radius: 1rem;
     }
 

@@ -99,7 +99,7 @@ Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCate
 Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
 Route::get('/categorias-filhas/{categoriasfilhas}/produtos', [ProductController::class, 'byCategoriasFilhas'])->name('products.byCategoriasFilhas');
 Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
-Route::get('/categorias/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
+Route::get('/categorias/{slug}', [CategoryController::class, 'show'])->name('categories.show');
 Route::get('/subcategorias', [SubcategoryController::class, 'index'])->name('subcategories.index');
 Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->name('subcategories.show');
 Route::get('/categorias-filhas', [PublicCategoriasFilhasController::class, 'index'])->name('categorias-filhas.index');
@@ -170,6 +170,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('cafe_bistro', CafeBistroAdminController::class);
     Route::resource('institucional', InstitucionalAdminController::class);
     Route::post('products/{product}/toggle-status', [ProductControllerAdmin::class, 'toggleStatus'])->name('products.toggleStatus');
+    Route::post('products/revalidate-status', [ProductControllerAdmin::class, 'revalidateStatus'])->name('products.revalidateStatus');
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
     Route::get('activate-control', [ActivateBrandsAndCategoriesController::class, 'index'])->name('activate.index');
     Route::post('activate-toggle/{type}/{id}', [ActivateBrandsAndCategoriesController::class, 'toggleStatus'])->name('activate.toggle');

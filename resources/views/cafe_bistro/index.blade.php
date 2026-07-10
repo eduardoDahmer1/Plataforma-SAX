@@ -2,8 +2,7 @@
 
 @php
     // Traducción del idioma actual; fallback a la tabla principal si no existe
-    $currentLang = app()->getLocale();
-    $t = $cafeBistro->translations->where('locale', $currentLang)->first();
+    $t = $cafeBistro->translations->firstWhere('locale', translation_locale());
 @endphp
 
 @section('title', ($t?->cafe_meta_title ?? $cafeBistro->meta_title) ?? 'SAX Café & Bistrô')

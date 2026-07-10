@@ -5,11 +5,16 @@ namespace App\Services;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-
 class ImageConverterService
 {
+    // Lado máximo (px) permitido antes de reduzir proporcionalmente — evita fotos de celular
+    // (4000x3000+) gerarem WebPs pesados mesmo sem nenhum limite de tamanho de arquivo na validação.
+    private const MAX_DIMENSION = 2000;
+
     /**
      * Convierte una imagen subida a WebP y la guarda en el disco público.
+     * Si la imagen es muy grande (en dimensiones), se reduce proporcionalmente antes de
+     * codificar — así no hace falta rechazar el archivo por tamaño, siempre se acepta.
      *
      * @param  UploadedFile  $image      Archivo subido.
      * @param  string        $directory  Carpeta destino ya resuelta (ej: 'brands/logo').
@@ -34,9 +39,9 @@ class ImageConverterService
             Storage::disk('public')->makeDirectory($directory);
         }
 
-        // Si ya viene en un formato moderno, se guarda tal cual sin reprocesar.
-        if ($extension === 'webp' || $extension === 'avif') {
-            $finalName = uniqid() . '.' . $extension;
+        // AVIF: el GD de este servidor não decodifica de volta, então mantemos como está.
+        if ($extension === 'avif') {
+            $finalName = uniqid() . '.avif';
             Storage::disk('public')->putFileAs($directory, $image, $finalName);
             return "{$directory}{$finalName}";
         }
@@ -48,6 +53,7 @@ class ImageConverterService
             'gif'                 => @imagecreatefromgif($tempPath),
             'bmp'                 => @imagecreatefrombmp($tempPath),
             'tga'                 => @imagecreatefromtga($tempPath),
+            'webp'                => @imagecreatefromwebp($tempPath),
             default               => @imagecreatefromstring(file_get_contents($tempPath)),
         };
 
@@ -68,10 +74,35 @@ class ImageConverterService
         imagealphablending($imageResource, true);
         imagesavealpha($imageResource, true);
 
+        $imageResource = $this->resizeIfTooLarge($imageResource, self::MAX_DIMENSION);
+
         $fullPath = storage_path('app/public/' . $directory . $filename);
         imagewebp($imageResource, $fullPath, $quality);
         imagedestroy($imageResource);
 
         return "{$directory}{$filename}";
+    }
+
+    // Reduz proporcionalmente se largura ou altura passarem de $maxDimension; senão devolve intacto.
+    private function resizeIfTooLarge($imageResource, int $maxDimension)
+    {
+        $width = imagesx($imageResource);
+        $height = imagesy($imageResource);
+
+        if ($width <= $maxDimension && $height <= $maxDimension) {
+            return $imageResource;
+        }
+
+        $ratio = min($maxDimension / $width, $maxDimension / $height);
+        $newWidth = max((int) round($width * $ratio), 1);
+        $newHeight = max((int) round($height * $ratio), 1);
+
+        $resized = imagecreatetruecolor($newWidth, $newHeight);
+        imagealphablending($resized, false);
+        imagesavealpha($resized, true);
+        imagecopyresampled($resized, $imageResource, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        imagedestroy($imageResource);
+
+        return $resized;
     }
 }

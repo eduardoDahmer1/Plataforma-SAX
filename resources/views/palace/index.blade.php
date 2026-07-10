@@ -3,8 +3,8 @@
 @section('content')
 @php
     // Define o idioma e busca a tradução correspondente ou usa o padrão
-    $currentLang = app()->getLocale();
-    $t = $palace->translations->where('locale', $currentLang)->first() ?? $palace;
+    $currentLang = translation_locale();
+    $t = $palace->translations->firstWhere('locale', $currentLang) ?? $palace;
 @endphp
 
 {{-- Passamos $palace e $t (tradução ativa) para todos os componentes --}}

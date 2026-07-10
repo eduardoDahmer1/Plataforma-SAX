@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Services\ImageConverterService;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SubcategoryControllerAdmin extends Controller
 {
@@ -43,10 +44,9 @@ class SubcategoryControllerAdmin extends Controller
         ]);
     
         $data = $request->only(['name', 'category_id']);
-    
-        // Slug igual ao nome
-        $data['slug'] = $request->name;
-    
+
+        $data['slug'] = $this->resolveUniqueSlug($request->name);
+
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
         }
@@ -158,6 +158,21 @@ class SubcategoryControllerAdmin extends Controller
         $subcategory->delete();
 
         return redirect()->route('admin.subcategories.index')->with('success', 'Subcategoria deletada com sucesso!');
+    }
+
+    // Gera um slug único (globalmente, entre todas as subcategorias) em vez de copiar o nome cru.
+    private function resolveUniqueSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: 'subcategoria';
+        $slug = $base;
+        $suffix = 2;
+
+        while (Subcategory::where('slug', $slug)->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 
     private function deleteFileIfExists($filePath)

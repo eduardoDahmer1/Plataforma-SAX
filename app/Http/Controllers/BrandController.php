@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Models\SlugRedirect;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -38,12 +40,19 @@ class BrandController extends Controller
         $page = $request->get('page', 1);
         $cacheKey = "brand_show_{$slug}_page_{$page}";
 
-        $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
-            return Brand::where('slug', $slug)
-                ->where('status', 1)
-                ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
-                ->firstOrFail();
-        });
+        try {
+            $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
+                return Brand::where('slug', $slug)
+                    ->where('status', 1)
+                    ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
+                    ->firstOrFail();
+            });
+        } catch (ModelNotFoundException $e) {
+            if ($redirectUrl = SlugRedirect::resolveUrl('brand', $slug)) {
+                return redirect($redirectUrl, 301);
+            }
+            throw $e;
+        }
 
         $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand) {
             return $brand

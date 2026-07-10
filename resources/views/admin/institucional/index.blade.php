@@ -3,8 +3,8 @@
 @section('content')
 @php
     // Busca a tradução ativa ou retorna um objeto vazio para evitar erro de null
-    $locale = app()->getLocale();
-    $translation = $institucional->translations->where('locale', $locale)->first();
+    $locale = translation_locale();
+    $translation = $institucional->translations->firstWhere('locale', $locale);
     
     // Fallback: se não achar a tradução, usa o que estiver na tabela pai
     $title = $translation->inst_section_one_title ?? $institucional->section_one_title;

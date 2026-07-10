@@ -2,8 +2,8 @@
 
 @section('content')
 @php
-    $currentLang = app()->getLocale();
-    $t = $palace->translations->where('locale', $currentLang)->first() ?? $palace;
+    $currentLang = translation_locale();
+    $t = $palace->translations->firstWhere('locale', $currentLang) ?? $palace;
 @endphp
 
 <x-admin.card>

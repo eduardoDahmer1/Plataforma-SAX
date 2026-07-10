@@ -3,11 +3,10 @@
 @section('content')
 @php
     // 1. Resgata o idioma atual do front-end de forma centralizada
-    $locale = app()->getLocale();
-    $dbLocale = $locale === 'pt' ? 'pt-br' : $locale;
-    
+    $dbLocale = translation_locale();
+
     // 2. Filtra a tradução do idioma ativo uma única vez
-    $translation = $institucional->translations->where('locale', $dbLocale)->first();
+    $translation = $institucional->translations->firstWhere('locale', $dbLocale);
 
     // 3. Monta o objeto de fallbacks globais para a página se preferir, 
     // ou passa a própria model e a tradução para os sub-componentes resolverem.

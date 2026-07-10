@@ -563,6 +563,91 @@ color: var(--ink);
 color: #dc3545;
 }
 
+.action-icon.is-on {
+color: var(--ink);
+}
+
+.action-icon-lg {
+font-size: 1.05rem;
+padding: 0.25rem;
+}
+
+/* ===== Admin > Produtos (index) — cards compactos, paleta neutra (branco/prata/preto) ===== */
+.sax-product-card {
+background: var(--paper);
+border: 1px solid var(--line);
+border-radius: 0.5rem;
+padding: 0.75rem 1rem;
+transition: 0.2s;
+}
+
+.sax-product-card:hover {
+border-color: var(--ink);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.sax-product-img-box {
+width: 84px;
+height: 84px;
+border-radius: 0.375rem;
+overflow: hidden;
+flex-shrink: 0;
+background: var(--surface);
+}
+
+.sax-product-img-box img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.sax-product-img-box img.is-inactive {
+filter: grayscale(100%);
+opacity: 0.5;
+}
+
+.product-status-pill {
+font-size: 0.6rem;
+font-weight: 800;
+letter-spacing: 0.03em;
+text-transform: uppercase;
+padding: 2px 9px;
+border-radius: 50px;
+border: 1px solid var(--border-medium);
+}
+
+.product-status-pill.is-on {
+background: var(--ink);
+color: var(--paper);
+border-color: var(--ink);
+}
+
+.product-status-pill.is-off {
+background: var(--surface);
+color: var(--soft);
+}
+
+.sax-product-actions {
+display: flex;
+align-items: center;
+gap: 1.1rem;
+border-top: 1px solid var(--line);
+margin-top: 0.75rem;
+padding-top: 0.65rem;
+}
+
+@media (min-width: 768px) {
+.sax-product-actions {
+border-top: 0;
+border-left: 1px solid var(--line);
+margin-top: 0;
+padding-top: 0;
+padding-left: 1.25rem;
+padding-right: 0.25rem;
+}
+}
+
 .sax-brand-card {
 background: var(--paper);
 border: 1px solid var(--border-light);
@@ -1609,6 +1694,26 @@ border-bottom: 1px solid var(--surface);
     border-radius: 8px;
     overflow: hidden;
     background: var(--line);
+}
+
+.gallery-preview-item.is-pending {
+    outline: 2px dashed var(--soft);
+    outline-offset: -2px;
+}
+
+.gallery-preview-item.is-pending::after {
+    content: "Novo";
+    position: absolute;
+    left: 0.25rem;
+    bottom: 0.25rem;
+    font-size: 0.55rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--paper);
+    background: rgba(0, 0, 0, 0.65);
+    padding: 1px 6px;
+    border-radius: 50px;
 }
 
 .gallery-preview-item img {

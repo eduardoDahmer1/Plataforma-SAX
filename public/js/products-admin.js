@@ -220,21 +220,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (response.ok) {
                     var modal = bootstrap.Modal.getInstance(form.closest('.modal'));
-                    modal.hide();
+                    if (modal) modal.hide();
 
-                    var alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
-                    alertDiv.innerHTML =
-                        '<i class="fa fa-check-circle me-2"></i>Destaques atualizados com sucesso!' +
-                        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-                    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.card'));
-
-                    setTimeout(function () { alertDiv.remove(); }, 3000);
+                    if (window.saxToast) saxToast('success', 'Destaques atualizados com sucesso!');
                 } else {
                     throw new Error('Erro ao salvar');
                 }
             } catch (error) {
-                alert('Erro ao atualizar destaques. Tente novamente.');
+                if (window.saxToast) {
+                    saxToast('error', 'Erro ao atualizar destaques. Tente novamente.');
+                } else {
+                    alert('Erro ao atualizar destaques. Tente novamente.');
+                }
             } finally {
                 button.disabled = false;
                 button.innerHTML = originalText;
@@ -347,5 +344,146 @@ document.addEventListener('DOMContentLoaded', function () {
         store.items.remove(parseInt(btn.dataset.index, 10)); // quita esa foto del set
         input.files = store.files;
         render();
+    });
+});
+
+
+// ======== Index: aplica visualmente o status (ativo/inativo) num card ========
+// Archivo: resources/views/admin/products/index.blade.php
+// Usado tanto pelo toggle individual quanto pela revalidação em massa.
+function applyProductStatusUI(productId, isActive) {
+    var card = document.getElementById('product-card-' + productId);
+    if (!card) return;
+
+    var pill = card.querySelector('.product-status-pill');
+    var btn = card.querySelector('.btn-toggle-status');
+
+    if (pill && btn) {
+        pill.classList.toggle('is-on', isActive);
+        pill.classList.toggle('is-off', !isActive);
+        pill.textContent = isActive ? btn.dataset.labelActive : btn.dataset.labelInactive;
+    }
+
+    var img = card.querySelector('.sax-product-img-box img');
+    if (img) img.classList.toggle('is-inactive', !isActive);
+
+    if (!btn) return;
+
+    btn.classList.toggle('is-on', isActive);
+
+    var icon = btn.querySelector('.icon-toggle');
+    if (icon) {
+        icon.classList.toggle('fa-toggle-on', isActive);
+        icon.classList.toggle('fa-toggle-off', !isActive);
+    }
+}
+
+// ======== Index: Ativar/Desativar via AJAX (sem reload) ========
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-toggle-status').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (btn.disabled) return;
+            btn.disabled = true;
+
+            fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: Object.assign({ 'Accept': 'application/json' }, headers),
+            })
+                .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                .then(function (result) {
+                    if (!result.ok || !result.data.success) {
+                        throw new Error(result.data.message || 'Erro ao atualizar status.');
+                    }
+                    var card = btn.closest('[id^="product-card-"]');
+                    if (card) applyProductStatusUI(card.id.replace('product-card-', ''), !!result.data.status);
+                    if (window.saxToast) saxToast('success', result.data.message || 'Status atualizado!');
+                })
+                .catch(function (err) {
+                    if (window.saxToast) saxToast('error', err.message || 'Erro ao atualizar status.');
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                });
+        });
+    });
+});
+
+// ======== Index: Excluir produto via AJAX (com modal de confirmação) ========
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-delete-product').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var card = document.getElementById('product-card-' + btn.dataset.productId);
+
+            function doDelete() {
+                btn.disabled = true;
+
+                fetch(btn.dataset.url, {
+                    method: 'DELETE',
+                    headers: Object.assign({ 'Accept': 'application/json' }, headers),
+                })
+                    .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                    .then(function (result) {
+                        if (!result.ok || !result.data.success) {
+                            throw new Error(result.data.message || 'Erro ao excluir produto.');
+                        }
+                        if (window.saxToast) saxToast('success', result.data.message || 'Produto excluído com sucesso!');
+                        if (card) {
+                            card.style.transition = 'opacity .25s';
+                            card.style.opacity = '0';
+                            setTimeout(function () { card.remove(); }, 250);
+                        }
+                    })
+                    .catch(function (err) {
+                        if (window.saxToast) saxToast('error', err.message || 'Erro ao excluir produto.');
+                        btn.disabled = false;
+                    });
+            }
+
+            var confirmModalEl = document.getElementById('saxConfirmModal');
+            if (confirmModalEl && typeof bootstrap !== 'undefined') {
+                document.getElementById('saxConfirmMessage').textContent = 'Tem certeza que deseja excluir este produto? Essa ação não pode ser desfeita.';
+                document.getElementById('saxConfirmAccept').onclick = function () {
+                    bootstrap.Modal.getOrCreateInstance(confirmModalEl).hide();
+                    doDelete();
+                };
+                bootstrap.Modal.getOrCreateInstance(confirmModalEl).show();
+            } else if (confirm('Tem certeza que deseja excluir este produto?')) {
+                doDelete();
+            }
+        });
+    });
+});
+
+// ======== Index: Verificar produtos (revalida em massa, sem reload) ========
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('btnRevalidateProducts');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        var originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i> Verificando...';
+
+        fetch(btn.dataset.url, {
+            method: 'POST',
+            headers: Object.assign({ 'Accept': 'application/json' }, headers),
+        })
+            .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+            .then(function (result) {
+                if (!result.ok || !result.data.success) {
+                    throw new Error(result.data.message || 'Erro ao verificar produtos.');
+                }
+                (result.data.activated_ids || []).forEach(function (id) { applyProductStatusUI(id, true); });
+                (result.data.deactivated_ids || []).forEach(function (id) { applyProductStatusUI(id, false); });
+                if (window.saxToast) saxToast('success', result.data.message || 'Verificação concluída!');
+            })
+            .catch(function (err) {
+                if (window.saxToast) saxToast('error', err.message || 'Erro ao verificar produtos.');
+            })
+            .finally(function () {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            });
     });
 });

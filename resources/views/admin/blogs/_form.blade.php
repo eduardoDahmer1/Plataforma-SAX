@@ -22,19 +22,10 @@
 
         <div class="p-4">
             <div class="row g-4">
-                <div class="col-md-8">
+                <div class="col-12">
                     <label for="title" class="sax-label">{{ __('messages.titulo_blog_label') }}</label>
                     <input type="text" id="title" name="title" class="form-control sax-input fw-bold fs-5"
                            value="{{ old('title', $blog?->title ?? '') }}" placeholder="Ex: Las Tendencias de Verano en SAX">
-                </div>
-
-                <div class="col-md-4">
-                    <label for="read_time" class="sax-label">{{ __('messages.tempo_leitura_label') }}</label>
-                    <div class="input-group">
-                        <input type="number" id="read_time" name="read_time" class="form-control sax-input"
-                               value="{{ old('read_time', $blog?->read_time ?? '') }}" placeholder="Ex: 5">
-                        <span class="input-group-text bg-white border sax-input-icon"><i class="far fa-clock"></i></span>
-                    </div>
                 </div>
 
                 <div class="col-12">
@@ -112,7 +103,7 @@
         <div class="p-4">
             <div id="blogGaleriaPreview" class="gallery-preview-grid mb-3">
                 @foreach($blog?->gallery ?? [] as $index => $foto)
-                    <div class="gallery-preview-item shadow-sm border">
+                    <div class="gallery-preview-item is-existing shadow-sm border">
                         <img src="{{ Storage::url($foto) }}" class="w-100 h-100 object-fit-cover">
                         <input type="hidden" name="gallery_actual[]" value="{{ $foto }}">
                         <button type="button" class="gallery-remove-btn">
@@ -123,7 +114,7 @@
             </div>
 
             <div class="upload-zone" id="blogGaleriaZone">
-                <input type="file" name="gallery[]" class="upload-input" multiple accept="image/*">
+                <input type="file" id="blogGalleryInput" name="gallery[]" class="upload-input" multiple accept="image/*">
                 <i class="fas fa-images mb-2 opacity-25 fa-lg"></i>
                 <p class="x-small fw-bold m-0">{{ __('messages.click_or_drag_images') }}</p>
                 <p class="x-small text-muted m-0">{{ __('messages.image_formats_max_each') }}</p>
@@ -131,7 +122,7 @@
 
             <p class="x-small text-muted mt-2 mb-0">
                 <i class="fas fa-info-circle me-1"></i>
-                <span id="blogGaleriaCount">{{ count($blog?->gallery ?? []) }}</span>/12 {{ __('messages.loaded_images_count') }}
+                <span id="blogGaleriaCount">{{ count($blog?->gallery ?? []) }}</span>/10 {{ __('messages.loaded_images_count') }}
             </p>
         </div>
     </div>

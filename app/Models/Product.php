@@ -120,6 +120,34 @@ class Product extends Model
         return asset('storage/uploads/noimage.webp');
     }
 
+    // Produto tem ao menos uma imagem válida (foto principal ou galeria) já existente no disco
+    public static function hasUsableImage($photo, $gallery): bool
+    {
+        if ($photo && Storage::disk('public')->exists($photo)) {
+            return true;
+        }
+
+        $gallery = is_string($gallery) ? json_decode($gallery, true) : $gallery;
+        if (is_array($gallery)) {
+            foreach ($gallery as $image) {
+                if ($image && Storage::disk('public')->exists($image)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Regras mínimas para o produto poder ficar ativo na loja
+    public function meetsActiveRequirements(): bool
+    {
+        return static::hasUsableImage($this->photo, $this->gallery)
+            && (float) $this->price > 0
+            && (int) $this->stock > 0
+            && trim((string) $this->description) !== '';
+    }
+
     public function brand()
     {
         return $this->belongsTo(Brand::class);

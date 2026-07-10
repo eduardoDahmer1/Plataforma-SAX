@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
+use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class BlogControllerAdmin extends Controller
 {
+    const MAX_GALLERY_IMAGES = 10;
+
     public function index(Request $request)
     {
         $search = $request->get('search');
@@ -113,6 +117,14 @@ class BlogControllerAdmin extends Controller
         }
 
         $keptGallery = array_values(array_filter((array) $request->input('gallery_actual', [])));
+        $newUploadsCount = count($request->file('gallery', []) ?: []);
+
+        if (count($keptGallery) + $newUploadsCount > self::MAX_GALLERY_IMAGES) {
+            throw ValidationException::withMessages([
+                'gallery' => 'A galeria pode ter no máximo ' . self::MAX_GALLERY_IMAGES . ' imagens.',
+            ]);
+        }
+
         foreach (array_diff($blog->gallery ?? [], $keptGallery) as $removed) {
             Storage::disk('public')->delete($removed);
         }
@@ -174,30 +186,44 @@ class BlogControllerAdmin extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:2000',
-            'slug' => 'nullable|unique:blogs,slug' . ($id ? ",$id" : ''),
+            'slug' => 'nullable|string|max:255',
             'image' => 'nullable|image',
             'image_caption' => 'nullable|string|max:255',
             'content' => 'required|string',
             'meta_description' => 'nullable|string|max:160',
-            'read_time' => 'nullable|integer|min:0|max:999',
             'author' => 'nullable|string|max:255',
             'published_at' => 'nullable|date',
             'is_active' => 'sometimes|boolean',
             'featured' => 'sometimes|boolean',
-            'category_id' => 'required|exists:blog_categories,id',
-            'gallery' => 'nullable|array|max:12',
-            'gallery.*' => 'nullable|image|max:4096',
+            'category_id' => 'nullable|exists:blog_categories,id',
+            'gallery' => 'nullable|array|max:' . self::MAX_GALLERY_IMAGES,
+            'gallery.*' => 'nullable|image',
+        ], [
+            'gallery.max' => 'A galeria pode ter no máximo ' . self::MAX_GALLERY_IMAGES . ' imagens.',
+            'gallery.*.image' => 'Um dos arquivos da galeria não é uma imagem válida.',
         ]);
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
         $data['featured'] = $request->has('featured') ? 1 : 0;
         $data['published_at'] = $data['published_at'] ?? null;
-
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['title']);
-        }
+        $data['slug'] = $this->resolveUniqueSlug(($data['slug'] ?? null) ?: $data['title'], $id);
 
         return $data;
+    }
+
+    // Gera um slug único automaticamente em vez de bloquear o salvamento com erro de validação.
+    private function resolveUniqueSlug(string $source, $id = null): string
+    {
+        $base = Str::slug($source) ?: 'artigo';
+        $slug = $base;
+        $suffix = 2;
+
+        while (Blog::where('slug', $slug)->when($id, fn($q) => $q->where('id', '!=', $id))->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 
     private function processGalleryUploads(Request $request)
@@ -214,30 +240,7 @@ class BlogControllerAdmin extends Controller
 
     private function processImage($file, $folder = 'blogs')
     {
-        $originalPath = $file->store($folder, 'public');
-        $fullPath = storage_path('app/public/' . $originalPath);
-        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-        $image = null;
-
-        if (in_array($extension, ['jpg', 'jpeg'])) {
-            $image = imagecreatefromjpeg($fullPath);
-        } elseif ($extension === 'png') {
-            $image = imagecreatefrompng($fullPath);
-            imagepalettetotruecolor($image);
-            imagealphablending($image, true);
-            imagesavealpha($image, true);
-        }
-
-        if ($image) {
-            $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
-            imagewebp($image, $webpPath, 85);
-            imagedestroy($image);
-            @unlink($fullPath);
-
-            return preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
-        }
-
-        return $originalPath;
+        return app(ImageConverterService::class)->toWebp($file, $folder, ['quality' => 85]);
     }
 
     private function extractImageUrls($html)

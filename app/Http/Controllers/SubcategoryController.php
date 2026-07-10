@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subcategory;
+use App\Models\SlugRedirect;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -43,28 +45,35 @@ class SubcategoryController extends Controller
             return DB::table('attributes')->first();
         });
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug) {
-            $subcategory = Subcategory::with(['category', 'categoriasfilhas'])
-                ->where('slug', $idOrSlug)
-                ->orWhere('id', $idOrSlug)
-                ->firstOrFail();
+        try {
+            $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug) {
+                $subcategory = Subcategory::with(['category', 'categoriasfilhas'])
+                    ->where('slug', $idOrSlug)
+                    ->orWhere('id', $idOrSlug)
+                    ->firstOrFail();
 
-            $products = $subcategory
-                ->products()
-                ->where('status', 1)
-                ->where('product_role', 'P')
-                ->where('stock', '>', 0)
-                ->whereNotNull('photo')
-                ->where('photo', '!=', '')
-                ->with(['brand', 'category'])
-                ->paginate(12)
-                ->withQueryString();
+                $products = $subcategory
+                    ->products()
+                    ->where('status', 1)
+                    ->where('product_role', 'P')
+                    ->where('stock', '>', 0)
+                    ->whereNotNull('photo')
+                    ->where('photo', '!=', '')
+                    ->with(['brand', 'category'])
+                    ->paginate(12)
+                    ->withQueryString();
 
-            return [
-                'subcategory' => $subcategory,
-                'products' => $products,
-            ];
-        });
+                return [
+                    'subcategory' => $subcategory,
+                    'products' => $products,
+                ];
+            });
+        } catch (ModelNotFoundException $e) {
+            if ($redirectUrl = SlugRedirect::resolveUrl('subcategory', $idOrSlug)) {
+                return redirect($redirectUrl, 301);
+            }
+            throw $e;
+        }
 
         $allCategories = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
@@ -81,9 +90,9 @@ class SubcategoryController extends Controller
             'currentChild' => null,
             'backUrl' => route('subcategories.index'),
             'backLabel' => __('VOLVER A SUBCATEGORIAS'),
-            'breadcrumb' => [
-                $data['subcategory']->category->name ?? '',
-            ],
+            'breadcrumb' => $data['subcategory']->category ? [
+                ['label' => $data['subcategory']->category->name, 'url' => route('categories.show', $data['subcategory']->category->slug)],
+            ] : [],
             'emptyMessage' => 'No se encontraron productos en esta subcategoría.',
         ]);
     }

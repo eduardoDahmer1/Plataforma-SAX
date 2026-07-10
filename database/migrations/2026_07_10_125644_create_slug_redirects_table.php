@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('slug_redirects', function (Blueprint $table) {
+            $table->id();
+            // 'category' | 'subcategory' | 'categoria_filha' | 'brand'
+            $table->string('model');
+            $table->string('old_slug');
+            $table->unsignedBigInteger('entity_id');
+            $table->timestamps();
+
+            $table->unique(['model', 'old_slug']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('slug_redirects');
+    }
+};

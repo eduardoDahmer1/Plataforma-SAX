@@ -65,9 +65,9 @@
 
                 @if($showFavorite ?? true)
                     <div class="position-absolute top-0 end-0 p-3">
-                        @auth
+                        @if (Auth::check() && Auth::user()->user_type != 1)
                             <x-product-favorite-button :item="$item" />
-                        @endauth
+                        @endif
                     </div>
                 @endif
             </div>

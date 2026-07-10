@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CategoriasFilhas;
+use App\Models\SlugRedirect;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -39,28 +41,35 @@ class CategoriasFilhasController extends Controller
             return DB::table('attributes')->first();
         });
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug) {
-            $categoriasfilhas = CategoriasFilhas::with(['subcategory.category'])
-                ->where('slug', $idOrSlug)
-                ->orWhere('id', $idOrSlug)
-                ->firstOrFail();
+        try {
+            $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug) {
+                $categoriasfilhas = CategoriasFilhas::with(['subcategory.category'])
+                    ->where('slug', $idOrSlug)
+                    ->orWhere('id', $idOrSlug)
+                    ->firstOrFail();
 
-            $products = $categoriasfilhas
-                ->products()
-                ->where('status', 1)
-                ->where('product_role', 'P')
-                ->where('stock', '>', 0)
-                ->whereNotNull('photo')
-                ->where('photo', '!=', '')
-                ->with(['brand', 'category'])
-                ->paginate(24)
-                ->withQueryString();
+                $products = $categoriasfilhas
+                    ->products()
+                    ->where('status', 1)
+                    ->where('product_role', 'P')
+                    ->where('stock', '>', 0)
+                    ->whereNotNull('photo')
+                    ->where('photo', '!=', '')
+                    ->with(['brand', 'category'])
+                    ->paginate(24)
+                    ->withQueryString();
 
-            return [
-                'categoriasfilhas' => $categoriasfilhas,
-                'products' => $products,
-            ];
-        });
+                return [
+                    'categoriasfilhas' => $categoriasfilhas,
+                    'products' => $products,
+                ];
+            });
+        } catch (ModelNotFoundException $e) {
+            if ($redirectUrl = SlugRedirect::resolveUrl('categoria_filha', $idOrSlug)) {
+                return redirect($redirectUrl, 301);
+            }
+            throw $e;
+        }
 
         $categoriesTree = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
@@ -77,10 +86,14 @@ class CategoriasFilhasController extends Controller
             'currentChild' => $data['categoriasfilhas'],
             'backUrl' => route('categorias-filhas.index'),
             'backLabel' => 'VOLVER A CATEGORIAS FILHAS',
-            'breadcrumb' => [
-                $data['categoriasfilhas']->subcategory->category->name ?? '',
-                $data['categoriasfilhas']->subcategory->name ?? '',
-            ],
+            'breadcrumb' => array_filter([
+                $data['categoriasfilhas']->subcategory->category ?? null
+                    ? ['label' => $data['categoriasfilhas']->subcategory->category->name, 'url' => route('categories.show', $data['categoriasfilhas']->subcategory->category->slug)]
+                    : null,
+                $data['categoriasfilhas']->subcategory ?? null
+                    ? ['label' => $data['categoriasfilhas']->subcategory->name, 'url' => route('subcategories.show', $data['categoriasfilhas']->subcategory->slug)]
+                    : null,
+            ]),
             'emptyMessage' => 'No se encontraron productos en esta categoría.',
         ]);
     }

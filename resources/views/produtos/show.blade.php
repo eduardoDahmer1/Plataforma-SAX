@@ -324,9 +324,11 @@
                                         {{ $product->stock > 0 ? __('messages.adicionar_ao_carrinho') : __('messages.esgotado') }}
                                     </button>
                                 </form>
-                                <button class="btn btn-outline-dark rounded-0 wishlist-btn">
-                                    <i class="far fa-heart"></i>
-                                </button>
+                                @if (Auth::user()->user_type != 1)
+                                    <button class="btn btn-outline-dark rounded-0 wishlist-btn">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                @endif
                             </div>
                         @else
                             <a href="{{ route('login') }}"

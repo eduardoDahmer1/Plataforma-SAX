@@ -61,6 +61,8 @@
 
                 @if ($isOutOfStock)
                     <div class="sax-stock-overlay">{{ __('messages.esgotado') }}</div>
+                @else
+                    <x-cupon-selo :product="$item" variante="card" />
                 @endif
 
                 @if($showFavorite ?? true)

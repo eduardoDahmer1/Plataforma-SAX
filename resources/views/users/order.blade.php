@@ -177,20 +177,48 @@
                             <span
                                 class="badge-payment-sax {{ $order->payment_method }} shadow-sm">{{ ucfirst($order->payment_method) }}</span>
                         </div>
+                        @php
+                            // Subtotal a partir dos itens: o total do pedido já vem com
+                            // desconto e frete aplicados.
+                            $subtotalPedido = $order->items->sum(fn ($item) => $item->price * $item->quantity);
+                            $descontoPedido = (float) ($order->discount ?? 0);
+                        @endphp
+
                         <div class="mt-4 p-3 bg-light rounded-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="label m-0">{{ __('messages.subtotal') }}:</span>
+                                <span class="value fw-bold text-dark">
+                                    {{ order_money($order, $subtotalPedido) }}
+                                </span>
+                            </div>
+
+                            @if ($descontoPedido > 0)
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="label m-0">
+                                        {{ __('messages.desconto') }}
+                                        @if ($order->cupon)
+                                            <span class="sax-cupon-produto__codigo ms-1">{{ $order->cupon->codigo }}</span>
+                                        @endif
+                                    </span>
+                                    <span class="value fw-bold text-success">
+                                        - {{ order_money($order, $descontoPedido) }}
+                                    </span>
+                                </div>
+                            @endif
+
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="label m-0">{{ __('messages.frete') }}:</span>
                                 <span class="value fw-bold text-dark">
-                                    {{ currency_format($order->shipping_cost ?? 0) }}
+                                    {{ order_money($order, $order->shipping_cost ?? 0) }}
                                 </span>
                             </div>
-                            
+
                             <hr class="my-2">
-                            
+
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="label m-0 fw-bold">{{ __('messages.total_geral') }}:</span>
                                 <span class="value fw-bold text-dark fs-4">
-                                    {{ currency_format($order->total) }}
+                                    {{ order_money($order, $order->total) }}
                                 </span>
                             </div>
                         </div>
@@ -334,10 +362,10 @@
                                 class="fw-bold fs-6">{{ $item->quantity }}</span></div>
                         <div class="col-4 col-md-2 mt-3 mt-md-0 text-center"><label
                                 class="sax-label d-block text-muted">{{ __('messages.unitario') }}</label><span
-                                class="text-muted small">{{ currency_format($item->price) }}</span></div>
+                                class="text-muted small">{{ order_money($order, $item->price) }}</span></div>
                         <div class="col-4 col-md-2 mt-3 mt-md-0 text-end pe-4"><label
                             class="sax-label d-block text-muted">{{ __('messages.subtotal') }}</label><span
-                                class="fw-bold text-dark fs-6">{{ currency_format($item->price * $item->quantity) }}</span>
+                                class="fw-bold text-dark fs-6">{{ order_money($order, $item->price * $item->quantity) }}</span>
                         </div>
                     </div>
                 </div>

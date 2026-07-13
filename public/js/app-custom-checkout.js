@@ -236,16 +236,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalDisplay = document.getElementById('total-geral-display');
     const freteValorInput = document.getElementById('frete_valor');
     const subtotalDisplay = document.getElementById('subtotal-valor');
+    const totalSemFrete = document.getElementById('total-sem-frete');
 
     let paraguayData = null;
     let observationsValues = { 1: '', 2: '', 3: '' };
+
+    // Total do pedido já com o cupom abatido, antes do frete. Quando não há frete
+    // (retirada na loja ou envio a combinar), é ele que vai para o total geral —
+    // usar o subtotal aqui apagaria o desconto do cupom da tela.
+    function textoTotalSemFrete() {
+        return totalSemFrete?.textContent?.trim()
+            || subtotalDisplay?.textContent?.trim()
+            || '';
+    }
 
     function calcularFrete() {
         const radioSelected = document.querySelector('input[name="shipping"]:checked')?.value;
         
         if (radioSelected === '3') {
             if (freteDisplay) freteDisplay.innerText = 'Gratis';
-            if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
+            if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
             return; 
         }
@@ -264,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pais === 'brasil') {
             if (freteDisplay) freteDisplay.innerText = 'A combinar';
             
-            if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
+            if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
             return;
         }
@@ -298,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (method == 3) {
             infoContent.innerHTML = '<i class="fa fa-shopping-bag me-2"></i> <strong>Retirada na Loja:</strong> Selecione a unidade de preferência no mapa. <strong>Frete Grátis.</strong>';
             if (freteDisplay) freteDisplay.innerText = 'Gratis';
-            if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
+            if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
 
         } else {
@@ -309,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (country.toLowerCase() === 'brasil') {
                 infoContent.innerHTML = '<i class="fa fa-whatsapp me-2"></i> <strong>Envio Internacional (Brasil):</strong> O valor do frete não está incluso no total. <strong>Será combinado via WhatsApp</strong> após a finalização do pedido.';
                 if (freteDisplay) freteDisplay.innerText = 'A combinar';
-                if (totalDisplay) totalDisplay.innerText = subtotalDisplay?.textContent?.trim() ?? '';
+                if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
                 if (freteValorInput) freteValorInput.value = '0.00';
 
             } else {
@@ -486,6 +496,146 @@ document.addEventListener('DOMContentLoaded', function () {
     
     if (typeof window.toggleCountryFields === 'function') {
         window.toggleCountryFields();
+    }
+
+    /* ----------------------------------------------------------------------
+     * Cupom no checkout
+     * O código fica na sessão do servidor; o formulário do pedido não envia
+     * desconto algum. Aqui só atualizamos a tela com o que o servidor calculou.
+     * -------------------------------------------------------------------- */
+    const cuponBox = document.getElementById('cupon-box');
+
+    if (cuponBox) {
+        const textos = window.cuponTexts || {};
+        const descontoRow = document.getElementById('desconto-row');
+        const descontoDisplay = document.getElementById('desconto-display');
+        const subtotalDisplayFinal = document.getElementById('subtotal-display');
+
+        function feedbackEl() {
+            return document.getElementById('cupon-feedback');
+        }
+
+        function mostrarFeedback(mensagem, ok) {
+            const el = feedbackEl();
+            if (!el) return;
+            el.textContent = mensagem || '';
+            el.classList.toggle('is-error', !ok);
+            el.classList.toggle('is-success', !!ok);
+        }
+
+        function escapar(texto) {
+            const div = document.createElement('div');
+            div.textContent = texto ?? '';
+            return div.innerHTML;
+        }
+
+        // Redesenha só o bloco do cupom, preservando o que o cliente já digitou
+        // nos outros passos (por isso não recarregamos a página).
+        function renderCuponBox(cupon) {
+            const corpo = cupon
+                ? `<div class="sax-cupon-applied">
+                       <div>
+                           <span class="sax-cupon-applied-label">${escapar(textos.aplicado)}</span>
+                           <strong class="sax-cupon-applied-code">${escapar(cupon.codigo)}</strong>
+                           <span class="sax-cupon-applied-rule">${escapar(cupon.rotulo)} · ${escapar(cupon.escopo)}</span>
+                       </div>
+                       <button type="button" class="sax-cupon-remove" id="cupon-remove-btn" aria-label="${escapar(textos.remover)}">
+                           <i class="fas fa-times"></i>
+                       </button>
+                   </div>`
+                : `<label for="cupon-codigo-checkout" class="sax-cupon-label">
+                       <i class="fas fa-tag me-1"></i>${escapar(textos.tem_codigo)}
+                   </label>
+                   <div class="sax-cupon-input-group">
+                       <input type="text" id="cupon-codigo-checkout" maxlength="60"
+                              class="sax-cupon-input text-uppercase" placeholder="${escapar(textos.placeholder)}">
+                       <button type="button" class="sax-cupon-btn" id="cupon-apply-btn">${escapar(textos.aplicar)}</button>
+                   </div>`;
+
+            cuponBox.innerHTML = corpo + '<div class="sax-cupon-feedback" id="cupon-feedback" role="status"></div>';
+        }
+
+        function aplicarResumo(data) {
+            if (subtotalDisplayFinal) subtotalDisplayFinal.innerText = data.subtotal_formatado;
+            if (subtotalDisplay) {
+                subtotalDisplay.innerText = data.subtotal_formatado;
+                subtotalDisplay.dataset.valor = data.subtotal;
+            }
+            if (descontoDisplay) descontoDisplay.innerText = '- ' + data.desconto_formatado;
+            if (descontoRow) descontoRow.classList.toggle('d-none', !(data.desconto > 0));
+            if (totalSemFrete) {
+                totalSemFrete.innerText = data.total_formatado;
+                totalSemFrete.dataset.valor = data.total;
+            }
+
+            // Com entrega já escolhida, o servidor devolve o total somando o frete;
+            // sem entrega, o total é o do pedido sem frete.
+            if (document.querySelector('input[name="shipping"]:checked')) {
+                calcularFrete();
+            } else if (totalDisplay) {
+                totalDisplay.innerText = data.total_formatado;
+            }
+        }
+
+        function enviarCupon(url, corpo, botao) {
+            if (botao) botao.disabled = true;
+            mostrarFeedback('', true);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(corpo)
+            })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok || !data.success) {
+                    if (botao) botao.disabled = false;
+                    mostrarFeedback(data.message || textos.erro_generico, false);
+                    return;
+                }
+
+                aplicarResumo(data);
+                renderCuponBox(data.codigo ? { codigo: data.codigo, rotulo: data.rotulo, escopo: data.escopo } : null);
+                mostrarFeedback(data.message, true);
+            })
+            .catch(() => {
+                if (botao) botao.disabled = false;
+                mostrarFeedback(textos.erro_conexao, false);
+            });
+        }
+
+        // Delegação: o conteúdo do bloco é redesenhado a cada aplicação/remoção.
+        cuponBox.addEventListener('click', function(e) {
+            const aplicar = e.target.closest('#cupon-apply-btn');
+            const remover = e.target.closest('#cupon-remove-btn');
+
+            if (aplicar) {
+                const input = document.getElementById('cupon-codigo-checkout');
+                const codigo = (input?.value || '').trim();
+
+                if (!codigo) {
+                    mostrarFeedback(textos.digite_codigo, false);
+                    return;
+                }
+
+                enviarCupon(cuponBox.dataset.applyUrl, { codigo }, aplicar);
+            }
+
+            if (remover) {
+                enviarCupon(cuponBox.dataset.removeUrl, {}, remover);
+            }
+        });
+
+        cuponBox.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.id === 'cupon-codigo-checkout') {
+                e.preventDefault();
+                document.getElementById('cupon-apply-btn')?.click();
+            }
+        });
     }
 
     if (checkoutForm) {

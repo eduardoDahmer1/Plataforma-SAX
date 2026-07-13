@@ -36,14 +36,32 @@
                             <span class="text-muted small fw-bold">DATA CADASTRO</span>
                             <span>{{ $client->created_at->format('d/m/Y') }}</span>
                         </div>
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted small fw-bold">TIPO</span>
-                            <span class="badge bg-light text-dark border">
-                                @if($client->user_type == 1) Cliente
-                                @elseif($client->user_type == 2) Admin
-                                @else Curso @endif
+                            {{-- user_type 1 é o administrador (ver middleware CheckAdmin) --}}
+                            <span class="badge {{ $client->isAdmin() ? 'bg-dark' : 'bg-light text-dark border' }}">
+                                {{ $client->user_role }}
                             </span>
                         </div>
+
+                        @php
+                            $pedidosPagos = $client->orders->where('payment_status', 'paid');
+                            $totalGasto = $pedidosPagos->sum(fn ($o) => (float) $o->total);
+                            $totalEconomizado = $client->orders->sum(fn ($o) => (float) ($o->discount ?? 0));
+                        @endphp
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold">TOTAL COMPRADO</span>
+                            {{-- Os totais são gravados na moeda base (USD) --}}
+                            <span class="fw-bold">US$ {{ number_format($totalGasto, 2, '.', ',') }}</span>
+                        </div>
+
+                        @if ($totalEconomizado > 0)
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small fw-bold">DESCONTOS</span>
+                                <span class="fw-bold text-success">US$ {{ number_format($totalEconomizado, 2, '.', ',') }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -57,14 +75,25 @@
                 <div class="card-body p-4">
                     <div class="row g-4">
                         @php
+                            // O endereço do usuário é guardado em address/number/district/complement.
+                            $logradouro = trim(collect([
+                                trim(($client->address ?? '') . ' ' . ($client->number ?? '')),
+                                $client->complement,
+                                $client->district,
+                            ])->filter()->implode(', '));
+
+                            $telefone = trim(($client->phone_country ? '+' . $client->phone_country : '') . ' ' . ($client->phone_number ?? ''));
+
                             $fields = [
-                                'Telefone' => ($client->phone_country ?? '') . ' ' . ($client->phone_number ?? ''),
+                                'Telefone' => $telefone,
+                                'E-mail' => $client->email,
                                 'Documento' => $client->document,
-                                'Endereço' => $client->address,
+                                'Endereço' => $logradouro,
                                 'Cidade' => $client->city,
                                 'Estado' => $client->state,
+                                'País' => $client->country,
                                 'CEP' => $client->cep,
-                                'Informações Adicionais' => $client->additional_info
+                                'Informações Adicionais' => $client->additional_info,
                             ];
                         @endphp
                         @foreach($fields as $label => $value)
@@ -91,32 +120,53 @@
             <table class="table align-middle m-0">
                 <thead class="bg-light">
                     <tr class="text-uppercase text-muted" style="font-size: 0.75rem;">
-                        <th class="py-3 ps-4">ID Pedido</th>
+                        <th class="py-3 ps-4">Pedido</th>
                         <th class="py-3">Data</th>
                         <th class="py-3">Status</th>
-                        <th class="py-3">Total</th>
+                        <th class="py-3">Pagamento</th>
+                        <th class="py-3">Cupom</th>
+                        <th class="py-3 text-end">Total</th>
                         <th class="py-3 text-end pe-4">Ação</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($client->orders as $order)
+                        @php
+                            $statusColors = [
+                                'pending' => 'bg-warning text-dark',
+                                'processing' => 'bg-info text-dark',
+                                'shipped' => 'bg-primary text-white',
+                                'completed' => 'bg-success text-white',
+                                'canceled' => 'bg-danger text-white',
+                            ];
+                            $corPagamento = match ($order->payment_status) {
+                                'paid' => 'text-success',
+                                'failed' => 'text-danger',
+                                'refunded' => 'text-secondary',
+                                default => 'text-warning',
+                            };
+                        @endphp
                         <tr>
-                            <td class="ps-4 fw-bold">#{{ $order->id }}</td>
+                            <td class="ps-4 fw-bold">#{{ $order->order_number ?? $order->id }}</td>
                             <td>{{ $order->created_at->format('d/m/Y') }}</td>
                             <td>
-                                @php
-                                    $statusColors = [
-                                        'pending' => 'bg-warning text-dark',
-                                        'processing' => 'bg-info text-white',
-                                        'completed' => 'bg-success text-white',
-                                        'canceled' => 'bg-danger text-white'
-                                    ];
-                                @endphp
                                 <span class="badge {{ $statusColors[$order->status] ?? 'bg-secondary' }}">
-                                    {{ ucfirst($order->status) }}
+                                    {{ __('messages.status_' . $order->status) }}
                                 </span>
                             </td>
-                            <td class="fw-bold">R$ {{ number_format($order->total, 2, ',', '.') }}</td>
+                            <td class="small {{ $corPagamento }}">
+                                {{ __('messages.payment_status_' . $order->payment_status) }}
+                            </td>
+                            <td>
+                                @if ($order->cupon)
+                                    <span class="badge bg-light text-dark border">{{ $order->cupon->codigo }}</span>
+                                    <span class="d-block x-small text-success">- {{ order_money($order, $order->discount) }}</span>
+                                @else
+                                    <span class="text-muted small">—</span>
+                                @endif
+                            </td>
+                            {{-- Na moeda em que o cliente fechou o pedido, não em R$ fixo --}}
+                            <td class="fw-bold text-end">{{ order_money($order, $order->total) }}</td>
                             <td class="text-end pe-4">
                                 <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-outline-dark rounded-0">
                                     <i class="fa fa-eye me-1"></i> Visualizar
@@ -125,7 +175,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">Nenhum pedido realizado por este cliente.</td>
+                            <td colspan="7" class="text-center py-5 text-muted">Nenhum pedido realizado por este cliente.</td>
                         </tr>
                     @endforelse
                 </tbody>

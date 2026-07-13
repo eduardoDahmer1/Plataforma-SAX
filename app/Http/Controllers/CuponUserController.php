@@ -2,150 +2,109 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cupon;
-use App\Models\Product;
 use App\Models\UserCupon;
+use App\Services\CuponService;
 use Illuminate\Http\Request;
 
 class CuponUserController extends Controller
 {
+    public function __construct(private CuponService $cupons)
+    {
+    }
+
     /**
-     * Lista os cupons do usuário autenticado
+     * Página "Meus cupons": os cupons que o cliente pode usar agora e o histórico de uso.
      */
     public function index()
     {
         $user = auth()->user();
 
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Você precisa estar logado para ver seus cupons.');
+            return redirect()->route('login')->with('error', __('messages.cupon_precisa_login'));
         }
 
-        $cupons = $user->cupons()->withPivot('desconto')->get();
+        $disponiveis = $this->cupons->disponiveisPara($user);
 
-        return view('users.cupon', compact('cupons'));
+        $historico = UserCupon::consumidos()
+            ->with(['cupon', 'order'])
+            ->where('user_id', $user->id)
+            ->latest('usado_em')
+            ->get();
+
+        $resumo = $this->cupons->resumoDoCarrinho($user);
+
+        return view('users.cupon', compact('disponiveis', 'historico', 'resumo'));
     }
 
     /**
-     * Aplica cupom via API (usado no carrinho com JSON)
+     * Aplica um cupom ao carrinho. Responde JSON quando chamado via fetch e
+     * volta com flash message quando vem de um formulário normal.
      */
     public function apply(Request $request)
     {
         $request->validate([
-            'codigo' => 'required|string',
-            'cart'   => 'required|array',
+            'codigo' => 'required|string|max:60',
         ]);
 
         $user = auth()->user();
+
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Você precisa estar logado para aplicar cupons.'
-            ]);
+            return $this->responder($request, false, __('messages.cupon_precisa_login'));
         }
 
-        $codigo = $request->input('codigo');
-        $cart   = $request->input('cart');
+        $cupon = $this->cupons->localizar($request->input('codigo'));
+        $itens = $this->cupons->itensDoCarrinho($user);
+        $resultado = $this->cupons->avaliar($cupon, $itens, $user);
 
-        $cupon = Cupon::ativos()->where('codigo', $codigo)->first();
-        if (!$cupon) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cupom inválido ou expirado.'
-            ]);
+        if (!$resultado['ok']) {
+            $this->cupons->remover();
+
+            return $this->responder($request, false, $resultado['mensagem']);
         }
 
-        if ($cupon->quantidade && $cupon->quantidade <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Este cupom não está mais disponível.'
-            ]);
-        }
+        $this->cupons->aplicarNaSessao($resultado['cupon']);
 
-        $desconto = 0;
-        $subtotal = 0;
-
-        foreach ($cart as $productId => $qty) {
-            $product = Product::find($productId);
-            if (!$product) continue;
-
-            $aplica = match ($cupon->modelo) {
-                'categoria' => $product->category_id == $cupon->categoria_id,
-                'marca'     => $product->brand_id == $cupon->marca_id,
-                'produto'   => $product->id == $cupon->produto_id,
-                default     => true,
-            };
-
-            if ($aplica) {
-                $precoProduto = $product->price * $qty;
-                $subtotal    += $precoProduto;
-
-                $desconto    += $cupon->tipo == 'percentual'
-                    ? ($precoProduto * $cupon->montante) / 100
-                    : $cupon->montante;
-            }
-        }
-
-        if ($cupon->valor_maximo && $desconto > $cupon->valor_maximo) {
-            $desconto = $cupon->valor_maximo;
-        }
-
-        if ($cupon->valor_minimo && $subtotal < $cupon->valor_minimo) {
-            return response()->json([
-                'success' => false,
-                'message' => "O cupom só pode ser aplicado em compras acima de {$cupon->valor_minimo}."
-            ]);
-        }
-
-        UserCupon::updateOrCreate(
-            ['user_id' => $user->id, 'cupon_id' => $cupon->id],
-            ['desconto' => round($desconto, 2)]
-        );
-
-        return response()->json([
-            'success'  => true,
-            'message'  => 'Cupom aplicado com sucesso!',
-            'desconto' => round($desconto, 2),
-            'subtotal' => round($subtotal, 2),
-            'total'    => round($subtotal - $desconto, 2),
-            'cupon'    => $cupon->codigo
-        ]);
+        return $this->responder($request, true, __('messages.cupon_aplicado'), $resultado);
     }
 
-    /**
-     * Aplica cupom via formulário da view
-     */
+    // Rota antiga do formulário: mesmo comportamento.
     public function applyCupon(Request $request)
     {
-        $codigo = $request->input('codigo');
-
-        $cupom = Cupon::where('codigo', $codigo)
-            ->where('data_final', '>=', now())
-            ->first();
-
-        if (!$cupom) {
-            return back()->with('error', 'Cupom inválido ou expirado.');
-        }
-
-        // Salva apenas o ID na sessão
-        session(['cupom_aplicado' => $cupom->id]);
-
-        return back()->with('success', 'Cupom aplicado com sucesso!');
+        return $this->apply($request);
     }
 
-    /**
-     * Remove cupom aplicado
-     */
     public function remove(Request $request)
     {
-        // Remove do banco (se existir)
-        $user = auth()->user();
-        if ($user) {
-            UserCupon::where('user_id', $user->id)->delete();
+        $this->cupons->remover();
+
+        $resumo = $this->cupons->resumoDoCarrinho(auth()->user());
+
+        return $this->responder($request, true, __('messages.cupon_removido'), $resumo);
+    }
+
+    private function responder(Request $request, bool $ok, ?string $mensagem, array $dados = [])
+    {
+        if ($request->expectsJson()) {
+            $subtotal = (float) ($dados['subtotal'] ?? 0);
+            $desconto = (float) ($dados['desconto'] ?? 0);
+            $total    = (float) ($dados['total'] ?? $subtotal);
+            $cupon    = $dados['cupon'] ?? null;
+
+            return response()->json([
+                'success'            => $ok,
+                'message'            => $mensagem,
+                'codigo'             => $cupon->codigo ?? null,
+                'rotulo'             => $cupon?->rotuloDesconto(),
+                'escopo'             => $cupon?->rotuloEscopo(),
+                'subtotal'           => round($subtotal, 2),
+                'desconto'           => round($desconto, 2),
+                'total'              => round($total, 2),
+                'subtotal_formatado' => currency_format($subtotal),
+                'desconto_formatado' => currency_format($desconto),
+                'total_formatado'    => currency_format($total),
+            ], $ok ? 200 : 422);
         }
 
-        // Remove da sessão
-        session()->forget('cupom_aplicado');
-
-        return back()->with('success', 'Cupom removido com sucesso!');
+        return back()->with($ok ? 'success' : 'error', $mensagem);
     }
 }

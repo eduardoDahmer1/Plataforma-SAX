@@ -165,7 +165,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::put('attributes/text-topo', [ImageUploadController::class, 'updateTextTopo'])->name('attributes.update_text');
     Route::put('attributes/banner-links', [ImageUploadController::class, 'updateBannerLinks'])->name('attributes.update_banner_links');
     Route::resource('palace', PalaceAdminController::class);
-    Route::post('activate/update-all', [ActivateBrandsAndCategoriesController::class, 'updateAll'])->name('activate.updateAll');
+    // O salvar-tudo em lote saiu: cada item agora é alternado por AJAX (activate.toggle).
     Route::resource('bridal', BridalAdminController::class);
     Route::resource('cafe_bistro', CafeBistroAdminController::class);
     Route::resource('institucional', InstitucionalAdminController::class);
@@ -178,7 +178,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('sections-home', [AdminHighlightController::class, 'index'])->name('sections_home.index');
     Route::patch('sections-home/update', [AdminHighlightController::class, 'update'])->name('sections_home.update');
     Route::post('currencies', [CurrencyControllerAdmin::class, 'store'])->name('currencies.store');
+    // Antes do resource: 'cupons/produtos' não pode cair na rota 'cupons/{cupon}'.
+    Route::get('cupons/produtos', [CuponController::class, 'buscarProdutos'])->name('cupons.produtos');
     Route::resource('cupons', CuponController::class);
+    Route::patch('cupons/{cupon}/toggle', [CuponController::class, 'toggle'])->name('cupons.toggle');
     Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
     Route::get('products/review', [ProductControllerAdmin::class, 'review'])->name('products.review');
     Route::put('currencies/{id}', [CurrencyControllerAdmin::class, 'update'])->name('currencies.update');

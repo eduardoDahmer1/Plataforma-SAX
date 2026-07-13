@@ -68,7 +68,7 @@
 
 {{-- 3. Checkout + Carrinho --}}
 @if(Route::is('checkout.*') || Route::is('cart.*'))
-    <link href="{{ asset('css/checkout.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/checkout.css') }}?v={{ file_exists(public_path('css/checkout.css')) ? filemtime(public_path('css/checkout.css')) : time() }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 @endif
 

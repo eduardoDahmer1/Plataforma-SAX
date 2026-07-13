@@ -6,9 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Cart;
 use App\Models\Currency;
+use App\Services\CuponService;
 
 class CartController extends Controller
 {
+    public function __construct(private CuponService $cupons)
+    {
+    }
+
     protected function getCurrency()
     {
         $currencySession = session('currency');
@@ -76,7 +81,8 @@ class CartController extends Controller
                 ->select(['id', 'user_id', 'product_id', 'quantity', 'created_at', 'updated_at'])
                 ->where('user_id', $user->id)
                 ->with([
-                    'product:id,brand_id,external_name,photo,price,previous_price,sku,stock,parent_id,color_parent_id,status,product_role',
+                    // category_id/brand_id são necessários para avaliar o escopo dos cupons.
+                    'product:id,brand_id,category_id,external_name,photo,price,previous_price,sku,stock,parent_id,color_parent_id,status,product_role',
                     'product.brand:id,name',
                 ])
                 ->get();
@@ -102,7 +108,10 @@ class CartController extends Controller
             return $item;
         });
 
-        return view('cart.view', compact('cart'));
+        // Subtotal, desconto e total vêm do serviço: a view nunca recalcula cupom.
+        $resumo = $this->cupons->resumoDoCarrinho($user, $cart->filter(fn ($i) => $i->product)->values());
+
+        return view('cart.view', compact('cart', 'resumo'));
     }
 
     public function addAndCheckout(Request $request)

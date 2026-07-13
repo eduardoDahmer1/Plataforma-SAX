@@ -95,7 +95,13 @@
                 <div class="sax-checkout-box sticky-top" style="top: 20px;">
                     <h4 class="sax-step-title">{{ __('messages.resumo_do_pedido') }}</h4>
 
-                    @php $totalPedido = 0; @endphp
+                    @php
+                        // Os valores vêm do pedido, na moeda em que ele foi fechado.
+                        // O preço do item é o gravado na compra (o do produto pode ter mudado depois).
+                        $subtotalPedido = $orderItems->sum(fn ($i) => $i->price * $i->quantity);
+                        $descontoPedido = (float) ($order->discount ?? 0);
+                    @endphp
+
                     <div class="sax-summary-list">
                         @foreach ($orderItems as $item)
                             <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-light">
@@ -111,24 +117,34 @@
                                         {{ $item->quantity }}</small>
                                 </div>
                                 <div class="text-end">
-                                    <span
-                                        class="d-block fw-bold">{{ currency_format(($item->product->price ?? 0) * $item->quantity) }}</span>
+                                    <span class="d-block fw-bold">{{ order_money($order, $item->price * $item->quantity) }}</span>
                                 </div>
                             </div>
-                            @php $totalPedido += ($item->product->price ?? 0) * $item->quantity; @endphp
                         @endforeach
                     </div>
 
                     <div class="sax-summary-total pt-3">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">{{ __('messages.subtotal') }}</span>
-                            <span>{{ currency_format($totalPedido) }}</span>
+                            <span>{{ order_money($order, $subtotalPedido) }}</span>
                         </div>
+
+                        @if ($descontoPedido > 0)
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">
+                                    {{ __('messages.desconto') }}
+                                    @if ($order->cupon)
+                                        <span class="sax-cupon-produto__codigo ms-1">{{ $order->cupon->codigo }}</span>
+                                    @endif
+                                </span>
+                                <span class="text-success fw-bold">- {{ order_money($order, $descontoPedido) }}</span>
+                            </div>
+                        @endif
 
                         <div class="d-flex justify-content-between mb-3">
                             <span class="text-muted">{{ __('messages.envio') }}</span>
                             @if ($order->shipping_cost > 0)
-                                <span class="fw-bold">{{ currency_format($order->shipping_cost) }}</span>
+                                <span class="fw-bold">{{ order_money($order, $order->shipping_cost) }}</span>
                             @else
                                 <span
                                     class="text-success small fw-bold text-uppercase">{{ __('messages.a_confirmar') }}</span>
@@ -137,11 +153,8 @@
 
                         <div class="d-flex justify-content-between align-items-center border-top pt-3">
                             <span class="fw-bold h5 mb-0">{{ __('messages.total') }}</span>
-                            @php
-                                // Somamos o total dos itens com o custo de envio salvo no banco
-                                $totalFinal = $totalPedido + $order->shipping_cost;
-                            @endphp
-                            <span class="fw-bold h4 mb-0">{{ currency_format($totalFinal) }}</span>
+                            {{-- O total do pedido já inclui desconto e frete: é o valor a depositar --}}
+                            <span class="fw-bold h4 mb-0">{{ order_money($order, $order->total) }}</span>
                         </div>
                     </div>
                 </div>

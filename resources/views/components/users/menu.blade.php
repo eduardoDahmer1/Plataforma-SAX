@@ -23,9 +23,9 @@
             <a href="{{ route('user.orders') }}" class="sax-menu-link">
                 <i class="fa fa-list"></i> {{ __('messages.menu_historico') }}
             </a>
-            {{-- <a href="{{ route('user.cupons') }}" class="sax-menu-link">
-                <i class="fa fa-ticket-alt"></i> {{ __('messages.cupom') }}
-            </a> --}}
+            <a href="{{ route('user.cupons') }}" class="sax-menu-link">
+                <i class="fa fa-ticket-alt"></i> {{ __('messages.cupon_meus_cupons_titulo') }}
+            </a>
         </div>
     </div>
 

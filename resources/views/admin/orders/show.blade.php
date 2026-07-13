@@ -65,7 +65,7 @@
                                     </td>
                                     <td class="py-3 text-center text-secondary">{{ $item->quantity }}</td>
                                     <td class="py-3 text-end pe-0 fw-bold text-dark">
-                                        {{ currency_format($item->quantity * $item->price) }}
+                                        {{ order_money($order, $item->quantity * $item->price) }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -84,7 +84,7 @@
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between">
                                         <span class="fw-bold text-dark">{{ $item->name ?? ($product->name ?? 'Produto') }}</span>
-                                        <span class="fw-bold">{{ currency_format($item->quantity * $item->price) }}</span>
+                                        <span class="fw-bold">{{ order_money($order, $item->quantity * $item->price) }}</span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-1">
                                         <span class="x-small text-muted">Qtd: {{ $item->quantity }}</span>
@@ -249,39 +249,70 @@
                 @endif
 
                 {{-- Financeiro --}}
+                @php
+                    $subtotal = $order->items->sum(fn ($item) => $item->price * $item->quantity);
+                    $descontoPedido = (float) ($order->discount ?? 0);
+                    $moedaPedido = trim((string) ($order->currency_sign ?? '')) ?: 'US$';
+                    $cotacaoPedido = (float) ($order->currency_value ?? 1) ?: 1;
+                @endphp
+
                 <div class="border p-4 bg-dark text-white rounded shadow">
-                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-4 border-bottom border-secondary pb-2">Pagamento</h6>
-                    
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
+                        <h6 class="x-small fw-bold text-uppercase tracking-wider mb-0">{{ __('messages.pagamento_titulo') }}</h6>
+                        {{-- Moeda travada no fechamento do pedido: é o que o cliente viu e pagou. --}}
+                        <span class="x-small fw-bold px-2 py-1 bg-light text-dark rounded" title="{{ __('messages.pedido_moeda_ajuda') }}">
+                            {{ $moedaPedido }}
+                        </span>
+                    </div>
+
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="x-small text-secondary text-uppercase">Método</span>
+                        <span class="x-small text-secondary text-uppercase">{{ __('messages.metodo') }}</span>
                         <span class="x-small fw-bold px-2 py-1 bg-secondary rounded">{{ strtoupper($order->payment_method) }}</span>
                     </div>
 
                     <div class="d-flex justify-content-between mb-2 mt-3">
-                        <span class="x-small text-secondary text-uppercase">Subtotal</span>
-                        @php $subtotal = $order->items->sum(fn($item)=>$item->price*$item->quantity); @endphp
-                        <span class="small fw-bold">{{ currency_format($subtotal) }}</span>
+                        <span class="x-small text-secondary text-uppercase">{{ __('messages.subtotal') }}</span>
+                        <span class="small fw-bold">{{ order_money($order, $subtotal) }}</span>
                     </div>
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="x-small text-secondary text-uppercase">Frete</span>
-                        <span class="small fw-bold">{{ currency_format($order->shipping_cost ?? 0) }}</span>
-                    </div>
+                    @if ($descontoPedido > 0)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="x-small text-uppercase" style="color:#7fd18f;">
+                                {{ __('messages.desconto') }}
+                                @if ($order->cupon)
+                                    <span class="badge bg-light text-dark ms-1">{{ $order->cupon->codigo }}</span>
+                                @endif
+                            </span>
+                            <span class="small fw-bold" style="color:#7fd18f;">- {{ order_money($order, $descontoPedido) }}</span>
+                        </div>
 
-                    @if($order->discount > 0)
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="x-small text-danger text-uppercase">Cupom</span>
-                        <span class="small fw-bold text-danger">- {{ currency_format($order->discount) }}</span>
-                    </div>
+                        @if ($order->cupon)
+                            <div class="x-small text-secondary mb-2 ps-1">
+                                {{ $order->cupon->rotuloDesconto() }} · {{ $order->cupon->rotuloEscopo() }}
+                            </div>
+                        @endif
                     @endif
 
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="x-small text-secondary text-uppercase">{{ __('messages.frete') }}</span>
+                        <span class="small fw-bold">{{ order_money($order, $order->shipping_cost ?? 0) }}</span>
+                    </div>
+
                     <div class="d-flex justify-content-between mt-4 pt-3 border-top border-secondary">
-                        <span class="small text-uppercase fw-bold text-secondary">Total Final</span>
+                        <span class="small text-uppercase fw-bold text-secondary">{{ __('messages.total_final') }}</span>
                         <span class="h4 mb-0 fw-bold text-white">
-                            {{ currency_format($order->total) }}
+                            {{ order_money($order, $order->total) }}
                         </span>
                     </div>
-                    
+
+                    {{-- Referência em USD: os valores são gravados na moeda base. --}}
+                    @if ($moedaPedido !== 'US$')
+                        <div class="text-end x-small text-secondary mt-1">
+                            {{ __('messages.pedido_equivale_base', ['valor' => 'US$ ' . number_format($order->total, 2, ',', '.')]) }}
+                            · {{ __('messages.pedido_cotacao', ['valor' => rtrim(rtrim(number_format($cotacaoPedido, 4, ',', '.'), '0'), ',')]) }}
+                        </div>
+                    @endif
+
                     @if ($order->deposit_receipt)
                         <div class="pt-4 mt-4 border-top border-secondary">
                             <label class="x-small fw-bold text-uppercase d-block mb-3 text-secondary text-center">Comprovante</label>

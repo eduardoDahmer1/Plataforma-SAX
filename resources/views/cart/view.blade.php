@@ -10,10 +10,20 @@
             </div>
         </div>
 
+        @if (session('success') || session('error') || ($resumo['aviso'] ?? null))
+            <div class="col-12">
+                <div class="alert {{ session('error') || ($resumo['aviso'] ?? null) ? 'alert-danger' : 'alert-success' }} border-0 rounded-3 mb-0">
+                    {{ session('error') ?? ($resumo['aviso'] ?? session('success')) }}
+                </div>
+            </div>
+        @endif
+
         @if ($cart->count() > 0)
             @php
                 $totalCarrinho = 0;
                 $totalItens = 0;
+                $cupon = $resumo['cupon'] ?? null;
+                $itensComDesconto = $resumo['itens_elegiveis'] ?? [];
             @endphp
 
             <div class="col-lg-8">
@@ -74,6 +84,11 @@
 
                             <div class="sax-cart-item-price-wrap">
                                 <span class="sax-cart-item-price">{{ currency_format($itemTotal) }}</span>
+                                @if ($cupon && in_array($item->product_id, $itensComDesconto))
+                                    <span class="sax-cart-item-cupon-tag">
+                                        <i class="fas fa-tag me-1"></i>{{ $cupon->codigo }}
+                                    </span>
+                                @endif
                             </div>
                         </article>
                     @endforeach
@@ -95,17 +110,49 @@
 
                     <div class="sax-summary-line">
                         <span>{{ __('messages.subtotal') }}</span>
-                        <strong>{{ currency_format($totalCarrinho) }}</strong>
+                        <strong>{{ currency_format($resumo['subtotal']) }}</strong>
                     </div>
 
                     <div class="sax-summary-line">
                         <span>{{ __('messages.desconto') }}</span>
-                        <strong class="text-success">- {{ currency_format(0) }}</strong>
+                        <strong class="text-success">- {{ currency_format($resumo['desconto']) }}</strong>
                     </div>
 
                     <div class="sax-summary-total-line">
                         <span>{{ __('messages.total') }}</span>
-                        <strong>{{ currency_format($totalCarrinho) }}</strong>
+                        <strong>{{ currency_format($resumo['total']) }}</strong>
+                    </div>
+
+                    {{-- Cupom de desconto --}}
+                    <div class="sax-cupon-box mt-4">
+                        @if ($cupon)
+                            <div class="sax-cupon-applied">
+                                <div>
+                                    <span class="sax-cupon-applied-label">{{ __('messages.cupon_aplicado_label') }}</span>
+                                    <strong class="sax-cupon-applied-code">{{ $cupon->codigo }}</strong>
+                                    <span class="sax-cupon-applied-rule">{{ $cupon->rotuloDesconto() }} · {{ $cupon->rotuloEscopo() }}</span>
+                                </div>
+                                <form action="{{ route('user.cupons.remove') }}" method="POST" class="m-0">
+                                    @csrf
+                                    <button type="submit" class="sax-cupon-remove" aria-label="{{ __('messages.cupon_remover_btn') }}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <form action="{{ route('user.cupons.apply') }}" method="POST" class="sax-cupon-form">
+                                @csrf
+                                <label for="cupon-codigo" class="sax-cupon-label">
+                                    <i class="fas fa-tag me-1"></i>{{ __('messages.cupon_tem_codigo') }}
+                                </label>
+                                <div class="sax-cupon-input-group">
+                                    <input type="text" id="cupon-codigo" name="codigo" maxlength="60" required
+                                           class="sax-cupon-input text-uppercase"
+                                           placeholder="{{ __('messages.cupon_placeholder') }}">
+                                    <button type="submit" class="sax-cupon-btn">{{ __('messages.cupon_aplicar_btn') }}</button>
+                                </div>
+                            </form>
+                        @endif
                     </div>
 
                     <div class="d-grid gap-2 mt-4">

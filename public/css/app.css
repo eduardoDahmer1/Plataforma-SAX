@@ -3771,3 +3771,427 @@ transform: scale(1.5);
 .blog-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.14) !important; }
 .blog-card img { transition: .3s ease; }
 .blog-card:hover img { filter: brightness(0.9); }
+/* ==========================================================================
+   Selo de cupom — card de produto e página do produto
+   ========================================================================== */
+
+/* No card: etiqueta discreta sobre a foto, sem competir com o produto. */
+.sax-cupon-selo-card {
+    position: absolute;
+    left: 0;
+    bottom: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: baseline;
+    gap: .3rem;
+    max-width: calc(100% - 12px);
+    padding: .3rem .55rem;
+    background: rgba(255, 255, 255, .92);
+    backdrop-filter: blur(4px);
+    border-left: 2px solid #111;
+    color: #111;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sax-cupon-selo-card__valor {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    line-height: 1;
+}
+
+.sax-cupon-selo-card__label {
+    font-size: .56rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #6d6d6d;
+    line-height: 1;
+}
+
+/* Na página do produto: uma linha sóbria abaixo do preço. */
+.sax-cupon-produto {
+    margin-top: .85rem;
+    padding: .7rem .9rem;
+    border: 1px solid #e6e6e6;
+    border-left: 2px solid #111;
+    background: #fbfbfb;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem .6rem;
+}
+
+.sax-cupon-produto__preco {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: .01em;
+}
+
+.sax-cupon-produto__texto {
+    font-size: .78rem;
+    color: #555;
+}
+
+.sax-cupon-produto__codigo {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #111;
+    border: 1px dashed #bdbdbd;
+    background: #fff;
+    padding: .18rem .45rem;
+}
+
+.sax-cupon-produto__regra {
+    flex-basis: 100%;
+    font-size: .68rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #9a9a9a;
+}
+
+/* ==========================================================================
+   Catálogo do admin — padrão comum a marcas, categorias, subcategorias e filhas
+   ========================================================================== */
+.sax-cat { font-size: .8rem; }
+
+/* Cabeçalho */
+.sax-cat__top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .9rem;
+}
+
+.sax-cat__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #111;
+}
+
+.sax-cat__sub { font-size: .7rem; color: #999; }
+.sax-cat__sub strong { color: #111; }
+
+.sax-cat__new {
+    flex: 0 0 auto;
+    background: #111;
+    color: #fff;
+    border: 1px solid #111;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .45rem .9rem;
+    border-radius: 2px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.sax-cat__new:hover { opacity: .85; color: #fff; }
+
+/* Barra de busca */
+.sax-cat__bar {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 0 .8rem;
+    margin-bottom: .5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.sax-cat__search { position: relative; flex: 1 1 260px; max-width: 360px; margin: 0; }
+
+.sax-cat__search i {
+    position: absolute; left: .6rem; top: 50%; transform: translateY(-50%);
+    font-size: .7rem; color: #aaa;
+}
+
+.sax-cat__search input {
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    padding: .38rem .5rem .38rem 1.7rem;
+    font-size: .78rem;
+}
+
+.sax-cat__search input:focus { outline: none; border-color: #111; }
+
+.sax-cat__clear {
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #999;
+    font-size: .65rem;
+    padding: .35rem .6rem;
+    border-radius: 2px;
+    text-decoration: none;
+}
+
+.sax-cat__clear:hover { border-color: #111; color: #111; }
+
+/* Grade de cards */
+.sax-cat__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .75rem;
+}
+
+.sax-cat-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ececec;
+    border-radius: 2px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color .15s ease;
+}
+
+.sax-cat-card:hover { border-color: #c9c9c9; }
+
+.sax-cat-card__media {
+    aspect-ratio: 16 / 9;
+    background: #fafafa;
+    border-bottom: 1px solid #f2f2f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sax-cat-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.sax-cat-card__media i { font-size: 1.1rem; color: #dcdcdc; }
+
+.sax-cat-card__body { padding: .6rem .7rem; flex: 1 1 auto; min-width: 0; }
+
+.sax-cat-card__name {
+    display: block;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sax-cat-card__meta {
+    display: block;
+    margin-top: .15rem;
+    font-size: .65rem;
+    color: #a0a0a0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sax-cat-card__parent {
+    display: inline-block;
+    margin-top: .35rem;
+    font-size: .6rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #666;
+    background: #f4f4f4;
+    border-radius: 2px;
+    padding: .1rem .35rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Ações do card */
+.sax-cat-card__actions {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid #f2f2f2;
+}
+
+.sax-cat-card__actions > * { flex: 1 1 0; display: flex; }
+
+.sax-cat-act {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    border: 0;
+    border-right: 1px solid #f2f2f2;
+    background: #fff;
+    color: #777;
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .45rem .3rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.sax-cat-card__actions > *:last-child .sax-cat-act,
+.sax-cat-card__actions > .sax-cat-act:last-child { border-right: 0; }
+
+.sax-cat-act:hover { background: #fafafa; color: #111; }
+.sax-cat-act--danger:hover { background: #fdf3f2; color: #c0392b; }
+
+.sax-cat__empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2.5rem 0;
+    color: #aaa;
+    font-style: italic;
+    font-size: .78rem;
+}
+
+.sax-cat__pag { display: flex; justify-content: center; margin-top: 1.2rem; }
+
+/* ---------- Formulário padrão ---------- */
+.sax-catf { font-size: .8rem; max-width: 1000px; }
+
+.sax-catf__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: .7rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid #eee;
+}
+
+.sax-catf__back {
+    flex: 0 0 auto;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #777;
+    text-decoration: none;
+}
+
+.sax-catf__back:hover { color: #111; }
+
+.sax-catf__errors {
+    border-left: 2px solid #c0392b;
+    background: #fdf3f2;
+    padding: .6rem .8rem;
+    margin-bottom: 1rem;
+}
+
+.sax-catf__errors ul { margin: 0; padding-left: 1rem; font-size: .75rem; color: #a5352a; }
+
+.sax-catf__section {
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #999;
+    padding-bottom: .35rem;
+    margin: 0 0 .9rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sax-catf__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.sax-field { margin-bottom: 1rem; }
+
+.sax-field__label {
+    display: block;
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: .3rem;
+}
+
+.sax-field__control {
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    padding: .45rem .55rem;
+    font-size: .8rem;
+    color: #222;
+    background: #fff;
+}
+
+.sax-field__control:focus { outline: none; border-color: #111; }
+.sax-field__control.is-invalid { border-color: #c0392b; }
+
+.sax-field__group { display: flex; align-items: stretch; }
+
+.sax-field__prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 .5rem;
+    font-size: .7rem;
+    color: #999;
+    background: #f7f7f7;
+    border: 1px solid #e0e0e0;
+    border-right: 0;
+    border-radius: 2px 0 0 2px;
+    white-space: nowrap;
+}
+
+.sax-field__group .sax-field__control { border-radius: 0 2px 2px 0; }
+
+.sax-field__hint { display: block; font-size: .65rem; color: #aaa; margin-top: .25rem; }
+.sax-field__error { display: block; font-size: .68rem; color: #c0392b; margin-top: .25rem; }
+
+.sax-catf__actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.sax-catf__save {
+    background: #111;
+    border: 1px solid #111;
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .55rem 1.6rem;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.sax-catf__save:hover { opacity: .85; }
+
+.sax-catf__cancel {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #999;
+    text-decoration: none;
+}
+
+.sax-catf__cancel:hover { color: #111; }
+
+/* Upload simples (usado no create; no edit continua o media-field com AJAX) */
+.sax-upload {
+    border: 1px dashed #dcdcdc;
+    border-radius: 2px;
+    background: #fbfbfb;
+    padding: .7rem;
+    text-align: center;
+}
+
+.sax-upload i { display: block; font-size: 1rem; color: #d0d0d0; margin-bottom: .3rem; }
+.sax-upload input { width: 100%; font-size: .7rem; }
+.sax-upload p { margin: .35rem 0 0; font-size: .62rem; color: #aaa; }

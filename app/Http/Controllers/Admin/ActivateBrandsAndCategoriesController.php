@@ -15,14 +15,15 @@ class ActivateBrandsAndCategoriesController extends Controller
      */
     public function index()
     {
-        $brands = Brand::orderBy('name')->get();
-        $categories = Category::orderBy('name')->get();
+        // Só as colunas usadas na tela: são milhares de marcas.
+        $brands = Brand::orderBy('name')->get(['id', 'name', 'slug', 'status']);
+        $categories = Category::orderBy('name')->get(['id', 'name', 'slug', 'status']);
 
         return view('admin.activate.index', compact('brands', 'categories'));
     }
 
     /**
-     * Alterna o status de um item individual (via link/botão direto se houver)
+     * Alterna o status de um item. Responde JSON para a tela atualizar sem recarregar.
      */
     public function toggleStatus(Request $request, $type, $id)
     {
@@ -35,34 +36,19 @@ class ActivateBrandsAndCategoriesController extends Controller
         // Limpa o cache para as mudanças refletirem no site imediatamente
         Cache::flush();
 
-        $label = ($type === 'brand') ? 'Marca' : 'Categoria';
-        $statusTexto = ($model->status == 1) ? 'ativada' : 'desativada';
+        $label = ($type === 'brand') ? __('messages.marca') : __('messages.categoria');
+        $ativo = $model->status == 1;
 
-        return back()->with('success', "{$label} {$statusTexto} com sucesso!");
-    }
-
-    /**
-     * Atualiza todos os itens enviados pelo formulário em lote
-     */
-    public function updateAll(Request $request)
-    {
-        // Recebe os arrays de status (ID => STATUS)
-        $categoriesInput = $request->input('categories', []);
-        $brandsInput = $request->input('brands', []);
-
-        // Atualiza Categorias
-        foreach ($categoriesInput as $id => $status) {
-            Category::where('id', $id)->update(['status' => (int)$status]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'status'  => $model->status,
+                'ativo'   => $ativo,
+                'message' => $label . ' ' . ($ativo ? __('messages.ativada_sucesso') : __('messages.desativada_sucesso')),
+            ]);
         }
 
-        // Atualiza Marcas
-        foreach ($brandsInput as $id => $status) {
-            Brand::where('id', $id)->update(['status' => (int)$status]);
-        }
-
-        // Limpa o cache uma única vez após todas as atualizações
-        Cache::flush();
-
-        return back()->with('success', "Alterações aplicadas com sucesso e cache limpo!");
+        return back()->with('success', $label . ' ' . ($ativo ? __('messages.ativada_sucesso') : __('messages.desativada_sucesso')));
     }
+
 }

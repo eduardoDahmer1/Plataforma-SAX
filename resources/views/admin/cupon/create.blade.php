@@ -21,16 +21,6 @@
                         @include('admin.cupon.partials.form', ['button' => __('messages.registrar_cupon_btn')])
                     </div>
                 </div>
-
-                {{-- Ações de Rodapé (Caso não estejam no partial) --}}
-                <div class="mt-4 d-flex align-items-center gap-3">
-                    <button type="submit" class="btn btn-dark rounded-0 px-5 py-2 fw-bold text-uppercase tracking-wider small">
-                        {{ __('messages.guardar_cupon_btn') }}
-                    </button>
-                    <a href="{{ route('admin.cupons.index') }}" class="text-secondary text-decoration-none x-small fw-bold text-uppercase hover-underline">
-                        {{ __('messages.descartar_link') }}
-                    </a>
-                </div>
             </form>
         </div>
     </div>

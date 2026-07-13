@@ -63,10 +63,20 @@
         <div class="sax-total-section mt-4">
             <span class="total-count">{{ $totalItens }} {{ __('messages.itens_selecionados') }}</span>
             <span class="total-label">{{ __('messages.subtotal') }}</span>
-            <span class="total-value" id="subtotal-valor" data-valor="{{ $totalCarrinho }}">
-                {{ currency_format($totalCarrinho) }}
+            <span class="total-value" id="subtotal-valor" data-valor="{{ $resumo['subtotal'] ?? $totalCarrinho }}">
+                {{ currency_format($resumo['subtotal'] ?? $totalCarrinho) }}
             </span>
         </div>
+
+        @if (($resumo['desconto'] ?? 0) > 0)
+            <div class="sax-total-section mt-2">
+                <span class="total-count">
+                    <i class="fas fa-tag me-1"></i>{{ $resumo['cupon']->codigo }}
+                </span>
+                <span class="total-label">{{ __('messages.desconto') }}</span>
+                <span class="total-value text-success">- {{ currency_format($resumo['desconto']) }}</span>
+            </div>
+        @endif
 
         <button type="button" class="sax-btn-next mt-4" onclick="nextStep(1)">
             {{ __('messages.seguir_identificacao') }} <i class="fa fa-chevron-right ms-2"></i>

@@ -46,10 +46,10 @@
         @csrf
         <input type="hidden" name="step" id="currentStep" value="{{ $initialStep }}">
 
-        <x-checkout.step1-cart :cart="$cart" />
+        <x-checkout.step1-cart :cart="$cart" :resumo="$resumo" />
         <x-checkout.step2-user />
         <x-checkout.step3-shipping />
-        <x-checkout.step4-payment :cart="$cart" :payment-methods="$paymentMethods" />
+        <x-checkout.step4-payment :cart="$cart" :resumo="$resumo" :payment-methods="$paymentMethods" />
     </form>
 </div>
 </div>

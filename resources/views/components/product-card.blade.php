@@ -58,6 +58,8 @@
                 <img src="{{ $fotoExibir }}" class="card-img-top img-fluid rounded-0"
                     alt="{{ $item->name }}">
 
+                <x-cupon-selo :product="$item" variante="card" />
+
                 <div class="position-absolute top-0 end-0 p-3">
                     @if (Auth::check() && Auth::user()->user_type != 1)
                         <x-product-favorite-button :item="$item" />

@@ -6,8 +6,10 @@ use Illuminate\Support\Str;
 
 class CategoryDisplayService
 {
-    public function formatName(string $name, ?string $slug = null): string
+    // Há registros com nome nulo no banco; sem isso qualquer tela que os liste quebra.
+    public function formatName(?string $name, ?string $slug = null): string
     {
+        $name = (string) $name;
         $checkSlug = $slug ?? Str::slug($name);
 
         if ($checkSlug === 'perfumes-and-cosmeticos') {

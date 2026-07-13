@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
-use App\Models\UserCupon;
-use App\Models\Cupon;
 use Illuminate\Support\Facades\Hash;
 use App\Models\PaymentMethod;
 
@@ -128,7 +126,7 @@ class UserController extends Controller
         $user = Auth::user();
 
         // Busca o pedido com os itens
-        $order = Order::with(['items', 'receipt'])->where('id', $id)->where('user_id', $user->id)->firstOrFail();
+        $order = Order::with(['items', 'receipt', 'cupon'])->where('id', $id)->where('user_id', $user->id)->firstOrFail();
 
         // BUSCA AS CONTAS BANCÁRIAS
         // Removi o 'status' para evitar o erro de coluna não encontrada
@@ -138,59 +136,7 @@ class UserController extends Controller
         return view('users.order', compact('order', 'bankAccounts'));
     }
 
-    // Aplicar cupom no checkout
-    public function applyCupon(Request $request)
-    {
-        $request->validate(['cupon' => 'required|string']);
-        $user = Auth::user();
-
-        $cupon = Cupon::where('codigo', $request->cupon)->where('data_inicio', '<=', now())->where('data_final', '>=', now())->first();
-
-        if (!$cupon) {
-            return back()->withErrors(['cupon' => 'Cupom inválido ou expirado.']);
-        }
-
-        $cartTotal = session()->get('cart_total', 0);
-
-        if ($cupon->valor_minimo && $cartTotal < $cupon->valor_minimo) {
-            return back()->withErrors(['cupon' => "O pedido deve ser mínimo de {$cupon->valor_minimo} para este cupom."]);
-        }
-
-        if ($cupon->valor_maximo && $cartTotal > $cupon->valor_maximo) {
-            return back()->withErrors(['cupon' => "O pedido deve ser máximo de {$cupon->valor_maximo} para este cupom."]);
-        }
-
-        // Calcula desconto
-        $discount = $cupon->tipo === 'percentual' ? ($cartTotal * $cupon->montante) / 100 : $cupon->montante;
-
-        // Salva na sessão (mantém compatibilidade)
-        session()->put('cupon', [
-            'id' => $cupon->id,
-            'codigo' => $cupon->codigo,
-            'discount' => $discount,
-        ]);
-
-        // Salva também no banco para histórico
-        UserCupon::updateOrCreate(['user_id' => $user->id, 'cupon_id' => $cupon->id], ['desconto' => round($discount, 2)]);
-
-        return back()->with('success', "Cupom '{$cupon->codigo}' aplicado! Desconto: {$discount}");
-    }
-
-    // Remover cupom
-    public function removeCupon()
-    {
-        session()->forget('cupon');
-        return back()->with('success', 'Cupom removido com sucesso!');
-    }
-
-    public function cupons()
-    {
-        $user = Auth::user();
-
-        $cupons = UserCupon::with('cupon')->where('user_id', $user->id)->get();
-
-        return view('users.cupon', compact('cupons'));
-    }
+    // Os cupons são tratados por CuponUserController + CuponService (rotas user.cupons.*).
 
     public function checkoutSuccess(Request $request)
     {

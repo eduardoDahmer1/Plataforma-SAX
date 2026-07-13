@@ -171,7 +171,7 @@
                         @foreach ($gallery as $img)
                             <div class="swiper-slide">
                                 <div class="swiper-zoom-container">
-                                    <img src="{{ Storage::url($img) }}" alt="{{ $product->name }}">
+                                    <img src="{{ Storage::url($img) }}" alt="{{ $displayName }}">
                                 </div>
                             </div>
                         @endforeach
@@ -231,7 +231,7 @@
                         $catBadgeModifier = $categoryBadgeMap[$catKey] ?? '';
                     @endphp
                     <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                        <h1 class="h4 text-uppercase fw-light mb-0" style="letter-spacing: 1px; line-height: 1.3;">{{ $product->name }}</h1>
+                        <h1 class="h4 text-uppercase fw-light mb-0" style="letter-spacing: 1px; line-height: 1.3;">{{ $displayName }}</h1>
                         @if ($product->category)
                             <span class="cat-badge {{ $catBadgeModifier }}">{{ \Str::upper($product->category->name) }}</span>
                         @endif
@@ -243,6 +243,8 @@
                             <span class="text-muted text-decoration-line-through me-2 small fw-light">{{ currency_format($product->previous_price) }}</span>
                         @endif
                         <span class="h4 fw-bold text-dark">{{ currency_format($product->price) }}</span>
+
+                        <x-cupon-selo :product="$product" variante="produto" />
                     </div>
 
                     <div class="mb-4">
@@ -308,7 +310,7 @@
 
                     <div class="mb-5">
                         @if ($isBridal)
-                                     <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $product->name) }}"
+                                     <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $displayName) }}"
                                target="_blank"
                                class="btn btn-outline-dark w-100 text-uppercase fw-bold rounded-0 bridal-btn">
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.agendar_consulta_bridal') }}

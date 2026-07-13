@@ -56,38 +56,89 @@
 
     <div class="row g-3">
         @forelse($orders as $order)
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card h-100 rounded-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <span class="fw-bold">#{{ $order->order_number }}</span>
-                        <span class="badge bg-secondary">{{ $order->status }}</span>
+            @php
+                $corStatus = match ($order->status) {
+                    'completed' => 'bg-success',
+                    'shipped'   => 'bg-primary',
+                    'processing'=> 'bg-info text-dark',
+                    'canceled'  => 'bg-danger',
+                    default     => 'bg-warning text-dark',
+                };
+                $corPagamento = match ($order->payment_status) {
+                    'paid'     => 'text-success',
+                    'failed'   => 'text-danger',
+                    'refunded' => 'text-secondary',
+                    default    => 'text-warning',
+                };
+                $subtotalCard = $order->items->sum(fn ($i) => $i->price * $i->quantity);
+                $totalItens = $order->items->sum('quantity');
+            @endphp
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 rounded-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="fw-bold d-block">#{{ $order->order_number ?? $order->id }}</span>
+                                <span class="x-small text-muted">{{ $order->created_at->format('d/m/Y H:i') }}</span>
+                            </div>
+                            <span class="badge {{ $corStatus }} rounded-0 x-small">{{ __('messages.status_' . $order->status) }}</span>
+                        </div>
+
+                        <p class="mb-1 fw-bold">{{ $order->user->name ?? $order->name ?? '—' }}</p>
+                        <p class="small text-muted mb-3">{{ $order->user->email ?? $order->email }}</p>
+
+                        <div class="small border-top pt-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">{{ __('messages.metodo') }}</span>
+                                <span>
+                                    {{ ucfirst($order->payment_method) }}
+                                    <i class="fa fa-circle x-small ms-1 {{ $corPagamento }}"
+                                       title="{{ __('messages.payment_status_' . $order->payment_status) }}"></i>
+                                </span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">{{ __('messages.quantidade_col') }}</span>
+                                <span>{{ $totalItens }}</span>
+                            </div>
+
+                            @if ($order->discount > 0)
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted">{{ __('messages.desconto') }}</span>
+                                    <span class="text-success">
+                                        @if ($order->cupon)
+                                            <span class="badge bg-light text-dark border me-1">{{ $order->cupon->codigo }}</span>
+                                        @endif
+                                        - {{ order_money($order, $order->discount) }}
+                                    </span>
+                                </div>
+                            @endif
+
+                            <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                                <span>{{ __('messages.total') }}</span>
+                                {{-- Na moeda em que o cliente fechou o pedido --}}
+                                <span>{{ order_money($order, $order->total) }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <p class="mb-1 fw-bold">{{ $order->user->name ?? 'Anônimo' }}</p>
-                    <p class="small text-muted mb-2">{{ $order->user->email ?? '' }}</p>
-                    <div class="small border-top pt-2">
-                        <div class="d-flex justify-content-between">
-                            <span>Data:</span> <span>{{ $order->created_at->format('d/m/Y') }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span>Método:</span> <span>{{ ucfirst($order->payment_method) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between fw-bold mt-2">
-                            <span>Total:</span> <span>{{ currency_format($order->total) }}</span>
-                        </div>
+
+                    <div class="card-footer bg-white border-0 p-3 d-flex gap-2">
+                        <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-dark rounded-0 flex-grow-1 x-small text-uppercase fw-bold">
+                            {{ __('messages.ver_detalhes_btn') }}
+                        </a>
+                        <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST"
+                              onsubmit="return confirm('{{ __('messages.eliminar_btn') }}?');" class="m-0">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-outline-danger rounded-0 x-small" title="{{ __('messages.eliminar_registro') }}">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </form>
                     </div>
-                </div>
-                <div class="card-footer bg-white border-0 p-3">
-                    <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-dark w-100 rounded-0">Ver Detalhes</a>
-                    <form class="btn btn-dark w-100 rounded-0" action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" onsubmit="return confirm('{{ __('messages.eliminar_btn') }}?');">
-                        @csrf @method('DELETE')
-                        <button class="dropdown-item small text-danger">{{ __('messages.eliminar_registro') }}</button>
-                    </form>
                 </div>
             </div>
-        </div>
         @empty
-        <div class="col-12 text-center py-5">Nenhum pedido encontrado.</div>
+            <div class="col-12 text-center py-5 text-muted">{{ __('messages.nenhum_pedido_encontrado') }}</div>
         @endforelse
     </div>
 

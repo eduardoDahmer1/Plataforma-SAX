@@ -18,6 +18,13 @@
                 'cta' => 'View my order',
                 'updated_title' => 'Your order has been updated',
                 'method_deposito' => 'Bank deposit',
+                'items' => 'Your items',
+                'qty' => 'Qty',
+                'subtotal' => 'Subtotal',
+                'discount' => 'Discount',
+                'coupon' => 'Coupon',
+                'shipping' => 'Shipping',
+                'shipping_free' => 'Free',
             ],
             'es' => [
                 'hello' => 'Hola,',
@@ -29,6 +36,13 @@
                 'cta' => 'Ver mi pedido',
                 'updated_title' => 'Tu pedido fue actualizado',
                 'method_deposito' => 'Deposito bancario',
+                'items' => 'Tus productos',
+                'qty' => 'Cant',
+                'subtotal' => 'Subtotal',
+                'discount' => 'Descuento',
+                'coupon' => 'Cupon',
+                'shipping' => 'Envio',
+                'shipping_free' => 'Gratis',
             ],
             default => [
                 'hello' => 'Olá,',
@@ -40,13 +54,25 @@
                 'cta' => 'Ver meu pedido',
                 'updated_title' => 'Seu pedido foi atualizado',
                 'method_deposito' => 'Deposito bancario',
+                'items' => 'Seus produtos',
+                'qty' => 'Qtd',
+                'subtotal' => 'Subtotal',
+                'discount' => 'Desconto',
+                'coupon' => 'Cupom',
+                'shipping' => 'Frete',
+                'shipping_free' => 'Gratis',
             ],
         };
 
-        $currencySign = $order->currency_sign ?: 'US$';
-        $currencyValue = (float) ($order->currency_value ?: 1);
-        $totalConverted = (float) $order->total * $currencyValue;
-        $totalFormatted = $currencySign . ' ' . number_format($totalConverted, 2, ',', '.');
+        // Todos os valores são formatados na moeda em que o cliente fechou o pedido.
+        $dinheiro = fn ($valorBase) => order_money($order, $valorBase);
+
+        $itens = $order->items;
+        $subtotal = $itens->sum(fn ($item) => $item->price * $item->quantity);
+        $desconto = (float) ($order->discount ?? 0);
+        $frete = (float) ($order->shipping_cost ?? 0);
+        $totalFormatted = $dinheiro($order->total);
+
         $paymentMethod = strtolower((string) $order->payment_method) === 'deposito'
             ? $copy['method_deposito']
             : ucfirst((string) $order->payment_method);
@@ -96,6 +122,38 @@
                         </td>
                     </tr>
                     <tr>
+                        <td style="padding:0.58rem 0;border-bottom:1px solid #ddd9d4;">
+                            <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15rem;color:#888888;">{{ $copy['subtotal'] }}</span>
+                        </td>
+                        <td style="padding:0.58rem 0;border-bottom:1px solid #ddd9d4;text-align:right;">
+                            <span style="font-size:0.95rem;color:#333333;">{{ $dinheiro($subtotal) }}</span>
+                        </td>
+                    </tr>
+
+                    @if ($desconto > 0)
+                        <tr>
+                            <td style="padding:0.58rem 0;border-bottom:1px solid #ddd9d4;">
+                                <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15rem;color:#888888;">{{ $copy['discount'] }}</span>
+                                @if ($order->cupon)
+                                    <span style="display:inline-block;margin-left:6px;font-size:0.65rem;font-weight:700;letter-spacing:0.08rem;color:#111;border:1px dashed #bdbdbd;background:#fff;padding:2px 6px;">{{ $order->cupon->codigo }}</span>
+                                @endif
+                            </td>
+                            <td style="padding:0.58rem 0;border-bottom:1px solid #ddd9d4;text-align:right;">
+                                <span style="font-size:0.95rem;font-weight:700;color:#1f7a37;">- {{ $dinheiro($desconto) }}</span>
+                            </td>
+                        </tr>
+                    @endif
+
+                    <tr>
+                        <td style="padding:0.58rem 0;border-bottom:1px solid #ddd9d4;">
+                            <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15rem;color:#888888;">{{ $copy['shipping'] }}</span>
+                        </td>
+                        <td style="padding:0.58rem 0;border-bottom:1px solid #ddd9d4;text-align:right;">
+                            <span style="font-size:0.95rem;color:#333333;">{{ $frete > 0 ? $dinheiro($frete) : $copy['shipping_free'] }}</span>
+                        </td>
+                    </tr>
+
+                    <tr>
                         <td style="padding:0.85rem 0 0 0;">
                             <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15rem;color:#888888;">{{ $copy['total'] }}</span>
                         </td>
@@ -107,6 +165,29 @@
             </td>
         </tr>
     </table>
+
+    {{-- Produtos do pedido --}}
+    @if ($itens->count())
+        <p style="margin:0 0 0.8rem 0;font-size:0.72rem;letter-spacing:0.18rem;text-transform:uppercase;color:#8a8a8a;">{{ $copy['items'] }}</p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:1.8rem;border:1px solid #e6e2dc;">
+            @foreach ($itens as $item)
+                <tr>
+                    <td style="padding:0.9rem 1rem;border-bottom:{{ $loop->last ? '0' : '1px solid #eeeae4' }};">
+                        <span style="display:block;font-size:0.92rem;font-weight:700;color:#111111;line-height:1.4;">
+                            {{ $item->external_name ?: ($item->name ?: 'Produto') }}
+                        </span>
+                        <span style="display:block;margin-top:2px;font-size:0.72rem;color:#8a8a8a;">
+                            SKU: {{ $item->sku ?: '-' }} &nbsp;·&nbsp; {{ $copy['qty'] }}: {{ $item->quantity }}
+                        </span>
+                    </td>
+                    <td style="padding:0.9rem 1rem;border-bottom:{{ $loop->last ? '0' : '1px solid #eeeae4' }};text-align:right;white-space:nowrap;">
+                        <span style="font-size:0.95rem;font-weight:700;color:#111111;">{{ $dinheiro($item->price * $item->quantity) }}</span>
+                    </td>
+                </tr>
+            @endforeach
+        </table>
+    @endif
 
     <p style="margin:0 0 1.8rem 0;font-size:0.98rem;color:#333333;line-height:1.7;">
         {{ $copy['track'] }}

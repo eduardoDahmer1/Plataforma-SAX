@@ -32,7 +32,8 @@ class ClientController extends Controller
 
     public function show($id)
     {
-        $client = User::with(['orders.items'])->findOrFail($id);
+        $client = User::with(['orders' => fn ($q) => $q->latest(), 'orders.items', 'orders.cupon'])
+            ->findOrFail($id);
         return view('admin.clients.show', compact('client'));
     }
 }

@@ -22,7 +22,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 20);
-        $query = Order::with(['user', 'items']);
+        $query = Order::with(['user', 'items', 'cupon']);
 
         if ($request->filled('payment_method')) {
             if ($request->payment_method === 'bancard') {
@@ -34,6 +34,11 @@ class OrderController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // O filtro existia no formulário mas nunca era aplicado.
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
         }
 
         if ($request->filled('user_name')) {
@@ -118,7 +123,7 @@ class OrderController extends Controller
     // Mostra detalhes do pedido
     public function show($id)
     {
-        $order = Order::with(['user', 'items.product', 'receipt'])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'receipt', 'cupon'])->findOrFail($id);
         return view('admin.orders.show', compact('order'));
     }
 

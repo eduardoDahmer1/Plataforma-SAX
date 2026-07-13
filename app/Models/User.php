@@ -87,11 +87,18 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
     
+    // user_type 1 é o administrador: é o que o middleware CheckAdmin exige e é
+    // justamente quem o carrinho impede de comprar. O 2 é o cliente da loja.
+    public function isAdmin(): bool
+    {
+        return (int) $this->user_type === 1;
+    }
+
     public function getUserRoleAttribute()
     {
-        return match ($this->user_type) {
-            1 => 'Usuário Comum',
-            2 => 'Admin Master',
+        return match ((int) $this->user_type) {
+            1 => 'Admin',
+            2 => 'Cliente',
             default => 'Desconhecido',
         };
     }

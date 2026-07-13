@@ -118,7 +118,13 @@
       "Bash(php -l /var/www/html/sax_plataforma/app/Http/Controllers/Admin/InstitucionalAdminController.php)",
       "Bash(grep -n 'currentLangLabel\\\\|currentCurrencyId\\\\|langMap\\\\|$currencies\\\\|currentCurrency' resources/views/components/header-internas.blade.php)",
       "Bash(curl -s -o /dev/null -w \"home:%{http_code}\\\\n\" -H \"Host: saxdepartment.com\" http://127.0.0.1/)",
-      "Bash(curl -s -o /dev/null -w \"bridal:%{http_code}\\\\n\" -H \"Host: saxdepartment.com\" http://127.0.0.1/bridal)"
+      "Bash(curl -s -o /dev/null -w \"bridal:%{http_code}\\\\n\" -H \"Host: saxdepartment.com\" http://127.0.0.1/bridal)",
+      "Bash(grep -v \"WARNING\\\\|^$\")",
+      "Bash(php -l app/Http/Controllers/Auth/UserController.php)",
+      "Bash(php -l app/Models/Cart.php)",
+      "Bash(grep -n 'R\\\\$' resources/views/admin/clients/show.blade.php)",
+      "Bash(php -l app/Http/Controllers/Admin/LanguageControllerAdmin.php)",
+      "Bash(sed -i 's|\\\\$render\\(\"\\\\$nome edit\",   fn \\(\\) => \\\\$c->edit\\(\\\\$model\\)\\);|$render\\(\"$nome edit\",   fn \\(\\) => $c->edit\\($nome === \"categorias\" ? $model->id : $model\\)\\);|' /tmp/claude-1002/-var-www-html-sax-plataforma/0d9c67b9-b620-40a0-ab43-d95b34f7d4f1/scratchpad/teste_cat.php)"
     ],
     "additionalDirectories": [
       "/home/edu/.claude",

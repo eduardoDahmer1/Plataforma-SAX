@@ -8,8 +8,8 @@ use App\Models\Order;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
-use App\Models\Cupon;
 use App\Http\Controllers\PagoParController;
+use App\Services\CuponService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
@@ -17,6 +17,10 @@ use App\Mail\OrderStatusMail;
 
 class CheckoutController extends Controller
 {
+    public function __construct(private CuponService $cupons)
+    {
+    }
+
     // Página inicial do checkout
     public function index(Request $request)
     {
@@ -32,7 +36,10 @@ class CheckoutController extends Controller
             return $item;
         });
 
-        return view('checkout.index', compact('paymentMethods', 'cart'));
+        // O cupom da sessão é revalidado contra o carrinho atual a cada carregamento.
+        $resumo = $this->cupons->resumoDoCarrinho($user, $cart->filter(fn ($i) => $i->product)->values());
+
+        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo'));
     }
 
     public function store(Request $request)
@@ -57,7 +64,6 @@ class CheckoutController extends Controller
             'frete_valor' => 'nullable|numeric', // Validamos o campo que enviamos via JS
             'store' => 'required_if:shipping,3',
             'observations' => 'nullable|string',
-            'cupon' => 'nullable|string',
         ]);
 
         $cart = Cart::with('product')->where('user_id', $user->id)->get();
@@ -66,31 +72,22 @@ class CheckoutController extends Controller
         }
 
         $frete = (float) $request->input('frete_valor', 0);
-
-        $subtotal = $cart->sum(fn($item) => $item->quantity * $item->product->price);
         $paymentMethod = $request->input('payment_method');
-        $desconto = 0;
-        $cupon = null;
 
-        if ($request->filled('cupon') && in_array($paymentMethod, ['deposito', 'pagopar', 'bancard'])) {
-            $cupon = Cupon::where('codigo', $request->input('cupon'))
-                        ->where('data_inicio', '<=', now())
-                        ->where('data_final', '>=', now())
-                        ->first();
+        // O cupom vem da sessão e é recalculado aqui no servidor: o valor enviado pelo
+        // navegador nunca é usado para definir o desconto.
+        $itensValidos = $cart->filter(fn ($item) => $item->product)->values();
+        $resumo = $this->cupons->resumoDoCarrinho($user, $itensValidos);
 
-            if ($cupon) {
-                if (($cupon->valor_minimo && $subtotal < $cupon->valor_minimo) || ($cupon->valor_maximo && $subtotal > $cupon->valor_maximo)) {
-                    return back()->with('error', 'Este cupom não se aplica ao valor do seu pedido.');
-                }
-                $desconto = $cupon->tipo === 'percentual' ? $subtotal * ($cupon->montante / 100) : $cupon->montante;
-                session(['applied_cupon' => $cupon]);
-            } else {
-                return back()->with('error', 'Cupom inválido ou expirado.');
-            }
+        $subtotal = $resumo['subtotal'];
+        $desconto = $resumo['desconto'];
+        $cupon    = $resumo['cupon'];
+
+        if ($resumo['aviso']) {
+            return back()->with('error', $resumo['aviso'])->withInput();
         }
 
-        $total = ($subtotal - $desconto) + $frete;
-        $total = max(0, $total);
+        $total = max(0, ($subtotal - $desconto) + $frete);
 
         DB::beginTransaction();
         try {
@@ -175,7 +172,16 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            // 6. Comprovante de Depósito
+            // 6. Consumo do cupom: o contador de usos é incrementado de forma atômica.
+            // Se o último uso foi tomado por outro cliente nesse meio-tempo, o pedido
+            // inteiro é revertido em vez de fechar com um desconto indevido.
+            if ($cupon && !$this->cupons->registrarUso($cupon, $user, $order, $desconto)) {
+                DB::rollBack();
+
+                return back()->with('error', __('messages.cupon_esgotado'))->withInput();
+            }
+
+            // 7. Comprovante de Depósito
             if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
                 $file = $request->file('deposit_receipt');
                 $filename = time() . '_' . $file->getClientOriginalName();
@@ -191,16 +197,14 @@ class CheckoutController extends Controller
                     ? $this->checkoutEmailMessage($order, 'deposito_recebido')
                     : $this->checkoutEmailMessage($order, 'deposito_reservado');
 
-                Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
+                $this->enviarEmailPedido($order, $msg);
             } elseif (in_array($paymentMethod, ['bancard', 'bancard_v2', 'pagopar'])) {
-                $msg = $this->checkoutEmailMessage($order, 'gateway_aguardando');
-
-                Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
+                $this->enviarEmailPedido($order, $this->checkoutEmailMessage($order, 'gateway_aguardando'));
             }
 
-            // 7. Limpeza do Carrinho (Para todos os métodos, incluindo gateways)
+            // 8. Limpeza do Carrinho (Para todos os métodos, incluindo gateways)
             Cart::where('user_id', $user->id)->delete();
-            session()->forget('applied_cupon');
+            $this->cupons->remover();
 
             // 8. Redirecionamentos Finais
             if ($paymentMethod === 'bancard_v2') {
@@ -257,26 +261,28 @@ class CheckoutController extends Controller
         $cidade = $request->input('city');
         $pais = $request->input('country');
 
-        // Subtotal do carrinho em valor base (USD)
-        $subtotal = Cart::with('product')
-            ->where('user_id', auth()->id())
-            ->get()
-            ->sum(fn($item) => ($item->product->price ?? 0) * $item->quantity);
-        
+        // Subtotal e desconto em valor base (USD); o cupom já entra no total do frete.
+        $resumo = $this->cupons->resumoDoCarrinho(auth()->user());
+        $totalComDesconto = $resumo['total'];
+
         if ($pais !== 'paraguai' || empty(trim($cidade))) {
             return response()->json([
-                'frete'           => 0,
-                'frete_formatado' => currency_format(0),
-                'total_formatado' => currency_format($subtotal),
+                'frete'              => 0,
+                'frete_formatado'    => currency_format(0),
+                'desconto'           => $resumo['desconto'],
+                'desconto_formatado' => currency_format($resumo['desconto']),
+                'total_formatado'    => currency_format($totalComDesconto),
             ]);
         }
 
         $frete = $this->calcularFrete($cidade);
 
         return response()->json([
-            'frete'           => $frete,
-            'frete_formatado' => currency_format($frete),
-            'total_formatado' => currency_format($subtotal + $frete),
+            'frete'              => $frete,
+            'frete_formatado'    => currency_format($frete),
+            'desconto'           => $resumo['desconto'],
+            'desconto_formatado' => currency_format($resumo['desconto']),
+            'total_formatado'    => currency_format($totalComDesconto + $frete),
         ]);
     }
 
@@ -288,7 +294,13 @@ class CheckoutController extends Controller
             return back()->with('error', 'Carrinho vazio');
         }
 
-        $total = $cart->sum(fn($item) => $item->quantity * $item->product->price);
+        $itensValidos = $cart->filter(fn ($item) => $item->product)->values();
+        $resumo = $this->cupons->resumoDoCarrinho($user, $itensValidos);
+
+        $subtotal = $resumo['subtotal'];
+        $desconto = $resumo['desconto'];
+        $cupon    = $resumo['cupon'];
+        $total    = $resumo['total'];
 
         DB::beginTransaction();
         try {
@@ -297,6 +309,8 @@ class CheckoutController extends Controller
                 'status' => 'pending',
                 'total' => $total,
                 'payment_method' => 'whatsapp',
+                'cupon_id' => $cupon->id ?? null,
+                'discount' => $desconto,
                 'name' => $user->name,
                 'document' => $user->document ?? '',
                 'email' => $user->email,
@@ -311,6 +325,12 @@ class CheckoutController extends Controller
                     'price' => $cartItem->product->price,
                     'name' => $cartItem->product->name,
                 ]);
+            }
+
+            if ($cupon && !$this->cupons->registrarUso($cupon, $user, $order, $desconto)) {
+                DB::rollBack();
+
+                return back()->with('error', __('messages.cupon_esgotado'));
             }
 
             DB::commit();
@@ -328,9 +348,17 @@ class CheckoutController extends Controller
             $message .= 'Preço: ' . currency($cartItem->product->price) . "\n";
             $message .= "Qtd: {$cartItem->quantity}\n------------------------\n";
         }
+
+        $message .= 'Subtotal: ' . currency($subtotal) . "\n";
+
+        if ($cupon) {
+            $message .= 'Cupom: ' . $cupon->codigo . ' (-' . currency($desconto) . ")\n";
+        }
+
         $message .= 'Total: ' . currency($total) . "\nCliente: {$user->name}\nTelefone: +{$user->phone_country}{$user->phone_number}\n";
 
         Cart::where('user_id', $user->id)->delete();
+        $this->cupons->remover();
 
         return redirect('https://wa.me/595984167575?text=' . urlencode($message));
     }
@@ -343,8 +371,9 @@ class CheckoutController extends Controller
         }
 
         $bankAccounts = PaymentMethod::where('type', 'bank')->where('active', 1)->get();
-        $orderItems = $order->items;
-        
+        $order->load('cupon');
+        $orderItems = $order->items()->with('product:id,photo,external_name')->get();
+
         return view('layout.deposito', compact('order', 'bankAccounts', 'orderItems'));
     }
 
@@ -353,6 +382,10 @@ class CheckoutController extends Controller
      */
     public function submitDeposito(Request $request, Order $order)
     {
+        if ($order->user_id !== auth()->id()) {
+            abort(403, 'Acesso negado ao pedido.');
+        }
+
         $request->validate([
             'deposit_receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
@@ -362,14 +395,35 @@ class CheckoutController extends Controller
             $order->deposit_receipt = $filePath;
             $order->save();
 
-            $msg = $this->checkoutEmailMessage($order, 'comprovante_enviado');
-            Mail::to($order->email)->send(new OrderStatusMail($order, $msg));
+            $this->enviarEmailPedido($order, $this->checkoutEmailMessage($order, 'comprovante_enviado'));
 
             return redirect()->route('user.orders.show', $order->id)
                 ->with('success', __('messages.deposito_comprovante_recebido'));
         }
 
         return back()->with('info', __('messages.deposito_em_verificacao'));
+    }
+
+    /**
+     * Envia o e-mail do pedido depois que a resposta já foi entregue ao navegador.
+     *
+     * O envio é por SMTP externo e a fila está em modo síncrono: mandar o e-mail no meio
+     * do request deixava o cliente esperando o handshake do servidor de e-mail (vários
+     * segundos) só para ver a página carregar. Uma falha no envio também não pode
+     * derrubar um pedido que já foi salvo — por isso o try/catch.
+     */
+    private function enviarEmailPedido(Order $order, string $mensagem): void
+    {
+        dispatch(function () use ($order, $mensagem) {
+            try {
+                Mail::to($order->email)->send(new OrderStatusMail($order, $mensagem));
+            } catch (\Throwable $e) {
+                Log::error('Falha ao enviar e-mail do pedido', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        })->afterResponse();
     }
 
     private function emailLocaleByOrder(Order $order): string

@@ -267,9 +267,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('image-upload', [ImageUploadController::class, 'form'])->name('image.form');
 });
 
+// Troca apenas o idioma. A cotação é independente (currency.change).
 Route::get('lang/{locale}', function ($locale) {
-    if (in_array($locale, ['pt_BR', 'en', 'es'])) {
+    if (in_array($locale, \App\Http\Middleware\SetLocale::LOCALES, true)) {
         session()->put('locale', $locale);
+        session()->save();
     }
 
     return redirect()->back();

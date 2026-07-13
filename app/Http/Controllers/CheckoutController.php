@@ -122,6 +122,7 @@ class CheckoutController extends Controller
                 'order_number' => strtoupper(Str::random(10)),
                 'currency_sign' => session('currency_sign', 'US$'),
                 'currency_value' => (float) session('currency_value', 1),
+                'locale' => app()->getLocale(),
             ]);
 
             switch ($request->shipping) {
@@ -373,6 +374,12 @@ class CheckoutController extends Controller
 
     private function emailLocaleByOrder(Order $order): string
     {
+        // Idioma escolhido pelo cliente na compra. Pedidos antigos não têm
+        // essa coluna, então caímos no mapeamento pela moeda.
+        if (in_array($order->locale, \App\Http\Middleware\SetLocale::LOCALES, true)) {
+            return $order->locale;
+        }
+
         $sign = strtoupper(trim((string) ($order->currency_sign ?? '')));
 
         if ($sign === 'R$') {

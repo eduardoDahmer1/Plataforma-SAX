@@ -14,7 +14,7 @@ if (!function_exists('currency_format')) {
             $price = (float) $price;
         }
 
-        // Pega a moeda da sessão ou a moeda inicial de exibição (BRL)
+        // Pega a moeda da sessão ou a moeda padrão do sistema (is_default = USD)
         $currency = null;
         $currencySession = session('currency');
         if ($currencySession) {
@@ -25,8 +25,8 @@ if (!function_exists('currency_format')) {
         }
 
         if (!$currency) {
-            $currency = Currency::where('name', 'BRL')->first()
-                ?? Currency::where('is_default', 1)->first();
+            $currency = Currency::where('is_default', 1)->first()
+                ?? Currency::first();
         }
 
         // Se não houver moeda, retorna preço simples

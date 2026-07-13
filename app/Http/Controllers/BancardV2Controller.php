@@ -108,16 +108,15 @@ class BancardV2Controller extends Controller
      */
     private function convertOrderTotalToPyg(Order $order): string
     {
+        // O total do pedido é sempre gravado na moeda base do sistema (USD),
+        // independente da moeda que o cliente escolheu para visualizar os preços.
         $valorBase = $order->total;
-        $valorMoeda = $order->currency_value ?? 1;
-        $moedaBase = $order->currency_sign ?? 'USD';
 
-        // Buscar taxa do PYG
-        $pyg = \App\Models\Currency::where('sign', 'GS$')->orWhere('name', 'PYG')->first();
+        $pyg = \App\Models\Currency::where('name', 'PYG')->orWhere('sign', 'GS$')->first();
         $taxaPyg = $pyg->value ?? 1;
 
-        // Converter para PYG
-        $valorEmPyg = $valorBase * ($taxaPyg / $valorMoeda);
+        $valorEmPyg = $valorBase * $taxaPyg;
+
         return number_format($valorEmPyg, 2, '.', '');
     }
 

@@ -56,6 +56,12 @@ class OrderPaidMail extends Mailable
 
     private function resolveLocaleFromOrder(Order $order): string
     {
+        // Idioma escolhido pelo cliente na compra. Pedidos antigos não têm
+        // essa coluna, então caímos no mapeamento pela moeda.
+        if (in_array($order->locale, \App\Http\Middleware\SetLocale::LOCALES, true)) {
+            return $order->locale;
+        }
+
         $sign = strtoupper(trim((string) ($order->currency_sign ?? '')));
 
         if ($sign === 'R$') {

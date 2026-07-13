@@ -2,14 +2,30 @@
 
 @section('title', $bridal->title ?? 'SAX Bridal')
 
+@php
+    // Traducción activa: cada texto y lista cae al idioma actual, con fallback
+    // a la tabla principal si ese idioma todavía no se guardó.
+    $t = $bridal->translations->firstWhere('locale', translation_locale());
+
+    $rawServices     = $t?->bridal_services     ?? $bridal->services;
+    $rawPromos       = $t?->bridal_promos       ?? $bridal->promos;
+    $rawTestimonials = $t?->bridal_testimonials ?? $bridal->testimonials;
+    $rawLocations    = $t?->bridal_locations    ?? $bridal->locations;
+
+    $services     = is_array($rawServices)     ? $rawServices     : (json_decode($rawServices, true)     ?? []);
+    $promos       = is_array($rawPromos)       ? $rawPromos       : (json_decode($rawPromos, true)       ?? []);
+    $testimonials = is_array($rawTestimonials) ? $rawTestimonials : (json_decode($rawTestimonials, true) ?? []);
+    $locations    = is_array($rawLocations)    ? $rawLocations    : (json_decode($rawLocations, true)    ?? []);
+@endphp
+
 @section('content')
 
     {{-- Hero --}}
     @include('bridal.componentes.hero', [
       'backgroundImage' => asset('storage/' . $bridal->hero_image),
-      'subtitle'        => $bridal->hero_subtitle,
-      'title'           => $bridal->hero_title,
-      'description'     => $bridal->hero_description,
+      'subtitle'        => $t?->bridal_hero_subtitle    ?? $bridal->hero_subtitle,
+      'title'           => $t?->bridal_hero_title       ?? $bridal->hero_title,
+      'description'     => $t?->bridal_hero_description ?? $bridal->hero_description,
       'primaryLink'     => '#contact',
       'primaryText'     => 'Conoce más',
       'secondaryLink'   => route('contact.form'),
@@ -31,24 +47,24 @@
 
     {{-- Promo Carousel --}}
     @include('bridal.componentes.promo-carousel', [
-        'promos' => $bridal->promos ?? []
+        'promos' => $promos
     ])
 
     {{-- Services --}}
     @include('bridal.componentes.services', [
-        'sectionLabel' => $bridal->services_label,
-        'sectionTitle' => $bridal->services_title,
-        'services'     => $bridal->services ?? [],
+        'sectionLabel' => $t?->bridal_services_label    ?? $bridal->services_label,
+        'sectionTitle' => $t?->bridal_services_title    ?? $bridal->services_title,
+        'services'     => $services,
         'ctaLink'      => $bridal->services_cta_link,
-        'ctaText'      => $bridal->services_cta_text,
+        'ctaText'      => $t?->bridal_services_cta_text ?? $bridal->services_cta_text,
     ])
 
 
     {{-- Testimonials --}}
     @include('bridal.componentes.testimonials', [
-        'sectionLabel' => $bridal->testimonials_label,
-        'sectionTitle' => $bridal->testimonials_title,
-        'testimonials' => $bridal->testimonials ?? []
+        'sectionLabel' => $t?->bridal_testimonials_label ?? $bridal->testimonials_label,
+        'sectionTitle' => $t?->bridal_testimonials_title ?? $bridal->testimonials_title,
+        'testimonials' => $testimonials
     ])
 
     {{-- Instagram CTA --}}
@@ -59,7 +75,7 @@
 
     {{-- Contacto / Sucursales --}}
     @include('bridal.componentes.contato', [
-    'locations' => $bridal->locations ?? [],
+    'locations' => $locations,
     ])
 
 

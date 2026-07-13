@@ -32,14 +32,7 @@
     $siteAttributes = View::shared('attributes');
     $hasCustomLogo  = $siteAttributes && !empty($siteAttributes->{$config['logo_key']});
 
-    // 4. Seletor de idioma 
-    $currencies        = \App\Models\Currency::all();
-    $currentCurrencyId = session('currency') ?? \App\Models\Currency::where('is_default', 1)->value('id');
-    $langMap           = ['BRL' => 'Português', 'PYG' => 'Español', 'USD' => 'English'];
-    $currentCurrency  = $currencies->firstWhere('id', (int) $currentCurrencyId);
-    $currentLangLabel = $currentCurrency
-        ? ($langMap[strtoupper($currentCurrency->name)] ?? $currentCurrency->name)
-        : __('messages.idioma');
+    // 4. Idioma e moeda são renderizados por <x-locale-currency-selector variant="nav" />
 @endphp
 
 <header class="navbar navbar-expand-lg fixed-top exp-header transition-all" id="mainHeader">
@@ -105,25 +98,8 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
 
-                {{-- Seletor de idioma --}}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="langDropDesk" data-bs-toggle="dropdown">
-                        <i class="bi bi-globe"></i> {{ $currentLangLabel }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg exp-lang-menu">
-                        @foreach ($currencies as $currency)
-                            <li>
-                                <form action="{{ route('currency.change') }}" method="POST" class="m-0">
-                                    @csrf
-                                    <input type="hidden" name="currency_id" value="{{ $currency->id }}">
-                                    <button type="submit" class="dropdown-item {{ (int) $currency->id === (int) $currentCurrencyId ? 'active' : '' }}">
-                                        {{ $langMap[strtoupper($currency->name)] ?? $currency->name }}
-                                    </button>
-                                </form>
-                            </li>
-                        @endforeach
-                    </ul>
-                </li>
+                {{-- Seletores de idioma e moeda (independentes) --}}
+                <x-locale-currency-selector variant="nav" />
             </ul>
 
             <div class="d-flex align-items-center gap-3">
@@ -152,25 +128,8 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
 
-                {{-- Seletor de idioma --}}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="langDropMobile" data-bs-toggle="dropdown">
-                        <i class="bi bi-globe"></i> {{ $currentLangLabel }}
-                    </a>
-                    <ul class="dropdown-menu bg-transparent border-0 ps-3">
-                        @foreach ($currencies as $currency)
-                            <li>
-                                <form action="{{ route('currency.change') }}" method="POST" class="m-0">
-                                    @csrf
-                                    <input type="hidden" name="currency_id" value="{{ $currency->id }}">
-                                    <button type="submit" class="dropdown-item {{ (int) $currency->id === (int) $currentCurrencyId ? 'active' : '' }}">
-                                        {{ $langMap[strtoupper($currency->name)] ?? $currency->name }}
-                                    </button>
-                                </form>
-                            </li>
-                        @endforeach
-                    </ul>
-                </li>
+                {{-- Seletores de idioma e moeda (independentes) --}}
+                <x-locale-currency-selector variant="nav-mobile" />
             </ul>
             <div class="d-grid gap-2 mt-4 pb-4">
                 <a href="{{ route('home') }}" class="btn-shop-link text-center">{{ __('messages.ir_para_loja') }}</a>

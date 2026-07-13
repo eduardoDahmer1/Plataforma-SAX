@@ -115,7 +115,10 @@
       "Bash(curl -sk -H \"Host: saxdepartment.com\" https://127.0.0.1/institucional -o /tmp/inst_test3.html -w \"HTTP %{http_code}\\\\n\")",
       "Bash(curl -sk -H \"Host: saxdepartment.com\" https://127.0.0.1/institucional -o /tmp/inst_test4.html -w \"HTTP %{http_code}\\\\n\")",
       "Bash(rm -f /tmp/inst_test4.html)",
-      "Bash(php -l /var/www/html/sax_plataforma/app/Http/Controllers/Admin/InstitucionalAdminController.php)"
+      "Bash(php -l /var/www/html/sax_plataforma/app/Http/Controllers/Admin/InstitucionalAdminController.php)",
+      "Bash(grep -n 'currentLangLabel\\\\|currentCurrencyId\\\\|langMap\\\\|$currencies\\\\|currentCurrency' resources/views/components/header-internas.blade.php)",
+      "Bash(curl -s -o /dev/null -w \"home:%{http_code}\\\\n\" -H \"Host: saxdepartment.com\" http://127.0.0.1/)",
+      "Bash(curl -s -o /dev/null -w \"bridal:%{http_code}\\\\n\" -H \"Host: saxdepartment.com\" http://127.0.0.1/bridal)"
     ],
     "additionalDirectories": [
       "/home/edu/.claude",

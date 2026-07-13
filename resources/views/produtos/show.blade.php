@@ -308,7 +308,7 @@
 
                     <div class="mb-5">
                         @if ($isBridal)
-                                     <a href="https://wa.me/{{ config('settings.whatsapp') }}?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $product->name) }}"
+                                     <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $product->name) }}"
                                target="_blank"
                                class="btn btn-outline-dark w-100 text-uppercase fw-bold rounded-0 bridal-btn">
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.agendar_consulta_bridal') }}

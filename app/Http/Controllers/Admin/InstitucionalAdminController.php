@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Cache;
 
 class InstitucionalAdminController extends Controller
 {
+    const MAX_TOP_SLIDERS = 8;
+    const MAX_GALLERY_IMAGES = 16;
+
     /**
      * Exibe a visão geral dos dados institucionais.
      */
@@ -29,7 +32,7 @@ class InstitucionalAdminController extends Controller
         $institucional = Institucional::with('translations')->findOrFail($id);
         return view('admin.institucional.edit', compact('institucional'));
     }
-    
+
     public function update(Request $request, $id)
     {
         $institucional = Institucional::findOrFail($id);
@@ -41,14 +44,18 @@ class InstitucionalAdminController extends Controller
             'iframe_tour_360'           => 'nullable|string',
             'iframe_ponte_amizade'      => 'nullable|string',
             'iframe_centro_cde'         => 'nullable|string',
-            
+
             'section_one_image'         => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:8192',
+
             'top_sliders'               => 'nullable|array',
             'top_sliders.*'             => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'brand_logos'               => 'nullable|array',
-            'brand_logos.*'             => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'top_sliders_actual'        => 'nullable|array',
+            'top_sliders_actual.*'      => 'string',
+
             'gallery_images'            => 'nullable|array',
             'gallery_images.*'          => 'image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
+            'gallery_images_actual'     => 'nullable|array',
+            'gallery_images_actual.*'   => 'string',
 
             'translate'                 => 'required|array',
             'translate.pt-br'           => 'nullable|array',
@@ -63,23 +70,15 @@ class InstitucionalAdminController extends Controller
             $data['section_one_image'] = $this->convertToWebp($request->file('section_one_image'), 'institucional');
         }
 
-        $arrayFields = ['top_sliders', 'brand_logos', 'gallery_images'];
-        foreach ($arrayFields as $field) {
-            if ($request->hasFile($field)) {
-                if ($institucional->$field) {
-                    foreach ($institucional->$field as $oldPath) {
-                        Storage::disk('public')->delete($oldPath);
-                    }
-                }
+        $arrayFieldsMax = [
+            'top_sliders'    => self::MAX_TOP_SLIDERS,
+            'gallery_images' => self::MAX_GALLERY_IMAGES,
+        ];
 
-                $newPaths = [];
-                foreach ($request->file($field) as $image) {
-                    $newPaths[] = $this->convertToWebp($image, "institucional/$field");
-                }
-                $data[$field] = $newPaths;
-            }
+        foreach ($arrayFieldsMax as $field => $max) {
+            $data[$field] = $this->mergeGalleryField($request, $institucional, $field, $max);
         }
-        
+
         $translationsInput = $request->input('translate', []);
         $data['section_one_title'] = $translationsInput['pt-br']['inst_section_one_title'] ?? 'SAX Institutional';
         $data['section_one_content'] = $translationsInput['pt-br']['inst_section_one_content'] ?? null;
@@ -94,7 +93,7 @@ class InstitucionalAdminController extends Controller
             $institucional->translations()->updateOrCreate(
                 [
                     'locale'    => $dbLocale,
-                    'page_type' => $institucional->getMorphClass(), 
+                    'page_type' => $institucional->getMorphClass(),
                 ],
                 [
                     'inst_section_one_title'       => $localeFields['inst_section_one_title'] ?? null,
@@ -111,7 +110,61 @@ class InstitucionalAdminController extends Controller
 
         Cache::forget('institucional_page_data');
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Dados atualizados com sucesso!',
+                'institucional' => [
+                    'updated_at'          => $institucional->updated_at->format('d/m/Y H:i'),
+                    'section_one_image'   => $institucional->section_one_image ? Storage::url($institucional->section_one_image) : null,
+                    'top_sliders'         => $this->mapGalleryUrls($institucional->top_sliders),
+                    'gallery_images'      => $this->mapGalleryUrls($institucional->gallery_images),
+                ],
+            ]);
+        }
+
         return redirect()->route('admin.institucional.index')->with('success', 'Dados atualizados com sucesso!');
+    }
+
+    /**
+     * Combina as imagens mantidas (enviadas via inputs *_actual[]) com os novos uploads,
+     * apaga do disco as que foram removidas e respeita o limite máximo do campo.
+     */
+    private function mergeGalleryField(Request $request, Institucional $institucional, string $field, int $max): array
+    {
+        $original = is_array($institucional->$field) ? $institucional->$field : (json_decode($institucional->$field, true) ?: []);
+
+        // Só aceita como "mantida" uma imagem que já pertencia ao registro, evitando que o
+        // formulário injete caminhos de storage arbitrários.
+        $kept = array_values(array_intersect(
+            array_filter((array) $request->input("{$field}_actual", [])),
+            $original
+        ));
+
+        $removed = array_diff($original, $kept);
+        foreach ($removed as $oldPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        $newUploads = [];
+        if ($request->hasFile($field)) {
+            $room = max($max - count($kept), 0);
+            foreach (array_slice($request->file($field), 0, $room) as $image) {
+                $newUploads[] = $this->convertToWebp($image, "institucional/$field");
+            }
+        }
+
+        return array_merge($kept, $newUploads);
+    }
+
+    private function mapGalleryUrls($images)
+    {
+        $images = is_array($images) ? $images : (json_decode($images, true) ?: []);
+
+        return collect($images)->map(fn($path) => [
+            'path' => $path,
+            'url'  => Storage::url($path),
+        ])->values();
     }
 
     /**

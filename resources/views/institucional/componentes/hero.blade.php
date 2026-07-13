@@ -3,9 +3,12 @@
     $heroTitle = $translation->section_one_title ?? $institucional->section_one_title;
     
     // Garante que o slider superior seja interpretado como array para o loop de forma segura
-    $sliders = is_array($institucional->top_sliders) 
-        ? $institucional->top_sliders 
+    $sliders = is_array($institucional->top_sliders)
+        ? $institucional->top_sliders
         : json_decode($institucional->top_sliders, true);
+
+    // Rotaciona a ordem dos banners automaticamente a cada 2 dias, sem intervenção manual
+    $sliders = sax_rotate_images($sliders, 2);
 @endphp
 
 <section class="hero-slider">

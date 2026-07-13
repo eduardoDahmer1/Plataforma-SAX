@@ -2,6 +2,11 @@
     // Agora o componente apenas consome o que veio do Index com Fallback seguro
     $aboutTitle = $translation->section_one_title ?? $institucional->section_one_title;
     $aboutContent = $translation->section_one_content ?? $institucional->section_one_content;
+
+    // Pool de imagens disponíveis (banners + galeria + capa), convertido em URLs para o fundo do parallax.
+    // Evita repetir sempre a mesma foto de capa em todas as seções de fundo da página.
+    $sceneryUrls = collect($sceneryPool ?? [])->map(fn($path) => asset('storage/' . $path))->values();
+    $parallaxImage = $sceneryUrls[0] ?? ($institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/1920x600');
 @endphp
 
 <section id="sobre" class="section-about overflow-hidden">
@@ -47,7 +52,8 @@
 
     <div class="about-banner-parallax">
         <div class="parallax-overlay"></div>
-        <img src="{{ asset('storage/' . ($institucional->section_two_image ?? $institucional->section_one_image ?? 'https://placehold.co/1920x600')) }}" class="parallax-img" alt="Luxury Interior">
+        <img src="{{ $parallaxImage }}" class="parallax-img" alt="Luxury Interior"
+             data-scenery-pool="{{ $sceneryUrls->toJson() }}">
         
         <div class="parallax-content text-center position-relative z-index-2">
             <h3 class="parallax-title" data-aos="zoom-out">

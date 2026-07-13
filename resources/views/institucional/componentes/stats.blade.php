@@ -1,4 +1,10 @@
-<section class="counter-section parallax-window" style="background-image: url('{{ $institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/1920x600' }}')">
+@php
+    // Pool de imagens disponíveis (banners + galeria + capa); pega uma diferente da usada no parallax da seção "Sobre"
+    $sceneryUrls = collect($sceneryPool ?? [])->map(fn($path) => asset('storage/' . $path))->values();
+    $statsImage = $sceneryUrls[1 % max($sceneryUrls->count(), 1)] ?? ($institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/1920x600');
+@endphp
+
+<section class="counter-section parallax-window" style="background-image: url('{{ $statsImage }}')" data-scenery-pool="{{ $sceneryUrls->toJson() }}">
     <div class="luxury-overlay"></div>
     <div class="container position-relative z-index-2">
         <div class="row text-center align-items-center">

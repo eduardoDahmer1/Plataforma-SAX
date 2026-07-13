@@ -15,15 +15,15 @@
     {{-- Passamos o $translation e o $locale explicitamente para cada bloco --}}
     @include('institucional.componentes.hero', ['institucional' => $institucional, 'translation' => $translation, 'locale' => $locale])
     
-    @include('institucional.componentes.sobre', ['institucional' => $institucional, 'translation' => $translation])
-    
+    @include('institucional.componentes.sobre', ['institucional' => $institucional, 'translation' => $translation, 'sceneryPool' => $sceneryPool ?? []])
+
     @include('institucional.componentes.features', ['institucional' => $institucional, 'translation' => $translation])
-    
-    @include('institucional.componentes.stats', ['institucional' => $institucional, 'translation' => $translation])
-    
+
+    @include('institucional.componentes.stats', ['institucional' => $institucional, 'translation' => $translation, 'sceneryPool' => $sceneryPool ?? []])
+
     @include('institucional.componentes.brands-gallery', ['institucional' => $institucional])
-    
-    @include('institucional.componentes.cta', ['institucional' => $institucional, 'translation' => $translation])
+
+    @include('institucional.componentes.cta', ['institucional' => $institucional, 'translation' => $translation, 'sceneryPool' => $sceneryPool ?? []])
     
     @include('institucional.componentes.video', ['institucional' => $institucional, 'translation' => $translation])
 @endsection

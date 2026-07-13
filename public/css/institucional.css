@@ -150,6 +150,16 @@
     z-index: 1;
 }
 
+@media (max-width: 768px) {
+    .cta-luxury {
+        padding: 80px 0;
+    }
+    /* background-attachment: fixed é instável no Safari/iOS e pesado em telas pequenas */
+    .cta-bg-image {
+        background-attachment: scroll;
+    }
+}
+
 .cta-overlay {
     position: absolute;
     top: 0;
@@ -309,7 +319,6 @@
     font-size: 0.95rem;
     line-height: 1.8;
     margin: 0;
-    text-align: justify;
 }
 
 @media (max-width: 991px) {
@@ -340,10 +349,6 @@
 
     .timeline-box {
         padding: 30px;
-    }
-
-    .timeline-box p {
-        text-align: left;
     }
 }
 
@@ -656,12 +661,6 @@
     letter-spacing: -1px;
 }
 
-.text-gold {
-    color: var(--gold);
-    font-style: italic;
-    font-weight: 400;
-}
-
 .hero-line {
     width: 60px;
     height: 1px;
@@ -778,7 +777,6 @@
     font-size: 1.05rem;
     line-height: 1.8;
     color: var(--muted);
-    text-align: justify;
 }
 
 .image-stack {
@@ -821,7 +819,8 @@
 
 .about-features {
     display: flex;
-    gap: 30px;
+    flex-wrap: wrap;
+    gap: 15px 30px;
 }
 .feature-item {
     display: flex;
@@ -910,6 +909,26 @@
         height: 400px;
     }
 }
+
+@media (max-width: 576px) {
+    .experience-card {
+        gap: 10px;
+        padding: 15px 18px;
+    }
+    .card-number {
+        font-size: 2.2rem;
+    }
+    .card-text {
+        font-size: 0.6rem;
+    }
+    .about-banner-parallax {
+        height: 280px;
+    }
+    .parallax-title {
+        padding: 0 10px;
+    }
+}
+
 .counter-section {
     position: relative;
     padding: 120px 0;
@@ -977,7 +996,7 @@
 @media (max-width: 768px) {
     .counter-section {
         padding: 80px 0;
-        background-attachment: scroll; 
+        background-attachment: scroll;
     }
     .counter-number {
         font-size: 3.5rem;
@@ -987,7 +1006,6 @@
         font-size: 0.65rem;
     }
 }
-@import url("https://fonts.googleapis.com/css2?family=Cormorant:wght@400;600;700&display=swap");
 
 .live-videos-grid {
     display: grid;
@@ -1004,11 +1022,11 @@
 }
 
 .video-label {
-    font-family: "Cormorant", serif;
-    font-size: 1.4rem;
+    font-family: "Playfair Display", serif;
+    font-size: 1.3rem;
     color: var(--ink);
     margin-bottom: 15px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .video-responsive-container {
@@ -1044,10 +1062,11 @@
     font-size: 0.9rem;
 }
 .sax-title {
-    font-family: "Cormorant", serif;
-    font-size: 3.5rem;
+    font-family: "Playfair Display", serif;
+    font-weight: 700;
+    font-size: 3rem;
     color: var(--ink);
-    line-height: 1.1;
+    line-height: 1.15;
     margin-bottom: 25px;
 }
 .sax-text {

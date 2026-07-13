@@ -58,6 +58,11 @@ class AppServiceProvider extends ServiceProvider
             require_once app_path('Helpers/LocaleHelper.php');
         }
 
+        // 3c. Carrega helper de rotação de imagens (sliders/galeria institucional)
+        if (file_exists(app_path('Helpers/ImageRotationHelper.php'))) {
+            require_once app_path('Helpers/ImageRotationHelper.php');
+        }
+
         // 4. Força HTTPS em produção
         if (config('app.env') === 'production') {
             URL::forceScheme('https');

@@ -1,10 +1,14 @@
 @php
     $ctaDesc = $translation->section_one_content ?? $institucional->section_one_content;
+
+    // Pool de imagens disponíveis (banners + galeria + capa); pega uma diferente das usadas no parallax e nos stats
+    $sceneryUrls = collect($sceneryPool ?? [])->map(fn($path) => asset('storage/' . $path))->values();
+    $ctaImage = $sceneryUrls[2 % max($sceneryUrls->count(), 1)] ?? ($institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/1920x600');
 @endphp
 
 {{-- SECTION: CTA FINAL --}}
 <section class="cta-luxury">
-    <div class="cta-bg-image" style="background-image: url('{{ $institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/1920x600' }}')"></div>
+    <div class="cta-bg-image" style="background-image: url('{{ $ctaImage }}')" data-scenery-pool="{{ $sceneryUrls->toJson() }}"></div>
     <div class="cta-overlay"></div>
     <div class="container position-relative z-index-2">
         <div class="row justify-content-center text-center">

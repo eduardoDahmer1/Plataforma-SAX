@@ -251,7 +251,6 @@ class BridalAdminController extends Controller
             'social_instagram'  => $data['social_instagram'] ?? $bridal->social_instagram,
             'hero_image'        => $data['hero_image'] ?? $bridal->hero_image,
             'palace_image'      => $data['palace_image'] ?? $bridal->palace_image,
-            'promos'            => !empty($promos) ? $promos : $bridal->promos,
             'brands'            => !empty($brands) ? $brands : $bridal->brands,
         ]);
 
@@ -259,7 +258,6 @@ class BridalAdminController extends Controller
         $bridal->translations()->updateOrCreate(
             [
                 'locale' => $locale,
-                'page_type' => 'bridal',
             ],
             [
                 'bridal_title'             => $data['title'] ?? null,
@@ -279,6 +277,7 @@ class BridalAdminController extends Controller
                 
                 // Estruturas complexas salvas localizadas por idioma
                 'bridal_services'          => !empty($services) ? json_encode($services) : null,
+                'bridal_promos'            => !empty($promos) ? json_encode($promos) : null,
                 'bridal_testimonials'      => !empty($testimonials) ? json_encode($testimonials) : null,
                 'bridal_locations'         => !empty($locations) ? json_encode($locations) : null,
             ]

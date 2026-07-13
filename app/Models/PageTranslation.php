@@ -58,6 +58,7 @@ class PageTranslation extends Model
         'bridal_services_title',
         'bridal_services_cta_text',
         'bridal_services',
+        'bridal_promos',
         'bridal_palace_subtitle',
         'bridal_palace_title',
         'bridal_palace_description',

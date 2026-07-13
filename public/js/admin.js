@@ -909,3 +909,202 @@ document.addEventListener('change', function (e) {
         counter.textContent = field.value.length;
     });
 })();
+
+
+// ======== Gestor genérico de galerias (mantém/remove/adiciona) ========
+// Usado por <x-admin.gallery-field>. Acumula seleções entre múltiplos cliques
+// (sem perder as anteriores), gera preview local e permite remover tanto
+// imagens já salvas quanto pendentes, tudo sem reload da página.
+window.saxGalleryManagers = {};
+
+(function () {
+    document.querySelectorAll('[data-gallery-field]').forEach(function (manager) {
+        var field = manager.dataset.galleryField;
+        var max = parseInt(manager.dataset.max, 10) || 20;
+        var input = document.getElementById('galleryInput_' + field);
+        var preview = document.getElementById('galleryPreview_' + field);
+        var counter = document.getElementById('galleryCount_' + field);
+        if (!input || !preview) return;
+
+        var store = new DataTransfer();
+        var urls = [];
+
+        function existingCount() {
+            return preview.querySelectorAll('.gallery-preview-item.is-existing').length;
+        }
+
+        function updateCounter() {
+            if (counter) counter.textContent = existingCount() + store.files.length;
+        }
+
+        function renderPending() {
+            urls.forEach(function (u) { URL.revokeObjectURL(u); });
+            urls = [];
+            preview.querySelectorAll('.gallery-preview-item.is-pending').forEach(function (el) { el.remove(); });
+
+            Array.from(store.files).forEach(function (file, index) {
+                var url = URL.createObjectURL(file);
+                urls.push(url);
+
+                var item = document.createElement('div');
+                item.className = 'gallery-preview-item is-pending shadow-sm border';
+                item.dataset.fileIndex = index;
+                item.innerHTML =
+                    '<img src="' + url + '" class="w-100 h-100 object-fit-cover">' +
+                    '<button type="button" class="gallery-remove-btn"><i class="fas fa-times"></i></button>';
+                preview.appendChild(item);
+            });
+
+            updateCounter();
+        }
+
+        input.addEventListener('change', function () {
+            var incoming = Array.from(input.files);
+            var room = max - existingCount() - store.files.length;
+
+            if (incoming.length > room) {
+                if (window.saxToast) saxToast('error', 'Você pode ter no máximo ' + max + ' imagens.');
+                incoming = incoming.slice(0, Math.max(room, 0));
+            }
+
+            incoming.forEach(function (file) {
+                var dup = Array.from(store.files).some(function (f) {
+                    return f.name === file.name && f.size === file.size;
+                });
+                if (!dup) store.items.add(file);
+            });
+
+            input.files = store.files;
+            renderPending();
+        });
+
+        preview.addEventListener('click', function (e) {
+            var btn = e.target.closest('.gallery-remove-btn');
+            if (!btn) return;
+            e.stopPropagation();
+
+            var pendingItem = btn.closest('.gallery-preview-item.is-pending');
+            if (pendingItem) {
+                store.items.remove(parseInt(pendingItem.dataset.fileIndex, 10));
+                input.files = store.files;
+                renderPending();
+                return;
+            }
+
+            var existingItem = btn.closest('.gallery-preview-item.is-existing');
+            if (existingItem) {
+                existingItem.remove();
+                updateCounter();
+            }
+        });
+
+        // Chamado após um save AJAX bem-sucedido: reconstrói o preview a partir do
+        // que o servidor confirmou ter persistido e limpa os pendentes já enviados.
+        window.saxGalleryManagers[field] = {
+            reset: function (items) {
+                store = new DataTransfer();
+                input.files = store.files;
+                input.value = '';
+
+                preview.innerHTML = '';
+                (items || []).forEach(function (item) {
+                    var el = document.createElement('div');
+                    el.className = 'gallery-preview-item is-existing shadow-sm border';
+                    el.innerHTML =
+                        '<img src="' + item.url + '" class="w-100 h-100 object-fit-cover">' +
+                        '<input type="hidden" name="' + field + '_actual[]" value="' + item.path + '">' +
+                        '<button type="button" class="gallery-remove-btn"><i class="fas fa-times"></i></button>';
+                    preview.appendChild(el);
+                });
+
+                renderPending();
+            },
+        };
+    });
+})();
+
+
+// ── Institucional: salvar formulário inteiro via AJAX (sem reload) ──────
+(function () {
+    var form = document.getElementById('formInstitucional');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var submitBtns = form.querySelectorAll('button[type="submit"]');
+        submitBtns.forEach(function (btn) { window.saxButtonLoading(btn, true, 'Salvando...'); });
+
+        form.querySelectorAll('.is-invalid').forEach(function (el) { el.classList.remove('is-invalid'); });
+        form.querySelectorAll('[data-ajax-error]').forEach(function (el) { el.remove(); });
+
+        var formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: Object.assign({ 'Accept': 'application/json' }, headers),
+            body: formData,
+        })
+            .then(function (res) {
+                return res.json().then(function (data) { return { status: res.status, data: data }; });
+            })
+            .then(function (result) {
+                var status = result.status;
+                var data = result.data;
+
+                if (status === 200 && data.success) {
+                    if (window.saxToast) saxToast('success', data.message || 'Salvo com sucesso!');
+
+                    var inst = data.institucional || {};
+
+                    var updatedLabel = document.querySelector('.sticky-header .x-small');
+                    if (updatedLabel && inst.updated_at) {
+                        updatedLabel.textContent = 'Última atualização: ' + inst.updated_at;
+                    }
+
+                    var coverInput = form.querySelector('input[name="section_one_image"]');
+                    if (coverInput) coverInput.value = '';
+                    if (inst.section_one_image) {
+                        var coverPreview = document.getElementById('preview-section_one_image');
+                        if (coverPreview) coverPreview.src = inst.section_one_image;
+                    }
+
+                    ['top_sliders', 'gallery_images'].forEach(function (field) {
+                        if (window.saxGalleryManagers[field] && inst[field]) {
+                            window.saxGalleryManagers[field].reset(inst[field]);
+                        }
+                    });
+                } else if (status === 422 && data.errors) {
+                    var unmatchedMessages = [];
+
+                    Object.keys(data.errors).forEach(function (field) {
+                        var input = form.querySelector('[name="' + field + '"]');
+                        if (!input) {
+                            unmatchedMessages.push(data.errors[field][0]);
+                            return;
+                        }
+                        input.classList.add('is-invalid');
+                        var feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback d-block';
+                        feedback.setAttribute('data-ajax-error', '1');
+                        feedback.textContent = data.errors[field][0];
+                        input.insertAdjacentElement('afterend', feedback);
+                    });
+
+                    if (unmatchedMessages.length) {
+                        if (window.saxToast) saxToast('error', unmatchedMessages[0]);
+                    } else {
+                        if (window.saxToast) saxToast('error', 'Verifique os campos destacados.');
+                    }
+                } else {
+                    if (window.saxToast) saxToast('error', data.message || 'Erro ao salvar os dados.');
+                }
+            })
+            .catch(function () {
+                if (window.saxToast) saxToast('error', 'Erro de rede ao salvar.');
+            })
+            .finally(function () {
+                submitBtns.forEach(function (btn) { window.saxButtonLoading(btn, false); });
+            });
+    });
+})();

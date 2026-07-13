@@ -1,8 +1,12 @@
 @php
     // Garante que a galeria de imagens seja interpretada como um array válido de forma segura
-    $gallery = is_array($institucional->gallery_images) 
-        ? $institucional->gallery_images 
+    $gallery = is_array($institucional->gallery_images)
+        ? $institucional->gallery_images
         : json_decode($institucional->gallery_images, true);
+
+    // Rotaciona a ordem da galeria e das marcas automaticamente a cada 2 dias
+    $gallery = sax_rotate_images($gallery, 2);
+    $brands = isset($brands) ? collect(sax_rotate_images($brands->all(), 2)) : $brands;
 @endphp
 
 <section class="py-5 bg-white overflow-hidden">
@@ -44,7 +48,7 @@
             <div class="title-divider mx-auto"></div>
         </div>
 
-        <div class="row g-3">
+        <div class="row g-3" id="institucionalGalleryGrid">
             @if(!empty($gallery))
                 @foreach($gallery as $image)
                     <div class="col-6 col-md-3" data-aos="fade-up">

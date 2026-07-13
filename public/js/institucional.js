@@ -1,5 +1,47 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Embaralha aleatoriamente a ordem das imagens a cada carregamento de página
+    // (banners do topo, marcas e galeria) — precisa rodar antes do Swiper/AOS lerem o DOM.
+    function shuffleChildren(container) {
+        if (!container) return;
+        const items = Array.from(container.children);
+        for (let i = items.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [items[i], items[j]] = [items[j], items[i]];
+        }
+        items.forEach(item => container.appendChild(item));
+    }
+
+    shuffleChildren(document.querySelector('.mainSwiper .swiper-wrapper'));
+    shuffleChildren(document.querySelector('.brandsSwiper .swiper-wrapper'));
+    shuffleChildren(document.getElementById('institucionalGalleryGrid'));
+
+    // Sorteia uma imagem diferente para cada fundo (parallax, stats, cta), evitando repetir
+    // a mesma foto entre eles quando há variedade suficiente no pool disponível.
+    (function randomizeScenery() {
+        const used = [];
+        document.querySelectorAll('[data-scenery-pool]').forEach((el) => {
+            let pool;
+            try {
+                pool = JSON.parse(el.getAttribute('data-scenery-pool'));
+            } catch (e) {
+                pool = [];
+            }
+            if (!Array.isArray(pool) || !pool.length) return;
+
+            const available = pool.filter((url) => used.indexOf(url) === -1);
+            const candidates = available.length ? available : pool;
+            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            used.push(pick);
+
+            if (el.tagName === 'IMG') {
+                el.src = pick;
+            } else {
+                el.style.backgroundImage = `url('${pick}')`;
+            }
+        });
+    })();
+
     AOS.init({ duration: 1000, once: true });
 
     Fancybox.bind('[data-fancybox]', {

@@ -2,11 +2,24 @@
 
 @section('content')
 @php
-    $services     = is_array($bridal->services)     ? $bridal->services     : (json_decode($bridal->services, true)     ?? []);
-    $promos       = is_array($bridal->promos)       ? $bridal->promos       : (json_decode($bridal->promos, true)       ?? []);
-    $brands       = is_array($bridal->brands)       ? $bridal->brands       : (json_decode($bridal->brands, true)       ?? []);
-    $testimonials = is_array($bridal->testimonials) ? $bridal->testimonials : (json_decode($bridal->testimonials, true) ?? []);
-    $locations    = is_array($bridal->locations)    ? $bridal->locations    : (json_decode($bridal->locations, true)    ?? []);
+    // Idioma activo (se cambia desde el selector del navbar; la página se recarga)
+    $currentLang = translation_locale();
+    $t = $bridal->translations->firstWhere('locale', $currentLang);
+
+    // Services, promos, testimonials y locations son traducibles: se leen del idioma activo,
+    // con fallback a la tabla principal si ese idioma todavía no se guardó.
+    $rawServices     = $t?->bridal_services     ?? $bridal->services;
+    $rawPromos       = $t?->bridal_promos       ?? $bridal->promos;
+    $rawTestimonials = $t?->bridal_testimonials ?? $bridal->testimonials;
+    $rawLocations    = $t?->bridal_locations    ?? $bridal->locations;
+
+    $services     = is_array($rawServices)     ? $rawServices     : (json_decode($rawServices, true)     ?? []);
+    $promos       = is_array($rawPromos)       ? $rawPromos       : (json_decode($rawPromos, true)       ?? []);
+    $testimonials = is_array($rawTestimonials) ? $rawTestimonials : (json_decode($rawTestimonials, true) ?? []);
+    $locations    = is_array($rawLocations)    ? $rawLocations    : (json_decode($rawLocations, true)    ?? []);
+
+    // Brands NO es traducible (va a la tabla principal, igual en todos los idiomas: son nombres propios)
+    $brands = is_array($bridal->brands) ? $bridal->brands : (json_decode($bridal->brands, true) ?? []);
 
     // Rellenar slots fijos
     for ($i = count($services);     $i < 4; $i++) $services[]     = ['image' => '', 'title' => '', 'description' => ''];
@@ -19,6 +32,9 @@
     @csrf
     @method('PUT')
 
+    {{-- Idioma que se está editando (viene del selector del navbar) --}}
+    <input type="hidden" name="locale" value="{{ $currentLang }}">
+
     {{-- ── HEADER STICKY ────────────────────────────────────────── --}}
     <x-admin.sticky-header
         :title="__('messages.edit_sax_bridal')"
@@ -29,6 +45,15 @@
     {{-- ── ERRORES / FLASH ──────────────────────────────────────── --}}
     <div class="mx-4">
         <x-admin.alert />
+        <div class="alert alert-info x-small d-flex align-items-center justify-content-between flex-wrap gap-2 py-2">
+            <span><i class="fas fa-language me-1"></i> Editando o conteúdo em <strong>{{ strtoupper($currentLang) }}</strong>. <strong>Salve antes de trocar de idioma.</strong></span>
+            <div class="btn-group btn-group-sm" role="group">
+                @foreach (['pt_BR' => 'PT', 'es' => 'ES', 'en' => 'EN'] as $localeValue => $label)
+                    <a href="{{ route('lang.switch', $localeValue) }}"
+                       class="btn {{ app()->getLocale() === $localeValue ? 'btn-dark-gold' : 'btn-outline-secondary' }}">{{ $label }}</a>
+                @endforeach
+            </div>
+        </div>
     </div>
 
     <div class="px-3 d-flex flex-column gap-4">
@@ -41,16 +66,16 @@
                     <div class="mb-3">
                         <label class="sax-form-label">{{ __('messages.main_title_label') }}</label>
                         <input type="text" name="hero_title" class="form-control sax-input"
-                               value="{{ old('hero_title', $bridal->hero_title) }}">
+                               value="{{ old('hero_title', $t?->bridal_hero_title ?? $bridal->hero_title) }}">
                     </div>
                     <div class="mb-3">
                         <label class="sax-form-label">{{ __('messages.subtitle_label') }}</label>
                         <input type="text" name="hero_subtitle" class="form-control sax-input"
-                               value="{{ old('hero_subtitle', $bridal->hero_subtitle) }}">
+                               value="{{ old('hero_subtitle', $t?->bridal_hero_subtitle ?? $bridal->hero_subtitle) }}">
                     </div>
                     <div class="mb-0">
                         <label class="sax-form-label">{{ __('messages.description_label') }}</label>
-                        <textarea name="hero_description" class="form-control sax-input" rows="4">{{ old('hero_description', $bridal->hero_description) }}</textarea>
+                        <textarea name="hero_description" class="form-control sax-input" rows="4">{{ old('hero_description', $t?->bridal_hero_description ?? $bridal->hero_description) }}</textarea>
                     </div>
                 </div>
                 <div class="col-lg-5 p-4 bg-light border-start">
@@ -130,17 +155,17 @@
                     <div class="col-md-3">
                         <label class="sax-form-label">{{ __('messages.label_label') }}</label>
                         <input type="text" name="services_label" class="form-control sax-input"
-                               value="{{ old('services_label', $bridal->services_label) }}">
+                               value="{{ old('services_label', $t?->bridal_services_label ?? $bridal->services_label) }}">
                     </div>
                     <div class="col-md-3">
                         <label class="sax-form-label">{{ __('messages.section_title_label') }}</label>
                         <input type="text" name="services_title" class="form-control sax-input"
-                               value="{{ old('services_title', $bridal->services_title) }}">
+                               value="{{ old('services_title', $t?->bridal_services_title ?? $bridal->services_title) }}">
                     </div>
                     <div class="col-md-3">
                         <label class="sax-form-label">{{ __('messages.cta_text_label') }}</label>
                         <input type="text" name="services_cta_text" class="form-control sax-input"
-                               value="{{ old('services_cta_text', $bridal->services_cta_text) }}">
+                               value="{{ old('services_cta_text', $t?->bridal_services_cta_text ?? $bridal->services_cta_text) }}">
                     </div>
                     <div class="col-md-3">
                         <label class="sax-form-label">{{ __('messages.cta_link_label') }}</label>
@@ -195,12 +220,12 @@
                     <div class="col-md-6">
                         <label class="sax-form-label">{{ __('messages.label_label') }}</label>
                         <input type="text" name="testimonials_label" class="form-control sax-input"
-                               value="{{ old('testimonials_label', $bridal->testimonials_label) }}">
+                               value="{{ old('testimonials_label', $t?->bridal_testimonials_label ?? $bridal->testimonials_label) }}">
                     </div>
                     <div class="col-md-6">
                         <label class="sax-form-label">{{ __('messages.section_title_label') }}</label>
                         <input type="text" name="testimonials_title" class="form-control sax-input"
-                               value="{{ old('testimonials_title', $bridal->testimonials_title) }}">
+                               value="{{ old('testimonials_title', $t?->bridal_testimonials_title ?? $bridal->testimonials_title) }}">
                     </div>
                 </div>
 
@@ -361,13 +386,13 @@
                 <div class="col-md-6">
                     <label class="sax-form-label text-white opacity-75">{{ __('messages.meta_title_label') }}</label>
                     <input type="text" name="meta_title" class="form-control sax-input sax-input-dark"
-                           value="{{ old('meta_title', $bridal->meta_title) }}"
+                           value="{{ old('meta_title', $t?->bridal_meta_title ?? $bridal->meta_title) }}"
                            placeholder="{{ __('messages.meta_title_placeholder_bridal') }}">
                 </div>
                 <div class="col-md-6">
                     <label class="sax-form-label text-white opacity-75">{{ __('messages.meta_description_label') }}</label>
                     <textarea name="meta_description" class="form-control sax-input sax-input-dark" rows="3"
-                              placeholder="{{ __('messages.meta_description_google_placeholder') }}">{{ old('meta_description', $bridal->meta_description) }}</textarea>
+                              placeholder="{{ __('messages.meta_description_google_placeholder') }}">{{ old('meta_description', $t?->bridal_meta_description ?? $bridal->meta_description) }}</textarea>
                 </div>
             </div>
         </div>

@@ -20,9 +20,27 @@ class InstitucionalController extends Controller
             ];
         });
 
+        $institucional = $data['institucional'];
+
+        // Pool com todas as imagens de "cenário" disponíveis (banners + galeria + capa), sem repetição,
+        // usado para distribuir fotos diferentes entre os fundos (parallax, stats, cta) em vez de repetir sempre a mesma.
+        $topSliders = is_array($institucional->top_sliders) ? $institucional->top_sliders : (json_decode($institucional->top_sliders, true) ?: []);
+        $galleryImages = is_array($institucional->gallery_images) ? $institucional->gallery_images : (json_decode($institucional->gallery_images, true) ?: []);
+
+        $sceneryPool = collect($topSliders)
+            ->merge($galleryImages)
+            ->push($institucional->section_one_image)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $sceneryPool = sax_rotate_images($sceneryPool, 2);
+
         return view('institucional.index', [
-            'institucional' => $data['institucional'],
-            'brands' => $data['brands']
+            'institucional' => $institucional,
+            'brands' => $data['brands'],
+            'sceneryPool' => $sceneryPool,
         ]);
     }
 }

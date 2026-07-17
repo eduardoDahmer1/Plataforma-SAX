@@ -110,6 +110,25 @@
         </div>
     </div>
 
+    <div class="d-flex align-items-center justify-content-between mb-3 mt-5">
+        <h5 class="fw-bold m-0">Carrinhos abandonados</h5>
+        <a href="{{ route('admin.abandoned-carts.index', ['search' => $client->email]) }}" class="btn btn-sm btn-outline-dark">Ver no relatório</a>
+    </div>
+    <div class="card rounded-0 border-0 shadow-sm mb-5">
+        <div class="table-responsive">
+            <table class="table align-middle m-0">
+                <thead class="bg-light"><tr><th class="ps-4">Carrinho</th><th>Data</th><th>Itens</th><th>Total</th><th>Status</th><th class="text-end pe-4">Ação</th></tr></thead>
+                <tbody>
+                    @forelse($client->abandonedCarts as $cart)
+                        <tr><td class="ps-4 fw-bold">#{{ $cart->id }}</td><td>{{ $cart->abandoned_at->format('d/m/Y H:i') }}</td><td>{{ $cart->items_count }}</td><td>{{ $cart->currency_sign }} {{ number_format($cart->total * $cart->currency_value, 2, '.', ',') }}</td><td><span class="badge {{ $cart->status === 'restored' ? 'bg-success' : 'bg-warning text-dark' }}">{{ $cart->status === 'restored' ? 'Restaurado' : 'Abandonado' }}</span></td><td class="text-end pe-4"><a href="{{ route('admin.abandoned-carts.show', $cart) }}" class="btn btn-sm btn-outline-dark">Visualizar</a></td></tr>
+                    @empty
+                        <tr><td colspan="6" class="text-center text-muted py-4">Este cliente não possui carrinhos abandonados.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h5 class="fw-bold m-0">Histórico de Pedidos</h5>
         <span class="badge bg-dark">{{ $client->orders->count() }} pedidos encontrados</span>

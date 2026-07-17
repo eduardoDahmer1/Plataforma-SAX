@@ -60,6 +60,7 @@
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-2 mt-md-0">
                     <p class="x-small text-secondary mb-0">
+                        <a href="{{ route('policies.index') }}" class="text-secondary me-3">Políticas e Termos</a>
                         {{ __('messages.made_by') }} <span class="text-white fw-bold">SAX FULL SERVICE</span>
                     </p>
                 </div>

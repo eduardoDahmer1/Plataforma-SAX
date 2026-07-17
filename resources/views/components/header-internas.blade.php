@@ -1,3 +1,5 @@
+@props(['palaceWhatsapp' => null])
+
 @php
     // 1. Identificação da rota (necessário para as cores/estilos)
     $isBridal = Request::is('bridal*');
@@ -8,7 +10,9 @@
     // 2. Lógica simplificada do WhatsApp (usando o que vem do Controller)
     $whatsapp = match(true) {
         $isBridal => collect($bridalData->locations ?? [])->first()['whatsapp_url'] ?? 'https://wa.me/595983123456',
-        $isPalace => 'https://wa.me/' . preg_replace('/\D/', '', $palaceData->contato_whatsapp ?? '595983000000'),
+        $isPalace => $palaceWhatsapp
+            ? 'https://wa.me/' . preg_replace('/\D/', '', $palaceWhatsapp) . '?text=' . urlencode(__('messages.msg_consultoria_para_grandes_eventos'))
+            : '#',
         $isBistro => $cafeData->whatsapp_link ?? 'https://wa.me/595983000000',
         $isInst   => 'https://wa.me/595983123456',
         default   => '#'

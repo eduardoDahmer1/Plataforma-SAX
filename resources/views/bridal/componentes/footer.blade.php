@@ -60,6 +60,7 @@
                     <li><a href="{{ route('palace.index') }}" class="footer-link">{{ __('messages.sax_palace') }}</a></li>
                     <li><a href="{{ route('bridal.index') }}" class="footer-link">{{ __('messages.sax_bridal') }}</a></li>
                     <li><a href="{{ route('contact.form') }}" class="footer-link">{{ __('messages.trabalhe_conosco') }}</a></li>
+                    <li><a href="{{ route('policies.index') }}" class="footer-link">Políticas e Termos</a></li>
                 </ul>
             </div>
 

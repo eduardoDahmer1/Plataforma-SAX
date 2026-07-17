@@ -28,8 +28,8 @@
             @if ($hasBancardV2)
                 <button type="button" class="sax-payment-method" id="btn-bancard_v2" data-payment-method="bancard_v2" aria-pressed="false">
                     <i class="fa fa-credit-card mb-2 d-block"></i>
-                    {{ __('messages.cartao_qr_bancard') }}
-                    <span class="sax-payment-caption">Cartao e QR em ambiente seguro</span>
+                    Cartão / QR Bancard
+                    <span class="sax-payment-caption">Cartão internacional · QR somente no Paraguai</span>
                 </button>
             @endif
         </div>
@@ -127,8 +127,8 @@
                 <span class="text-muted">{{ __('messages.desconto') }}</span>
                 <span id="desconto-display" class="text-success">- {{ currency_format($descontoPedido) }}</span>
             </div>
-            <div class="d-flex justify-content-between mb-3">
-                <span class="text-muted">{{ __('messages.envio') }}</span>
+            <div class="d-flex justify-content-between mb-3" id="shipping-summary-row">
+                <span class="text-muted" id="shipping-summary-label">{{ __('messages.envio') }}</span>
                 <span id="frete-display" class="text-success small fw-bold text-uppercase">{{ __('messages.selecione_entrega') }}</span>
             </div>
             <div class="d-flex justify-content-between align-items-center border-top pt-3">
@@ -138,6 +138,57 @@
 
             {{-- Total sem frete (subtotal - desconto), usado pelo JS ao trocar a entrega --}}
             <span id="total-sem-frete" class="d-none" data-valor="{{ $totalPedido }}">{{ currency_format($totalPedido) }}</span>
+        </div>
+    </div>
+
+    <div class="sax-checkout-box mt-4">
+        <div id="terms-validation-message" class="alert alert-warning border-0 rounded-3 mb-3 {{ $errors->has('accept_terms') ? '' : 'd-none' }}" role="alert">
+            <i class="fa fa-info-circle me-2"></i>
+            <strong>Só falta uma confirmação:</strong> para continuar com sua compra, confirme que você leu e aceita nossas políticas e termos.
+        </div>
+        <div class="form-check d-flex align-items-start gap-2 m-0">
+            <input class="form-check-input mt-1" type="checkbox" name="accept_terms" value="1" id="accept_terms" @checked(old('accept_terms'))>
+            <label class="form-check-label text-start" for="accept_terms">
+                Confirmo que li e aceito as
+                <button type="button" class="btn btn-link d-inline p-0 align-baseline fw-bold text-decoration-underline"
+                        data-bs-toggle="modal" data-bs-target="#checkoutPoliciesModal">
+                    Políticas de Privacidade, Compras, Vendas e Envios
+                </button>.
+                <span class="d-block small text-muted mt-1">O aceite é obrigatório para finalizar sua compra.</span>
+            </label>
+        </div>
+        @error('accept_terms')
+            <div class="text-danger small mt-2">Você precisa aceitar as políticas e os termos para finalizar a compra.</div>
+        @enderror
+    </div>
+
+    <div class="modal fade" id="checkoutPoliciesModal" tabindex="-1" aria-labelledby="checkoutPoliciesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-3 shadow">
+                <div class="modal-header border-bottom px-4 py-3">
+                    <div>
+                        <span class="d-block small text-muted text-uppercase fw-bold tracking-wider">SAX Department</span>
+                        <h2 class="modal-title h4 fw-bold mb-0" id="checkoutPoliciesModalLabel">Políticas e Termos</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body p-4 p-lg-5">
+                    @forelse(($policies ?? collect()) as $policy)
+                        <article class="checkout-policy-content {{ !$loop->last ? 'border-bottom pb-4 mb-4' : '' }}">
+                            <h3 class="h5 fw-bold mb-3">{{ $policy->title }}</h3>
+                            {!! $policy->content !!}
+                            <p class="small text-muted mb-0 mt-3">Última atualização: {{ $policy->updated_at->format('d/m/Y') }}</p>
+                        </article>
+                    @empty
+                        <div class="alert alert-light border mb-0">As políticas não estão disponíveis no momento.</div>
+                    @endforelse
+                </div>
+
+                <div class="modal-footer border-top px-4 py-3">
+                    <button type="button" class="btn btn-dark px-4" data-bs-dismiss="modal">Li e compreendi</button>
+                </div>
+            </div>
         </div>
     </div>
 

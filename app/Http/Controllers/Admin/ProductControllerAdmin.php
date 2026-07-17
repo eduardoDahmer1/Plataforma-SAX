@@ -34,7 +34,8 @@ class ProductControllerAdmin extends Controller
 
         $products = Product::select($productColumns)
             ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
-                $q2->where('external_name', 'LIKE', "%{$search}%")
+                $q2->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('external_name', 'LIKE', "%{$search}%")
                     ->orWhere('sku', 'LIKE', "%{$search}%")
                     ->orWhere('slug', 'LIKE', "%{$search}%");
             }))
@@ -96,10 +97,10 @@ class ProductControllerAdmin extends Controller
                             $q->orderBy('price', 'desc');
                             break;
                         case 'name_az':
-                            $q->orderBy('external_name', 'asc');
+                            $q->orderByRaw("COALESCE(NULLIF(name, ''), external_name) asc");
                             break;
                         case 'name_za':
-                            $q->orderBy('external_name', 'desc');
+                            $q->orderByRaw("COALESCE(NULLIF(name, ''), external_name) desc");
                             break;
                         default:
                             $q->orderBy('id', 'desc');
@@ -193,6 +194,8 @@ class ProductControllerAdmin extends Controller
 
         $data['highlights'] = $request->input('highlights', []);
         $data['product_role'] = 'P';
+        $data['updated_by'] = auth()->id();
+        $data['admin_edited_at'] = now();
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
@@ -408,6 +411,7 @@ class ProductControllerAdmin extends Controller
 
                 if (auth()->check()) {
                     $data['updated_by'] = auth()->id();
+                    $data['admin_edited_at'] = now();
                 }
 
                 $product->update($data);
@@ -644,6 +648,8 @@ class ProductControllerAdmin extends Controller
         }
 
         $product->gallery = array_values($gallery);
+        $product->updated_by = auth()->id();
+        $product->admin_edited_at = now();
         $product->save();
 
         return redirect()->back()->with('success', 'Imagem da galeria removida com sucesso!');
@@ -677,6 +683,8 @@ class ProductControllerAdmin extends Controller
         }
 
         $product->gallery = array_values($newGallery);
+        $product->updated_by = auth()->id();
+        $product->admin_edited_at = now();
         $product->save();
 
         return redirect()
@@ -695,6 +703,8 @@ class ProductControllerAdmin extends Controller
             }
 
             $product->photo = null;
+            $product->updated_by = auth()->id();
+            $product->admin_edited_at = now();
             $product->save();
             return redirect()->back()->with('success', 'Foto principal removida com sucesso!');
         }
@@ -777,6 +787,8 @@ class ProductControllerAdmin extends Controller
     {
         $product = Product::findOrFail($id);
         $product->status = !$product->status;
+        $product->updated_by = auth()->id();
+        $product->admin_edited_at = now();
         $product->save();
 
         if (request()->expectsJson() || request()->ajax()) {
@@ -796,6 +808,8 @@ class ProductControllerAdmin extends Controller
 
         $highlights = $request->input('highlights', []);
         $product->highlights = json_encode($highlights);
+        $product->updated_by = auth()->id();
+        $product->admin_edited_at = now();
         $product->save();
 
         if ($request->expectsJson() || $request->ajax()) {
@@ -823,16 +837,18 @@ class ProductControllerAdmin extends Controller
             ];
         }
 
-        $edicoesPorDia = Product::selectRaw('DATE(updated_at) as dia, COUNT(*) as total')
-            ->whereBetween('updated_at', [$dataInicio, $dataFim])
+        $edicoesPorDia = Product::selectRaw('DATE(admin_edited_at) as dia, COUNT(*) as total')
+            ->whereBetween('admin_edited_at', [$dataInicio, $dataFim])
             ->whereNotNull('updated_by')
             ->groupBy('dia')
             ->orderBy('dia', 'desc')
             ->get();
 
-        $detalhesProdutos = Product::whereBetween('updated_at', [$dataInicio, $dataFim])
-            ->selectRaw('DATE(updated_at) as dia, name, sku, ref_code, updated_by')
+        $detalhesProdutos = Product::with('editor:id,name')
+            ->whereBetween('admin_edited_at', [$dataInicio, $dataFim])
+            ->selectRaw('id, DATE(admin_edited_at) as dia, COALESCE(external_name, name) as name, sku, ref_code, updated_by, admin_edited_at')
             ->whereNotNull('updated_by')
+            ->orderByDesc('admin_edited_at')
             ->get()
             ->groupBy('dia');
 

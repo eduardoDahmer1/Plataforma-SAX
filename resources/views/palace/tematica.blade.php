@@ -37,7 +37,7 @@
                     <div class="image-border-decoration"></div>
                     <div class="image-wrapper">
                         <img src="{{ asset('storage/' . $palace->tematica_imagem) }}"
-                            class="img-main"
+                            class="img-main img-fluid w-100"
                             alt="{{ $t->palace_tematica_titulo ?? $palace->tematica_titulo }}">
 
                         <div class="floating-price-card d-none d-md-block">

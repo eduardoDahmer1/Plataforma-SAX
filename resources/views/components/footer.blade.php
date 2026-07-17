@@ -52,6 +52,7 @@
                     <h6 class="footer-title">{{ __('messages.atendimento') }}</h6>
                     <ul class="footer-links">
                         <li><a href="{{ route('contact.form') }}">{{ __('messages.ajuda') }}</a></li>
+                        <li><a href="{{ route('policies.index') }}">Políticas e Termos</a></li>
                     </ul>
 
                     <h6 class="footer-title social-title">{{ __('messages.siga_redes') }}</h6>

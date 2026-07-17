@@ -113,6 +113,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(\App\Models\Cart::class);
     }
 
+    public function abandonedCarts()
+    {
+        return $this->hasMany(\App\Models\AbandonedCart::class);
+    }
+
     public function favoriteProducts()
     {
         return $this->belongsToMany(Product::class, 'user_product_preferences')->withTimestamps();

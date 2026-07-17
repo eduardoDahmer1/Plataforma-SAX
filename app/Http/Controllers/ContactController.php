@@ -30,7 +30,7 @@ class ContactController extends Controller
             'contact_type' => 'required|in:1,2',
             'email' => 'required|email',
             'phone' => 'nullable|string|max:20',
-            'message' => $type === 1 ? 'required|string' : 'nullable|string',
+            'message' => 'required|string',
             'attachment' => $type === 2 ? 'required|file|mimes:pdf,jpg,jpeg,png|max:2048' : 'nullable',
         ];
 

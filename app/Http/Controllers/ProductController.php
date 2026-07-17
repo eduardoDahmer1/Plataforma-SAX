@@ -17,7 +17,7 @@ class ProductController extends Controller
             ->where('stock', '>', 0)
             ->whereNotNull('photo')
             ->where('photo', '!=', '');
-    }
+    } 
 
     private function withCupons($query)
     {

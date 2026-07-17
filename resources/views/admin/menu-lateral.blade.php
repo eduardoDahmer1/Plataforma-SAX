@@ -1,7 +1,7 @@
 @php
     $catalogosOpen = request()->routeIs('admin.products.*', 'admin.brands.*', 'admin.categories.*', 'admin.subcategories.*', 'admin.categorias-filhas.*');
-    $vendasOpen = request()->routeIs('admin.orders.*', 'admin.clients.*');
-    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*');
+    $vendasOpen = request()->routeIs('admin.orders.*', 'admin.clients.*', 'admin.abandoned-carts.*');
+    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*', 'admin.policies.*');
     $sistemaOpen = request()->routeIs(
         'admin.index',
         'admin.sections_home.*',
@@ -51,6 +51,7 @@
             <div class="collapse sax-submenu {{ $vendasOpen ? 'show' : '' }}" id="menuVendas">
                 <a href="{{ route('admin.orders.index') }}" class="submenu-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}"><i class="fa-solid fa-receipt"></i> {{ __('messages.menu_pedidos') }}</a>
                 <a href="{{ route('admin.clients.index') }}" class="submenu-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}"><i class="fa-solid fa-user-tie"></i> {{ __('messages.menu_clientes') }}</a>
+                <a href="{{ route('admin.abandoned-carts.index') }}" class="submenu-link {{ request()->routeIs('admin.abandoned-carts.*') ? 'active' : '' }}"><i class="fa-solid fa-cart-arrow-down"></i> Carrinhos abandonados</a>
             </div>
         </div>
 
@@ -66,7 +67,7 @@
             <div class="collapse sax-submenu {{ $conteudosOpen ? 'show' : '' }}" id="menuConteudos">
                 <a href="{{ route('admin.blogs.index') }}" class="submenu-link {{ request()->routeIs('admin.blogs.*') ? 'active' : '' }}"><i class="fa-solid fa-blog"></i> {{ __('messages.menu_blog') }}</a>
                 <a href="{{ route('admin.contatos.index') }}" class="submenu-link {{ request()->routeIs('admin.contatos.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> {{ __('messages.menu_contato') }}</a>
-                <a href="#" class="submenu-link"><i class="fa-solid fa-scale-balanced"></i> {{ __('messages.menu_politicas') }}</a>
+                <a href="{{ route('admin.policies.index') }}" class="submenu-link {{ request()->routeIs('admin.policies.*') ? 'active' : '' }}"><i class="fa-solid fa-scale-balanced"></i> {{ __('messages.menu_politicas') }}</a>
             </div>
         </div>
 

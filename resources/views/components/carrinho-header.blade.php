@@ -3,7 +3,7 @@
     use App\Models\Currency;
 
     $user = auth()->user();
-    $cart = $user ? Cart::with(['product.brand'])->where('user_id', $user->id)->get() : collect();
+    $cart = $user ? Cart::available()->with(['product.brand'])->where('user_id', $user->id)->get() : collect();
     $cartCount = $cart->sum('quantity');
 
     $totalGeral = 0;
@@ -146,6 +146,13 @@
                 <a href="{{ route('cart.view') }}" class="btn-go-to-cart w-100 py-3 text-uppercase">
                     {{ __('messages.ir_para_carrinho') }}
                 </a>
+                <form action="{{ route('cart.abandon') }}" method="POST" class="mt-2"
+                      onsubmit="return confirm('Tem certeza de que deseja abandonar este carrinho? Os itens serão removidos da sua sacola, mas ficarão salvos no seu histórico para consultar ou restaurar depois.');">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-link text-danger text-decoration-none w-100 py-2 small fw-bold">
+                        <i class="fa fa-trash-alt me-1"></i> Abandonar carrinho
+                    </button>
+                </form>
             </div>
         @endif
     </div>

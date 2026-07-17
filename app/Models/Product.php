@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
+    public const MINIMUM_VISIBLE_PRICE = 3.0;
+
     protected $table = 'products';
 
     protected $fillable = [
@@ -87,6 +90,7 @@ class Product extends Model
         'gtin',
         'promotion_price',
         'updated_by',
+        'admin_edited_at',
         'name',
         'description',
         'price',
@@ -105,11 +109,23 @@ class Product extends Model
         'price' => 'float',
         'stores' => 'array',
         'stock' => 'integer',
+        'admin_edited_at' => 'datetime',
     ];
 
     protected static ?bool $hasColorParentColumn = null;
     protected static ?bool $hasColorColumn = null;
     protected static array $familyColorCache = [];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('minimum_visible_price', function (Builder $builder) {
+            $builder->where(
+                $builder->getModel()->qualifyColumn('price'),
+                '>=',
+                self::MINIMUM_VISIBLE_PRICE
+            );
+        });
+    }
 
     // URL da foto do produto
     public function getPhotoUrlAttribute()
@@ -143,7 +159,7 @@ class Product extends Model
     public function meetsActiveRequirements(): bool
     {
         return static::hasUsableImage($this->photo, $this->gallery)
-            && (float) $this->price > 0
+            && (float) $this->price >= self::MINIMUM_VISIBLE_PRICE
             && (int) $this->stock > 0
             && trim((string) $this->description) !== '';
     }
@@ -213,6 +229,11 @@ class Product extends Model
     public function favoredByUsers()
     {
         return $this->belongsToMany(User::class, 'user_product_preferences')->withTimestamps();
+    }
+
+    public function editor()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function getResolvedCardColorsAttribute(): array

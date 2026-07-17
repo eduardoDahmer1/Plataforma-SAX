@@ -56,6 +56,7 @@
                                 <tr>
                                     <th class="ps-4 border-0 small text-muted">{{ __('messages.col_produto') }}</th>
                                     <th class="border-0 small text-muted text-center">{{ __('messages.col_sku') }}</th>
+                                    <th class="border-0 small text-muted text-center">Editado por</th>
                                     <th class="pe-4 border-0 small text-muted text-end">{{ __('messages.col_ref') }}</th>
                                 </tr>
                             </thead>

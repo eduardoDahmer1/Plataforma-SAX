@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderStatusMail;
+use App\Models\Policy;
 
 class CheckoutController extends Controller
 {
@@ -25,8 +26,9 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $cart = Cart::with('product')->where('user_id', $user->id)->get();
+        $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
         $paymentMethods = PaymentMethod::where('active', 1)->get();
+        $policies = Policy::where('is_active', true)->orderBy('id')->get();
 
         $cart->transform(function ($item) {
             if ($item->product) {
@@ -39,7 +41,7 @@ class CheckoutController extends Controller
         // O cupom da sessão é revalidado contra o carrinho atual a cada carregamento.
         $resumo = $this->cupons->resumoDoCarrinho($user, $cart->filter(fn ($i) => $i->product)->values());
 
-        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo'));
+        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies'));
     }
 
     public function store(Request $request)
@@ -64,9 +66,10 @@ class CheckoutController extends Controller
             'frete_valor' => 'nullable|numeric', // Validamos o campo que enviamos via JS
             'store' => 'required_if:shipping,3',
             'observations' => 'nullable|string',
+            'accept_terms' => 'accepted',
         ]);
 
-        $cart = Cart::with('product')->where('user_id', $user->id)->get();
+        $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
         if ($cart->isEmpty()) {
             return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
         }
@@ -120,6 +123,8 @@ class CheckoutController extends Controller
                 'currency_sign' => session('currency_sign', 'US$'),
                 'currency_value' => (float) session('currency_value', 1),
                 'locale' => app()->getLocale(),
+                'terms_accepted_at' => now(),
+                'terms_version' => hash('sha256', Policy::where('is_active', true)->orderBy('id')->get(['id', 'updated_at'])->toJson()),
             ]);
 
             switch ($request->shipping) {
@@ -289,7 +294,7 @@ class CheckoutController extends Controller
     public function whatsapp(Request $request)
     {
         $user = auth()->user();
-        $cart = Cart::with('product')->where('user_id', $user->id)->get();
+        $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
         if ($cart->isEmpty()) {
             return back()->with('error', 'Carrinho vazio');
         }

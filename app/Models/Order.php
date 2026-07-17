@@ -46,6 +46,8 @@ class Order extends Model
         'currency_sign',
         'currency_value',
         'locale',
+        'terms_accepted_at',
+        'terms_version',
 
         'shipping_name',
         'shipping_email',

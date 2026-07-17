@@ -33,8 +33,6 @@
         $options = [
             'consultoria_para_grandes_eventos'   => __('messages.msg_consultoria_para_grandes_eventos'),
             'consulta_de_disponibilidade'        => __('messages.msg_consulta_de_disponibilidade'),
-            'agendar_visita_tecnica'             => __('messages.msg_agendar_visita_tecnica'),
-            'orcamento_personalizado'            => __('messages.msg_orcamento_personalizado'),
             'capacidade_e_layouts'               => __('messages.msg_capacidade_e_layouts')
         ];
     } elseif (Route::is('checkout.*')) {

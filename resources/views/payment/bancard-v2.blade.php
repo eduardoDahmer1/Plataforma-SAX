@@ -14,7 +14,7 @@
             <div class="bancard-head text-center mb-4">
                 <p class="bancard-kicker mb-2">Checkout seguro</p>
                 <h1 class="bancard-title mb-2">Pagamento Bancard V2</h1>
-                <p class="bancard-subtitle mb-0">Finalize seu pedido com cartão ou QR em ambiente protegido.</p>
+                <p class="bancard-subtitle mb-0">Escolha a opção adequada ao seu país e finalize em ambiente protegido.</p>
             </div>
 
             <div class="bancard-meta-grid mb-4">
@@ -33,6 +33,29 @@
                 <div class="bancard-meta-item">
                     <span class="meta-label">Status</span>
                     <strong class="meta-value status-badge {{ $orderStatus }}">{{ strtoupper($orderStatus) }}</strong>
+                </div>
+            </div>
+
+            <div class="bancard-payment-guide mb-4" aria-label="Disponibilidade das formas de pagamento">
+                <div class="bancard-guide-card is-available">
+                    <div class="bancard-guide-icon"><i class="fas fa-credit-card"></i></div>
+                    <div>
+                        <span class="bancard-guide-status">Disponível internacionalmente</span>
+                        <h2>Pagamento com cartão</h2>
+                        <p>Use cartões emitidos no <strong>Brasil</strong>, no <strong>Paraguai</strong> ou em <strong>outros países</strong>, sujeito à aprovação do banco emissor.</p>
+                    </div>
+                </div>
+                <div class="bancard-guide-card is-paraguay">
+                    <div class="bancard-guide-icon"><i class="fas fa-qrcode"></i></div>
+                    <div>
+                        <span class="bancard-guide-status">Exclusivo para o Paraguai</span>
+                        <h2>QR Bancard</h2>
+                        <p>Disponível somente para aplicativos e contas compatíveis do <strong>Paraguai</strong>.</p>
+                    </div>
+                </div>
+                <div class="bancard-pix-notice">
+                    <i class="fas fa-bolt me-2"></i>
+                    <div><strong>Clientes do Brasil:</strong> o PIX/QR ainda não está disponível, mas será implementado em breve. Por enquanto, selecione a opção de cartão.</div>
                 </div>
             </div>
 
@@ -127,6 +150,16 @@
         color: #1f1f1f;
         font-weight: 700;
     }
+
+    .bancard-payment-guide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .bancard-guide-card { display: flex; gap: 14px; padding: 18px; border: 1px solid #e4e4e4; border-radius: 14px; background: #fff; }
+    .bancard-guide-card.is-available { border-left: 4px solid #198754; }
+    .bancard-guide-card.is-paraguay { border-left: 4px solid #365899; }
+    .bancard-guide-icon { flex: 0 0 42px; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: #f2f3f5; color: #161616; font-size: 17px; }
+    .bancard-guide-status { display: block; margin-bottom: 4px; color: #6c757d; font-size: .63rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .bancard-guide-card h2 { margin: 0 0 6px; font-size: .95rem; font-weight: 800; }
+    .bancard-guide-card p { margin: 0; color: #666; font-size: .78rem; line-height: 1.5; }
+    .bancard-pix-notice { grid-column: 1 / -1; display: flex; align-items: flex-start; padding: 13px 16px; border: 1px solid #d8e8ff; border-radius: 12px; background: #f2f7ff; color: #29405f; font-size: .78rem; line-height: 1.5; }
 
     .status-badge {
         text-transform: uppercase;
@@ -228,6 +261,8 @@
         .bancard-actions {
             flex-direction: column;
         }
+
+        .bancard-payment-guide { grid-template-columns: 1fr; }
 
         .btn-action {
             width: 100%;

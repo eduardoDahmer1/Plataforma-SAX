@@ -39,6 +39,7 @@ use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\InstitucionalController;
 use App\Http\Controllers\PalaceController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SubcategoryController;
@@ -115,6 +116,7 @@ Route::get('/blogs/ajax-search', [BlogController::class, 'ajaxSearch'])->name('b
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
 Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/politicas', [PolicyController::class, 'index'])->name('policies.index');
 Route::post('/currency/change', [CurrencyController::class, 'change'])->name('currency.change');
 
 Route::middleware('auth')->group(function () {
@@ -134,6 +136,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
     Route::get('/checkout/error', fn () => view('checkout.error'))->name('checkout.error');
     Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
+    Route::delete('/cart/abandon', [CartController::class, 'abandon'])->name('cart.abandon');
+    Route::get('/carrinhos-abandonados', [\App\Http\Controllers\AbandonedCartController::class, 'index'])->name('user.abandoned-carts.index');
+    Route::get('/carrinhos-abandonados/{abandonedCart}', [\App\Http\Controllers\AbandonedCartController::class, 'show'])->name('user.abandoned-carts.show');
+    Route::post('/carrinhos-abandonados/{abandonedCart}/restaurar', [\App\Http\Controllers\AbandonedCartController::class, 'restore'])->name('user.abandoned-carts.restore');
 
     Route::get('/checkout/bancard-v2/{order}', [\App\Http\Controllers\BancardV2Controller::class, 'checkoutPage'])
         ->whereNumber('order')
@@ -215,10 +221,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
     Route::resource('clients', ClientController::class)->only(['index', 'show']);
+    Route::resource('abandoned-carts', \App\Http\Controllers\Admin\AbandonedCartControllerAdmin::class)
+        ->parameters(['abandoned-carts' => 'abandonedCart'])
+        ->only(['index', 'show']);
     Route::resource('payments', PaymentMethodController::class);
     Route::post('payments/{id}/toggle-active', [PaymentMethodController::class, 'toggleActive'])->name('payments.toggleActive');
     Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
     Route::resource('blogs', BlogControllerAdmin::class);
+    Route::resource('policies', \App\Http\Controllers\Admin\PolicyControllerAdmin::class)->only(['index', 'edit', 'update']);
     Route::post('blogs/upload-image', [BlogControllerAdmin::class, 'uploadImage'])->name('blogs.upload-image');
     Route::resource('blog-categories', BlogCategoryController::class)->parameter('blog-categories', 'category');
     Route::get('users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('users.create');

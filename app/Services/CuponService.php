@@ -41,7 +41,8 @@ class CuponService
             return collect();
         }
 
-        return Cart::with('product')
+        return Cart::available()
+            ->with('product')
             ->where('user_id', $user->id)
             ->get()
             ->filter(fn ($item) => $item->product !== null)

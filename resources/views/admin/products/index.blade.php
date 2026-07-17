@@ -62,7 +62,7 @@
                                 <!-- Imagem -->
                                 <div class="col-auto">
                                     <div class="sax-product-img-box">
-                                        <img src="{{ $imageUrl }}" alt="{{ $product->name }}"
+                                        <img src="{{ $imageUrl }}" alt="{{ $product->name ?: $product->external_name }}"
                                             class="{{ $product->status ? '' : 'is-inactive' }}">
                                     </div>
                                 </div>
@@ -83,8 +83,10 @@
                                             {{ $product->status ? __('messages.status_ativo') : __('messages.status_inativo') }}
                                         </span>
                                     </div>
-                                    <h6 class="fw-bold mb-0 small text-truncate">{{ $product->name }}</h6>
-                                    <p class="x-small text-muted mb-1 text-truncate">{{ $product->external_name }}</p>
+                                    <h6 class="fw-bold mb-0 small text-truncate">{{ $product->name ?: $product->external_name }}</h6>
+                                    @if($product->external_name && trim($product->external_name) !== trim((string) $product->name))
+                                        <p class="x-small text-muted mb-1 text-truncate" title="Nome original do Sistema GO">{{ $product->external_name }}</p>
+                                    @endif
                                     <div class="d-flex align-items-center gap-2 x-small fw-bold text-dark">
                                         <span>{{ currency_format($product->price) }}</span>
                                         <span class="text-muted">•</span>

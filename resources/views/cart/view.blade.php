@@ -167,6 +167,14 @@
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.checkout_whatsapp') }}
                             </button>
                         </form>
+
+                        <form action="{{ route('cart.abandon') }}" method="POST"
+                              onsubmit="return confirm('Tem certeza de que deseja abandonar este carrinho? Os itens serão removidos da sua sacola, mas ficarão salvos no seu histórico para consultar ou restaurar depois.');">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-outline-danger w-100 py-2 fw-bold text-uppercase">
+                                <i class="fas fa-trash-alt me-2"></i>Abandonar carrinho
+                            </button>
+                        </form>
                     </div>
 
                     <div class="sax-summary-security mt-4">
@@ -191,4 +199,3 @@
     </div>
 </div>
 @endsection
-

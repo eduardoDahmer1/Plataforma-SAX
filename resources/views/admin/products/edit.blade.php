@@ -36,15 +36,17 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="external_name" class="form-label"><i class="fas fa-tag me-1"></i>Nome Externo</label>
+                        <label for="external_name" class="form-label"><i class="fas fa-tag me-1"></i>Nome original (Sistema GO)</label>
                         <input readonly type="text" id="external_name" name="external_name" class="form-control"
                             value="{{ old('external_name', $item->external_name ?? '') }}">
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label class="form-label"><i class="fas fa-pencil-alt me-1"></i>Nome do Produto</label>
+                        <label class="form-label"><i class="fas fa-pencil-alt me-1"></i>Nome comercial do produto</label>
                         
-                        <input type="hidden" id="real-name-pt" name="translate[pt-br][name]" value="{{ old('translate.pt-br.name', $ptTranslation->name ?? ($item->name ?? ($item->external_name ?? ''))) }}">
+                        {{-- products.name é o nome comercial canônico em PT. A tradução antiga
+                             não pode sobrescrevê-lo ao abrir e salvar o formulário. --}}
+                        <input type="hidden" id="real-name-pt" name="translate[pt-br][name]" value="{{ old('translate.pt-br.name', $item->name ?: ($ptTranslation->name ?? ($item->external_name ?? ''))) }}">
                         <input type="hidden" id="real-name-es" name="translate[es][name]" value="{{ old('translate.es.name', $esTranslation->name ?? '') }}">
                         <input type="hidden" id="real-name-en" name="translate[en][name]" value="{{ old('translate.en.name', $enTranslation->name ?? '') }}">
 
@@ -53,10 +55,15 @@
                         </div>
 
                         <div class="mt-1">
+                            <span class="small text-muted d-block mb-1">Este é o nome exibido no catálogo e na loja.</span>
                             <span class="small text-muted me-2">Editar idioma:</span>
                             <a href="javascript:void(0)" class="badge bg-primary name-lang-btn text-decoration-none" data-lang="pt" onclick="switchLanguage('name', 'pt', this)">PT</a>
                             <a href="javascript:void(0)" class="badge bg-secondary name-lang-btn text-decoration-none" data-lang="es" onclick="switchLanguage('name', 'es', this)">ES</a>
                             <a href="javascript:void(0)" class="badge bg-secondary name-lang-btn text-decoration-none" data-lang="en" onclick="switchLanguage('name', 'en', this)">EN</a>
+                            <button type="button" id="translate-name-btn" class="btn btn-outline-primary btn-sm ms-2"
+                                    onclick="translateProductField('name')">
+                                <i class="fas fa-language me-1"></i>Detectar e traduzir
+                            </button>
                         </div>
                     </div>
 
@@ -129,24 +136,29 @@
                     <div class="col-12">
                         <div class="row g-4">
                             <div class="col-md-6">
-                                <label for="photo" class="form-label text-bold">
+                                <label for="photoInput" class="form-label text-bold">
                                     <i class="fas fa-image me-1"></i>Foto Principal
                                 </label>
-                                <div class="d-flex flex-column gap-2">
-                                    <input type="file" name="photo" class="form-control" id="photoInput" accept="image/*">
-
-                                    <div class="position-relative border rounded p-1 bg-white align-self-start" id="photoPreviewBox"
-                                        style="width: 8rem; height: 8rem; {{ $item->photo ? '' : 'display:none;' }}">
+                                <div class="product-media-panel h-100">
+                                    <div class="product-main-preview position-relative" id="photoPreviewBox"
+                                        style="{{ $item->photo ? '' : 'display:none;' }}">
                                         <img src="{{ $item->photo ? Storage::url($item->photo) : '' }}" id="photoPreviewImg"
-                                            class="w-100 h-100 rounded" style="object-fit: cover;">
+                                            class="w-100 h-100" alt="Prévia da foto principal">
                                         @if ($item->photo)
                                             <button type="button"
-                                                class="btn btn-danger btn-xs position-absolute top-0 end-0 m-n1 shadow-sm"
-                                                style="padding: 2px 5px; font-size: 10px;"
+                                                class="product-media-remove position-absolute top-0 end-0 m-2 shadow-sm"
                                                 onclick="if(confirm('Excluir foto principal?')) document.getElementById('deletePhotoForm').submit();">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         @endif
+                                    </div>
+
+                                    <div class="product-dropzone {{ $item->photo ? 'mt-3' : '' }}" id="productPhotoDropzone">
+                                        <input type="file" name="photo" id="photoInput" class="product-dropzone-input" accept="image/jpeg,image/png,image/webp">
+                                        <div class="product-dropzone-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                                        <strong>Arraste a foto principal aqui</strong>
+                                        <span>ou clique para selecionar no computador</span>
+                                        <small id="photoSelectionStatus">JPG, PNG ou WEBP · máximo 10 MB</small>
                                     </div>
                                 </div>
                             </div>
@@ -155,13 +167,19 @@
                                 <label class="form-label text-bold">
                                     <i class="fas fa-images me-1"></i>Galeria de Imagens
                                 </label>
-                                <div class="d-flex flex-column gap-2">
-                                    <input type="file" name="gallery[]" class="form-control" multiple id="galleryInput">
+                                <div class="product-media-panel h-100">
+                                    <div class="product-dropzone" id="productGalleryDropzone">
+                                        <input type="file" name="gallery[]" id="galleryInput" class="product-dropzone-input" multiple accept="image/jpeg,image/png,image/webp">
+                                        <div class="product-dropzone-icon"><i class="fas fa-images"></i></div>
+                                        <strong>Arraste várias imagens para a galeria</strong>
+                                        <span>ou clique para selecionar no computador</span>
+                                        <small id="gallerySelectionCount">Nenhuma nova imagem selecionada</small>
+                                    </div>
 
-                                    <div id="galleryPreview" class="row g-2" style="display:none;"></div>
+                                    <div id="galleryPreview" class="product-gallery-preview mt-3" style="display:none;"></div>
 
                                     @if (!empty($galleryImages))
-                                        <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal"
+                                        <button type="button" class="btn btn-outline-dark btn-sm w-100 mt-3" data-bs-toggle="modal"
                                             data-bs-target="#modalGerenciarGaleria">
                                             <i class="fas fa-tasks me-1"></i> Gerenciar Galeria ({{ count($galleryImages) }}
                                             fotos)
@@ -536,7 +554,9 @@
                     <div class="col-12 mb-3">
                         <label class="sax-label"><i class="fas fa-align-left me-1"></i>Descrição do Produto</label>
                         
-                        <textarea id="real-desc-pt" name="translate[pt-br][details]" class="d-none">{{ old('translate.pt-br.details', $ptTranslation->details ?? ($item->description ?? '')) }}</textarea>
+                        {{-- products.description é a descrição canônica em português. ES e EN
+                             permanecem armazenados separadamente em product_translations. --}}
+                        <textarea id="real-desc-pt" name="translate[pt-br][details]" class="d-none">{{ old('translate.pt-br.details', $item->description ?: ($ptTranslation->details ?? '')) }}</textarea>
                         <textarea id="real-desc-es" name="translate[es][details]" class="d-none">{{ old('translate.es.details', $esTranslation->details ?? '') }}</textarea>
                         <textarea id="real-desc-en" name="translate[en][details]" class="d-none">{{ old('translate.en.details', $enTranslation->details ?? '') }}</textarea>
 
@@ -545,10 +565,15 @@
                         </div>
 
                         <div class="mt-1">
+                            <span class="small text-muted d-block mb-1" id="desc-current-language">Conteúdo em Português</span>
                             <span class="small text-muted me-2">Editar idioma:</span>
-                            <a href="javascript:void(0)" class="badge bg-primary desc-lang-btn text-decoration-none" onclick="switchLanguage('desc', 'pt', this)">PT</a>
-                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" onclick="switchLanguage('desc', 'es', this)">ES</a>
-                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" onclick="switchLanguage('desc', 'en', this)">EN</a>
+                            <a href="javascript:void(0)" class="badge bg-primary desc-lang-btn text-decoration-none" data-lang="pt" onclick="switchLanguage('desc', 'pt', this)">PT</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" data-lang="es" onclick="switchLanguage('desc', 'es', this)">ES</a>
+                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" data-lang="en" onclick="switchLanguage('desc', 'en', this)">EN</a>
+                            <button type="button" id="translate-desc-btn" class="btn btn-outline-primary btn-sm ms-2"
+                                    onclick="generateSaxDescriptionTranslations()">
+                                <i class="fas fa-wand-magic-sparkles me-1"></i>Gerar descrição SAX
+                            </button>
                         </div>
                     </div>
 

@@ -45,7 +45,7 @@
                             <input type="text" name="phone" class="form-control sax-input" placeholder="+595 XXX XXXXXX">
                         </div>
 
-                        <div class="col-md-12 form-field" data-type="1">
+                        <div class="col-md-12 form-field" data-type="1 2">
                             <label class="sax-label">{{ __('messages.mensagem') }}</label>
                             <textarea name="message" class="form-control sax-input" rows="5" placeholder="{{ __('messages.como_ajudar') }}" required></textarea>
                         </div>

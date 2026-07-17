@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Models\Cart;
 use App\Models\Currency;
 use App\Services\CuponService;
+use App\Models\AbandonedCart;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -80,6 +82,7 @@ class CartController extends Controller
             $cart = Cart::query()
                 ->select(['id', 'user_id', 'product_id', 'quantity', 'created_at', 'updated_at'])
                 ->where('user_id', $user->id)
+                ->available()
                 ->with([
                     // category_id/brand_id são necessários para avaliar o escopo dos cupons.
                     'product:id,brand_id,category_id,external_name,photo,price,previous_price,sku,stock,parent_id,color_parent_id,status,product_role',
@@ -129,7 +132,7 @@ class CartController extends Controller
             return back()->with('error', 'Produto não encontrado.');
         }
 
-        $cart = Cart::where('user_id', $user->id)->get();
+        $cart = Cart::where('user_id', $user->id)->available()->get();
 
         if ($cart->isEmpty()) {
             Cart::create([
@@ -186,5 +189,46 @@ class CartController extends Controller
             ->delete();
 
         return back()->with('success', 'Produto removido do carrinho!');
+    }
+
+    public function abandon()
+    {
+        $user = auth()->user();
+        $items = Cart::available()->with('product')->where('user_id', $user->id)->get();
+
+        if ($items->isEmpty()) {
+            return back()->with('error', 'Seu carrinho já está vazio.');
+        }
+
+        $currency = $this->getCurrency();
+        $rate = (float) ($currency->value ?? 1);
+        $abandonedCart = null;
+
+        DB::transaction(function () use ($items, $user, $currency, $rate, &$abandonedCart) {
+            $abandonedCart = AbandonedCart::create([
+                'user_id' => $user->id,
+                'total' => $items->sum(fn ($item) => (float) $item->product->price * $item->quantity),
+                'items_count' => $items->sum('quantity'),
+                'currency_sign' => $currency->sign ?? 'US$',
+                'currency_value' => $rate,
+                'status' => 'abandoned',
+                'abandoned_at' => now(),
+            ]);
+
+            foreach ($items as $item) {
+                $abandonedCart->items()->create([
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->external_name ?? $item->product->name ?? 'Produto',
+                    'sku' => $item->product->sku,
+                    'image' => $item->product->photo,
+                    'unit_price' => $item->product->price,
+                    'quantity' => $item->quantity,
+                ]);
+            }
+
+            Cart::where('user_id', $user->id)->delete();
+        });
+
+        return redirect()->route('user.abandoned-carts.show', $abandonedCart)->with('success', 'Seu carrinho foi salvo no histórico e removido da sacola.');
     }
 }

@@ -10,7 +10,7 @@
             $initialStep = 2;
         } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['shipping', 'country', 'cep', 'street', 'number', 'city', 'state', 'store', 'observations'], true))) {
             $initialStep = 3;
-        } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['payment_method', 'deposit_receipt'], true))) {
+        } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['payment_method', 'deposit_receipt', 'accept_terms'], true))) {
             $initialStep = 4;
         }
     }
@@ -49,7 +49,7 @@
         <x-checkout.step1-cart :cart="$cart" :resumo="$resumo" />
         <x-checkout.step2-user />
         <x-checkout.step3-shipping />
-        <x-checkout.step4-payment :cart="$cart" :resumo="$resumo" :payment-methods="$paymentMethods" />
+        <x-checkout.step4-payment :cart="$cart" :resumo="$resumo" :payment-methods="$paymentMethods" :policies="$policies" />
     </form>
 </div>
 </div>

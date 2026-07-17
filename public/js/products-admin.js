@@ -7,6 +7,44 @@
 // ======== Edit: Buscador de productos hijo (tamaño/color) ========
 // Archivo: resources/views/admin/products/edit.blade.php
 document.addEventListener('DOMContentLoaded', function () {
+    function setupProductDropzone(zoneId, inputId, multiple) {
+        var zone = document.getElementById(zoneId);
+        var fileInput = document.getElementById(inputId);
+        if (!zone || !fileInput) return;
+
+        ['dragenter', 'dragover'].forEach(function (eventName) {
+            zone.addEventListener(eventName, function (event) {
+                event.preventDefault();
+                zone.classList.add('is-dragging');
+            });
+        });
+        ['dragleave', 'drop'].forEach(function (eventName) {
+            zone.addEventListener(eventName, function () { zone.classList.remove('is-dragging'); });
+        });
+
+        zone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            var allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            var imageFiles = Array.from(event.dataTransfer.files).filter(function (file) {
+                return allowedTypes.includes(file.type) && file.size <= 10 * 1024 * 1024;
+            });
+            if (!imageFiles.length) {
+                if (window.saxToast) saxToast('warning', 'Use imagens JPG, PNG ou WEBP com até 10 MB.');
+                return;
+            }
+
+            var transfer = new DataTransfer();
+            (multiple ? imageFiles : imageFiles.slice(0, 1)).forEach(function (file) { transfer.items.add(file); });
+            fileInput.files = transfer.files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }
+
+    setupProductDropzone('productPhotoDropzone', 'photoInput', false);
+    setupProductDropzone('productGalleryDropzone', 'galleryInput', true);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
     var parentResults = document.getElementById('parent_results');
     if (!parentResults) return;
 
@@ -250,6 +288,11 @@ function abrirModalLocal(data) {
     if (!corpo || !titulo) return;
 
     var produtosDoDia = dadosProdutos[data] || [];
+    var escapeHtml = function (value) {
+        return String(value).replace(/[&<>'"]/g, function (char) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char];
+        });
+    };
 
     titulo.innerText = 'Editados em ' + data;
     corpo.innerHTML = '';
@@ -261,10 +304,10 @@ function abrirModalLocal(data) {
             // Adicionamos a coluna do usuário
             corpo.innerHTML +=
                 '<tr>' +
-                '<td class="ps-4"><b>' + p.name + '</b></td>' +
-                '<td class="text-center"><code class="small">' + (p.sku || '-') + '</code></td>' +
-                '<td class="text-center"><span class="badge bg-secondary text-white">' + (p.updated_by || 'Sistema') + '</span></td>' +
-                '<td class="pe-4 text-end"><span class="badge bg-light text-dark border">' + (p.ref_code || '-') + '</span></td>' +
+                '<td class="ps-4"><b>' + escapeHtml(p.name || 'Produto') + '</b></td>' +
+                '<td class="text-center"><code class="small">' + escapeHtml(p.sku || '-') + '</code></td>' +
+                '<td class="text-center"><span class="badge bg-dark text-white">' + escapeHtml(p.editor && p.editor.name ? p.editor.name : 'Usuário removido') + '</span></td>' +
+                '<td class="pe-4 text-end"><span class="badge bg-light text-dark border">' + escapeHtml(p.ref_code || '-') + '</span></td>' +
                 '</tr>';
         });
     }
@@ -290,6 +333,9 @@ document.addEventListener('DOMContentLoaded', function () {
         img.src = url;
         img.dataset.objectUrl = url;
         box.style.display = '';
+        document.getElementById('productPhotoDropzone')?.classList.add('mt-3');
+        var status = document.getElementById('photoSelectionStatus');
+        if (status) status.textContent = file.name + ' · ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
     });
 });
 
@@ -302,6 +348,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!input) return; 
 
     var preview = document.getElementById('galleryPreview');
+    var countLabel = document.getElementById('gallerySelectionCount');
     var store = new DataTransfer(); // acumula TODOS los archivos elegidos
     var urls = [];                  // objectURLs activos, para revocarlos en cada render
 
@@ -311,17 +358,20 @@ document.addEventListener('DOMContentLoaded', function () {
         preview.innerHTML = '';
 
         var files = Array.from(store.files);
-        preview.style.display = files.length ? 'flex' : 'none';
+        preview.style.display = files.length ? 'grid' : 'none';
+        if (countLabel) countLabel.textContent = files.length
+            ? files.length + (files.length === 1 ? ' nova imagem selecionada' : ' novas imagens selecionadas')
+            : 'Nenhuma nova imagem selecionada';
 
         files.forEach(function (file, index) {
             var url = URL.createObjectURL(file);
             urls.push(url);
 
             var col = document.createElement('div');
-            col.className = 'col-4 col-sm-3 col-md-2 position-relative';
+            col.className = 'product-gallery-pending';
             col.innerHTML =
-                '<img src="' + url + '" class="w-100 rounded" style="aspect-ratio:1/1;object-fit:cover;">' +
-                '<button type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-1" data-index="' + index + '">' +
+                '<img src="' + url + '" alt="Prévia da imagem">' +
+                '<button type="button" class="btn btn-danger btn-xs position-absolute top-0 end-0 m-1" data-index="' + index + '" aria-label="Remover imagem">' +
                 '<i class="fas fa-times"></i></button>';
             preview.appendChild(col);
         });

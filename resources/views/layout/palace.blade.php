@@ -6,7 +6,7 @@
 </head>
 
 <body class="palace-page">
-    <x-header-internas />
+    <x-header-internas :palace-whatsapp="$palace->contato_whatsapp" />
 
     <main class="palace-main">
         @yield('content')

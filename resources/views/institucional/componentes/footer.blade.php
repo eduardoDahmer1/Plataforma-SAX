@@ -65,6 +65,7 @@
                     <li><a href="{{ route('bridal.index') }}" class="footer-link">SAX Bridal</a></li>
                     <li><a href="{{ route('contact.form') }}" class="footer-link">{{ __('messages.fale_conosco_menu') ?? 'Fale Conosco' }}</a></li>
                     <li><a href="#" class="footer-link">{{ __('messages.trabalhe_conosco_menu') ?? 'Trabalhe Conosco' }}</a></li>
+                    <li><a href="{{ route('policies.index') }}" class="footer-link">Políticas e Termos</a></li>
                 </ul>
             </div>
 

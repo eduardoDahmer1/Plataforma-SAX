@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -41,6 +42,10 @@ class UserPreferenceController extends Controller
         ]);
 
         $productId = $request->input('product_id');
+
+        if (!Product::find($productId)) {
+            return back()->with('error', 'Produto indisponível.');
+        }
 
         if ($user->favoriteProducts()->where('product_id', $productId)->exists()) {
             $user->favoriteProducts()->detach($productId); // remove

@@ -189,6 +189,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
+        const acceptTerms = document.getElementById('accept_terms');
+        if (!acceptTerms?.checked) {
+            const termsMessage = document.getElementById('terms-validation-message');
+            termsMessage?.classList.remove('d-none');
+            markFieldInvalid('#accept_terms', true);
+            return false;
+        }
+
         return true;
     }
 
@@ -233,6 +241,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const infoBox = document.getElementById('shipping-info-box');
     const infoContent = document.getElementById('shipping-info-content');
     const freteDisplay = document.getElementById('frete-display');
+    const shippingSummaryRow = document.getElementById('shipping-summary-row');
+    const shippingSummaryLabel = document.getElementById('shipping-summary-label');
     const totalDisplay = document.getElementById('total-geral-display');
     const freteValorInput = document.getElementById('frete_valor');
     const subtotalDisplay = document.getElementById('subtotal-valor');
@@ -254,11 +264,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const radioSelected = document.querySelector('input[name="shipping"]:checked')?.value;
         
         if (radioSelected === '3') {
-            if (freteDisplay) freteDisplay.innerText = 'Gratis';
+            if (shippingSummaryRow) shippingSummaryRow.classList.remove('d-none');
+            if (shippingSummaryLabel) shippingSummaryLabel.innerText = 'Retirada na loja';
+            if (freteDisplay) freteDisplay.innerText = '';
             if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
             return; 
         }
+
+        if (shippingSummaryRow) shippingSummaryRow.classList.remove('d-none');
+        if (shippingSummaryLabel) shippingSummaryLabel.innerText = 'Envio';
 
         let cidade, pais;
         if (radioSelected === '1') {
@@ -272,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!cidade || !pais) return;
 
         if (pais === 'brasil') {
-            if (freteDisplay) freteDisplay.innerText = 'A combinar';
+            if (freteDisplay) freteDisplay.innerText = 'Frete via WhatsApp';
             
             if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
@@ -307,18 +322,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (method == 3) {
             infoContent.innerHTML = '<i class="fa fa-shopping-bag me-2"></i> <strong>Retirada na Loja:</strong> Selecione a unidade de preferência no mapa. <strong>Frete Grátis.</strong>';
-            if (freteDisplay) freteDisplay.innerText = 'Gratis';
+            if (shippingSummaryRow) shippingSummaryRow.classList.remove('d-none');
+            if (shippingSummaryLabel) shippingSummaryLabel.innerText = 'Retirada na loja';
+            if (freteDisplay) freteDisplay.innerText = '';
             if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
 
         } else {
+            if (shippingSummaryRow) shippingSummaryRow.classList.remove('d-none');
+            if (shippingSummaryLabel) shippingSummaryLabel.innerText = 'Envio';
             let country = (method == 1) 
                 ? (document.getElementById('user_country_data')?.value || 'brasil') 
                 : (countrySelect?.value || 'brasil');
 
             if (country.toLowerCase() === 'brasil') {
-                infoContent.innerHTML = '<i class="fa fa-whatsapp me-2"></i> <strong>Envio Internacional (Brasil):</strong> O valor do frete não está incluso no total. <strong>Será combinado via WhatsApp</strong> após a finalização do pedido.';
-                if (freteDisplay) freteDisplay.innerText = 'A combinar';
+                infoContent.innerHTML = '<i class="fab fa-whatsapp me-2"></i> <strong>Entrega no Brasil:</strong> Após finalizar o pedido, nossa equipe entrará em contato pelo WhatsApp para confirmar a melhor opção de envio e o valor do frete. <strong>O frete não está incluído no total abaixo.</strong>';
+                if (freteDisplay) freteDisplay.innerText = 'Frete via WhatsApp';
                 if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
                 if (freteValorInput) freteValorInput.value = '0.00';
 
@@ -476,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (instruction) {
             instruction.innerText = ['bancard', 'bancard_v2'].includes(method)
-                ? "Finalize seu pagamento através do portal seguro Bancard."
+                ? "Cartão disponível para Brasil, Paraguai e outros países. QR Bancard somente para o Paraguai; PIX/QR Brasil em breve."
                 : "Após finalizar, você deverá enviar o comprovante do depósito/transferência.";
         }
     };
@@ -489,6 +508,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const initialPay = document.getElementById('payment_method')?.value || 'deposito';
     window.selectPayment(initialPay);
+
+    const acceptTerms = document.getElementById('accept_terms');
+    const syncTermsAcceptance = function () {
+        if (acceptTerms?.checked) {
+            clearInvalid('#accept_terms');
+            document.getElementById('terms-validation-message')?.classList.add('d-none');
+        }
+    };
+    acceptTerms?.addEventListener('change', syncTermsAcceptance);
+    syncTermsAcceptance();
 
     if (countrySelect && countrySelect.value) {
         countrySelect.dispatchEvent(new Event('change'));

@@ -92,6 +92,7 @@
         <div class="footer-bottom">
             <p class="footer-copyright">
                 &copy; 2026 SAX Café &amp; Bistró &middot; Todos os direitos reservados
+                &middot; <a href="{{ route('policies.index') }}" class="text-reset">Políticas e Termos</a>
             </p>
         </div>
 

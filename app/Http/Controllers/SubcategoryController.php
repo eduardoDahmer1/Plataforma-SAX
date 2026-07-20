@@ -55,6 +55,7 @@ class SubcategoryController extends Controller
                 $products = $subcategory
                     ->products()
                     ->where('status', 1)
+                    ->where('is_outlet', false)
                     ->where('product_role', 'P')
                     ->where('stock', '>', 0)
                     ->whereNotNull('photo')

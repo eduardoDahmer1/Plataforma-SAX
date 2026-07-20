@@ -1,67 +1,61 @@
 @extends('layout.layout')
 
 @section('content')
-    <div class="categories-page-wrapper py-5">
-        <div class="container">
-            {{-- Cabeçalho Minimalista Estilo SAX --}}
-            <div class="text-center mb-5">
-                <h1 class="sax-title">{{ __('messages.categorias') }}</h1>
-                <div class="sax-divider mx-auto"></div>
-                <p class="text-muted small text-uppercase tracking-widest mt-3">
-                    {{ __('messages.explore_colecoes') }}
-                </p>
-            </div>
+    <main class="catalog-directory-page">
+        <div class="container py-4 py-lg-5">
+            <section class="catalog-directory-hero">
+                <div class="catalog-directory-heading">
+                    <span class="catalog-directory-eyebrow">{{ __('messages.explore_catalogo') }}</span>
+                    <h1>{{ __('messages.categorias') }}</h1>
+                    <p>{{ __('messages.explore_colecoes') }}</p>
+                </div>
 
-            {{-- Busca Elegante --}}
-            <div class="search-container mb-5">
-                <form method="GET" class="mx-auto" style="max-width: 600px;">
-                    <div class="sax-search-input">
-                        <input type="text" name="search" 
-                               placeholder="{{ __('messages.busca_colecao') }}" 
-                               value="{{ request('search') }}">
-                        <button type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
+                <form method="GET" action="{{ route('categories.index') }}" class="catalog-directory-search" role="search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" name="search" placeholder="{{ __('messages.busca_colecao') }}"
+                        value="{{ request('search') }}" aria-label="{{ __('messages.busca_colecao') }}">
+                    @if (request('search'))
+                        <a href="{{ route('categories.index') }}" aria-label="{{ __('messages.limpar_busca') }}">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </a>
+                    @endif
+                    <button type="submit">{{ __('messages.buscar') }}</button>
                 </form>
-            </div>
+            </section>
 
-            {{-- Grid de Categorias com Padrão de Luxo --}}
-            <div class="row g-2">
+            <div class="catalog-category-grid mt-3 mt-lg-4">
                 @forelse ($categories as $category)
                     @if (($category->products_count ?? 0) > 0)
-                        <div class="col-6 col-md-4 col-lg-3">
-                            <a href="{{ route('categories.show', $category->slug) }}" class="category-sax-card">
-                                {{-- Área da Imagem --}}
-                                <div class="category-img-box">
-                                    @if ($category->photo && Storage::disk('public')->exists($category->photo))
-                                        <img src="{{ Storage::url($category->photo) }}" alt="{{ $category->name }}" loading="lazy">
-                                    @else
-                                        <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="{{ __('messages.sem_imagem') }}">
-                                    @endif
+                        <a href="{{ route('categories.show', $category->slug) }}" class="catalog-category-card">
+                            <div class="catalog-category-image">
+                                @if ($category->photo && Storage::disk('public')->exists($category->photo))
+                                    <img src="{{ Storage::url($category->photo) }}" alt="{{ $category->name }}" loading="lazy">
+                                @else
+                                    <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="{{ __('messages.sem_imagem') }}" loading="lazy">
+                                @endif
+                            </div>
+                            <div class="catalog-category-info">
+                                <div>
+                                    <span>{{ __('messages.colecao') }}</span>
+                                    <h2>{{ $category->name ?? $category->slug }}</h2>
+                                    <small>{{ trans_choice('messages.produtos_disponiveis', $category->products_count, ['count' => $category->products_count]) }}</small>
                                 </div>
-
-                                {{-- Info Centralizada --}}
-                                <div class="category-info">
-                                    <h5 class="category-name">{{ $category->name ?? $category->slug }}</h5>
-                                </div>
-                            </a>
-                        </div>
+                                <span class="catalog-category-arrow"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                            </div>
+                        </a>
                     @endif
                 @empty
-                    <div class="col-12 py-5 text-center">
-                        <div class="no-results">
-                            <i class="fas fa-search mb-3"></i>
-                            <p>{{ __('messages.categorias_nao_encontradas') }}</p>
-                        </div>
+                    <div class="catalog-directory-empty">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <strong>{{ __('messages.categorias_nao_encontradas') }}</strong>
+                        <a href="{{ route('categories.index') }}">{{ __('messages.limpar_busca') }}</a>
                     </div>
                 @endforelse
             </div>
 
-            {{-- Paginação Customizada --}}
-            <div class="sax-pagination mt-5">
+            <div class="sax-pagination mt-4 mt-lg-5">
                 {{ $categories->appends(request()->input())->links() }}
             </div>
         </div>
-    </div>
+    </main>
 @endsection

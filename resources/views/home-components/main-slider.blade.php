@@ -17,7 +17,7 @@
                 <div class="swiper-slide">
                     <div class="slide-inner">
                         @if(!empty($slide['link']))
-                            <a href="{{ $slide['link'] }}" target="_blank" rel="noopener noreferrer">
+                            <a href="{{ $slide['link'] }}" >
                                 <img src="{{ asset('storage/uploads/' . $slide['image']) }}" alt="Banner SAX">
                             </a>
                         @else

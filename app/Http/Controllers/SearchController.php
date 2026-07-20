@@ -40,7 +40,11 @@ class SearchController extends Controller
     {
         $query = Product::query()
             ->select($this->productCols())
-            ->with(['brand:id,name'])
+            ->with([
+                'brand:id,name',
+                'translations' => fn($query) => $query->where('locale', translation_locale()),
+            ])
+            ->where('is_outlet', false)
             ->where('status', 1)
             ->where('product_role', 'P')
             ->where('stock', '>', 0)
@@ -82,6 +86,7 @@ class SearchController extends Controller
 
         $variants = Product::query()
             ->select(['id', 'color', 'color_parent_id'])
+            ->where('is_outlet', false)
             ->where('status', 1)
             ->where('product_role', 'P')
             ->where(function ($q) use ($familyIds) {
@@ -204,6 +209,7 @@ class SearchController extends Controller
         $products = Product::query()
             ->select(['id', 'name', 'external_name', 'sku', 'price', 'photo', 'slug', 'brand_id', 'category_id'])
             ->with(['brand:id,name', 'category:id,name'])
+            ->where('is_outlet', false)
             ->where('status', 1)
             ->where('product_role', 'P')
             ->where('stock', '>', 0)

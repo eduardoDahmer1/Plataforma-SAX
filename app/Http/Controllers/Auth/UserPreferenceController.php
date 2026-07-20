@@ -22,7 +22,7 @@ class UserPreferenceController extends Controller
         }
 
         // Usamos with('brand') para carregar as marcas de uma vez só
-        $favoriteProducts = $user->favoriteProducts()->with('brand')->paginate(12);
+        $favoriteProducts = $user->favoriteProducts()->sellable()->with('brand')->paginate(12);
 
         return view('users.preferences.index', compact('favoriteProducts'));
     }
@@ -43,7 +43,7 @@ class UserPreferenceController extends Controller
 
         $productId = $request->input('product_id');
 
-        if (!Product::find($productId)) {
+        if (!Product::sellable()->find($productId)) {
             return back()->with('error', 'Produto indisponível.');
         }
 

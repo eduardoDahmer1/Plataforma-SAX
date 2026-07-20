@@ -21,7 +21,7 @@ class Cart extends Model
 
     public function scopeAvailable(Builder $query): Builder
     {
-        return $query->whereHas('product');
+        return $query->whereHas('product', fn (Builder $product) => $product->sellable());
     }
 
     // Opcional: relacionamento com User

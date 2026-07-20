@@ -6,6 +6,9 @@
         title="{{ __('messages.menu_produtos') }}"
         description="Exibindo <span class='text-dark fw-bold'>{{ $products->count() }}</span> de {{ $products->total() }} produtos registrados">
         <x-slot:actions>
+            <a href="{{ route('admin.products.outlet.form') }}" class="btn btn-outline-danger btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="fa fa-box-open me-2"></i> Gestão de outlet
+            </a>
             <button type="button" id="btnRevalidateProducts" class="btn btn-outline-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1"
                 data-url="{{ route('admin.products.revalidateStatus') }}"
                 data-label-active="{{ __('messages.status_ativo') }}"
@@ -82,6 +85,9 @@
                                         <span class="product-status-pill {{ $product->status ? 'is-on' : 'is-off' }}">
                                             {{ $product->status ? __('messages.status_ativo') : __('messages.status_inativo') }}
                                         </span>
+                                        @if ($product->is_outlet)
+                                            <span class="badge bg-danger text-white rounded-0 x-small-7 fw-bold">OUTLET · FORA DO E-COMMERCE</span>
+                                        @endif
                                     </div>
                                     <h6 class="fw-bold mb-0 small text-truncate">{{ $product->name ?: $product->external_name }}</h6>
                                     @if($product->external_name && trim($product->external_name) !== trim((string) $product->name))
@@ -100,6 +106,7 @@
                                 <div class="col-12 col-md-auto sax-product-actions">
                                     <button type="button" class="action-icon action-icon-lg btn-toggle-status {{ $product->status ? 'is-on' : '' }}"
                                         title="Ativar/Desativar"
+                                        {{ $product->is_outlet ? 'disabled' : '' }}
                                         data-url="{{ route('admin.products.toggleStatus', $product->id) }}"
                                         data-label-active="{{ __('messages.status_ativo') }}"
                                         data-label-inactive="{{ __('messages.status_inativo') }}">

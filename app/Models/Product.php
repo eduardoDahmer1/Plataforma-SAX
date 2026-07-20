@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -33,6 +34,8 @@ class Product extends Model
         'previous_price',
         'views',
         'status',
+        'is_outlet',
+        'status_before_outlet',
         'views',
         'colors',
         'product_condition',
@@ -110,6 +113,8 @@ class Product extends Model
         'stores' => 'array',
         'stock' => 'integer',
         'admin_edited_at' => 'datetime',
+        'is_outlet' => 'boolean',
+        'status_before_outlet' => 'boolean',
     ];
 
     protected static ?bool $hasColorParentColumn = null;
@@ -158,10 +163,153 @@ class Product extends Model
     // Regras mínimas para o produto poder ficar ativo na loja
     public function meetsActiveRequirements(): bool
     {
-        return static::hasUsableImage($this->photo, $this->gallery)
+        return !$this->is_outlet
+            && static::hasUsableImage($this->photo, $this->gallery)
             && (float) $this->price >= self::MINIMUM_VISIBLE_PRICE
             && (int) $this->stock > 0
             && trim((string) $this->description) !== '';
+    }
+
+    public function scopeSellable(Builder $query): Builder
+    {
+        return $query
+            ->where($query->getModel()->qualifyColumn('is_outlet'), false)
+            ->where($query->getModel()->qualifyColumn('status'), 1)
+            ->where($query->getModel()->qualifyColumn('stock'), '>', 0);
+    }
+
+    public function isSellable(): bool
+    {
+        return !$this->is_outlet && (int) $this->status === 1 && (int) $this->stock > 0;
+    }
+
+    public static function referenceParts(?string $value): array
+    {
+        $value = trim((string) $value);
+        $reference = $value;
+        $size = null;
+        $color = null;
+
+        // No cadastro do integrador, tamanho e cor normalmente chegam no fim:
+        // "MODELO J05999 #12M *401". A cor é sempre o último parâmetro *... .
+        if (preg_match('/\*\s*([^\s*#]+)\s*$/u', $reference, $matches)) {
+            $color = trim($matches[1]);
+            $reference = trim(substr($reference, 0, (int) strrpos($reference, '*')));
+        }
+
+        if (preg_match('/#\s*([^\s*#]+)\s*$/u', $reference, $matches)) {
+            $size = trim($matches[1]);
+            $reference = trim(substr($reference, 0, (int) strrpos($reference, '#')));
+        }
+
+        return [
+            'reference' => $reference,
+            'reference_key' => self::normalizeReferenceValue($reference),
+            'size' => $size ?: null,
+            'color' => $color ?: null,
+            'color_key' => self::normalizeColorToken($color),
+        ];
+    }
+
+    public function inferredSize(): ?string
+    {
+        return filled($this->size)
+            ? trim((string) $this->size)
+            : self::referenceParts($this->referenceSource())['size'];
+    }
+
+    public function referenceKey(): string
+    {
+        return self::referenceParts($this->referenceSource())['reference_key'];
+    }
+
+    public function referenceLabel(): string
+    {
+        return self::referenceParts($this->referenceSource())['reference'];
+    }
+
+    public function relationshipReferenceKey(): string
+    {
+        $referenceKey = $this->referenceKey();
+        $tokens = preg_split('/\s+/', $referenceKey, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        foreach (array_reverse($tokens) as $token) {
+            $hasLettersAndNumbers = preg_match('/[A-Z]/', $token) && preg_match('/\d/', $token);
+            $isLongNumericReference = ctype_digit($token) && strlen($token) >= 5;
+
+            if ($hasLettersAndNumbers || $isLongNumericReference) {
+                return $token;
+            }
+        }
+
+        return $referenceKey;
+    }
+
+    public function relationshipSearchTerm(): string
+    {
+        return $this->relationshipReferenceKey() ?: $this->referenceLabel();
+    }
+
+    public function inferredColorKey(): string
+    {
+        $inferred = self::referenceParts($this->referenceSource())['color_key'];
+
+        return $inferred !== '' ? $inferred : self::normalizeColorToken($this->color);
+    }
+
+    public function inferredColorCode(): string
+    {
+        return trim((string) self::referenceParts($this->referenceSource())['color']);
+    }
+
+    public function relationshipColorKey(): string
+    {
+        $hex = strtoupper(trim((string) $this->color));
+
+        return preg_match('/^#[0-9A-F]{6}$/', $hex)
+            ? $hex
+            : $this->inferredColorKey();
+    }
+
+    private function referenceSource(): string
+    {
+        $candidates = collect([$this->external_name, $this->name])
+            ->filter(fn ($value) => filled($value))
+            ->map(fn ($value) => trim((string) $value));
+
+        return (string) $candidates
+            ->sortByDesc(function (string $value) {
+                $score = strlen($value);
+                $score += str_contains($value, '*') ? 1000 : 0;
+                $score += str_contains($value, '#') ? 500 : 0;
+                $score += preg_match('/\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\d)[A-Z0-9-]{4,}\b/i', $value) ? 250 : 0;
+
+                return $score;
+            })
+            ->first();
+    }
+
+    private static function normalizeReferenceValue(?string $value): string
+    {
+        return preg_replace('/[^A-Z0-9]+/', ' ', strtoupper(Str::ascii(trim((string) $value)))) ?: '';
+    }
+
+    private static function normalizeColorToken(?string $value): string
+    {
+        $token = preg_replace('/[^A-Z0-9]+/', '', strtoupper(Str::ascii(trim((string) $value)))) ?: '';
+
+        return [
+            'WHI' => 'WHITE', 'WHT' => 'WHITE', 'WHITE' => 'WHITE', 'BCO' => 'WHITE', 'BRANCO' => 'WHITE', 'BLANCO' => 'WHITE',
+            'BLK' => 'BLACK', 'BLA' => 'BLACK', 'BLACK' => 'BLACK', 'PTO' => 'BLACK', 'PRETO' => 'BLACK', 'NEGRO' => 'BLACK',
+            'BLU' => 'BLUE', 'BLUE' => 'BLUE', 'AZUL' => 'BLUE',
+            'RED' => 'RED', 'VERMELHO' => 'RED', 'ROJO' => 'RED',
+            'GRN' => 'GREEN', 'GREEN' => 'GREEN', 'VERDE' => 'GREEN',
+            'YEL' => 'YELLOW', 'YELLOW' => 'YELLOW', 'AMARELO' => 'YELLOW', 'AMARILLO' => 'YELLOW',
+            'GRY' => 'GREY', 'GRAY' => 'GREY', 'GREY' => 'GREY', 'CINZA' => 'GREY', 'GRIS' => 'GREY',
+            'PNK' => 'PINK', 'PINK' => 'PINK', 'ROSA' => 'PINK',
+            'BRN' => 'BROWN', 'BROWN' => 'BROWN', 'MARROM' => 'BROWN', 'MARRON' => 'BROWN',
+            'BEI' => 'BEIGE', 'BEIGE' => 'BEIGE',
+        ][$token] ?? $token;
     }
 
     public function brand()

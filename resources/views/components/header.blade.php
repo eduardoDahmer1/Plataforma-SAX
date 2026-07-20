@@ -32,28 +32,48 @@
                 <li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
 
                 <li class="list-inline-item border-start ps-3 dropdown-mega-parent">
-                    <a href="{{ route('categories.index') }}">{{ __('messages.categorias') }}</a>
-                    <div class="mega-menu-box" style="display: none;">
-                        <div class="container text-start">
-                            <div class="row py-4">
+                    <a href="{{ route('categories.index') }}" class="mega-menu-trigger">
+                        {{ __('messages.categorias') }}
+                        <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                    </a>
+                    <div class="mega-menu-box">
+                        <div class="container text-start mega-menu-shell">
+                            <div class="mega-menu-header">
+                                <div>
+                                    <span class="mega-menu-eyebrow">Explore o catálogo</span>
+                                    <strong>Compre por categoria</strong>
+                                </div>
+                                <a href="{{ route('categories.index') }}" class="mega-menu-view-all">
+                                    Ver todas as categorias
+                                    <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                            <div class="mega-menu-grid">
                                 @foreach ($headerCategories as $cat)
-                                    <div class="col-md-3 category-col mb-4">
+                                    <div class="category-col">
                                         <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}" class="mega-title">
-                                            {{ $cat->name }}
+                                            <span>{{ $cat->name }}</span>
+                                            <i class="fa fa-arrow-right" aria-hidden="true"></i>
                                         </a>
                                         <ul class="list-unstyled sub-list">
                                             @foreach ($cat->subcategories as $sub)
                                                 <li class="subcategory-item">
                                                     <a href="{{ route('subcategories.show', $sub->slug ?? $sub->id) }}">
-                                                        {{ $sub->name }}
+                                                        <span>{{ $sub->name }}</span>
+                                                        @if ($sub->categoriasfilhas->isNotEmpty())
+                                                            <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                                        @endif
                                                     </a>
-                                                    <div class="filhas-flyout">
-                                                        @foreach ($sub->categoriasfilhas as $filha)
-                                                            <a href="{{ route('categorias-filhas.show', $filha->slug ?? $filha->id) }}">
-                                                                {{ $filha->name }}
-                                                            </a>
-                                                        @endforeach
-                                                    </div>
+                                                    @if ($sub->categoriasfilhas->isNotEmpty())
+                                                        <div class="filhas-flyout">
+                                                            <span class="filhas-flyout-title">{{ $sub->name }}</span>
+                                                            @foreach ($sub->categoriasfilhas as $filha)
+                                                                <a href="{{ route('categorias-filhas.show', $filha->slug ?? $filha->id) }}">
+                                                                    {{ $filha->name }}
+                                                                </a>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
                                                 </li>
                                             @endforeach
                                         </ul>

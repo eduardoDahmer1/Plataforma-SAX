@@ -56,12 +56,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const searchBtn = document.getElementById(btnId);
         const resultsDiv = document.getElementById(resultsId);
         const selectedDiv = document.getElementById(selectedId);
+        const resultsLabel = document.getElementById(resultsId + '_label');
+
+        function updateSelectedCount() {
+            const badge = document.querySelector('[data-count-for="' + selectedId + '"]');
+            if (badge) badge.textContent = selectedDiv.querySelectorAll(':scope > [data-id]').length;
+        }
 
         function searchProducts() {
             const query = searchInput.value.trim();
             if (query.length < 2) {
                 resultsDiv.style.display = 'none';
                 resultsDiv.innerHTML = '';
+                if (resultsLabel) resultsLabel.classList.add('d-none');
                 return;
             }
 
@@ -69,6 +76,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const params = new URLSearchParams({ q: query });
             if (excludeId) params.append('exclude_id', excludeId);
             if (context) params.append('context', context);
+            if ((context === 'size' || context === 'color') && resultsDiv.dataset.currentColorKey) {
+                params.append('current_color_key', resultsDiv.dataset.currentColorKey);
+            }
+            if ((context === 'size' || context === 'color') && resultsDiv.dataset.currentReferenceKey) {
+                params.append('current_reference_key', resultsDiv.dataset.currentReferenceKey);
+            }
 
             fetch(searchUrl + '?' + params.toString())
                 .then(function (res) { return res.json(); })
@@ -83,14 +96,19 @@ document.addEventListener('DOMContentLoaded', function () {
                             html += '<div class="col-6 col-md-4 col-lg-2">' +
                                 '<div class="card h-100 card-hover ' + (alreadySelected ? 'border-success selected' : '') + '" ' +
                                 'style="cursor:pointer;" data-id="' + product.id + '" ' +
-                                'data-color="' + (product.color || '') + '" data-size="' + (product.size || '') + '">' +
+                                'data-sku="' + (product.sku || '') + '" data-color="' + (product.color || '') + '" ' +
+                                'data-inferred-color="' + (product.color_code || '') + '" data-size="' + (product.size || '') + '">' +
                                 '<img src="' + (product.photo || noImage) + '" ' +
                                 'class="img-fluid object-fit-cover" alt="' + (product.name || product.external_name) + '">' +
                                 '<div class="card-body p-2">' +
-                                '<p class="card-text m-0 fw-bold">' + (product.name || product.external_name) + '</p>' +
+                                '<span class="badge bg-light text-dark border mb-1">Sugestão</span>' +
+                                '<p class="card-text m-0 fw-bold">' + (product.external_name || product.name) + '</p>' +
+                                (product.sku ? '<small class="text-muted d-block mt-1">SKU: ' + product.sku + '</small>' : '') +
                                 (product.color ? '<div class="d-flex align-items-center mt-1">' +
                                     '<span style="display:inline-block;width:16px;height:16px;background:' + product.color + ';border:1px solid #ccc;margin-right:5px;"></span>' +
                                     '<small>' + product.color + '</small></div>' : '') +
+                                (product.color_code ?
+                                    '<small class="text-muted d-block mt-1">Código original: *' + product.color_code + '</small>' : '') +
                                 (product.size ? '<div class="mt-1"><small class="text-muted">Tamanho: ' + product.size + '</small></div>' : '') +
                                 '</div></div></div>';
                         });
@@ -100,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     resultsDiv.innerHTML = html;
                     resultsDiv.style.display = 'flex';
                     resultsDiv.style.flexWrap = 'wrap';
+                    if (resultsLabel) resultsLabel.classList.remove('d-none');
                 })
                 .catch(function (err) { console.error('Falha na busca de produtos:', err); });
         }
@@ -112,6 +131,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        if (searchInput.dataset.autoSearch === '1' && searchInput.value.trim().length >= 2) {
+            window.setTimeout(searchProducts, 80);
+        }
+
         resultsDiv.addEventListener('click', function (e) {
             const card = e.target.closest('.card');
             if (!card) return;
@@ -121,7 +144,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const name = card.querySelector('.card-text').textContent;
             const imgSrc = card.querySelector('img').src;
             const color = card.getAttribute('data-color');
+            const inferredColor = card.getAttribute('data-inferred-color');
             const size = card.getAttribute('data-size');
+            const sku = card.getAttribute('data-sku');
 
             const newCard = document.createElement('div');
             newCard.className = 'col-6 col-md-4 col-lg-2';
@@ -129,32 +154,41 @@ document.addEventListener('DOMContentLoaded', function () {
             newCard.innerHTML = '<div class="card border-success h-100 position-relative">' +
                 '<img src="' + imgSrc + '" class="card-img-top" style="height:120px; object-fit:cover;">' +
                 '<div class="card-body p-2">' +
+                '<span class="badge bg-success mb-1">Relacionado</span>' +
                 '<p class="card-text m-0 fw-bold">' + name + '</p>' +
+                (sku ? '<small class="text-muted d-block mt-1">SKU: ' + sku + '</small>' : '') +
                 (color ? '<div class="d-flex align-items-center mt-1">' +
                     '<span style="display:inline-block;width:16px;height:16px;background:' + color + ';border:1px solid #ccc;margin-right:5px;"></span>' +
                     '<small>' + color + '</small></div>' : '') +
+                (context === 'color' && inferredColor ?
+                    '<small class="text-muted d-block mt-1">Código original: *' + inferredColor + '</small>' : '') +
                 (size ? '<div class="mt-1"><small class="text-muted">Tamanho: ' + size + '</small></div>' : '') +
                 '<button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-item">' +
                 '<i class="fas fa-times"></i></button>' +
                 '<input type="hidden" name="' + hiddenName + '[]" value="' + id + '">' +
                 '</div></div>';
             selectedDiv.appendChild(newCard);
+            updateSelectedCount();
         });
 
         selectedDiv.addEventListener('click', function (e) {
             if (e.target.closest('.remove-item')) {
                 e.target.closest('[data-id]').remove();
+                updateSelectedCount();
             }
         });
+
+        updateSelectedCount();
 
         document.addEventListener('click', function (e) {
             if (!e.target.closest('#' + inputId + ', #' + resultsId + ', #' + btnId)) {
                 resultsDiv.style.display = 'none';
+                if (resultsLabel) resultsLabel.classList.add('d-none');
             }
         });
     }
 
-    setupSearch('parent_search', 'parent_search_btn', 'parent_results', 'selected_parents', 'parent_id', '/admin/products/search');
+    setupSearch('parent_search', 'parent_search_btn', 'parent_results', 'selected_parents', 'parent_id', '/admin/products/search', 'size');
     setupSearch('color_search', 'color_search_btn', 'color_results', 'selected_colors', 'color_parent_id', '/admin/products/search', 'color');
 });
 

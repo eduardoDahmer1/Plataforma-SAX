@@ -49,9 +49,9 @@ class CartController extends Controller
         $productId = $request->input('product_id');
         $quantity  = (int) $request->input('quantity', 1);
 
-        $product = Product::find($productId);
+        $product = Product::sellable()->find($productId);
         if (!$product) {
-            return back()->with('error', 'Produto não encontrado.');
+            return back()->with('error', 'Este produto não está disponível para venda no e-commerce.');
         }
 
         $cartItem = Cart::where('user_id', $user->id)
@@ -127,9 +127,9 @@ class CartController extends Controller
         $productId = $request->input('product_id');
         $quantity  = (int) $request->input('quantity', 1);
 
-        $product = Product::find($productId);
+        $product = Product::sellable()->find($productId);
         if (!$product) {
-            return back()->with('error', 'Produto não encontrado.');
+            return back()->with('error', 'Este produto não está disponível para venda no e-commerce.');
         }
 
         $cart = Cart::where('user_id', $user->id)->available()->get();
@@ -164,9 +164,10 @@ class CartController extends Controller
         }
 
         if ($quantity > 0) {
-            $product = Product::find($productId);
+            $product = Product::sellable()->find($productId);
             if (!$product) {
-                return back()->with('error', 'Produto não encontrado.');
+                $cartItem->delete();
+                return back()->with('error', 'O produto foi removido do carrinho porque não está mais disponível para venda.');
             }
 
             $cartItem->update(['quantity' => min($quantity, $product->stock)]);

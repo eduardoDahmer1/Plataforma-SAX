@@ -10,7 +10,7 @@
             <a href="{{ route('user.profile.edit') }}" class="sax-menu-link">
                 <i class="fa fa-user-edit"></i> {{ __('messages.menu_editar_dados') }}
             </a>
-            <a href="#" class="sax-menu-link">
+            <a href="{{ route('user.password.edit') }}" class="sax-menu-link {{ request()->routeIs('user.password.*') ? 'active' : '' }}">
                 <i class="fa fa-lock"></i> {{ __('messages.menu_seguranca') }}
             </a>
         </div>

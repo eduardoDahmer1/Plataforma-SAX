@@ -13,6 +13,7 @@ class ProductController extends Controller
     private function activeBase()
     {
         return Product::where('status', 1)
+            ->where('is_outlet', false)
             ->where('product_role', 'P')
             ->where('stock', '>', 0)
             ->whereNotNull('photo')
@@ -26,8 +27,11 @@ class ProductController extends Controller
 
     public function show($id_or_slug)
     {
-        $product = Product::where('id', $id_or_slug)
-            ->orWhere('slug', $id_or_slug)
+        $product = Product::where(fn ($query) => $query
+                ->where('id', $id_or_slug)
+                ->orWhere('slug', $id_or_slug))
+            ->where('is_outlet', false)
+            ->where('status', 1)
             ->with(['brand', 'category', 'subcategory', 'categoriasfilhas'])
             ->firstOrFail();
 
@@ -60,13 +64,25 @@ class ProductController extends Controller
         }
 
         $siblings = Product::where(fn($q) => $q->where('parent_id', $masterId)->orWhere('id', $masterId))
+            ->where('is_outlet', false)
             ->where('status', 1)
             ->get()
+            ->each(function (Product $sibling) {
+                if (!filled($sibling->size)) {
+                    $sibling->size = $sibling->inferredSize();
+                }
+            })
+            ->groupBy(fn (Product $sibling) => mb_strtoupper(trim((string) ($sibling->size ?: 'SEM_TAMANHO_' . $sibling->id))))
+            ->map(function ($sameSize) use ($product) {
+                return $sameSize->firstWhere('id', $product->id)
+                    ?? $sameSize->sortByDesc('stock')->first();
+            })
             ->sortBy(fn($s) => $this->sizeWeight($s->size))
             ->values();
 
         $colorGroupId    = !empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
         $coresRelacionadas = Product::where(fn($q) => $q->where('color_parent_id', $colorGroupId)->orWhere('id', $colorGroupId))
+            ->where('is_outlet', false)
             ->where('status', 1)
             ->where('product_role', 'P')
             ->get();

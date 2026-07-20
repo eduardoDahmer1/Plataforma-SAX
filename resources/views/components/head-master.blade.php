@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<script>document.documentElement.dataset.analyticsEndpoint = @json(route('analytics.store'));</script>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -85,6 +86,7 @@
 
 {{-- 6. Admin --}}
 @if(Route::is('admin.*') || Route::is('manutencao') || (Route::is('receipts.*') && auth()->user()?->user_type == 1))
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
 @endif
 

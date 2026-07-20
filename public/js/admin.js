@@ -84,17 +84,36 @@ document.addEventListener('DOMContentLoaded', function () {
     const overlay = document.getElementById("adminDrawerOverlay");
 
     if (openDrawer && closeDrawer && drawer && overlay) {
+        const setDrawer = (isOpen) => {
+            drawer.classList.toggle("open", isOpen);
+            overlay.classList.toggle("show", isOpen);
+            document.body.classList.toggle("admin-drawer-open", isOpen);
+            drawer.setAttribute("aria-hidden", String(!isOpen));
+            openDrawer.setAttribute("aria-expanded", String(isOpen));
+
+            if (isOpen) {
+                closeDrawer.focus();
+            } else {
+                openDrawer.focus();
+            }
+        };
+
         openDrawer.addEventListener("click", () => {
-            drawer.classList.add("open");
-            overlay.classList.add("show");
+            setDrawer(true);
         });
         closeDrawer.addEventListener("click", () => {
-            drawer.classList.remove("open");
-            overlay.classList.remove("show");
+            setDrawer(false);
         });
         overlay.addEventListener("click", () => {
-            drawer.classList.remove("open");
-            overlay.classList.remove("show");
+            setDrawer(false);
+        });
+        drawer.querySelectorAll("a.submenu-link").forEach(link => {
+            link.addEventListener("click", () => setDrawer(false));
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && drawer.classList.contains("open")) {
+                setDrawer(false);
+            }
         });
     }
 });

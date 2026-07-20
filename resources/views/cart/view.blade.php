@@ -72,6 +72,7 @@
                                         </form>
                                     </div>
 
+                                    {{-- #TODO: manter um botão independente para excluir o item inteiro, mesmo com várias unidades, via AJAX e sem atualizar a página. --}}
                                     <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="ms-2">
                                         @csrf
                                         @method('DELETE')

@@ -24,6 +24,7 @@ class HomeController extends Controller
     private function activeProducts()
     {
         return Product::where('status', 1)
+            ->where('is_outlet', false)
             ->where('product_role', 'P')
             ->where('stock', '>', 0)
             ->whereNotNull('photo')

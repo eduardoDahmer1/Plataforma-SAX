@@ -14,7 +14,9 @@ use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductControllerAdmin extends Controller
 {
@@ -28,9 +30,10 @@ class ProductControllerAdmin extends Controller
         $stockFilter = $request->get('stock_filter');
         $sortBy = $request->get('sort_by');
         $productType = $request->get('product_type');
+        $outletFilter = $request->get('outlet_filter');
         $perPage = $request->get('per_page', 20);
 
-        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'product_role', 'highlights', 'parent_id'];
+        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id'];
 
         $products = Product::select($productColumns)
             ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
@@ -46,8 +49,26 @@ class ProductControllerAdmin extends Controller
                     $q->whereNull('parent_id');
                 } elseif ($productType === 'child') {
                     $q->whereNotNull('parent_id');
+                } elseif ($productType === 'unrelated_parent') {
+                    $q->whereNull('parent_id')
+                        ->whereNotExists(function ($children) {
+                            $children->selectRaw('1')
+                                ->from('products as size_children')
+                                ->whereColumn('size_children.parent_id', 'products.id');
+                        })
+                        ->where(function ($standaloneColor) {
+                            $standaloneColor->whereNull('products.color_parent_id')
+                                ->orWhereColumn('products.color_parent_id', 'products.id');
+                        })
+                        ->whereNotExists(function ($colorMembers) {
+                            $colorMembers->selectRaw('1')
+                                ->from('products as color_members')
+                                ->whereColumn('color_members.color_parent_id', 'products.id')
+                                ->whereColumn('color_members.id', '!=', 'products.id');
+                        });
                 }
             })
+            ->when($outletFilter !== null && $outletFilter !== '', fn ($q) => $q->where('is_outlet', $outletFilter === 'outlet'))
             ->when($statusFilter, function ($q) use ($statusFilter) {
                 switch ($statusFilter) {
                     case 'active':
@@ -127,7 +148,85 @@ class ProductControllerAdmin extends Controller
             return $product;
         });
 
-        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'productType', 'perPage', 'highlights'));
+        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'productType', 'outletFilter', 'perPage', 'highlights'));
+    }
+
+    public function outletForm()
+    {
+        $outletCount = DB::table('products')->where('is_outlet', true)->count();
+
+        return view('admin.products.outlet', compact('outletCount'));
+    }
+
+    public function updateOutlet(Request $request)
+    {
+        $validated = $request->validate([
+            'skus' => ['required', 'string', 'max:100000'],
+            'action' => ['required', 'in:outlet,restore'],
+        ], [
+            'skus.required' => 'Informe pelo menos um SKU.',
+            'action.in' => 'Selecione uma ação válida.',
+        ]);
+
+        $skus = collect(preg_split('/[\s,;]+/u', $validated['skus'], -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn ($sku) => trim($sku))
+            ->filter()
+            ->unique(fn ($sku) => mb_strtolower($sku))
+            ->values();
+
+        if ($skus->count() > 5000) {
+            throw ValidationException::withMessages([
+                'skus' => 'Envie no máximo 5.000 SKUs por operação.',
+            ]);
+        }
+
+        $foundProducts = DB::table('products')->whereIn('sku', $skus)->get(['id', 'sku']);
+        $foundSkus = $foundProducts->pluck('sku');
+        $foundProductIds = $foundProducts->pluck('id');
+        $foundLookup = $foundSkus->mapWithKeys(fn ($sku) => [mb_strtolower($sku) => true]);
+        $missingSkus = $skus
+            ->reject(fn ($sku) => isset($foundLookup[mb_strtolower($sku)]))
+            ->values();
+        $updated = 0;
+
+        DB::transaction(function () use ($foundSkus, $foundProductIds, $validated, &$updated) {
+            foreach ($foundSkus->chunk(500) as $chunk) {
+                $query = DB::table('products')->whereIn('sku', $chunk)->lockForUpdate();
+
+                if ($validated['action'] === 'outlet') {
+                    $updated += $query->update([
+                        'status_before_outlet' => DB::raw('CASE WHEN is_outlet = 0 THEN status ELSE status_before_outlet END'),
+                        'is_outlet' => true,
+                        'status' => 0,
+                        'updated_by' => auth()->id(),
+                        'admin_edited_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    $updated += $query->update([
+                        'status' => DB::raw('COALESCE(status_before_outlet, 1)'),
+                        'is_outlet' => false,
+                        'status_before_outlet' => null,
+                        'updated_by' => auth()->id(),
+                        'admin_edited_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($validated['action'] === 'outlet' && $foundProductIds->isNotEmpty()) {
+                DB::table('carts')->whereIn('product_id', $foundProductIds)->delete();
+            }
+        });
+
+        Cache::flush();
+
+        $actionLabel = $validated['action'] === 'outlet' ? 'enviados para outlet' : 'restaurados ao estado normal';
+
+        return redirect()
+            ->route('admin.products.outlet.form')
+            ->with('success', "{$updated} produto(s) {$actionLabel}.")
+            ->with('missing_skus', $missingSkus->all());
     }
 
     public function create()
@@ -146,6 +245,8 @@ class ProductControllerAdmin extends Controller
         $q = $request->get('q');
         $excludeId = $request->integer('exclude_id');
         $context = $request->get('context');
+        $currentColorKey = (string) $request->get('current_color_key', '');
+        $currentReferenceKey = (string) $request->get('current_reference_key', '');
 
         $products = Product::where(function ($query) use ($q) {
             $query
@@ -153,14 +254,49 @@ class ProductControllerAdmin extends Controller
                 ->orWhere('external_name', 'like', "%{$q}%")
                 ->orWhere('sku', 'like', "%{$q}%");
         })
-            ->when($context === 'color', fn($query) => $query->where('product_role', 'P'))
             ->when($excludeId, fn($query) => $query->where('id', '!=', $excludeId))
             ->orderBy('external_name')
-            ->limit(50)
-            ->get(['id', 'name', 'external_name', 'photo', 'color', 'size']);
+            // Uma mesma cor pode possuir muitos tamanhos. Na busca de família de
+            // cor precisamos de uma amostra maior antes de eliminar as repetições.
+            ->limit($context === 'color' ? 250 : 80)
+            ->get(['id', 'sku', 'name', 'external_name', 'photo', 'color', 'size', 'stock', 'parent_id', 'product_role']);
+
+        if (in_array($context, ['size', 'color'], true)) {
+            $products = $products
+                ->when($currentReferenceKey !== '', fn ($items) => $items->filter(
+                    fn (Product $product) => $product->relationshipReferenceKey() === $currentReferenceKey
+                ));
+        }
+
+        if ($context === 'size' && $currentColorKey !== '') {
+            $products = $products
+                ->filter(fn (Product $product) => $product->relationshipColorKey() === $currentColorKey)
+                ->values();
+        }
+
+        if ($context === 'color') {
+            $products = $products
+                ->filter(fn (Product $product) => $product->relationshipColorKey() !== '')
+                ->when($currentColorKey !== '', fn ($items) => $items->reject(
+                    fn (Product $product) => $product->relationshipColorKey() === $currentColorKey
+                ))
+                ->groupBy(fn (Product $product) => $product->relationshipColorKey())
+                ->map(fn ($colorProducts) => $colorProducts
+                    ->sortByDesc(fn (Product $candidate) => [
+                        $candidate->product_role === 'P' ? 1 : 0,
+                        filled($candidate->photo) ? 1 : 0,
+                        (int) $candidate->stock,
+                    ])
+                    ->first())
+                ->values();
+        }
 
         $products->transform(function ($product) {
             $product->photo = $product->photo_url;
+            $product->size = $product->inferredSize();
+            $product->reference = $product->referenceLabel();
+            $product->inferred_color = $product->inferredColorKey();
+            $product->color_code = $product->inferredColorCode();
 
             return $product;
         });
@@ -235,21 +371,33 @@ class ProductControllerAdmin extends Controller
         $subcategories = Subcategory::orderBy('name')->get();
         $categoriasfilhas = CategoriasFilhas::orderBy('name')->get();
 
-        $products = Product::select('id', 'name', 'sku')->where('id', '!=', $id)->orderBy('name', 'asc')->get();
-
-        $item->selected_size_children = Product::where('parent_id', $item->id)->where('product_role', 'F')->pluck('id')->toArray();
+        $itemReferenceKey = $item->relationshipReferenceKey();
+        $itemColorKey = $item->relationshipColorKey();
+        $item->selected_size_children = Product::where('parent_id', $item->id)
+            ->where('product_role', 'F')
+            ->get(['id', 'name', 'external_name', 'color', 'size'])
+            ->filter(fn (Product $child) =>
+                $child->relationshipReferenceKey() === $itemReferenceKey
+                && $child->relationshipColorKey() === $itemColorKey
+            )
+            ->pluck('id')
+            ->values()
+            ->toArray();
         $familyRootId = !empty($item->color_parent_id) ? (int) $item->color_parent_id : (int) $item->id;
         $item->selected_color_family_members = Product::where('color_parent_id', $familyRootId)->where('product_role', 'P')->where('id', '!=', $item->id)->pluck('id')->toArray();
 
         $sizeChildrenProducts = Product::whereIn('id', $item->selected_size_children)
-            ->get(['id', 'name', 'external_name', 'photo', 'color', 'size'])
+            ->get(['id', 'sku', 'name', 'external_name', 'photo', 'color', 'size'])
+            ->each(fn (Product $child) => $child->size = $child->inferredSize())
             ->keyBy('id');
 
         $colorFamilyProducts = Product::whereIn('id', $item->selected_color_family_members)
-            ->get(['id', 'name', 'external_name', 'photo', 'color', 'size'])
+            ->get(['id', 'sku', 'name', 'external_name', 'photo', 'color', 'size'])
+            ->each(fn (Product $member) => $member->size = $member->inferredSize())
             ->keyBy('id');
 
         $translationsByLocale = $item->translations->keyBy('locale');
+        [$suggestedColor, $suggestedColorSource] = $this->suggestColorForProduct($item);
 
         if (is_string($item->parent_id) && str_contains($item->parent_id, ',')) {
             $item->parent_id =
@@ -261,7 +409,110 @@ class ProductControllerAdmin extends Controller
             $item->parent_id = collect($item->parent_id)->map(fn($parentId) => (int) $parentId)->first(fn($parentId) => $parentId > 0) ?: null;
         }
 
-        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'products', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale'));
+        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale', 'suggestedColor', 'suggestedColorSource'));
+    }
+
+    private function suggestColorForProduct(Product $product): array
+    {
+        $currentColor = strtoupper(trim((string) $product->color));
+        $hasValidCurrentColor = (bool) preg_match('/^#[0-9A-F]{6}$/', $currentColor);
+
+        $colorFile = public_path('data/color.json');
+        $availableColors = is_file($colorFile)
+            ? (array) json_decode((string) file_get_contents($colorFile), true)
+            : [];
+        $searchableName = $this->normalizeColorText(implode(' ', array_filter([
+            $product->name,
+            $product->external_name,
+        ])));
+
+        $semanticVocabulary = collect($availableColors)
+            ->map(fn ($colorName, $hex) => ['hex' => strtoupper((string) $hex), 'name' => (string) $colorName])
+            ->concat([
+                ['hex' => '#000080', 'name' => 'Marino'],
+                ['hex' => '#000080', 'name' => 'Navy'],
+                ['hex' => '#FF0000', 'name' => 'Rojo'],
+                ['hex' => '#FFFFFF', 'name' => 'Blanco'],
+                ['hex' => '#000000', 'name' => 'Negro'],
+                ['hex' => '#FFFF00', 'name' => 'Amarillo'],
+                ['hex' => '#808080', 'name' => 'Gris'],
+                ['hex' => '#A52A2A', 'name' => 'Marrón'],
+                ['hex' => '#800080', 'name' => 'Morado'],
+                ['hex' => '#000080', 'name' => 'Azul Marino'],
+                ['hex' => '#FF0000', 'name' => 'Red'],
+                ['hex' => '#FFFFFF', 'name' => 'White'],
+                ['hex' => '#000000', 'name' => 'Black'],
+            ]);
+
+        $semanticMatches = $semanticVocabulary
+            ->map(function ($entry) use ($searchableName) {
+                $colorName = $entry['name'];
+                $normalizedName = $this->normalizeColorText((string) $colorName);
+
+                return [
+                    'hex' => $entry['hex'],
+                    'name' => (string) $colorName,
+                    'normalized' => $normalizedName,
+                    'matches' => $normalizedName !== ''
+                        && preg_match('/(?:^|\s)' . preg_quote($normalizedName, '/') . '(?:$|\s)/', $searchableName),
+                ];
+            })
+            ->filter(fn ($entry) => $entry['matches'])
+            ->sortByDesc(fn ($entry) => strlen($entry['normalized']))
+            ->first();
+
+        if ($semanticMatches) {
+            // #000000 era o valor padrão histórico de muitos cadastros. Quando o
+            // próprio nome informa outra cor, a informação explícita é mais segura.
+            if ($hasValidCurrentColor
+                && ($currentColor !== '#000000' || $semanticMatches['hex'] === '#000000')) {
+                return [null, null];
+            }
+
+            return [$semanticMatches['hex'], 'nome comercial: ' . $semanticMatches['name']];
+        }
+
+        if ($hasValidCurrentColor) {
+            return [null, null];
+        }
+
+        $colorCode = $product->inferredColorCode();
+        $colorKey = $product->inferredColorKey();
+        if ($colorCode === '' || $colorKey === '') {
+            return [null, null];
+        }
+
+        $historicalColors = DB::table('products')
+            ->where('id', '!=', $product->id)
+            ->whereNotNull('color')
+            ->where(function ($query) use ($colorCode) {
+                $query->where('external_name', 'like', '%*' . $colorCode . '%')
+                    ->orWhere('name', 'like', '%*' . $colorCode . '%');
+            })
+            ->limit(500)
+            ->get(['name', 'external_name', 'color'])
+            ->filter(function ($candidate) use ($colorKey) {
+                $candidateKeys = collect([$candidate->external_name, $candidate->name])
+                    ->filter()
+                    ->map(fn ($name) => Product::referenceParts((string) $name)['color_key']);
+
+                return $candidateKeys->contains($colorKey)
+                    && preg_match('/^#[0-9A-F]{6}$/i', trim((string) $candidate->color));
+            })
+            ->map(fn ($candidate) => strtoupper(trim((string) $candidate->color)))
+            ->countBy()
+            ->sortDesc();
+
+        $historicalHex = $historicalColors->keys()->first();
+
+        return $historicalHex
+            ? [$historicalHex, 'código comercial *' . $colorCode]
+            : [null, null];
+    }
+
+    private function normalizeColorText(string $value): string
+    {
+        return trim(preg_replace('/[^A-Z0-9]+/', ' ', strtoupper(Str::ascii($value))) ?: '');
     }
 
     public function update(Request $request, $id)
@@ -292,19 +543,66 @@ class ProductControllerAdmin extends Controller
 
         try {
             return DB::transaction(function () use ($request, $product) {
-                $previousDescription = $product->description;
-                $previousPhoto = $product->photo;
-                $previousGallery = is_string($product->gallery) ? json_encode(array_values(json_decode($product->gallery, true) ?: [])) : json_encode(array_values($product->gallery ?: []));
                 $isCurrentlySizeVariant = ($product->product_role ?? null) === 'F' || !empty($product->parent_id);
                 $promoteToParent = $request->boolean('force_as_parent') && $isCurrentlySizeVariant;
                 $originalFamilyRootId = !empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
-                $existingSizeChildIds = Product::where('parent_id', $product->id)->where('product_role', 'F')->pluck('id')->map(fn($childId) => (int) $childId)->toArray();
                 $selectedSizeChildIds = array_values(array_filter(array_unique(array_filter((array) $request->input('parent_id', []))), fn($childId) => (int) $childId !== (int) $product->id));
                 $selectedColorFamilyMemberIds = array_values(array_filter(array_unique(array_filter((array) $request->input('color_parent_id', []))), fn($memberId) => (int) $memberId !== (int) $product->id));
 
                 if ($isCurrentlySizeVariant) {
                     $selectedSizeChildIds = [];
                     $selectedColorFamilyMemberIds = [];
+                }
+
+                if (!empty($selectedSizeChildIds)) {
+                    $currentReferenceKey = $product->relationshipReferenceKey();
+                    $currentColorKey = $product->relationshipColorKey();
+                    $selectedSizeChildIds = Product::whereIn('id', $selectedSizeChildIds)
+                        ->get(['id', 'name', 'external_name', 'color', 'size'])
+                        ->filter(fn (Product $candidate) =>
+                            $candidate->relationshipReferenceKey() === $currentReferenceKey
+                            && $candidate->relationshipColorKey() === $currentColorKey
+                        )
+                        ->pluck('id')
+                        ->map(fn ($childId) => (int) $childId)
+                        ->values()
+                        ->toArray();
+                }
+
+                // Uma cor que foi relacionada equivocadamente como variante de
+                // tamanho pode voltar a ser a âncora da própria cor. Os demais
+                // tamanhos com a mesma referência/cor acompanham essa nova âncora.
+                $selectedColorCandidates = Product::whereIn('id', $selectedColorFamilyMemberIds)->get();
+                foreach ($selectedColorCandidates as $candidate) {
+                    if ($candidate->product_role !== 'F' && empty($candidate->parent_id)) {
+                        continue;
+                    }
+
+                    $oldParentId = (int) $candidate->parent_id;
+                    $candidateReferenceKey = $candidate->relationshipReferenceKey();
+                    $candidateColorKey = $candidate->relationshipColorKey();
+                    $sameColorSiblingIds = Product::where('parent_id', $oldParentId)
+                        ->where('id', '!=', $candidate->id)
+                        ->get(['id', 'name', 'external_name', 'color', 'size'])
+                        ->filter(fn (Product $sibling) =>
+                            $sibling->relationshipReferenceKey() === $candidateReferenceKey
+                            && $sibling->relationshipColorKey() === $candidateColorKey
+                        )
+                        ->pluck('id');
+
+                    Product::where('id', $candidate->id)->update([
+                        'parent_id' => null,
+                        'color_parent_id' => $candidate->id,
+                        'product_role' => 'P',
+                    ]);
+
+                    if ($sameColorSiblingIds->isNotEmpty()) {
+                        Product::whereIn('id', $sameColorSiblingIds)->update([
+                            'parent_id' => $candidate->id,
+                            'color_parent_id' => $candidate->id,
+                            'product_role' => 'F',
+                        ]);
+                    }
                 }
 
                 $selectedColorFamilyMemberIds = Product::whereIn('id', $selectedColorFamilyMemberIds)->where('product_role', 'P')->pluck('id')->map(fn($memberId) => (int) $memberId)->unique()->values()->toArray();
@@ -348,6 +646,7 @@ class ProductControllerAdmin extends Controller
                 $desiredColorAnchorIds = $shouldSyncColorFamily ? array_values(array_unique(array_merge([(int) $product->id], $selectedColorFamilyMemberIds))) : [];
 
                 $data = $request->only(['sku', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'size', 'price', 'stock']);
+                $data['size'] = filled($data['size'] ?? null) ? trim((string) $data['size']) : $product->inferredSize();
 
                 if ($request->has('translate.pt-br')) {
                     $data['name'] = $request->input('translate.pt-br.name');
@@ -440,11 +739,8 @@ class ProductControllerAdmin extends Controller
                     ->whereNotIn('id', $selectedSizeChildIds)
                     ->update([
                         'parent_id' => null,
-                        'color_parent_id' => null,
+                        'color_parent_id' => DB::raw('id'),
                         'product_role' => 'P',
-                        'description' => null,
-                        'photo' => null,
-                        'gallery' => null,
                     ]);
 
                 if (!empty($selectedSizeChildIds)) {
@@ -453,32 +749,29 @@ class ProductControllerAdmin extends Controller
                         ->get();
 
                     foreach ($children as $child) {
-                        $isNewChild = !in_array((int) $child->id, $existingSizeChildIds, true);
-                        $childGallery = is_string($child->gallery) ? json_encode(array_values(json_decode($child->gallery, true) ?: [])) : json_encode(array_values($child->gallery ?: []));
-
                         $childData = [
                             'parent_id' => $product->id,
                             'color_parent_id' => $targetFamilyRootId,
-                            'color' => $data['color'] ?? null,
+                            'color' => $resolvedParentColor,
+                            'size' => $child->inferredSize(),
                             'product_role' => 'F',
+                            'name' => $product->name,
+                            'description' => $product->description,
+                            'price' => $product->price,
+                            'previous_price' => $product->previous_price,
+                            'promotion_price' => $product->promotion_price,
                             'brand_id' => $product->brand_id,
                             'category_id' => $product->category_id,
                             'subcategory_id' => $product->subcategory_id,
                             'childcategory_id' => $product->childcategory_id,
-                            'status' => $product->status,
+                            'photo' => $product->photo,
+                            'gallery' => $data['gallery'],
+                            'highlights' => $product->highlights,
                             'stores' => $data['stores'],
                         ];
 
-                        if ($isNewChild || empty($child->description) || $child->description === $previousDescription) {
-                            $childData['description'] = $product->description;
-                        }
-
-                        if ($isNewChild || empty($child->photo) || $child->photo === $previousPhoto) {
-                            $childData['photo'] = $product->photo;
-                        }
-
-                        if ($isNewChild || $childGallery === '[]' || $childGallery === $previousGallery) {
-                            $childData['gallery'] = $data['gallery'];
+                        if (!$child->is_outlet) {
+                            $childData['status'] = $product->status;
                         }
 
                         Product::where('id', $child->id)->update($childData);
@@ -734,7 +1027,7 @@ class ProductControllerAdmin extends Controller
     // mas atualizações que não passam por lá (ex.: ajuste de estoque direto) podem deixá-lo desatualizado.
     public function revalidateStatus()
     {
-        $products = Product::select(['id', 'photo', 'gallery', 'description', 'price', 'stock', 'status'])->get();
+        $products = Product::select(['id', 'photo', 'gallery', 'description', 'price', 'stock', 'status', 'is_outlet'])->get();
 
         $toActivate = [];
         $toDeactivate = [];
@@ -786,6 +1079,14 @@ class ProductControllerAdmin extends Controller
     public function toggleStatus($id)
     {
         $product = Product::findOrFail($id);
+
+        if ($product->is_outlet) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Produtos em outlet não podem ser ativados no e-commerce. Restaure-o primeiro na gestão de outlet.',
+            ], 422);
+        }
+
         $product->status = !$product->status;
         $product->updated_by = auth()->id();
         $product->admin_edited_at = now();

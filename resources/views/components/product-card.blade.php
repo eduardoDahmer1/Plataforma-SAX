@@ -2,10 +2,12 @@
     'item',
     'cartItems' => [],
     'gridClass' => 'col-6 col-md-6 col-lg-2 mb-1 g-1',
+    'displayName' => null,
 ])
 
 @php
     $isOutOfStock = ($item->stock ?? 0) <= 0;
+    $displayName = filled($displayName) ? $displayName : ($item->name ?? '');
 
     $fotoExibir = 'https://placehold.co/400x533/f5f5f5/999?text=No+Image';
     if (!empty($item->photo_url)) {
@@ -56,7 +58,7 @@
 
             <div class="product-card-standard__media jw-img-container position-relative">
                 <img src="{{ $fotoExibir }}" class="card-img-top img-fluid rounded-0"
-                    alt="{{ $item->name }}">
+                    alt="{{ $displayName }}">
 
                 <x-cupon-selo :product="$item" variante="card" />
 
@@ -72,8 +74,8 @@
                     {{ $item->brand->name ?? __('messages.brand_name') }}
                 </div>
 
-                <div class="product-card-standard__name" title="{{ $item->name ?? $item->name }}">
-                    {{ $item->name ?? $item->name }}
+                <div class="product-card-standard__name" title="{{ $displayName }}">
+                    {{ $displayName }}
                 </div>
 
                 <div class="product-card-standard__meta mt-auto">

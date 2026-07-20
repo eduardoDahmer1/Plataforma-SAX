@@ -32,6 +32,11 @@
     <script src="{{ asset('js/app-custom.js') }}?v={{ filemtime(public_path('js/app-custom.js'))}}"></script>
 @endif
 
+<!-- Analytics próprio: somente páginas públicas -->
+@if(!Route::is('admin.*'))
+    <script src="{{ asset('js/site-analytics.js') }}?v={{ filemtime(public_path('js/site-analytics.js')) }}" defer></script>
+@endif
+
 <!-- 7. TinyMCE + admin.js (solo admin) -->
 @if(Route::is('admin.*') || Route::is('manutencao'))
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>

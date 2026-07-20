@@ -235,22 +235,41 @@
                         </div>
                     </div>
 
-                    <div class="mb-3 col-md-6" id="color-section">
+                    @php
+                        $allowImageColorSuggestion = empty($suggestedColor)
+                            && (empty($item->color) || strtoupper((string) $item->color) === '#000000');
+                    @endphp
+                    <div class="mb-3 col-md-6" id="color-section"
+                        data-detect-color-from-image="{{ $allowImageColorSuggestion ? '1' : '0' }}">
                         <label class="form-label"><i class="fas fa-palette me-1"></i> Cor do Produto</label>
+                        @php
+                            $effectiveColor = old('colors_values.0', $suggestedColor ?: ($item->color ?: '#000000'));
+                            $hasEffectiveColor = !empty($item->color) || !empty($suggestedColor);
+                        @endphp
                         
                         <div class="d-flex align-items-center gap-2 mb-2">
-                            <input type="color" id="color-input" name="colors_values[]" value="{{ old('color', $item->color ?? '#000000') }}" 
+                            <input type="color" id="color-input" name="colors_values[]" value="{{ $effectiveColor }}"
                                 class="form-control form-control-color" oninput="document.getElementById('color-search').value = this.value">
                             
                             <input type="text" id="color-search" class="form-control" placeholder="Buscar cor ou código..." 
-                                value="{{ old('color', $item->color ?? '#000000') }}" onkeyup="renderColors(this.value)">
+                                value="{{ $effectiveColor }}" onkeyup="renderColors(this.value)">
 
                             <div class="form-check ms-2">
-                                <input class="form-check-input" type="checkbox" name="no_color" id="no_color" {{ empty($item->color) ? 'checked' : '' }}
+                                <input class="form-check-input" type="checkbox" name="no_color" id="no_color" {{ !$hasEffectiveColor ? 'checked' : '' }}
                                     onchange="if(this.checked) { document.getElementById('color-input').value = ''; }">
                                 <label class="form-check-label" for="no_color">Sem cor</label>
                             </div>
                         </div>
+
+                        @if ($suggestedColor)
+                            <div class="alert alert-success py-2 px-3 mb-2 small">
+                                <i class="fas fa-wand-magic-sparkles me-1"></i>
+                                Cor preenchida automaticamente: <strong>{{ $suggestedColor }}</strong>
+                                usando {{ $suggestedColorSource }}. Você pode alterá-la antes de salvar.
+                            </div>
+                        @endif
+
+                        <div id="image-color-suggestion" class="alert alert-info py-2 px-3 mb-2 small d-none"></div>
 
                         <div id="color-palette" class="d-flex flex-wrap gap-1 p-2 border rounded bg-light" style="max-height: 200px; overflow-y: auto;"></div>
                         <div id="color-suggestions" class="small text-muted mt-2"></div>
@@ -273,6 +292,7 @@
                             }));
 
                             renderColors();
+                            detectDominantImageColor();
                         } catch (error) {
                             console.error("Erro ao carregar cores:", error);
                         }
@@ -351,6 +371,66 @@
                         if (colorInput) colorInput.value = hex;
                         if (colorSearch) colorSearch.value = hex;
                         if (noColor) noColor.checked = false;
+                    }
+
+                    function detectDominantImageColor() {
+                        const section = document.getElementById('color-section');
+                        const image = document.getElementById('photoPreviewImg');
+                        if (!section || section.dataset.detectColorFromImage !== '1' || !image) return;
+                        if (!image.getAttribute('src')) {
+                            image.addEventListener('load', detectDominantImageColor, { once: true });
+                            return;
+                        }
+
+                        const analyze = () => {
+                            try {
+                                const canvas = document.createElement('canvas');
+                                const context = canvas.getContext('2d', { willReadFrequently: true });
+                                const size = 72;
+                                canvas.width = size;
+                                canvas.height = size;
+                                context.drawImage(image, 0, 0, size, size);
+
+                                const pixels = context.getImageData(0, 0, size, size).data;
+                                const buckets = new Map();
+                                for (let index = 0; index < pixels.length; index += 4) {
+                                    const r = pixels[index];
+                                    const g = pixels[index + 1];
+                                    const b = pixels[index + 2];
+                                    if (pixels[index + 3] < 180 || (r > 235 && g > 235 && b > 235)) continue;
+
+                                    const saturation = Math.max(r, g, b) - Math.min(r, g, b);
+                                    const key = `${Math.round(r / 24)},${Math.round(g / 24)},${Math.round(b / 24)}`;
+                                    const bucket = buckets.get(key) || { score: 0, r: 0, g: 0, b: 0, count: 0 };
+                                    bucket.score += 1 + saturation / 80;
+                                    bucket.r += r;
+                                    bucket.g += g;
+                                    bucket.b += b;
+                                    bucket.count += 1;
+                                    buckets.set(key, bucket);
+                                }
+
+                                const dominant = Array.from(buckets.values()).sort((a, b) => b.score - a.score)[0];
+                                if (!dominant || dominant.count < 10) return;
+
+                                const toHex = value => Math.round(value).toString(16).padStart(2, '0').toUpperCase();
+                                const hex = `#${toHex(dominant.r / dominant.count)}${toHex(dominant.g / dominant.count)}${toHex(dominant.b / dominant.count)}`;
+                                applyColor(hex);
+                                renderColors(hex);
+
+                                const message = document.getElementById('image-color-suggestion');
+                                if (message) {
+                                    message.classList.remove('d-none');
+                                    message.innerHTML = `<i class="fas fa-image me-1"></i>Cor sugerida pela foto: <strong>${hex}</strong>. Confira antes de salvar.`;
+                                }
+                                section.dataset.detectColorFromImage = '0';
+                            } catch (error) {
+                                console.warn('Não foi possível identificar a cor pela imagem:', error);
+                            }
+                        };
+
+                        if (image.complete && image.naturalWidth) analyze();
+                        else image.addEventListener('load', analyze, { once: true });
                     }
 
                     function renderSuggestions(filter, filteredCount) {
@@ -469,10 +549,7 @@
                     $activeGroup = $categoryMap[$categorySlug] ?? null;
                     $currentSize = old('size', $item->size ?? '');
                     
-                    $detectedSize = '';
-                    if (preg_match('/#([^\s*]+)/', $item->external_name ?? '', $sizeMatch)) {
-                        $detectedSize = trim($sizeMatch[1]);
-                    }
+                    $detectedSize = $item->inferredSize() ?? '';
                 @endphp
 
                 <div class="col-md-6" id="size-container">
@@ -645,11 +722,14 @@
                         <label class="form-label"><i class="fas fa-link me-1"></i>Variantes de talla</label>
                         <div class="input-group mb-2">
                             <input type="text" id="parent_search" class="form-control"
-                                placeholder="Buscar variante por talla..." autocomplete="off">
+                                placeholder="Buscar variante por talla..." autocomplete="off"
+                                value="{{ $item->relationshipSearchTerm() }}" data-auto-search="1">
                             <button class="btn btn-primary" id="parent_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
-                        <div id="parent_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}"></div>
+                        <div id="parent_results_label" class="relationship-section-label d-none">Sugestões encontradas</div>
+                        <div id="parent_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}"></div>
+                        <div class="relationship-section-label mt-3">Já relacionados <span class="relationship-count" data-count-for="selected_parents">{{ count($item->selected_size_children ?? []) }}</span></div>
                         <div id="selected_parents" class="row g-2 mt-2">
                             @if (!empty($item->selected_size_children))
                                 @php
@@ -663,8 +743,10 @@
                                                 <img src="{{ $parentProduct->photo_url }}"
                                                     class="card-img-top" style="height:120px; object-fit:cover;">
                                                 <div class="card-body p-2">
+                                                    <span class="badge bg-success mb-1">Relacionado</span>
                                                     <p class="card-text m-0 fw-bold">
-                                                        {{ $parentProduct->name ?? $parentProduct->external_name }}</p>
+                                                        {{ $parentProduct->external_name ?: $parentProduct->name }}</p>
+                                                    <small class="text-muted d-block mt-1">SKU: {{ $parentProduct->sku }}</small>
                                                     @if ($parentProduct->color)
                                                         <div class="d-flex align-items-center mt-1">
                                                             <span
@@ -691,7 +773,7 @@
                             @endif
                         </div>
                         <small class="form-text text-muted d-block mt-2">
-                            Estas variantes comparten el ancla de talla y heredan los datos comunes del producto base.
+                            Variantes com a mesma referência e cor são pré-selecionadas automaticamente. Elas herdam os dados comuns do produto pai; SKU, estoque e tamanho continuam próprios de cada filho.
                         </small>
                     </div>
 
@@ -699,11 +781,14 @@
                         <label class="form-label"><i class="fas fa-palette me-1"></i>Familia de color</label>
                         <div class="input-group mb-2">
                             <input type="text" id="color_search" class="form-control"
-                                placeholder="Buscar producto para la familia de color..." autocomplete="off">
+                                placeholder="Buscar produto para a família de cor..." autocomplete="off"
+                                value="{{ $item->relationshipSearchTerm() }}" data-auto-search="1">
                             <button class="btn btn-primary" id="color_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
-                        <div id="color_results" class="row g-2" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}"></div>
+                        <div id="color_results_label" class="relationship-section-label d-none">Sugestões de outras cores</div>
+                        <div id="color_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}"></div>
+                        <div class="relationship-section-label mt-3">Já relacionados <span class="relationship-count" data-count-for="selected_colors">{{ count($item->selected_color_family_members ?? []) }}</span></div>
                         <div id="selected_colors" class="row g-2 mt-2">
                             @if (!empty($item->selected_color_family_members))
                                 @php
@@ -717,8 +802,10 @@
                                                 <img src="{{ $colorProduct->photo_url }}"
                                                     class="card-img-top" style="height:120px; object-fit:cover;">
                                                 <div class="card-body p-2">
+                                                    <span class="badge bg-success mb-1">Relacionado</span>
                                                     <p class="card-text m-0 fw-bold">
-                                                        {{ $colorProduct->name ?? $colorProduct->external_name }}</p>
+                                                        {{ $colorProduct->external_name ?: $colorProduct->name }}</p>
+                                                    <small class="text-muted d-block mt-1">SKU: {{ $colorProduct->sku }}</small>
                                                     @if ($colorProduct->color)
                                                         <div class="d-flex align-items-center mt-1">
                                                             <span
@@ -748,7 +835,7 @@
                             <div class="text-danger small mt-2">{{ $message }}</div>
                         @enderror
                         <small class="form-text text-muted d-block mt-2">
-                            Los miembros de la familia de color conservan sus propios datos; solo comparten el mismo referente.
+                            As sugestões usam a mesma referência e mostram somente um produto-base por cor diferente. Cada cor conserva seus próprios tamanhos e estoque.
                         </small>
                     </div>
                 @endif
@@ -810,6 +897,47 @@
 
     .product-edit-actions .btn {
         min-width: 12rem;
+    }
+
+    .relationship-section-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .relationship-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        padding: 0 0.4rem;
+        border-radius: 999px;
+        background: #e2e8f0;
+        color: #0f172a;
+        font-size: 0.75rem;
+    }
+
+    .relationship-results {
+        max-height: 430px;
+        margin: 0;
+        padding: 0.75rem;
+        overflow-y: auto;
+        border: 1px solid #dbe2ea;
+        border-radius: 0.75rem;
+        background: #f8fafc;
+    }
+
+    #selected_parents > [data-id] .card,
+    #selected_colors > [data-id] .card {
+        background: #f6fff9;
+        box-shadow: 0 0 0 1px rgba(25, 135, 84, 0.08);
     }
 
     @media (max-width: 991px) {

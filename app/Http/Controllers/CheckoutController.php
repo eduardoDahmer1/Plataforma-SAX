@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderStatusMail;
 use App\Models\Policy;
+use App\Models\Product;
 
 class CheckoutController extends Controller
 {
@@ -94,6 +95,21 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
+            $cartProductIds = $cart->pluck('product_id')->unique()->values();
+            $sellableProductIds = Product::sellable()
+                ->whereIn('id', $cartProductIds)
+                ->lockForUpdate()
+                ->pluck('id');
+
+            if ($sellableProductIds->count() !== $cartProductIds->count()) {
+                DB::rollBack();
+
+                return redirect()->route('cart.view')->with(
+                    'error',
+                    'Um ou mais produtos foram enviados para outlet ou deixaram de estar disponíveis. Revise o carrinho antes de continuar.'
+                );
+            }
+
             $nameParts = explode(' ', trim($request->input('name')));
             $firstName = array_shift($nameParts);
             $lastName = implode(' ', $nameParts) ?: $firstName;
@@ -309,6 +325,21 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
+            $cartProductIds = $cart->pluck('product_id')->unique()->values();
+            $sellableProductIds = Product::sellable()
+                ->whereIn('id', $cartProductIds)
+                ->lockForUpdate()
+                ->pluck('id');
+
+            if ($sellableProductIds->count() !== $cartProductIds->count()) {
+                DB::rollBack();
+
+                return redirect()->route('cart.view')->with(
+                    'error',
+                    'Um ou mais produtos foram enviados para outlet ou deixaram de estar disponíveis. Revise o carrinho antes de continuar.'
+                );
+            }
+
             $order = Order::create([
                 'user_id' => $user->id,
                 'status' => 'pending',

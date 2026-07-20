@@ -23,6 +23,15 @@
     {{-- Filtros inline --}}
     <div class="sax-filter-bar">
         <div class="sax-filter-item">
+            <label class="sax-filter-label">Canal</label>
+            <select name="outlet_filter" class="form-select sax-filter-select">
+                <option value="">Todos</option>
+                <option value="normal" @selected(request('outlet_filter') === 'normal')>E-commerce normal</option>
+                <option value="outlet" @selected(request('outlet_filter') === 'outlet')>Outlet</option>
+            </select>
+        </div>
+
+        <div class="sax-filter-item">
             <label class="sax-filter-label">{{ __('messages.marca') }}</label>
             <select name="brand_id" class="form-select sax-filter-select">
                 <option value="">Todas as Marcas</option>
@@ -83,6 +92,7 @@
                 <option value="">Todos</option>
                 <option value="parent" @selected(request('product_type') == 'parent')>Apenas Pais</option>
                 <option value="child" @selected(request('product_type') == 'child')>Apenas Filhos</option>
+                <option value="unrelated_parent" @selected(request('product_type') == 'unrelated_parent')>Pais ainda não relacionados</option>
             </select>
         </div>
 
@@ -109,7 +119,7 @@
     </div>
 
     {{-- Link limpar (solo si hay filtros activos) --}}
-    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'highlight_filter']))
+    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'highlight_filter', 'outlet_filter', 'product_type', 'stock_filter']))
         <div class="mt-2 text-end">
             <a href="{{ route('admin.products.index') }}" class="sax-clear-filters">
                 <i class="fa fa-times me-1"></i> Limpar filtros

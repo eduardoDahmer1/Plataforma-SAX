@@ -30,7 +30,7 @@ class AbandonedCartController extends Controller
         DB::transaction(function () use ($abandonedCart, &$restored) {
             $abandonedCart->load('items.product');
             foreach ($abandonedCart->items as $item) {
-                if (!$item->product || !$item->product->status || $item->product->stock < 1) continue;
+                if (!$item->product || !$item->product->isSellable()) continue;
                 $cartItem = Cart::firstOrNew(['user_id' => auth()->id(), 'product_id' => $item->product_id]);
                 $cartItem->quantity = min(($cartItem->exists ? $cartItem->quantity : 0) + $item->quantity, $item->product->stock);
                 $cartItem->save();

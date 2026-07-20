@@ -22,7 +22,11 @@
                 return null;
             };
 
-            $heroBannerUrl = $resolveStorageUrl($entity->banner ?? null);
+            $isBrand = $isBrand ?? false;
+
+            $heroBannerUrl = $resolveStorageUrl($isBrand
+                ? ($entity->internal_banner ?? null)
+                : ($entity->banner ?? null));
 
             if (!$heroBannerUrl && !empty($banner10 ?? null)) {
                 $heroBannerUrl = $resolveStorageUrl($banner10);
@@ -32,7 +36,9 @@
                 $heroBannerUrl = $resolveStorageUrl($banner_horizontal);
             }
 
-            $sideBannerUrl = $resolveStorageUrl($entity->internal_banner ?? null);
+            $sideBannerUrl = $resolveStorageUrl($isBrand
+                ? ($entity->banner ?? null)
+                : ($entity->internal_banner ?? null));
 
             if (!$sideBannerUrl) {
                 $sideBannerUrl = $resolveStorageUrl($entity->image ?? null);
@@ -85,47 +91,78 @@
             </div>
         </div>
 
-        <div class="container-fluid px-1 px-md-4 py-4 bg-white">
-            <div class="row g-1">
-                <div class="col-12 col-lg-3 d-none d-lg-block">
-                    <div class="sticky-sidebar-content" style="position: sticky; top: 100px;">
-                        <div class="catalog-filter-desktop mb-4">
-                            <x-product-filters
-                                :categories="$categories"
-                                :brands="$brands"
-                                :currentCategory="$currentCategory ?? null"
-                                :currentSub="$currentSub ?? null"
-                                :currentChild="$currentChild ?? null" />
-                        </div>
+        <div class="container-fluid px-3 px-lg-5 py-4 bg-white catalog-products-section">
+            <div class="toolbar-container search-toolbar catalog-toolbar d-flex d-lg-none justify-content-between align-items-center mb-4">
+                <button
+                    class="btn-filter-trigger search-filter-button d-flex align-items-center gap-2"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#{{ $mobileFilterId }}"
+                    aria-controls="{{ $mobileFilterId }}">
+                    <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true">
+                        <path d="M0 1H18M0 6H12M0 11H18" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                    <span class="x-small fw-bold text-uppercase tracking-widest">{{ __('messages.todos_filtros') }}</span>
+                </button>
 
-                        @if ($sideBannerUrl)
-                            <div class="sticky-banner-lateral">
-                                <img src="{{ $sideBannerUrl }}" class="img-fluid banner-v-render" alt="{{ $entityName }} Promo" onerror="this.src='{{ $fallbackImg }}'">
-                            </div>
-                        @endif
-                    </div>
+                <div class="catalog-result-summary">
+                    <strong>{{ number_format($products->total(), 0, ',', '.') }}</strong>
+                    <span>produtos encontrados</span>
                 </div>
+            </div>
+
+            <div class="row g-3 g-xl-4 align-items-start">
+                <aside class="col-lg-3 d-none d-lg-block">
+                    <div class="catalog-desktop-filter catalog-standard-drawer">
+                        <div class="search-filter-header catalog-desktop-filter-header">
+                            <div>
+                                <span class="search-filter-eyebrow">Catálogo</span>
+                                <h2 class="offcanvas-title mb-0">{{ __('messages.filtrar_por') }}</h2>
+                            </div>
+                        </div>
+                        <div class="search-filter-body catalog-desktop-filter-body">
+                            <div class="catalog-drawer-filter-shell">
+                                <x-product-filters
+                                    :categories="$categories"
+                                    :brands="$brands"
+                                    :currentCategory="$currentCategory ?? null"
+                                    :currentSub="$currentSub ?? null"
+                                    :currentChild="$currentChild ?? null" />
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($sideBannerUrl)
+                        <div class="sticky-banner-lateral catalog-sidebar-banner mt-3">
+                            <img
+                                src="{{ $sideBannerUrl }}"
+                                class="img-fluid banner-v-render"
+                                alt="{{ $entityName }} Promo"
+                                onerror="this.src='{{ $fallbackImg }}'">
+                        </div>
+                    @endif
+                </aside>
 
                 <div class="col-12 col-lg-9">
-                    <div class="catalog-toolbar d-flex align-items-center justify-content-between mb-3">
-                        <p class="catalog-toolbar-label mb-0 {{ $isEditionPrivee ? 'text-lowercase font-edition-privee' : 'text-uppercase' }}">
-                            {{ $entityName }}
-                        </p>
-                        <button
-                            class="btn catalog-filter-toggle d-lg-none"
-                            type="button"
-                            data-bs-toggle="offcanvas"
-                            data-bs-target="#{{ $mobileFilterId }}"
-                            aria-expanded="false"
-                            aria-controls="{{ $mobileFilterId }}">
-                            <i class="fas fa-sliders-h me-2"></i> Filtrar
-                        </button>
+                    <div class="catalog-result-summary catalog-result-summary-desktop d-none d-lg-flex">
+                        <strong>{{ number_format($products->total(), 0, ',', '.') }}</strong>
+                        <span>produtos encontrados</span>
                     </div>
 
                     @if ($products->count())
-                        <div class="row g-1">
+                        @php
+                            $productLocale = translation_locale();
+                            $products->getCollection()->load([
+                                'translations' => fn ($query) => $query->where('locale', $productLocale),
+                            ]);
+                        @endphp
+                        <div class="row g-2 g-md-3">
                             @foreach ($products as $item)
-                                <x-product-card :item="$item" :cartItems="$cartItems ?? []" gridClass="col-6 col-md-4 col-xl-3" />
+                                @php
+                                    $translation = $item->translations->first();
+                                    $displayName = filled($translation?->name) ? $translation->name : $item->name;
+                                @endphp
+                                <x-product-card :item="$item" :cartItems="$cartItems ?? []" :displayName="$displayName" gridClass="col-6 col-md-4 col-xl-3" />
                             @endforeach
                         </div>
 
@@ -143,13 +180,16 @@
             </div>
         </div>
 
-        <div class="offcanvas offcanvas-end catalog-filter-offcanvas d-lg-none" tabindex="-1" id="{{ $mobileFilterId }}" aria-labelledby="{{ $mobileFilterId }}Label">
-            <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="{{ $mobileFilterId }}Label">{{ __('messages.filtrar_produtos') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="{{ __('messages.fechar') }}"></button>
+        <div class="offcanvas offcanvas-end search-filter-drawer catalog-standard-drawer" tabindex="-1" id="{{ $mobileFilterId }}" aria-labelledby="{{ $mobileFilterId }}Label">
+            <div class="offcanvas-header search-filter-header">
+                <div>
+                    <span class="search-filter-eyebrow">Catálogo</span>
+                    <h5 class="offcanvas-title mb-0" id="{{ $mobileFilterId }}Label">{{ __('messages.filtrar_por') }}</h5>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="{{ __('messages.fechar') }}"></button>
             </div>
-            <div class="offcanvas-body">
-                <div class="mobile-filter-shell">
+            <div class="offcanvas-body search-filter-body">
+                <div class="catalog-drawer-filter-shell">
                     <x-product-filters
                         :categories="$categories"
                         :brands="$brands"
@@ -159,8 +199,12 @@
                 </div>
 
                 @if ($sideBannerUrl)
-                    <div class="mobile-filter-banner mt-3">
-                        <img src="{{ $sideBannerUrl }}" class="img-fluid banner-v-render" alt="{{ $entityName }} Promo" onerror="this.src='{{ $fallbackImg }}'">
+                    <div class="sticky-banner-lateral catalog-sidebar-banner mt-3">
+                        <img
+                            src="{{ $sideBannerUrl }}"
+                            class="img-fluid banner-v-render"
+                            alt="{{ $entityName }} Promo"
+                            onerror="this.src='{{ $fallbackImg }}'">
                     </div>
                 @endif
             </div>
@@ -246,79 +290,178 @@
         }
 
         .catalog-toolbar {
-            border-bottom: 1px solid #efede8;
-            padding-bottom: 10px;
+            border-bottom: 0;
         }
 
-        .catalog-toolbar-label {
-            font-size: 10px;
-            letter-spacing: 1.8px;
-            color: #696255;
-            font-weight: 700;
+        .catalog-result-summary {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+            color: #667085;
+            font-size: 0.73rem;
         }
 
-        .catalog-filter-toggle {
-            border: 1px solid #d9d3c8;
-            border-radius: 999px;
-            background: #f8f6f2;
-            color: #221f19;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-            padding: 7px 14px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        .catalog-result-summary strong {
+            color: #101828;
+            font-size: 0.9rem;
+            font-weight: 750;
         }
 
-        .catalog-filter-toggle:hover,
-        .catalog-filter-toggle:focus {
-            background: #f0ece4;
-            color: #13110f;
-            border-color: #c7beaf;
+        .catalog-result-summary-desktop {
+            justify-content: flex-end;
+            min-height: 28px;
+            margin-bottom: 12px;
+            padding: 0 3px;
         }
 
-        .catalog-filter-desktop {
-            border: 1px solid #ece7de;
-            background: #fff;
-            border-radius: 12px;
-            padding: 14px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
-        }
-
-        .mobile-filter-shell {
-            border: 1px solid #ece7de;
-            background: #fff;
-            border-radius: 12px;
-            padding: 14px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
-        }
-
-        .mobile-filter-banner {
-            border-radius: 10px;
+        .catalog-desktop-filter {
+            position: sticky;
+            top: 96px;
             overflow: hidden;
-            border: 1px solid #efede8;
+            max-height: calc(100vh - 116px);
+            background: #fff;
+            border: 1px solid #dfe3ea;
+            border-radius: 14px;
+            box-shadow: 0 8px 28px rgba(16, 24, 40, 0.07);
         }
 
-        .catalog-filter-offcanvas {
-            width: min(420px, 92vw);
-            background: #faf9f7;
+        .catalog-desktop-filter-header {
+            display: flex;
+            align-items: center;
+            min-height: 82px;
+            padding: 17px 18px;
         }
 
-        .catalog-filter-offcanvas .offcanvas-header {
-            border-bottom: 1px solid #e8e4dc;
-            padding: 14px 16px;
+        .catalog-desktop-filter-body {
+            max-height: calc(100vh - 198px);
+            padding: 18px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #d5dae3 transparent;
         }
 
-        .catalog-filter-offcanvas .offcanvas-title {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
-            margin: 0;
+        .catalog-desktop-filter-body::-webkit-scrollbar {
+            width: 4px;
         }
 
-        .catalog-filter-offcanvas .offcanvas-body {
-            padding: 14px;
+        .catalog-desktop-filter-body::-webkit-scrollbar-thumb {
+            background: #d5dae3;
+            border-radius: 999px;
+        }
+
+        .catalog-standard-drawer .catalog-drawer-filter-shell {
+            padding: 0;
+        }
+
+        .catalog-standard-drawer .product-filters-wrapper {
+            padding: 0;
+        }
+
+        .catalog-standard-drawer .filter-title {
+            display: none;
+        }
+
+        .catalog-standard-drawer .filter-group {
+            margin-bottom: 24px !important;
+        }
+
+        .catalog-standard-drawer .filter-label {
+            margin-bottom: 9px;
+            color: #344054;
+            font-size: 0.69rem;
+            letter-spacing: 0.07em;
+        }
+
+        .catalog-standard-drawer .filter-search-input {
+            height: 54px;
+            padding: 0 44px 0 15px;
+            border: 1px solid #d7dee9;
+            border-radius: 12px;
+            background: #fff;
+            color: #344054;
+            font-size: 0.82rem;
+            letter-spacing: 0;
+        }
+
+        .catalog-standard-drawer .filter-search-input:focus {
+            border-color: #98a2b3;
+            box-shadow: 0 0 0 3px rgba(41, 112, 255, 0.08);
+        }
+
+        .catalog-standard-drawer .filter-search-icon {
+            top: 50%;
+            right: 16px;
+            color: #98a2b3;
+            font-size: 0.8rem;
+            transform: translateY(-50%);
+        }
+
+        .catalog-standard-drawer .filter-link {
+            color: #667085;
+            font-size: 0.72rem;
+            letter-spacing: 0.02em;
+            line-height: 1.55;
+        }
+
+        .catalog-standard-drawer .filter-link-sub,
+        .catalog-standard-drawer .filter-link-child,
+        .catalog-standard-drawer .filter-link-brand {
+            font-size: 0.69rem;
+        }
+
+        .catalog-standard-drawer .filter-link:hover,
+        .catalog-standard-drawer .filter-link.active {
+            color: #101828;
+        }
+
+        .catalog-standard-drawer .brand-filter-scroll {
+            max-height: 290px;
+        }
+
+        @media (max-width: 575.98px) {
+            .catalog-products-section {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+
+            .catalog-result-summary span {
+                display: inline;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .catalog-toolbar.search-toolbar {
+                display: flex !important;
+                flex-wrap: nowrap;
+                gap: 0.75rem;
+            }
+
+            .catalog-toolbar .search-filter-button {
+                width: auto;
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .catalog-toolbar .catalog-result-summary {
+                flex: 0 0 auto;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .catalog-toolbar.search-toolbar {
+                flex-wrap: wrap;
+            }
+
+            .catalog-toolbar .search-filter-button {
+                width: 100%;
+                flex-basis: 100%;
+            }
+
+            .catalog-toolbar .catalog-result-summary {
+                width: 100%;
+                justify-content: flex-end;
+            }
         }
 
         .jw-product-card {

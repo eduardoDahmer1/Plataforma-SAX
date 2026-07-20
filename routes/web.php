@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductControllerAdmin;
 use App\Http\Controllers\Admin\SubcategoryControllerAdmin;
 use App\Http\Controllers\Admin\SystemController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\AllCategoriesController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\Auth\UserPreferenceController;
@@ -42,10 +43,15 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SiteAnalyticsController;
 use App\Http\Controllers\SubcategoryController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+
+Route::post('/analytics/event', [SiteAnalyticsController::class, 'store'])
+    ->middleware('throttle:120,1')
+    ->name('analytics.store');
 
 Route::get('/testar-email', function () {
     try {
@@ -123,6 +129,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
     Route::get('/profile', [UserController::class, 'edit'])->name('user.profile.edit');
     Route::put('/profile', [UserController::class, 'update'])->name('user.profile.update');
+    Route::get('/seguranca/senha', [UserController::class, 'editPassword'])->name('user.password.edit');
+    Route::put('/seguranca/senha', [UserController::class, 'updatePassword'])->name('user.password.update');
     Route::post('/checkout/calcular-frete', [CheckoutController::class, 'ajaxCalcularFrete'])->name('checkout.calcular-frete');
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
@@ -165,7 +173,9 @@ Route::get('/checkout/bancard-v2/success', [\App\Http\Controllers\BancardV2Contr
 Route::get('/checkout/bancard-v2/error', [\App\Http\Controllers\BancardV2Controller::class, 'errorPage'])->name('bancard.v2.error');
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
-    Route::get('/', [ImageUploadController::class, 'index'])->name('index');
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('banners', [ImageUploadController::class, 'index'])->name('banners.index');
+    Route::redirect('visao-geral', '/admin')->name('overview');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::resource('languages', \App\Http\Controllers\Admin\LanguageControllerAdmin::class);
     Route::put('attributes/text-topo', [ImageUploadController::class, 'updateTextTopo'])->name('attributes.update_text');
@@ -190,6 +200,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::patch('cupons/{cupon}/toggle', [CuponController::class, 'toggle'])->name('cupons.toggle');
     Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
     Route::get('products/review', [ProductControllerAdmin::class, 'review'])->name('products.review');
+    Route::get('products/outlet/lote', [ProductControllerAdmin::class, 'outletForm'])->name('products.outlet.form');
+    Route::put('products/outlet/lote', [ProductControllerAdmin::class, 'updateOutlet'])->name('products.outlet.update');
     Route::put('currencies/{id}', [CurrencyControllerAdmin::class, 'update'])->name('currencies.update');
     Route::get('currencies/{id}/default', [CurrencyControllerAdmin::class, 'setDefault'])->name('currencies.default');
     Route::patch('products/{product}/update-highlights', [ProductControllerAdmin::class, 'updateHighlights'])->name('products.updateHighlights');

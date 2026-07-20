@@ -165,15 +165,42 @@
             if (!block) return;
 
             var needle = normalize(term);
-            var items = block.querySelectorAll('[data-filter-item]');
+            var items = Array.from(block.querySelectorAll('[data-filter-item]'));
             var shown = 0;
 
             items.forEach(function (item) {
                 var name = normalize(item.getAttribute('data-filter-name'));
-                var match = !needle || name.indexOf(needle) !== -1;
+                var ownMatch = !needle || name.indexOf(needle) !== -1;
+                var descendantMatch = needle && Array.from(item.querySelectorAll('[data-filter-item]')).some(function (child) {
+                    return normalize(child.getAttribute('data-filter-name')).indexOf(needle) !== -1;
+                });
+                var match = ownMatch || descendantMatch;
+
                 item.classList.toggle('d-none', !match);
-                if (match) shown += 1;
+                if (ownMatch && match) shown += 1;
             });
+
+            if (kind === 'category') {
+                block.querySelectorAll('.collapse').forEach(function (collapse) {
+                    if (!collapse.hasAttribute('data-filter-initially-open')) {
+                        collapse.setAttribute('data-filter-initially-open', collapse.classList.contains('show') ? '1' : '0');
+                    }
+
+                    var trigger = block.querySelector('[data-bs-target="#' + collapse.id + '"]');
+                    var hasMatchingDescendant = needle && Array.from(collapse.querySelectorAll('[data-filter-item]')).some(function (child) {
+                        return normalize(child.getAttribute('data-filter-name')).indexOf(needle) !== -1;
+                    });
+                    var shouldOpen = needle
+                        ? hasMatchingDescendant
+                        : collapse.getAttribute('data-filter-initially-open') === '1';
+
+                    collapse.classList.toggle('show', shouldOpen);
+                    if (trigger) {
+                        trigger.classList.toggle('collapsed', !shouldOpen);
+                        trigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                    }
+                });
+            }
 
             var empty = root.querySelector('[data-filter-empty="' + kind + '"]');
             if (empty) {

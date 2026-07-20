@@ -7,7 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use App\Models\PaymentMethod;
+use App\Mail\PasswordChangedMail;
 
 class UserController extends Controller
 {
@@ -30,6 +35,7 @@ class UserController extends Controller
             // Segundo: Buscamos os produtos reais usando esses IDs
             $userHistory = \App\Models\Product::whereIn('products.id', $productIds)
                 ->where('status', 1)
+                ->where('is_outlet', false)
                 ->with('brand')
                 // Join para garantir a ordem cronológica exata do histórico
                 ->join('product_views_history', 'products.id', '=', 'product_views_history.product_id')
@@ -111,6 +117,61 @@ class UserController extends Controller
                 ->withErrors(['msg' => 'Erro no banco: ' . $e->getMessage()])
                 ->withInput();
         }
+    }
+
+    public function editPassword()
+    {
+        return view('users.password');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => [
+                'required',
+                'confirmed',
+                'different:current_password',
+                'max:72',
+                Password::min(8)->letters()->numbers(),
+            ],
+        ], [
+            'current_password.required' => 'Informe sua senha atual.',
+            'current_password.current_password' => 'A senha atual informada está incorreta.',
+            'password.required' => 'Informe a nova senha.',
+            'password.confirmed' => 'A confirmação da nova senha não confere.',
+            'password.different' => 'A nova senha deve ser diferente da senha atual.',
+            'password.min' => 'A nova senha deve ter pelo menos 8 caracteres.',
+            'password.max' => 'A nova senha deve ter no máximo 72 caracteres.',
+            'password.letters' => 'A nova senha deve conter pelo menos uma letra.',
+            'password.numbers' => 'A nova senha deve conter pelo menos um número.',
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        $user->password = Hash::make($validated['password']);
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        $request->session()->regenerate();
+
+        try {
+            Mail::to($user->email)->send(new PasswordChangedMail($user));
+        } catch (\Throwable $exception) {
+            Log::error('Não foi possível enviar o aviso de alteração de senha.', [
+                'user_id' => $user->id,
+                'exception' => $exception,
+            ]);
+
+            return redirect()
+                ->route('user.password.edit')
+                ->with('success', 'Senha alterada com sucesso!')
+                ->with('warning', 'A senha foi atualizada, mas não conseguimos enviar o e-mail de confirmação agora.');
+        }
+
+        return redirect()
+            ->route('user.password.edit')
+            ->with('success', 'Senha alterada com sucesso! Enviamos uma confirmação para o seu e-mail.');
     }
 
     public function orders()

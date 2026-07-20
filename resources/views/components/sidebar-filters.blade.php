@@ -4,16 +4,23 @@
     use App\Models\Currency;
     $currentCurrencyId = session('currency', Currency::where('is_default', 1)->first()?->id);
     $currencySign      = Currency::find($currentCurrencyId)?->sign ?? '$';
+    $activeFilterCount = collect([
+        $request->brand, $request->category, $request->subcategory,
+        $request->categoriasfilhas, $request->min_price, $request->max_price,
+    ])->filter(fn ($value) => filled($value))->count();
 @endphp
 
-<div class="toolbar-container d-flex justify-content-between align-items-center py-3 mb-4 border-top border-bottom">
+<div class="toolbar-container search-toolbar d-flex justify-content-between align-items-center mb-4">
 
-    <button class="btn-filter-trigger d-flex align-items-center gap-2" type="button"
+    <button class="btn-filter-trigger search-filter-button d-flex align-items-center gap-2" type="button"
             data-bs-toggle="offcanvas" data-bs-target="#modalFiltros">
         <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M0 1H18M0 6H12M0 11H18" stroke="currentColor" stroke-width="1.5"/>
         </svg>
         <span class="x-small fw-bold text-uppercase tracking-widest">{{ __('messages.todos_filtros') }}</span>
+        @if($activeFilterCount)
+            <span class="search-filter-count">{{ $activeFilterCount }}</span>
+        @endif
     </button>
 
     <div class="d-flex align-items-center gap-3" id="sortForm">
@@ -25,7 +32,7 @@
         <input type="hidden" name="min_price"        data-filter value="{{ $request->min_price }}">
         <input type="hidden" name="max_price"        data-filter value="{{ $request->max_price }}">
 
-        <div class="d-flex align-items-center gap-2">
+        <div class="toolbar-control d-flex align-items-center gap-2">
             <label class="toolbar-label d-none d-md-block mb-0">{{ __('messages.ordenar_por') }}</label>
             <select name="sort_by" data-filter class="form-select toolbar-select">
                 <option value="">{{ __('messages.ordenar_padrao') }}</option>
@@ -36,7 +43,7 @@
             </select>
         </div>
 
-        <div class="d-flex align-items-center gap-2 border-start ps-3">
+        <div class="toolbar-control d-flex align-items-center gap-2">
             <label class="toolbar-label d-none d-md-block mb-0">{{ __('messages.mostrar') }}</label>
             <select name="per_page" data-filter class="form-select toolbar-select" style="width: 68px;">
                 <option value="36"  @selected($request->per_page == 36)>36</option>
@@ -47,13 +54,16 @@
     </div>
 </div>
 
-<div class="offcanvas offcanvas-end offcanvas-filter" tabindex="-1" id="modalFiltros">
-    <div class="offcanvas-header px-4 py-4 border-bottom">
-        <h5 class="offcanvas-title x-small fw-bold text-uppercase tracking-widest mb-0">{{ __('messages.filtrar_por') }}</h5>
+<div class="offcanvas offcanvas-end offcanvas-filter search-filter-drawer" tabindex="-1" id="modalFiltros">
+    <div class="offcanvas-header search-filter-header">
+        <div>
+            <span class="search-filter-eyebrow">Catálogo</span>
+            <h5 class="offcanvas-title mb-0">{{ __('messages.filtrar_por') }}</h5>
+        </div>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
     </div>
 
-    <div class="offcanvas-body px-4 py-4">
+    <div class="offcanvas-body search-filter-body">
         <form action="{{ route('search') }}" method="GET" id="filterSidebarForm">
             <input type="hidden" name="sort_by"  value="{{ $request->sort_by }}">
             <input type="hidden" name="per_page" value="{{ $request->per_page }}">
@@ -69,41 +79,49 @@
             @endphp
 
             @foreach ($filterFields as $f)
-                <div class="mb-5">
-                    <label class="x-small fw-bold text-uppercase tracking-widest d-block mb-2">{{ $f['label'] }}</label>
-                    <input type="text"
-                           id="{{ $f['input'] }}"
-                           list="{{ $f['listId'] }}"
-                           class="form-control sax-filter-input"
-                           placeholder="{{ __('messages.buscar_ou_selecionar') }}"
-                           value="{{ collect($f['items'])->firstWhere('id', $request->{$f['name']})?->name ?? '' }}"
-                           autocomplete="off">
+                <div class="search-filter-group">
+                    <label for="{{ $f['input'] }}">{{ $f['label'] }}</label>
+                    <div class="search-filter-combobox">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text"
+                               id="{{ $f['input'] }}"
+                               class="form-control sax-filter-input"
+                               placeholder="{{ __('messages.buscar_ou_selecionar') }}"
+                               value="{{ collect($f['items'])->firstWhere('id', $request->{$f['name']})?->name ?? '' }}"
+                               data-filter-combobox
+                               data-options="{{ $f['listId'] }}"
+                               aria-controls="{{ $f['listId'] }}"
+                               aria-expanded="false"
+                               autocomplete="off">
+                        <button type="button" class="search-filter-clear" aria-label="Limpar {{ $f['label'] }}" tabindex="-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                     <input type="hidden" id="{{ $f['hidden'] }}" name="{{ $f['name'] }}" data-filter value="{{ $request->{$f['name']} }}">
-                    <datalist id="{{ $f['listId'] }}">
+                    <div class="search-filter-options" id="{{ $f['listId'] }}" role="listbox">
                         @foreach ($f['items'] as $item)
-                            <option data-id="{{ $item->id }}" value="{{ $item->name }}">
+                            <button type="button" role="option" data-id="{{ $item->id }}" data-value="{{ $item->name }}">{{ $item->name }}</button>
                         @endforeach
-                    </datalist>
+                        <span class="search-filter-no-results">Nenhuma opção encontrada</span>
+                    </div>
                 </div>
             @endforeach
 
-            <div class="mb-5">
-                <label class="x-small fw-bold text-uppercase tracking-widest d-block mb-2">
+            <div class="search-filter-group">
+                <label>
                     {{ __('messages.preco') }} ({{ $currencySign }})
                 </label>
-                <div class="d-flex gap-2">
-                    <input type="number" name="min_price" data-filter class="form-control sax-filter-input" placeholder="MIN" value="{{ $request->min_price }}">
-                    <input type="number" name="max_price" data-filter class="form-control sax-filter-input" placeholder="MAX" value="{{ $request->max_price }}">
+                <div class="search-price-grid">
+                    <div><span>De</span><input type="number" name="min_price" data-filter class="form-control sax-filter-input" placeholder="0" value="{{ $request->min_price }}"></div>
+                    <div><span>Até</span><input type="number" name="max_price" data-filter class="form-control sax-filter-input" placeholder="Sem limite" value="{{ $request->max_price }}"></div>
                 </div>
             </div>
 
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-dark rounded-0 py-3 x-small fw-bold text-uppercase tracking-widest">
+            <div class="search-filter-actions">
+                <button type="submit" class="btn btn-dark search-filter-apply">
                     {{ __('messages.aplicar_filtros') }}
                 </button>
                 <a href="{{ route('search', ['search' => $request->search]) }}"
-                   class="btn btn-link text-dark text-decoration-none text-center x-small text-uppercase tracking-widest mt-1">
-                    {{ __('messages.limpar_tudo') }}
+                   class="search-filter-reset">
+                    <i class="fa-solid fa-rotate-left"></i> {{ __('messages.limpar_tudo') }}
                 </a>
             </div>
         </form>
@@ -112,29 +130,70 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const syncDatalist = (inputId, hiddenId, datalistId) => {
+    const setupCombobox = (inputId, hiddenId, optionsId) => {
         const input    = document.getElementById(inputId);
         const hidden   = document.getElementById(hiddenId);
-        const datalist = document.getElementById(datalistId);
-        if (!input || !hidden || !datalist) return;
+        const options  = document.getElementById(optionsId);
+        if (!input || !hidden || !options) return;
+
+        const choices = [...options.querySelectorAll('[data-id]')];
+        const clearButton = input.closest('.search-filter-combobox')?.querySelector('.search-filter-clear');
+
+        const close = () => {
+            options.classList.remove('is-open');
+            input.setAttribute('aria-expanded', 'false');
+        };
+
+        const filter = () => {
+            const term = input.value.trim().toLocaleLowerCase();
+            let visible = 0;
+            choices.forEach(choice => {
+                const matches = choice.dataset.value.toLocaleLowerCase().includes(term);
+                const show = matches && visible < 60;
+                choice.hidden = !show;
+                if (show) visible++;
+            });
+            options.querySelector('.search-filter-no-results').hidden = visible > 0;
+            options.classList.add('is-open');
+            input.setAttribute('aria-expanded', 'true');
+        };
 
         input.addEventListener('input', function () {
-            const match  = [...datalist.options].find(o => o.value === this.value);
-            hidden.value = match ? match.getAttribute('data-id') : '';
+            const match = choices.find(choice => choice.dataset.value === this.value);
+            hidden.value = match ? match.dataset.id : '';
             hidden.dispatchEvent(new Event('input', { bubbles: true }));
+            clearButton?.classList.toggle('is-visible', Boolean(this.value));
+            filter();
         });
 
-        input.addEventListener('blur', function () {
-            if (!this.value) {
-                hidden.value = '';
-                hidden.dispatchEvent(new Event('input', { bubbles: true }));
-            }
+        input.addEventListener('focus', filter);
+        choices.forEach(choice => choice.addEventListener('click', () => {
+            input.value = choice.dataset.value;
+            hidden.value = choice.dataset.id;
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+            clearButton?.classList.add('is-visible');
+            close();
+        }));
+        clearButton?.classList.toggle('is-visible', Boolean(input.value));
+        clearButton?.addEventListener('click', () => {
+            input.value = '';
+            hidden.value = '';
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+            clearButton.classList.remove('is-visible');
+            input.focus();
+            filter();
+        });
+        document.addEventListener('click', event => {
+            if (!input.closest('.search-filter-group')?.contains(event.target)) close();
+        });
+        input.addEventListener('keydown', event => {
+            if (event.key === 'Escape') close();
         });
     };
 
-    syncDatalist('brand-input',         'brand-id',         'list-brands');
-    syncDatalist('category-input',      'category-id',      'list-categories');
-    syncDatalist('subcategory-input',   'subcategory-id',   'list-subcategories');
-    syncDatalist('child-category-input','child-category-id','list-child-categories');
+    setupCombobox('brand-input',         'brand-id',         'list-brands');
+    setupCombobox('category-input',      'category-id',      'list-categories');
+    setupCombobox('subcategory-input',   'subcategory-id',   'list-subcategories');
+    setupCombobox('child-category-input','child-category-id','list-child-categories');
 });
 </script>

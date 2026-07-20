@@ -42,7 +42,7 @@
                         <li><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>
                         <li><a href="{{ route('palace.index') }}">SAX Palace</a></li>
                         <li><a href="{{ route('contact.form') }}">{{ __('messages.trabalhe_conosco') }}</a></li>
-                        <li><a href="https://saxdepartment.com/categorias-filhas/edition-privee">Edition Privee</a></li>
+                        <li><a href="https://saxdepartment.com/categorias-filhas/edition-privee">édition privée</a></li>
                     </ul>
                 </div>
             </div>

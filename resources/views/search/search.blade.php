@@ -4,12 +4,12 @@
 
 <x-alert type="success" :message="session('success')" />
 
-<div class="container-fluid px-3 px-lg-5 py-5">
+<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5 search-page">
 
     @if ($query)
-        <div class="mb-5">
-            <p class="x-small text-uppercase text-muted tracking-widest mb-1">{{ __('messages.results_for') }}</p>
-            <h1 class="h4 fw-light text-uppercase" style="letter-spacing: 2px;">"{{ $query }}"</h1>
+        <div class="search-query-heading">
+            <p>{{ __('messages.results_for') }}</p>
+            <h1>“{{ $query }}”</h1>
         </div>
     @endif
 
@@ -21,9 +21,12 @@
         :categoriasfilhas="$categoriasfilhas"
     />
 
-    <div id="search-status" class="d-flex align-items-center gap-2 mb-3 x-small text-muted text-uppercase tracking-widest" style="min-height: 24px;">
-        <span id="search-total"></span>
-        <div id="search-spinner" class="spinner-border spinner-border-sm d-none" role="status" style="width: 12px; height: 12px; border-width: 1.5px;"></div>
+    <div id="search-status" class="search-results-status">
+        <div>
+            <span id="search-total">{{ number_format($paginated->total(), 0, ',', '.') }}</span>
+            <span>produtos encontrados</span>
+        </div>
+        <div id="search-spinner" class="spinner-border spinner-border-sm d-none" role="status"></div>
     </div>
 
     <div id="search-grid" class="row g-2 g-md-3">
@@ -81,7 +84,7 @@
             pagination.innerHTML = data.pagination;
 
             const count = data.total ?? 0;
-            totalEl.textContent  = count > 0 ? count + ' {{ __("messages.produtos") }}' : '';
+            totalEl.textContent  = new Intl.NumberFormat('pt-BR').format(count);
 
             grid.style.opacity = '1';
             spinner.classList.add('d-none');

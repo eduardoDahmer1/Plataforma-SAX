@@ -58,6 +58,7 @@ class BrandController extends Controller
             return $brand
                 ->products()
                 ->where('status', 1)
+                ->where('is_outlet', false)
                 ->where('product_role', 'P')
                 ->where('stock', '>', 0)
                 ->whereNotNull('photo')
@@ -74,6 +75,7 @@ class BrandController extends Controller
 
         return view('catalog.show', [
             'entity' => $brand,
+            'isBrand' => true,
             'products' => $products,
             'categories' => $categoriesTree,
             'brands' => $allBrands,

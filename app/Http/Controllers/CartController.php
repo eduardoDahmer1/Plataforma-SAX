@@ -9,6 +9,11 @@ use App\Models\Currency;
 use App\Services\CuponService;
 use App\Models\AbandonedCart;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use App\Mail\AbandonedCartHelpMail;
+use App\Services\BusinessEventService;
 
 class CartController extends Controller
 {
@@ -172,7 +177,15 @@ class CartController extends Controller
 
             $cartItem->update(['quantity' => min($quantity, $product->stock)]);
         } else {
-            $cartItem->delete();
+            $removalResult = $this->removeCartProduct($user->id, $productId);
+
+            if ($removalResult === 'last_item') {
+                return back()->with('error', __('messages.cart_last_item_requires_abandon'));
+            }
+
+            if ($removalResult === 'not_found') {
+                return back()->with('error', __('messages.cart_product_not_found'));
+            }
         }
 
         return back()->with('success', 'Carrinho atualizado!');
@@ -185,15 +198,54 @@ class CartController extends Controller
             return redirect()->route('login')->with('error', 'Você precisa estar logado para remover do carrinho.');
         }
 
-        Cart::where('user_id', $user->id)
-            ->where('product_id', $productId)
-            ->delete();
+        $removalResult = $this->removeCartProduct($user->id, $productId);
 
-        return back()->with('success', 'Produto removido do carrinho!');
+        if ($removalResult === 'last_item') {
+            return back()->with('error', __('messages.cart_last_item_requires_abandon'));
+        }
+
+        if ($removalResult === 'not_found') {
+            return back()->with('error', __('messages.cart_product_not_found'));
+        }
+
+        return back()->with('success', __('messages.cart_product_removed'));
     }
 
-    public function abandon()
+    private function removeCartProduct(int $userId, $productId): string
     {
+        return DB::transaction(function () use ($userId, $productId) {
+            $cartItems = Cart::where('user_id', $userId)
+                ->with('product')
+                ->lockForUpdate()
+                ->get();
+
+            $target = $cartItems->first(
+                fn (Cart $item) => (int) $item->product_id === (int) $productId
+            );
+            if (!$target) {
+                return 'not_found';
+            }
+
+            $availableItems = $cartItems->filter(
+                fn (Cart $item) => $item->product && $item->product->isSellable()
+            );
+
+            if ($availableItems->contains('id', $target->id) && $availableItems->count() <= 1) {
+                return 'last_item';
+            }
+
+            $target->delete();
+
+            return 'removed';
+        });
+    }
+
+    public function abandon(Request $request)
+    {
+        $validated = $request->validate([
+            'abandon_reason' => ['required', 'in:payment,shipping_price,later,help,no_answer'],
+            'abandon_message' => ['nullable', 'string', 'max:1500'],
+        ]);
         $user = auth()->user();
         $items = Cart::available()->with('product')->where('user_id', $user->id)->get();
 
@@ -205,7 +257,7 @@ class CartController extends Controller
         $rate = (float) ($currency->value ?? 1);
         $abandonedCart = null;
 
-        DB::transaction(function () use ($items, $user, $currency, $rate, &$abandonedCart) {
+        DB::transaction(function () use ($items, $user, $currency, $rate, $validated, &$abandonedCart) {
             $abandonedCart = AbandonedCart::create([
                 'user_id' => $user->id,
                 'total' => $items->sum(fn ($item) => (float) $item->product->price * $item->quantity),
@@ -213,7 +265,11 @@ class CartController extends Controller
                 'currency_sign' => $currency->sign ?? 'US$',
                 'currency_value' => $rate,
                 'status' => 'abandoned',
+                'recovery_token' => Str::random(64),
                 'abandoned_at' => now(),
+                'feedback_reason' => $validated['abandon_reason'],
+                'feedback_message' => $validated['abandon_message'] ?? null,
+                'feedback_at' => now(),
             ]);
 
             foreach ($items as $item) {
@@ -229,6 +285,34 @@ class CartController extends Controller
 
             Cart::where('user_id', $user->id)->delete();
         });
+
+        $reasonLabels = [
+            'payment' => 'Não conseguiu concluir o pagamento',
+            'shipping_price' => 'Preço ou frete não ficou adequado',
+            'later' => 'Vai comprar em outro momento',
+            'help' => 'Ficou com dúvida e precisa de ajuda',
+            'no_answer' => 'Preferiu não informar o motivo',
+        ];
+        app(BusinessEventService::class)->record(
+            'cart',
+            'Cliente abandonou o carrinho',
+            $reasonLabels[$validated['abandon_reason']] ?? 'Motivo não informado',
+            'info',
+            $user->id,
+            null,
+            'Carrinho #' . $abandonedCart->id,
+        );
+
+        dispatch(function () use ($abandonedCart) {
+            try {
+                $abandonedCart->loadMissing('user');
+                Mail::to($abandonedCart->user->email)->send(new AbandonedCartHelpMail($abandonedCart));
+                $abandonedCart->update(['help_email_sent_at' => now()]);
+            } catch (\Throwable $e) {
+                Log::error('Falha ao enviar ajuda de carrinho abandonado', ['cart_id' => $abandonedCart->id, 'message' => $e->getMessage()]);
+                app(BusinessEventService::class)->record('email', 'E-mail do carrinho não foi enviado', 'A equipe pode entrar em contato manualmente com o cliente.', 'warning', $abandonedCart->user_id, null, 'Carrinho #' . $abandonedCart->id);
+            }
+        })->afterResponse();
 
         return redirect()->route('user.abandoned-carts.show', $abandonedCart)->with('success', 'Seu carrinho foi salvo no histórico e removido da sacola.');
     }

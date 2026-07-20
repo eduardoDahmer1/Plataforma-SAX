@@ -38,6 +38,9 @@ class Order extends Model
         'charge_id',
         'pay_id',
         'payment_status',
+        'payment_response_code',
+        'payment_response_message',
+        'payment_failed_at',
 
         'shipping_cost',
         'packing_cost',
@@ -75,6 +78,8 @@ class Order extends Model
         'description',
         'payment',
     ];
+
+    protected $casts = ['payment_failed_at' => 'datetime', 'terms_accepted_at' => 'datetime'];
 
     // Relacionamento com itens do pedido
     public function items()

@@ -75,40 +75,7 @@
                     @if ($products->count())
                         <div class="row g-1">
                             @foreach ($products as $item)
-                                <div class="col-6 col-md-4 col-xl-3">
-                                    <a href="{{ route('produto.show', $item->slug ?? $item->id) }}"
-                                        class="text-decoration-none jw-product-link">
-                                        <div class="card h-100 border-0 rounded-0 jw-product-card bg-transparent">
-                                            <div class="jw-img-container position-relative bg-light">
-                                                <img src="{{ $item->photo_url }}" class="card-img-top img-fluid rounded-0"
-                                                    alt="{{ $item->external_name }}">
-
-                                                <div class="position-absolute top-0 end-0 p-3 z-index-2">
-                                                    @auth <x-product-favorite-button :item="$item" /> @endauth
-                                                </div>
-                                            </div>
-
-                                            <div class="card-body px-2 py-3 d-flex flex-column">
-                                                <div class="sax-brand fw-bold text-uppercase mb-1">
-                                                    {{ $item->brand->name ?? 'BRAND' }}
-                                                </div>
-
-                                                <div class="sax-product-name text-muted mb-3">
-                                                    {{ $item->name ?? $item->external_name }}
-                                                </div>
-
-                                                <div class="d-flex justify-content-between align-items-center mt-auto">
-                                                    <div class="sax-price fw-bold text-dark">
-                                                        {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}
-                                                    </div>
-                                                    <div class="sax-sku text-muted small">
-                                                        SKU: {{ $item->sku ?? 'N/A' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
+                                <x-product-card :item="$item" gridClass="col-6 col-md-4 col-xl-3" />
                             @endforeach
                         </div>
 

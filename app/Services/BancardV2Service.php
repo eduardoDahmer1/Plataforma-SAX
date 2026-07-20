@@ -236,6 +236,11 @@ class BancardV2Service
         ];
     }
 
+    public function describeFailure(?array $confirmation, string $status = ''): string
+    {
+        return $this->resolveErrorResponseDescription($confirmation, $status);
+    }
+
     public function hasValidCallbackToken(array $payload): bool
     {
         $shopProcessId = $this->extractShopProcessId($payload);
@@ -312,14 +317,17 @@ class BancardV2Service
         $responseCode = trim((string) data_get($confirmation, 'response_code', ''));
 
         $mappedDescription = match ($responseCode) {
-            '51' => 'No aprobada - insuficiencia de fondos.',
-            '33' => 'Tarjeta vencida.',
-            '55' => 'Clave inválida.',
-            '05' => 'Tarjeta inhabilitada.',
-            '12' => 'Transacción inválida.',
-            '15' => 'Emisor inexistente o tarjeta no habilitada.',
-            '94' => 'Transacción duplicada.',
-            '17' => 'Operación cancelada por el cliente.',
+            '00' => 'Pagamento aprovado.',
+            '14' => 'Número do cartão inválido ou cartão não reconhecido pelo emissor.',
+            '41' => 'Cartão sinalizado como perdido. O cliente deve contatar o banco emissor.',
+            '51' => 'Saldo ou limite insuficiente no cartão.',
+            '33' => 'Cartão vencido.',
+            '55' => 'Senha do cartão inválida.',
+            '05' => 'Pagamento recusado pelo banco emissor.',
+            '12' => 'Transação inválida para este cartão.',
+            '15' => 'Banco emissor não encontrado ou cartão não habilitado.',
+            '94' => 'Transação duplicada.',
+            '17' => 'Operação cancelada pelo cliente.',
             default => '',
         };
 

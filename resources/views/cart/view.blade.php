@@ -72,14 +72,24 @@
                                         </form>
                                     </div>
 
-                                    {{-- #TODO: manter um botão independente para excluir o item inteiro, mesmo com várias unidades, via AJAX e sem atualizar a página. --}}
-                                    <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="ms-2">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-remove-sax">
+                                    @if($cart->count() === 1)
+                                        <button type="button"
+                                                class="btn-remove-sax ms-2"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#abandonCartFeedbackModal"
+                                                aria-label="{{ __('messages.cart_last_item_requires_abandon') }}"
+                                                title="{{ __('messages.cart_last_item_requires_abandon') }}">
                                             <i class="far fa-trash-alt me-1"></i>{{ __('messages.remover') }}
                                         </button>
-                                    </form>
+                                    @else
+                                        <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="ms-2">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-remove-sax">
+                                                <i class="far fa-trash-alt me-1"></i>{{ __('messages.remover') }}
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
 
@@ -169,13 +179,11 @@
                             </button>
                         </form>
 
-                        <form action="{{ route('cart.abandon') }}" method="POST"
-                              onsubmit="return confirm('Tem certeza de que deseja abandonar este carrinho? Os itens serão removidos da sua sacola, mas ficarão salvos no seu histórico para consultar ou restaurar depois.');">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-outline-danger w-100 py-2 fw-bold text-uppercase">
-                                <i class="fas fa-trash-alt me-2"></i>Abandonar carrinho
+                        <div>
+                            <button type="button" class="btn btn-outline-danger w-100 py-2 fw-bold text-uppercase" data-bs-toggle="modal" data-bs-target="#abandonCartFeedbackModal">
+                                <i class="fas fa-trash-alt me-2"></i>{{ __('messages.cart_abandon_button') }}
                             </button>
-                        </form>
+                        </div>
                     </div>
 
                     <div class="sax-summary-security mt-4">

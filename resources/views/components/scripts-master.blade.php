@@ -78,4 +78,10 @@
 @endif
 
 <!-- 9. Stack para scripts inyectados desde vistas child (@push('scripts')) -->
+@auth
+    @if(auth()->user()->user_type != 1 && !Route::is('checkout.*'))
+        @include('components.favorite-confirmation-modal')
+    @endif
+@endauth
+
 @stack('scripts')

@@ -171,9 +171,15 @@ Route::post('/checkout/bancard-v2/callback', [\App\Http\Controllers\BancardV2Con
 Route::get('/checkout/bancard-v2/finish', [\App\Http\Controllers\BancardV2Controller::class, 'returnPage'])->name('bancard.v2.return');
 Route::get('/checkout/bancard-v2/success', [\App\Http\Controllers\BancardV2Controller::class, 'successPage'])->name('bancard.v2.success');
 Route::get('/checkout/bancard-v2/error', [\App\Http\Controllers\BancardV2Controller::class, 'errorPage'])->name('bancard.v2.error');
+Route::get('/ajuda-carrinho/{token}', [\App\Http\Controllers\AbandonedCartFeedbackController::class, 'show'])
+    ->name('abandoned-cart.feedback');
+Route::post('/ajuda-carrinho/{token}', [\App\Http\Controllers\AbandonedCartFeedbackController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('abandoned-cart.feedback.store');
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('/relatorios/{period}', [DashboardController::class, 'report'])->whereIn('period', ['today', 'week', 'month'])->name('reports.download');
     Route::get('banners', [ImageUploadController::class, 'index'])->name('banners.index');
     Route::redirect('visao-geral', '/admin')->name('overview');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');

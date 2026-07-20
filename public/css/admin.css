@@ -2935,6 +2935,15 @@ font-weight: 500;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* O cabeçalho do admin permanece no fluxo da página para garantir scroll estável. */
+.sax-admin-body .sax-header,
+.sax-admin-body .sax-header.is-sticky {
+    position: relative;
+    inset: auto;
+    z-index: 1030;
+    transform: none;
+}
+
 .sax-admin-body .sax-admin-layout {
     background:
         radial-gradient(circle at 85% 0%, rgba(41,112,255,.045), transparent 26rem),

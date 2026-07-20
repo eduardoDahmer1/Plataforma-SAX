@@ -31,6 +31,13 @@
     </div>
 </section>
 
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+    <strong class="me-2">Baixar relatório:</strong>
+    <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.reports.download', 'today') }}"><i class="fa-regular fa-file-pdf me-1"></i>Hoje</a>
+    <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.reports.download', 'week') }}"><i class="fa-regular fa-file-pdf me-1"></i>7 dias</a>
+    <a class="btn btn-sm btn-dark" href="{{ route('admin.reports.download', 'month') }}"><i class="fa-regular fa-file-pdf me-1"></i>Mês</a>
+</div>
+
 @if(!$analyticsReady)
     <div class="analytics-empty mb-4"><i class="fa-solid fa-circle-info me-2"></i>Os indicadores de audiência começarão a ser registrados assim que a migration de analytics for executada.</div>
 @endif
@@ -90,6 +97,8 @@
 </div>
 
 <div class="table-card mb-4"><div class="d-flex justify-content-between align-items-center"><div><h3 class="card-heading">Pedidos recentes</h3><div class="card-kicker">Últimas movimentações da loja</div></div><a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-dark">Ver todos</a></div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Pagamento</th><th>Status</th><th>Total</th><th>Data</th></tr></thead><tbody>@forelse($recentOrders as $order)<tr><td><a href="{{ route('admin.orders.show',$order) }}" class="fw-bold text-dark">#{{ $order->order_number ?: $order->id }}</a></td><td>{{ $order->user?->name ?: $order->name ?: 'Visitante' }}</td><td>{{ ['bancard'=>'Bancard','bancard_v2'=>'Bancard V2','deposito'=>'Depósito','whatsapp'=>'WhatsApp'][$order->payment_method] ?? ucfirst($order->payment_method) }}</td><td><span class="badge-soft">{{ ucfirst($order->status) }}</span></td><td>{{ $order->currency_sign ?: 'US$' }} {{ number_format($order->total,2,',','.') }}</td><td>{{ $order->created_at?->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="6" class="text-center text-muted py-4">Nenhum pedido encontrado.</td></tr>@endforelse</tbody></table></div></div>
+
+<div class="table-card mb-4"><h3 class="card-heading">Ocorrências recentes</h3><div class="card-kicker">Resumo simples de pagamentos, checkout, carrinhos e e-mails</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>Quando</th><th>Cliente</th><th>Ocorrência</th><th>Explicação</th><th>Referência</th></tr></thead><tbody>@forelse($businessEvents as $event)<tr><td>{{ $event->created_at->format('d/m H:i') }}</td><td>{{ $event->user?->name ?: 'Não identificado' }}</td><td><span class="badge-soft">{{ $event->title }}</span></td><td>{{ $event->message ?: 'Sem detalhes adicionais' }}</td><td>@if($event->order)<a href="{{ route('admin.orders.show',$event->order) }}">#{{ $event->order->order_number ?: $event->order_id }}</a>@else{{ $event->reference ?: '—' }}@endif</td></tr>@empty<tr><td colspan="5" class="text-center text-muted py-4">Nenhuma ocorrência registrada após a ativação do monitoramento.</td></tr>@endforelse</tbody></table></div></div>
 @endsection
 
 @push('scripts')

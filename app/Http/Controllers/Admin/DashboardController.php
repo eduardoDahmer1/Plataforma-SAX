@@ -14,7 +14,10 @@ use App\Models\Product;
 use App\Models\SiteAnalyticsEvent;
 use App\Models\Subcategory;
 use App\Models\User;
+use App\Models\BusinessEvent;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -68,6 +71,10 @@ class DashboardController extends Controller
         $topPages = collect();
         $topClicks = collect();
         $devices = collect();
+        $businessEvents = Schema::hasTable('business_events')
+            ? BusinessEvent::with(['user:id,name,email', 'order:id,order_number'])
+                ->latest()->limit(12)->get()
+            : collect();
 
         if ($analyticsReady) {
             $analytics['views_today'] = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', $today)->count();
@@ -100,7 +107,40 @@ class DashboardController extends Controller
 
         return view('admin.dashboard.index', compact(
             'metrics', 'analytics', 'analyticsReady', 'paymentMethods', 'orderStatuses', 'recentOrders',
-            'topProducts', 'trafficLabels', 'trafficViews', 'trafficVisitors', 'topPages', 'topClicks', 'devices'
+            'topProducts', 'trafficLabels', 'trafficViews', 'trafficVisitors', 'topPages', 'topClicks', 'devices', 'businessEvents'
         ));
+    }
+
+    public function report(string $period): Response
+    {
+        [$start, $label] = match ($period) {
+            'today' => [now()->startOfDay(), 'Hoje'],
+            'week' => [now()->subDays(6)->startOfDay(), 'Últimos 7 dias'],
+            'month' => [now()->startOfMonth(), 'Mês atual'],
+        };
+        $end = now()->endOfDay();
+        $orders = Order::whereBetween('created_at', [$start, $end]);
+        $paidOrders = Order::whereBetween('created_at', [$start, $end])
+            ->where(fn ($query) => $query->where('payment_status', 'paid')->orWhere('status', 'paid'));
+        $analyticsReady = Schema::hasTable('site_analytics_events');
+
+        $report = [
+            'period' => $label,
+            'start' => $start,
+            'end' => $end,
+            'orders' => (clone $orders)->count(),
+            'paid_orders' => (clone $paidOrders)->count(),
+            'sales_total' => (float) (clone $paidOrders)->sum('total'),
+            'new_customers' => User::where('user_type', '<>', 1)->whereBetween('created_at', [$start, $end])->count(),
+            'abandoned_carts' => AbandonedCart::whereBetween('abandoned_at', [$start, $end])->count(),
+            'views' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->count() : 0,
+            'visitors' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->distinct('visitor_hash')->count('visitor_hash') : 0,
+            'clicks' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'click')->whereBetween('created_at', [$start, $end])->count() : 0,
+            'payment_methods' => (clone $orders)->select('payment_method', DB::raw('COUNT(*) total'))->groupBy('payment_method')->pluck('total', 'payment_method'),
+        ];
+
+        return Pdf::loadView('admin.dashboard.report', compact('report'))
+            ->setPaper('a4')
+            ->download('relatorio-sax-' . $period . '-' . now()->format('Y-m-d') . '.pdf');
     }
 }

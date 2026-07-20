@@ -16,10 +16,11 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderStatusMail;
 use App\Models\Policy;
 use App\Models\Product;
+use App\Services\BusinessEventService;
 
 class CheckoutController extends Controller
 {
-    public function __construct(private CuponService $cupons)
+    public function __construct(private CuponService $cupons, private BusinessEventService $events)
     {
     }
 
@@ -250,6 +251,7 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro crítico no checkout: ' . $e->getMessage());
+            $this->events->record('checkout', 'Cliente não conseguiu concluir o pedido', 'O checkout encontrou um erro antes de criar o pedido. A equipe pode oferecer ajuda.', 'error', $user?->id);
             return back()->with('error', 'Erro ao processar pedido.')->withInput();
         }
     }

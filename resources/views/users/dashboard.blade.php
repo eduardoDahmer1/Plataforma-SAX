@@ -31,7 +31,7 @@
         </div>
         <div class="col-12 col-md-4">
             <div class="border rounded-3 p-3 h-100 bg-white">
-                <div class="small text-muted text-uppercase fw-semibold">Vistos recentemente</div>
+                <div class="small text-muted text-uppercase fw-semibold">{{ __('messages.user_recently_viewed') }}</div>
                 <div class="fs-4 fw-bold mt-1">{{ isset($userHistory) ? $userHistory->count() : 0 }}</div>
             </div>
         </div>
@@ -133,7 +133,7 @@
     @endif
 
     <div class="section-label mb-3 mt-5">
-        <h6 class="sax-section-title mb-0">Vistos recentemente</h6>
+        <h6 class="sax-section-title mb-0">{{ __('messages.user_recently_viewed') }}</h6>
     </div>
 
     @if(isset($userHistory) && $userHistory->count() > 0)
@@ -141,9 +141,7 @@
             <div class="swiper historySwiper">
                 <div class="swiper-wrapper">
                     @foreach($userHistory as $item)
-                        <div class="swiper-slide" style="width: 200px;">
-                            @include('home-components.product-card', ['item' => $item])
-                        </div>
+                        @include('home-components.product-card', ['item' => $item])
                     @endforeach
                 </div>
             </div>
@@ -169,7 +167,7 @@
     @else
         <div class="empty-state mb-2">
             <i class="fas fa-eye fa-2x mb-3 opacity-50"></i>
-            <p class="mb-0">Nenhum produto visualizado recentemente.</p>
+            <p class="mb-0">{{ __('messages.user_no_recently_viewed') }}</p>
         </div>
     @endif
 

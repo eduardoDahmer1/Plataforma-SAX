@@ -44,15 +44,15 @@ class UserPreferenceController extends Controller
         $productId = $request->input('product_id');
 
         if (!Product::sellable()->find($productId)) {
-            return back()->with('error', 'Produto indisponível.');
+            return back()->with('error', __('messages.favorite_product_unavailable'));
         }
 
         if ($user->favoriteProducts()->where('product_id', $productId)->exists()) {
             $user->favoriteProducts()->detach($productId); // remove
-            $message = 'Produto removido dos favoritos';
+            $message = __('messages.favorite_removed_success');
         } else {
             $user->favoriteProducts()->attach($productId); // adiciona
-            $message = 'Produto adicionado aos favoritos';
+            $message = __('messages.favorite_added_success');
         }
 
         return back()->with('success', $message);

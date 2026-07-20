@@ -54,7 +54,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Sticky Header (Desktop + Mobile)
     const siteHeader = document.querySelector('.sax-header');
-    if (siteHeader) {
+    const isAdminLayout = document.body.classList.contains('sax-admin-body');
+
+    if (siteHeader && !isAdminLayout) {
         const stickyThreshold = 80;
 
         const applyStickyState = () => {
@@ -70,6 +72,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.body.style.paddingTop = `${siteHeader.offsetHeight}px`;
             }
         });
+    } else if (siteHeader) {
+        // No painel, o header permanece no fluxo normal. Alterar sua altura durante
+        // o scroll provocava realimentação entre scrollY e padding-top do body.
+        siteHeader.classList.remove('is-sticky');
+        document.body.style.removeProperty('padding-top');
     }
 
     // Back to Top
@@ -589,4 +596,56 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+});
+// Confirmação global de favoritos: atende cards, vitrines e página do produto.
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('favoriteConfirmationModal');
+    const confirmation = window.saxFavoriteConfirmation;
+
+    if (!modalElement || !confirmation || typeof bootstrap === 'undefined') {
+        return;
+    }
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const title = document.getElementById('favoriteConfirmationTitle');
+    const message = document.getElementById('favoriteConfirmationMessage');
+    const confirmButton = document.getElementById('favoriteConfirmationSubmit');
+    let pendingForm = null;
+
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('.js-favorite-confirm-form')) {
+            event.stopPropagation();
+        }
+    });
+
+    document.addEventListener('submit', function (event) {
+        const form = event.target.closest('.js-favorite-confirm-form');
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        pendingForm = form;
+
+        const isFavorited = form.dataset.isFavorited === '1';
+        title.textContent = isFavorited ? confirmation.removeTitle : confirmation.addTitle;
+        message.textContent = isFavorited ? confirmation.removeMessage : confirmation.addMessage;
+        confirmButton.textContent = isFavorited ? confirmation.removeButton : confirmation.addButton;
+        modal.show();
+    });
+
+    confirmButton.addEventListener('click', function () {
+        if (!pendingForm) {
+            return;
+        }
+
+        confirmButton.disabled = true;
+        pendingForm.submit();
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        pendingForm = null;
+        confirmButton.disabled = false;
+    });
 });

@@ -144,6 +144,8 @@
                 </aside>
 
                 <div class="col-12 col-lg-9">
+                    <x-catalog-sort-toolbar />
+
                     <div class="catalog-result-summary catalog-result-summary-desktop d-none d-lg-flex">
                         <strong>{{ number_format($products->total(), 0, ',', '.') }}</strong>
                         <span>produtos encontrados</span>
@@ -293,6 +295,50 @@
             border-bottom: 0;
         }
 
+        .catalog-sort-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border: 1px solid #e0e5ec;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 7px 22px rgba(16, 24, 40, 0.045);
+        }
+
+        .catalog-sort-toolbar .toolbar-control {
+            padding: 6px 9px 6px 12px;
+            border: 1px solid #e0e5ec;
+            border-radius: 11px;
+            background: #f9fafb;
+        }
+
+        .catalog-sort-toolbar .toolbar-label {
+            color: #667085;
+            font-size: .67rem;
+            font-weight: 800;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .catalog-sort-toolbar .toolbar-select {
+            min-width: 145px;
+            border: 0;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            background-color: transparent;
+            box-shadow: none;
+            color: #101828;
+            font-size: .74rem;
+            font-weight: 700;
+        }
+
+        .catalog-sort-toolbar .catalog-per-page-select {
+            min-width: 68px;
+        }
+
         .catalog-result-summary {
             display: flex;
             align-items: baseline;
@@ -426,6 +472,25 @@
 
             .catalog-result-summary span {
                 display: inline;
+            }
+
+            .catalog-sort-toolbar {
+                justify-content: stretch;
+                padding: 9px;
+            }
+
+            .catalog-sort-toolbar .toolbar-control:first-of-type {
+                flex: 1 1 auto;
+            }
+
+            .catalog-sort-toolbar .toolbar-select {
+                width: 100%;
+                min-width: 0;
+                font-size: .7rem;
+            }
+
+            .catalog-sort-toolbar .toolbar-control:last-of-type {
+                flex: 0 0 78px;
             }
         }
 

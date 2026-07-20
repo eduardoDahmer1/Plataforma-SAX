@@ -38,7 +38,7 @@ class CategoryController extends Controller
         return view('categories.index', compact('categories', 'attribute'));
     }
 
-    public function show($slug)
+    public function show(Request $request, $slug)
     {
         try {
             $category = Category::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
@@ -53,8 +53,10 @@ class CategoryController extends Controller
             abort(404);
         }
 
-        $page = request()->get('page', 1);
-        $cacheKey = "category_show_{$category->id}_{$page}";
+        $page = $request->get('page', 1);
+        $sortBy = $this->catalogSortBy($request);
+        $perPage = $this->catalogPerPage($request);
+        $cacheKey = "category_show_{$category->id}_{$page}_{$sortBy}_{$perPage}";
 
         // 1. Buscamos o atributo global para os banners de fallback
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
@@ -62,9 +64,9 @@ class CategoryController extends Controller
         });
 
         // 2. Busca Categoria e Produtos (Cacheado)
-        [$category, $products] = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($category) {
+        [$category, $products] = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($category, $sortBy, $perPage) {
             $category = $category->load(['subcategories.categoriasfilhas']);
-            $products = $category
+            $productsQuery = $category
                 ->products()
                 ->with(['brand', 'category']) // Eager loading para evitar N+1 no card
                 ->where('status', 1)
@@ -72,8 +74,10 @@ class CategoryController extends Controller
                 ->where('product_role', 'P')
                 ->where('stock', '>', 0)
                 ->whereNotNull('photo')
-                ->where('photo', '!=', '')
-                ->paginate(12)
+                ->where('photo', '!=', '');
+            $this->applyCatalogSorting($productsQuery, $sortBy);
+            $products = $productsQuery
+                ->paginate($perPage)
                 ->withQueryString();
 
             return [$category, $products];

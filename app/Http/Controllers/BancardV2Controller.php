@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Services\BancardV2Service;
 use App\Services\ReceiptService;
+use App\Services\BusinessEventService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,8 +23,9 @@ class BancardV2Controller extends Controller
     private const CURRENCY = 'PYG';
     private BancardV2Service $bancard;
     private ReceiptService $receiptService;
+    private BusinessEventService $events;
 
-    public function __construct(ReceiptService $receiptService)
+    public function __construct(ReceiptService $receiptService, BusinessEventService $events)
     {
         $gateway = PaymentMethod::query()
             ->where('type', 'gateway')
@@ -31,6 +33,7 @@ class BancardV2Controller extends Controller
             ->first();
         $this->bancard = BancardV2Service::fromPaymentMethod($gateway);
         $this->receiptService = $receiptService;
+        $this->events = $events;
     }
 
     public function checkoutPage(Order $order): View|RedirectResponse
@@ -91,6 +94,7 @@ class BancardV2Controller extends Controller
                 'status' => $singleBuy['status'],
                 'response' => $data,
             ]);
+            $this->events->record('payment', 'Falha ao abrir pagamento Bancard', $this->bancard->extractApiErrorMessage($data), 'error', $order->user_id, $order->id, $shopProcessId);
 
             return redirect()->route('checkout.index')->with('error', $this->bancard->extractApiErrorMessage($data));
         } catch (\Throwable $e) {
@@ -98,6 +102,7 @@ class BancardV2Controller extends Controller
                 'order_id' => $order->id,
                 'message' => $e->getMessage(),
             ]);
+            $this->events->record('payment', 'Erro ao iniciar pagamento Bancard', 'O gateway não pôde ser iniciado. Tente novamente ou ofereça outro meio de pagamento.', 'error', $order->user_id, $order->id, $order->shop_process_id);
 
             return redirect()->route('checkout.index')->with('error', 'Erro ao iniciar pagamento Bancard V2.');
         }
@@ -127,6 +132,13 @@ class BancardV2Controller extends Controller
             abort(403, 'Acesso negado ao pedido.');
         }
 
+        if (!$order->isPaid()) {
+            $this->markOrderAsFailed($order, [
+                'response_code' => '17',
+                'response_description' => 'Pagamento cancelado pelo cliente antes da confirmação.',
+            ], 'cancelled');
+        }
+
         return redirect()->route('user.orders.show', $order->id)
             ->with('warning', 'Pagamento não efetuado.');
     }
@@ -144,6 +156,7 @@ class BancardV2Controller extends Controller
 
         if (!$shopProcessId) {
             Log::warning('Bancard V2 callback sem shop_process_id', $payload);
+            $this->events->record('payment', 'Retorno Bancard incompleto', 'O gateway respondeu sem identificar o pedido.', 'error');
             return response()->json([
                 'status' => 'error',
                 'description' => 'shop_process_id ausente',
@@ -155,6 +168,7 @@ class BancardV2Controller extends Controller
                 'shop_process_id' => $shopProcessId,
                 'received_token' => data_get($payload, 'operation.token'),
             ]);
+            $this->events->record('payment', 'Retorno Bancard não validado', 'A confirmação recebida não passou pela validação de segurança.', 'error', null, null, $shopProcessId);
 
             return response()->json([
                 'status' => 'error',
@@ -167,6 +181,7 @@ class BancardV2Controller extends Controller
             Log::warning('Bancard V2 callback com pedido não encontrado', [
                 'shop_process_id' => $shopProcessId,
             ]);
+            $this->events->record('payment', 'Pedido do Bancard não encontrado', 'Chegou uma confirmação para uma referência que não existe nos pedidos.', 'error', null, null, $shopProcessId);
 
             return response()->json([
                 'status' => 'error',
@@ -223,8 +238,7 @@ class BancardV2Controller extends Controller
 
         if (in_array($status, self::FAILURE_STATUSES, true)) {
             if ($order->status !== 'paid') {
-                $order->status = 'failed';
-                $order->save();
+                $this->markOrderAsFailed($order, $confirmation, $status);
             }
 
             $this->storeErrorDisplayPayload((string) $order->shop_process_id, $confirmation, $order, $status);
@@ -335,10 +349,10 @@ class BancardV2Controller extends Controller
                 return;
             }
 
-            if ($order->status !== 'paid') {
-                $order->status = 'failed';
-                $order->save();
-            }
+            if ($order->status !== 'paid') $this->markOrderAsFailed($order, [
+                'response_code' => $responseCode,
+                'response_description' => data_get($payload, 'operation.response_description') ?? data_get($payload, 'response_description'),
+            ], $status);
 
             return;
         }
@@ -349,17 +363,21 @@ class BancardV2Controller extends Controller
         }
 
         if (in_array($status, self::FAILURE_STATUSES, true)) {
-            $order->status = 'failed';
-            $order->save();
+            $this->markOrderAsFailed($order, null, $status);
         }
     }
 
     private function markOrderAsPaid(Order $order): void
     {
-        if ($order->status !== 'paid') {
-            $order->status = 'paid';
-            $order->save();
+        $wasPaid = $order->isPaid();
+        $order->status = 'paid';
+        $order->payment_status = 'paid';
+        $order->payment_response_code = '00';
+        $order->payment_response_message = 'Pagamento aprovado pelo Bancard.';
+        $order->payment_failed_at = null;
+        $order->save();
 
+        if (!$wasPaid) {
             $this->reduceOrderStock($order);
 
             try {
@@ -383,6 +401,33 @@ class BancardV2Controller extends Controller
         }
 
         Cart::where('user_id', $order->user_id)->delete();
+    }
+
+    private function markOrderAsFailed(Order $order, ?array $confirmation, string $status = ''): void
+    {
+        $code = trim((string) data_get($confirmation, 'response_code', '')) ?: null;
+        $message = $this->bancard->describeFailure($confirmation, $status);
+        $alreadyRecorded = $order->payment_status === 'failed'
+            && (string) $order->payment_response_code === (string) $code
+            && (string) $order->payment_response_message === $message;
+
+        $order->update([
+            'status' => 'failed',
+            'payment_status' => 'failed',
+            'payment_response_code' => $code,
+            'payment_response_message' => $message,
+            'payment_failed_at' => now(),
+        ]);
+
+        if (!$alreadyRecorded) $this->events->record(
+            'payment',
+            'Pagamento Bancard não aprovado',
+            $message,
+            'warning',
+            $order->user_id,
+            $order->id,
+            $code ? 'Bancard ' . $code : (string) $order->shop_process_id,
+        );
     }
 
     private function reduceOrderStock(Order $order): void

@@ -48,7 +48,7 @@
             <select name="per_page" data-filter class="form-select toolbar-select" style="width: 68px;">
                 <option value="36"  @selected($request->per_page == 36)>36</option>
                 <option value="72"  @selected($request->per_page == 72)>72</option>
-                <option value="102" @selected($request->per_page == 102)>100</option>
+                <option value="100" @selected($request->per_page == 100)>100</option>
             </select>
         </div>
     </div>

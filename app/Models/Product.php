@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -120,6 +121,7 @@ class Product extends Model
     protected static ?bool $hasColorParentColumn = null;
     protected static ?bool $hasColorColumn = null;
     protected static array $familyColorCache = [];
+    protected static ?array $cardColorVariantMap = null;
 
     protected static function booted(): void
     {
@@ -130,6 +132,16 @@ class Product extends Model
                 self::MINIMUM_VISIBLE_PRICE
             );
         });
+
+        static::saved(function () {
+            Cache::forget('storefront_product_card_color_variants_v1');
+            self::$cardColorVariantMap = null;
+        });
+
+        static::deleted(function () {
+            Cache::forget('storefront_product_card_color_variants_v1');
+            self::$cardColorVariantMap = null;
+        });
     }
 
     // URL da foto do produto
@@ -139,6 +151,32 @@ class Product extends Model
             return Storage::url($this->photo);
         }
         return asset('storage/uploads/noimage.webp');
+    }
+
+    public function getCardHoverPhotoUrlAttribute(): ?string
+    {
+        $gallery = is_array($this->gallery) ? $this->gallery : json_decode((string) $this->gallery, true);
+
+        if (!is_array($gallery)) {
+            return null;
+        }
+
+        foreach ($gallery as $image) {
+            $image = trim((string) $image);
+            if ($image === '' || $image === trim((string) $this->photo)) {
+                continue;
+            }
+
+            if (filter_var($image, FILTER_VALIDATE_URL)) {
+                return $image;
+            }
+
+            if (Storage::disk('public')->exists($image)) {
+                return Storage::url($image);
+            }
+        }
+
+        return null;
     }
 
     // Produto tem ao menos uma imagem válida (foto principal ou galeria) já existente no disco
@@ -469,6 +507,71 @@ class Product extends Model
         }
 
         return array_values($colors);
+    }
+
+    public function getResolvedCardColorVariantsAttribute(): array
+    {
+        if (self::$hasColorParentColumn === null) {
+            $table = $this->getTable();
+            self::$hasColorParentColumn = Schema::hasColumn($table, 'color_parent_id');
+            self::$hasColorColumn = Schema::hasColumn($table, 'color');
+        }
+
+        $ownColor = strtoupper(trim((string) $this->color));
+        if ($ownColor !== '' && !str_starts_with($ownColor, '#')) {
+            $ownColor = '#' . $ownColor;
+        }
+
+        if (!self::$hasColorParentColumn || !self::$hasColorColumn) {
+            return preg_match('/^#[0-9A-F]{6}$/', $ownColor)
+                ? [['id' => (int) $this->id, 'slug' => $this->slug, 'color' => $ownColor]]
+                : [];
+        }
+
+        $familyId = (int) ($this->color_parent_id ?: $this->id);
+        if ($familyId <= 0) {
+            return [];
+        }
+
+        if (self::$cardColorVariantMap === null) {
+            self::$cardColorVariantMap = Cache::remember(
+                'storefront_product_card_color_variants_v1',
+                now()->addMinutes(10),
+                function () {
+                    $map = [];
+                    $variants = self::query()
+                        ->select(['id', 'slug', 'color', 'color_parent_id'])
+                        ->where('is_outlet', false)
+                        ->where('status', 1)
+                        ->where('stock', '>', 0)
+                        ->where('product_role', 'P')
+                        ->orderBy('id')
+                        ->get();
+
+                    foreach ($variants as $variant) {
+                        $color = strtoupper(trim((string) $variant->color));
+                        if ($color !== '' && !str_starts_with($color, '#')) {
+                            $color = '#' . $color;
+                        }
+
+                        if (!preg_match('/^#[0-9A-F]{6}$/', $color)) {
+                            continue;
+                        }
+
+                        $variantFamilyId = (int) ($variant->color_parent_id ?: $variant->id);
+                        $map[$variantFamilyId][$color] ??= [
+                            'id' => (int) $variant->id,
+                            'slug' => $variant->slug,
+                            'color' => $color,
+                        ];
+                    }
+
+                    return array_map('array_values', $map);
+                }
+            );
+        }
+
+        return self::$cardColorVariantMap[$familyId] ?? [];
     }
 
     public $timestamps = true;

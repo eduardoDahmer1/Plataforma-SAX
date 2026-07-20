@@ -38,7 +38,9 @@ class BrandController extends Controller
     public function publicShow($slug, Request $request)
     {
         $page = $request->get('page', 1);
-        $cacheKey = "brand_show_{$slug}_page_{$page}";
+        $sortBy = $this->catalogSortBy($request);
+        $perPage = $this->catalogPerPage($request);
+        $cacheKey = "brand_show_{$slug}_page_{$page}_{$sortBy}_{$perPage}";
 
         try {
             $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
@@ -54,8 +56,8 @@ class BrandController extends Controller
             throw $e;
         }
 
-        $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand) {
-            return $brand
+        $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand, $sortBy, $perPage) {
+            $productsQuery = $brand
                 ->products()
                 ->where('status', 1)
                 ->where('is_outlet', false)
@@ -63,9 +65,11 @@ class BrandController extends Controller
                 ->where('stock', '>', 0)
                 ->whereNotNull('photo')
                 ->where('photo', '!=', '')
-                ->with(['brand', 'category'])
-                ->latest()
-                ->paginate(12)
+                ->with(['brand', 'category']);
+            $this->applyCatalogSorting($productsQuery, $sortBy);
+
+            return $productsQuery
+                ->paginate($perPage)
                 ->withQueryString();
         });
 

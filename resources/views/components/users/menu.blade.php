@@ -27,14 +27,14 @@
                 <i class="fa fa-ticket-alt"></i> {{ __('messages.cupon_meus_cupons_titulo') }}
             </a>
             <a href="{{ route('user.abandoned-carts.index') }}" class="sax-menu-link">
-                <i class="fa fa-cart-arrow-down"></i> Carrinhos abandonados
+                <i class="fa fa-cart-arrow-down"></i> {{ __('messages.user_abandoned_carts') }}
             </a>
 
             @php($recentAbandonedCarts = auth()->user()->abandonedCarts()->latest('abandoned_at')->limit(3)->get())
             @foreach($recentAbandonedCarts as $recentCart)
                 <a href="{{ route('user.abandoned-carts.show', $recentCart) }}" class="sax-menu-link ps-4 small text-muted">
                     <i class="fa fa-history"></i>
-                    {{ $recentCart->abandoned_at->format('d/m/Y') }} · {{ $recentCart->items_count }} {{ $recentCart->items_count === 1 ? 'item' : 'itens' }}
+                    {{ $recentCart->abandoned_at->format('d/m/Y') }} · {{ trans_choice('messages.user_item_count', $recentCart->items_count, ['count' => $recentCart->items_count]) }}
                 </a>
             @endforeach
         </div>

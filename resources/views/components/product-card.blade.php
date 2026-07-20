@@ -7,7 +7,7 @@
 
 @php
     $isOutOfStock = ($item->stock ?? 0) <= 0;
-    $displayName = filled($displayName) ? $displayName : ($item->name ?? '');
+    $displayName = filled($displayName) ? $displayName : ($item->name ?? $item->external_name ?? '');
 
     $fotoExibir = 'https://placehold.co/400x533/f5f5f5/999?text=No+Image';
     if (!empty($item->photo_url)) {
@@ -16,60 +16,46 @@
         $fotoExibir = asset('storage/uploads/products/' . $item->photo);
     }
 
-    $rawColors = $item->card_colors ?? ($item->resolved_card_colors ?? ($item->colors ?? null));
-    if (is_string($rawColors)) {
-        $decoded = json_decode($rawColors, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $rawColors = $decoded;
-        } else {
-            $rawColors = array_filter(array_map('trim', explode(',', $rawColors)));
-        }
-    }
-    if (!is_array($rawColors)) {
-        $rawColors = [];
-    }
-
-    if (!empty($item->color)) {
-        $rawColors[] = $item->color;
-    }
-
-    $colorDots = collect($rawColors)
-        ->map(function ($color) {
-            $c = strtoupper(trim((string) $color));
-            if ($c === '') {
-                return null;
-            }
-            if (!str_starts_with($c, '#')) {
-                $c = '#' . $c;
-            }
-            return preg_match('/^#[0-9A-F]{6}$/', $c) ? $c : null;
-        })
-        ->filter()
-        ->unique()
+    $colorVariants = collect($item->card_color_variants ?? $item->resolved_card_color_variants ?? [])
+        ->filter(fn ($variant) => is_array($variant) && !empty($variant['color']) && (!empty($variant['slug']) || !empty($variant['id'])))
+        ->unique('color')
         ->take(6)
         ->values();
 
     $productSize = trim((string) ($item->size ?? ''));
+    $hoverPhotoUrl = $item->card_hover_photo_url;
 @endphp
 
 <div class="{{ $gridClass }}">
-    <a href="{{ route('produto.show', $item->slug) }}" class="text-decoration-none text-dark">
-        <div class="card h-100 border-0 rounded-0 product-card-standard {{ $isOutOfStock ? 'sax-out-of-stock' : '' }}">
+    <div class="card h-100 border-0 rounded-0 product-card-standard {{ $hoverPhotoUrl ? 'has-hover-image' : '' }} {{ $isOutOfStock ? 'sax-out-of-stock' : '' }}">
 
-            <div class="product-card-standard__media jw-img-container position-relative">
-                <img src="{{ $fotoExibir }}" class="card-img-top img-fluid rounded-0"
-                    alt="{{ $displayName }}">
+        <div class="product-card-standard__media jw-img-container position-relative">
+            <a href="{{ route('produto.show', $item->slug ?? $item->id) }}"
+               class="product-card-standard__media-link"
+               aria-label="{{ $displayName }}">
+                <img src="{{ $fotoExibir }}"
+                     class="card-img-top img-fluid rounded-0 product-card-standard__image product-card-standard__image--primary"
+                     alt="{{ $displayName }}">
+                @if($hoverPhotoUrl)
+                    <img src="{{ $hoverPhotoUrl }}"
+                         class="card-img-top img-fluid rounded-0 product-card-standard__image product-card-standard__image--secondary"
+                         alt=""
+                         loading="lazy"
+                         aria-hidden="true">
+                @endif
+            </a>
 
-                <x-cupon-selo :product="$item" variante="card" />
+            <x-cupon-selo :product="$item" variante="card" />
 
-                <div class="position-absolute top-0 end-0 p-3">
-                    @if (Auth::check() && Auth::user()->user_type != 1)
-                        <x-product-favorite-button :item="$item" />
-                    @endif
-                </div>
+            <div class="position-absolute top-0 end-0 p-3">
+                @if (Auth::check() && Auth::user()->user_type != 1)
+                    <x-product-favorite-button :item="$item" />
+                @endif
             </div>
+        </div>
 
-            <div class="card-body product-card-standard__body d-flex flex-column">
+        <div class="card-body product-card-standard__body d-flex flex-column">
+            <a href="{{ route('produto.show', $item->slug ?? $item->id) }}" class="text-decoration-none text-dark">
                 <div class="product-card-standard__brand">
                     {{ $item->brand->name ?? __('messages.brand_name') }}
                 </div>
@@ -86,21 +72,32 @@
                         {{ __('messages.sku_prefix') }} {{ $item->sku ?? __('messages.not_available_short') }}
                     </div>
                 </div>
+            </a>
 
-                <div class="product-card-standard__variants">
-                    @if ($colorDots->isNotEmpty())
-                        <div class="product-card-standard__colors" aria-label="{{ __('messages.cores_disponiveis') }}">
-                            @foreach ($colorDots as $hex)
-                                <span class="product-card-standard__color-dot" style="background-color: {{ $hex }};" title="{{ $hex }}"></span>
-                            @endforeach
-                        </div>
-                    @endif
+            <div class="product-card-standard__variants">
+                @if ($colorVariants->isNotEmpty())
+                    <div class="product-card-standard__colors" aria-label="{{ __('messages.cores_disponiveis') }}">
+                        @foreach ($colorVariants as $variant)
+                            @php
+                                $hex = $variant['color'];
+                                $itemColor = strtoupper(trim((string) ($item->color ?? '')));
+                                $itemColor = $itemColor !== '' && !str_starts_with($itemColor, '#') ? '#' . $itemColor : $itemColor;
+                                $isCurrentColor = (int) ($variant['id'] ?? 0) === (int) $item->id || $itemColor === $hex;
+                            @endphp
+                            <a href="{{ route('produto.show', $variant['slug'] ?? $variant['id']) }}"
+                               class="product-card-standard__color-link {{ $isCurrentColor ? 'is-current' : '' }}"
+                               aria-label="{{ __('messages.view_product_color', ['color' => $hex]) }}"
+                               title="{{ __('messages.view_product_color', ['color' => $hex]) }}">
+                                <span class="product-card-standard__color-dot" style="background-color: {{ $hex }};"></span>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
 
-                    @if ($productSize !== '')
-                        <span class="product-card-standard__size">{{ __('messages.tam_prefix') }} {{ $productSize }}</span>
-                    @endif
-                </div>
+                @if ($productSize !== '')
+                    <span class="product-card-standard__size">{{ __('messages.tam_prefix') }} {{ $productSize }}</span>
+                @endif
             </div>
         </div>
-    </a>
+    </div>
 </div>

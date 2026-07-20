@@ -119,10 +119,21 @@
                                                 @if ($item->quantity >= ($item->product->stock ?? 1)) disabled @endif>+</button>
                                         </form>
                                     </div>
-                                    <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="ms-auto">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="remove-item-btn"><i class="fa fa-trash-o"></i></button>
-                                    </form>
+                                    @if($cart->count() === 1)
+                                        <button type="button"
+                                                class="remove-item-btn ms-auto"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#abandonCartFeedbackModal"
+                                                aria-label="{{ __('messages.cart_last_item_requires_abandon') }}"
+                                                title="{{ __('messages.cart_last_item_requires_abandon') }}">
+                                            <i class="fa fa-trash-o"></i>
+                                        </button>
+                                    @else
+                                        <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="ms-auto">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="remove-item-btn"><i class="fa fa-trash-o"></i></button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -146,14 +157,14 @@
                 <a href="{{ route('cart.view') }}" class="btn-go-to-cart w-100 py-3 text-uppercase">
                     {{ __('messages.ir_para_carrinho') }}
                 </a>
-                <form action="{{ route('cart.abandon') }}" method="POST" class="mt-2"
-                      onsubmit="return confirm('Tem certeza de que deseja abandonar este carrinho? Os itens serão removidos da sua sacola, mas ficarão salvos no seu histórico para consultar ou restaurar depois.');">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-link text-danger text-decoration-none w-100 py-2 small fw-bold">
-                        <i class="fa fa-trash-alt me-1"></i> Abandonar carrinho
+                <div class="mt-2">
+                    <button type="button" class="btn btn-link text-danger text-decoration-none w-100 py-2 small fw-bold" data-bs-toggle="modal" data-bs-target="#abandonCartFeedbackModal">
+                        <i class="fa fa-trash-alt me-1"></i> {{ __('messages.cart_abandon_button') }}
                     </button>
-                </form>
+                </div>
             </div>
         @endif
     </div>
 </div>
+
+@include('components.abandon-cart-modal')

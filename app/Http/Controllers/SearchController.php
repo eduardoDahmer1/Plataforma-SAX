@@ -14,7 +14,7 @@ class SearchController extends Controller
 {
     private const BASE_PRODUCT_COLS = [
         'id', 'name', 'external_name', 'sku', 'price', 'stock',
-        'photo', 'brand_id', 'category_id', 'subcategory_id',
+        'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id',
         'childcategory_id', 'slug', 'status',
     ];
 
@@ -85,9 +85,10 @@ class SearchController extends Controller
         }
 
         $variants = Product::query()
-            ->select(['id', 'color', 'color_parent_id'])
+            ->select(['id', 'slug', 'color', 'color_parent_id'])
             ->where('is_outlet', false)
             ->where('status', 1)
+            ->where('stock', '>', 0)
             ->where('product_role', 'P')
             ->where(function ($q) use ($familyIds) {
                 $q->whereIn('id', $familyIds)
@@ -107,12 +108,21 @@ class SearchController extends Controller
                 $familyColors[$familyId] = [];
             }
 
-            $familyColors[$familyId][$color] = $color;
+            $normalizedColor = str_starts_with($color, '#') ? $color : '#' . $color;
+            if (!preg_match('/^#[0-9A-F]{6}$/', $normalizedColor)) {
+                continue;
+            }
+
+            $familyColors[$familyId][$normalizedColor] ??= [
+                'id' => (int) $variant->id,
+                'slug' => $variant->slug,
+                'color' => $normalizedColor,
+            ];
         }
 
         $items->transform(function ($item) use ($familyColors) {
             $familyId = (int) ($item->color_parent_id ?: $item->id);
-            $item->card_colors = array_values($familyColors[$familyId] ?? []);
+            $item->card_color_variants = array_values($familyColors[$familyId] ?? []);
             return $item;
         });
 

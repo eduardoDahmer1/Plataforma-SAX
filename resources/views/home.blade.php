@@ -31,6 +31,8 @@
 
         <x-alert type="success" :message="session('success')" />
 
+        @include('components.cart-feedback-access-modal')
+
         @if (isset($categories) && $categories->count() > 0)
             @include('home-components.category-strip')
         @endif
@@ -107,9 +109,7 @@
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsEditados as $item)
-                                <div class="swiper-slide">
-                                    @include('home-components.product-card', ['item' => $item])
-                                </div>
+                                @include('home-components.product-card', ['item' => $item])
                             @endforeach
                         </div>
                     </div>
@@ -159,9 +159,7 @@
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsMaisVistos as $item)
-                                <div class="swiper-slide">
-                                    @include('home-components.product-card', ['item' => $item])
-                                </div>
+                                @include('home-components.product-card', ['item' => $item])
                             @endforeach
                         </div>
                     </div>
@@ -176,9 +174,7 @@
                     <div class="swiper mySwiper">
                         <div class="swiper-wrapper">
                             @foreach ($productsDest as $item)
-                                <div class="swiper-slide">
-                                    @include('home-components.product-card', ['item' => $item])
-                                </div>
+                                @include('home-components.product-card', ['item' => $item])
                             @endforeach
                         </div>
                     </div>

@@ -35,20 +35,22 @@ class CategoriasFilhasController extends Controller
     public function show(Request $request, $idOrSlug)
     {
         $page = $request->get('page', 1);
-        $cacheKey = "cat_filha_show_{$idOrSlug}_p{$page}";
+        $sortBy = $this->catalogSortBy($request);
+        $perPage = $this->catalogPerPage($request);
+        $cacheKey = "cat_filha_show_{$idOrSlug}_p{$page}_{$sortBy}_{$perPage}";
 
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
         });
 
         try {
-            $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug) {
+            $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug, $sortBy, $perPage) {
                 $categoriasfilhas = CategoriasFilhas::with(['subcategory.category'])
                     ->where('slug', $idOrSlug)
                     ->orWhere('id', $idOrSlug)
                     ->firstOrFail();
 
-                $products = $categoriasfilhas
+                $productsQuery = $categoriasfilhas
                     ->products()
                     ->where('status', 1)
                     ->where('is_outlet', false)
@@ -56,8 +58,10 @@ class CategoriasFilhasController extends Controller
                     ->where('stock', '>', 0)
                     ->whereNotNull('photo')
                     ->where('photo', '!=', '')
-                    ->with(['brand', 'category'])
-                    ->paginate(24)
+                    ->with(['brand', 'category']);
+                $this->applyCatalogSorting($productsQuery, $sortBy);
+                $products = $productsQuery
+                    ->paginate($perPage)
                     ->withQueryString();
 
                 return [

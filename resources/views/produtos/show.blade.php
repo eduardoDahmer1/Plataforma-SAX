@@ -90,6 +90,49 @@
     $visibleSizeOptions = $sizeOptions->take(4);
     $hasHiddenSizes = $sizeOptions->count() > 4;
 
+    $taxonomy = collect([
+        $product->category->name ?? null,
+        $product->category->slug ?? null,
+        $product->subcategory->name ?? null,
+        $product->subcategory->slug ?? null,
+        $product->categoriasfilhas->name ?? null,
+        $product->categoriasfilhas->slug ?? null,
+    ])->filter()->map(fn ($value) => \Str::slug($value))->implode(' ');
+
+    $taxonomyContains = fn (array $terms) => collect($terms)
+        ->contains(fn ($term) => str_contains($taxonomy, $term));
+
+    $isBeverage = $taxonomyContains(['bebida', 'vinho', 'whisky', 'vodka', 'gin', 'licor', 'cerveja', 'champagne', 'espumante', 'cognac', 'tequila']);
+    $isFragrance = $taxonomyContains(['perfume', 'perfumaria', 'fragancia', 'cosmetico', 'beleza']);
+    $isWearable = $taxonomyContains(['feminino', 'masculino', 'infantil', 'roupa', 'vestuario', 'camisa', 'camiseta', 'blusa', 'calca', 'vestido', 'jaqueta', 'casaco', 'bermuda', 'short', 'calcado', 'sapato', 'tenis', 'sandalia']);
+    $hasDefinedSize = $sizeOptions->contains(fn ($option) => filled(trim((string) $option->size)));
+
+    if (!$hasDefinedSize) {
+        $sizeOptions = collect([$product]);
+        $visibleSizeOptions = $sizeOptions;
+        $hasHiddenSizes = false;
+    }
+
+    $sizeSectionLabel = __('messages.tamanho');
+    $missingSizeLabel = __('messages.product_size_one_size');
+    $missingSizeNote = __('messages.product_size_no_variation');
+
+    if (!$hasDefinedSize && $isBeverage) {
+        $sizeSectionLabel = __('messages.product_size_presentation');
+        $missingSizeLabel = __('messages.product_size_unit');
+        $missingSizeNote = __('messages.product_size_beverage_note');
+    } elseif (!$hasDefinedSize && $isFragrance) {
+        $sizeSectionLabel = __('messages.product_size_presentation');
+        $missingSizeLabel = __('messages.product_size_bottle');
+        $missingSizeNote = __('messages.product_size_fragrance_note');
+    } elseif (!$hasDefinedSize && !$isWearable) {
+        $sizeSectionLabel = __('messages.product_size_option');
+        $missingSizeLabel = __('messages.product_size_single_model');
+        $missingSizeNote = __('messages.product_size_no_variation');
+    }
+
+    $showSizeGuide = $isWearable && $hasDefinedSize;
+
     $sizeCatalog = json_decode(file_get_contents(public_path('data/tamanho.json')), true) ?? [];
 
     $currentLocale = app()->getLocale();
@@ -115,6 +158,7 @@
 .product-page-wrapper .size-box:hover { border-color: #000; color: #000; }
 .product-page-wrapper .size-box.active { background: #000; border-color: #000; color: #fff; }
 .product-page-wrapper .size-box.disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; pointer-events: none; }
+.product-size-context { margin-top: .55rem; color: #777; font-size: .67rem; line-height: 1.45; }
 .extra-small { font-size: .65rem; letter-spacing: .5px; }
 .cat-badge { display: inline-flex; align-items: center; line-height: 1; font-size: .7rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; color: #fff; background: #616161; padding: .35rem .65rem; border-radius: .5rem; }
 .cat-badge--infantil { background: #FB8C00; color: #212121; }
@@ -130,6 +174,9 @@
 .login-buy-btn,
 .bridal-btn { min-height: 52px; padding: 10px 14px !important; font-size: .72rem !important; letter-spacing: .8px !important; }
 .wishlist-btn { min-width: 52px !important; min-height: 52px; padding: 0 !important; display: inline-flex; align-items: center; justify-content: center; }
+.wishlist-btn { border: 1px solid #212529; }
+.wishlist-btn .card-favorite-form,
+.wishlist-btn .btn-heart-luxury { width: 100%; height: 100%; }
 @media (max-width: 991px) {
     .product-sticky-info { padding-top: 1.5rem; }
     .product-page-wrapper .size-box { height: 32px; min-width: 40px; padding: 0 10px; font-size: .68rem; }
@@ -273,18 +320,20 @@
 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <p class="extra-small fw-bold text-uppercase mb-0">{{ __('messages.tamanho') }}</p>
-                            <a href="#" class="extra-small text-muted text-decoration-underline"
-                               data-bs-toggle="modal" data-bs-target="#sizeGuideModal">
-                                {{ __('messages.guia_de_medidas') }}
-                            </a>
+                            <p class="extra-small fw-bold text-uppercase mb-0">{{ $sizeSectionLabel }}</p>
+                            @if($showSizeGuide)
+                                <a href="#" class="extra-small text-muted text-decoration-underline"
+                                   data-bs-toggle="modal" data-bs-target="#sizeGuideModal">
+                                    {{ __('messages.guia_de_medidas') }}
+                                </a>
+                            @endif
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if ($sizeOptions->isNotEmpty())
                                 @foreach ($visibleSizeOptions as $sib)
                                     @php
                                         $isCurrent = (int) $product->id === (int) $sib->id;
-                                        $sizeLabel = $sib->size ?: __('messages.sem_tamanho_definido');
+                                        $sizeLabel = $sib->size ?: $missingSizeLabel;
                                         $isOut = ($sib->stock ?? 0) <= 0;
                                     @endphp
                                     @if ($isOut)
@@ -303,9 +352,12 @@
                                     </button>
                                 @endif
                             @else
-                                <span class="extra-small text-muted">{{ __('messages.sem_tamanho_definido') }}</span>
+                                <span class="size-box active">{{ $missingSizeLabel }}</span>
                             @endif
                         </div>
+                        @if(!$hasDefinedSize)
+                            <p class="product-size-context mb-0">{{ $missingSizeNote }}</p>
+                        @endif
                     </div>
 
                     <div class="mb-5">
@@ -327,9 +379,9 @@
                                     </button>
                                 </form>
                                 @if (Auth::user()->user_type != 1)
-                                    <button class="btn btn-outline-dark rounded-0 wishlist-btn">
-                                        <i class="far fa-heart"></i>
-                                    </button>
+                                    <div class="wishlist-btn">
+                                        <x-product-favorite-button :item="$product" />
+                                    </div>
                                 @endif
                             </div>
                         @else
@@ -574,7 +626,7 @@
                         @foreach ($sizeOptions as $sib)
                             @php
                                 $isCurrent = (int) $product->id === (int) $sib->id;
-                                $sizeLabel = $sib->size ?: __('messages.sem_tamanho_definido');
+                                $sizeLabel = $sib->size ?: $missingSizeLabel;
                                 $isOut = ($sib->stock ?? 0) <= 0;
                             @endphp
                             @if ($isOut)

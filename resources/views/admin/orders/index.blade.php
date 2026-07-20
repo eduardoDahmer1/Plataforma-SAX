@@ -98,6 +98,13 @@
                                 </span>
                             </div>
 
+                            @if($order->payment_status === 'failed' && $order->payment_response_message)
+                                <div class="alert alert-danger py-2 px-2 mt-2 mb-1 small">
+                                    <strong>Motivo:</strong> {{ $order->payment_response_message }}
+                                    @if($order->payment_response_code)<span class="d-block text-muted">Código Bancard: {{ $order->payment_response_code }}</span>@endif
+                                </div>
+                            @endif
+
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">{{ __('messages.quantidade_col') }}</span>
                                 <span>{{ $totalItens }}</span>

@@ -144,6 +144,13 @@
             <div class="sticky-top" style="top: 20px;">
                 
                 {{-- Gestão de Status --}}
+                @if($order->payment_status === 'failed' && $order->payment_response_message)
+                    <div class="alert alert-danger mb-4">
+                        <strong class="d-block mb-1"><i class="fa fa-circle-exclamation me-1"></i>Por que o pagamento falhou</strong>
+                        {{ $order->payment_response_message }}
+                        @if($order->payment_response_code)<small class="d-block mt-1">Retorno Bancard: {{ $order->payment_response_code }}</small>@endif
+                    </div>
+                @endif
                 <div class="border p-4 mb-4 bg-white shadow-sm rounded">
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.gestao_pedido_card') }}</h6>
                     

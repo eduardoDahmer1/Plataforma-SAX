@@ -243,23 +243,38 @@
                         data-detect-color-from-image="{{ $allowImageColorSuggestion ? '1' : '0' }}">
                         <label class="form-label"><i class="fas fa-palette me-1"></i> Cor do Produto</label>
                         @php
-                            $effectiveColor = old('colors_values.0', $suggestedColor ?: ($item->color ?: '#000000'));
-                            $hasEffectiveColor = !empty($item->color) || !empty($suggestedColor);
+                            $savedColors = old('colors_values', $item->product_colors);
+                            if (empty($savedColors) && $suggestedColor) $savedColors = [$suggestedColor];
+                            $effectiveColor = $savedColors[0] ?? '#000000';
+                            $hasEffectiveColor = !empty($savedColors);
                         @endphp
                         
                         <div class="d-flex align-items-center gap-2 mb-2">
-                            <input type="color" id="color-input" name="colors_values[]" value="{{ $effectiveColor }}"
+                            <input type="color" id="color-input" value="{{ $effectiveColor }}"
                                 class="form-control form-control-color" oninput="document.getElementById('color-search').value = this.value">
                             
                             <input type="text" id="color-search" class="form-control" placeholder="Buscar cor ou código..." 
                                 value="{{ $effectiveColor }}" onkeyup="renderColors(this.value)">
 
+                            <button type="button" id="add-color" class="btn btn-outline-dark text-nowrap">Adicionar cor</button>
                             <div class="form-check ms-2">
                                 <input class="form-check-input" type="checkbox" name="no_color" id="no_color" {{ !$hasEffectiveColor ? 'checked' : '' }}
                                     onchange="if(this.checked) { document.getElementById('color-input').value = ''; }">
                                 <label class="form-check-label" for="no_color">Sem cor</label>
                             </div>
                         </div>
+
+                        <div id="selected-colors" class="d-flex flex-wrap gap-2 mb-2" aria-label="Cores selecionadas">
+                            @foreach ($savedColors as $savedColor)
+                                <span class="selected-color badge bg-light text-dark border d-inline-flex align-items-center gap-2 p-2" data-color="{{ strtoupper($savedColor) }}">
+                                    <i style="width:18px;height:18px;border-radius:50%;background:{{ $savedColor }};border:1px solid #bbb"></i>
+                                    {{ strtoupper($savedColor) }}
+                                    <button type="button" class="btn-close" style="font-size:8px" aria-label="Remover cor"></button>
+                                    <input type="hidden" name="colors_values[]" value="{{ strtoupper($savedColor) }}">
+                                </span>
+                            @endforeach
+                        </div>
+                        <div class="form-text mb-2">A primeira é a cor principal. Para packs, adicione até 8 cores; no site elas aparecem dentro de uma única bolinha.</div>
 
                         @if ($suggestedColor)
                             <div class="alert alert-success py-2 px-3 mb-2 small">
@@ -371,6 +386,25 @@
                         if (colorInput) colorInput.value = hex;
                         if (colorSearch) colorSearch.value = hex;
                         if (noColor) noColor.checked = false;
+                        addSelectedColor(hex);
+                    }
+
+                    function addSelectedColor(hex) {
+                        const normalized = normalizeHex(hex);
+                        const container = document.getElementById('selected-colors');
+                        if (!normalized || !container || container.querySelector(`[data-color="${normalized}"]`)) return;
+                        if (container.querySelectorAll('.selected-color').length >= 8) return;
+
+                        const chip = document.createElement('span');
+                        chip.className = 'selected-color badge bg-light text-dark border d-inline-flex align-items-center gap-2 p-2';
+                        chip.dataset.color = normalized;
+                        chip.innerHTML = `<i style="width:18px;height:18px;border-radius:50%;background:${normalized};border:1px solid #bbb"></i>${normalized}<button type="button" class="btn-close" style="font-size:8px" aria-label="Remover cor"></button><input type="hidden" name="colors_values[]" value="${normalized}">`;
+                        container.appendChild(chip);
+                    }
+
+                    function removeSelectedColor(event) {
+                        const removeButton = event.target.closest('.btn-close');
+                        if (removeButton) removeButton.closest('.selected-color')?.remove();
                     }
 
                     function detectDominantImageColor() {
@@ -513,6 +547,15 @@
 
                         const colorSearch = document.getElementById('color-search');
                         const colorInput = document.getElementById('color-input');
+                        const selectedColors = document.getElementById('selected-colors');
+                        const addColor = document.getElementById('add-color');
+                        const noColor = document.getElementById('no_color');
+
+                        selectedColors?.addEventListener('click', removeSelectedColor);
+                        addColor?.addEventListener('click', () => applyColor(colorInput?.value));
+                        noColor?.addEventListener('change', function () {
+                            if (this.checked && selectedColors) selectedColors.innerHTML = '';
+                        });
 
                         if (colorSearch) {
                             colorSearch.addEventListener('input', function() {

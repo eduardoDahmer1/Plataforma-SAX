@@ -141,57 +141,10 @@
     $displayDesc   = $translation && !empty($translation->details) ? $translation->details : $product->description;
 @endphp
 
-<style>
-.productMainSwiper { width: 100%; aspect-ratio: 3/4; background: #f7f7f7; border: 1px solid #eee; }
-.productMainSwiper .swiper-slide { display: flex; align-items: center; justify-content: center; }
-.productMainSwiper img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
-.swiper-button-next, .swiper-button-prev { color: #000 !important; }
-.swiper-button-next::after, .swiper-button-prev::after { font-size: 16px !important; }
-.thumb-item { cursor: pointer; border: 1px solid #e0e0e0; aspect-ratio: 1; overflow: hidden; transition: border-color .2s; }
-.thumb-item:hover { border-color: #000; }
-.thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.color-box-link { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ddd; padding: 2px; transition: border-color .2s; display: inline-block; }
-.color-box-link.active { border-color: #000; border-width: 2px; }
-.color-dot { width: 100%; height: 100%; border-radius: 50%; }
-.size-selector { gap: .45rem !important; }
-.product-page-wrapper .size-box { border: 1px solid #dadada; padding: 0 12px; height: 34px; min-width: 42px; text-align: center; font-size: .7rem; color: #4f4f4f; transition: all .2s; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; line-height: 1; width: auto !important; flex: 0 0 auto; border-radius: 2px; }
-.product-page-wrapper .size-box:hover { border-color: #000; color: #000; }
-.product-page-wrapper .size-box.active { background: #000; border-color: #000; color: #fff; }
-.product-page-wrapper .size-box.disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; pointer-events: none; }
-.product-size-context { margin-top: .55rem; color: #777; font-size: .67rem; line-height: 1.45; }
-.extra-small { font-size: .65rem; letter-spacing: .5px; }
-.cat-badge { display: inline-flex; align-items: center; line-height: 1; font-size: .7rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; color: #fff; background: #616161; padding: .35rem .65rem; border-radius: .5rem; }
-.cat-badge--infantil { background: #FB8C00; color: #212121; }
-.breadcrumb-item + .breadcrumb-item::before { content: "/"; font-size: 10px; color: #ccc; }
-.size-more-btn { border: 1px dashed #111; background: #fff; color: #111; height: 34px; padding: 0 12px; min-width: 88px; font-size: .66rem; text-transform: uppercase; letter-spacing: .5px; display: inline-flex; align-items: center; justify-content: center; }
-.size-more-btn:hover { background: #111; color: #fff; }
-.size-guide-table thead th { font-size: .68rem; letter-spacing: .6px; text-transform: uppercase; color: #666; border-bottom: 1px solid #e9e9e9; }
-.size-guide-table tbody td { font-size: .75rem; color: #333; vertical-align: middle; }
-.size-guide-badge { display: inline-block; font-size: .62rem; letter-spacing: .5px; text-transform: uppercase; color: #666; background: #f2f2f2; border: 1px solid #e5e5e5; padding: 4px 8px; margin: 0 6px 6px 0; }
-.size-guide-note { font-size: .72rem; color: #666; line-height: 1.7; }
-.buy-actions { gap: .5rem !important; }
-.add-to-cart-btn,
-.login-buy-btn,
-.bridal-btn { min-height: 52px; padding: 10px 14px !important; font-size: .72rem !important; letter-spacing: .8px !important; }
-.wishlist-btn { min-width: 52px !important; min-height: 52px; padding: 0 !important; display: inline-flex; align-items: center; justify-content: center; }
-.wishlist-btn { border: 1px solid #212529; }
-.wishlist-btn .card-favorite-form,
-.wishlist-btn .btn-heart-luxury { width: 100%; height: 100%; }
-@media (max-width: 991px) {
-    .product-sticky-info { padding-top: 1.5rem; }
-    .product-page-wrapper .size-box { height: 32px; min-width: 40px; padding: 0 10px; font-size: .68rem; }
-    .size-more-btn { height: 32px; min-width: 78px; padding: 0 10px; }
-    .add-to-cart-btn,
-    .login-buy-btn,
-    .bridal-btn { min-height: 46px; font-size: .68rem !important; letter-spacing: .7px !important; }
-    .wishlist-btn { min-width: 46px !important; min-height: 46px; }
-}
-</style>
-
 <div class="product-page-wrapper">
-    <div class="container-fluid px-3 px-lg-5 py-4">
+    <div class="container-fluid product-page-container px-3 px-lg-5 py-3 py-lg-4">
 
-        <nav aria-label="breadcrumb" class="mb-4">
+        <nav aria-label="breadcrumb" class="product-breadcrumb mb-3 mb-lg-4">
             <ol class="breadcrumb x-small text-uppercase mb-0">
                 <li class="breadcrumb-item">
                     <a href="/" class="text-muted text-decoration-none">{{ __('messages.home') }}</a>
@@ -210,43 +163,48 @@
             </ol>
         </nav>
 
-        <div class="row g-4 g-lg-5">
+        <div class="row g-4 g-xl-5 align-items-start product-hero">
 
-            <div class="col-lg-6">
-                <div class="swiper productMainSwiper mb-2">
+            <div class="col-lg-7 col-xl-7">
+                <div class="product-gallery-shell">
+                <div class="swiper productMainSwiper">
                     <div class="swiper-wrapper">
                         @foreach ($gallery as $img)
                             <div class="swiper-slide">
                                 <div class="swiper-zoom-container">
-                                    <img src="{{ Storage::url($img) }}" alt="{{ $displayName }}">
+                                    <img src="{{ Storage::url($img) }}" alt="{{ $displayName }}" loading="{{ $loop->first ? 'eager' : 'lazy' }}" data-product-image>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                     <div class="swiper-button-next"></div>
                     <div class="swiper-button-prev"></div>
+                    <div class="product-gallery-counter"><span data-gallery-current>1</span> / {{ count($gallery) }}</div>
+                    <button type="button" class="product-gallery-expand" data-open-product-zoom aria-label="Ampliar imagem">
+                        <i class="fa-solid fa-expand"></i><span>Ampliar</span>
+                    </button>
                 </div>
 
-                @php $thumbs = array_slice($gallery, 0, 4); @endphp
+                @php $thumbs = array_slice($gallery, 0, 6); @endphp
                 @if (count($thumbs) > 1)
-                    <div class="row g-2">
+                    <div class="product-thumbnails" role="tablist" aria-label="Imagens do produto">
                         @foreach ($thumbs as $i => $img)
-                            <div class="col-3">
-                                <div class="thumb-item" onclick="window.mySwiper?.slideToLoop({{ $i }})">
+                                <button type="button" class="thumb-item {{ $i === 0 ? 'active' : '' }}" data-gallery-index="{{ $i }}" aria-label="{{ __('messages.thumb_prefix') }} {{ $i + 1 }}">
                                     <img src="{{ Storage::url($img) }}" alt="{{ __('messages.thumb_prefix') }} {{ $i + 1 }}">
-                                </div>
-                            </div>
+                                </button>
                         @endforeach
                     </div>
                 @endif
+                <p class="product-gallery-hint"><i class="fa-solid fa-magnifying-glass-plus"></i> Clique ou toque na imagem para ampliar</p>
+                </div>
             </div>
 
-            <div class="col-lg-6">
-                <div class="product-sticky-info ps-lg-3">
+            <div class="col-lg-5 col-xl-5">
+                <div class="product-sticky-info">
 
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <a href="{{ route('brands.show', $product->brand->slug) }}" class="text-decoration-none">
-                            <span class="text-uppercase fw-bold text-muted" style="letter-spacing: 2px; font-size: .8rem;">
+                    <div class="product-meta-row d-flex justify-content-between align-items-start mb-3">
+                        <a href="{{ $product->brand ? route('brands.show', $product->brand->slug) : '#' }}" class="text-decoration-none">
+                            <span class="product-brand-name">
                                 {{ $product->brand->name ?? __('messages.luxury_selection') }}
                             </span>
                         </a>
@@ -277,48 +235,48 @@
                         $catKey = \Str::slug($product->category->name ?? '');
                         $catBadgeModifier = $categoryBadgeMap[$catKey] ?? '';
                     @endphp
-                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                        <h1 class="h4 text-uppercase fw-light mb-0" style="letter-spacing: 1px; line-height: 1.3;">{{ $displayName }}</h1>
+                    <div class="product-heading d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h1 class="product-display-title mb-0">{{ $displayName }}</h1>
                         @if ($product->category)
                             <span class="cat-badge {{ $catBadgeModifier }}">{{ \Str::upper($product->category->name) }}</span>
                         @endif
                     </div>
-                    <p class="text-muted extra-small mb-3">{{ __('messages.ref_prefix') }} {{ $product->sku }}</p>
+                    <p class="product-reference mb-3">{{ __('messages.ref_prefix') }} {{ $product->sku }}</p>
 
-                    <div class="mb-4">
+                    <div class="product-price-block mb-4">
                         @if ($product->previous_price > $product->price)
                             <span class="text-muted text-decoration-line-through me-2 small fw-light">{{ currency_format($product->previous_price) }}</span>
                         @endif
-                        <span class="h4 fw-bold text-dark">{{ currency_format($product->price) }}</span>
+                        <span class="product-current-price">{{ currency_format($product->price) }}</span>
 
                         <x-cupon-selo :product="$product" variante="produto" />
                     </div>
 
-                    <div class="mb-4">
+                    <div class="product-option-group mb-4">
                         <p class="extra-small fw-bold text-uppercase mb-2">
                             {{ __('messages.cor') }}:
-                            <span class="fw-normal text-muted">{{ $product->color ? $getColorName($product->color) : __('messages.sem_cor_definida') }}</span>
+                            <span class="fw-normal text-muted">{{ count($product->product_colors) ? collect($product->product_colors)->map($getColorName)->filter()->implode(' + ') : __('messages.sem_cor_definida') }}</span>
                         </p>
                         <div class="d-flex flex-wrap size-selector">
                             @if (isset($colorSiblings) && $colorSiblings->count() > 0)
                                 @foreach ($colorSiblings as $sib)
                                     <a href="{{ route('produto.show', $sib->slug ?? $sib->id) }}"
                                        class="color-box-link {{ $product->id == $sib->id ? 'active' : '' }}"
-                                       title="{{ $sib->color ? $getColorName($sib->color) : __('messages.sem_cor_definida') }}">
+                                       title="{{ count($sib->product_colors) ? collect($sib->product_colors)->map($getColorName)->filter()->implode(' + ') : __('messages.sem_cor_definida') }}">
                                         <div class="color-dot {{ empty($sib->color) ? 'bg-secondary' : '' }}"
-                                             @if (!empty($sib->color)) style="background-color: {{ $sib->color }}" @endif></div>
+                                             style="{{ $sib->color_swatch_style }}"></div>
                                     </a>
                                 @endforeach
                             @else
                                 <div class="color-box-link active">
                                     <div class="color-dot {{ empty($product->color) ? 'bg-secondary' : '' }}"
-                                         @if (!empty($product->color)) style="background-color: {{ $product->color }}" @endif></div>
+                                         style="{{ $product->color_swatch_style }}"></div>
                                 </div>
                             @endif
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="product-option-group mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <p class="extra-small fw-bold text-uppercase mb-0">{{ $sizeSectionLabel }}</p>
                             @if($showSizeGuide)
@@ -360,7 +318,7 @@
                         @endif
                     </div>
 
-                    <div class="mb-5">
+                    <div class="product-purchase mb-4 mb-lg-5">
                         @if ($isBridal)
                                      <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $displayName) }}"
                                target="_blank"
@@ -393,7 +351,7 @@
                         @endif
                     </div>
 
-                    <div class="border-top">
+                    <div class="product-information">
                         <div class="accordion-item-sax">
                             <div class="accordion-trigger d-flex justify-content-between align-items-center py-3">
                                 <span class="extra-small fw-bold text-uppercase" style="letter-spacing: 1px;">{{ __('messages.descricao_produto') }}</span>
@@ -412,7 +370,7 @@
                                         <span class="extra-small fw-bold text-uppercase" style="letter-spacing: 1px;">{{ __('messages.detalhes_tecnicos') }}</span>
                                         <i class="fas fa-plus small text-muted"></i>
                                     </div>
-                                    <div class="accordion-content pb-3" style="display: none;">
+                                    <div class="accordion-content pb-3">
                                         <table class="table table-sm table-borderless m-0 extra-small text-muted">
                                             @foreach ($attrs as $key => $value)
                                                 <tr>
@@ -431,6 +389,19 @@
             </div>
 
         </div>
+    </div>
+</div>
+
+<div class="product-zoom-viewer" data-product-zoom-viewer role="dialog" aria-modal="true" aria-label="Imagem ampliada de {{ $displayName }}">
+    <div class="product-zoom-stage" data-product-zoom-stage>
+        <img class="product-zoom-image" data-product-zoom-image src="" alt="{{ $displayName }}">
+        <div class="product-zoom-toolbar">
+            <button type="button" data-zoom-out aria-label="Diminuir zoom"><i class="fa-solid fa-minus"></i></button>
+            <button type="button" data-zoom-reset aria-label="Restaurar zoom"><i class="fa-solid fa-rotate-left"></i></button>
+            <button type="button" data-zoom-in aria-label="Aumentar zoom"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" data-close-product-zoom aria-label="Fechar imagem ampliada"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <span class="product-zoom-caption">Use a roda do mouse ou os botões para aproximar</span>
     </div>
 </div>
 
@@ -647,13 +618,128 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const galleryImages = Array.from(document.querySelectorAll('[data-product-image]'));
+    const thumbnails = Array.from(document.querySelectorAll('[data-gallery-index]'));
+    const galleryCurrent = document.querySelector('[data-gallery-current]');
+    const viewer = document.querySelector('[data-product-zoom-viewer]');
+    const zoomStage = document.querySelector('[data-product-zoom-stage]');
+    const zoomImage = document.querySelector('[data-product-zoom-image]');
+    let zoomScale = 1;
+    let zoomX = 0;
+    let zoomY = 0;
+    let dragging = false;
+    let dragOrigin = null;
+    const pointers = new Map();
+    let pinchDistance = null;
+
+    function renderZoom() {
+        if (!zoomImage) return;
+        zoomImage.style.transform = `translate3d(${zoomX}px, ${zoomY}px, 0) scale(${zoomScale})`;
+        zoomImage.style.cursor = zoomScale > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in';
+    }
+
+    function setZoom(nextScale) {
+        zoomScale = Math.min(4, Math.max(1, nextScale));
+        if (zoomScale === 1) zoomX = zoomY = 0;
+        renderZoom();
+    }
+
+    function resetZoom() {
+        zoomScale = 1;
+        zoomX = zoomY = 0;
+        pinchDistance = null;
+        renderZoom();
+    }
+
+    function activeImageSource() {
+        const activeSlideImage = document.querySelector('.productMainSwiper .swiper-slide-active [data-product-image]');
+        return activeSlideImage?.currentSrc || activeSlideImage?.src || galleryImages[window.mySwiper?.realIndex || 0]?.src;
+    }
+
+    function openViewer() {
+        if (!viewer || !zoomImage) return;
+        zoomImage.src = activeImageSource();
+        resetZoom();
+        viewer.classList.add('is-open');
+        document.body.classList.add('product-zoom-open');
+        viewer.querySelector('[data-close-product-zoom]')?.focus();
+    }
+
+    function closeViewer() {
+        if (!viewer) return;
+        viewer.classList.remove('is-open');
+        document.body.classList.remove('product-zoom-open');
+        pointers.clear();
+        resetZoom();
+    }
+
     window.mySwiper = new Swiper('.productMainSwiper', {
-        loop: true,
-        zoom: { maxRatio: 2, toggle: true },
+        loop: galleryImages.length > 1,
+        zoom: { maxRatio: 3, toggle: false },
         navigation: {
             nextEl: '.swiper-button-next',
             prevEl: '.swiper-button-prev',
         },
+        keyboard: { enabled: true },
+        on: {
+            realIndexChange(swiper) {
+                const index = swiper.realIndex || 0;
+                if (galleryCurrent) galleryCurrent.textContent = index + 1;
+                thumbnails.forEach((thumb, thumbIndex) => thumb.classList.toggle('active', thumbIndex === index));
+            }
+        }
+    });
+
+    thumbnails.forEach((thumb, index) => thumb.addEventListener('click', function () {
+        window.mySwiper?.slideToLoop(index);
+    }));
+    galleryImages.forEach(image => image.addEventListener('click', openViewer));
+    document.querySelector('[data-open-product-zoom]')?.addEventListener('click', openViewer);
+    document.querySelector('[data-close-product-zoom]')?.addEventListener('click', closeViewer);
+    document.querySelector('[data-zoom-in]')?.addEventListener('click', () => setZoom(zoomScale + .5));
+    document.querySelector('[data-zoom-out]')?.addEventListener('click', () => setZoom(zoomScale - .5));
+    document.querySelector('[data-zoom-reset]')?.addEventListener('click', resetZoom);
+
+    zoomStage?.addEventListener('wheel', function (event) {
+        event.preventDefault();
+        setZoom(zoomScale + (event.deltaY < 0 ? .25 : -.25));
+    }, { passive: false });
+    zoomStage?.addEventListener('dblclick', () => setZoom(zoomScale > 1 ? 1 : 2.5));
+    zoomStage?.addEventListener('pointerdown', function (event) {
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        zoomStage.setPointerCapture(event.pointerId);
+        dragging = zoomScale > 1 && pointers.size === 1;
+        dragOrigin = { x: event.clientX - zoomX, y: event.clientY - zoomY };
+        renderZoom();
+    });
+    zoomStage?.addEventListener('pointermove', function (event) {
+        if (!pointers.has(event.pointerId)) return;
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pointers.size === 2) {
+            const [a, b] = Array.from(pointers.values());
+            const distance = Math.hypot(a.x - b.x, a.y - b.y);
+            if (pinchDistance) setZoom(zoomScale * (distance / pinchDistance));
+            pinchDistance = distance;
+        } else if (dragging && dragOrigin) {
+            zoomX = event.clientX - dragOrigin.x;
+            zoomY = event.clientY - dragOrigin.y;
+            renderZoom();
+        }
+    });
+    const releasePointer = function (event) {
+        pointers.delete(event.pointerId);
+        dragging = false;
+        dragOrigin = null;
+        if (pointers.size < 2) pinchDistance = null;
+        renderZoom();
+    };
+    zoomStage?.addEventListener('pointerup', releasePointer);
+    zoomStage?.addEventListener('pointercancel', releasePointer);
+    viewer?.addEventListener('click', event => {
+        if (event.target === zoomStage && zoomScale === 1) closeViewer();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && viewer?.classList.contains('is-open')) closeViewer();
     });
 });
 </script>

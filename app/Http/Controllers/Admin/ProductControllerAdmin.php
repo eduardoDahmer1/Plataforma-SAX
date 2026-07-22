@@ -321,6 +321,8 @@ class ProductControllerAdmin extends Controller
             'highlights' => 'nullable|array',
             'parent_id' => 'nullable|exists:products,id',
             'color' => 'nullable|string|max:7',
+            'colors_values' => 'nullable|array|max:8',
+            'colors_values.*' => ['string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'color_parent_id' => 'nullable|array',
             'color_parent_id.*' => 'nullable|exists:products,id',
             'size' => 'nullable|string|max:50',
@@ -338,7 +340,9 @@ class ProductControllerAdmin extends Controller
         }
 
         if ($request->has('colors_values')) {
-            $data['color'] = $request->input('colors_values')[0];
+            $colors = array_values(array_unique(array_map('strtoupper', (array) $request->input('colors_values'))));
+            $data['color'] = $colors[0] ?? null;
+            if (Product::supportsMultipleColors()) $data['colors'] = $colors;
         }
 
         if ($request->hasFile('gallery')) {
@@ -535,6 +539,8 @@ class ProductControllerAdmin extends Controller
             'force_as_parent' => 'nullable|boolean',
             'stores' => 'nullable|array',
             'size' => 'nullable|string|max:50',
+            'colors_values' => 'nullable|array|max:8',
+            'colors_values.*' => ['string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
 
             'translate' => 'nullable|array',
             'translate.*.name' => 'nullable|string|max:255',
@@ -653,16 +659,13 @@ class ProductControllerAdmin extends Controller
                     $data['description'] = $request->input('translate.pt-br.details');
                 }
 
-                if ($request->has('colors_values')) {
-                    $colors = (array) $request->input('colors_values');
-                    $data['color'] = reset($colors);
-                }
-
                 if ($request->has('no_color')) {
                     $data['color'] = null;
+                    if (Product::supportsMultipleColors()) $data['colors'] = [];
                 } elseif ($request->has('colors_values')) {
-                    $colors = (array) $request->input('colors_values');
-                    $data['color'] = reset($colors);
+                    $colors = array_values(array_unique(array_map('strtoupper', (array) $request->input('colors_values'))));
+                    $data['color'] = $colors[0] ?? null;
+                    if (Product::supportsMultipleColors()) $data['colors'] = $colors;
                 }
 
                 if ($request->hasFile('photo')) {
@@ -769,6 +772,10 @@ class ProductControllerAdmin extends Controller
                             'highlights' => $product->highlights,
                             'stores' => $data['stores'],
                         ];
+
+                        if (Product::supportsMultipleColors()) {
+                            $childData['colors'] = json_encode($product->product_colors);
+                        }
 
                         if (!$child->is_outlet) {
                             $childData['status'] = $product->status;

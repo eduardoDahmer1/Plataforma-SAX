@@ -16,9 +16,12 @@
         $fotoExibir = asset('storage/uploads/products/' . $item->photo);
     }
 
-    $colorVariants = collect($item->card_color_variants ?? $item->resolved_card_color_variants ?? [])
+    $providedColorVariants = collect($item->card_color_variants ?? []);
+    $colorVariants = ($providedColorVariants->isNotEmpty()
+            ? $providedColorVariants
+            : collect($item->resolved_card_color_variants ?? []))
         ->filter(fn ($variant) => is_array($variant) && !empty($variant['color']) && (!empty($variant['slug']) || !empty($variant['id'])))
-        ->unique('color')
+        ->unique(fn ($variant) => implode(',', $variant['colors'] ?? [$variant['color']]))
         ->take(6)
         ->values();
 
@@ -80,15 +83,16 @@
                         @foreach ($colorVariants as $variant)
                             @php
                                 $hex = $variant['color'];
-                                $itemColor = strtoupper(trim((string) ($item->color ?? '')));
-                                $itemColor = $itemColor !== '' && !str_starts_with($itemColor, '#') ? '#' . $itemColor : $itemColor;
-                                $isCurrentColor = (int) ($variant['id'] ?? 0) === (int) $item->id || $itemColor === $hex;
+                                $variantColors = $variant['colors'] ?? [$hex];
+                                $swatchStyle = $variant['swatch_style'] ?? ('background-color: ' . $hex . ';');
+                                $isCurrentColor = (int) ($variant['id'] ?? 0) === (int) $item->id
+                                    || implode(',', $item->product_colors) === implode(',', $variantColors);
                             @endphp
                             <a href="{{ route('produto.show', $variant['slug'] ?? $variant['id']) }}"
                                class="product-card-standard__color-link {{ $isCurrentColor ? 'is-current' : '' }}"
-                               aria-label="{{ __('messages.view_product_color', ['color' => $hex]) }}"
-                               title="{{ __('messages.view_product_color', ['color' => $hex]) }}">
-                                <span class="product-card-standard__color-dot" style="background-color: {{ $hex }};"></span>
+                               aria-label="{{ __('messages.view_product_color', ['color' => implode(' + ', $variantColors)]) }}"
+                               title="{{ implode(' + ', $variantColors) }}">
+                                <span class="product-card-standard__color-dot" style="{{ $swatchStyle }}"></span>
                             </a>
                         @endforeach
                     </div>

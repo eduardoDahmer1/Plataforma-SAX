@@ -110,6 +110,7 @@ class Product extends Model
     // Casts para JSON/array
     protected $casts = [
         'gallery' => 'array',
+        'colors' => 'array',
         'price' => 'float',
         'stores' => 'array',
         'stock' => 'integer',
@@ -120,8 +121,48 @@ class Product extends Model
 
     protected static ?bool $hasColorParentColumn = null;
     protected static ?bool $hasColorColumn = null;
+    protected static ?bool $hasColorsColumn = null;
     protected static array $familyColorCache = [];
     protected static ?array $cardColorVariantMap = null;
+
+    public static function supportsMultipleColors(): bool
+    {
+        return self::$hasColorsColumn ??= Schema::hasColumn((new static)->getTable(), 'colors');
+    }
+
+    /** Todas as cores que compõem o item; `color` segue como cor principal legada. */
+    public function getProductColorsAttribute(): array
+    {
+        $colors = $this->colors;
+        if (!is_array($colors)) {
+            $colors = json_decode((string) $this->getRawOriginal('colors'), true);
+        }
+
+        return collect(is_array($colors) ? $colors : [])
+            ->prepend($this->color)
+            ->map(function ($color) {
+                $color = strtoupper(trim((string) $color));
+                if ($color !== '' && !str_starts_with($color, '#')) $color = '#' . $color;
+                return preg_match('/^#[0-9A-F]{6}$/', $color) ? $color : null;
+            })
+            ->filter()->unique()->values()->all();
+    }
+
+    public function getColorSwatchStyleAttribute(): string
+    {
+        $colors = $this->product_colors;
+        if (count($colors) < 2) {
+            return 'background-color: ' . ($colors[0] ?? '#9E9E9E') . ';';
+        }
+
+        $step = 100 / count($colors);
+        $stops = [];
+        foreach ($colors as $index => $color) {
+            $stops[] = $color . ' ' . round($index * $step, 3) . '%';
+            $stops[] = $color . ' ' . round(($index + 1) * $step, 3) . '%';
+        }
+        return 'background: linear-gradient(90deg, ' . implode(', ', $stops) . ');';
+    }
 
     protected static function booted(): void
     {
@@ -134,12 +175,12 @@ class Product extends Model
         });
 
         static::saved(function () {
-            Cache::forget('storefront_product_card_color_variants_v1');
+            Cache::forget('storefront_product_card_color_variants_v2');
             self::$cardColorVariantMap = null;
         });
 
         static::deleted(function () {
-            Cache::forget('storefront_product_card_color_variants_v1');
+            Cache::forget('storefront_product_card_color_variants_v2');
             self::$cardColorVariantMap = null;
         });
     }
@@ -302,11 +343,15 @@ class Product extends Model
 
     public function relationshipColorKey(): string
     {
-        $hex = strtoupper(trim((string) $this->color));
+        // O codigo que vem no nome do integrador (ex.: "*698") identifica a
+        // familia comercial da cor e precisa ser a chave principal da relacao.
+        // O hexadecimal e apenas a representacao visual: pode estar ausente ou
+        // variar ligeiramente entre tamanhos do mesmo produto.
+        $sourceColorKey = self::referenceParts($this->referenceSource())['color_key'];
 
-        return preg_match('/^#[0-9A-F]{6}$/', $hex)
-            ? $hex
-            : $this->inferredColorKey();
+        return $sourceColorKey !== ''
+            ? $sourceColorKey
+            : self::normalizeColorToken($this->color);
     }
 
     private function referenceSource(): string
@@ -535,12 +580,15 @@ class Product extends Model
 
         if (self::$cardColorVariantMap === null) {
             self::$cardColorVariantMap = Cache::remember(
-                'storefront_product_card_color_variants_v1',
+                'storefront_product_card_color_variants_v2',
                 now()->addMinutes(10),
                 function () {
                     $map = [];
+                    $columns = ['id', 'slug', 'color', 'color_parent_id'];
+                    if (self::supportsMultipleColors()) $columns[] = 'colors';
+
                     $variants = self::query()
-                        ->select(['id', 'slug', 'color', 'color_parent_id'])
+                        ->select($columns)
                         ->where('is_outlet', false)
                         ->where('status', 1)
                         ->where('stock', '>', 0)
@@ -559,10 +607,13 @@ class Product extends Model
                         }
 
                         $variantFamilyId = (int) ($variant->color_parent_id ?: $variant->id);
-                        $map[$variantFamilyId][$color] ??= [
+                        $compositionKey = implode(',', $variant->product_colors);
+                        $map[$variantFamilyId][$compositionKey] ??= [
                             'id' => (int) $variant->id,
                             'slug' => $variant->slug,
                             'color' => $color,
+                            'colors' => $variant->product_colors,
+                            'swatch_style' => $variant->color_swatch_style,
                         ];
                     }
 

@@ -84,8 +84,13 @@ class SearchController extends Controller
             return;
         }
 
+        $variantColumns = ['id', 'slug', 'color', 'color_parent_id'];
+        if (Product::supportsMultipleColors()) {
+            $variantColumns[] = 'colors';
+        }
+
         $variants = Product::query()
-            ->select(['id', 'slug', 'color', 'color_parent_id'])
+            ->select($variantColumns)
             ->where('is_outlet', false)
             ->where('status', 1)
             ->where('stock', '>', 0)
@@ -113,10 +118,13 @@ class SearchController extends Controller
                 continue;
             }
 
-            $familyColors[$familyId][$normalizedColor] ??= [
+            $compositionKey = implode(',', $variant->product_colors);
+            $familyColors[$familyId][$compositionKey] ??= [
                 'id' => (int) $variant->id,
                 'slug' => $variant->slug,
                 'color' => $normalizedColor,
+                'colors' => $variant->product_colors,
+                'swatch_style' => $variant->color_swatch_style,
             ];
         }
 

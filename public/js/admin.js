@@ -713,7 +713,26 @@ async function translateProductField(type, options = {}) {
     }
 }
 
-function buildSaxProductDescription() {
+let saxDescriptionProfilesPromise;
+
+async function loadSaxDescriptionProfiles() {
+    if (!saxDescriptionProfilesPromise) {
+        saxDescriptionProfilesPromise = fetch('/data/product_description_profiles.json', {
+            headers: { Accept: 'application/json' },
+            cache: 'no-cache'
+        }).then(response => {
+            if (!response.ok) throw new Error(`Não foi possível carregar os perfis editoriais (${response.status}).`);
+            return response.json();
+        }).catch(error => {
+            saxDescriptionProfilesPromise = null;
+            throw error;
+        });
+    }
+
+    return saxDescriptionProfilesPromise;
+}
+
+async function buildSaxProductDescription() {
     const productName = document.getElementById('real-name-pt')?.value?.trim()
         || document.getElementById('external_name')?.value?.trim()
         || 'este produto';
@@ -732,88 +751,21 @@ function buildSaxProductDescription() {
     const brandName = brand && !/selecione/i.test(brand) ? safe(brand) : '';
     const sizeText = size ? ` Consulte a disponibilidade no tamanho ${safe(size)}.` : '';
 
-    const profiles = {
-        bridal: {
-            opening: [
-                `${name} foi selecionado para acompanhar celebrações marcadas por elegância, emoção e atenção aos detalhes.`,
-                `Pensado para momentos inesquecíveis, ${name} integra a curadoria Bridal da SAX com uma presença delicada e refinada.`,
-                `${name} traduz o cuidado especial que envolve cada escolha para o grande dia e suas celebrações.`
-            ],
-            body: [
-                'Sua proposta valoriza uma composição visual harmoniosa, ideal para complementar produções nupciais com equilíbrio e sofisticação, sem retirar o protagonismo de quem celebra.',
-                'Uma escolha concebida para dialogar com cerimônias, recepções e ocasiões especiais, acrescentando um toque de distinção à experiência Bridal.',
-                'A curadoria privilegia a elegância atemporal e a versatilidade necessária para construir uma produção pessoal, memorável e cheia de significado.'
-            ],
-            closing: [
-                'Descubra os detalhes, confira as opções disponíveis e encontre na SAX uma escolha à altura de um momento único.',
-                'Conheça as opções disponíveis e permita que a equipe SAX ajude a compor uma experiência tão especial quanto a ocasião.',
-                'Explore esta seleção e complete sua produção com o refinamento e o atendimento cuidadoso que definem a experiência SAX Bridal.'
-            ]
-        },
-        feminino: {
-            opening: [`Delicado e contemporâneo, ${name} faz parte de uma curadoria feminina pensada para expressar personalidade com leveza.`, `${name} chega à seleção feminina da SAX como uma escolha elegante para diferentes momentos.`, `Com uma proposta feminina e refinada, ${name} acrescenta charme e presença à composição.`],
-            body: ['Sua versatilidade permite criar combinações equilibradas, transitando com naturalidade entre produções cotidianas e ocasiões especiais.', 'Uma peça escolhida para valorizar o estilo pessoal e acompanhar diferentes propostas com delicadeza, confiança e sofisticação.', 'O destaque está na maneira como complementa a produção, oferecendo liberdade para composições clássicas, modernas ou marcantes.'],
-            closing: ['Explore os detalhes e descubra novas possibilidades para compor um estilo autenticamente seu.', 'Confira as opções disponíveis e encontre a versão que melhor acompanha sua personalidade.', 'Conheça esta escolha da curadoria SAX e transforme cada produção em uma expressão de elegância pessoal.']
-        },
-        masculino: {
-            opening: [`${name} integra a curadoria masculina da SAX com uma proposta segura, atual e sofisticada.`, `Versátil e marcante, ${name} foi selecionado para um estilo masculino de presença e personalidade.`, `${name} combina uma estética contemporânea com a elegância essencial da seleção masculina SAX.`],
-            body: ['Uma escolha que se adapta a diferentes contextos e contribui para composições bem resolvidas, do cotidiano às ocasiões que pedem maior refinamento.', 'Sua proposta favorece combinações equilibradas e um visual confiante, preservando a individualidade em cada detalhe.', 'Ideal para quem valoriza praticidade estética e uma apresentação cuidada, sem abrir mão de personalidade.'],
-            closing: ['Confira os detalhes e escolha a opção que melhor representa seu estilo.', 'Descubra as possibilidades e eleve sua composição com a curadoria masculina da SAX.', 'Explore as opções disponíveis e encontre uma escolha preparada para acompanhar sua rotina com distinção.']
-        },
-        infantil: {
-            opening: [`${name} faz parte da seleção infantil da SAX, criada para acompanhar os pequenos em momentos cheios de descobertas.`, `Com uma proposta alegre e versátil, ${name} integra uma curadoria pensada especialmente para o universo infantil.`, `${name} foi escolhido para compor produções infantis com personalidade, leveza e um toque especial.`],
-            body: ['A proposta combina praticidade visual e liberdade para criar produções adequadas a diferentes momentos da rotina e das celebrações em família.', 'Uma escolha que permite composições divertidas e cuidadosas, respeitando o estilo e a espontaneidade de cada criança.', 'Versátil para diferentes ocasiões, ajuda a construir um visual encantador sem perder a naturalidade própria da infância.'],
-            closing: ['Confira as opções disponíveis e encontre a escolha ideal para acompanhar cada nova aventura.', 'Explore os detalhes e descubra uma seleção feita para tornar os momentos dos pequenos ainda mais especiais.', 'Conheça a curadoria infantil SAX e escolha a opção que melhor combina com esta fase cheia de personalidade.']
-        },
-        casa: {
-            opening: [`${name} integra a curadoria SAX Casa, pensada para ambientes que expressam identidade e bom gosto.`, `Com presença elegante, ${name} foi selecionado para acrescentar personalidade aos espaços da casa.`, `${name} convida a renovar os ambientes por meio de uma escolha cuidadosa e sofisticada.`],
-            body: ['Sua proposta dialoga com diferentes estilos de decoração e permite criar composições acolhedoras, equilibradas e visualmente marcantes.', 'Uma escolha que valoriza os detalhes do cotidiano e contribui para uma atmosfera mais pessoal, harmoniosa e convidativa.', 'Ideal para integrar ambientes com naturalidade, reforçando a sensação de cuidado e intenção em cada composição.'],
-            closing: ['Explore os detalhes e descubra novas formas de transformar sua casa em uma expressão do seu estilo.', 'Confira as opções disponíveis e leve para seus ambientes a curadoria especial da SAX Casa.', 'Conheça esta seleção e encontre inspiração para compor espaços elegantes, acolhedores e únicos.']
-        },
-        bebidas: {
-            opening: [`${name} integra a seleção de bebidas da SAX, uma curadoria preparada para encontros e celebrações especiais.`, `Selecionado para ocasiões que merecem ser apreciadas, ${name} acrescenta distinção à experiência de celebrar.`, `${name} faz parte de uma curadoria de bebidas pensada para receber, brindar e compartilhar bons momentos.`],
-            body: ['Uma escolha versátil para compor sua adega, presentear ou acompanhar ocasiões em que cada detalhe contribui para uma experiência memorável.', 'Sua presença completa diferentes celebrações e convida a desfrutar o momento com atenção, elegância e boa companhia.', 'Ideal para quem valoriza uma seleção cuidadosa e deseja tornar encontros, brindes e comemorações ainda mais especiais.'],
-            closing: ['Confira os detalhes e escolha a opção ideal para sua próxima celebração. Aprecie com responsabilidade.', 'Explore a seleção SAX e encontre a bebida que melhor acompanha a ocasião. Aprecie com responsabilidade.', 'Descubra esta escolha da curadoria SAX e prepare-se para brindar momentos especiais. Aprecie com responsabilidade.']
-        },
-        habanos: {
-            opening: [`${name} faz parte de uma curadoria de habanos voltada a apreciadores de rituais marcados por tradição e distinção.`, `Selecionado para momentos de contemplação, ${name} integra a experiência SAX Habanos com elegância e personalidade.`, `${name} representa uma escolha cuidadosa para quem valoriza a cultura, o ritual e a presença dos habanos.`],
-            body: ['Uma opção para compor momentos reservados e experiências de apreciação, sempre com a atenção e o cuidado que esse universo exige.', 'Sua proposta convida a desacelerar e valorizar a ocasião, integrando uma seleção preparada para apreciadores adultos.', 'A curadoria reúne escolhas destinadas a quem reconhece o valor do ritual e busca uma experiência conduzida com sofisticação.'],
-            closing: ['Conheça os detalhes e consulte a disponibilidade desta seleção exclusiva para maiores de idade.', 'Explore a curadoria SAX Habanos e encontre uma escolha alinhada ao seu momento de apreciação. Venda exclusiva para maiores de idade.', 'Confira as opções disponíveis e descubra a experiência SAX dedicada a apreciadores adultos.']
-        },
-        maletines: {
-            opening: [`${name} integra a seleção de maletines da SAX com uma proposta funcional, elegante e profissional.`, `Pensado para acompanhar uma rotina dinâmica, ${name} une organização visual e presença sofisticada.`, `${name} foi selecionado para quem busca praticidade e uma apresentação cuidada em diferentes compromissos.`],
-            body: ['Sua proposta favorece uma rotina mais organizada e se adapta a diferentes contextos profissionais, viagens curtas e compromissos cotidianos.', 'Uma escolha versátil para transportar itens essenciais com uma estética segura e alinhada a um estilo contemporâneo.', 'Ideal para completar uma rotina de trabalho ou deslocamentos com mais intenção, personalidade e praticidade.'],
-            closing: ['Confira os detalhes e encontre a opção que melhor acompanha sua rotina.', 'Explore as opções disponíveis e escolha um aliado elegante para seus próximos compromissos.', 'Conheça esta seleção SAX e leve mais organização e distinção para o dia a dia.']
-        },
-        optico: {
-            opening: [`${name} integra a curadoria óptica da SAX como um elemento de estilo capaz de transformar a expressão.`, `Com uma proposta atual e sofisticada, ${name} acrescenta identidade ao visual.`, `${name} foi selecionado para quem entende os acessórios ópticos como parte essencial da composição pessoal.`],
-            body: ['Sua estética permite dialogar com diferentes estilos e ocasiões, criando um ponto de destaque equilibrado e cheio de personalidade.', 'Uma escolha que valoriza a expressão individual e completa produções clássicas ou contemporâneas com naturalidade.', 'Versátil e marcante, contribui para um visual bem definido e alinhado à personalidade de quem usa.'],
-            closing: ['Conheça os detalhes e encontre a opção que melhor harmoniza com seu estilo.', 'Explore a curadoria óptica SAX e descubra novas maneiras de expressar sua personalidade.', 'Confira as opções disponíveis e escolha o modelo que dará um novo olhar à sua composição.']
-        },
-        perfumes: {
-            opening: [`${name} integra a curadoria de perfumes da SAX como um convite para expressar identidade de forma pessoal e memorável.`, `Escolher ${name} é transformar o perfume em uma assinatura que acompanha momentos, gestos e lembranças.`, `${name} faz parte de uma seleção pensada para quem reconhece na perfumaria uma forma sutil de presença.`],
-            body: ['A experiência olfativa é profundamente pessoal e ganha novas nuances em contato com cada pele, tornando a escolha parte de um ritual único.', 'Uma fragrância pode marcar ocasiões, despertar memórias e complementar a personalidade com delicadeza ou intensidade, conforme a experiência de quem a usa.', 'Sua presença convida a descobrir sensações e construir uma assinatura olfativa alinhada ao estilo e ao momento pessoal.'],
-            closing: ['Conheça esta seleção e descubra como a fragrância se revela em você.', 'Explore a perfumaria SAX e encontre uma assinatura capaz de tornar cada momento ainda mais pessoal.', 'Confira os detalhes e escolha a fragrância que melhor traduz sua presença.']
-        },
-        unisex: {
-            opening: [`${name} integra a curadoria unissex da SAX com uma proposta livre, contemporânea e cheia de personalidade.`, `Sem limites para a expressão individual, ${name} foi selecionado para diferentes estilos e maneiras de usar.`, `${name} traduz uma visão versátil de estilo, criada para acompanhar escolhas autênticas.`],
-            body: ['Sua proposta permite combinações diversas e valoriza a liberdade de construir uma identidade visual própria, além de convenções.', 'Uma escolha aberta a diferentes interpretações, capaz de transitar entre ocasiões e composições com naturalidade.', 'Versátil e atual, convida cada pessoa a adaptar a peça ao próprio repertório e à sua forma particular de expressão.'],
-            closing: ['Explore os detalhes e descubra novas possibilidades para usar do seu jeito.', 'Confira as opções disponíveis e escolha a versão que melhor representa sua identidade.', 'Conheça esta seleção SAX e celebre um estilo construído com liberdade e autenticidade.']
-        }
-    };
+    const content = await loadSaxDescriptionProfiles();
+    const matchingAlias = Object.keys(content.aliases)
+        .sort((a, b) => b.length - a.length)
+        .find(alias => categoryKey === alias || categoryKey.includes(alias));
+    const profileKey = content.aliases[matchingAlias] || 'default';
+    const profile = content.profiles[profileKey] || content.profiles.default;
+    const interpolate = template => template
+        .replaceAll('{{name}}', name)
+        .replaceAll('{{brand}}', brandName)
+        .replaceAll('{{size}}', sizeText);
+    const brandTemplates = brandName ? content.brand.with_brand : content.brand.without_brand;
 
-    const aliases = { 'bridal': 'bridal', 'femenino': 'feminino', 'feminino': 'feminino', 'masculino': 'masculino', 'infantil': 'infantil', 'casa': 'casa', 'bebidas': 'bebidas', 'habanos': 'habanos', 'maletines': 'maletines', 'optico': 'optico', 'otico': 'optico', 'perfumes': 'perfumes', 'unisex': 'unisex' };
-    const profile = profiles[aliases[categoryKey]] || {
-        opening: [`${name} integra a curadoria SAX como uma escolha especial para quem valoriza estilo e personalidade.`, `${name} foi selecionado pela SAX para compor experiências marcadas por cuidado e bom gosto.`],
-        body: ['Sua proposta versátil permite diferentes possibilidades de uso e combinações, acompanhando ocasiões e estilos com naturalidade.', 'Uma escolha pensada para complementar o cotidiano com uma presença elegante e alinhada ao estilo pessoal.'],
-        closing: ['Confira os detalhes e descubra a opção que melhor combina com você.', 'Explore as opções disponíveis e conheça mais uma escolha da curadoria SAX.']
-    };
-
-    const brandParagraph = brandName
-        ? `<p>Da marca ${brandName}, esta escolha recebe o olhar cuidadoso da curadoria SAX, que reúne produtos capazes de dialogar com diferentes estilos e ocasiões.${sizeText}</p>`
-        : `<p>Esta escolha recebe o olhar cuidadoso da curadoria SAX, reunindo versatilidade, personalidade e novas possibilidades para o seu estilo.${sizeText}</p>`;
-
-    return `<p>${pick(profile.opening)}</p><p>${pick(profile.body)}</p>${brandParagraph}<p>${pick(profile.closing)}</p>`;
+    return [pick(profile.opening), pick(profile.body), pick(brandTemplates), pick(profile.closing)]
+        .map(template => `<p>${interpolate(template)}</p>`)
+        .join('');
 }
 
 async function generateSaxDescriptionTranslations() {
@@ -821,10 +773,15 @@ async function generateSaxDescriptionTranslations() {
     if (fields.some(field => !field)) return;
     if (fields.some(field => field.value.trim()) && !confirm('As descrições atuais em PT, ES e EN serão substituídas por uma nova descrição SAX. Deseja continuar?')) return;
 
-    await translateProductField('desc', {
-        automatic: true,
-        sourceValue: buildSaxProductDescription()
-    });
+    try {
+        await translateProductField('desc', {
+            automatic: true,
+            sourceValue: await buildSaxProductDescription()
+        });
+    } catch (error) {
+        console.error('Falha ao gerar descrição SAX:', error);
+        window.saxToast ? saxToast('error', 'Não foi possível carregar a curadoria editorial. Tente novamente.') : alert('Não foi possível carregar a curadoria editorial.');
+    }
 }
 
 async function autoPopulateProductTranslations() {
@@ -855,7 +812,7 @@ async function autoPopulateProductTranslations() {
             automatic: true,
             silent: true,
             onlyWhenIncomplete: true,
-            sourceValue: existingDescription || buildSaxProductDescription()
+            sourceValue: existingDescription || await buildSaxProductDescription()
         });
     }
 
@@ -866,7 +823,9 @@ async function autoPopulateProductTranslations() {
 
 document.addEventListener('DOMContentLoaded', function () {
     // Aguarda o TinyMCE carregar o conteúdo inicial antes do preenchimento automático.
-    setTimeout(autoPopulateProductTranslations, 700);
+    setTimeout(() => autoPopulateProductTranslations().catch(error => {
+        console.error('Falha no preenchimento editorial automático:', error);
+    }), 700);
 });
 
 // ── Image preview genérico (.img-trigger + data-prev) ─────────

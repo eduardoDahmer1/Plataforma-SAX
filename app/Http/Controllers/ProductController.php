@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Generalsetting;
 use App\Models\Attribute;
+use App\Services\DailyMostViewedProducts;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
@@ -25,7 +26,7 @@ class ProductController extends Controller
         return $query->with(['cupons' => fn($q) => $q->ativos()]);
     }
 
-    public function show($id_or_slug)
+    public function show($id_or_slug, DailyMostViewedProducts $dailyMostViewedProducts)
     {
         $product = Product::where(fn ($query) => $query
                 ->where('id', $id_or_slug)
@@ -35,9 +36,18 @@ class ProductController extends Controller
             ->with(['brand', 'category', 'subcategory', 'categoriasfilhas'])
             ->firstOrFail();
 
-        $sessionKey = 'viewed_product_' . $product->id;
+        $masterId = (int) $product->id;
+        if ($product->product_role === 'F' && !empty($product->parent_id)) {
+            $masterId = str_contains((string) $product->parent_id, ',')
+                ? (int) (array_values(array_filter(array_map('trim', explode(',', $product->parent_id))))[0] ?? $masterId)
+                : (int) $product->parent_id;
+        }
+
+        // Uma visita a qualquer tamanho conta para o produto-pai exibido nos
+        // cards, evitando que as visualizações fiquem dispersas nos filhos.
+        $sessionKey = 'viewed_product_family_' . $masterId;
         if (!Session::has($sessionKey)) {
-            $product->increment('views');
+            Product::whereKey($masterId)->increment('views');
             Session::put($sessionKey, true);
         }
 
@@ -55,13 +65,6 @@ class ProductController extends Controller
 
         $product->current_price = $product->promotion_price > 0 ? $product->promotion_price : $product->price;
         $product->has_discount  = $product->previous_price > $product->current_price;
-
-        $masterId = (int) $product->id;
-        if ($product->product_role === 'F' && !empty($product->parent_id)) {
-            $masterId = str_contains((string) $product->parent_id, ',')
-                ? (int) (array_values(array_filter(array_map('trim', explode(',', $product->parent_id))))[0] ?? $masterId)
-                : (int) $product->parent_id;
-        }
 
         $siblings = Product::where(fn($q) => $q->where('parent_id', $masterId)->orWhere('id', $masterId))
             ->where('is_outlet', false)
@@ -90,9 +93,7 @@ class ProductController extends Controller
         $attribute  = Cache::remember('system_attributes', 600, fn() => Attribute::first());
         $settings   = Cache::remember('general_settings',  600, fn() => Generalsetting::first());
         $similares  = $this->getSimilares($product);
-        $mostViewed = Cache::remember('show_most_viewed_products', 600,
-            fn() => $this->activeBase()->with('brand')->orderBy('views', 'desc')->take(12)->get()
-        );
+        $mostViewed = $dailyMostViewedProducts->get(12);
 
         return view('produtos.show', [
             'product'           => $product,

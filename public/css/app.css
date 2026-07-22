@@ -570,8 +570,6 @@ overflow: hidden;
 
 .jw-img-container img {
 width: 100%;
-object-fit: cover;
-
 }
 
 .product-card-standard {

@@ -1,0 +1,126 @@
+{
+  "aliases": {
+    "bridal": "bridal", "noivas": "bridal", "novias": "bridal",
+    "femenino": "feminino", "feminino": "feminino", "mulher": "feminino", "mujer": "feminino",
+    "masculino": "masculino", "homem": "masculino", "hombre": "masculino",
+    "infantil": "infantil", "criancas": "infantil", "ninos": "infantil", "kids": "infantil",
+    "casa": "casa", "home": "casa", "decoracao": "casa", "decoracion": "casa",
+    "bebidas": "bebidas", "vinhos": "bebidas", "vinos": "bebidas", "licores": "bebidas",
+    "habanos": "habanos", "charutos": "habanos", "cigarros": "habanos",
+    "maletines": "maletines", "maletas": "maletines", "viagem": "maletines", "viaje": "maletines",
+    "optico": "optico", "otico": "optico", "lente": "optico", "oculos": "optico", "gafas": "optico",
+    "perfumes": "perfumes", "perfumaria": "perfumes", "fragancias": "perfumes",
+    "unisex": "unisex", "unissex": "unisex",
+    "bolsas": "bolsas", "carteras": "bolsas", "mochilas": "bolsas",
+    "calcados": "calcados", "calzados": "calcados", "sapatos": "calcados", "zapatos": "calcados",
+    "joias": "joias", "joyas": "joias", "bijuterias": "joias",
+    "relogios": "relogios", "relojes": "relogios",
+    "beleza": "beleza", "belleza": "beleza", "cosmeticos": "beleza", "maquiagem": "beleza",
+    "tecnologia": "tecnologia", "electronica": "tecnologia", "eletronicos": "tecnologia"
+  },
+  "brand": {
+    "with_brand": [
+      "Assinado por {{brand}}, este artigo reflete uma visão autoral de qualidade, acabamento e identidade. A curadoria SAX o apresenta para escolhas feitas com intenção.{{size}}",
+      "A excelência de {{brand}} encontra a curadoria SAX em uma peça pensada para atravessar ocasiões com naturalidade e distinção.{{size}}",
+      "Com a assinatura de {{brand}}, esta escolha reúne presença estética e atenção aos detalhes — atributos essenciais de um repertório verdadeiramente sofisticado.{{size}}",
+      "Selecionado entre as criações de {{brand}}, este artigo traduz o equilíbrio entre design, personalidade e uma experiência de compra excepcional.{{size}}"
+    ],
+    "without_brand": [
+      "Cada detalhe desta escolha foi considerado pela curadoria SAX para oferecer presença, versatilidade e uma experiência à altura de ocasiões especiais.{{size}}",
+      "Uma seleção conduzida pelo olhar SAX, onde estética, qualidade e personalidade se encontram em equilíbrio.{{size}}",
+      "Parte de uma curadoria que privilegia escolhas duradouras, este artigo acrescenta refinamento ao cotidiano e significado aos momentos especiais.{{size}}"
+    ]
+  },
+  "profiles": {
+    "default": {
+      "opening": ["{{name}} integra a curadoria SAX como uma expressão de estilo, qualidade e personalidade.", "Cuidadosamente selecionado, {{name}} revela uma elegância segura, feita para ser percebida nos detalhes.", "{{name}} representa o olhar contemporâneo da SAX sobre escolhas que unem presença e sofisticação.", "Há escolhas que completam uma ocasião; {{name}} foi selecionado para torná-la memorável."],
+      "body": ["Sua proposta equilibra versatilidade e identidade, permitindo composições pessoais com acabamento refinado.", "De estética apurada, adapta-se com naturalidade a diferentes momentos sem perder seu caráter distinto.", "Uma escolha que valoriza o essencial e transforma o cuidado com os detalhes em uma forma de expressão.", "Design e funcionalidade se encontram em uma presença elegante, atual e naturalmente marcante."],
+      "closing": ["Descubra seus detalhes e viva a experiência de escolher com a curadoria SAX.", "Conheça as opções disponíveis e encontre a versão que melhor traduz o seu estilo.", "Explore esta seleção e permita que cada detalhe revele uma nova possibilidade.", "Visite a SAX e descubra uma experiência de compra conduzida com atenção e excelência."]
+    },
+    "bridal": {
+      "opening": ["{{name}} foi selecionado para acompanhar celebrações onde elegância, emoção e significado se encontram.", "Para um dia que permanecerá na memória, {{name}} integra a curadoria SAX Bridal com delicadeza e distinção.", "{{name}} traduz o cuidado extraordinário reservado às escolhas que cercam o grande dia.", "Romântico sem excessos, {{name}} foi escolhido para celebrar uma história única com refinamento atemporal."],
+      "body": ["Sua presença harmoniosa complementa a produção nupcial sem retirar o protagonismo de quem vive o momento.", "Cada detalhe dialoga com cerimônias e recepções elegantes, acrescentando beleza de maneira sutil e inesquecível.", "A proposta combina sensibilidade contemporânea e elegância atemporal para uma composição profundamente pessoal.", "Concebido para ocasiões singulares, acrescenta equilíbrio e um toque de encanto à experiência Bridal."],
+      "closing": ["Descubra cada detalhe e encontre na SAX uma escolha à altura da sua celebração.", "Permita que a equipe SAX Bridal acompanhe você na criação de uma experiência verdadeiramente inesquecível.", "Explore a curadoria Bridal e complete sua história com a elegância de uma escolha feita especialmente para você.", "Agende seu momento SAX Bridal e descubra um atendimento tão especial quanto a ocasião." ]
+    },
+    "feminino": {
+      "opening": ["{{name}} chega à curadoria feminina da SAX com elegância contemporânea e personalidade.", "Delicado na medida certa, {{name}} transforma a composição com presença e naturalidade.", "{{name}} foi escolhido para uma mulher que faz do estilo uma expressão inteiramente pessoal.", "Entre linhas atuais e elegância atemporal, {{name}} revela uma feminilidade segura e sofisticada."],
+      "body": ["Sua versatilidade acompanha diferentes momentos, do cotidiano elegante às ocasiões que pedem maior refinamento.", "Uma escolha capaz de valorizar o estilo pessoal em composições clássicas, modernas ou marcantes.", "A proposta equilibra leveza e identidade, criando um visual cuidado sem abrir mão da espontaneidade.", "Seu desenho acrescenta intenção à produção e permite combinações que atravessam tendências com naturalidade."],
+      "closing": ["Explore os detalhes e componha um estilo autenticamente seu.", "Descubra a versão que melhor acompanha sua personalidade na curadoria SAX.", "Conheça esta seleção e transforme cada produção em uma expressão de elegância pessoal.", "Encontre na SAX novas maneiras de traduzir quem você é através do estilo."]
+    },
+    "masculino": {
+      "opening": ["{{name}} integra a curadoria masculina da SAX com presença segura e sofisticação contemporânea.", "Versátil e marcante, {{name}} foi selecionado para um estilo de personalidade inequívoca.", "{{name}} combina precisão estética e elegância essencial em uma escolha naturalmente distinta.", "Para quem reconhece o valor dos detalhes, {{name}} oferece uma leitura atual do estilo masculino."],
+      "body": ["Adapta-se do cotidiano aos compromissos especiais, preservando uma aparência sempre bem resolvida.", "Sua proposta favorece combinações equilibradas e um visual confiante, pessoal e cuidadosamente construído.", "Funcionalidade e acabamento se unem para acompanhar uma rotina dinâmica sem renunciar à elegância.", "Uma peça de presença discreta, capaz de elevar a composição com precisão e naturalidade."],
+      "closing": ["Confira os detalhes e escolha a opção que melhor representa o seu estilo.", "Eleve sua composição com o olhar apurado da curadoria masculina SAX.", "Explore as opções e encontre uma escolha preparada para acompanhar sua rotina com distinção.", "Descubra na SAX um repertório masculino criado para quem escolhe com intenção."]
+    },
+    "infantil": {
+      "opening": ["{{name}} integra a seleção infantil SAX para acompanhar descobertas com charme e leveza.", "Com alegria e personalidade, {{name}} foi escolhido especialmente para o universo dos pequenos.", "{{name}} leva um toque especial a momentos vividos com espontaneidade e imaginação.", "Pensado para infâncias cheias de histórias, {{name}} combina encanto e uma estética cuidadosamente selecionada."],
+      "body": ["A proposta une praticidade e liberdade para produções adequadas à rotina e às celebrações em família.", "Uma escolha que respeita a espontaneidade de cada criança enquanto acrescenta cuidado ao visual.", "Versátil para diferentes ocasiões, cria uma composição encantadora sem perder a naturalidade da infância.", "Conforto visual, personalidade e delicadeza se encontram em uma seleção feita para acompanhar cada aventura."],
+      "closing": ["Encontre a escolha ideal para acompanhar a próxima aventura.", "Explore os detalhes de uma seleção feita para tornar cada momento ainda mais especial.", "Conheça a curadoria infantil SAX e escolha o que mais combina com esta fase única.", "Descubra opções encantadoras para celebrar a personalidade dos pequenos." ]
+    },
+    "casa": {
+      "opening": ["{{name}} integra a curadoria SAX Casa para ambientes que expressam identidade e sensibilidade estética.", "Com presença elegante, {{name}} acrescenta intenção e personalidade aos espaços.", "{{name}} convida a transformar a casa por meio de uma escolha cuidadosa e sofisticada.", "Detalhes definem atmosferas; {{name}} foi selecionado para tornar cada ambiente mais pessoal."],
+      "body": ["Sua proposta dialoga com diferentes estilos e favorece composições acolhedoras e visualmente equilibradas.", "Uma escolha que valoriza os rituais cotidianos e contribui para uma atmosfera harmoniosa e convidativa.", "Integra-se com naturalidade ao ambiente, reforçando a sensação de cuidado em cada composição.", "Forma, função e beleza se unem para criar espaços que acolhem e revelam a personalidade de quem vive neles."],
+      "closing": ["Descubra novas formas de transformar sua casa em uma expressão do seu estilo.", "Leve para seus ambientes o olhar especial da curadoria SAX Casa.", "Encontre inspiração para compor espaços elegantes, acolhedores e únicos.", "Explore os detalhes e crie uma casa onde cada escolha conta uma história." ]
+    },
+    "bolsas": {
+      "opening": ["{{name}} traduz o poder de um acessório bem escolhido: funcional, autoral e imediatamente elegante.", "Com linhas sofisticadas, {{name}} integra a curadoria SAX como um ícone de estilo para todos os momentos.", "{{name}} foi selecionado por sua capacidade de unir praticidade e presença em perfeita proporção.", "Mais que um acessório, {{name}} é uma assinatura de estilo pensada para acompanhar diferentes ocasiões."],
+      "body": ["Seu desenho organiza o essencial enquanto acrescenta estrutura e personalidade à composição.", "Uma peça versátil que transita entre compromissos cotidianos e ocasiões especiais com elegância natural.", "Proporções, acabamento e funcionalidade se encontram em uma escolha de presença atemporal.", "O equilíbrio entre forma e função faz deste acessório um aliado elegante para uma rotina contemporânea."],
+      "closing": ["Descubra os detalhes e encontre a bolsa que acompanhará seus próximos capítulos.", "Explore a seleção SAX e escolha uma nova assinatura para o seu estilo.", "Conheça as opções disponíveis e encontre o modelo feito para a sua rotina.", "Complete sua composição com um acessório escolhido para permanecer." ]
+    },
+    "calcados": {
+      "opening": ["{{name}} foi selecionado para conduzir cada passo com elegância e personalidade.", "Equilíbrio entre desenho e presença, {{name}} completa a composição a partir de sua base.", "{{name}} integra a curadoria SAX como uma escolha capaz de transformar a postura e o visual.", "Com estética apurada, {{name}} acompanha movimentos cotidianos e ocasiões especiais com distinção."],
+      "body": ["Sua proposta combina versatilidade visual e acabamento cuidadoso para diferentes maneiras de vestir.", "Uma escolha que dá ritmo à composição e acrescenta uma nota sofisticada sem esforço.", "Linhas equilibradas permitem transitar entre repertórios clássicos e contemporâneos.", "Pensado para integrar o guarda-roupa com naturalidade, oferece novas possibilidades a cada produção."],
+      "closing": ["Descubra os detalhes e encontre o par que traduz o seu momento.", "Dê o próximo passo com a seleção de calçados da SAX.", "Explore as opções e complete sua produção com elegância da cabeça aos pés.", "Conheça a curadoria SAX e escolha o modelo que acompanhará seus caminhos." ]
+    },
+    "joias": {
+      "opening": ["{{name}} ilumina a composição com a delicadeza de uma joia escolhida para permanecer.", "De presença preciosa, {{name}} celebra a beleza dos detalhes e dos gestos que ganham significado.", "{{name}} integra a curadoria SAX como uma expressão atemporal de elegância.", "Há detalhes que se tornam memória; {{name}} foi selecionado para acompanhar momentos assim."],
+      "body": ["Seu desenho acrescenta luz e identidade, seja usado como gesto sutil ou ponto central da composição.", "Uma escolha que atravessa ocasiões e transforma o refinamento em uma assinatura pessoal.", "Proporções delicadas e presença marcante encontram equilíbrio em um artigo de beleza duradoura.", "Criada para ser apreciada de perto, revela novas nuances a cada movimento."],
+      "closing": ["Descubra uma joia capaz de contar a sua história.", "Explore os detalhes e escolha uma presença preciosa para seus momentos especiais.", "Conheça a seleção SAX e encontre uma peça para celebrar, presentear e guardar.", "Permita que este detalhe extraordinário se torne parte da sua história." ]
+    },
+    "relogios": {
+      "opening": ["{{name}} transforma a passagem do tempo em uma declaração de estilo e precisão.", "Elegância medida nos detalhes, {{name}} integra a curadoria de relógios da SAX.", "{{name}} foi selecionado para quem reconhece no tempo uma expressão de caráter.", "Entre engenharia e estética, {{name}} revela uma presença sofisticada no pulso."],
+      "body": ["Seu desenho equilibra funcionalidade, proporção e identidade em uma peça feita para acompanhar diferentes ocasiões.", "Uma escolha que transcende a função e se torna parte do repertório pessoal de quem a usa.", "A precisão encontra o refinamento em detalhes concebidos para serem apreciados ao longo do tempo.", "Clássico ou contemporâneo, acrescenta um ponto de distinção a toda composição."],
+      "closing": ["Conheça os detalhes e escolha o relógio que marcará seus próximos momentos.", "Explore a relojoaria SAX e encontre uma peça à altura do seu tempo.", "Descubra uma seleção onde precisão e elegância permanecem lado a lado.", "Encontre na SAX um relógio para acompanhar histórias que merecem ser lembradas." ]
+    },
+    "optico": {
+      "opening": ["{{name}} emoldura a expressão com uma leitura contemporânea de estilo e personalidade.", "Com desenho sofisticado, {{name}} transforma o olhar em uma assinatura pessoal.", "{{name}} integra a curadoria óptica SAX como um acessório de presença precisa.", "Entre forma e identidade, {{name}} foi selecionado para revelar novos ângulos do seu estilo."],
+      "body": ["Sua estética dialoga com diferentes traços e composições, criando destaque de maneira equilibrada.", "Uma escolha capaz de completar repertórios clássicos ou contemporâneos com naturalidade.", "Linhas marcantes e proporções cuidadosas valorizam a expressão individual.", "Versátil e autoral, oferece um novo ponto de vista para produções de diferentes ocasiões."],
+      "closing": ["Encontre a opção que melhor harmoniza com o seu estilo.", "Descubra novas maneiras de expressar sua personalidade com a curadoria óptica SAX.", "Escolha o modelo que dará um novo olhar à sua composição.", "Explore os detalhes e encontre a armação que parece ter sido feita para você." ]
+    },
+    "perfumes": {
+      "opening": ["{{name}} é um convite a transformar fragrância em presença e memória.", "Escolher {{name}} é revelar uma assinatura olfativa profundamente pessoal.", "{{name}} integra a perfumaria SAX para quem reconhece o luxo invisível de uma fragrância memorável.", "Entre notas e emoções, {{name}} foi selecionado para deixar uma impressão singular."],
+      "body": ["Em contato com a pele, sua composição ganha nuances únicas e passa a fazer parte de um ritual pessoal.", "Uma fragrância capaz de evocar memórias, marcar ocasiões e acompanhar a personalidade com sutileza.", "Sua evolução convida a descobrir diferentes facetas ao longo do dia, em uma experiência íntima e sofisticada.", "Mais que um aroma, oferece uma forma delicada de comunicar presença antes mesmo das palavras."],
+      "closing": ["Descubra como esta fragrância se revela em você.", "Encontre na perfumaria SAX uma assinatura para tornar cada momento mais pessoal.", "Explore os detalhes e escolha a fragrância que melhor traduz sua presença.", "Visite a SAX e permita-se viver a experiência de escolher uma nova assinatura olfativa." ]
+    },
+    "beleza": {
+      "opening": ["{{name}} transforma o cuidado pessoal em um ritual de beleza e sofisticação.", "Selecionado pelo olhar SAX, {{name}} celebra a beleza como uma expressão única e pessoal.", "{{name}} integra nossa curadoria para elevar pequenos gestos cotidianos a momentos extraordinários.", "Beleza começa nos detalhes; {{name}} foi escolhido para aperfeiçoar cada etapa do seu ritual."],
+      "body": ["Sua proposta convida a explorar texturas, acabamentos e possibilidades que valorizam a expressão individual.", "Uma escolha pensada para tornar a rotina mais sensorial, cuidadosa e alinhada ao seu estilo.", "Versatilidade e performance se unem em uma experiência de beleza conduzida com intenção.", "Ideal para compor um repertório pessoal onde autocuidado e refinamento caminham juntos."],
+      "closing": ["Descubra os detalhes e renove seu ritual de beleza com a SAX.", "Explore nossa curadoria e encontre novas formas de realçar o que torna você única.", "Conheça as opções e transforme o cuidado diário em uma experiência especial.", "Permita-se descobrir uma beleza ainda mais pessoal." ]
+    },
+    "maletines": {
+      "opening": ["{{name}} une organização inteligente e elegância para uma rotina em movimento.", "Pensado para acompanhar trajetos com distinção, {{name}} integra a seleção de viagem SAX.", "{{name}} foi escolhido para quem deseja levar o essencial com praticidade e presença.", "Do compromisso profissional ao próximo destino, {{name}} acompanha cada percurso com estilo."],
+      "body": ["Sua proposta favorece uma organização intuitiva e se adapta a viagens e compromissos cotidianos.", "Funcionalidade e estética contemporânea se encontram em uma escolha preparada para diferentes trajetos.", "Uma solução versátil para transportar itens essenciais com segurança visual e personalidade.", "Detalhes bem resolvidos tornam cada deslocamento mais fluido, organizado e elegante."],
+      "closing": ["Encontre a opção que melhor acompanha a sua rotina.", "Escolha um aliado elegante para seus próximos compromissos.", "Leve mais organização e distinção para cada destino com a SAX.", "Explore os detalhes e prepare-se para viajar com outra perspectiva." ]
+    },
+    "bebidas": {
+      "opening": ["{{name}} integra uma curadoria criada para encontros que merecem ser apreciados sem pressa.", "Selecionado para ocasiões especiais, {{name}} acrescenta distinção à arte de celebrar.", "{{name}} convida a brindar histórias, encontros e momentos dignos de memória.", "Para receber, presentear ou guardar, {{name}} representa uma escolha de paladar e elegância."],
+      "body": ["Uma escolha versátil para a adega e para ocasiões em que cada detalhe contribui para a experiência.", "Sua presença completa celebrações e convida a desfrutar o momento com atenção e boa companhia.", "Ideal para quem valoriza uma seleção criteriosa e o prazer de compartilhar descobertas especiais.", "Uma experiência pensada para acompanhar conversas, brindes e a atmosfera única de cada encontro."],
+      "closing": ["Escolha a opção ideal para sua próxima celebração. Aprecie com responsabilidade.", "Encontre a bebida que melhor acompanha a ocasião. Aprecie com responsabilidade.", "Prepare-se para brindar momentos especiais com a curadoria SAX. Aprecie com responsabilidade.", "Descubra novos rituais de celebração. Venda exclusiva para maiores de idade." ]
+    },
+    "habanos": {
+      "opening": ["{{name}} integra uma curadoria dedicada ao tempo, à tradição e aos rituais de apreciação.", "Selecionado para momentos de contemplação, {{name}} traduz distinção e personalidade.", "{{name}} representa uma escolha criteriosa para conhecedores da cultura dos habanos.", "Entre tradição e caráter, {{name}} convida a uma experiência reservada e conduzida sem pressa."],
+      "body": ["Uma opção para momentos especiais, apresentada com a atenção que este universo exige.", "Sua proposta convida a desacelerar e valorizar cada etapa de um ritual destinado a apreciadores adultos.", "A curadoria privilegia escolhas para quem reconhece nuances, origem e o valor do tempo.", "Uma presença de caráter, preparada para experiências de apreciação marcadas pela sofisticação."],
+      "closing": ["Conheça os detalhes desta seleção exclusiva para maiores de idade.", "Explore a curadoria SAX Habanos. Venda exclusiva para maiores de idade.", "Descubra a experiência SAX dedicada a apreciadores adultos.", "Consulte a disponibilidade e conheça um universo reservado a maiores de idade." ]
+    },
+    "tecnologia": {
+      "opening": ["{{name}} integra a curadoria SAX como uma expressão de inovação, design e desempenho.", "Tecnologia que se percebe nos detalhes: {{name}} foi selecionado para uma rotina mais intuitiva.", "{{name}} combina engenharia contemporânea e estética apurada em uma experiência premium.", "Criado para simplificar sem perder sofisticação, {{name}} acompanha um estilo de vida conectado."],
+      "body": ["Sua proposta transforma recursos avançados em uma experiência fluida, elegante e naturalmente funcional.", "Design e desempenho trabalham em equilíbrio para acompanhar diferentes momentos do dia.", "Uma escolha feita para quem valoriza soluções inteligentes, acabamento preciso e uso intuitivo.", "Cada detalhe foi pensado para integrar tecnologia à rotina com discrição e eficiência."],
+      "closing": ["Descubra os recursos e experimente uma nova maneira de viver a tecnologia.", "Explore os detalhes e encontre a solução ideal para o seu ritmo.", "Conheça a seleção de tecnologia SAX e eleve sua experiência cotidiana.", "Encontre inovação e design reunidos em uma escolha excepcional." ]
+    },
+    "unisex": {
+      "opening": ["{{name}} traduz uma visão livre e contemporânea do estilo, sem limites para a expressão individual.", "Versátil por natureza, {{name}} foi selecionado para diferentes identidades e maneiras de usar.", "{{name}} integra a curadoria SAX com uma proposta autêntica, atual e aberta a interpretações.", "Além de convenções, {{name}} celebra um estilo construído com liberdade e intenção."],
+      "body": ["Sua proposta permite combinações diversas e valoriza a construção de um repertório verdadeiramente pessoal.", "Uma escolha capaz de transitar entre ocasiões e composições com absoluta naturalidade.", "Atual e adaptável, convida cada pessoa a incorporar a peça à sua própria narrativa.", "O desenho equilibrado abre espaço para diferentes leituras sem perder identidade e sofisticação."],
+      "closing": ["Descubra novas possibilidades para usar do seu jeito.", "Escolha a versão que melhor representa a sua identidade.", "Celebre um estilo construído com liberdade e autenticidade.", "Explore a curadoria SAX e faça desta escolha uma expressão inteiramente sua." ]
+    }
+  }
+}

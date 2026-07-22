@@ -75,7 +75,7 @@
 
 {{-- 4. Detalhes do Produto --}}
 @if(Route::is('produto.show') || Route::is('product.show'))
-    <link href="{{ asset('css/show-products.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/show-products.css') }}?v={{ filemtime(public_path('css/show-products.css')) }}" rel="stylesheet">
 @endif
 
 {{-- 5. Blog --}}

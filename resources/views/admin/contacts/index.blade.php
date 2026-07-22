@@ -19,9 +19,42 @@
                 <span class="sax-cat__sub">{{ __('messages.gestao_comunicacoes_desc') }}</span>
             </div>
 
-            <a href="{{ route('admin.contacts.export', ['type' => $type]) }}" class="sax-cat__new">
+            <a href="{{ route('admin.contacts.export', ['type' => $type, 'period' => $period]) }}" class="sax-cat__new">
                 <i class="fas fa-download"></i> {{ __('messages.exportar_btn') }}
             </a>
+        </div>
+
+        <div class="contacts-period-panel">
+            <div>
+                <span class="contacts-period-eyebrow">Resumo dos contatos</span>
+                <strong>{{ $periodLabel }}</strong>
+            </div>
+            <div class="contacts-period-actions">
+                @foreach ($periods as $periodKey => $periodName)
+                    <a href="{{ route('admin.contatos.index', ['period' => $periodKey, 'type' => $type, 'search' => $search, 'per_page' => $perPage]) }}"
+                       class="contacts-period-btn {{ $period === $periodKey ? 'is-active' : '' }}">
+                        {{ $periodName }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="contacts-summary-grid">
+            @php
+                $summaryCards = [
+                    ['Total recebidos', $stats['total'], 'fa-inbox', '#2970ff'],
+                    ['Consultas', $stats['consultas'], 'fa-comment', '#12b76a'],
+                    ['Currículos', $stats['curriculos'], 'fa-file-lines', '#b7791f'],
+                    ['Newsletter', $stats['newsletters'], 'fa-envelope', '#7f56d9'],
+                ];
+            @endphp
+            @foreach ($summaryCards as [$label, $value, $icon, $color])
+                <div class="contacts-summary-card">
+                    <span class="contacts-summary-icon" style="--summary-color: {{ $color }}"><i class="fa-solid {{ $icon }}"></i></span>
+                    <span class="contacts-summary-label">{{ $label }}</span>
+                    <strong>{{ number_format($value, 0, ',', '.') }}</strong>
+                </div>
+            @endforeach
         </div>
 
         {{-- Busca + abas por tipo + itens por página --}}
@@ -30,6 +63,7 @@
                 <i class="fa fa-search"></i>
                 <input type="text" name="search" value="{{ $search }}" autocomplete="off"
                        placeholder="{{ __('messages.contato_buscar_placeholder') }}">
+                <input type="hidden" name="period" value="{{ $period }}">
                 @if ($type)
                     <input type="hidden" name="type" value="{{ $type }}">
                 @endif
@@ -37,13 +71,13 @@
             </form>
 
             <div class="sax-msg__tabs">
-                <a href="{{ route('admin.contatos.index', ['search' => $search, 'per_page' => $perPage]) }}"
+                <a href="{{ route('admin.contatos.index', ['period' => $period, 'search' => $search, 'per_page' => $perPage]) }}"
                    class="sax-chip {{ !$type ? 'is-on' : '' }}">
                     {{ __('messages.cupon_situacao_todas') }} <span>{{ $totais['all'] }}</span>
                 </a>
 
                 @foreach ($tipos as $id => $info)
-                    <a href="{{ route('admin.contatos.index', ['type' => $id, 'search' => $search, 'per_page' => $perPage]) }}"
+                    <a href="{{ route('admin.contatos.index', ['period' => $period, 'type' => $id, 'search' => $search, 'per_page' => $perPage]) }}"
                        class="sax-chip {{ (int) $type === $id ? 'is-on' : '' }}">
                         {{ $info['rotulo'] }} <span>{{ $totais[$id] }}</span>
                     </a>
@@ -51,6 +85,7 @@
             </div>
 
             <form method="GET" action="{{ route('admin.contatos.index') }}" class="sax-msg__per">
+                <input type="hidden" name="period" value="{{ $period }}">
                 @if ($type) <input type="hidden" name="type" value="{{ $type }}"> @endif
                 @if ($search) <input type="hidden" name="search" value="{{ $search }}"> @endif
                 <select name="per_page" onchange="this.form.submit()">
@@ -174,6 +209,111 @@
 .sax-msg__bar { flex-wrap: wrap; }
 .sax-msg__tabs { display: flex; gap: .25rem; flex-wrap: wrap; }
 .sax-msg__tabs .sax-chip span { opacity: .55; margin-left: .15rem; }
+
+.contacts-period-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.1rem 0;
+    padding: 1rem 1.1rem;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #f8fafc;
+}
+
+.contacts-period-panel strong {
+    display: block;
+    margin-top: .2rem;
+    color: #101828;
+    font-size: .95rem;
+}
+
+.contacts-period-eyebrow {
+    display: block;
+    color: #98a2b3;
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.contacts-period-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+.contacts-period-btn {
+    padding: .48rem .72rem;
+    border: 1px solid #d0d5dd;
+    border-radius: 9px;
+    color: #475467;
+    background: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: .2s ease;
+}
+
+.contacts-period-btn:hover,
+.contacts-period-btn.is-active {
+    border-color: #101828;
+    color: #fff;
+    background: #101828;
+}
+
+.contacts-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .75rem;
+    margin-bottom: 1.1rem;
+}
+
+.contacts-summary-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: .7rem;
+    align-items: center;
+    padding: .9rem;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.contacts-summary-icon {
+    grid-row: span 2;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: 10px;
+    color: var(--summary-color);
+    background: color-mix(in srgb, var(--summary-color) 12%, white);
+    font-size: .85rem;
+}
+
+.contacts-summary-label {
+    color: #667085;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.contacts-summary-card strong {
+    color: #101828;
+    font-size: 1.35rem;
+    line-height: 1.1;
+}
+
+@media (max-width: 767.98px) {
+    .contacts-period-panel { align-items: flex-start; flex-direction: column; }
+    .contacts-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 420px) {
+    .contacts-summary-grid { gap: .5rem; }
+    .contacts-summary-card { padding: .7rem; }
+    .contacts-summary-icon { width: 30px; height: 30px; }
+    .contacts-summary-card strong { font-size: 1.1rem; }
+}
 
 .sax-msg__per select {
     border: 1px solid #e0e0e0;

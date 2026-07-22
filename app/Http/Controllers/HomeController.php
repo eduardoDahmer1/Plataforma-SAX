@@ -11,6 +11,7 @@ use App\Models\Cart;
 use App\Models\Blog;
 use App\Models\Generalsetting;
 use App\Models\Attribute;
+use App\Services\DailyMostViewedProducts;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
@@ -69,7 +70,7 @@ class HomeController extends Controller
         );
     }
 
-    public function index(Request $request)
+    public function index(Request $request, DailyMostViewedProducts $dailyMostViewedProducts)
     {
         $settings  = Cache::remember('general_settings',  600, fn() => Generalsetting::first());
         $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
@@ -97,15 +98,7 @@ class HomeController extends Controller
             fn() => $this->activeProducts()->orderBy('updated_at', 'desc')->take(12)->get()
         );
 
-        $mostViewed = Cache::remember(
-            'home_most_viewed_products_' . now()->format('Y_W'),
-            now()->addDays(7),
-            fn() => $this->activeProducts()
-                ->where('views', '>', 0)
-                ->orderBy('views', 'desc')
-                ->limit(12)
-                ->get()
-        );
+        $mostViewed = $dailyMostViewedProducts->get(12);
 
         $categoriesStrip = Cache::remember('categories_home_strip_random_15min', 900,
             fn() => Category::select('id', 'name', 'slug', 'photo')

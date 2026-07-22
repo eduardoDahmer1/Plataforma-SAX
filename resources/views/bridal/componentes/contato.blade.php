@@ -3,7 +3,7 @@
     <div class="container">
 
         <div class="text-center mb-5" data-reveal="up">
-            <span class="title-gold">ENCUÉNTRANOS</span>
+            <span class="title-gold">Noos Escontree</span>
             <h2 class="section-title">Nuestras Sucursales</h2>
         </div>
 

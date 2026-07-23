@@ -95,26 +95,5 @@
             </form>
         </div>
     </div>
-
-<script>
-function toggleFields() {
-    const type = document.getElementById('type').value;
-    const name = (document.getElementById('name')?.value || '').trim().toLowerCase();
-    const gatewayFields = document.querySelectorAll('.gateway-only');
-    const bankFields = document.querySelectorAll('.bank-only');
-    const sandboxControl = document.getElementById('sandboxControl');
-    
-    gatewayFields.forEach(el => el.style.display = (type === 'gateway') ? 'block' : 'none');
-    bankFields.forEach(el => el.style.display = (type === 'bank') ? 'block' : 'none');
-
-    if (sandboxControl) {
-        sandboxControl.style.display = (type === 'gateway' && name === 'bancard v2') ? 'block' : 'none';
-    }
-}
-
-document.getElementById('type').addEventListener('change', toggleFields);
-document.getElementById('name').addEventListener('input', toggleFields);
-toggleFields();
-</script>
 </x-admin.card>
 @endsection

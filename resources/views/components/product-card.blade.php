@@ -7,7 +7,35 @@
 
 @php
     $isOutOfStock = ($item->stock ?? 0) <= 0;
-    $displayName = filled($displayName) ? $displayName : ($item->name ?? $item->external_name ?? '');
+    if (!filled($displayName)) {
+        $productLocale = translation_locale();
+        $commercialName = filled($item->name) ? $item->name : ($item->external_name ?? '');
+        $translation = null;
+
+        if ($productLocale !== 'pt-br') {
+            $translation = $item->relationLoaded('translations')
+                ? $item->translations->firstWhere('locale', $productLocale)
+                : null;
+
+            // Coleções antigas em cache podem conter somente outro idioma.
+            if (!$translation) {
+                $translation = $item->translations()
+                    ->where('locale', $productLocale)
+                    ->first();
+            }
+        }
+
+        $translatedName = trim((string) ($translation?->name ?? ''));
+        $externalName = trim((string) ($item->external_name ?? ''));
+        $isLegacyExternalName = $translatedName !== ''
+            && $externalName !== ''
+            && mb_strtolower($translatedName) === mb_strtolower($externalName)
+            && mb_strtolower(trim((string) $commercialName)) !== mb_strtolower($externalName);
+
+        $displayName = $translatedName !== '' && !$isLegacyExternalName
+            ? $translatedName
+            : $commercialName;
+    }
 
     $fotoExibir = 'https://placehold.co/400x533/f5f5f5/999?text=No+Image';
     if (!empty($item->photo_url)) {

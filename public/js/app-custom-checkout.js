@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const paymentMethodsAllowed = ['deposito', 'bancard', 'bancard_v2', 'whatsapp', 'pagopar'];
+    const paymentMethodsAllowed = ['deposito', 'bancard_v2', 'whatsapp'];
 
     function getStepElement(stepNumber) {
         return document.getElementById(`step${stepNumber}`);
@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         
         if (instruction) {
-            instruction.innerText = ['bancard', 'bancard_v2'].includes(method)
+            instruction.innerText = method === 'bancard_v2'
                 ? "Cartão disponível para Brasil, Paraguai e outros países. QR Bancard somente para o Paraguai; PIX/QR Brasil em breve."
                 : "Após finalizar, você deverá enviar o comprovante do depósito/transferência.";
         }

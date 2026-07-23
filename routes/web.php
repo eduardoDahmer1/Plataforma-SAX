@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ContactControllerAdmin;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\InstitucionalAdminController;
+use App\Http\Controllers\Admin\MarketingSettingController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PalaceAdminController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -181,6 +182,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::get('/relatorios/{period}', [DashboardController::class, 'report'])->whereIn('period', ['today', 'week', 'month'])->name('reports.download');
     Route::get('banners', [ImageUploadController::class, 'index'])->name('banners.index');
+    Route::get('marketing', [MarketingSettingController::class, 'edit'])->name('marketing.edit');
+    Route::put('marketing', [MarketingSettingController::class, 'update'])->name('marketing.update');
     Route::redirect('visao-geral', '/admin')->name('overview');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::resource('languages', \App\Http\Controllers\Admin\LanguageControllerAdmin::class);

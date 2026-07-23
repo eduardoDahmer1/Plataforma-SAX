@@ -160,11 +160,7 @@
                         @endphp
                         <div class="row g-2 g-md-3">
                             @foreach ($products as $item)
-                                @php
-                                    $translation = $item->translations->first();
-                                    $displayName = filled($translation?->name) ? $translation->name : $item->name;
-                                @endphp
-                                <x-product-card :item="$item" :cartItems="$cartItems ?? []" :displayName="$displayName" gridClass="col-6 col-md-4 col-xl-3" />
+                                <x-product-card :item="$item" :cartItems="$cartItems ?? []" gridClass="col-6 col-md-4 col-xl-3" />
                             @endforeach
                         </div>
 

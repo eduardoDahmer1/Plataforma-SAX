@@ -137,6 +137,17 @@ class CategoriasFilhasControllerAdmin extends Controller
         return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
     }
 
+    public function deletePhoto(CategoriasFilhas $categorias_filha)
+    {
+        if ($categorias_filha->photo) {
+            $this->deleteFileIfExists($categorias_filha->photo);
+            $categorias_filha->photo = null;
+            $categorias_filha->save();
+        }
+
+        return back()->with('success', 'Foto excluída com sucesso.');
+    }
+
     public function uploadBanner(Request $request, CategoriasFilhas $categorias_filha)
     {
         $request->validate(['banner' => 'required|image|max:10240']);
@@ -147,6 +158,17 @@ class CategoriasFilhasControllerAdmin extends Controller
         $categorias_filha->save();
 
         return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+    }
+
+    public function deleteBanner(CategoriasFilhas $categorias_filha)
+    {
+        if ($categorias_filha->banner) {
+            $this->deleteFileIfExists($categorias_filha->banner);
+            $categorias_filha->banner = null;
+            $categorias_filha->save();
+        }
+
+        return back()->with('success', 'Banner excluído com sucesso.');
     }
 
     // ... (restante dos métodos auxiliares permanecem iguais)

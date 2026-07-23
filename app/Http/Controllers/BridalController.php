@@ -22,7 +22,7 @@ class BridalController extends Controller
         $brands   = Brand::where('status', 1)->whereIn('id', $idbrands)->get();
 
         // obtener los productos relacionados con las marcas específicas, asegurando que tengan una foto válida
-        $bridalProducts = Product::with('brand')
+        $bridalProducts = Product::with(['brand', 'translations'])
             ->whereIn('brand_id', $idbrands)
             ->where('is_outlet', false)
             ->where('status', 1)

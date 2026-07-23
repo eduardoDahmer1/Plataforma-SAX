@@ -6,6 +6,7 @@
 </head>
 
 <body>
+    <x-marketing-body-start />
 
     {{-- Header --}}
     @include('components.header')

@@ -31,7 +31,7 @@ class DailyMostViewedProducts
                     ->whereNotNull('photo')
                     ->where('photo', '!=', '')
                     ->where('views', '>', 0)
-                    ->with('brand')
+                    ->with(['brand', 'translations'])
                     ->orderByDesc('views')
                     ->limit($limit * self::POOL_MULTIPLIER)
                     ->get();

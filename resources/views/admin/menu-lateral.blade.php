@@ -16,7 +16,8 @@
         'admin.payments.*',
         'admin.cupons.*',
         'admin.activate.*',
-        'admin.languages.*'
+        'admin.languages.*',
+        'admin.marketing.*'
     );
 @endphp
 
@@ -113,6 +114,7 @@
                     <i class="fa-solid fa-images"></i> {{ __('messages.menu_banners_home') }}
                 </a>
                 <a href="{{ route('admin.sections_home.index') }}" class="submenu-link {{ request()->routeIs('admin.sections_home.*') ? 'active' : '' }}"><i class="fas fa-sliders-h"></i> {{ __('messages.menu_secoes_home') }}</a>
+                <a href="{{ route('admin.marketing.edit') }}" class="submenu-link {{ request()->routeIs('admin.marketing.*') ? 'active' : '' }}"><i class="fa-solid fa-chart-simple"></i> SEO e Marketing</a>
                 <button id="clearCacheBtn" data-url="{{ secure_url('admin/clear-cache') }}" data-csrf="{{ csrf_token() }}" class="submenu-link border-0 bg-transparent w-100 text-start">
                     <i class="fa-solid fa-broom"></i> {{ __('messages.menu_limpar_cache') }}
                 </button>

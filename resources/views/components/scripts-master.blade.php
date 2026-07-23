@@ -85,3 +85,4 @@
 @endauth
 
 @stack('scripts')
+<x-marketing-body-end />

@@ -4,6 +4,7 @@
     <x-head-master />
 </head>
 <body>
+    <x-marketing-body-start />
 
     <x-header-internas />
 

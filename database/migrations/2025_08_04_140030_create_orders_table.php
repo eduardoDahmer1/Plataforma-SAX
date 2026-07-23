@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->decimal('total', 10, 2);
-            $table->string('payment_method'); // bancard, deposito
+            $table->string('payment_method'); // bancard_v2, deposito
             $table->string('status')->default('pendente');
             $table->timestamps();
         });

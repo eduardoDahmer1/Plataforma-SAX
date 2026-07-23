@@ -30,7 +30,7 @@ class HomeController extends Controller
             ->where('stock', '>', 0)
             ->whereNotNull('photo')
             ->where('photo', '!=', '')
-            ->with('brand');
+            ->with(['brand', 'translations']);
     }
 
     private function weeklyRotatedHomeBanners(?Attribute $attribute): array

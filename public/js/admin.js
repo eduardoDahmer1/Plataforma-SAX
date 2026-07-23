@@ -63,6 +63,79 @@ document.addEventListener('submit', function (e) {
 });
 
 
+// ======== Métodos de pagamento: confirmação conforme o ambiente ========
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('paymentMethodForm');
+    const modalEl = document.getElementById('confirmPaymentChangesModal');
+    const confirmButton = document.getElementById('confirmPaymentChangesButton');
+    const environmentAlert = document.getElementById('paymentEnvironmentAlert');
+    const environmentTitle = document.getElementById('paymentEnvironmentTitle');
+    const environmentMessage = document.getElementById('paymentEnvironmentMessage');
+    const typeField = document.getElementById('type');
+    const nameField = document.getElementById('name');
+
+    if (!form || !modalEl || !confirmButton || !environmentAlert || !environmentTitle || !environmentMessage) {
+        return;
+    }
+
+    const togglePaymentFields = function () {
+        const isGateway = typeField && typeField.value === 'gateway';
+        document.querySelectorAll('.gateway-only').forEach(el => el.style.display = isGateway ? 'block' : 'none');
+        document.querySelectorAll('.bank-only').forEach(el => el.style.display = isGateway ? 'none' : 'block');
+    };
+
+    if (typeField) typeField.addEventListener('change', togglePaymentFields);
+    if (nameField) nameField.addEventListener('input', togglePaymentFields);
+    togglePaymentFields();
+
+    const currentHost = window.location.hostname.toLowerCase().replace(/^www\./, '');
+    const isProduction = currentHost === 'saxdepartment.com';
+    const isStage = currentHost === 'stage.saxdepartment.com';
+    let changesConfirmed = false;
+
+    if (isProduction) {
+        environmentAlert.classList.add('alert-danger');
+        environmentTitle.textContent = 'ATENÇÃO: VOCÊ ESTÁ EM PRODUÇÃO';
+        environmentMessage.textContent = 'Esta alteração afetará os pagamentos reais dos clientes em saxdepartment.com. Revise cuidadosamente as credenciais, o sandbox e a ativação do método antes de continuar.';
+        confirmButton.classList.add('btn-danger');
+        confirmButton.textContent = 'Sim, alterar produção';
+    } else if (isStage) {
+        environmentAlert.classList.add('alert-warning');
+        environmentTitle.textContent = 'Você está no ambiente de STAGE';
+        environmentMessage.textContent = 'As alterações serão aplicadas somente em stage.saxdepartment.com. Use este ambiente para validar a configuração antes de levá-la para produção.';
+        confirmButton.classList.add('btn-primary');
+    } else {
+        environmentAlert.classList.add('alert-secondary');
+        environmentTitle.textContent = 'Ambiente não identificado';
+        environmentMessage.textContent = `O endereço atual é ${currentHost}. Confirme que este é o ambiente correto antes de continuar.`;
+        confirmButton.classList.add('btn-dark');
+    }
+
+    form.addEventListener('submit', function (event) {
+        if (changesConfirmed) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (typeof bootstrap === 'undefined') {
+            changesConfirmed = window.confirm(`${environmentTitle.textContent}\n\n${environmentMessage.textContent}`);
+            if (changesConfirmed) form.requestSubmit();
+            return;
+        }
+
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    });
+
+    confirmButton.addEventListener('click', function () {
+        changesConfirmed = true;
+        window.saxButtonLoading(confirmButton, true, 'Guardando...');
+        bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+        form.requestSubmit();
+    });
+});
+
+
 // ======== Back to Top + Drawer Mobile (Layout Admin) ========
 document.addEventListener('DOMContentLoaded', function () {
     const backToTop = document.getElementById("backToTop");
@@ -448,19 +521,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // 1. Inicialização segura do Objeto de Estados
 var currentLangs = {
-    title: 'pt', content: 'pt', desc: 'pt', pilar1: 'pt', 
+    title: 'pt', content: 'pt', desc: 'pt', pilar1: 'pt',
     pilar2: 'pt', pilar3: 'pt', name: 'pt',heroT: 'pt',
     heroD: 'pt', barT: 'pt', barD: 'pt', gastT: 'pt', gastD: 'pt'
 };
 
 document.addEventListener("DOMContentLoaded", function() {
-    
+
     // ==========================================
     // 2. INICIALIZAÇÃO DE CAMPOS (Títulos e Inputs)
     // ==========================================
     const inputsParaInicializar = {
         'visual-title-input': 'real-title-pt',
-        'visual-name-input': 'real-name-pt', 
+        'visual-name-input': 'real-name-pt',
         'visual-pilar1t-input': 'real-pilar1t-pt', 'visual-pilar1b-input': 'real-pilar1b-pt',
         'visual-pilar2t-input': 'real-pilar2t-pt', 'visual-pilar2b-input': 'real-pilar2b-pt',
         'visual-pilar3t-input': 'real-pilar3t-pt', 'visual-pilar3b-input': 'real-pilar3b-pt'
@@ -484,24 +557,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Editor 1: Conteúdo Geral
         tinymce.init({
-            ...editorConfig, 
+            ...editorConfig,
             selector: '#editor-content',
             setup: (ed) => {
                 ed.on('init', () => {
                     const real = document.getElementById('real-content-pt');
                     if (real) ed.setContent(real.value);
                 });
-                ed.on('change keyup', () => { 
-                    ed.save(); 
+                ed.on('change keyup', () => {
+                    ed.save();
                     const t = document.getElementById('real-content-' + currentLangs.content);
-                    if (t) t.value = ed.getContent(); 
+                    if (t) t.value = ed.getContent();
                 });
             }
         });
 
         // Editor 2: Descrição do Produto
         tinymce.init({
-            ...editorConfig, 
+            ...editorConfig,
             selector: '#editor-product',
             setup: (ed) => {
                 const syncDescription = () => {
@@ -544,7 +617,7 @@ function switchLanguage(type, nextLang, element) {
     if (type === 'content' || type === 'desc') {
         const editorId = (type === 'content') ? 'editor-content' : 'editor-product';
         const realPrefix = (type === 'content') ? 'real-content-' : 'real-desc-';
-        
+
         const editor = tinymce.get(editorId);
         if (editor) {
             const prevArea = document.getElementById(realPrefix + prevLang);
@@ -552,13 +625,13 @@ function switchLanguage(type, nextLang, element) {
             if (prevArea) prevArea.value = editor.getContent();
             editor.setContent(nextArea ? nextArea.value : '');
         }
-    } 
+    }
     // B. Tratamento para Inputs Visuais (title, name)
     else if (type === 'title' || type === 'name') {
         const prevInput = document.getElementById(`real-${type}-` + prevLang);
         const nextInput = document.getElementById(`real-${type}-` + nextLang);
         const vEl = document.getElementById(`visual-${type}-input`);
-        
+
         if (vEl && prevInput) prevInput.value = vEl.value;
         if (vEl) vEl.value = nextInput ? nextInput.value : '';
     }
@@ -566,27 +639,27 @@ function switchLanguage(type, nextLang, element) {
     else if (type.startsWith('pilar')) {
         const vTitle = document.getElementById(`visual-${type}t-input`);
         const vBody = document.getElementById(`visual-${type}b-input`);
-        
+
         const prevT = document.getElementById(`real-${type}t-${prevLang}`);
         const prevB = document.getElementById(`real-${type}b-${prevLang}`);
         if (vTitle && prevT) prevT.value = vTitle.value;
         if (vBody && prevB) prevB.value = vBody.value;
-        
+
         const nextT = document.getElementById(`real-${type}t-${nextLang}`);
         const nextB = document.getElementById(`real-${type}b-${nextLang}`);
         if (vTitle) vTitle.value = nextT ? nextT.value : '';
         if (vBody) vBody.value = nextB ? nextB.value : '';
     }
-    
+
     // D. Tratamento para Novos Campos (heroT, heroD, barT, barD, gastT, gastD)
     else {
         const vEl = document.getElementById(`visual-${type}-input`); // Ex: visual-gastD-input
-        
+
         // O erro pode estar aqui: o ID no seu Blade é real-gastD-pt
-        // Certifique-se que o 'type' que você passa no onclick seja EXATAMENTE 
+        // Certifique-se que o 'type' que você passa no onclick seja EXATAMENTE
         // a parte do meio do ID (ex: gastD)
-        
-        const prevInput = document.getElementById(`real-${type}-${prevLang}`); 
+
+        const prevInput = document.getElementById(`real-${type}-${prevLang}`);
         const nextInput = document.getElementById(`real-${type}-${nextLang}`);
 
         if (vEl && prevInput) prevInput.value = vEl.value; // Salva o atual
@@ -1001,21 +1074,107 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 
 
-// ======== Activate: Toggle Status ========
-// Usado en activate/index.blade.php — botones de status de categorías y marcas
-function toggleUI(btn) {
-    const input = btn.previousElementSibling;
-    const isCurrentlyActive = input.value == "1";
-    if (isCurrentlyActive) {
-        input.value = "2";
-        btn.className = "status-badge status-inactive";
-        btn.innerHTML = 'Inativo <span>▾</span>';
-    } else {
-        input.value = "1";
-        btn.className = "status-badge status-active";
-        btn.innerHTML = 'Ativo <span>▴</span>';
+document.addEventListener('DOMContentLoaded', function () {
+    const app = document.getElementById('activate-app');
+    if (!app) return;
+
+    const feedback = document.getElementById('activate-feedback');
+    const busca = document.getElementById('activate-search');
+    const chips = app.querySelectorAll('.sax-chip');
+    let filtroStatus = 'all';
+    let timerFeedback = null;
+
+    function avisar(mensagem, erro) {
+        feedback.textContent = mensagem;
+        feedback.classList.toggle('is-error', Boolean(erro));
+        clearTimeout(timerFeedback);
+        timerFeedback = setTimeout(function () {
+            feedback.textContent = '';
+        }, 2500);
     }
-}
+
+    function nomeDe(item) {
+        if (!item._nome) {
+            item._nome = item.querySelector('.ai-n').textContent.trim().toLowerCase();
+        }
+        return item._nome;
+    }
+
+    function aplicarFiltros() {
+        const termo = busca.value.trim().toLowerCase();
+
+        app.querySelectorAll('[data-section]').forEach(function (secao) {
+            let visiveis = 0;
+
+            secao.querySelectorAll('.ai').forEach(function (item) {
+                const casaTexto = !termo || nomeDe(item).includes(termo);
+                const casaStatus = filtroStatus === 'all' || item.dataset.s === filtroStatus;
+                const mostrar = casaTexto && casaStatus;
+
+                item.hidden = !mostrar;
+                if (mostrar) visiveis++;
+            });
+
+            secao.querySelector('[data-empty]').hidden = visiveis > 0;
+        });
+    }
+
+    busca.addEventListener('input', aplicarFiltros);
+
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            chips.forEach(function (item) {
+                item.classList.remove('is-on');
+            });
+            chip.classList.add('is-on');
+            filtroStatus = chip.dataset.filter;
+            aplicarFiltros();
+        });
+    });
+
+    app.addEventListener('click', function (event) {
+        const botao = event.target.closest('.sax-toggle');
+        if (!botao) return;
+
+        const item = botao.closest('.ai');
+        const secao = botao.closest('[data-section]');
+        const ligadoAntes = botao.classList.contains('is-on');
+        const url = app.dataset.toggleUrl
+            .replace('__TYPE__', secao.dataset.section)
+            .replace('__ID__', botao.dataset.id);
+
+        botao.disabled = true;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        })
+            .then(function (response) {
+                return response.ok ? response.json() : Promise.reject();
+            })
+            .then(function (data) {
+                botao.classList.toggle('is-on', data.ativo);
+                item.dataset.s = data.status;
+
+                const contador = secao.querySelector('[data-count-active]');
+                contador.textContent = Number(contador.textContent) + (data.ativo ? 1 : -1);
+
+                avisar(data.message, false);
+                aplicarFiltros();
+            })
+            .catch(function () {
+                botao.classList.toggle('is-on', ligadoAntes);
+                avisar(app.dataset.errorMessage, true);
+            })
+            .finally(function () {
+                botao.disabled = false;
+            });
+    });
+});
 
 
 // ======== Admin: AJAX image upload genérico ========
@@ -1353,3 +1512,501 @@ window.saxGalleryManagers = {};
             });
     });
 })();
+
+
+document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.upload-form').forEach(function (form) {
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const card = form.closest('.banner-admin-card');
+                const btn = form.querySelector('.btn-submit');
+                const img = card.querySelector('.banner-preview-img');
+                const empty = card.querySelector('.empty-state');
+                const delBtn = card.querySelector('.btn-delete');
+
+                btn.disabled = true;
+
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    img.src = data.url;
+                    img.style.display = 'block';
+                    empty.style.display = 'none';
+                    delBtn.style.display = 'block';
+                }
+
+                btn.disabled = false;
+            });
+        });
+
+        document.querySelectorAll('.btn-delete').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                if (!confirm(document.getElementById('banner-admin-config').dataset.confirmDelete)) {
+                    return;
+                }
+
+                const form = btn.closest('.delete-form');
+                const card = form.closest('.banner-admin-card');
+                const img = card.querySelector('.banner-preview-img');
+                const empty = card.querySelector('.empty-state');
+
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    img.style.display = 'none';
+                    empty.style.display = 'block';
+                    btn.style.display = 'none';
+                }
+            });
+        });
+
+        document.querySelectorAll('.banner-link-form').forEach(function (form) {
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const card = form.closest('.banner-admin-card');
+                const input = form.querySelector('.banner-link-input');
+                const btn = form.querySelector('.btn-link-submit');
+                const activeLink = card.querySelector('.banner-active-link');
+                const originalButtonHtml = btn.innerHTML;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Salvando...';
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new FormData(form)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        const firstError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+                        throw new Error(firstError || data?.message || 'Erro ao salvar o link.');
+                    }
+
+                    const currentValue = (input.value || '').trim();
+
+                    if (activeLink) {
+                        if (currentValue) {
+                            activeLink.href = currentValue;
+                            activeLink.classList.remove('d-none');
+                        } else {
+                            activeLink.href = '#';
+                            activeLink.classList.add('d-none');
+                        }
+                    }
+
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>Salvo';
+                } catch (error) {
+                    alert(error.message || 'Nao foi possivel salvar o link agora.');
+                    btn.innerHTML = '<i class="fas fa-triangle-exclamation me-1"></i>Tentar novamente';
+                } finally {
+                    setTimeout(function () {
+                        btn.disabled = false;
+                        btn.innerHTML = originalButtonHtml;
+                    }, 900);
+                }
+            });
+        });
+    });
+
+
+window.applyFilters = function () {
+    const form = document.getElementById('filterForm');
+    if (!form) return;
+    window.location.href = window.location.pathname + '?' + new URLSearchParams(new FormData(form)).toString();
+};
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const app = document.getElementById('msg-app');
+    if (!app) return;
+
+    const feedback = document.getElementById('msg-feedback');
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+    let timer = null;
+
+    function avisar(msg, erro) {
+        feedback.textContent = msg;
+        feedback.classList.toggle('is-error', !!erro);
+        clearTimeout(timer);
+        timer = setTimeout(() => (feedback.textContent = ''), 2500);
+    }
+
+    // Abre/fecha o detalhe da mensagem
+    function alternar(item) {
+        const detalhe = item.querySelector('.sax-msg__detail');
+        const aberto = !detalhe.hidden;
+
+        detalhe.hidden = aberto;
+        item.classList.toggle('is-open', !aberto);
+        item.querySelector('[data-toggle]').setAttribute('aria-expanded', String(!aberto));
+    }
+
+    app.addEventListener('click', function (e) {
+        const excluir = e.target.closest('[data-del]');
+        const cabecalho = e.target.closest('[data-toggle]');
+
+        if (excluir) {
+            const item = excluir.closest('[data-row]');
+            if (!confirm(app.dataset.confirmDelete)) return;
+
+            excluir.disabled = true;
+
+            fetch(app.dataset.deleteUrl + '/' + item.dataset.id, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({ _method: 'DELETE' })
+            })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(data => {
+                item.remove();
+                avisar(data.message, false);
+            })
+            .catch(() => {
+                excluir.disabled = false;
+                avisar(app.dataset.errorMessage, true);
+            });
+
+            return;
+        }
+
+        if (cabecalho) {
+            alternar(cabecalho.closest('[data-row]'));
+        }
+    });
+
+    // Teclado: Enter/Espaço abrem a mensagem
+    app.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const cabecalho = e.target.closest('[data-toggle]');
+        if (!cabecalho) return;
+        e.preventDefault();
+        alternar(cabecalho.closest('[data-row]'));
+    });
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const app = document.getElementById('tr-app');
+    if (!app) return;
+
+    const feedback = document.getElementById('tr-feedback');
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+    let timer = null;
+
+    function avisar(msg, erro) {
+        feedback.textContent = msg;
+        feedback.classList.toggle('is-error', !!erro);
+        clearTimeout(timer);
+        timer = setTimeout(() => (feedback.textContent = ''), 2500);
+    }
+
+    function url(base, id) {
+        return app.dataset[base].replace('__ID__', id);
+    }
+
+    // Marca a linha como alterada e revela o botão de salvar.
+    app.addEventListener('input', function (e) {
+        const input = e.target.closest('.sax-tr__table input');
+        if (!input) return;
+
+        const linha = input.closest('[data-row]');
+        input.classList.toggle('is-dirty', input.value !== input.defaultValue);
+
+        const alterada = [...linha.querySelectorAll('input')].some(i => i.value !== i.defaultValue);
+        linha.querySelector('[data-save]').hidden = !alterada;
+    });
+
+    // Ctrl+Enter ou Enter salva a linha
+    app.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        const linha = e.target.closest('[data-row]');
+        if (!linha) return;
+        e.preventDefault();
+        salvar(linha);
+    });
+
+    function salvar(linha) {
+        const botao = linha.querySelector('[data-save]');
+        const inputs = linha.querySelectorAll('input');
+        const corpo = {};
+        inputs.forEach(i => (corpo[i.name] = i.value));
+
+        botao.disabled = true;
+
+        fetch(url('updateUrl', linha.dataset.id), {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-HTTP-Method-Override': 'PUT'
+            },
+            body: JSON.stringify({ ...corpo, _method: 'PUT' })
+        })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok) {
+                const erro = data.errors ? Object.values(data.errors)[0][0] : (data.message || 'Erro');
+                avisar(erro, true);
+                return;
+            }
+
+            // O valor salvo vira o novo "original": a linha deixa de estar alterada.
+            inputs.forEach(i => {
+                i.defaultValue = i.value;
+                i.classList.remove('is-dirty');
+            });
+
+            botao.hidden = true;
+            linha.classList.toggle('is-missing', data.falta);
+            avisar(data.message, false);
+        })
+        .catch(() => avisar(app.dataset.errorMessage, true))
+        .finally(() => (botao.disabled = false));
+    }
+
+    app.addEventListener('click', function (e) {
+        const salvarBtn = e.target.closest('[data-save]');
+        const delBtn = e.target.closest('[data-del]');
+
+        if (salvarBtn) {
+            salvar(salvarBtn.closest('[data-row]'));
+            return;
+        }
+
+        if (delBtn) {
+            const linha = delBtn.closest('[data-row]');
+            if (!confirm(app.dataset.confirmDelete)) return;
+
+            delBtn.disabled = true;
+
+            fetch(url('deleteUrl', linha.dataset.id), {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({ _method: 'DELETE' })
+            })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(data => {
+                linha.remove();
+                avisar(data.message, false);
+            })
+            .catch(() => {
+                delBtn.disabled = false;
+                avisar(app.dataset.errorMessage, true);
+            });
+        }
+    });
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const modelo = document.getElementById('modelo-cupon');
+    const tipo = document.getElementById('tipo-cupon');
+    if (!modelo || !tipo) return;
+    const camposEscopo = document.querySelectorAll('.cupon-escopo-field');
+    const descontoMaximo = document.getElementById('desconto-maximo-field');
+    const prefixo = document.getElementById('montante-prefixo');
+    const ajudaMontante = document.getElementById('montante-ajuda');
+
+    const couponFields = document.getElementById('coupon-form-fields');
+    const textos = { percentual: couponFields.dataset.percentHelp, valorFixo: couponFields.dataset.fixedHelp };
+
+    // Mostra só o campo do escopo escolhido.
+    function alternarEscopo() {
+        camposEscopo.forEach(function (campo) {
+            campo.style.display = campo.dataset.modelo === modelo.value ? 'block' : 'none';
+        });
+    }
+
+    // Teto de desconto só faz sentido para percentual: um valor fixo já é o próprio teto.
+    function alternarTipo() {
+        const ehPercentual = tipo.value === 'percentual';
+        prefixo.textContent = ehPercentual ? '%' : 'US$';
+        ajudaMontante.textContent = ehPercentual ? textos.percentual : textos.valorFixo;
+        descontoMaximo.style.display = ehPercentual ? 'block' : 'none';
+    }
+
+    modelo.addEventListener('change', alternarEscopo);
+    tipo.addEventListener('change', alternarTipo);
+
+    alternarEscopo();
+    alternarTipo();
+
+    // --- Autocomplete de produto ---
+    const buscaWrap = document.getElementById('produto-busca-wrap');
+    const buscaInput = document.getElementById('produto-busca');
+    const buscaResultados = document.getElementById('produto-resultados');
+    const produtoIdInput = document.getElementById('produto_id');
+    let debounce = null;
+
+    function fecharResultados() {
+        buscaResultados.classList.add('d-none');
+        buscaResultados.innerHTML = '';
+    }
+
+    buscaInput.addEventListener('input', function () {
+        const termo = this.value.trim();
+
+        // Digitar de novo invalida o produto escolhido antes.
+        produtoIdInput.value = '';
+        clearTimeout(debounce);
+
+        if (termo.length < 2) {
+            fecharResultados();
+            return;
+        }
+
+        debounce = setTimeout(function () {
+            fetch(buscaWrap.dataset.url + '?q=' + encodeURIComponent(termo), {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(function (produtos) {
+                buscaResultados.innerHTML = '';
+
+                if (!produtos.length) {
+                    fecharResultados();
+                    return;
+                }
+
+                produtos.forEach(function (produto) {
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action x-small text-start';
+                    item.textContent = produto.texto + ' · ' + produto.preco;
+
+                    item.addEventListener('click', function () {
+                        produtoIdInput.value = produto.id;
+                        buscaInput.value = produto.texto;
+                        fecharResultados();
+                    });
+
+                    buscaResultados.appendChild(item);
+                });
+
+                buscaResultados.classList.remove('d-none');
+            })
+            .catch(fecharResultados);
+        }, 300);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!buscaWrap.contains(e.target)) fecharResultados();
+    });
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const type = document.getElementById('type');
+    const name = document.getElementById('name');
+    if (!type || !name || document.getElementById('paymentMethodForm')) return;
+
+    function toggleFields() {
+        const isGateway = type.value === 'gateway';
+        const isBancardV2 = name.value.trim().toLowerCase() === 'bancard v2';
+        document.querySelectorAll('.gateway-only').forEach(el => el.style.display = isGateway ? 'block' : 'none');
+        document.querySelectorAll('.bank-only').forEach(el => el.style.display = isGateway ? 'none' : 'block');
+        const sandboxControl = document.getElementById('sandboxControl');
+        if (sandboxControl) sandboxControl.style.display = isGateway && isBancardV2 ? 'block' : 'none';
+    }
+
+    type.addEventListener('change', toggleFields);
+    name.addEventListener('input', toggleFields);
+    toggleFields();
+});
+
+
+document.querySelectorAll('.toggle-active').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const id = this.dataset.id;
+            const active = this.checked ? 1 : 0;
+
+            fetch(`/admin/payments/${id}/toggle-active`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ active })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Error');
+                return res.json();
+            })
+            .then(data => {
+                const row = this.closest('tr');
+                const dot = row.querySelector('.status-dot');
+                const text = row.querySelector('.status-indicator span:last-child');
+                const status = row.querySelector('.status-indicator');
+
+                if(active === 1){
+                    dot.classList.add('active');
+                    status.classList.add('is-active');
+                    status.classList.remove('is-inactive');
+                    text.textContent = 'ATIVO';
+                    text.classList.replace('text-muted', 'text-dark');
+                } else {
+                    dot.classList.remove('active');
+                    status.classList.add('is-inactive');
+                    status.classList.remove('is-active');
+                    text.textContent = 'INATIVO';
+                    text.classList.replace('text-dark', 'text-muted');
+                }
+            })
+            .catch(() => {
+                alert('Erro ao atualizar');
+                this.checked = !this.checked;
+            });
+        });
+    });
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const chartData = document.getElementById('dashboard-chart-data');
+    if (!chartData) return;
+    const loadCharts = function () {
+        if (typeof Chart === 'undefined') return;
+        const read = name => JSON.parse(chartData.dataset[name] || '[]');
+        Chart.defaults.font.family = 'Montserrat, Arial, sans-serif';
+        Chart.defaults.color = '#667085';
+        const grid = { color: 'rgba(16,24,40,.06)' };
+        new Chart(document.getElementById('trafficChart'), { type: 'line', data: { labels: read('trafficLabels'), datasets: [{ label: 'Páginas vistas', data: read('trafficViews'), borderColor: '#2970ff', backgroundColor: 'rgba(41,112,255,.1)', fill: true, tension: .35, pointRadius: 2 }, { label: 'Visitantes únicos', data: read('trafficVisitors'), borderColor: '#b39154', backgroundColor: 'transparent', tension: .35, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid }, x: { grid: { display: false } } } } });
+        const doughnut = (id, labels, data, colors) => new Chart(document.getElementById(id), { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } } });
+        doughnut('paymentsChart', read('paymentLabels'), read('paymentValues'), ['#2970ff','#b39154','#12b76a','#98a2b3']);
+        doughnut('ordersChart', read('orderLabels'), read('orderValues'), ['#12b76a','#f79009','#2970ff','#d92d20','#7f56d9','#98a2b3']);
+        doughnut('devicesChart', read('deviceLabels'), read('deviceValues'), ['#101828','#b39154','#2970ff']);
+    };
+    if (typeof Chart !== 'undefined') return loadCharts();
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+    script.onload = loadCharts;
+    document.head.appendChild(script);
+});

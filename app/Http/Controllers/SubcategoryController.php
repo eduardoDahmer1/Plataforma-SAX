@@ -62,7 +62,7 @@ class SubcategoryController extends Controller
                     ->where('stock', '>', 0)
                     ->whereNotNull('photo')
                     ->where('photo', '!=', '')
-                    ->with(['brand', 'category']);
+                    ->with(['brand', 'category', 'translations']);
                 $this->applyCatalogSorting($productsQuery, $sortBy);
                 $products = $productsQuery
                     ->paginate($perPage)

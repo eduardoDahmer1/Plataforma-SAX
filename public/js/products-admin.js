@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var selects = filterForm.querySelectorAll(
         'select[name="status_filter"], select[name="sort_by"], select[name="highlight_filter"], select[name="brand_id"], select[name="category_id"], select[name="product_type"], select[name="per_page"]'
     );
-    
+
     selects.forEach(function (select) {
         select.addEventListener('change', function () {
             filterForm.submit();
@@ -315,12 +315,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // ======== Review: Modal de detalhes ========
 // Archivo: resources/views/admin/products/review.blade.php
-// NOTA: la variable `dadosProdutos` se define inline en el blade con @json()
 function abrirModalLocal(data) {
     var corpo = document.getElementById('corpoTabelaLocal');
     var titulo = document.getElementById('tituloModal');
     if (!corpo || !titulo) return;
 
+    var reviewData = document.getElementById('product-review-data');
+    var dadosProdutos = reviewData ? JSON.parse(reviewData.dataset.products || '{}') : {};
     var produtosDoDia = dadosProdutos[data] || [];
     var escapeHtml = function (value) {
         return String(value).replace(/[&<>'"]/g, function (char) {
@@ -351,7 +352,7 @@ function abrirModalLocal(data) {
 
 document.addEventListener('DOMContentLoaded', function () {
     var input = document.getElementById('photoInput');
-    if (!input) return; 
+    if (!input) return;
 
     input.addEventListener('change', function (e) {
         var file = e.target.files[0];
@@ -379,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // para que al guardar se manden TODAS. No toca backend (update ya acumula sobre lo guardado).
 document.addEventListener('DOMContentLoaded', function () {
     var input = document.getElementById('galleryInput');
-    if (!input) return; 
+    if (!input) return;
 
     var preview = document.getElementById('galleryPreview');
     var countLabel = document.getElementById('gallerySelectionCount');
@@ -571,3 +572,399 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 });
+
+
+(function() {
+                    if (!document.getElementById('color-section')) return;
+                    let colorEntries = [];
+                    let showAll = false;
+
+                    async function initPalette() {
+                        try {
+                            const response = await fetch('/data/color.json');
+                            const data = await response.json();
+
+                            colorEntries = Object.entries(data).map(([hex, name]) => ({
+                                hex: String(hex).toUpperCase(),
+                                name: String(name),
+                            }));
+
+                            renderColors();
+                            detectDominantImageColor();
+                        } catch (error) {
+                            console.error("Erro ao carregar cores:", error);
+                        }
+                    }
+
+                    function normalizeHex(value) {
+                        if (!value) return null;
+                        let hex = String(value).trim().replace('#', '').toUpperCase();
+
+                        if (/^[0-9A-F]{3}$/.test(hex)) {
+                            hex = hex.split('').map(ch => ch + ch).join('');
+                        }
+
+                        if (!/^[0-9A-F]{6}$/.test(hex)) {
+                            return null;
+                        }
+
+                        return `#${hex}`;
+                    }
+
+                    function hexToRgb(hex) {
+                        return {
+                            r: parseInt(hex.slice(1, 3), 16),
+                            g: parseInt(hex.slice(3, 5), 16),
+                            b: parseInt(hex.slice(5, 7), 16),
+                        };
+                    }
+
+                    function colorDistance(a, b) {
+                        const dr = a.r - b.r;
+                        const dg = a.g - b.g;
+                        const db = a.b - b.b;
+                        return dr * dr + dg * dg + db * db;
+                    }
+
+                    function closestByHex(hex, limit = 6) {
+                        const target = hexToRgb(hex);
+
+                        return colorEntries
+                            .map(entry => ({
+                                ...entry,
+                                dist: colorDistance(target, hexToRgb(entry.hex))
+                            }))
+                            .sort((a, b) => a.dist - b.dist)
+                            .slice(0, limit);
+                    }
+
+                    function closestByName(term, limit = 6) {
+                        const query = term.toLowerCase().trim();
+                        if (!query) return [];
+
+                        const words = query.split(/\s+/).filter(Boolean);
+
+                        return colorEntries
+                            .map(entry => {
+                                const name = entry.name.toLowerCase();
+                                const score = words.reduce((acc, word) => {
+                                    if (name === word) return acc + 120;
+                                    if (name.startsWith(word)) return acc + 50;
+                                    if (name.includes(word)) return acc + 25;
+                                    return acc;
+                                }, 0);
+
+                                return { ...entry, score };
+                            })
+                            .filter(entry => entry.score > 0)
+                            .sort((a, b) => b.score - a.score)
+                            .slice(0, limit);
+                    }
+
+                    function applyColor(hex) {
+                        const colorInput = document.getElementById('color-input');
+                        const colorSearch = document.getElementById('color-search');
+                        const noColor = document.getElementById('no_color');
+
+                        if (colorInput) colorInput.value = hex;
+                        if (colorSearch) colorSearch.value = hex;
+                        if (noColor) noColor.checked = false;
+                        addSelectedColor(hex);
+                    }
+
+                    function addSelectedColor(hex) {
+                        const normalized = normalizeHex(hex);
+                        const container = document.getElementById('selected-colors');
+                        if (!normalized || !container || container.querySelector(`[data-color="${normalized}"]`)) return;
+                        if (container.querySelectorAll('.selected-color').length >= 8) return;
+
+                        const chip = document.createElement('span');
+                        chip.className = 'selected-color badge bg-light text-dark border d-inline-flex align-items-center gap-2 p-2';
+                        chip.dataset.color = normalized;
+                        chip.innerHTML = `<i style="width:18px;height:18px;border-radius:50%;background:${normalized};border:1px solid #bbb"></i>${normalized}<button type="button" class="btn-close" style="font-size:8px" aria-label="Remover cor"></button><input type="hidden" name="colors_values[]" value="${normalized}">`;
+                        container.appendChild(chip);
+                    }
+
+                    function removeSelectedColor(event) {
+                        const removeButton = event.target.closest('.btn-close');
+                        if (removeButton) removeButton.closest('.selected-color')?.remove();
+                    }
+
+                    function detectDominantImageColor() {
+                        const section = document.getElementById('color-section');
+                        const image = document.getElementById('photoPreviewImg');
+                        if (!section || section.dataset.detectColorFromImage !== '1' || !image) return;
+                        if (!image.getAttribute('src')) {
+                            image.addEventListener('load', detectDominantImageColor, { once: true });
+                            return;
+                        }
+
+                        const analyze = () => {
+                            try {
+                                const canvas = document.createElement('canvas');
+                                const context = canvas.getContext('2d', { willReadFrequently: true });
+                                const size = 72;
+                                canvas.width = size;
+                                canvas.height = size;
+                                context.drawImage(image, 0, 0, size, size);
+
+                                const pixels = context.getImageData(0, 0, size, size).data;
+                                const buckets = new Map();
+                                for (let index = 0; index < pixels.length; index += 4) {
+                                    const r = pixels[index];
+                                    const g = pixels[index + 1];
+                                    const b = pixels[index + 2];
+                                    if (pixels[index + 3] < 180 || (r > 235 && g > 235 && b > 235)) continue;
+
+                                    const saturation = Math.max(r, g, b) - Math.min(r, g, b);
+                                    const key = `${Math.round(r / 24)},${Math.round(g / 24)},${Math.round(b / 24)}`;
+                                    const bucket = buckets.get(key) || { score: 0, r: 0, g: 0, b: 0, count: 0 };
+                                    bucket.score += 1 + saturation / 80;
+                                    bucket.r += r;
+                                    bucket.g += g;
+                                    bucket.b += b;
+                                    bucket.count += 1;
+                                    buckets.set(key, bucket);
+                                }
+
+                                const dominant = Array.from(buckets.values()).sort((a, b) => b.score - a.score)[0];
+                                if (!dominant || dominant.count < 10) return;
+
+                                const toHex = value => Math.round(value).toString(16).padStart(2, '0').toUpperCase();
+                                const hex = `#${toHex(dominant.r / dominant.count)}${toHex(dominant.g / dominant.count)}${toHex(dominant.b / dominant.count)}`;
+                                applyColor(hex);
+                                renderColors(hex);
+
+                                const message = document.getElementById('image-color-suggestion');
+                                if (message) {
+                                    message.classList.remove('d-none');
+                                    message.innerHTML = `<i class="fas fa-image me-1"></i>Cor sugerida pela foto: <strong>${hex}</strong>. Confira antes de salvar.`;
+                                }
+                                section.dataset.detectColorFromImage = '0';
+                            } catch (error) {
+                                console.warn('Não foi possível identificar a cor pela imagem:', error);
+                            }
+                        };
+
+                        if (image.complete && image.naturalWidth) analyze();
+                        else image.addEventListener('load', analyze, { once: true });
+                    }
+
+                    function renderSuggestions(filter, filteredCount) {
+                        const suggestionsContainer = document.getElementById('color-suggestions');
+                        if (!suggestionsContainer) return;
+
+                        suggestionsContainer.innerHTML = '';
+
+                        const normalizedHex = normalizeHex(filter);
+                        let suggestions = [];
+
+                        if (normalizedHex) {
+                            const exact = colorEntries.some(entry => entry.hex === normalizedHex);
+                            if (!exact) {
+                                suggestions = closestByHex(normalizedHex, 8);
+                            }
+                        } else if (String(filter).trim() && filteredCount === 0) {
+                            suggestions = closestByName(filter, 8);
+                        }
+
+                        if (!suggestions.length) {
+                            return;
+                        }
+
+                        const wrap = document.createElement('div');
+                        wrap.className = 'd-flex flex-wrap align-items-center gap-2';
+
+                        const title = document.createElement('span');
+                        title.className = 'text-muted';
+                        title.textContent = 'Nomes parecidos:';
+                        wrap.appendChild(title);
+
+                        suggestions.forEach(entry => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-outline-secondary btn-sm py-1 px-2';
+                            btn.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${entry.hex};margin-right:6px;"></span>${entry.name}`;
+                            btn.onclick = () => applyColor(entry.hex);
+                            wrap.appendChild(btn);
+                        });
+
+                        suggestionsContainer.appendChild(wrap);
+                    }
+
+                    window.renderColors = function(filter = '') {
+                        const container = document.getElementById('color-palette');
+                        if (!container) return;
+
+                        container.innerHTML = '';
+                        const normalizedFilter = String(filter).toLowerCase();
+                        const filtered = colorEntries.filter(entry =>
+                            entry.name.toLowerCase().includes(normalizedFilter) || entry.hex.toLowerCase().includes(normalizedFilter)
+                        );
+
+                        const limit = showAll ? filtered.length : 20;
+
+                        filtered.slice(0, limit).forEach(entry => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-sm border shadow-sm';
+                            btn.style.backgroundColor = entry.hex;
+                            btn.style.width = '32px';
+                            btn.style.height = '32px';
+                            btn.title = `${entry.name} (${entry.hex})`;
+                            btn.onclick = () => applyColor(entry.hex);
+                            container.appendChild(btn);
+                        });
+
+                        renderSuggestions(filter, filtered.length);
+                    };
+
+                    window.toggleColors = function() {
+                        showAll = !showAll;
+                        document.getElementById('btn-toggle').innerText = showAll ? 'Mostrar menos...' : 'Mostrar mais cores...';
+                        renderColors(document.getElementById('color-search') ? document.getElementById('color-search').value : '');
+                    };
+
+                    document.addEventListener('DOMContentLoaded', () => {
+                        initPalette();
+
+                        const colorSearch = document.getElementById('color-search');
+                        const colorInput = document.getElementById('color-input');
+                        const selectedColors = document.getElementById('selected-colors');
+                        const addColor = document.getElementById('add-color');
+                        const noColor = document.getElementById('no_color');
+
+                        selectedColors?.addEventListener('click', removeSelectedColor);
+                        addColor?.addEventListener('click', () => applyColor(colorInput?.value));
+                        noColor?.addEventListener('change', function () {
+                            if (this.checked && selectedColors) selectedColors.innerHTML = '';
+                        });
+
+                        if (colorSearch) {
+                            colorSearch.addEventListener('input', function() {
+                                renderColors(this.value);
+                            });
+                        }
+
+                        if (colorInput) {
+                            colorInput.addEventListener('input', function() {
+                                const colorSearchField = document.getElementById('color-search');
+                                if (colorSearchField) {
+                                    colorSearchField.value = this.value;
+                                    renderColors(this.value);
+                                }
+                            });
+                        }
+                    });
+                })();
+
+(async function() {
+                    const sizeContainer = document.getElementById('size-container');
+                    if (!sizeContainer) return;
+                    const typeSelector = document.getElementById('type_selector');
+                    const sizeSelect = document.getElementById('size_select');
+                    const inputManual = document.getElementById('size_manual');
+                    const detectionMsg = document.getElementById('detection-msg');
+
+                    const currentSize = sizeContainer.dataset.currentSize;
+                    const detectedSize = sizeContainer.dataset.detectedSize;
+                    const activeGroup = sizeContainer.dataset.activeGroup;
+
+                    const response = await fetch('/data/tamanho.json');
+                    const sizeGroups = await response.json();
+
+                    Object.keys(sizeGroups).forEach(key => {
+                        const opt = document.createElement('option');
+                        opt.value = key; opt.text = key.charAt(0).toUpperCase() + key.slice(1);
+                        if(key === activeGroup) opt.selected = true;
+                        typeSelector.appendChild(opt);
+                    });
+
+                    function populateSizes(group) {
+                        sizeSelect.innerHTML = '<option value="">Selecione o tamanho</option>';
+                        const valToSet = currentSize || detectedSize;
+
+                        if (group && sizeGroups[group]) {
+                            sizeGroups[group].forEach(val => {
+                                const opt = document.createElement('option');
+                                opt.value = val; opt.text = val;
+                                if(val === valToSet) opt.selected = true;
+                                sizeSelect.appendChild(opt);
+                            });
+                            sizeSelect.classList.remove('d-none');
+                            sizeSelect.setAttribute('name', 'size');
+                            inputManual.removeAttribute('name');
+                            inputManual.classList.add('d-none');
+                        } else if (group === 'manual') {
+                            sizeSelect.classList.add('d-none');
+                            sizeSelect.removeAttribute('name');
+                            inputManual.value = valToSet;
+                            inputManual.classList.remove('d-none');
+                            inputManual.setAttribute('name', 'size');
+                        } else {
+                            sizeSelect.classList.add('d-none');
+                            inputManual.classList.add('d-none');
+                        }
+                    }
+
+                    typeSelector.addEventListener('change', (e) => {
+                        detectionMsg.classList.add('d-none');
+                        populateSizes(e.target.value);
+                    });
+
+                    if(activeGroup) populateSizes(activeGroup);
+                })();
+
+document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('productEditForm');
+        const saveBtn = document.getElementById('saveProductBtn');
+        const feedback = document.getElementById('productEditFeedback');
+
+        if (!form || !saveBtn || !feedback) {
+            return;
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const originalHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+
+            feedback.className = 'd-none';
+            feedback.innerHTML = '';
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new FormData(form)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    const firstError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+                    throw new Error(firstError || data?.message || 'Erro ao salvar produto.');
+                }
+
+                feedback.className = 'alert alert-success';
+                feedback.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + (data.message || 'Produto atualizado com sucesso!');
+
+                if (data.redirect) {
+                    setTimeout(function () {
+                        window.location.href = data.redirect;
+                    }, 650);
+                }
+            } catch (error) {
+                feedback.className = 'alert alert-danger';
+                feedback.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + (error.message || 'Erro ao salvar.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalHtml;
+            }
+        });
+    });

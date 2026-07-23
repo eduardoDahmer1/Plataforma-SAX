@@ -68,7 +68,7 @@ class CategoryController extends Controller
             $category = $category->load(['subcategories.categoriasfilhas']);
             $productsQuery = $category
                 ->products()
-                ->with(['brand', 'category']) // Eager loading para evitar N+1 no card
+                ->with(['brand', 'category', 'translations']) // Eager loading para evitar N+1 no card
                 ->where('status', 1)
                 ->where('is_outlet', false)
                 ->where('product_role', 'P')

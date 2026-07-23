@@ -6,6 +6,7 @@
 </head>
 
 <body>
+    <x-marketing-body-start />
     <x-header-internas />
 
     <main>

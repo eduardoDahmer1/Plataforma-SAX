@@ -2,6 +2,5 @@
 <x-product-card
     :item="$item"
     :cartItems="$cartItems ?? []"
-    :displayName="$displayName ?? null"
     gridClass="swiper-slide h-auto"
 />

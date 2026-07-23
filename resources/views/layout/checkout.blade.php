@@ -6,6 +6,7 @@
 </head>
 
 <body class="bg-light">
+    <x-marketing-body-start />
 
     @include('components.header')
 

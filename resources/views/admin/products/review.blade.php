@@ -14,7 +14,7 @@
         </select>
     </div>
 
-    <div class="sax-stats-wrapper">
+    <div class="sax-stats-wrapper" id="product-review-data" data-products="{{ json_encode($detalhesProdutos) }}">
         <div class="row g-4">
             @forelse ($edicoesPorDia as $linha)
                 <div class="col-12 col-sm-6 col-md-4 col-xl-3">
@@ -67,6 +67,5 @@
             </div>
         </div>
     </div>
-    <script>var dadosProdutos = @json($detalhesProdutos);</script>
 </x-admin.card>
 @endsection

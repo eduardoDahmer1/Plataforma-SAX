@@ -153,13 +153,4 @@
         {{ $orders->appends(request()->query())->links() }}
     </div>
 </x-admin.card>
-
-<script>
-function applyFilters() {
-    const form = document.getElementById('filterForm');
-    const formData = new FormData(form);
-    const params = new URLSearchParams(formData);
-    window.location.href = window.location.pathname + '?' + params.toString();
-}
-</script>
 @endsection

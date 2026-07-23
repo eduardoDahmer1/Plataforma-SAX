@@ -25,11 +25,7 @@ class OrderController extends Controller
         $query = Order::with(['user', 'items', 'cupon']);
 
         if ($request->filled('payment_method')) {
-            if ($request->payment_method === 'bancard') {
-                $query->whereIn('payment_method', ['bancard', 'bancard_v2']);
-            } else {
-                $query->where('payment_method', $request->payment_method);
-            }
+            $query->where('payment_method', $request->payment_method);
         }
 
         if ($request->filled('status')) {

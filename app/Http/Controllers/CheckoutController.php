@@ -8,7 +8,6 @@ use App\Models\Order;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\PagoParController;
 use App\Services\CuponService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -56,7 +55,7 @@ class CheckoutController extends Controller
             'email' => 'required|email',
             'phone' => 'required|string',
             'shipping' => 'required|in:1,2,3',
-            'payment_method' => 'required|in:deposito,bancard,bancard_v2,whatsapp,pagopar',
+            'payment_method' => 'required|in:deposito,bancard_v2,whatsapp',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street' => 'required_if:shipping,2',
             'number' => 'required_if:shipping,2',
@@ -220,7 +219,7 @@ class CheckoutController extends Controller
                     : $this->checkoutEmailMessage($order, 'deposito_reservado');
 
                 $this->enviarEmailPedido($order, $msg);
-            } elseif (in_array($paymentMethod, ['bancard', 'bancard_v2', 'pagopar'])) {
+            } elseif ($paymentMethod === 'bancard_v2') {
                 $this->enviarEmailPedido($order, $this->checkoutEmailMessage($order, 'gateway_aguardando'));
             }
 
@@ -231,10 +230,6 @@ class CheckoutController extends Controller
             // 8. Redirecionamentos Finais
             if ($paymentMethod === 'bancard_v2') {
                 return redirect()->route('checkout.bancard.v2', ['order' => $order->id]);
-            }
-
-            if (in_array($paymentMethod, ['pagopar', 'bancard'])) {
-                return app(PagoParController::class)->payment($order);
             }
 
             if ($paymentMethod === 'deposito') {

@@ -21,8 +21,11 @@ class UserPreferenceController extends Controller
                 ->with('erro', 'Seu perfil não permite usar favoritos');
         }
 
-        // Usamos with('brand') para carregar as marcas de uma vez só
-        $favoriteProducts = $user->favoriteProducts()->sellable()->with('brand')->paginate(12);
+        // Carrega marca e traduções de uma vez para evitar consultas por card.
+        $favoriteProducts = $user->favoriteProducts()
+            ->sellable()
+            ->with(['brand', 'translations'])
+            ->paginate(12);
 
         return view('users.preferences.index', compact('favoriteProducts'));
     }

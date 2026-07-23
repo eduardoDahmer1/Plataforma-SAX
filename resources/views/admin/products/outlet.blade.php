@@ -84,19 +84,3 @@
     </div>
 </x-admin.card>
 @endsection
-
-@push('styles')
-<style>
-    .outlet-skus { min-height:300px; padding:18px; border-color:#d9dee7; border-radius:12px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.88rem; line-height:1.65; }
-    .outlet-action-option { display:flex; align-items:center; gap:14px; min-height:96px; padding:17px; border:1px solid #dfe3ea; border-radius:12px; cursor:pointer; transition:.18s ease; }
-    .outlet-action-option:has(input:checked) { border-color:#111; box-shadow:0 0 0 2px rgba(17,17,17,.08); }
-    .outlet-action-option input { position:absolute; opacity:0; }
-    .outlet-action-option strong, .outlet-action-option small { display:block; }
-    .outlet-action-option small { margin-top:4px; color:#7a8494; font-size:.75rem; }
-    .outlet-action-icon { display:grid; flex:0 0 42px; width:42px; height:42px; place-items:center; border-radius:50%; }
-    .outlet-action-danger .outlet-action-icon { color:#b42318; background:#fee4e2; }
-    .outlet-action-success .outlet-action-icon { color:#067647; background:#dcfae6; }
-    .outlet-summary span { color:#667085; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-    .outlet-summary strong { margin-top:8px; font-size:2.25rem; line-height:1; }
-</style>
-@endpush

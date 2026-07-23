@@ -14,7 +14,7 @@
     </div>
 @endif
 
-<div class="row g-4">
+<div class="row g-4" id="coupon-form-fields" data-percent-help="{{ __('messages.cupon_montante_ajuda_percentual') }}" data-fixed-help="{{ __('messages.cupon_montante_ajuda_valor') }}">
     {{-- Seção: Identificação e Valor --}}
     <div class="col-12 mb-2">
         <span class="sax-section-title">{{ __('messages.parametros_principais_sec') }}</span>
@@ -201,102 +201,3 @@
         </a>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modelo = document.getElementById('modelo-cupon');
-    const tipo = document.getElementById('tipo-cupon');
-    const camposEscopo = document.querySelectorAll('.cupon-escopo-field');
-    const descontoMaximo = document.getElementById('desconto-maximo-field');
-    const prefixo = document.getElementById('montante-prefixo');
-    const ajudaMontante = document.getElementById('montante-ajuda');
-
-    const textos = {
-        percentual: @json(__('messages.cupon_montante_ajuda_percentual')),
-        valorFixo: @json(__('messages.cupon_montante_ajuda_valor'))
-    };
-
-    // Mostra só o campo do escopo escolhido.
-    function alternarEscopo() {
-        camposEscopo.forEach(function (campo) {
-            campo.style.display = campo.dataset.modelo === modelo.value ? 'block' : 'none';
-        });
-    }
-
-    // Teto de desconto só faz sentido para percentual: um valor fixo já é o próprio teto.
-    function alternarTipo() {
-        const ehPercentual = tipo.value === 'percentual';
-        prefixo.textContent = ehPercentual ? '%' : 'US$';
-        ajudaMontante.textContent = ehPercentual ? textos.percentual : textos.valorFixo;
-        descontoMaximo.style.display = ehPercentual ? 'block' : 'none';
-    }
-
-    modelo.addEventListener('change', alternarEscopo);
-    tipo.addEventListener('change', alternarTipo);
-
-    alternarEscopo();
-    alternarTipo();
-
-    // --- Autocomplete de produto ---
-    const buscaWrap = document.getElementById('produto-busca-wrap');
-    const buscaInput = document.getElementById('produto-busca');
-    const buscaResultados = document.getElementById('produto-resultados');
-    const produtoIdInput = document.getElementById('produto_id');
-    let debounce = null;
-
-    function fecharResultados() {
-        buscaResultados.classList.add('d-none');
-        buscaResultados.innerHTML = '';
-    }
-
-    buscaInput.addEventListener('input', function () {
-        const termo = this.value.trim();
-
-        // Digitar de novo invalida o produto escolhido antes.
-        produtoIdInput.value = '';
-        clearTimeout(debounce);
-
-        if (termo.length < 2) {
-            fecharResultados();
-            return;
-        }
-
-        debounce = setTimeout(function () {
-            fetch(buscaWrap.dataset.url + '?q=' + encodeURIComponent(termo), {
-                headers: { 'Accept': 'application/json' }
-            })
-            .then(res => res.json())
-            .then(function (produtos) {
-                buscaResultados.innerHTML = '';
-
-                if (!produtos.length) {
-                    fecharResultados();
-                    return;
-                }
-
-                produtos.forEach(function (produto) {
-                    const item = document.createElement('button');
-                    item.type = 'button';
-                    item.className = 'list-group-item list-group-item-action x-small text-start';
-                    item.textContent = produto.texto + ' · ' + produto.preco;
-
-                    item.addEventListener('click', function () {
-                        produtoIdInput.value = produto.id;
-                        buscaInput.value = produto.texto;
-                        fecharResultados();
-                    });
-
-                    buscaResultados.appendChild(item);
-                });
-
-                buscaResultados.classList.remove('d-none');
-            })
-            .catch(fecharResultados);
-        }, 300);
-    });
-
-    document.addEventListener('click', function (e) {
-        if (!buscaWrap.contains(e.target)) fecharResultados();
-    });
-});
-</script>

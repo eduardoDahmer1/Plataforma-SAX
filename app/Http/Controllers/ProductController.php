@@ -33,7 +33,7 @@ class ProductController extends Controller
                 ->orWhere('slug', $id_or_slug))
             ->where('is_outlet', false)
             ->where('status', 1)
-            ->with(['brand', 'category', 'subcategory', 'categoriasfilhas'])
+            ->with(['brand', 'category', 'subcategory', 'categoriasfilhas', 'translations'])
             ->firstOrFail();
 
         $masterId = (int) $product->id;
@@ -116,7 +116,7 @@ class ProductController extends Controller
 
             $base = $this->activeBase()
                 ->where('id', '!=', $product->id)
-                ->with('brand');
+                ->with(['brand', 'translations']);
 
             $niveles = [];
             if ($palabraClave) {

@@ -15,7 +15,7 @@
 
     <div class="row">
         <div class="col-lg-8">
-            <form action="{{ isset($method) ? route('admin.payments.update', $method->id) : route('admin.payments.store') }}" method="POST">
+            <form id="paymentMethodForm" action="{{ isset($method) ? route('admin.payments.update', $method->id) : route('admin.payments.store') }}" method="POST">
                 @csrf
                 @if(isset($method)) @method('PUT') @endif
 
@@ -96,19 +96,29 @@
         </div>
     </div>
 
-<script>
-function toggleFields() {
-    const type = document.getElementById('type').value;
-    const gatewayFields = document.querySelectorAll('.gateway-only');
-    const bankFields = document.querySelectorAll('.bank-only');
-    
-    gatewayFields.forEach(el => el.style.display = (type === 'gateway') ? 'block' : 'none');
-    bankFields.forEach(el => el.style.display = (type === 'bank') ? 'block' : 'none');
-}
+    <div class="modal fade" id="confirmPaymentChangesModal" tabindex="-1" aria-labelledby="confirmPaymentChangesTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h2 class="modal-title fs-5 fw-bold" id="confirmPaymentChangesTitle">Você tem certeza?</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <div id="paymentEnvironmentAlert" class="alert mb-3" role="alert">
+                        <strong id="paymentEnvironmentTitle" class="d-block mb-1"></strong>
+                        <span id="paymentEnvironmentMessage"></span>
+                    </div>
+                    <p class="mb-0 text-secondary">
+                        Confirme para guardar as alterações deste método de pagamento.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Não</button>
+                    <button type="button" class="btn px-4 fw-bold" id="confirmPaymentChangesButton">Sim, guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-document.getElementById('type').addEventListener('change', toggleFields);
-document.getElementById('name').addEventListener('input', toggleFields);
-toggleFields();
-</script>
 </x-admin.card>
 @endsection

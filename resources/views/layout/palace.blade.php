@@ -6,6 +6,7 @@
 </head>
 
 <body class="palace-page">
+    <x-marketing-body-start />
     <x-header-internas :palace-whatsapp="$palace->contato_whatsapp" />
 
     <main class="palace-main">

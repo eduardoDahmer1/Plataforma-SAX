@@ -6,6 +6,7 @@
 </head>
 
 <body>
+    <x-marketing-body-start />
 
     <main class="py-4 container-fluid">
         @yield('content')

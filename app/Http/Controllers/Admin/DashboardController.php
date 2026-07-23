@@ -38,7 +38,7 @@ class DashboardController extends Controller
             'published_blogs' => Blog::published()->count(),
             'customers' => User::where('user_type', '<>', 1)->count(),
             'orders' => Order::count(),
-            'bancard_orders' => Order::whereIn('payment_method', ['bancard', 'bancard_v2'])->count(),
+            'bancard_orders' => Order::where('payment_method', 'bancard_v2')->count(),
             'deposit_orders' => Order::where('payment_method', 'deposito')->count(),
             'whatsapp_orders' => Order::where('payment_method', 'whatsapp')->count(),
             'low_stock' => Product::where('status', 1)->where('stock', '>', 0)->where('stock', '<=', 5)->count(),
@@ -48,7 +48,7 @@ class DashboardController extends Controller
         ];
 
         $paymentMethods = Order::query()
-            ->selectRaw("CASE WHEN payment_method IN ('bancard', 'bancard_v2') THEN 'Bancard' WHEN payment_method = 'deposito' THEN 'Depósito' WHEN payment_method = 'whatsapp' THEN 'WhatsApp' ELSE 'Outros' END AS label")
+            ->selectRaw("CASE WHEN payment_method = 'bancard_v2' THEN 'Bancard V2' WHEN payment_method = 'deposito' THEN 'Depósito' WHEN payment_method = 'whatsapp' THEN 'WhatsApp' ELSE 'Outros' END AS label")
             ->selectRaw('COUNT(*) AS total')
             ->groupBy('label')->pluck('total', 'label');
 

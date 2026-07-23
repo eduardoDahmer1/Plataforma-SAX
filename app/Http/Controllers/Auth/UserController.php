@@ -36,7 +36,7 @@ class UserController extends Controller
             $userHistory = \App\Models\Product::whereIn('products.id', $productIds)
                 ->where('status', 1)
                 ->where('is_outlet', false)
-                ->with('brand')
+                ->with(['brand', 'translations'])
                 // Join para garantir a ordem cronológica exata do histórico
                 ->join('product_views_history', 'products.id', '=', 'product_views_history.product_id')
                 ->where('product_views_history.user_id', $user->id)

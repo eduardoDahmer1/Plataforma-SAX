@@ -350,7 +350,34 @@ function abrirModalLocal(data) {
     new bootstrap.Modal(document.getElementById('modalDetalhesLocal')).show();
 }
 
+function inicializarFiltroRelatorioProdutos() {
+    var form = document.getElementById('product-review-report-form');
+    var periodSelect = document.getElementById('report-period');
+    if (!form || !periodSelect) return;
+
+    var fieldGroups = form.querySelectorAll('[data-report-field]');
+
+    function atualizarCamposRelatorio() {
+        var selectedPeriod = periodSelect.value;
+
+        fieldGroups.forEach(function (group) {
+            var isActive = group.dataset.reportField === selectedPeriod;
+            group.classList.toggle('d-none', !isActive);
+
+            group.querySelectorAll('input').forEach(function (input) {
+                input.disabled = !isActive;
+                input.required = isActive;
+            });
+        });
+    }
+
+    periodSelect.addEventListener('change', atualizarCamposRelatorio);
+    atualizarCamposRelatorio();
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+    inicializarFiltroRelatorioProdutos();
+
     var input = document.getElementById('photoInput');
     if (!input) return;
 

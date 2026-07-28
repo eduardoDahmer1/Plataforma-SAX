@@ -39,6 +39,7 @@ class Controller extends BaseController
     protected function applyActiveProductScope($query)
     {
         return $query
+            ->inActiveCategory()
             ->where('status', 1)
             ->where('product_role', 'P')
             ->where('stock', '>', 0)

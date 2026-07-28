@@ -27,10 +27,17 @@ class ActivateBrandsAndCategoriesController extends Controller
      */
     public function toggleStatus(Request $request, $type, $id)
     {
+        abort_unless(in_array($type, ['brand', 'category'], true), 404);
+
+        $data = $request->validate([
+            'active' => ['required', 'boolean'],
+        ]);
+
         $model = ($type === 'brand') ? Brand::findOrFail($id) : Category::findOrFail($id);
 
-        // Alterna entre 1 (Ativo) e 2 (Inativo)
-        $model->status = ($model->status == 1) ? 2 : 1;
+        // Define explicitamente o estado desejado. Repetir a mesma requisição
+        // não pode inverter novamente o status.
+        $model->status = $data['active'] ? 1 : 2;
         $model->save();
 
         // Limpa o cache para as mudanças refletirem no site imediatamente

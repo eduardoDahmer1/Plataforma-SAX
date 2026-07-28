@@ -59,6 +59,7 @@ class BrandController extends Controller
         $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand, $sortBy, $perPage) {
             $productsQuery = $brand
                 ->products()
+                ->inActiveCategory()
                 ->where('status', 1)
                 ->where('is_outlet', false)
                 ->where('product_role', 'P')

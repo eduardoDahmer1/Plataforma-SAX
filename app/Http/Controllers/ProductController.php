@@ -13,7 +13,8 @@ class ProductController extends Controller
 {
     private function activeBase()
     {
-        return Product::where('status', 1)
+        return Product::inActiveCategory()
+            ->where('status', 1)
             ->where('is_outlet', false)
             ->where('product_role', 'P')
             ->where('stock', '>', 0)
@@ -28,7 +29,8 @@ class ProductController extends Controller
 
     public function show($id_or_slug, DailyMostViewedProducts $dailyMostViewedProducts)
     {
-        $product = Product::where(fn ($query) => $query
+        $product = Product::inActiveCategory()
+            ->where(fn ($query) => $query
                 ->where('id', $id_or_slug)
                 ->orWhere('slug', $id_or_slug))
             ->where('is_outlet', false)
@@ -66,7 +68,8 @@ class ProductController extends Controller
         $product->current_price = $product->promotion_price > 0 ? $product->promotion_price : $product->price;
         $product->has_discount  = $product->previous_price > $product->current_price;
 
-        $siblings = Product::where(fn($q) => $q->where('parent_id', $masterId)->orWhere('id', $masterId))
+        $siblings = Product::inActiveCategory()
+            ->where(fn($q) => $q->where('parent_id', $masterId)->orWhere('id', $masterId))
             ->where('is_outlet', false)
             ->where('status', 1)
             ->get()
@@ -84,7 +87,8 @@ class ProductController extends Controller
             ->values();
 
         $colorGroupId    = !empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
-        $coresRelacionadas = Product::where(fn($q) => $q->where('color_parent_id', $colorGroupId)->orWhere('id', $colorGroupId))
+        $coresRelacionadas = Product::inActiveCategory()
+            ->where(fn($q) => $q->where('color_parent_id', $colorGroupId)->orWhere('id', $colorGroupId))
             ->where('is_outlet', false)
             ->where('status', 1)
             ->where('product_role', 'P')

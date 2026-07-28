@@ -22,7 +22,9 @@ class CategoriasFilhasController extends Controller
         });
 
         $categoriasfilhas = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            $query = CategoriasFilhas::with('subcategory.category')->orderBy('name');
+            $query = CategoriasFilhas::with('subcategory.category')
+                ->whereHas('subcategory.category', fn ($categoryQuery) => $categoryQuery->where('status', 1))
+                ->orderBy('name');
             if (!empty($search)) {
                 $query->where('name', 'like', "%{$search}%");
             }
@@ -46,12 +48,15 @@ class CategoriasFilhasController extends Controller
         try {
             $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug, $sortBy, $perPage) {
                 $categoriasfilhas = CategoriasFilhas::with(['subcategory.category'])
-                    ->where('slug', $idOrSlug)
-                    ->orWhere('id', $idOrSlug)
+                    ->whereHas('subcategory.category', fn ($categoryQuery) => $categoryQuery->where('status', 1))
+                    ->where(fn ($query) => $query
+                        ->where('slug', $idOrSlug)
+                        ->orWhere('id', $idOrSlug))
                     ->firstOrFail();
 
                 $productsQuery = $categoriasfilhas
                     ->products()
+                    ->inActiveCategory()
                     ->where('status', 1)
                     ->where('is_outlet', false)
                     ->where('product_role', 'P')

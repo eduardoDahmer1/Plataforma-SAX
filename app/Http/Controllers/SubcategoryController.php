@@ -24,7 +24,9 @@ class SubcategoryController extends Controller
         });
 
         $subcategories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            $query = Subcategory::with('category')->orderBy('name');
+            $query = Subcategory::with('category')
+                ->whereHas('category', fn ($categoryQuery) => $categoryQuery->where('status', 1))
+                ->orderBy('name');
 
             if (!empty($search)) {
                 $query->where('name', 'like', "%{$search}%");
@@ -50,12 +52,15 @@ class SubcategoryController extends Controller
         try {
             $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug, $sortBy, $perPage) {
                 $subcategory = Subcategory::with(['category', 'categoriasfilhas'])
-                    ->where('slug', $idOrSlug)
-                    ->orWhere('id', $idOrSlug)
+                    ->whereHas('category', fn ($categoryQuery) => $categoryQuery->where('status', 1))
+                    ->where(fn ($query) => $query
+                        ->where('slug', $idOrSlug)
+                        ->orWhere('id', $idOrSlug))
                     ->firstOrFail();
 
                 $productsQuery = $subcategory
                     ->products()
+                    ->inActiveCategory()
                     ->where('status', 1)
                     ->where('is_outlet', false)
                     ->where('product_role', 'P')

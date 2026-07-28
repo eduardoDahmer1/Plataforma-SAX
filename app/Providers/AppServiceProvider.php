@@ -97,6 +97,29 @@ class AppServiceProvider extends ServiceProvider
             $view->with('headerCategories', $headerCategories);
         });
 
+        View::composer('admin.notifications-menu', function ($view) {
+            $admin = auth()->user();
+
+            if (! $admin || ! $admin->isAdmin()) {
+                $view->with([
+                    'adminNotifications' => collect(),
+                    'adminUnreadNotificationsCount' => 0,
+                ]);
+
+                return;
+            }
+
+            $view->with([
+                'adminNotifications' => $admin->adminNotifications()
+                    ->latest()
+                    ->limit(8)
+                    ->get(),
+                'adminUnreadNotificationsCount' => $admin->adminNotifications()
+                    ->whereNull('read_at')
+                    ->count(),
+            ]);
+        });
+
         /**
          * 7. ATRIBUTOS E BANNERS GLOBAIS
          */

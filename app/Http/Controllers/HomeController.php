@@ -24,7 +24,8 @@ class HomeController extends Controller
 
     private function activeProducts()
     {
-        return Product::where('status', 1)
+        return Product::inActiveCategory()
+            ->where('status', 1)
             ->where('is_outlet', false)
             ->where('product_role', 'P')
             ->where('stock', '>', 0)
@@ -115,6 +116,7 @@ class HomeController extends Controller
 
         $allCategories = Cache::remember('categories_all', 600,
             fn() => Category::selectRaw("id, COALESCE(NULLIF(name,''),slug) as name, slug")
+                ->where('status', 1)
                 ->orderBy('name')->get()
         );
 

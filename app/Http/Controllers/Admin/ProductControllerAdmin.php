@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Models\Brand;
 use App\Models\Category;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 
 class ProductControllerAdmin extends Controller
 {
@@ -1161,5 +1163,91 @@ class ProductControllerAdmin extends Controller
             ->groupBy('dia');
 
         return view('admin.products.review', compact('edicoesPorDia', 'detalhesProdutos', 'mesesDisponiveis', 'mesSelecionado'));
+    }
+
+    public function reviewPdf(Request $request): Response
+    {
+        $data = $request->validate([
+            'period' => ['required', 'in:day,week,month,custom'],
+            'day' => ['nullable', 'required_if:period,day', 'date_format:Y-m-d'],
+            'week' => ['nullable', 'required_if:period,week', 'regex:/^\d{4}-W\d{2}$/'],
+            'month' => ['nullable', 'required_if:period,month', 'date_format:Y-m'],
+            'start_date' => ['nullable', 'required_if:period,custom', 'date_format:Y-m-d'],
+            'end_date' => ['nullable', 'required_if:period,custom', 'date_format:Y-m-d', 'after_or_equal:start_date'],
+        ], [
+            'week.regex' => 'Selecione uma semana válida.',
+            'end_date.after_or_equal' => 'A data final deve ser igual ou posterior à data inicial.',
+        ]);
+
+        [$start, $end, $periodLabel, $filePeriod] = match ($data['period']) {
+            'day' => [
+                Carbon::createFromFormat('Y-m-d', $data['day'])->startOfDay(),
+                Carbon::createFromFormat('Y-m-d', $data['day'])->endOfDay(),
+                'Dia '.Carbon::createFromFormat('Y-m-d', $data['day'])->format('d/m/Y'),
+                'dia-'.$data['day'],
+            ],
+            'week' => $this->productReviewWeekRange($data['week']),
+            'month' => [
+                Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth(),
+                Carbon::createFromFormat('Y-m', $data['month'])->endOfMonth(),
+                ucfirst(Carbon::createFromFormat('Y-m', $data['month'])->translatedFormat('F Y')),
+                'mes-'.$data['month'],
+            ],
+            'custom' => [
+                Carbon::createFromFormat('Y-m-d', $data['start_date'])->startOfDay(),
+                Carbon::createFromFormat('Y-m-d', $data['end_date'])->endOfDay(),
+                'Período de '.Carbon::createFromFormat('Y-m-d', $data['start_date'])->format('d/m/Y')
+                    .' a '.Carbon::createFromFormat('Y-m-d', $data['end_date'])->format('d/m/Y'),
+                'periodo-'.$data['start_date'].'-a-'.$data['end_date'],
+            ],
+        };
+
+        $products = Product::with('editor:id,name')
+            ->whereBetween('admin_edited_at', [$start, $end])
+            ->whereNotNull('updated_by')
+            ->select([
+                'id',
+                'name',
+                'external_name',
+                'sku',
+                'ref_code',
+                'updated_by',
+                'admin_edited_at',
+            ])
+            ->orderBy('admin_edited_at')
+            ->get();
+
+        $dailyTotals = $products
+            ->groupBy(fn (Product $product) => $product->admin_edited_at->format('Y-m-d'))
+            ->map->count()
+            ->sortKeysDesc();
+
+        return Pdf::loadView('admin.products.review-report', compact(
+            'products',
+            'dailyTotals',
+            'start',
+            'end',
+            'periodLabel'
+        ))
+            ->setPaper('a4', 'landscape')
+            ->download('relatorio-produtos-editados-'.$filePeriod.'.pdf');
+    }
+
+    private function productReviewWeekRange(string $weekValue): array
+    {
+        preg_match('/^(\d{4})-W(\d{2})$/', $weekValue, $matches);
+
+        $start = Carbon::now()
+            ->setISODate((int) $matches[1], (int) $matches[2])
+            ->startOfWeek()
+            ->startOfDay();
+        $end = $start->copy()->endOfWeek()->endOfDay();
+
+        return [
+            $start,
+            $end,
+            'Semana de '.$start->format('d/m/Y').' a '.$end->format('d/m/Y'),
+            'semana-'.$weekValue,
+        ];
     }
 }

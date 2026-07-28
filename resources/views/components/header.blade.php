@@ -118,6 +118,10 @@
             </div>
 
             <div class="col-3 col-lg-3 text-end d-flex justify-content-end align-items-center gap-3 sax-header-actions">
+                @if ($isAdminUser)
+                    @include('admin.notifications-menu')
+                @endif
+
                 <div class="sax-auth-links d-none d-lg-flex align-items-center">
                     <i class="fa-regular fa-user me-2"></i>
                     @if ($currentUser)

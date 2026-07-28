@@ -252,14 +252,25 @@ class Product extends Model
     public function scopeSellable(Builder $query): Builder
     {
         return $query
+            ->inActiveCategory()
             ->where($query->getModel()->qualifyColumn('is_outlet'), false)
             ->where($query->getModel()->qualifyColumn('status'), 1)
             ->where($query->getModel()->qualifyColumn('stock'), '>', 0);
     }
 
+    public function scopeInActiveCategory(Builder $query): Builder
+    {
+        return $query->whereHas('category', function (Builder $categoryQuery) {
+            $categoryQuery->where('status', 1);
+        });
+    }
+
     public function isSellable(): bool
     {
-        return !$this->is_outlet && (int) $this->status === 1 && (int) $this->stock > 0;
+        return !$this->is_outlet
+            && (int) $this->status === 1
+            && (int) $this->stock > 0
+            && $this->category()->where('status', 1)->exists();
     }
 
     public static function referenceParts(?string $value): array

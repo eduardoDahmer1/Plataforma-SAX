@@ -6,6 +6,7 @@ use App\Notifications\WelcomeAndVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -86,7 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
-    
+
     // user_type 1 é o administrador: é o que o middleware CheckAdmin exige e é
     // justamente quem o carrinho impede de comprar. O 2 é o cliente da loja.
     public function isAdmin(): bool
@@ -106,6 +107,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function orders()
     {
         return $this->hasMany(\App\Models\Order::class);
+    }
+
+    public function adminNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 
     public function cart()

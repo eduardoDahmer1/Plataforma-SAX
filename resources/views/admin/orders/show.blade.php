@@ -316,7 +316,9 @@
                     @if ($moedaPedido !== 'US$')
                         <div class="text-end x-small text-secondary mt-1">
                             {{ __('messages.pedido_equivale_base', ['valor' => 'US$ ' . number_format($order->total, 2, ',', '.')]) }}
-                            · {{ __('messages.pedido_cotacao', ['valor' => rtrim(rtrim(number_format($cotacaoPedido, 4, ',', '.'), '0'), ',')]) }}
+                            · {{ __('messages.pedido_cotacao', [
+                                'valor' => $moedaPedido . ' ' . rtrim(rtrim(number_format($cotacaoPedido, 4, ',', '.'), '0'), ','),
+                            ]) }}
                         </div>
                     @endif
 

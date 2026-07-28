@@ -24,6 +24,7 @@ class DailyMostViewedProducts
                 // Primeiro limita aos produtos realmente mais vistos. A ordem
                 // diária é aplicada apenas dentro desse grupo qualificado.
                 $products = Product::query()
+                    ->inActiveCategory()
                     ->where('status', 1)
                     ->where('is_outlet', false)
                     ->where('product_role', 'P')

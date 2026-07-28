@@ -39,6 +39,7 @@ class SearchController extends Controller
     private function baseQuery(Request $request)
     {
         $query = Product::query()
+            ->inActiveCategory()
             ->select($this->productCols())
             ->with([
                 'brand:id,name',
@@ -90,6 +91,7 @@ class SearchController extends Controller
         }
 
         $variants = Product::query()
+            ->inActiveCategory()
             ->select($variantColumns)
             ->where('is_outlet', false)
             ->where('status', 1)
@@ -225,6 +227,7 @@ class SearchController extends Controller
         $term = '%' . $search . '%';
 
         $products = Product::query()
+            ->inActiveCategory()
             ->select(['id', 'name', 'external_name', 'sku', 'price', 'photo', 'slug', 'brand_id', 'category_id'])
             ->with(['brand:id,name', 'category:id,name'])
             ->where('is_outlet', false)

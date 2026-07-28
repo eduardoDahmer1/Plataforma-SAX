@@ -34,6 +34,7 @@ class UserController extends Controller
         if (!empty($productIds)) {
             // Segundo: Buscamos os produtos reais usando esses IDs
             $userHistory = \App\Models\Product::whereIn('products.id', $productIds)
+                ->inActiveCategory()
                 ->where('status', 1)
                 ->where('is_outlet', false)
                 ->with(['brand', 'translations'])

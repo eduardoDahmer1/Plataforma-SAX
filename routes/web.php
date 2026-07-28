@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\InstitucionalAdminController;
 use App\Http\Controllers\Admin\MarketingSettingController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PalaceAdminController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -208,6 +209,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('cupons', CuponController::class);
     Route::patch('cupons/{cupon}/toggle', [CuponController::class, 'toggle'])->name('cupons.toggle');
     Route::get('/produto/{product}', [ProductController::class, 'show'])->name('produto.show');
+    Route::get('products/review/pdf', [ProductControllerAdmin::class, 'reviewPdf'])->name('products.review.pdf');
     Route::get('products/review', [ProductControllerAdmin::class, 'review'])->name('products.review');
     Route::get('products/outlet/lote', [ProductControllerAdmin::class, 'outletForm'])->name('products.outlet.form');
     Route::put('products/outlet/lote', [ProductControllerAdmin::class, 'updateOutlet'])->name('products.outlet.update');
@@ -295,6 +297,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('brands/{brand}/upload-internal-banner', [BrandControllerAdmin::class, 'uploadInternalBanner'])->name('brands.uploadInternalBanner');
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);
     Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->whereNumber('notification')
+        ->name('notifications.read');
     Route::post('clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
     Route::post('image-upload', [ImageUploadController::class, 'upload'])->name('image.upload');
     Route::delete('image-upload', [ImageUploadController::class, 'delete'])->name('image.delete');

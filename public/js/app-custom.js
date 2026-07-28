@@ -174,11 +174,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // TODO: Extraer carrito y notificaciones a un drawer reutilizable con un único
+    // manejo de overlay, foco, Escape y bloqueo de scroll.
+    const notificationsDrawer = document.getElementById('adminNotificationsDrawer');
+    const notificationsOverlay = document.getElementById('adminNotificationsOverlay');
+    const notificationsButton = document.getElementById('adminNotificationsButton');
+    const notificationsClose = document.getElementById('adminNotificationsClose');
+
     // Cart Sidebar
     const cartSidebar = document.getElementById('cart-sidebar');
     const cartOverlay = document.getElementById('cart-overlay');
     if (cartSidebar && cartOverlay) {
         const toggleCart = () => {
+            notificationsDrawer?.classList.remove('open');
+            notificationsOverlay?.classList.remove('open');
+            notificationsButton?.setAttribute('aria-expanded', 'false');
+            notificationsDrawer?.setAttribute('aria-hidden', 'true');
+
             cartSidebar.classList.toggle('open');
             cartOverlay.classList.toggle('open');
             document.body.style.overflow = cartSidebar.classList.contains('open') ? 'hidden' : '';
@@ -186,6 +198,39 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('cart-button')?.addEventListener('click', e => { e.preventDefault(); toggleCart(); });
         document.getElementById('cart-close')?.addEventListener('click', toggleCart);
         cartOverlay.addEventListener('click', toggleCart);
+    }
+
+    // Notifications Sidebar (admin)
+    if (notificationsDrawer && notificationsOverlay && notificationsButton) {
+        const closeNotifications = () => {
+            notificationsDrawer.classList.remove('open');
+            notificationsOverlay.classList.remove('open');
+            notificationsDrawer.setAttribute('aria-hidden', 'true');
+            notificationsButton.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+            notificationsButton.focus();
+        };
+
+        const openNotifications = () => {
+            cartSidebar?.classList.remove('open');
+            cartOverlay?.classList.remove('open');
+            notificationsDrawer.classList.add('open');
+            notificationsOverlay.classList.add('open');
+            notificationsDrawer.setAttribute('aria-hidden', 'false');
+            notificationsButton.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+            notificationsClose?.focus();
+        };
+
+        notificationsButton.addEventListener('click', openNotifications);
+        notificationsClose?.addEventListener('click', closeNotifications);
+        notificationsOverlay.addEventListener('click', closeNotifications);
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && notificationsDrawer.classList.contains('open')) {
+                closeNotifications();
+            }
+        });
     }
 
     // User Profile: SAX registration field

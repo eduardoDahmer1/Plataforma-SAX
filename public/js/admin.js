@@ -1151,7 +1151,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
+            },
+            body: JSON.stringify({
+                active: !ligadoAntes
+            })
         })
             .then(function (response) {
                 return response.ok ? response.json() : Promise.reject();

@@ -2,7 +2,7 @@
 
 @section('content')
 <x-admin.card>
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <x-admin.page-header title="{{ __('messages.performance_edicao_titulo') }}" description="{{ __('messages.performance_edicao_desc') }}"></x-admin.page-header>
         
         <select class="form-select w-auto" onchange="window.location.href='?mes=' + this.value">
@@ -12,6 +12,58 @@
                 </option>
             @endforeach
         </select>
+    </div>
+
+    <div class="border rounded-4 bg-light p-3 mb-4">
+        <form method="GET" action="{{ route('admin.products.review.pdf') }}" id="product-review-report-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-3">
+                    <label class="sax-form-label" for="report-period">
+                        <i class="fa-regular fa-file-pdf me-1"></i> Selecionar relatório
+                    </label>
+                    <select class="form-select sax-input" id="report-period" name="period">
+                        <option value="day">Por dia</option>
+                        <option value="week">Por semana</option>
+                        <option value="month">Por mês</option>
+                        <option value="custom">Por período de datas</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-lg-5" data-report-field="day">
+                    <label class="sax-form-label" for="report-day">Dia</label>
+                    <input class="form-control sax-input" id="report-day" type="date" name="day" value="{{ now()->format('Y-m-d') }}" required>
+                </div>
+
+                <div class="col-12 col-lg-5 d-none" data-report-field="week">
+                    <label class="sax-form-label" for="report-week">Semana</label>
+                    <input class="form-control sax-input" id="report-week" type="week" name="week" value="{{ now()->format('o-\WW') }}" disabled>
+                </div>
+
+                <div class="col-12 col-lg-5 d-none" data-report-field="month">
+                    <label class="sax-form-label" for="report-month">Mês</label>
+                    <input class="form-control sax-input" id="report-month" type="month" name="month" value="{{ $mesSelecionado }}" disabled>
+                </div>
+
+                <div class="col-12 col-lg-5 d-none" data-report-field="custom">
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6">
+                            <label class="sax-form-label" for="report-start">Data inicial</label>
+                            <input class="form-control sax-input" id="report-start" type="date" name="start_date" value="{{ now()->startOfMonth()->format('Y-m-d') }}" disabled>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="sax-form-label" for="report-end">Data final</label>
+                            <input class="form-control sax-input" id="report-end" type="date" name="end_date" value="{{ now()->format('Y-m-d') }}" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <button class="btn btn-dark w-100" type="submit">
+                        <i class="fa-solid fa-download me-1"></i> Baixar relatório em PDF
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <div class="sax-stats-wrapper" id="product-review-data" data-products="{{ json_encode($detalhesProdutos) }}">

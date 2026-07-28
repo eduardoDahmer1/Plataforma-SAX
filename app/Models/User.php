@@ -109,6 +109,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(\App\Models\Order::class);
     }
 
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class)->orderByDesc('is_default')->latest();
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(UserAddress::class)->where('is_default', true);
+    }
+
     public function adminNotifications(): HasMany
     {
         return $this->hasMany(Notification::class);

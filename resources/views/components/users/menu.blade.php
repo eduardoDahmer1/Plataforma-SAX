@@ -10,6 +10,9 @@
             <a href="{{ route('user.profile.edit') }}" class="sax-menu-link">
                 <i class="fa fa-user-edit"></i> {{ __('messages.menu_editar_dados') }}
             </a>
+            <a href="{{ route('user.addresses.index') }}" class="sax-menu-link {{ request()->routeIs('user.addresses.*') ? 'active' : '' }}">
+                <i class="fa fa-map-marker-alt"></i> Meus endereços
+            </a>
             <a href="{{ route('user.password.edit') }}" class="sax-menu-link {{ request()->routeIs('user.password.*') ? 'active' : '' }}">
                 <i class="fa fa-lock"></i> {{ __('messages.menu_seguranca') }}
             </a>

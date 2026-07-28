@@ -111,6 +111,30 @@ class UserController extends Controller
         // 7. Tentativa de Salvamento com Log de Erro
         try {
             $user->update($data);
+
+            if (filled($data['address'] ?? null) && filled($data['number'] ?? null) && filled($data['district'] ?? null)) {
+                $addressData = [
+                    'label' => 'Endereço principal',
+                    'country' => $data['country'] ?? 'brasil',
+                    'postal_code' => $data['cep'] ?? null,
+                    'state' => $data['state'] ?? null,
+                    'city' => $data['city'] ?? null,
+                    'street' => $data['address'],
+                    'number' => $data['number'],
+                    'district' => $data['district'],
+                    'complement' => $data['complement'] ?? null,
+                    'is_default' => true,
+                ];
+
+                $defaultAddress = $user->addresses()->where('is_default', true)->first();
+                if ($defaultAddress) {
+                    $defaultAddress->update($addressData);
+                } else {
+                    $user->addresses()->update(['is_default' => false]);
+                    $user->addresses()->create($addressData);
+                }
+            }
+
             return back()->with('success', 'Perfil atualizado com sucesso!');
         } catch (\Exception $e) {
             // Retorna o erro exato do SQL se a migration ainda não tiver sido aplicada ou falhar

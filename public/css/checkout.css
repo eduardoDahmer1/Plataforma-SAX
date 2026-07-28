@@ -341,11 +341,117 @@ body {
 }
 
 .sax-address-preview {
-    background: #f9f9f9;
-    border: 1px solid #e4e4e4;
+    background: #fff;
+    border: 1px solid #dedede;
     border-left: 3px solid #141414;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 0.9rem;
+}
+
+.sax-selected-address {
+    border-top: 1px solid #e8e8e8;
+    margin-top: 18px;
+    padding-top: 18px;
+}
+
+.sax-selected-address__heading {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.sax-selected-address__heading strong,
+.sax-selected-address__eyebrow {
+    display: block;
+}
+
+.sax-selected-address__eyebrow {
+    color: #777;
+    font-size: .66rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.sax-selected-address__icon {
+    align-items: center;
+    background: #171717;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-flex;
+    height: 38px;
+    justify-content: center;
+    width: 38px;
+}
+
+.sax-selected-address__grid {
+    display: grid;
+    gap: 1px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+    background: #e7e7e7;
+    border: 1px solid #e7e7e7;
+    border-radius: 10px;
+}
+
+.sax-selected-address__field {
+    background: #fafafa;
+    min-height: 70px;
+    padding: 13px 15px;
+}
+
+.sax-selected-address__field--wide {
+    grid-column: span 2;
+}
+
+.sax-selected-address__field span,
+.sax-selected-address__field strong {
+    display: block;
+}
+
+.sax-selected-address__field span {
+    color: #7a7a7a;
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.sax-selected-address__field strong {
+    color: #171717;
+    font-size: .82rem;
+    overflow-wrap: anywhere;
+}
+
+.sax-selected-address__manage {
+    color: #171717;
+    display: inline-flex;
+    gap: 7px;
+    margin-top: 15px;
+    text-decoration: none;
+}
+
+.sax-selected-address__manage:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 767.98px) {
+    .sax-selected-address__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .sax-selected-address__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sax-selected-address__field--wide {
+        grid-column: auto;
+    }
 }
 
 .sax-shipping-alt {

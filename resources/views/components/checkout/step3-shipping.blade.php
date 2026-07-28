@@ -1,15 +1,12 @@
 <div class="step" id="step3">
     @php
         $u = auth()->user();
-        $selectedShipping = (int) old('shipping', 1);
+        $selectedShipping = (int) old('shipping', $addresses->isNotEmpty() ? 1 : 2);
         $selectedCountry = old('country', 'brasil');
         $selectedStore = old('store', 1);
-
-        $fullAddress = $u->address;
-        if($u->number) $fullAddress .= ', ' . $u->number;
-        if($u->complement) $fullAddress .= ' (' . $u->complement . ')';
-        if($u->district) $fullAddress .= ' - ' . $u->district;
-        if($u->city || $u->state) $fullAddress .= ' | ' . $u->city . ' - ' . $u->state;
+        $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
+        $selectedAddressId = (int) old('shipping_address_id', $defaultAddress?->id);
+        $selectedAddress = $addresses->firstWhere('id', $selectedAddressId) ?? $defaultAddress;
     @endphp
     
     <div class="sax-checkout-box">
@@ -25,7 +22,7 @@
             <label class="sax-method-card {{ $selectedShipping === 1 ? 'active' : '' }}" id="label-ship-1">
                 <input type="radio" name="shipping" value="1" {{ $selectedShipping === 1 ? 'checked' : '' }}>
                 <div class="method-icon"><i class="fa fa-home"></i></div>
-                <div class="method-text">{{ __('messages.endereco_cadastrado') }}</div>
+                <div class="method-text">Meus endereços</div>
             </label>
 
             <label class="sax-method-card {{ $selectedShipping === 2 ? 'active' : '' }}" id="label-ship-2">
@@ -51,17 +48,78 @@
         </div>
 
         <div id="shipping_registered" class="sax-address-preview p-3 mb-3" style="{{ $selectedShipping === 1 ? '' : 'display:none;' }}">
-            <input type="hidden" id="user_country_data" value="{{ $u->country }}">
-            <input type="hidden" id="user_city_data" value="{{ $u->city }}">
-            
-            <span class="d-block text-muted x-small mb-1">{{ __('messages.enviar_para') }}</span>
-            <p class="mb-0 fw-bold">
-                @if($u->address) {{ $fullAddress }} @else {{ __('messages.nenhum_endereco') }} @endif
-            </p>
+            @if ($addresses->isNotEmpty())
+                <label class="sax-label" for="shipping_address_id">Escolha onde deseja receber</label>
+                <select name="shipping_address_id" id="shipping_address_id" class="sax-form-control mb-3">
+                    @foreach ($addresses as $address)
+                        <option value="{{ $address->id }}"
+                                data-label="{{ $address->label }}"
+                                data-country="{{ $address->country }}"
+                                data-state="{{ $address->state }}"
+                                data-city="{{ $address->city }}"
+                                data-street="{{ $address->street }}"
+                                data-number="{{ $address->number }}"
+                                data-district="{{ $address->district }}"
+                                data-complement="{{ $address->complement }}"
+                                data-postal-code="{{ $address->postal_code }}"
+                                {{ $selectedAddressId === $address->id ? 'selected' : '' }}>
+                            {{ $address->label }}{{ $address->is_default ? ' — Padrão' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+                <input type="hidden" id="user_country_data" value="{{ $selectedAddress?->country }}">
+                <input type="hidden" id="user_city_data" value="{{ $selectedAddress?->city }}">
+
+                <div class="sax-selected-address">
+                    <div class="sax-selected-address__heading">
+                        <span class="sax-selected-address__icon"><i class="fa-solid fa-location-dot"></i></span>
+                        <div>
+                            <span class="sax-selected-address__eyebrow">{{ __('messages.enviar_para') }}</span>
+                            <strong data-address-selected-label>{{ $selectedAddress?->label }}</strong>
+                        </div>
+                    </div>
+                    <div class="sax-selected-address__grid" id="selected-address-preview">
+                        <div class="sax-selected-address__field">
+                            <span>País</span><strong data-address-field="country">{{ $selectedAddress?->country === 'paraguai' ? 'Paraguai' : 'Brasil' }}</strong>
+                        </div>
+                        <div class="sax-selected-address__field">
+                            <span>Estado / Departamento</span><strong data-address-field="state">{{ $selectedAddress?->state ?: 'Não informado' }}</strong>
+                        </div>
+                        <div class="sax-selected-address__field">
+                            <span>Cidade</span><strong data-address-field="city">{{ $selectedAddress?->city ?: 'Não informada' }}</strong>
+                        </div>
+                        <div class="sax-selected-address__field sax-selected-address__field--wide">
+                            <span>Rua / Endereço</span><strong data-address-field="street">{{ $selectedAddress?->street }}</strong>
+                        </div>
+                        <div class="sax-selected-address__field">
+                            <span>Número</span><strong data-address-field="number">{{ $selectedAddress?->number }}</strong>
+                        </div>
+                        <div class="sax-selected-address__field">
+                            <span>Bairro</span><strong data-address-field="district">{{ $selectedAddress?->district }}</strong>
+                        </div>
+                        <div class="sax-selected-address__field">
+                            <span>Complemento</span><strong data-address-field="complement">{{ $selectedAddress?->complement ?: 'Não informado' }}</strong>
+                        </div>
+                        <div class="sax-selected-address__field">
+                            <span>CEP / Código postal</span><strong data-address-field="postalCode">{{ $selectedAddress?->postal_code ?: 'Não informado' }}</strong>
+                        </div>
+                    </div>
+                    <a href="{{ route('user.addresses.index') }}" class="sax-selected-address__manage">
+                        <i class="fa-solid fa-pen-to-square"></i> Gerenciar meus endereços
+                    </a>
+                </div>
+            @else
+                <p class="mb-0">Você ainda não possui endereços salvos. Escolha <strong>Novo endereço</strong> para cadastrar.</p>
+            @endif
         </div>
 
         <div id="shipping_alternative" class="mt-4 sax-shipping-alt" style="{{ $selectedShipping === 2 ? '' : 'display:none;' }}">
             <div class="row g-3">
+                <div class="col-12">
+                    <label class="sax-label">Identificação do endereço</label>
+                    <input type="text" name="address_label" class="sax-form-control" maxlength="80"
+                           placeholder="Ex.: Casa, Trabalho, Casa dos pais" value="{{ old('address_label', 'Casa') }}">
+                </div>
                 <div class="col-12">
                     <label class="sax-label">{{ __('messages.escolha_o_pais') }}</label>
                     <select name="country" id="country" class="sax-form-control">
@@ -77,11 +135,11 @@
                     </div>
                     <div class="col-md-4">
                         <label class="sax-label" id="label-state">Estado</label>
-                        <select id="state-select" name="state" class="sax-form-control"><option value="">Selecione...</option></select>
+                        <select id="state-select" name="state" class="sax-form-control" data-selected="{{ old('state') }}"><option value="">Selecione...</option></select>
                     </div>
                     <div class="col-md-4">
                         <label class="sax-label">Cidade</label>
-                        <select id="city-select" name="city" class="sax-form-control" disabled><option value="">Selecione o estado primeiro...</option></select>
+                        <select id="city-select" name="city" class="sax-form-control" data-selected="{{ old('city') }}" disabled><option value="">Selecione o estado primeiro...</option></select>
                     </div>
                     <div class="col-md-9">
                         <label class="sax-label">{{ __('messages.rua') }}</label>
@@ -98,6 +156,12 @@
                     <div class="col-md-6">
                         <label class="sax-label">{{ __('messages.complemento') ?? 'Complemento' }}</label>
                         <input type="text" name="complement" class="sax-form-control" value="{{ old('complement') }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="d-flex align-items-center gap-2">
+                            <input type="checkbox" name="make_default_address" value="1" {{ old('make_default_address', $addresses->isEmpty()) ? 'checked' : '' }}>
+                            <span>Definir este como meu endereço padrão</span>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -130,5 +194,21 @@
         <button type="button" class="sax-btn-next" onclick="nextStep(3)">
             {{ __('messages.continuar_pagamento') }} <i class="fa fa-arrow-right ms-2"></i>
         </button>
+    </div>
+</div>
+
+<div class="modal fade" id="saveAddressModal" tabindex="-1" aria-labelledby="saveAddressModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-body p-4 p-md-5 text-center">
+                <i class="fa-solid fa-location-dot fs-2 mb-3"></i>
+                <h5 id="saveAddressModalTitle" class="fw-bold">Salvar este endereço?</h5>
+                <p class="text-muted">Este novo endereço será salvo na sua conta e ficará disponível nas próximas compras.</p>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="button" class="btn btn-outline-dark px-4" data-bs-dismiss="modal">Revisar</button>
+                    <button type="button" class="btn btn-dark px-4" id="confirmSaveAddress">Sim, salvar e continuar</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

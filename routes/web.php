@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\AllCategoriesController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\Auth\UserAddressController;
 use App\Http\Controllers\Auth\UserPreferenceController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BrandController;
@@ -131,6 +132,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
     Route::get('/profile', [UserController::class, 'edit'])->name('user.profile.edit');
     Route::put('/profile', [UserController::class, 'update'])->name('user.profile.update');
+    Route::get('/meus-enderecos', [UserAddressController::class, 'index'])->name('user.addresses.index');
+    Route::post('/meus-enderecos', [UserAddressController::class, 'store'])->name('user.addresses.store');
+    Route::patch('/meus-enderecos/{address}/padrao', [UserAddressController::class, 'makeDefault'])->name('user.addresses.default');
+    Route::delete('/meus-enderecos/{address}', [UserAddressController::class, 'destroy'])->name('user.addresses.destroy');
     Route::get('/seguranca/senha', [UserController::class, 'editPassword'])->name('user.password.edit');
     Route::put('/seguranca/senha', [UserController::class, 'updatePassword'])->name('user.password.update');
     Route::post('/checkout/calcular-frete', [CheckoutController::class, 'ajaxCalcularFrete'])->name('checkout.calcular-frete');

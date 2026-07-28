@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderStatusMail;
 use App\Models\Policy;
 use App\Models\Product;
+use App\Models\UserAddress;
 use App\Services\BusinessEventService;
 use App\Services\AdminNotificationService;
 
@@ -32,6 +33,8 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $this->ensureLegacyAddress($user);
+        $addresses = $user->addresses()->get();
         $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
         $paymentMethods = PaymentMethod::where('active', 1)->get();
         $policies = Policy::where('is_active', true)->orderBy('id')->get();
@@ -47,7 +50,7 @@ class CheckoutController extends Controller
         // O cupom da sessão é revalidado contra o carrinho atual a cada carregamento.
         $resumo = $this->cupons->resumoDoCarrinho($user, $cart->filter(fn ($i) => $i->product)->values());
 
-        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies'));
+        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies', 'addresses'));
     }
 
     public function store(Request $request)
@@ -60,15 +63,18 @@ class CheckoutController extends Controller
             'email' => 'required|email',
             'phone' => 'required|string',
             'shipping' => 'required|in:1,2,3',
+            'shipping_address_id' => 'required_if:shipping,1|nullable|integer',
             'payment_method' => 'required|in:deposito,bancard_v2,whatsapp',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street' => 'required_if:shipping,2',
             'number' => 'required_if:shipping,2',
             'district' => 'required_if:shipping,2',
-            'city' => 'nullable|string',
-            'state' => 'nullable|string',
+            'city' => 'required_if:shipping,2|nullable|string',
+            'state' => 'required_if:shipping,2|nullable|string',
             'country' => 'required_if:shipping,2',
             'cep' => 'required_if:shipping,2',
+            'address_label' => 'required_if:shipping,2|nullable|string|max:80',
+            'make_default_address' => 'nullable|boolean',
             'frete_valor' => 'nullable|numeric', // Validamos o campo que enviamos via JS
             'store' => 'required_if:shipping,3',
             'observations' => 'nullable|string',
@@ -82,6 +88,17 @@ class CheckoutController extends Controller
 
         $frete = (float) $request->input('frete_valor', 0);
         $paymentMethod = $request->input('payment_method');
+
+        $selectedAddress = null;
+        if ($request->input('shipping') === '1') {
+            $selectedAddress = $user->addresses()
+                ->whereKey($request->integer('shipping_address_id'))
+                ->first();
+
+            if (! $selectedAddress) {
+                return back()->withErrors(['shipping_address_id' => 'Selecione um endereço válido para entrega.'])->withInput();
+            }
+        }
 
         // O cupom vem da sessão e é recalculado aqui no servidor: o valor enviado pelo
         // navegador nunca é usado para definir o desconto.
@@ -150,33 +167,56 @@ class CheckoutController extends Controller
 
             switch ($request->shipping) {
                 case '1':
-                    // 1. Atualiza os dados do pedido com o endereço do usuário
+                    $address = $selectedAddress;
                     $order->update([
-                        'street' => $user->street, 
-                        'number' => $user->number, 
-                        'district' => $user->district,
-                        'complement' => $user->complement, 
-                        'city' => $user->city, 
-                        'state' => $user->state,
-                        'cep' => $user->cep, 
-                        'country' => $user->country == 'paraguai' ? 'PY' : 'BR',
+                        'street' => $address->street,
+                        'number' => $address->number,
+                        'district' => $address->district,
+                        'complement' => $address->complement,
+                        'city' => $address->city,
+                        'state' => $address->state,
+                        'cep' => $address->postal_code,
+                        'country' => $address->country === 'paraguai' ? 'PY' : 'BR',
                     ]);
 
-                    if ($user->country === 'paraguai' && !empty($user->city)) {
-                        $valorFrete = $this->calcularFrete($user->city);
+                    if ($address->country === 'paraguai' && ! empty($address->city)) {
+                        $valorFrete = $this->calcularFrete($address->city);
                         
                         $order->update(['shipping_cost' => $valorFrete]);
                         
-                        $novoTotal = $order->total + $valorFrete;
+                        $novoTotal = max(0, ($subtotal - $desconto) + $valorFrete);
                         $order->update(['total' => $novoTotal]);
                     }
                     break;
                 case '2':
+                    $makeDefault = $request->boolean('make_default_address') || ! $user->addresses()->exists();
+
+                    if ($makeDefault) {
+                        $user->addresses()->update(['is_default' => false]);
+                    }
+
+                    $address = $user->addresses()->create([
+                        'label' => $request->input('address_label', 'Meu endereço'),
+                        'country' => $request->input('country'),
+                        'postal_code' => $request->input('cep'),
+                        'state' => $request->input('state'),
+                        'city' => $request->input('city'),
+                        'street' => $request->input('street'),
+                        'number' => $request->input('number'),
+                        'district' => $request->input('district'),
+                        'complement' => $request->input('complement'),
+                        'is_default' => $makeDefault,
+                    ]);
+
+                    if ($makeDefault) {
+                        $this->syncLegacyAddress($user, $address);
+                    }
+
                     $order->update([
-                        'street' => $request->input('street'), 'number' => $request->input('number'),
-                        'district' => $request->input('district'), 'complement' => $request->input('complement'),
-                        'city' => $request->input('city') ?? '', 'state' => $request->input('state') ?? '',
-                        'cep' => $request->input('cep') ?? '', 'country' => $request->input('country') == 'paraguai' ? 'PY' : 'BR',
+                        'street' => $address->street, 'number' => $address->number,
+                        'district' => $address->district, 'complement' => $address->complement,
+                        'city' => $address->city ?? '', 'state' => $address->state ?? '',
+                        'cep' => $address->postal_code ?? '', 'country' => $address->country === 'paraguai' ? 'PY' : 'BR',
                     ]);
                     break;
                 case '3':
@@ -261,6 +301,40 @@ class CheckoutController extends Controller
             );
             return back()->with('error', 'Erro ao processar pedido.')->withInput();
         }
+    }
+
+    private function ensureLegacyAddress($user): void
+    {
+        if ($user->addresses()->exists() || ! filled($user->address) || ! filled($user->number) || ! filled($user->district)) {
+            return;
+        }
+
+        $user->addresses()->create([
+            'label' => 'Endereço principal',
+            'country' => in_array(mb_strtolower((string) $user->country), ['paraguai', 'py'], true) ? 'paraguai' : 'brasil',
+            'postal_code' => $user->cep,
+            'state' => $user->state,
+            'city' => $user->city,
+            'street' => $user->address,
+            'number' => $user->number,
+            'district' => $user->district,
+            'complement' => $user->complement,
+            'is_default' => true,
+        ]);
+    }
+
+    private function syncLegacyAddress($user, UserAddress $address): void
+    {
+        $user->update([
+            'country' => $address->country,
+            'cep' => $address->postal_code,
+            'state' => $address->state,
+            'city' => $address->city,
+            'address' => $address->street,
+            'number' => $address->number,
+            'district' => $address->district,
+            'complement' => $address->complement,
+        ]);
     }
 
     private function calcularFrete($cidade)

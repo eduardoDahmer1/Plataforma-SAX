@@ -125,6 +125,11 @@ document.addEventListener('DOMContentLoaded', function () {
         selectorsToClear.forEach(clearInvalid);
 
         if (shipping === '1') {
+            if (!fieldValue('#shipping_address_id')) {
+                showStepAlert(3, 'Selecione um endereço salvo ou cadastre um novo endereço.');
+                markFieldInvalid('#shipping_address_id', true);
+                return false;
+            }
             return true;
         }
 
@@ -134,6 +139,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const street = fieldValue('input[name="street"]');
             const number = fieldValue('input[name="number"]');
             const district = fieldValue('input[name="district"]');
+            const label = fieldValue('input[name="address_label"]');
+            const state = fieldValue('#state-select');
+            const city = fieldValue('#city-select');
+
+            if (!label) {
+                showStepAlert(3, 'Informe uma identificação para o endereço, como Casa ou Trabalho.');
+                markFieldInvalid('input[name="address_label"]', true);
+                return false;
+            }
 
             if (!country) {
                 showStepAlert(3, 'Selecione o pais de entrega para continuar.');
@@ -150,6 +164,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!street) {
                 showStepAlert(3, 'Informe a rua para continuar.');
                 markFieldInvalid('input[name="street"]', true);
+                return false;
+            }
+
+            if (!state) {
+                showStepAlert(3, 'Selecione o estado ou departamento para continuar.');
+                markFieldInvalid('#state-select', true);
+                return false;
+            }
+
+            if (!city) {
+                showStepAlert(3, 'Selecione a cidade para continuar.');
+                markFieldInvalid('#city-select', true);
                 return false;
             }
 
@@ -214,6 +240,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        const selectedShipping = document.querySelector('input[name="shipping"]:checked')?.value;
+        if (step === 3 && selectedShipping === '2' && window.bootstrap) {
+            const modalElement = document.getElementById('saveAddressModal');
+            if (modalElement) {
+                window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+                return;
+            }
+        }
+
         currentStep = step + 1;
         showStep(currentStep);
     }
@@ -229,6 +264,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const shippingRegistered = document.getElementById('shipping_registered');
     const shippingAlternative = document.getElementById('shipping_alternative');
     const shippingStore = document.getElementById('shipping_store');
+    const addressSelect = document.getElementById('shipping_address_id');
+    const addressPreview = document.getElementById('selected-address-preview');
     const countrySelect = document.getElementById('country');
     const stateSelect = document.getElementById('state-select');
     const citySelect = document.getElementById('city-select');
@@ -247,6 +284,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const freteValorInput = document.getElementById('frete_valor');
     const subtotalDisplay = document.getElementById('subtotal-valor');
     const totalSemFrete = document.getElementById('total-sem-frete');
+    const confirmSaveAddress = document.getElementById('confirmSaveAddress');
 
     let paraguayData = null;
     let observationsValues = { 1: '', 2: '', 3: '' };
@@ -316,6 +354,39 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function updateSelectedAddress() {
+        if (!addressSelect) return;
+        const option = addressSelect.options[addressSelect.selectedIndex];
+        const country = option?.dataset.country || '';
+        const city = option?.dataset.city || '';
+        const fields = {
+            country: country === 'paraguai' ? 'Paraguai' : 'Brasil',
+            state: option?.dataset.state || 'Não informado',
+            city: city || 'Não informada',
+            street: option?.dataset.street || 'Não informada',
+            number: option?.dataset.number || 'Não informado',
+            district: option?.dataset.district || 'Não informado',
+            complement: option?.dataset.complement || 'Não informado',
+            postalCode: option?.dataset.postalCode || 'Não informado'
+        };
+
+        const countryData = document.getElementById('user_country_data');
+        const cityData = document.getElementById('user_city_data');
+        if (countryData) countryData.value = country;
+        if (cityData) cityData.value = city;
+        if (addressPreview) {
+            Object.entries(fields).forEach(function ([field, value]) {
+                const element = addressPreview.querySelector(`[data-address-field="${field}"]`);
+                if (element) element.textContent = value;
+            });
+        }
+        const selectedLabel = document.querySelector('[data-address-selected-label]');
+        if (selectedLabel) selectedLabel.textContent = option?.dataset.label || 'Endereço selecionado';
+
+        updateShippingMessage('1');
+        calcularFrete();
+    }
+
     function updateShippingMessage(method) {
         if (!infoBox || !infoContent) return;
         infoBox.style.display = 'block';
@@ -355,6 +426,10 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 stateSelect.innerHTML = '<option value="">Selecione o Estado</option>';
                 data.forEach(uf => stateSelect.innerHTML += `<option value="${uf.sigla}" data-id="${uf.id}">${uf.nome}</option>`);
+                if (stateSelect.dataset.selected) {
+                    stateSelect.value = stateSelect.dataset.selected;
+                    stateSelect.dispatchEvent(new Event('change'));
+                }
                 if (callback) callback();
             });
     }
@@ -368,6 +443,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const depts = [...new Set(data.map(item => item.admin_name))].sort();
                 stateSelect.innerHTML = '<option value="">Selecione o Departamento</option>';
                 depts.forEach(d => stateSelect.innerHTML += `<option value="${d}">${d}</option>`);
+                if (stateSelect.dataset.selected) {
+                    stateSelect.value = stateSelect.dataset.selected;
+                    stateSelect.dispatchEvent(new Event('change'));
+                }
             });
     }
 
@@ -384,11 +463,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(data => {
                     citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
                     data.forEach(c => citySelect.innerHTML += `<option value="${c.nome}">${c.nome}</option>`);
+                    if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
                 });
         } else if (paraguayData) {
             const cities = paraguayData.filter(item => item.admin_name === this.value);
             citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
             cities.forEach(c => citySelect.innerHTML += `<option value="${c.city}">${c.city}</option>`);
+            if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
         }
     });
 
@@ -468,6 +549,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (countrySelect) countrySelect.addEventListener('change', window.toggleCountryFields);
     if (storeSelect) storeSelect.addEventListener('change', window.updateStoreMap);
+    if (addressSelect) addressSelect.addEventListener('change', updateSelectedAddress);
+    if (confirmSaveAddress) {
+        confirmSaveAddress.addEventListener('click', function () {
+            const modalElement = document.getElementById('saveAddressModal');
+            if (modalElement && window.bootstrap) {
+                window.bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+            }
+            currentStep = 4;
+            showStep(currentStep);
+        });
+    }
 
     const checkedRadio = document.querySelector('input[name="shipping"]:checked');
     

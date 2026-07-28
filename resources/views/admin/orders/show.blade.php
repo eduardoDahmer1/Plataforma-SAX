@@ -200,10 +200,27 @@
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.comprador_card') }}</h6>
                     
                     <div class="mb-3">
-                        <span class="d-block fw-bold text-dark">{{ $order->name }} {{ $order->surname }}</span>
+                        @if($order->user)
+                            <a href="{{ route('admin.clients.show', $order->user->id) }}"
+                               class="d-inline-flex align-items-center gap-2 fw-bold text-dark text-decoration-none"
+                               title="Abrir perfil administrativo do cliente">
+                                <span>{{ $order->name }} {{ $order->surname }}</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square x-small text-primary"></i>
+                            </a>
+                        @else
+                            <span class="d-block fw-bold text-dark">{{ $order->name }} {{ $order->surname }}</span>
+                        @endif
+
                         <a href="mailto:{{ $order->email }}" class="d-block small text-primary text-decoration-none mt-1">
                             <i class="fa fa-envelope me-1"></i>{{ $order->email }}
                         </a>
+
+                        @if($order->user)
+                            <a href="{{ route('admin.clients.show', $order->user->id) }}"
+                               class="btn btn-outline-dark btn-sm w-100 mt-3 rounded-0 fw-bold text-uppercase">
+                                <i class="fa-regular fa-user me-2"></i>Ver perfil do cliente
+                            </a>
+                        @endif
                         
                         @if($order->phone)
                             @php

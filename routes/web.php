@@ -163,6 +163,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->name('checkout.whatsapp');
     Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->name('orders.deposit.submit');
     Route::get('cupons', [CuponUserController::class, 'index'])->name('user.cupons');
+    Route::post('notifications/read-all', [\App\Http\Controllers\Auth\UserNotificationController::class, 'markAllAsRead'])->name('user.notifications.read-all');
+    Route::post('notifications/{notification}/read', [\App\Http\Controllers\Auth\UserNotificationController::class, 'markAsRead'])->whereNumber('notification')->name('user.notifications.read');
     Route::post('cupons/remove', [CuponUserController::class, 'remove'])->name('user.cupons.remove');
     Route::post('/user/cupon/apply', [CuponUserController::class, 'applyCupon'])->name('user.applyCupon');
     Route::post('/user/cupons/apply', [CuponUserController::class, 'apply'])->name('user.cupons.apply');

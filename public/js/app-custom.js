@@ -231,6 +231,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 closeNotifications();
             }
         });
+
+        const notificationsFilter = document.getElementById('adminNotificationsFilter');
+        const filteredEmpty = document.getElementById('adminNotificationsFilteredEmpty');
+
+        notificationsFilter?.addEventListener('change', function () {
+            let visibleItems = 0;
+
+            notificationsDrawer.querySelectorAll('[data-notification-item]').forEach(function (item) {
+                const visible = notificationsFilter.value === 'all'
+                    || item.dataset.notificationCategory === notificationsFilter.value;
+                item.classList.toggle('d-none', !visible);
+                if (visible) visibleItems++;
+            });
+
+            filteredEmpty?.classList.toggle('d-none', visibleItems > 0);
+        });
     }
 
     // User Profile: SAX registration field

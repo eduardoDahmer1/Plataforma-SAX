@@ -112,11 +112,25 @@ class AppServiceProvider extends ServiceProvider
             $view->with([
                 'adminNotifications' => $admin->adminNotifications()
                     ->latest()
-                    ->limit(8)
+                    ->limit(30)
                     ->get(),
                 'adminUnreadNotificationsCount' => $admin->adminNotifications()
                     ->whereNull('read_at')
                     ->count(),
+            ]);
+        });
+
+        View::composer('users.notifications-menu', function ($view) {
+            $customer = auth()->user();
+
+            if (! $customer || $customer->isAdmin()) {
+                $view->with(['customerNotifications' => collect(), 'customerUnreadNotificationsCount' => 0]);
+                return;
+            }
+
+            $view->with([
+                'customerNotifications' => $customer->adminNotifications()->latest()->limit(30)->get(),
+                'customerUnreadNotificationsCount' => $customer->adminNotifications()->whereNull('read_at')->count(),
             ]);
         });
 

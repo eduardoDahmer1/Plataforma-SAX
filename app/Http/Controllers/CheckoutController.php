@@ -16,10 +16,15 @@ use App\Mail\OrderStatusMail;
 use App\Models\Policy;
 use App\Models\Product;
 use App\Services\BusinessEventService;
+use App\Services\AdminNotificationService;
 
 class CheckoutController extends Controller
 {
-    public function __construct(private CuponService $cupons, private BusinessEventService $events)
+    public function __construct(
+        private CuponService $cupons,
+        private BusinessEventService $events,
+        private AdminNotificationService $adminNotifications
+    )
     {
     }
 
@@ -247,6 +252,13 @@ class CheckoutController extends Controller
             DB::rollBack();
             Log::error('Erro crítico no checkout: ' . $e->getMessage());
             $this->events->record('checkout', 'Cliente não conseguiu concluir o pedido', 'O checkout encontrou um erro antes de criar o pedido. A equipe pode oferecer ajuda.', 'error', $user?->id);
+            $this->adminNotifications->notifyAdmins(
+                'checkout_error',
+                'Erro no checkout',
+                'Um cliente não conseguiu concluir o pedido. Verifique os eventos do painel.',
+                '/admin',
+                ['user_id' => $user?->id],
+            );
             return back()->with('error', 'Erro ao processar pedido.')->withInput();
         }
     }

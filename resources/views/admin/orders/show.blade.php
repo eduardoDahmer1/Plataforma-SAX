@@ -329,6 +329,23 @@
                         </span>
                     </div>
 
+                    @if ($order->payment_currency === 'PYG' && $order->payment_amount)
+                        <div class="mt-3 p-3 rounded border border-secondary" style="background:rgba(255,255,255,.04);">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="x-small text-secondary text-uppercase">Enviado ao Bancard</span>
+                                <strong class="small">G$ {{ number_format((float) $order->payment_amount, 0, ',', '.') }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="x-small text-secondary text-uppercase">Cotação USD → PYG</span>
+                                <strong class="x-small">G$ {{ number_format((float) $order->payment_exchange_rate, 2, ',', '.') }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="x-small text-secondary text-uppercase">País do cartão</span>
+                                <strong class="x-small">{{ $order->payment_card_country ?: 'Aguardando retorno' }}</strong>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Referência em USD: os valores são gravados na moeda base. --}}
                     @if ($moedaPedido !== 'US$')
                         <div class="text-end x-small text-secondary mt-1">

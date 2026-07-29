@@ -10,7 +10,7 @@
         <i class="fa-regular fa-bell" aria-hidden="true"></i>
 
         @if ($adminUnreadNotificationsCount > 0)
-            <span class="sax-admin-notifications__badge">
+            <span class="sax-admin-notifications__badge" data-notifications-badge>
                 {{ $adminUnreadNotificationsCount > 99 ? '99+' : $adminUnreadNotificationsCount }}
             </span>
         @endif

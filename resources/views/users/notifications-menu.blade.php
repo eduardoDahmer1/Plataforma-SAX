@@ -3,7 +3,7 @@
             aria-controls="adminNotificationsDrawer" aria-expanded="false" aria-label="Abrir minhas notificações">
         <i class="fa-regular fa-bell" aria-hidden="true"></i>
         @if ($customerUnreadNotificationsCount > 0)
-            <span class="sax-admin-notifications__badge">{{ $customerUnreadNotificationsCount > 99 ? '99+' : $customerUnreadNotificationsCount }}</span>
+            <span class="sax-admin-notifications__badge" data-notifications-badge>{{ $customerUnreadNotificationsCount > 99 ? '99+' : $customerUnreadNotificationsCount }}</span>
         @endif
     </button>
 

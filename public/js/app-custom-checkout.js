@@ -284,6 +284,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const freteValorInput = document.getElementById('frete_valor');
     const subtotalDisplay = document.getElementById('subtotal-valor');
     const totalSemFrete = document.getElementById('total-sem-frete');
+    const bancardCurrencyNotice = document.getElementById('bancard-currency-notice');
+    const bancardPygTotal = document.getElementById('bancard-pyg-total');
+    const bancardCountryWarning = document.getElementById('bancard-country-warning');
     const confirmSaveAddress = document.getElementById('confirmSaveAddress');
 
     let paraguayData = null;
@@ -307,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (freteDisplay) freteDisplay.innerText = '';
             if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
+            updateBancardCurrencyNotice();
             return; 
         }
 
@@ -329,6 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
             
             if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
             if (freteValorInput) freteValorInput.value = '0.00';
+            updateBancardCurrencyNotice();
             return;
         }
 
@@ -347,11 +352,49 @@ document.addEventListener('DOMContentLoaded', function () {
             if (freteDisplay) freteDisplay.innerText = data.frete_formatado;
             if (totalDisplay) totalDisplay.innerText = data.total_formatado;
             if (freteValorInput) freteValorInput.value = (parseFloat(data.frete) || 0).toFixed(2);
+            updateBancardCurrencyNotice();
         })
         .catch(error => {
             console.error('Erro no cálculo:', error);
             if (freteDisplay) freteDisplay.innerText = 'Erro ao calcular';
         });
+    }
+
+    function resolveCheckoutCountry() {
+        const shipping = document.querySelector('input[name="shipping"]:checked')?.value;
+        if (shipping === '3') return 'paraguai';
+        if (shipping === '1') return document.getElementById('user_country_data')?.value || '';
+        if (shipping === '2') return countrySelect?.value || '';
+        return '';
+    }
+
+    function updateBancardCurrencyNotice() {
+        if (!bancardCurrencyNotice) return;
+
+        const isBancard = document.getElementById('payment_method')?.value === 'bancard_v2';
+        bancardCurrencyNotice.classList.toggle('d-none', !isBancard);
+        if (!isBancard) return;
+
+        const baseTotal = parseFloat(totalSemFrete?.dataset.valor || '0') || 0;
+        const shippingValue = parseFloat(freteValorInput?.value || '0') || 0;
+        const pygRate = parseFloat(bancardCurrencyNotice.dataset.pygRate || '1') || 1;
+        const pygSign = bancardCurrencyNotice.dataset.pygSign || 'G$';
+        const totalPyg = Math.round((baseTotal + shippingValue) * pygRate);
+
+        if (bancardPygTotal) {
+            bancardPygTotal.textContent = `${pygSign} ${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(totalPyg)}`;
+        }
+
+        const checkoutCountry = resolveCheckoutCountry();
+        if (!bancardCountryWarning) return;
+
+        if (checkoutCountry === 'brasil') {
+            bancardCountryWarning.innerHTML = '<strong>Aviso para compras do Brasil:</strong> esta é uma compra internacional processada em guaranis. O banco emissor e a bandeira do cartão podem aplicar sua própria cotação, IOF, spread cambial e outros encargos. Por isso, o valor final da fatura pode ser superior ao valor de referência exibido pela SAX. Esses encargos não são cobrados nem controlados pela SAX.';
+        } else if (checkoutCountry === 'paraguai') {
+            bancardCountryWarning.innerHTML = '<strong>Compra no Paraguai:</strong> o pagamento será processado diretamente em guaranis. A SAX não aplica taxa de conversão internacional. Caso o cartão ou a conta estejam em outra moeda, o banco emissor ainda poderá realizar sua própria conversão.';
+        } else {
+            bancardCountryWarning.innerHTML = '<strong>Aviso para cartões internacionais:</strong> o pagamento é processado em guaranis. Seu banco ou bandeira poderá aplicar conversão cambial, impostos e encargos próprios, fazendo o valor da fatura diferir da referência apresentada no checkout.';
+        }
     }
 
     function updateSelectedAddress() {
@@ -590,6 +633,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 ? "Cartão disponível para Brasil, Paraguai e outros países. QR Bancard somente para o Paraguai; PIX/QR Brasil em breve."
                 : "Após finalizar, você deverá enviar o comprovante do depósito/transferência.";
         }
+        updateBancardCurrencyNotice();
     };
 
     document.querySelectorAll('.sax-payment-method[data-payment-method]').forEach((button) => {

@@ -247,6 +247,112 @@ document.addEventListener('DOMContentLoaded', function () {
 
             filteredEmpty?.classList.toggle('d-none', visibleItems > 0);
         });
+
+        // Marking notifications should not reload the current page. Individual
+        // notifications still navigate after their read state is persisted.
+        const notificationMenu = notificationsDrawer.closest('.sax-admin-notifications');
+        const refreshNotificationState = () => {
+            const unreadItems = notificationsDrawer.querySelectorAll(
+                '[data-notification-item] .sax-admin-notifications__item.is-unread'
+            );
+            const unreadCount = unreadItems.length;
+            const unreadLabel = notificationsDrawer.querySelector('[data-notifications-unread-count]');
+            const readAllForm = notificationsDrawer.querySelector('[data-notifications-read-all]');
+            const badge = notificationMenu?.querySelector('[data-notifications-badge]');
+
+            if (unreadLabel) {
+                unreadLabel.textContent = `${unreadCount} ${unreadCount === 1 ? 'não lida' : 'não lidas'}`;
+                unreadLabel.classList.toggle('d-none', unreadCount === 0);
+            }
+
+            readAllForm?.classList.toggle('d-none', unreadCount === 0);
+
+            if (badge) {
+                badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+                badge.classList.toggle('d-none', unreadCount === 0);
+            }
+        };
+
+        const markItemAsReadInView = form => {
+            const item = form.querySelector('.sax-admin-notifications__item');
+            if (!item) return;
+
+            item.classList.remove('is-unread');
+            form.querySelector('.sax-admin-notifications__dot')?.remove();
+            form.querySelector('[data-notification-mark-read]')?.remove();
+            refreshNotificationState();
+        };
+
+        const submitNotificationAsync = async (form, { navigate = false, trigger = null } = {}) => {
+            const button = trigger || form.querySelector('button[type="submit"]');
+            if (form.dataset.submitting === 'true') return;
+
+            form.dataset.submitting = 'true';
+            if (button) button.disabled = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method || 'POST',
+                    body: new FormData(form),
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!response.ok) throw new Error(`Notification request failed: ${response.status}`);
+
+                const data = await response.json();
+
+                if (form.dataset.notificationsReadAll !== undefined) {
+                    notificationsDrawer.querySelectorAll(
+                        '[data-notification-item] .sax-admin-notifications__item.is-unread'
+                    ).forEach(item => {
+                        item.classList.remove('is-unread');
+                        item.closest('[data-notification-item]')
+                            ?.querySelector('.sax-admin-notifications__dot')?.remove();
+                        item.closest('[data-notification-item]')
+                            ?.querySelector('[data-notification-mark-read]')?.remove();
+                    });
+                    refreshNotificationState();
+                } else {
+                    markItemAsReadInView(form);
+                }
+
+                if (navigate && data.destination) {
+                    window.location.assign(data.destination);
+                }
+            } catch (error) {
+                // Keep the original form flow as a safe fallback if JavaScript,
+                // the network, or the JSON response is unavailable.
+                form.dataset.submitting = 'false';
+                if (button) button.disabled = false;
+                HTMLFormElement.prototype.submit.call(form);
+            }
+        };
+
+        notificationsDrawer.querySelectorAll('form[data-notification-item]').forEach(form => {
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                submitNotificationAsync(form, { navigate: true });
+            });
+        });
+
+        notificationsDrawer.querySelectorAll('form[data-notifications-read-all]').forEach(form => {
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                submitNotificationAsync(form);
+            });
+        });
+
+        notificationsDrawer.querySelectorAll('[data-notification-mark-read]').forEach(button => {
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                const form = button.closest('form[data-notification-item]');
+                if (form) submitNotificationAsync(form, { trigger: button });
+            });
+        });
     }
 
     // User Profile: SAX registration field

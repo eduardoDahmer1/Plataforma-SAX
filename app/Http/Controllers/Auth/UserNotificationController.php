@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class UserNotificationController extends Controller
 {
-    public function markAsRead(Notification $notification): RedirectResponse
+    public function markAsRead(Request $request, Notification $notification): RedirectResponse|JsonResponse
     {
         abort_if(auth()->user()->isAdmin(), 403);
 
@@ -25,14 +27,29 @@ class UserNotificationController extends Controller
             $destination = route('user.dashboard');
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'notification_id' => $notification->id,
+                'destination' => $destination,
+            ]);
+        }
+
         return redirect()->to($destination);
     }
 
-    public function markAllAsRead(): RedirectResponse
+    public function markAllAsRead(Request $request): RedirectResponse|JsonResponse
     {
         abort_if(auth()->user()->isAdmin(), 403);
 
-        auth()->user()->adminNotifications()->whereNull('read_at')->update(['read_at' => now()]);
+        $updated = auth()->user()->adminNotifications()->whereNull('read_at')->update(['read_at' => now()]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'updated' => $updated,
+            ]);
+        }
 
         return redirect()->back();
     }

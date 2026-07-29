@@ -50,10 +50,14 @@ class BancardV2Controller extends Controller
         try {
             $amount = $this->convertOrderTotalToPyg($order);
             $currency = self::CURRENCY;
+            $pygRate = $this->resolvePygRate();
             $shopProcessId = $this->bancard->generateShopProcessId($order);
             $token = $this->bancard->buildSingleBuyToken($shopProcessId, $amount, $currency);
 
             $order->shop_process_id = $shopProcessId;
+            $order->payment_currency = $currency;
+            $order->payment_amount = $amount;
+            $order->payment_exchange_rate = $pygRate;
             $order->save();
 
             $payload = $this->bancard->buildSingleBuyPayload(
@@ -188,6 +192,14 @@ class BancardV2Controller extends Controller
                 'description' => 'pedido não encontrado',
             ]);
         }
+
+        $order->update([
+            'payment_currency' => data_get($payload, 'operation.currency') ?: $order->payment_currency ?: self::CURRENCY,
+            'payment_amount' => data_get($payload, 'operation.amount') ?: $order->payment_amount,
+            'payment_card_country' => data_get($payload, 'operation.card_country')
+                ?: data_get($payload, 'card_country')
+                ?: $order->payment_card_country,
+        ]);
 
         $this->syncOrderStatus($order, $payload);
 
@@ -456,6 +468,13 @@ class BancardV2Controller extends Controller
         $pygCurrency = \App\Models\Currency::where('name', 'PYG')->first();
 
         return $pygCurrency?->sign ?? 'G$';
+    }
+
+    private function resolvePygRate(): float
+    {
+        $pygCurrency = \App\Models\Currency::where('name', 'PYG')->orWhere('sign', 'GS$')->first();
+
+        return (float) ($pygCurrency?->value ?: 1);
     }
 
 

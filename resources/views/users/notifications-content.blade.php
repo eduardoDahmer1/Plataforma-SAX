@@ -19,8 +19,8 @@
     <div><strong id="adminNotificationsTitle">Minhas notificações</strong><span>Pedidos, conta e novidades SAX</span></div>
     <div class="sax-admin-notifications__header-actions">
         @if ($customerUnreadNotificationsCount > 0)
-            <span class="sax-admin-notifications__unread">{{ $customerUnreadNotificationsCount }} {{ $customerUnreadNotificationsCount === 1 ? 'não lida' : 'não lidas' }}</span>
-            <form action="{{ route('user.notifications.read-all') }}" method="POST">
+            <span class="sax-admin-notifications__unread" data-notifications-unread-count>{{ $customerUnreadNotificationsCount }} {{ $customerUnreadNotificationsCount === 1 ? 'não lida' : 'não lidas' }}</span>
+            <form action="{{ route('user.notifications.read-all') }}" method="POST" data-notifications-read-all>
                 @csrf
                 <button type="submit" class="sax-admin-notifications__read-all">Marcar todas como lidas</button>
             </form>
@@ -56,6 +56,13 @@
                 </span>
                 @if (is_null($notification->read_at))<span class="sax-admin-notifications__dot" aria-label="Não lida"></span>@endif
             </button>
+            @if (is_null($notification->read_at))
+                <button type="button" class="sax-admin-notifications__mark-read"
+                        data-notification-mark-read title="Marcar como lida">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    <span>Marcar como lida</span>
+                </button>
+            @endif
         </form>
     @empty
         <div class="sax-admin-notifications__empty"><i class="fa-regular fa-bell-slash"></i><strong>Nenhuma notificação</strong><span>Suas novidades aparecerão aqui.</span></div>

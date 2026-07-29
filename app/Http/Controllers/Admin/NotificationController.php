@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function markAsRead(Notification $notification): RedirectResponse
+    public function markAsRead(Request $request, Notification $notification): RedirectResponse|JsonResponse
     {
         if ((int) $notification->user_id !== (int) auth()->id()) {
             abort(404);
@@ -28,10 +30,18 @@ class NotificationController extends Controller
             $destination = route('admin.index');
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'notification_id' => $notification->id,
+                'destination' => $destination,
+            ]);
+        }
+
         return redirect()->to($destination);
     }
 
-    public function markAllAsRead(): RedirectResponse
+    public function markAllAsRead(Request $request): RedirectResponse|JsonResponse
     {
         $admin = auth()->user();
 
@@ -39,9 +49,16 @@ class NotificationController extends Controller
             abort(403);
         }
 
-        $admin->adminNotifications()
+        $updated = $admin->adminNotifications()
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'updated' => $updated,
+            ]);
+        }
 
         return redirect()->back();
     }

@@ -475,6 +475,63 @@ body {
     max-width: 580px;
 }
 
+.sax-bancard-currency-notice {
+    background: #fff9e9;
+    border: 1px solid #e9d294;
+    border-radius: 12px;
+    color: #3f3520;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 760px;
+    padding: 16px 18px;
+}
+
+.sax-bancard-currency-notice__head {
+    align-items: center;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: auto 1fr auto;
+    margin-bottom: 12px;
+}
+
+.sax-bancard-currency-notice__head > i {
+    font-size: 1.25rem;
+}
+
+.sax-bancard-currency-notice__head span,
+.sax-bancard-currency-notice__head strong {
+    display: block;
+}
+
+.sax-bancard-currency-notice__head span {
+    font-size: .68rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.sax-bancard-currency-notice__amount {
+    font-size: 1.05rem;
+    white-space: nowrap;
+}
+
+.sax-bancard-currency-notice p {
+    border-top: 1px solid rgba(88, 70, 27, .18);
+    font-size: .78rem;
+    line-height: 1.6;
+    padding-top: 12px;
+}
+
+@media (max-width: 575.98px) {
+    .sax-bancard-currency-notice__head {
+        grid-template-columns: auto 1fr;
+    }
+
+    .sax-bancard-currency-notice__amount {
+        grid-column: 1 / -1;
+        padding-left: 34px;
+    }
+}
+
 .sax-payment-method {
     background: var(--paper);
     border: 1px solid #202020;

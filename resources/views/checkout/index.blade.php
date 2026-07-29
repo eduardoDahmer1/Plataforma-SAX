@@ -49,7 +49,7 @@
         <x-checkout.step1-cart :cart="$cart" :resumo="$resumo" />
         <x-checkout.step2-user />
         <x-checkout.step3-shipping :addresses="$addresses" />
-        <x-checkout.step4-payment :cart="$cart" :resumo="$resumo" :payment-methods="$paymentMethods" :policies="$policies" />
+        <x-checkout.step4-payment :cart="$cart" :resumo="$resumo" :payment-methods="$paymentMethods" :policies="$policies" :pyg-currency="$pygCurrency" />
     </form>
 </div>
 </div>

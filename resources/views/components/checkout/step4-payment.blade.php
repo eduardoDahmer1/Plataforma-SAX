@@ -5,6 +5,9 @@
         $descontoPedido = $resumo['desconto'] ?? 0;
         $cuponAplicado = $resumo['cupon'] ?? null;
         $totalPedido = $resumo['total'] ?? $subtotalPedido;
+        $pygRate = (float) ($pygCurrency?->value ?: 1);
+        $pygSign = $pygCurrency?->sign ?: 'G$';
+        $selectedCurrencySign = session('currency_sign', 'US$');
 
         $hasBancardV2 = false;
         foreach (($paymentMethods ?? collect()) as $method) {
@@ -37,6 +40,24 @@
         <p class="sax-payment-notice mt-4" id="payment-instruction">
             {{ __('messages.instrucao_pagamento_deposito') }}
         </p>
+
+        <div class="sax-bancard-currency-notice d-none mt-4 text-start" id="bancard-currency-notice"
+             data-pyg-rate="{{ $pygRate }}" data-pyg-sign="{{ $pygSign }}"
+             data-selected-currency="{{ $selectedCurrencySign }}">
+            <div class="sax-bancard-currency-notice__head">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+                <div>
+                    <span>Moeda processada pelo Bancard</span>
+                    <strong>Guarani paraguaio (PYG)</strong>
+                </div>
+                <strong class="sax-bancard-currency-notice__amount" id="bancard-pyg-total">
+                    {{ $pygSign }} {{ number_format($totalPedido * $pygRate, 0, ',', '.') }}
+                </strong>
+            </div>
+            <p class="mb-0" id="bancard-country-warning">
+                O valor exibido em outra moeda é uma referência. A cobrança do cartão será enviada ao Bancard em guaranis.
+            </p>
+        </div>
     </div>
 
     <input type="hidden" name="payment_method" id="payment_method" value="{{ old('payment_method', 'deposito') }}">

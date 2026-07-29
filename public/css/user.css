@@ -538,6 +538,389 @@ background-color: var(--ink);
 margin-top: 15px;
 }
 
+/* Detalhe do pedido do cliente */
+.sax-order-details-wrapper {
+animation: saxOrderFadeIn .35s ease-out;
+}
+
+.sax-order-hero {
+align-items: stretch;
+background: #17191c;
+border-radius: 18px;
+color: #fff;
+display: grid;
+grid-template-columns: 1fr auto;
+min-height: 190px;
+overflow: hidden;
+}
+
+.sax-order-hero__main {
+padding: 30px 34px;
+}
+
+.sax-order-back {
+align-items: center;
+color: #bbc0c7;
+display: inline-flex;
+font-size: .7rem;
+font-weight: 700;
+gap: 8px;
+letter-spacing: .06em;
+margin-bottom: 25px;
+text-decoration: none;
+text-transform: uppercase;
+}
+
+.sax-order-back:hover {
+color: #fff;
+}
+
+.sax-order-eyebrow {
+color: #9da3ab;
+display: block;
+font-size: .67rem;
+font-weight: 700;
+letter-spacing: .08em;
+margin-bottom: 7px;
+text-transform: uppercase;
+}
+
+.sax-order-hero h1 {
+font-size: clamp(1.65rem, 4vw, 2.45rem);
+font-weight: 400;
+letter-spacing: -.02em;
+margin: 0 0 8px;
+}
+
+.sax-order-hero h1 strong {
+font-weight: 800;
+}
+
+.sax-order-hero p {
+color: #b9bec5;
+font-size: .86rem;
+margin: 0;
+}
+
+.sax-order-hero__total {
+align-items: flex-end;
+background: rgba(255,255,255,.06);
+display: flex;
+flex-direction: column;
+justify-content: center;
+min-width: 245px;
+padding: 30px;
+text-align: right;
+}
+
+.sax-order-hero__total > span:first-child {
+color: #aeb4bc;
+font-size: .67rem;
+font-weight: 700;
+letter-spacing: .08em;
+text-transform: uppercase;
+}
+
+.sax-order-hero__total > strong {
+font-size: 1.8rem;
+margin: 5px 0 14px;
+}
+
+.sax-order-progress {
+background: #fff;
+border: 1px solid #e8e9eb;
+border-radius: 14px;
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+overflow: hidden;
+}
+
+.sax-order-progress__step {
+align-items: center;
+color: #a3a7ad;
+display: flex;
+gap: 10px;
+min-height: 76px;
+padding: 15px 18px;
+position: relative;
+}
+
+.sax-order-progress__step:not(:last-child)::after {
+background: #e7e8ea;
+content: "";
+height: 32px;
+position: absolute;
+right: 0;
+top: 22px;
+width: 1px;
+}
+
+.sax-order-progress__step > span {
+align-items: center;
+background: #f1f2f3;
+border-radius: 50%;
+display: inline-flex;
+height: 34px;
+justify-content: center;
+width: 34px;
+}
+
+.sax-order-progress__step strong {
+font-size: .7rem;
+line-height: 1.25;
+text-transform: uppercase;
+}
+
+.sax-order-progress__step.is-active {
+color: #17191c;
+}
+
+.sax-order-progress__step.is-active > span {
+background: #17191c;
+color: #fff;
+}
+
+.sax-order-progress.is-canceled {
+border-color: #f0caca;
+}
+
+.sax-order-message {
+align-items: flex-start;
+border: 1px solid;
+border-radius: 13px;
+display: flex;
+gap: 14px;
+padding: 16px 18px;
+}
+
+.sax-order-message > i {
+font-size: 1.05rem;
+margin-top: 2px;
+}
+
+.sax-order-message strong,
+.sax-order-message span {
+display: block;
+}
+
+.sax-order-message strong {
+font-size: .83rem;
+margin-bottom: 3px;
+}
+
+.sax-order-message span {
+font-size: .75rem;
+line-height: 1.55;
+}
+
+.sax-order-message__action {
+align-items: center;
+background: #17191c;
+border-radius: 8px;
+color: #fff;
+display: inline-flex;
+font-size: .7rem;
+font-weight: 800;
+gap: 8px;
+letter-spacing: .04em;
+margin-top: 12px;
+padding: 10px 14px;
+text-decoration: none;
+text-transform: uppercase;
+}
+
+.sax-order-message__action:hover {
+background: #000;
+color: #fff;
+}
+
+.sax-order-message.is-warning {
+background: #fff9e8;
+border-color: #ead59a;
+color: #58471b;
+}
+
+.sax-order-message.is-success {
+background: #effaf4;
+border-color: #b9e3ca;
+color: #176239;
+}
+
+.sax-order-message.is-danger {
+background: #fff2f2;
+border-color: #edc4c4;
+color: #8c2525;
+}
+
+.info-row {
+align-items: center;
+border-bottom: 1px dashed #e7e7e7;
+display: flex;
+justify-content: space-between;
+padding: 11px 0;
+}
+
+.info-row:last-child {
+border-bottom: 0;
+}
+
+.label {
+color: #85898f;
+font-size: .65rem;
+font-weight: 700;
+letter-spacing: .08em;
+text-transform: uppercase;
+}
+
+.status-badge-custom {
+align-items: center;
+border: 1px solid #ddd;
+border-radius: 50px;
+display: inline-flex;
+font-size: .62rem;
+font-weight: 800;
+gap: 6px;
+letter-spacing: .04em;
+padding: 5px 11px;
+text-transform: uppercase;
+}
+
+.status-order {
+background: #f2f3f4;
+color: #444;
+}
+
+.status-payment {
+background: #fff9e8;
+border-color: #ecd484;
+color: #9a6800;
+}
+
+.status-payment.paid {
+background: #ebf8f1;
+border-color: #a8dfc0;
+color: #14713f;
+}
+
+.status-payment.failed,
+.status-payment.canceled,
+.status-payment.cancelled {
+background: #fff1f1;
+border-color: #edbaba;
+color: #9b2727;
+}
+
+.sax-order-pyg-summary {
+background: #1f2226;
+border-radius: 10px;
+color: #fff;
+padding: 14px 16px;
+}
+
+.sax-order-pyg-summary span,
+.sax-order-pyg-summary small {
+color: #aeb4bc;
+display: block;
+font-size: .65rem;
+}
+
+.sax-order-pyg-summary strong {
+display: block;
+font-size: 1.15rem;
+margin: 3px 0;
+}
+
+.receipt-preview-link {
+cursor: pointer;
+display: block;
+overflow: hidden;
+position: relative;
+transition: .3s;
+}
+
+.receipt-preview-link .overlay {
+align-items: center;
+background: rgba(0,0,0,.55);
+color: #fff;
+display: flex;
+height: 100%;
+justify-content: center;
+left: 0;
+opacity: 0;
+position: absolute;
+top: 0;
+transition: .3s;
+width: 100%;
+}
+
+.receipt-preview-link:hover .overlay {
+opacity: 1;
+}
+
+.img-modal-backdrop {
+align-items: center;
+background: rgba(0,0,0,.9);
+cursor: zoom-out;
+display: none;
+height: 100%;
+justify-content: center;
+left: 0;
+position: fixed;
+top: 0;
+width: 100%;
+z-index: 9999;
+}
+
+.img-modal-backdrop img {
+border-radius: 8px;
+max-height: 90%;
+max-width: 90%;
+}
+
+@media (max-width: 991.98px) {
+.sax-order-progress {
+grid-template-columns: repeat(2, 1fr);
+}
+
+.sax-order-progress__step:nth-child(2)::after {
+display: none;
+}
+}
+
+@media (max-width: 575.98px) {
+.sax-order-hero {
+grid-template-columns: 1fr;
+}
+
+.sax-order-hero__main,
+.sax-order-hero__total {
+padding: 23px;
+}
+
+.sax-order-hero__total {
+align-items: flex-start;
+min-width: 0;
+text-align: left;
+}
+
+.sax-order-progress {
+grid-template-columns: 1fr;
+}
+
+.sax-order-progress__step {
+min-height: 60px;
+}
+
+.sax-order-progress__step::after {
+display: none;
+}
+}
+
+@keyframes saxOrderFadeIn {
+from { opacity: 0; transform: translateY(8px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
 
 .sax-label {
 font-size: 0.7rem;

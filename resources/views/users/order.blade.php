@@ -1,134 +1,17 @@
 @extends('layout.dashboard')
 
 @section('content')
-    <style>
-        .sax-order-details-wrapper {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .status-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px dashed #eee;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #888;
-            font-weight: 700;
-        }
-
-        .status-badge-custom {
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-order {
-            background: #f0f0f0;
-            color: #444;
-            border: 1px solid #ddd;
-        }
-
-        .status-payment {
-            background: #eef2ff;
-            color: #4f46e5;
-            border: 1px solid #c7d2fe;
-        }
-
-        .status-payment.paid {
-            background: #ecfdf5;
-            color: #059669;
-            border: 1px solid #a7f3d0;
-        }
-
-        .status-payment.pending {
-            background: #fffbeb;
-            color: #d97706;
-            border: 1px solid #fde68a;
-        }
-
-        .receipt-preview-link {
-            position: relative;
-            display: block;
-            overflow: hidden;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-
-        .receipt-preview-link:hover .overlay {
-            opacity: 1;
-        }
-
-        .receipt-preview-link .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: 0.3s;
-        }
-
-        .img-modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: zoom-out;
-        }
-
-        .img-modal-backdrop img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 8px;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
-
     <div class="sax-order-details-wrapper">
+        @php
+            $subtotalPedido = $order->items->sum(fn ($item) => $item->price * $item->quantity);
+            $descontoPedido = (float) ($order->discount ?? 0);
+            $isPaid = $order->payment_status === 'paid';
+            $isCanceled = in_array($order->status, ['canceled', 'cancelled', 'failed'], true);
+            $progress = $isCanceled ? 0 : ($isPaid ? 2 : 1);
+            if (in_array($order->status, ['processing', 'shipped'], true)) $progress = 3;
+            if (in_array($order->status, ['completed', 'delivered'], true)) $progress = 4;
+            $isParaguay = $order->shipping == 3 || strtoupper((string) $order->country) === 'PY';
+        @endphp
         @if (session('warning'))
             <div class="alert alert-warning mb-4 shadow-sm border-0" role="alert"><i
                     class="fas fa-exclamation-triangle me-2"></i> {{ session('warning') }}</div>
@@ -142,21 +25,66 @@
                 {{ session('info') }}</div>
         @endif
 
-        <div class="dashboard-header d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="sax-title text-uppercase letter-spacing-2 m-0">{{ __('messages.resumo_do_pedido_titulo') }}</h2>
-                <div class="sax-divider-dark"></div>
-                <span class="text-muted x-small">
-                    <i class="far fa-calendar-alt me-1"></i> {{ $order->created_at->format('d/m/Y H:i') }} •
-                    <span class="text-dark fw-bold">#{{ $order->id }}</span>
+        <div class="sax-order-hero mb-4">
+            <div class="sax-order-hero__main">
+                <a href="{{ route('user.orders') }}" class="sax-order-back"><i class="fas fa-arrow-left"></i> Meus pedidos</a>
+                <span class="sax-order-eyebrow">Pedido realizado em {{ $order->created_at->format('d/m/Y \à\s H:i') }}</span>
+                <h1>Pedido <strong>#{{ $order->order_number ?: $order->id }}</strong></h1>
+                <p>Acompanhe o pagamento, a preparação e a entrega em um só lugar.</p>
+            </div>
+            <div class="sax-order-hero__total">
+                <span>Total do pedido</span>
+                <strong>{{ order_money($order, $order->total) }}</strong>
+                <span class="status-badge-custom status-payment {{ $order->payment_status }}">
+                    <i class="fas {{ $isPaid ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                    {{ __('messages.payment_status_' . $order->payment_status) }}
                 </span>
             </div>
-            <a href="{{ route('user.dashboard') }}" class="btn-back-minimal"><i class="fas fa-chevron-left me-1"></i>
-                {{ __('messages.voltar_dashboard') }}</a>
         </div>
 
+        <div class="sax-order-progress mb-4 {{ $isCanceled ? 'is-canceled' : '' }}">
+            @foreach ([
+                1 => ['fa-receipt', 'Pedido recebido'],
+                2 => ['fa-credit-card', 'Pagamento'],
+                3 => ['fa-box-open', 'Preparação / envio'],
+                4 => ['fa-check', 'Concluído'],
+            ] as $step => [$icon, $label])
+                <div class="sax-order-progress__step {{ $progress >= $step ? 'is-active' : '' }}">
+                    <span><i class="fas {{ $icon }}"></i></span>
+                    <strong>{{ $label }}</strong>
+                </div>
+            @endforeach
+        </div>
+
+        @if ($isCanceled)
+            <div class="sax-order-message is-danger mb-4">
+                <i class="fas fa-circle-exclamation"></i>
+                <div><strong>Este pedido não foi concluído.</strong><span>Confira o status do pagamento abaixo ou fale com nossa equipe para receber ajuda.</span></div>
+            </div>
+        @elseif (! $isPaid && $order->payment_method === 'bancard_v2')
+            <div class="sax-order-message is-warning mb-4">
+                <i class="fas fa-credit-card"></i>
+                <div>
+                    <strong>Seu pagamento ainda está pendente.</strong>
+                    <span>Você pode tentar novamente. O Bancard processa a cobrança em guaranis (PYG).
+                        @if (! $isParaguay)
+                            Cartões do Brasil e de outros países podem ter conversão, IOF, spread e encargos definidos pelo banco emissor.
+                        @endif
+                    </span>
+                    <a href="{{ route('checkout.bancard.v2', $order->id) }}" class="sax-order-message__action">
+                        <i class="fas fa-sync-alt"></i> Tentar pagamento novamente
+                    </a>
+                </div>
+            </div>
+        @elseif ($isPaid)
+            <div class="sax-order-message is-success mb-4">
+                <i class="fas fa-shield-alt"></i>
+                <div><strong>Pagamento confirmado.</strong><span>Agora você pode acompanhar a preparação e a entrega do pedido por esta página.</span></div>
+            </div>
+        @endif
+
         <div class="row g-4 mb-5">
-            <div class="col-md-6">
+            <div class="col-lg-5">
                 <div class="sax-premium-card h-100 shadow-sm border-0">
                     <h6 class="card-sax-header bg-white border-bottom"><i class="fas fa-receipt me-2"></i>
                         {{ __('messages.detalhes_de_pagamento') }}</h6>
@@ -177,13 +105,6 @@
                             <span
                                 class="badge-payment-sax {{ $order->payment_method }} shadow-sm">{{ ucfirst($order->payment_method) }}</span>
                         </div>
-                        @php
-                            // Subtotal a partir dos itens: o total do pedido já vem com
-                            // desconto e frete aplicados.
-                            $subtotalPedido = $order->items->sum(fn ($item) => $item->price * $item->quantity);
-                            $descontoPedido = (float) ($order->discount ?? 0);
-                        @endphp
-
                         <div class="mt-4 p-3 bg-light rounded-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="label m-0">{{ __('messages.subtotal') }}:</span>
@@ -223,6 +144,14 @@
                             </div>
                         </div>
 
+                        @if ($order->payment_currency === 'PYG' && $order->payment_amount)
+                            <div class="sax-order-pyg-summary mt-3">
+                                <span>Valor processado pelo Bancard</span>
+                                <strong>G$ {{ number_format((float) $order->payment_amount, 0, ',', '.') }}</strong>
+                                <small>Cotação registrada: G$ {{ number_format((float) $order->payment_exchange_rate, 2, ',', '.') }} por US$ 1</small>
+                            </div>
+                        @endif
+
                         @if ($order->receipt && $order->payment_status === 'paid')
                             <div class="mt-3 pt-3 border-top">
                                 <label class="sax-label d-block mb-2 text-uppercase"
@@ -248,7 +177,7 @@
                                         <i class="fas fa-check-circle me-2"></i> {{ __('messages.ver_confirmacao') }}
                                     </a>
                                 </div>
-                            @elseif ($order->payment_status !== 'paid' && $order->status !== 'canceled')
+                            @elseif ($order->payment_status !== 'paid')
                                 <div class="mt-3">
                                     <a href="{{ route('checkout.bancard.v2', $order->id) }}"
                                         class="btn btn-outline-primary btn-sax-sm w-100 py-2">
@@ -272,13 +201,13 @@
                                 <label class="sax-label d-block mb-2 text-center text-uppercase"
                                     style="font-size: 9px">{{ __('messages.comprovante_enviado_cap') }}</label>
                                 <div class="receipt-preview-link rounded border shadow-sm"
-                                    onclick="openModal('{{ asset('storage/' . $order->deposit_receipt) }}')">
+                                    data-receipt-preview="{{ asset('storage/' . $order->deposit_receipt) }}">
                                     <img src="{{ asset('storage/' . $order->deposit_receipt) }}"
                                         class="img-fluid d-block mx-auto">
                                     <div class="overlay"><i class="fas fa-search-plus"></i>
                                         {{ __('messages.ver_ampliado') }}</div>
                                 </div>
-                            @elseif ($order->payment_status !== 'paid' && $order->status !== 'canceled')
+                            @elseif ($order->payment_method === 'deposito' && $order->payment_status !== 'paid' && $order->status !== 'canceled')
                                 <div class="upload-sax-box border-dashed p-3 text-center">
                                     <h6 class="x-small fw-bold text-success mb-3"><i class="fa fa-file-upload me-1"></i>
                                         {{ __('messages.adjuntar_comprovante') }}</h6>
@@ -297,7 +226,7 @@
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-lg-7">
                 <div class="sax-premium-card h-100 shadow-sm border-0">
                     <h6 class="card-sax-header bg-white border-bottom"><i class="fas fa-map-marker-alt me-2"></i>
                         {{ __('messages.envio_e_cliente') }}</h6>
@@ -315,7 +244,12 @@
                                 @if ($order->shipping == 3)
                                     <span class="badge bg-dark rounded-pill px-3 py-2"><i class="fas fa-store me-1"></i>
                                         {{ __('messages.recolha_na_loja') }}:
-                                        {{ $order->store == 1 ? 'SAX Ciudad del Este' : 'SAX Assunción' }}</span>
+                                        {{ match ((int) $order->store) {
+                                            1 => 'SAX Ciudad del Este',
+                                            2 => 'SAX Assunção',
+                                            3 => 'SAX Pedro Juan Caballero',
+                                            default => 'Unidade SAX selecionada',
+                                        } }}</span>
                                 @else
                                     <span class="d-block fw-semibold">{{ $order->street }}, {{ $order->number }}</span>
                                     @if ($order->district)
@@ -416,15 +350,12 @@
                 <i class="fab fa-whatsapp me-2"></i> {{ __('messages.contactar_suporte') }}
             </a>
 
-            <div class="img-modal-backdrop" id="imgModal" onclick="this.style.display='none'">
-                <img src="" id="modalImg">
+            <div class="img-modal-backdrop" id="imgModal" role="dialog" aria-modal="true" aria-label="Visualização do comprovante">
+                <img src="" id="modalImg" alt="Comprovante de pagamento">
             </div>
         </div>
-
-        <script>
-            function openModal(src) {
-                document.getElementById('modalImg').src = src;
-                document.getElementById('imgModal').style.display = 'flex';
-            }
-        </script>
     @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/user-order.js') }}?v={{ filemtime(public_path('js/user-order.js')) }}"></script>
+@endpush

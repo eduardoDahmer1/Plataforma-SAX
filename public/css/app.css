@@ -5572,10 +5572,37 @@ transform: scale(1.5);
     align-items: flex-start;
     gap: .75rem;
     border: 0;
-    border-bottom: 1px solid #eef2f7;
+    border-bottom: 0;
     background: #fff;
     color: inherit;
     text-align: left;
+}
+
+.sax-admin-notifications__drawer form[data-notification-item] {
+    position: relative;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__mark-read {
+    position: absolute;
+    right: 1rem;
+    bottom: .55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .15rem .35rem;
+    border: 0;
+    background: transparent;
+    color: #2563eb;
+    font-size: .66rem;
+    line-height: 1.2;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__mark-read:hover,
+.sax-admin-notifications__drawer .sax-admin-notifications__mark-read:focus-visible {
+    color: #1d4ed8;
+    text-decoration: underline;
+    outline: none;
 }
 
 .sax-admin-notifications__drawer .sax-admin-notifications__item:hover,
@@ -5586,6 +5613,7 @@ transform: scale(1.5);
 
 .sax-admin-notifications__drawer .sax-admin-notifications__item.is-unread {
     background: #f8fbff;
+    padding-bottom: 2.8rem;
 }
 
 .sax-admin-notifications__drawer .sax-admin-notifications__icon {

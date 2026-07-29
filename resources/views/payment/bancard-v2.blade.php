@@ -6,6 +6,7 @@
     $orderCurrencyValue = (float) ($order->currency_value ?: 1);
     $totalSelectedCurrency = (float) $order->total * $orderCurrencyValue;
     $orderStatus = strtolower((string) $order->status);
+    $isParaguayOrder = $order->shipping === '3' || strtoupper((string) $order->country) === 'PY';
 @endphp
 
 <section class="bancard-checkout-shell py-4 py-lg-5">
@@ -34,6 +35,19 @@
                     <span class="meta-label">Status</span>
                     <strong class="meta-value status-badge {{ $orderStatus }}">{{ strtoupper($orderStatus) }}</strong>
                 </div>
+            </div>
+
+            <div class="bancard-exchange-warning mb-4">
+                <div class="bancard-exchange-warning__title">
+                    <i class="fas fa-globe-americas"></i>
+                    <strong>Confirme a moeda antes de pagar</strong>
+                </div>
+                <p>O valor efetivamente enviado ao Bancard é <strong>{{ $pygSymbol }} {{ number_format((float) $totalInPyg, 0, ',', '.') }} em guaranis (PYG)</strong>. O valor em {{ $orderCurrencySign }} é apenas a referência exibida na loja.</p>
+                @if ($isParaguayOrder)
+                    <p class="mb-0">Para compras no Paraguai, a SAX não acrescenta taxa de conversão internacional. Se o cartão ou a conta forem de outro país ou estiverem em outra moeda, o banco emissor poderá realizar sua própria conversão.</p>
+                @else
+                    <p class="mb-0"><strong>Cartões do Brasil e de outros países:</strong> o banco e a bandeira podem aplicar cotação própria, IOF, spread cambial e outros encargos de compra internacional. O valor lançado na fatura pode ser maior e esses encargos não são cobrados nem controlados pela SAX.</p>
+                @endif
             </div>
 
             <div class="bancard-payment-guide mb-4" aria-label="Disponibilidade das formas de pagamento">
@@ -160,6 +174,9 @@
     .bancard-guide-card h2 { margin: 0 0 6px; font-size: .95rem; font-weight: 800; }
     .bancard-guide-card p { margin: 0; color: #666; font-size: .78rem; line-height: 1.5; }
     .bancard-pix-notice { grid-column: 1 / -1; display: flex; align-items: flex-start; padding: 13px 16px; border: 1px solid #d8e8ff; border-radius: 12px; background: #f2f7ff; color: #29405f; font-size: .78rem; line-height: 1.5; }
+    .bancard-exchange-warning { padding: 16px 18px; border: 1px solid #e9d294; border-radius: 12px; background: #fff9e9; color: #3f3520; font-size: .8rem; line-height: 1.55; }
+    .bancard-exchange-warning__title { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: .9rem; }
+    .bancard-exchange-warning p { margin: 0 0 7px; }
 
     .status-badge {
         text-transform: uppercase;

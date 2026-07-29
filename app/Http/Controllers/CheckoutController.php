@@ -16,6 +16,7 @@ use App\Mail\OrderStatusMail;
 use App\Models\Policy;
 use App\Models\Product;
 use App\Models\UserAddress;
+use App\Models\Currency;
 use App\Services\BusinessEventService;
 use App\Services\AdminNotificationService;
 
@@ -38,6 +39,7 @@ class CheckoutController extends Controller
         $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
         $paymentMethods = PaymentMethod::where('active', 1)->get();
         $policies = Policy::where('is_active', true)->orderBy('id')->get();
+        $pygCurrency = Currency::where('name', 'PYG')->orWhere('sign', 'GS$')->first();
 
         $cart->transform(function ($item) {
             if ($item->product) {
@@ -50,7 +52,7 @@ class CheckoutController extends Controller
         // O cupom da sessão é revalidado contra o carrinho atual a cada carregamento.
         $resumo = $this->cupons->resumoDoCarrinho($user, $cart->filter(fn ($i) => $i->product)->values());
 
-        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies', 'addresses'));
+        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies', 'addresses', 'pygCurrency'));
     }
 
     public function store(Request $request)

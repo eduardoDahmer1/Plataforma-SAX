@@ -48,11 +48,11 @@
 
     <div class="sax-admin-notifications__header-actions">
         @if ($adminUnreadNotificationsCount > 0)
-            <span class="sax-admin-notifications__unread">
+            <span class="sax-admin-notifications__unread" data-notifications-unread-count>
                 {{ $adminUnreadNotificationsCount }} {{ $adminUnreadNotificationsCount === 1 ? 'não lida' : 'não lidas' }}
             </span>
 
-            <form action="{{ route('admin.notifications.read-all') }}" method="POST">
+            <form action="{{ route('admin.notifications.read-all') }}" method="POST" data-notifications-read-all>
                 @csrf
                 <button type="submit" class="sax-admin-notifications__read-all">
                     Marcar todas como lidas
@@ -110,6 +110,13 @@
                     <span class="sax-admin-notifications__dot" aria-label="Não lida"></span>
                 @endif
             </button>
+            @if (is_null($notification->read_at))
+                <button type="button" class="sax-admin-notifications__mark-read"
+                        data-notification-mark-read title="Marcar como lida">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    <span>Marcar como lida</span>
+                </button>
+            @endif
         </form>
     @empty
         <div class="sax-admin-notifications__empty">

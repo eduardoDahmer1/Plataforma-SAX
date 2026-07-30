@@ -26,6 +26,10 @@
                 'discount' => 'Discount',
                 'shipping' => 'Shipping',
                 'shipping_free' => 'Free',
+                'bancard_title' => 'Important information about your Bancard payment',
+                'bancard_amount' => 'Amount processed in guaranies (PYG)',
+                'bancard_rate' => 'Recorded exchange rate',
+                'bancard_bank_charges' => 'The transaction is processed in Paraguayan guaranies (PYG). Your card issuer or bank may apply its own currency conversion, taxes, exchange-rate spread, fees and, when applicable to installments or financing, interest. These charges are determined by those institutions and are not charged or controlled by SAX.',
             ],
             'es' => [
                 'hello' => 'Hola,',
@@ -45,6 +49,10 @@
                 'discount' => 'Descuento',
                 'shipping' => 'Envio',
                 'shipping_free' => 'Gratis',
+                'bancard_title' => 'Información importante sobre tu pago con Bancard',
+                'bancard_amount' => 'Importe procesado en guaraníes (PYG)',
+                'bancard_rate' => 'Cotización registrada',
+                'bancard_bank_charges' => 'La operación se procesa en guaraníes paraguayos (PYG). El banco emisor o la administradora de la tarjeta puede aplicar su propia conversión, impuestos, spread cambiario, comisiones y, cuando corresponda por cuotas o financiación, intereses. Estos cargos son definidos por esas entidades y no son cobrados ni controlados por SAX.',
             ],
             default => [
                 'hello' => 'Olá,',
@@ -64,6 +72,10 @@
                 'discount' => 'Desconto',
                 'shipping' => 'Frete',
                 'shipping_free' => 'Gratis',
+                'bancard_title' => 'Informação importante sobre seu pagamento Bancard',
+                'bancard_amount' => 'Valor processado em guaranis (PYG)',
+                'bancard_rate' => 'Cotação registrada',
+                'bancard_bank_charges' => 'A operação é processada em guaranis paraguaios (PYG). O banco emissor ou a administradora do cartão pode aplicar conversão própria, IOF ou outros tributos, spread cambial, tarifas e, quando houver parcelamento ou financiamento, juros. Esses encargos são definidos por essas instituições e não são cobrados nem controlados pela SAX.',
             ],
         };
 
@@ -169,6 +181,10 @@
         </tr>
     </table>
 
+    <x-email-bancard-notice :order="$order" :copy="$copy" />
+
+    <x-email-order-details :order="$order" :locale="$locale" />
+
     {{-- Produtos do pedido --}}
     @if ($itens->count())
         <p style="margin:0 0 0.8rem 0;font-size:0.72rem;letter-spacing:0.18rem;text-transform:uppercase;color:#8a8a8a;">{{ $copy['items'] }}</p>
@@ -196,6 +212,6 @@
         {{ $copy['track'] }}
     </p>
 
-    <x-email-button :url="route('user.orders.show', $order->id)">{{ $copy['cta'] }}</x-email-button>
+    <x-email-order-actions :order="$order" :locale="$locale" />
 
 @endsection

@@ -226,6 +226,19 @@ class CheckoutController extends Controller
                     break;
             }
 
+            // Registra antes do primeiro e-mail o valor que será enviado ao Bancard.
+            // Assim, a mensagem de pedido criado informa a moeda e a conversão reais.
+            if ($paymentMethod === 'bancard_v2') {
+                $pygCurrency = Currency::where('name', 'PYG')->orWhere('sign', 'GS$')->first();
+                $pygRate = (float) ($pygCurrency?->value ?: 1);
+
+                $order->update([
+                    'payment_currency' => 'PYG',
+                    'payment_amount' => round((float) $order->total * $pygRate, 2),
+                    'payment_exchange_rate' => $pygRate,
+                ]);
+            }
+
             // 5. Salvar itens do pedido
             foreach ($cart as $cartItem) {
                 OrderItem::create([

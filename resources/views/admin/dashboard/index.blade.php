@@ -22,6 +22,69 @@
     <a class="btn btn-sm btn-dark" href="{{ route('admin.reports.download', 'month') }}"><i class="fa-regular fa-file-pdf me-1"></i>Mês</a>
 </div>
 
+@php
+    $integrationStatus = $integrationMonitor?->status ?? 'never_reported';
+    $integrationPresentation = [
+        'healthy' => ['Operando normalmente', 'success', 'fa-circle-check'],
+        'running' => ['Sincronização em andamento', 'warning', 'fa-arrows-rotate'],
+        'failed' => ['Falha na integração', 'danger', 'fa-triangle-exclamation'],
+        'stale' => ['Integrador sem comunicação', 'danger', 'fa-plug-circle-xmark'],
+        'never_reported' => ['Monitor aguardando o integrador', 'secondary', 'fa-clock'],
+    ][$integrationStatus] ?? ['Estado desconhecido', 'secondary', 'fa-circle-question'];
+@endphp
+
+<section id="integration-monitor" class="table-card mb-4 border border-{{ $integrationPresentation[1] }}">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-start">
+        <div>
+            <div class="card-kicker">Monitoramento automático</div>
+            <h2 class="card-heading mb-2">
+                <i class="fa-solid {{ $integrationPresentation[2] }} text-{{ $integrationPresentation[1] }} me-2"></i>
+                Integração de produtos
+            </h2>
+            <span class="badge text-bg-{{ $integrationPresentation[1] }}">{{ $integrationPresentation[0] }}</span>
+        </div>
+        <div class="small text-muted text-lg-end">
+            <div><strong>Última comunicação:</strong> {{ $integrationMonitor?->last_heartbeat_at?->format('d/m/Y H:i:s') ?? 'Ainda não recebida' }}</div>
+            <div><strong>Último sucesso:</strong> {{ $integrationMonitor?->last_success_at?->format('d/m/Y H:i:s') ?? 'Ainda não registrado' }}</div>
+            <div><strong>Falhas consecutivas:</strong> {{ (int) ($integrationMonitor?->consecutive_failures ?? 0) }}</div>
+        </div>
+    </div>
+
+    @if($integrationMonitor?->error_message)
+        <div class="alert alert-{{ in_array($integrationStatus, ['failed', 'stale'], true) ? 'danger' : 'warning' }} mt-3 mb-3">
+            <strong>{{ $integrationMonitor->error_code ?: 'Erro da integração' }}:</strong>
+            {{ $integrationMonitor->error_message }}
+        </div>
+    @elseif(!$integrationMonitor)
+        <div class="alert alert-secondary mt-3 mb-3">
+            O banco de monitoramento ainda não foi inicializado. Execute as migrations e configure o integrador.
+        </div>
+    @endif
+
+    <div class="table-responsive mt-3">
+        <table class="table overview-table mb-0">
+            <thead><tr><th>Início</th><th>Fim</th><th>Resultado</th><th>Duração</th><th>Detalhe</th></tr></thead>
+            <tbody>
+            @forelse($integrationRuns as $run)
+                @php
+                    $runStyle = ['success' => 'success', 'failed' => 'danger', 'running' => 'warning'][$run->status] ?? 'secondary';
+                    $runLabel = ['success' => 'Concluída', 'failed' => 'Falhou', 'running' => 'Executando'][$run->status] ?? ucfirst($run->status);
+                @endphp
+                <tr>
+                    <td>{{ $run->started_at?->format('d/m/Y H:i:s') ?? '—' }}</td>
+                    <td>{{ $run->finished_at?->format('d/m/Y H:i:s') ?? '—' }}</td>
+                    <td><span class="badge text-bg-{{ $runStyle }}">{{ $runLabel }}</span></td>
+                    <td>{{ $run->duration_seconds !== null ? gmdate('H:i:s', $run->duration_seconds) : '—' }}</td>
+                    <td class="text-break">{{ $run->error_message ?: 'Sem erros registrados' }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="5" class="text-center text-muted py-3">Nenhuma execução comunicada pelo novo monitor.</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+</section>
+
 @if(!$analyticsReady)
     <div class="analytics-empty mb-4"><i class="fa-solid fa-circle-info me-2"></i>Os indicadores de audiência começarão a ser registrados assim que a migration de analytics for executada.</div>
 @endif
@@ -80,7 +143,7 @@
     <div class="col-xl-4"><div class="table-card"><h3 class="card-heading">Produtos mais vistos</h3><div class="card-kicker">Ranking histórico do catálogo</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>#</th><th>Produto</th><th>Views</th><th>Estoque</th></tr></thead><tbody>@forelse($topProducts as $product)<tr><td><span class="rank">{{ $loop->iteration }}</span></td><td class="path-cell">{{ $product->name ?: $product->external_name ?: '#'.$product->id }}</td><td><b>{{ number_format($product->views ?? 0,0,',','.') }}</b></td><td><span class="badge-soft">{{ $product->stock ?? 0 }}</span></td></tr>@empty<tr><td colspan="4" class="text-center text-muted py-4">Nenhum produto encontrado.</td></tr>@endforelse</tbody></table></div></div></div>
 </div>
 
-<div class="table-card mb-4"><div class="d-flex justify-content-between align-items-center"><div><h3 class="card-heading">Pedidos recentes</h3><div class="card-kicker">Últimas movimentações da loja</div></div><a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-dark">Ver todos</a></div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Pagamento</th><th>Status</th><th>Total</th><th>Data</th></tr></thead><tbody>@forelse($recentOrders as $order)<tr><td><a href="{{ route('admin.orders.show',$order) }}" class="fw-bold text-dark">#{{ $order->order_number ?: $order->id }}</a></td><td>{{ $order->user?->name ?: $order->name ?: 'Visitante' }}</td><td>{{ ['bancard_v2'=>'Bancard V2','deposito'=>'Depósito','whatsapp'=>'WhatsApp'][$order->payment_method] ?? ucfirst($order->payment_method) }}</td><td><span class="badge-soft">{{ ucfirst($order->status) }}</span></td><td>{{ $order->currency_sign ?: 'US$' }} {{ number_format($order->total,2,',','.') }}</td><td>{{ $order->created_at?->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="6" class="text-center text-muted py-4">Nenhum pedido encontrado.</td></tr>@endforelse</tbody></table></div></div>
+<div class="table-card mb-4"><div class="d-flex justify-content-between align-items-center"><div><h3 class="card-heading">Pedidos recentes</h3><div class="card-kicker">Últimas movimentações da loja</div></div><a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-dark">Ver todos</a></div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Pagamento</th><th>Status</th><th>Total</th><th>Data</th></tr></thead><tbody>@forelse($recentOrders as $order)<tr><td><a href="{{ route('admin.orders.show',$order) }}" class="fw-bold text-dark">#{{ $order->order_number ?: $order->id }}</a></td><td>{{ $order->user?->name ?: $order->name ?: 'Visitante' }}</td><td>{{ ['bancard_v2'=>'Bancard V2','rendix_pix'=>'Pix Rendix','deposito'=>'Depósito','whatsapp'=>'WhatsApp'][$order->payment_method] ?? ucfirst($order->payment_method) }}</td><td><span class="badge-soft">{{ ucfirst($order->status) }}</span></td><td>{{ $order->currency_sign ?: 'US$' }} {{ number_format($order->total,2,',','.') }}</td><td>{{ $order->created_at?->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="6" class="text-center text-muted py-4">Nenhum pedido encontrado.</td></tr>@endforelse</tbody></table></div></div>
 
 <div class="table-card mb-4"><h3 class="card-heading">Ocorrências recentes</h3><div class="card-kicker">Resumo simples de pagamentos, checkout, carrinhos e e-mails</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>Quando</th><th>Cliente</th><th>Ocorrência</th><th>Explicação</th><th>Referência</th></tr></thead><tbody>@forelse($businessEvents as $event)<tr><td>{{ $event->created_at->format('d/m H:i') }}</td><td>{{ $event->user?->name ?: 'Não identificado' }}</td><td><span class="badge-soft">{{ $event->title }}</span></td><td>{{ $event->message ?: 'Sem detalhes adicionais' }}</td><td>@if($event->order)<a href="{{ route('admin.orders.show',$event->order) }}">#{{ $event->order->order_number ?: $event->order_id }}</a>@else{{ $event->reference ?: '—' }}@endif</td></tr>@empty<tr><td colspan="5" class="text-center text-muted py-4">Nenhuma ocorrência registrada após a ativação do monitoramento.</td></tr>@endforelse</tbody></table></div></div>
 @endsection

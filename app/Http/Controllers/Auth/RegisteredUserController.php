@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
+use App\Rules\CustomerDocumentRule;
+use App\Support\CustomerDocument;
 
 class RegisteredUserController extends Controller
 {
@@ -30,10 +32,17 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse|JsonResponse
     {
+        $documentType = CustomerDocument::inferType(
+            $request->input('document_type'),
+            $request->input('document'),
+            preg_replace('/\D/', '', (string) $request->input('phone_country'))
+        );
+
         $request->merge([
             'name' => trim((string) $request->input('name')),
             'email' => mb_strtolower(trim((string) $request->input('email'))),
-            'document' => trim((string) $request->input('document')),
+            'document_type' => $documentType,
+            'document' => CustomerDocument::format($request->input('document'), $documentType),
             'phone_country' => preg_replace('/\D/', '', (string) $request->input('phone_country')),
             'phone_number' => trim((string) $request->input('phone_number')),
         ]);
@@ -41,7 +50,8 @@ class RegisteredUserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:'.User::class],
-            'document' => ['required', 'string', 'regex:/^[A-Za-z0-9.\/\-\s]{5,30}$/'],
+            'document_type' => ['required', 'string', 'in:'.implode(',', CustomerDocument::types())],
+            'document' => ['required', 'string', 'max:30', new CustomerDocumentRule($documentType)],
             'phone_country' => ['required', 'string', 'in:55,595'],
             'phone_number' => ['required', 'string', 'regex:/^[0-9\s()+\-]{7,20}$/'],
             'password' => ['required', 'confirmed', 'min:8', 'max:72', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
@@ -56,7 +66,7 @@ class RegisteredUserController extends Controller
             'phone_country.required' => 'Selecione o codigo do pais.',
             'phone_number.required' => 'Informe seu telefone.',
             'phone_number.regex' => 'Informe um telefone valido, sem letras.',
-            'document.regex' => 'Informe um documento valido.',
+            'document_type.in' => 'Selecione um tipo de documento válido.',
             'password.required' => 'Informe uma senha.',
             'password.confirmed' => 'A confirmacao da senha nao confere.',
             'password.min' => 'A senha deve ter pelo menos :min caracteres.',
@@ -93,6 +103,7 @@ class RegisteredUserController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'document' => $validated['document'],
+                'document_type' => $validated['document_type'],
                 'phone_country' => str_replace('+', '', $validated['phone_country']),
                 'phone_number' => preg_replace('/\D/', '', $validated['phone_number']),
                 'password' => Hash::make($validated['password']),

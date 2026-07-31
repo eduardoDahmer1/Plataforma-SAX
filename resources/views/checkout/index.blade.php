@@ -6,11 +6,11 @@
     $errorFields = $errors->keys();
 
     if (!empty($errorFields)) {
-        if (collect($errorFields)->contains(fn ($field) => in_array($field, ['name', 'document', 'email', 'phone'], true))) {
+        if (collect($errorFields)->contains(fn ($field) => in_array($field, ['name', 'document', 'document_type', 'email', 'phone'], true))) {
             $initialStep = 2;
         } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['shipping', 'shipping_address_id', 'address_label', 'country', 'cep', 'street', 'number', 'city', 'state', 'store', 'observations'], true))) {
             $initialStep = 3;
-        } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['payment_method', 'deposit_receipt', 'accept_terms'], true))) {
+        } elseif (collect($errorFields)->contains(fn ($field) => in_array($field, ['payment_method', 'deposit_receipt', 'accept_terms', 'accept_pix_terms'], true))) {
             $initialStep = 4;
         }
     }

@@ -163,6 +163,21 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('order')
         ->name('checkout.bancard.v2.cancel');
 
+    Route::get('/checkout/pix/{order}', [\App\Http\Controllers\RendixPixController::class, 'checkoutPage'])
+        ->whereNumber('order')
+        ->name('checkout.rendix.pix');
+    Route::get('/checkout/pix/{order}/status', [\App\Http\Controllers\RendixPixController::class, 'status'])
+        ->middleware('throttle:20,1')
+        ->whereNumber('order')
+        ->name('checkout.rendix.pix.status');
+    Route::post('/checkout/pix/{order}/renovar', [\App\Http\Controllers\RendixPixController::class, 'renew'])
+        ->middleware('throttle:5,1')
+        ->whereNumber('order')
+        ->name('checkout.rendix.pix.renew');
+    Route::get('/checkout/pix/termos/rendix', [\App\Http\Controllers\RendixPixController::class, 'terms'])
+        ->middleware('throttle:10,1')
+        ->name('checkout.rendix.pix.terms');
+
     Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');
     Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
     Route::get('/checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->name('checkout.whatsapp');
@@ -177,6 +192,9 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::post('/checkout/bancard-v2/callback', [\App\Http\Controllers\BancardV2Controller::class, 'callback'])->name('bancard.v2.callback');
+Route::post('/webhooks/rendix/pix', [\App\Http\Controllers\RendixPixController::class, 'webhook'])
+    ->middleware('throttle:60,1')
+    ->name('rendix.pix.webhook');
 Route::get('/checkout/bancard-v2/finish', [\App\Http\Controllers\BancardV2Controller::class, 'returnPage'])->name('bancard.v2.return');
 Route::get('/checkout/bancard-v2/success', [\App\Http\Controllers\BancardV2Controller::class, 'successPage'])->name('bancard.v2.success');
 Route::get('/checkout/bancard-v2/error', [\App\Http\Controllers\BancardV2Controller::class, 'errorPage'])->name('bancard.v2.error');

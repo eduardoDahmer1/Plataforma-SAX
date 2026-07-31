@@ -33,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'already_registered',
         'additional_info',
         'document',
+        'document_type',
         'number',       // Adicionado
         'district',     // Adicionado
         'complement',   // Adicionado

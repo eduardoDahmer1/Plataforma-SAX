@@ -15,25 +15,31 @@
 
     <div class="row">
         <div class="col-lg-8">
-            <form action="{{ isset($method) ? route('admin.payments.update', $method->id) : route('admin.payments.store') }}" method="POST">
+            <form id="paymentMethodCreateForm" action="{{ isset($method) ? route('admin.payments.update', $method->id) : route('admin.payments.store') }}" method="POST">
                 @csrf
                 @if(isset($method)) @method('PUT') @endif
+                @if ($errors->any())
+                    <div class="alert alert-danger border-0 rounded-3 mb-4">
+                        <strong>Revise a configuração:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 {{-- Seção: Definição Básica --}}
                 <section class="mb-5">
                     <h6 class="x-small fw-bold text-uppercase text-secondary tracking-tighter mb-4">{{ __('messages.definicao_geral_sec') }}</h6>
                     <div class="row g-4">
                         <div class="col-md-7">
-                            <label for="name" class="sax-form-label">{{ __('messages.nome_metodo_label') }}</label>
-                            <input type="text" name="name" id="name" class="form-control sax-input" 
-                                   placeholder="Ex.: Bancard, PIX..." value="{{ $method->name ?? '' }}" required>
+                            @include('admin.payments._gateway_selector')
                         </div>
 
                         <div class="col-md-5">
                             <label for="type" class="sax-form-label">{{ __('messages.tipo_conexao_label') }}</label>
                             <select name="type" id="type" class="form-select sax-input" required>
-                                <option value="bank" {{ (isset($method) && $method->type == 'bank') ? 'selected' : '' }}>{{ __('messages.deposito_transferencia_opt') }}</option>
-                                <option value="gateway" {{ (isset($method) && $method->type == 'gateway') ? 'selected' : '' }}>{{ __('messages.gateway_automatico_opt') }}</option>
+                                <option value="bank" {{ old('type', $method->type ?? 'bank') === 'bank' ? 'selected' : '' }}>{{ __('messages.deposito_transferencia_opt') }}</option>
+                                <option value="gateway" {{ old('type', $method->type ?? 'bank') === 'gateway' ? 'selected' : '' }}>{{ __('messages.gateway_automatico_opt') }}</option>
                             </select>
                         </div>
                     </div>
@@ -53,7 +59,7 @@
                 </section>
 
                 {{-- Seção Dinâmica: Credenciais Gateway --}}
-                <section class="mb-5 gateway-only border-start border-3 border-dark ps-4" style="{{ isset($method) && $method->type === 'gateway' ? '' : 'display:none' }}">
+                <section class="mb-5 gateway-only generic-gateway-only border-start border-3 border-dark ps-4" style="{{ isset($method) && $method->type === 'gateway' ? '' : 'display:none' }}">
                     <h6 class="x-small fw-bold text-uppercase text-dark tracking-tighter mb-4">{{ __('messages.credenciais_api_sec') }}</h6>
                     <div class="row g-4">
                         <div class="col-md-6">
@@ -78,11 +84,13 @@
                     </div>
                 </section>
 
+                @include('admin.payments._rendix_fields')
+
                 {{-- Configurações de Ativação --}}
                 <div class="border-top pt-4 mt-5 d-flex align-items-center justify-content-between">
                     <div class="form-check form-switch">
                         <input type="checkbox" name="active" value="1" class="form-check-input cursor-pointer" id="active" 
-                               {{ (isset($method) && $method->active) ? 'checked' : '' }}>
+                               {{ old('active', isset($method) && $method->active) ? 'checked' : '' }}>
                         <label class="form-check-label x-small fw-bold text-uppercase ms-2 cursor-pointer" for="active">
                             {{ __('messages.habilitar_metodo_checkout') }}
                         </label>

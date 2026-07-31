@@ -14,6 +14,7 @@
                 <select name="payment_method" class="form-select rounded-0" onchange="applyFilters()">
                     <option value="">Todos</option>
                     <option value="bancard_v2" {{ request('payment_method') == 'bancard_v2' ? 'selected' : '' }}>Bancard V2</option>
+                    <option value="rendix_pix" {{ request('payment_method') == 'rendix_pix' ? 'selected' : '' }}>Pix Rendix</option>
                     <option value="deposito" {{ request('payment_method') == 'deposito' ? 'selected' : '' }}>Depósito</option>
                     <option value="whatsapp" {{ request('payment_method') == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
                 </select>

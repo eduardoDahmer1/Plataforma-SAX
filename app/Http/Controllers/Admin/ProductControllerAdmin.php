@@ -35,9 +35,13 @@ class ProductControllerAdmin extends Controller
         $outletFilter = $request->get('outlet_filter');
         $perPage = $request->get('per_page', 20);
 
-        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id'];
+        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id', 'updated_at', 'updated_by', 'admin_edited_at'];
 
         $products = Product::select($productColumns)
+            ->with([
+                'brand:id,name',
+                'editor:id,name,email',
+            ])
             ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
                 $q2->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('external_name', 'LIKE', "%{$search}%")
@@ -368,6 +372,7 @@ class ProductControllerAdmin extends Controller
             'categoriasfilhas:id,name,slug,subcategory_id',
             'translations:id,product_id,locale,name,details',
             'parent:id,name,external_name',
+            'editor:id,name,email',
         ])->findOrFail($id);
 
         $brands = Brand::where('status', 1)->orWhere('id', $item->brand_id)->orderBy('name', 'asc')->get();
@@ -1051,12 +1056,17 @@ class ProductControllerAdmin extends Controller
             }
         }
 
+        $auditData = [
+            'updated_by' => auth()->id(),
+            'admin_edited_at' => now(),
+        ];
+
         if (!empty($toActivate)) {
-            Product::whereIn('id', $toActivate)->update(['status' => 1]);
+            Product::whereIn('id', $toActivate)->update(array_merge(['status' => 1], $auditData));
         }
 
         if (!empty($toDeactivate)) {
-            Product::whereIn('id', $toDeactivate)->update(['status' => 0]);
+            Product::whereIn('id', $toDeactivate)->update(array_merge(['status' => 0], $auditData));
         }
 
         return response()->json([

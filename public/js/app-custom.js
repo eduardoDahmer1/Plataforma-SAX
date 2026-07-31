@@ -379,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const loginError                     = document.getElementById('loginError');
     const registerName                   = document.getElementById('name');
     const registerDocument               = document.getElementById('register_document');
+    const registerDocumentType           = registerForm?.querySelector('select[name="document_type"]');
     const registerPhoneCountry           = registerForm?.querySelector('select[name="phone_country"]');
     const registerPhoneNumber            = document.getElementById('register_phone_number');
     const registerEmail                  = document.getElementById('register_email');
@@ -394,7 +395,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const isCompleteEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const isStrongPassword = password => /^(?=.*[A-Za-z])(?=.*\d).{8,72}$/.test(password);
-    const isValidDocument = value => /^[A-Za-z0-9./\-\s]{5,30}$/.test(value);
+    const isValidDocument = (value, type) => window.SaxCustomerDocument?.isValid
+        ? window.SaxCustomerDocument.isValid(value, type)
+        : /^[A-Za-z0-9./\-\s]{5,30}$/.test(value);
     const isValidPhone = value => /^[0-9\s()+\-]{7,20}$/.test(value);
 
     const firstErrorMessage = errors => {
@@ -504,6 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const nameValue     = registerName?.value.trim() || '';
         const docValue      = registerDocument?.value.trim() || '';
+        const docTypeValue  = registerDocumentType?.value || '';
         const countryValue  = registerPhoneCountry?.value || '';
         const phoneValue    = registerPhoneNumber?.value.trim() || '';
         const email        = registerEmail?.value.trim() || '';
@@ -516,8 +520,9 @@ document.addEventListener('DOMContentLoaded', function () {
             hasError = true;
         }
 
-        if (!docValue || !isValidDocument(docValue)) {
+        if (!docValue || !isValidDocument(docValue, docTypeValue)) {
             registerDocument?.classList.add('is-invalid');
+            registerDocumentType?.classList.add('is-invalid');
             hasError = true;
         }
 
@@ -697,6 +702,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (errors.name) registerName?.classList.add('is-invalid');
             if (errors.document) registerDocument?.classList.add('is-invalid');
+            if (errors.document_type) registerDocumentType?.classList.add('is-invalid');
             if (errors.phone_country) registerPhoneCountry?.classList.add('is-invalid');
             if (errors.phone_number) registerPhoneNumber?.classList.add('is-invalid');
             if (errors.email) showFieldError(registerEmail, registerEmailError, errors.email[0]);

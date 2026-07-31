@@ -76,6 +76,17 @@
                     </a>
                 </div>
             </div>
+        @elseif (! $isPaid && $order->payment_method === 'rendix_pix')
+            <div class="sax-order-message is-warning mb-4">
+                <i class="fa-brands fa-pix"></i>
+                <div>
+                    <strong>Seu Pix ainda está pendente.</strong>
+                    <span>Abra o QR Code para pagar ou gerar um novo código caso o anterior tenha expirado.</span>
+                    <a href="{{ route('checkout.rendix.pix', $order->id) }}" class="sax-order-message__action">
+                        <i class="fas fa-qrcode"></i> Abrir pagamento Pix
+                    </a>
+                </div>
+            </div>
         @elseif ($isPaid)
             <div class="sax-order-message is-success mb-4">
                 <i class="fas fa-shield-alt"></i>
@@ -152,6 +163,16 @@
                             </div>
                         @endif
 
+                        @if ($order->payment_method === 'rendix_pix' && $order->payment_currency === 'BRL' && $order->payment_amount)
+                            <div class="sax-order-pyg-summary mt-3">
+                                <span>Valor processado pela Rendix</span>
+                                <strong>R$ {{ number_format((float) $order->payment_amount, 2, ',', '.') }}</strong>
+                                @if ($order->payment_exchange_rate)
+                                    <small>Taxa informada pela Rendix: {{ number_format((float) $order->payment_exchange_rate, 4, ',', '.') }}</small>
+                                @endif
+                            </div>
+                        @endif
+
                         @if ($order->receipt && $order->payment_status === 'paid')
                             <div class="mt-3 pt-3 border-top">
                                 <label class="sax-label d-block mb-2 text-uppercase"
@@ -186,6 +207,14 @@
                                     </a>
                                 </div>
                             @endif
+                        @endif
+                        @if (($order->payment_method ?? null) === 'rendix_pix' && $order->payment_status !== 'paid')
+                            <div class="mt-3">
+                                <a href="{{ route('checkout.rendix.pix', $order->id) }}"
+                                   class="btn btn-outline-success btn-sax-sm w-100 py-2">
+                                    <i class="fa-brands fa-pix me-2"></i> Abrir ou gerar Pix
+                                </a>
+                            </div>
                         @endif
                         @if ($order->payment_method === 'deposito' && $order->payment_status !== 'paid')
                             <div class="mt-3">

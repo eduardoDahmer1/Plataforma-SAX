@@ -48,12 +48,15 @@
             if($u->number) $fullAddress .= ', ' . $u->number;
             if($u->complement) $fullAddress .= ' (' . $u->complement . ')';
             if($u->district) $fullAddress .= ' - ' . $u->district;
+            $dashboardDocumentType = $u->document_type
+                ?: \App\Support\CustomerDocument::inferType(null, $u->document, $u->phone_country);
+            $dashboardDocument = \App\Support\CustomerDocument::format($u->document, $dashboardDocumentType);
 
             $fields = [
                 ['label' => __('messages.label_nome'), 'value' => $u->name, 'icon' => 'user'],
                 ['label' => __('messages.label_email'), 'value' => $u->email, 'icon' => 'envelope'],
                 ['label' => __('messages.label_telefone'), 'value' => ($u->phone_country ? '+'.$u->phone_country : '') . ' ' . $u->phone_number, 'icon' => 'phone'],
-                ['label' => __('messages.label_documento'), 'value' => $u->document, 'icon' => 'id-card'],
+                ['label' => __('messages.label_documento'), 'value' => $dashboardDocument, 'icon' => 'id-card'],
                 ['label' => __('messages.label_endereco'), 'value' => $fullAddress, 'icon' => 'home'],
                 ['label' => __('messages.label_cidade_estado'), 'value' => ($u->city && $u->state) ? $u->city . ' - ' . $u->state : $u->city . $u->state, 'icon' => 'map-marker-alt'],
                 ['label' => __('messages.label_cep') ?? 'CEP', 'value' => $u->cep, 'icon' => 'mail-bulk'],

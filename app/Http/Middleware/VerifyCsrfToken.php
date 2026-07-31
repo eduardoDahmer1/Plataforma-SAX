@@ -13,6 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'checkout/bancard-v2/callback',
+        'webhooks/rendix/pix',
         'currency/change', 
     ];
 }

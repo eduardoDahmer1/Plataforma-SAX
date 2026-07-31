@@ -19,6 +19,11 @@ use App\Models\UserAddress;
 use App\Models\Currency;
 use App\Services\BusinessEventService;
 use App\Services\AdminNotificationService;
+use App\Rules\BrazilianCpf;
+use App\Services\RendixPixService;
+use Illuminate\Validation\ValidationException;
+use App\Rules\CustomerDocumentRule;
+use App\Support\CustomerDocument;
 
 class CheckoutController extends Controller
 {
@@ -59,14 +64,31 @@ class CheckoutController extends Controller
     {
         $user = auth()->user();
 
+        $documentType = CustomerDocument::inferType(
+            $request->input('document_type'),
+            $request->input('document'),
+            $request->input('phone_country', $user->phone_country)
+        );
+        $request->merge([
+            'document_type' => $documentType,
+            'document' => CustomerDocument::format($request->input('document'), $documentType),
+        ]);
+
+        $documentRules = ['required', 'string', 'max:30', new CustomerDocumentRule($documentType)];
+        if ($request->input('payment_method') === RendixPixService::PROVIDER) {
+            $documentRules[] = new BrazilianCpf();
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'document' => 'required|string|max:50',
+            'document' => $documentRules,
+            'document_type' => ['required', 'string', 'in:'.implode(',', CustomerDocument::types())],
             'email' => 'required|email',
             'phone' => 'required|string',
+            'phone_country' => 'required|in:55,595',
             'shipping' => 'required|in:1,2,3',
             'shipping_address_id' => 'required_if:shipping,1|nullable|integer',
-            'payment_method' => 'required|in:deposito,bancard_v2,whatsapp',
+            'payment_method' => 'required|in:deposito,bancard_v2,rendix_pix,whatsapp',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street' => 'required_if:shipping,2',
             'number' => 'required_if:shipping,2',
@@ -81,7 +103,31 @@ class CheckoutController extends Controller
             'store' => 'required_if:shipping,3',
             'observations' => 'nullable|string',
             'accept_terms' => 'accepted',
+            'accept_pix_terms' => $request->input('payment_method') === RendixPixService::PROVIDER
+                ? 'accepted'
+                : 'nullable',
         ]);
+
+        if ($request->input('payment_method') === RendixPixService::PROVIDER) {
+            if ($documentType !== CustomerDocument::CPF) {
+                throw ValidationException::withMessages([
+                    'document' => 'Para pagar com Pix, selecione CPF brasileiro como tipo de documento.',
+                ]);
+            }
+
+            if ((string) $request->input('phone_country') !== '55') {
+                throw ValidationException::withMessages([
+                    'phone' => 'Para pagar com Pix, selecione Brasil (+55) e informe um celular brasileiro.',
+                ]);
+            }
+
+            $rendixGateway = RendixPixService::gateway();
+            if (!$rendixGateway?->active || !RendixPixService::fromPaymentMethod($rendixGateway)->isConfigured()) {
+                throw ValidationException::withMessages([
+                    'payment_method' => 'O Pix está temporariamente indisponível. Escolha outra forma de pagamento.',
+                ]);
+            }
+        }
 
         $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
         if ($cart->isEmpty()) {
@@ -155,6 +201,7 @@ class CheckoutController extends Controller
                 'name' => $firstName,
                 'surname' => $lastName,
                 'document' => $request->input('document'),
+                'document_type' => $documentType,
                 'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
                 'observations' => $observations,
@@ -165,6 +212,7 @@ class CheckoutController extends Controller
                 'locale' => app()->getLocale(),
                 'terms_accepted_at' => now(),
                 'terms_version' => hash('sha256', Policy::where('is_active', true)->orderBy('id')->get(['id', 'updated_at'])->toJson()),
+                'rendix_terms_accepted_at' => $paymentMethod === RendixPixService::PROVIDER ? now() : null,
             ]);
 
             switch ($request->shipping) {
@@ -279,7 +327,7 @@ class CheckoutController extends Controller
                     : $this->checkoutEmailMessage($order, 'deposito_reservado');
 
                 $this->enviarEmailPedido($order, $msg);
-            } elseif ($paymentMethod === 'bancard_v2') {
+            } elseif (in_array($paymentMethod, ['bancard_v2', RendixPixService::PROVIDER], true)) {
                 $this->enviarEmailPedido($order, $this->checkoutEmailMessage($order, 'gateway_aguardando'));
             }
 
@@ -290,6 +338,10 @@ class CheckoutController extends Controller
             // 8. Redirecionamentos Finais
             if ($paymentMethod === 'bancard_v2') {
                 return redirect()->route('checkout.bancard.v2', ['order' => $order->id]);
+            }
+
+            if ($paymentMethod === RendixPixService::PROVIDER) {
+                return redirect()->route('checkout.rendix.pix', ['order' => $order->id]);
             }
 
             if ($paymentMethod === 'deposito') {

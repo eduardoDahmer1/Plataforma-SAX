@@ -109,6 +109,7 @@
             {{ $slot }}
         </div>
     </div>
+    <script src="{{ asset('js/customer-document.js') }}?v={{ filemtime(public_path('js/customer-document.js')) }}"></script>
 </body>
 
 </html>

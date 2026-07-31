@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const paymentMethodsAllowed = ['deposito', 'bancard_v2', 'whatsapp'];
+    const paymentMethodsAllowed = ['deposito', 'bancard_v2', 'rendix_pix', 'whatsapp'];
 
     function getStepElement(stepNumber) {
         return document.getElementById(`step${stepNumber}`);
@@ -83,6 +83,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!documentValue) {
             showStepAlert(2, 'Informe o documento do cliente para continuar.');
+            markFieldInvalid('#step2 input[name="document"]', true);
+            return false;
+        }
+
+        const documentGroup = document.querySelector('#step2 [data-document-group]');
+        if (documentGroup?.saxValidateDocument && !documentGroup.saxValidateDocument(true)) {
+            showStepAlert(2, document.querySelector('#step2 [data-document-input]')?.validationMessage || 'Informe um documento válido para continuar.');
             markFieldInvalid('#step2 input[name="document"]', true);
             return false;
         }
@@ -509,7 +516,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
                 });
         } else if (paraguayData) {
-            const cities = paraguayData.filter(item => item.admin_name === this.value);
+            const cities = paraguayData
+                .filter(item => item.admin_name === this.value)
+                .sort((a, b) => a.city.localeCompare(b.city, 'es', { sensitivity: 'base' }));
             citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
             cities.forEach(c => citySelect.innerHTML += `<option value="${c.city}">${c.city}</option>`);
             if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
@@ -621,6 +630,8 @@ document.addEventListener('DOMContentLoaded', function () {
     window.selectPayment = function(method) {
         const paymentInput = document.getElementById('payment_method');
         const instruction = document.getElementById('payment-instruction');
+        const rendixNotice = document.getElementById('rendix-pix-notice');
+        const rendixTerms = document.getElementById('accept_pix_terms');
         
         if (paymentInput) paymentInput.value = method;
         
@@ -630,9 +641,13 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (instruction) {
             instruction.innerText = method === 'bancard_v2'
-                ? "Cartão disponível para Brasil, Paraguai e outros países. QR Bancard somente para o Paraguai; PIX/QR Brasil em breve."
-                : "Após finalizar, você deverá enviar o comprovante do depósito/transferência.";
+                ? window.translations.payment_bancard
+                : method === 'rendix_pix'
+                    ? window.translations.payment_pix
+                    : window.translations.payment_deposito;
         }
+        rendixNotice?.classList.toggle('d-none', method !== 'rendix_pix');
+        if (rendixTerms) rendixTerms.required = method === 'rendix_pix';
         updateBancardCurrencyNotice();
     };
 

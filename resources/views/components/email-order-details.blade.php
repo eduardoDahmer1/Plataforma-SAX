@@ -1,53 +1,27 @@
 @props(['order', 'locale' => 'pt_BR'])
 
 @php
-    $copy = match ($locale) {
-        'en' => [
-            'payment_status' => 'Payment status',
-            'pending' => 'Pending',
-            'paid' => 'Paid',
-            'failed' => 'Not approved',
-            'refunded' => 'Refunded',
-            'delivery' => 'Delivery information',
-            'recipient' => 'Recipient',
-            'pickup' => 'Pickup at',
-            'address' => 'Delivery address',
-            'notes' => 'Delivery notes',
-            'policies' => 'Policies and terms',
-            'accepted' => 'You accepted the Privacy, Purchase, Sales and Shipping Policies on :date.',
-            'view_policies' => 'View policies and terms',
-        ],
-        'es' => [
-            'payment_status' => 'Estado del pago',
-            'pending' => 'Pendiente',
-            'paid' => 'Pagado',
-            'failed' => 'No aprobado',
-            'refunded' => 'Reembolsado',
-            'delivery' => 'Información de entrega',
-            'recipient' => 'Destinatario',
-            'pickup' => 'Retiro en',
-            'address' => 'Dirección de entrega',
-            'notes' => 'Observaciones de entrega',
-            'policies' => 'Políticas y términos',
-            'accepted' => 'Aceptaste las Políticas de Privacidad, Compras, Ventas y Envíos el :date.',
-            'view_policies' => 'Ver políticas y términos',
-        ],
-        default => [
-            'payment_status' => 'Status do pagamento',
-            'pending' => 'Pendente',
-            'paid' => 'Pago',
-            'failed' => 'Não aprovado',
-            'refunded' => 'Reembolsado',
-            'delivery' => 'Informações de entrega',
-            'recipient' => 'Destinatário',
-            'pickup' => 'Retirada em',
-            'address' => 'Endereço de entrega',
-            'notes' => 'Observações de entrega',
-            'policies' => 'Políticas e termos',
-            'accepted' => 'Você aceitou as Políticas de Privacidade, Compras, Vendas e Envios em :date.',
-            'view_policies' => 'Ver políticas e termos',
-        ],
-    };
+    $translate = fn (string $key, array $replace = []) => app('translator')->get(
+        "messages.{$key}",
+        $replace,
+        $locale
+    );
+
+    $copy = [
+        'payment_status' => $translate('email_order_payment_status'),
+        'pending' => $translate('email_order_pending'),
+        'paid' => $translate('email_order_paid'),
+        'failed' => $translate('email_order_failed'),
+        'refunded' => $translate('email_order_refunded'),
+        'delivery' => $translate('email_order_delivery'),
+        'recipient' => $translate('email_order_recipient'),
+        'pickup' => $translate('email_order_pickup'),
+        'address' => $translate('email_order_address'),
+        'notes' => $translate('email_order_notes'),
+        'policies' => $translate('email_order_policies'),
+        'accepted' => $translate('email_order_accepted'),
+        'view_policies' => $translate('email_order_view_policies'),
+    ];
 
     $paymentStatus = strtolower((string) ($order->payment_status ?: 'pending'));
     $paymentStatusLabel = $copy[$paymentStatus] ?? ucfirst($paymentStatus);
@@ -57,12 +31,13 @@
         'refunded' => '#365899',
         default => '#9a6b00',
     };
-    $storeName = match ((int) $order->store) {
-        1 => 'SAX Ciudad del Este',
-        2 => 'SAX Assunção',
-        3 => 'SAX Pedro Juan Caballero',
-        default => 'SAX Department Store',
+    $storeKey = match ((int) $order->store) {
+        1 => 'email_order_store_ciudad_del_este',
+        2 => 'email_order_store_asuncion',
+        3 => 'email_order_store_pedro_juan_caballero',
+        default => 'email_order_store_default',
     };
+    $storeName = $translate($storeKey);
     $isPickup = (int) $order->shipping === 3;
 @endphp
 

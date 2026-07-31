@@ -13,10 +13,30 @@
                     value="{{ old('name') ?? auth()->user()->name }}" autocomplete="name" required>
             </div>
 
-            <div class="col-md-6 sax-input-group">
+            @php
+                $checkoutDocumentType = old('document_type', auth()->user()->document_type
+                    ?: \App\Support\CustomerDocument::inferType(null, auth()->user()->document, auth()->user()->phone_country));
+                $checkoutDocument = \App\Support\CustomerDocument::format(
+                    old('document', auth()->user()->document),
+                    $checkoutDocumentType
+                );
+            @endphp
+            <div class="col-md-6 sax-input-group" data-document-group>
                 <label>{{ __('messages.documento_identidade') }} *</label>
-                <input type="text" name="document" class="sax-form-control"
-                    value="{{ old('document') ?? auth()->user()->document }}" required>
+                <div class="d-flex gap-2">
+                    <select name="document_type" class="sax-form-control flex-shrink-0" style="width: 150px;" data-document-type required aria-label="Tipo de documento">
+                        <option value="cpf" {{ $checkoutDocumentType === 'cpf' ? 'selected' : '' }}>CPF Brasil</option>
+                        <option value="rg_br" {{ $checkoutDocumentType === 'rg_br' ? 'selected' : '' }}>RG Brasil</option>
+                        <option value="ci_py" {{ $checkoutDocumentType === 'ci_py' ? 'selected' : '' }}>CI Paraguai</option>
+                        <option value="ruc_py" {{ $checkoutDocumentType === 'ruc_py' ? 'selected' : '' }}>RUC Paraguai</option>
+                    </select>
+                    <input type="text" name="document" class="sax-form-control flex-grow-1" style="min-width: 0;"
+                        value="{{ $checkoutDocument }}" autocomplete="off" data-document-input required>
+                </div>
+                <small class="text-danger mt-1" data-document-feedback style="display:none;"></small>
+                @error('document')
+                    <small class="text-danger mt-1 d-block">{{ $message }}</small>
+                @enderror
             </div>
 
             <div class="col-md-6 sax-input-group">

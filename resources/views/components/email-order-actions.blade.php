@@ -1,32 +1,20 @@
 @props(['order', 'locale' => 'pt_BR'])
 
 @php
-    $copy = match ($locale) {
-        'en' => [
-            'view_order' => 'View my order',
-            'pay_bancard' => 'Pay / retry with Bancard',
-            'upload_receipt' => 'Upload deposit receipt',
-            'view_receipt' => 'View my receipt',
-            'whatsapp' => 'Talk to us on WhatsApp',
-            'whatsapp_message' => 'Hello, I need help with order #:order.',
-        ],
-        'es' => [
-            'view_order' => 'Ver mi pedido',
-            'pay_bancard' => 'Pagar / reintentar con Bancard',
-            'upload_receipt' => 'Enviar comprobante de depósito',
-            'view_receipt' => 'Ver mi recibo',
-            'whatsapp' => 'Hablar por WhatsApp',
-            'whatsapp_message' => 'Hola, necesito ayuda con el pedido #:order.',
-        ],
-        default => [
-            'view_order' => 'Ver meu pedido',
-            'pay_bancard' => 'Pagar / tentar novamente com Bancard',
-            'upload_receipt' => 'Enviar comprovante de depósito',
-            'view_receipt' => 'Ver meu recibo',
-            'whatsapp' => 'Falar pelo WhatsApp',
-            'whatsapp_message' => 'Olá, preciso de ajuda com o pedido #:order.',
-        ],
-    };
+    $translate = fn (string $key, array $replace = []) => app('translator')->get(
+        "messages.{$key}",
+        $replace,
+        $locale
+    );
+
+    $copy = [
+        'view_order' => $translate('email_order_view_order'),
+        'pay_bancard' => $translate('email_order_pay_bancard'),
+        'upload_receipt' => $translate('email_order_upload_receipt'),
+        'view_receipt' => $translate('email_order_view_receipt'),
+        'whatsapp' => $translate('email_order_whatsapp'),
+        'whatsapp_message' => $translate('email_order_whatsapp_message'),
+    ];
 
     $orderReference = $order->order_number ?: $order->id;
     $orderUrl = route('user.orders.show', $order->id);

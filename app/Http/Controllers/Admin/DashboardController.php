@@ -15,6 +15,8 @@ use App\Models\SiteAnalyticsEvent;
 use App\Models\Subcategory;
 use App\Models\User;
 use App\Models\BusinessEvent;
+use App\Models\IntegrationMonitor;
+use App\Models\IntegrationRun;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
@@ -39,6 +41,7 @@ class DashboardController extends Controller
             'customers' => User::where('user_type', '<>', 1)->count(),
             'orders' => Order::count(),
             'bancard_orders' => Order::where('payment_method', 'bancard_v2')->count(),
+            'pix_orders' => Order::where('payment_method', 'rendix_pix')->count(),
             'deposit_orders' => Order::where('payment_method', 'deposito')->count(),
             'whatsapp_orders' => Order::where('payment_method', 'whatsapp')->count(),
             'low_stock' => Product::where('status', 1)->where('stock', '>', 0)->where('stock', '<=', 5)->count(),
@@ -48,7 +51,7 @@ class DashboardController extends Controller
         ];
 
         $paymentMethods = Order::query()
-            ->selectRaw("CASE WHEN payment_method = 'bancard_v2' THEN 'Bancard V2' WHEN payment_method = 'deposito' THEN 'Depósito' WHEN payment_method = 'whatsapp' THEN 'WhatsApp' ELSE 'Outros' END AS label")
+            ->selectRaw("CASE WHEN payment_method = 'bancard_v2' THEN 'Bancard V2' WHEN payment_method = 'rendix_pix' THEN 'Pix Rendix' WHEN payment_method = 'deposito' THEN 'Depósito' WHEN payment_method = 'whatsapp' THEN 'WhatsApp' ELSE 'Outros' END AS label")
             ->selectRaw('COUNT(*) AS total')
             ->groupBy('label')->pluck('total', 'label');
 
@@ -74,6 +77,15 @@ class DashboardController extends Controller
         $businessEvents = Schema::hasTable('business_events')
             ? BusinessEvent::with(['user:id,name,email', 'order:id,order_number'])
                 ->latest()->limit(12)->get()
+            : collect();
+        $integrationMonitor = Schema::hasTable('integration_monitors')
+            ? IntegrationMonitor::where('source', 'catalog')->first()
+            : null;
+        $integrationRuns = $integrationMonitor && Schema::hasTable('integration_runs')
+            ? IntegrationRun::where('integration_monitor_id', $integrationMonitor->id)
+                ->latest('started_at')
+                ->limit(5)
+                ->get()
             : collect();
 
         if ($analyticsReady) {
@@ -107,7 +119,8 @@ class DashboardController extends Controller
 
         return view('admin.dashboard.index', compact(
             'metrics', 'analytics', 'analyticsReady', 'paymentMethods', 'orderStatuses', 'recentOrders',
-            'topProducts', 'trafficLabels', 'trafficViews', 'trafficVisitors', 'topPages', 'topClicks', 'devices', 'businessEvents'
+            'topProducts', 'trafficLabels', 'trafficViews', 'trafficVisitors', 'topPages', 'topClicks', 'devices', 'businessEvents',
+            'integrationMonitor', 'integrationRuns'
         ));
     }
 

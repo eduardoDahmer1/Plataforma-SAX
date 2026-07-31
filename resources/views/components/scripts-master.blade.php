@@ -28,6 +28,10 @@
 @endif
 
 <!-- 6. app-custom.js — Scripts globales del frontend (todas las rutas excepto checkout) -->
+@if(!Route::is('admin.*'))
+    <script src="{{ asset('js/customer-document.js') }}?v={{ filemtime(public_path('js/customer-document.js')) }}"></script>
+@endif
+
 @if(!Route::is('checkout.*'))
     <script src="{{ asset('js/app-custom.js') }}?v={{ filemtime(public_path('js/app-custom.js'))}}"></script>
 @endif

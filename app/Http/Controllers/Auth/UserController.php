@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use App\Models\PaymentMethod;
 use App\Mail\PasswordChangedMail;
+use App\Rules\CustomerDocumentRule;
+use App\Support\CustomerDocument;
 
 class UserController extends Controller
 {
@@ -61,6 +63,16 @@ class UserController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        $documentType = CustomerDocument::inferType(
+            $request->input('document_type'),
+            $request->input('document'),
+            $request->input('phone_country', $user->phone_country)
+        );
+        $request->merge([
+            'document_type' => $documentType,
+            'document' => CustomerDocument::format($request->input('document'), $documentType),
+        ]);
+
         // 1. Validação (Aumentei o max de country para 100 conforme sua nova migration)
         $request->validate([
             'name' => 'required|string|max:255',
@@ -72,13 +84,14 @@ class UserController extends Controller
             'complement' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
-            'document' => 'nullable|string|max:255',
+            'document_type' => ['required', 'string', 'in:'.implode(',', CustomerDocument::types())],
+            'document' => ['required', 'string', 'max:30', new CustomerDocumentRule($documentType)],
             'postal_code' => 'nullable|string|max:20',
             'cep' => 'nullable|string|max:20',
         ]);
 
         // 2. Coleta os dados básicos
-        $data = $request->only(['name', 'email', 'country', 'address', 'number', 'district', 'complement', 'city', 'state', 'document', 'additional_info']);
+        $data = $request->only(['name', 'email', 'country', 'address', 'number', 'district', 'complement', 'city', 'state', 'document', 'document_type', 'additional_info']);
 
         // 3. Sincroniza o CEP / Postal Code
         if ($request->filled('postal_code')) {

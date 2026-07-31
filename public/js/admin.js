@@ -63,6 +63,40 @@ document.addEventListener('submit', function (e) {
 });
 
 
+// ======== Seletor explícito de gateway ========
+document.addEventListener('DOMContentLoaded', function () {
+    const gatewayChoice = document.getElementById('gateway_choice');
+    const nameField = document.getElementById('name');
+    const customName = document.getElementById('custom_gateway_name');
+    const customWrap = document.getElementById('custom_gateway_name_wrap');
+    const typeField = document.getElementById('type');
+
+    if (!gatewayChoice || !nameField || !customName || !customWrap) return;
+
+    const syncGatewayChoice = function () {
+        const selected = gatewayChoice.value;
+        const isCustom = selected === '__custom__';
+
+        customWrap.style.display = isCustom ? 'block' : 'none';
+        customName.required = isCustom;
+
+        if (isCustom) {
+            nameField.value = customName.value.trim();
+        } else {
+            nameField.value = selected;
+            if (selected && typeField) typeField.value = 'gateway';
+        }
+
+        nameField.dispatchEvent(new Event('input', { bubbles: true }));
+        if (typeField) typeField.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    gatewayChoice.addEventListener('change', syncGatewayChoice);
+    customName.addEventListener('input', syncGatewayChoice);
+    syncGatewayChoice();
+});
+
+
 // ======== Métodos de pagamento: confirmação conforme o ambiente ========
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('paymentMethodForm');
@@ -80,8 +114,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const togglePaymentFields = function () {
         const isGateway = typeField && typeField.value === 'gateway';
+        const normalizedName = nameField ? nameField.value.trim().toLowerCase() : '';
+        const isRendix = ['rendix pix', 'pix rendix', 'pix'].includes(normalizedName);
+        const isBancardV2 = normalizedName === 'bancard v2';
         document.querySelectorAll('.gateway-only').forEach(el => el.style.display = isGateway ? 'block' : 'none');
+        document.querySelectorAll('.generic-gateway-only').forEach(el => el.style.display = isGateway && !isRendix ? 'block' : 'none');
+        document.querySelectorAll('.rendix-only').forEach(el => el.style.display = isGateway && isRendix ? 'block' : 'none');
         document.querySelectorAll('.bank-only').forEach(el => el.style.display = isGateway ? 'none' : 'block');
+        const sandboxControl = document.getElementById('sandboxControl');
+        if (sandboxControl) sandboxControl.style.display = isGateway && isBancardV2 ? 'block' : 'none';
     };
 
     if (typeField) typeField.addEventListener('change', togglePaymentFields);
@@ -1934,7 +1975,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function toggleFields() {
         const isGateway = type.value === 'gateway';
         const isBancardV2 = name.value.trim().toLowerCase() === 'bancard v2';
+        const isRendix = ['rendix pix', 'pix rendix', 'pix'].includes(name.value.trim().toLowerCase());
         document.querySelectorAll('.gateway-only').forEach(el => el.style.display = isGateway ? 'block' : 'none');
+        document.querySelectorAll('.generic-gateway-only').forEach(el => el.style.display = isGateway && !isRendix ? 'block' : 'none');
+        document.querySelectorAll('.rendix-only').forEach(el => el.style.display = isGateway && isRendix ? 'block' : 'none');
         document.querySelectorAll('.bank-only').forEach(el => el.style.display = isGateway ? 'none' : 'block');
         const sandboxControl = document.getElementById('sandboxControl');
         if (sandboxControl) sandboxControl.style.display = isGateway && isBancardV2 ? 'block' : 'none';
@@ -1960,9 +2004,10 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
                 },
                 body: JSON.stringify({ active })
             })
-            .then(res => {
-                if (!res.ok) throw new Error('Error');
-                return res.json();
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || 'Erro ao atualizar');
+                return data;
             })
             .then(data => {
                 const row = this.closest('tr');
@@ -1984,8 +2029,8 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
                     text.classList.replace('text-dark', 'text-muted');
                 }
             })
-            .catch(() => {
-                alert('Erro ao atualizar');
+            .catch((error) => {
+                alert(error.message || 'Erro ao atualizar');
                 this.checked = !this.checked;
             });
         });

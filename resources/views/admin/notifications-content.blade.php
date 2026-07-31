@@ -17,6 +17,9 @@
         'new_contact' => ['icon' => 'fa-envelope', 'class' => 'is-contact'],
         'new_resume' => ['icon' => 'fa-file-lines', 'class' => 'is-resume'],
         'new_user' => ['icon' => 'fa-user-plus', 'class' => 'is-user'],
+        'integration_failed' => ['icon' => 'fa-triangle-exclamation', 'class' => 'is-default'],
+        'integration_stale' => ['icon' => 'fa-plug-circle-xmark', 'class' => 'is-default'],
+        'integration_recovered' => ['icon' => 'fa-circle-check', 'class' => 'is-order'],
     ];
 
     $notificationCategories = [
@@ -37,6 +40,9 @@
         'new_resume' => 'contacts',
         'low_stock' => 'catalog',
         'out_of_stock' => 'catalog',
+        'integration_failed' => 'system',
+        'integration_stale' => 'system',
+        'integration_recovered' => 'system',
     ];
 @endphp
 
@@ -76,6 +82,7 @@
         <option value="clients">Clientes</option>
         <option value="contacts">Contatos e currículos</option>
         <option value="catalog">Catálogo e estoque</option>
+        <option value="system">Integrações e sistema</option>
     </select>
 </div>
 

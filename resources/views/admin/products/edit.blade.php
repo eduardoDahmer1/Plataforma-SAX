@@ -14,10 +14,34 @@
     @endphp
     @php
         $type = $type ?? 'product';
+        $lastEditedAt = $item->admin_edited_at ?? $item->updated_at;
+        $lastEditedBy = $item->editor?->name ?? 'Sistema / integração';
     @endphp
 
     <x-admin.card>
     <x-admin.page-header title="Editar Produto" description="Edite as informações do produto no catálogo"></x-admin.page-header>
+
+        <div class="bg-light border rounded-3 px-3 py-3 mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-6">
+                    <span class="d-block text-muted text-uppercase fw-bold x-small-7 mb-1">Última atualização</span>
+                    <span class="fw-bold text-dark">
+                        <i class="far fa-clock me-1 text-muted"></i>
+                        {{ $lastEditedAt?->format('d/m/Y \à\s H:i') ?? 'Data não registrada' }}
+                    </span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <span class="d-block text-muted text-uppercase fw-bold x-small-7 mb-1">Atualizado por</span>
+                    <span class="fw-bold text-dark">
+                        <i class="far fa-user me-1 text-muted"></i>
+                        {{ $lastEditedBy }}
+                    </span>
+                    @if ($item->editor?->email)
+                        <small class="text-muted ms-1">({{ $item->editor->email }})</small>
+                    @endif
+                </div>
+            </div>
+        </div>
 
         <div id="productEditFeedback" class="d-none"></div>
 

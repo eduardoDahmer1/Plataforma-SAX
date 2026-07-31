@@ -1,83 +1,40 @@
 @extends('layout.email')
 
-@section('title', 'Pagamento Confirmado')
+@section('title', app('translator')->get('messages.email_order_paid_title', [], $emailLocale ?? 'pt_BR'))
 
 @section('content')
 
     @php
         $locale = $emailLocale ?? 'pt_BR';
 
-        $copy = match ($locale) {
-            'en' => [
-                'hello' => 'Hello,',
-                'intro' => 'Your payment has been confirmed successfully.',
-                'intro2' => 'We are already preparing your order with care.',
-                'number' => 'Number',
-                'date' => 'Date',
-                'payment' => 'Payment',
-                'total' => 'Total',
-                'track' => 'Track your order details by clicking the button below:',
-                'cta' => 'View my order',
-                'paid_title' => 'Payment approved',
-                'method_deposito' => 'Bank deposit',
-                'items' => 'Your items',
-                'qty' => 'Qty',
-                'subtotal' => 'Subtotal',
-                'discount' => 'Discount',
-                'shipping' => 'Shipping',
-                'shipping_free' => 'Free',
-                'bancard_title' => 'Important information about your Bancard payment',
-                'bancard_amount' => 'Amount processed in guaranies (PYG)',
-                'bancard_rate' => 'Recorded exchange rate',
-                'bancard_bank_charges' => 'The transaction is processed in Paraguayan guaranies (PYG). Your card issuer or bank may apply its own currency conversion, taxes, exchange-rate spread, fees and, when applicable to installments or financing, interest. These charges are determined by those institutions and are not charged or controlled by SAX.',
-            ],
-            'es' => [
-                'hello' => 'Hola,',
-                'intro' => 'Tu pago fue confirmado con exito.',
-                'intro2' => 'Ya estamos preparando tu pedido con cuidado.',
-                'number' => 'Numero',
-                'date' => 'Fecha',
-                'payment' => 'Pago',
-                'total' => 'Total',
-                'track' => 'Sigue los detalles de tu pedido haciendo clic en el boton abajo:',
-                'cta' => 'Ver mi pedido',
-                'paid_title' => 'Pago aprobado',
-                'method_deposito' => 'Deposito bancario',
-                'items' => 'Tus productos',
-                'qty' => 'Cant',
-                'subtotal' => 'Subtotal',
-                'discount' => 'Descuento',
-                'shipping' => 'Envio',
-                'shipping_free' => 'Gratis',
-                'bancard_title' => 'Información importante sobre tu pago con Bancard',
-                'bancard_amount' => 'Importe procesado en guaraníes (PYG)',
-                'bancard_rate' => 'Cotización registrada',
-                'bancard_bank_charges' => 'La operación se procesa en guaraníes paraguayos (PYG). El banco emisor o la administradora de la tarjeta puede aplicar su propia conversión, impuestos, spread cambiario, comisiones y, cuando corresponda por cuotas o financiación, intereses. Estos cargos son definidos por esas entidades y no son cobrados ni controlados por SAX.',
-            ],
-            default => [
-                'hello' => 'Olá,',
-                'intro' => 'Seu pagamento foi confirmado com sucesso.',
-                'intro2' => 'Já estamos preparando o seu pedido com carinho.',
-                'number' => 'Numero',
-                'date' => 'Data',
-                'payment' => 'Pagamento',
-                'total' => 'Total',
-                'track' => 'Acompanhe os detalhes do seu pedido clicando no botão abaixo:',
-                'cta' => 'Ver meu pedido',
-                'paid_title' => 'Pagamento aprovado',
-                'method_deposito' => 'Deposito bancario',
-                'items' => 'Seus produtos',
-                'qty' => 'Qtd',
-                'subtotal' => 'Subtotal',
-                'discount' => 'Desconto',
-                'shipping' => 'Frete',
-                'shipping_free' => 'Gratis',
-                'bancard_title' => 'Informação importante sobre seu pagamento Bancard',
-                'bancard_amount' => 'Valor processado em guaranis (PYG)',
-                'bancard_rate' => 'Cotação registrada',
-                'bancard_bank_charges' => 'A operação é processada em guaranis paraguaios (PYG). O banco emissor ou a administradora do cartão pode aplicar conversão própria, IOF ou outros tributos, spread cambial, tarifas e, quando houver parcelamento ou financiamento, juros. Esses encargos são definidos por essas instituições e não são cobrados nem controlados pela SAX.',
-            ],
-        };
+        $translate = fn (string $key, array $replace = []) => app('translator')->get(
+            "messages.{$key}",
+            $replace,
+            $locale
+        );
+
+        $copy = [
+            'hello' => $translate('email_order_hello'),
+            'intro' => $translate('email_order_paid_intro'),
+            'intro2' => $translate('email_order_paid_preparing'),
+            'number' => $translate('email_order_number'),
+            'date' => $translate('email_order_date'),
+            'payment' => $translate('email_order_payment'),
+            'total' => $translate('email_order_total'),
+            'track' => $translate('email_order_paid_track'),
+            'paid_title' => $translate('email_order_paid_status'),
+            'method_deposito' => $translate('email_order_bank_deposit'),
+            'items' => $translate('email_order_items'),
+            'qty' => $translate('email_order_quantity'),
+            'subtotal' => $translate('email_order_subtotal'),
+            'discount' => $translate('email_order_discount'),
+            'shipping' => $translate('email_order_shipping'),
+            'shipping_free' => $translate('email_order_free'),
+            'bancard_title' => $translate('email_order_bancard_title'),
+            'bancard_amount' => $translate('email_order_bancard_amount'),
+            'bancard_rate' => $translate('email_order_bancard_rate'),
+            'bancard_bank_charges' => $translate('email_order_bancard_bank_charges'),
+        ];
 
         // Valores na moeda em que o cliente fechou o pedido.
         $dinheiro = fn ($valorBase) => order_money($order, $valorBase);
@@ -194,7 +151,7 @@
                 <tr>
                     <td style="padding:0.9rem 1rem;border-bottom:{{ $loop->last ? '0' : '1px solid #eeeae4' }};">
                         <span style="display:block;font-size:0.92rem;font-weight:700;color:#111111;line-height:1.4;">
-                            {{ $item->external_name ?: ($item->name ?: 'Produto') }}
+                            {{ $item->external_name ?: ($item->name ?: $translate('email_order_product')) }}
                         </span>
                         <span style="display:block;margin-top:2px;font-size:0.72rem;color:#8a8a8a;">
                             SKU: {{ $item->sku ?: '-' }} &nbsp;·&nbsp; {{ $copy['qty'] }}: {{ $item->quantity }}

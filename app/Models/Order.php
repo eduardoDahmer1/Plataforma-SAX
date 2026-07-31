@@ -23,6 +23,7 @@ class Order extends Model
         'deposit_receipt',
         'name',
         'document',
+        'document_type',
         'email',
         'phone',
         'address',
@@ -55,6 +56,7 @@ class Order extends Model
         'locale',
         'terms_accepted_at',
         'terms_version',
+        'rendix_terms_accepted_at',
 
         'shipping_name',
         'shipping_email',
@@ -81,9 +83,17 @@ class Order extends Model
         'delivery_method',
         'description',
         'payment',
+        'payment_currency',
+        'payment_amount',
+        'payment_exchange_rate',
+        'payment_card_country',
     ];
 
-    protected $casts = ['payment_failed_at' => 'datetime', 'terms_accepted_at' => 'datetime'];
+    protected $casts = [
+        'payment_failed_at' => 'datetime',
+        'terms_accepted_at' => 'datetime',
+        'rendix_terms_accepted_at' => 'datetime',
+    ];
 
     // Relacionamento com itens do pedido
     public function items()
@@ -106,6 +116,11 @@ class Order extends Model
     public function receipt()
     {
         return $this->hasOne(Receipt::class);
+    }
+
+    public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class);
     }
 
     public function isPaid(): bool

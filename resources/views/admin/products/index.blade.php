@@ -38,6 +38,8 @@
                     @foreach ($products as $product)
                         @php
                             $highlightsValues = json_decode($product->highlights ?? '{}', true);
+                            $lastEditedAt = $product->admin_edited_at ?? $product->updated_at;
+                            $lastEditedBy = $product->editor?->name ?? 'Sistema / integração';
 
                             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                                 $imageUrl = asset('storage/' . $product->photo);
@@ -98,6 +100,17 @@
                                         <span class="text-muted">•</span>
                                         <span class="text-muted fw-normal">
                                             {{ $product->stock > 0 ? 'Estoque: ' . $product->stock : 'Sem estoque' }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-2 x-small text-muted mt-1">
+                                        <span title="Data e hora da última edição registrada">
+                                            <i class="far fa-clock me-1"></i>
+                                            Atualizado em {{ $lastEditedAt?->format('d/m/Y \à\s H:i') ?? 'data não registrada' }}
+                                        </span>
+                                        <span class="d-none d-sm-inline">•</span>
+                                        <span title="Responsável pela última edição registrada">
+                                            <i class="far fa-user me-1"></i>
+                                            Por {{ $lastEditedBy }}
                                         </span>
                                     </div>
                                 </div>

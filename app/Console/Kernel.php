@@ -13,6 +13,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('carts:send-help --limit=50')->hourly()->withoutOverlapping();
+        $schedule->command('rendix:reconcile-pix --limit=50')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('integration:check-health')->everyFiveMinutes()->withoutOverlapping();
     }
 
     /**

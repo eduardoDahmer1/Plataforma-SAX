@@ -19,4 +19,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'integration_monitor' => [
+        'token' => env('INTEGRATION_MONITOR_TOKEN'),
+        'stale_after_minutes' => env('INTEGRATION_STALE_AFTER_MINUTES', 180),
+        'alert_cooldown_minutes' => env('INTEGRATION_ALERT_COOLDOWN_MINUTES', 720),
+    ],
+
 ];

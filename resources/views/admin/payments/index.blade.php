@@ -30,7 +30,7 @@
                     <td class="payment-method-cell" data-label="{{ __('messages.col_metodo') }}">
                         <div class="d-flex align-items-center">
                             <div class="payment-method-icon me-3">
-                                <i class="fa-solid {{ $method->type === 'gateway' ? 'fa-credit-card' : 'fa-building-columns' }}"></i>
+                                <i class="{{ in_array(mb_strtolower(trim($method->name)), ['rendix pix', 'pix rendix', 'pix'], true) ? 'fa-brands fa-pix' : 'fa-solid ' . ($method->type === 'gateway' ? 'fa-credit-card' : 'fa-building-columns') }}"></i>
                             </div>
                             <div>
                                 <span class="payment-method-name">{{ $method->name }}</span>

@@ -10,10 +10,14 @@
         $selectedCurrencySign = session('currency_sign', 'US$');
 
         $hasBancardV2 = false;
+        $hasRendixPix = false;
         foreach (($paymentMethods ?? collect()) as $method) {
-            if (($method->type ?? null) === 'gateway' && str_contains(mb_strtolower((string) ($method->name ?? '')), 'bancard v2')) {
+            $methodName = mb_strtolower(trim((string) ($method->name ?? '')));
+            if (($method->type ?? null) === 'gateway' && $methodName === 'bancard v2') {
                 $hasBancardV2 = true;
-                break;
+            }
+            if (($method->type ?? null) === 'gateway' && in_array($methodName, ['rendix pix', 'pix rendix', 'pix'], true)) {
+                $hasRendixPix = true;
             }
         }
     @endphp
@@ -31,11 +35,46 @@
             @if ($hasBancardV2)
                 <button type="button" class="sax-payment-method" id="btn-bancard_v2" data-payment-method="bancard_v2" aria-pressed="false">
                     <i class="fa fa-credit-card mb-2 d-block"></i>
-                    Cartão / QR Bancard
+                    {{ __('messages.checkout_bancard_label') }}
                     <span class="sax-payment-caption">Cartão internacional · QR somente no Paraguai</span>
                 </button>
             @endif
+
+            @if ($hasRendixPix)
+                <button type="button" class="sax-payment-method" id="btn-rendix_pix" data-payment-method="rendix_pix" aria-pressed="false">
+                    <i class="fa-brands fa-pix mb-2 d-block"></i>
+                    {{ __('messages.checkout_pix_label') }}
+                    <span class="sax-payment-caption">{{ __('messages.checkout_pix_caption') }}</span>
+                </button>
+            @endif
         </div>
+
+        @if ($hasRendixPix)
+            <div class="alert alert-success border-0 rounded-3 mt-3 mb-0 text-start d-none" id="rendix-pix-notice">
+                <div class="d-flex gap-3 align-items-start">
+                    <i class="fa-brands fa-pix fs-4 mt-1"></i>
+                    <div>
+                        <strong>{{ __('messages.checkout_pix_notice_title') }}</strong>
+                        <span class="d-block small mt-1">
+                            {{ __('messages.checkout_pix_notice_body') }}
+                        </span>
+                    </div>
+                </div>
+                <div class="form-check mt-3 pt-3 border-top border-success-subtle">
+                    <input class="form-check-input" type="checkbox" name="accept_pix_terms" value="1"
+                           id="accept_pix_terms" @checked(old('accept_pix_terms'))>
+                    <label class="form-check-label small" for="accept_pix_terms">
+                        {{ __('messages.checkout_pix_terms_prefix') }}
+                        <a href="{{ route('checkout.rendix.pix.terms') }}" target="_blank" rel="noopener"
+                           class="fw-bold text-success">{{ __('messages.checkout_pix_terms_link') }}</a>
+                        {{ __('messages.checkout_pix_terms_suffix') }}
+                    </label>
+                </div>
+                @error('accept_pix_terms')
+                    <div class="text-danger small mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+        @endif
 
         <p class="sax-payment-notice mt-4" id="payment-instruction">
             {{ __('messages.instrucao_pagamento_deposito') }}
@@ -226,6 +265,7 @@
 <script>
     window.translations = {
         payment_bancard: "{{ __('messages.instrucao_pagamento_bancard') }}",
+        payment_pix: @json(__('messages.checkout_pix_instruction')),
         payment_deposito: "{{ __('messages.instrucao_pagamento_deposito') }}"
     };
 

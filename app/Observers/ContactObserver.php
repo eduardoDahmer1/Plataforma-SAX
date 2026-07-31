@@ -30,6 +30,7 @@ class ContactObserver implements ShouldHandleEventsAfterCommit
             data: [
                 'contact_id' => $contact->getKey(),
                 'contact_type' => $contactType,
+                'translation_params' => ['name' => $contact->name],
             ],
         );
     }

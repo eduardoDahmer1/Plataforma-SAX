@@ -261,7 +261,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const badge = notificationMenu?.querySelector('[data-notifications-badge]');
 
             if (unreadLabel) {
-                unreadLabel.textContent = `${unreadCount} ${unreadCount === 1 ? 'não lida' : 'não lidas'}`;
+                const unreadText = unreadCount === 1
+                    ? notificationsDrawer.dataset.notificationsUnreadSingular
+                    : notificationsDrawer.dataset.notificationsUnreadPlural;
+                unreadLabel.textContent = `${unreadCount} ${unreadText || ''}`.trim();
                 unreadLabel.classList.toggle('d-none', unreadCount === 0);
             }
 

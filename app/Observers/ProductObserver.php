@@ -21,7 +21,11 @@ class ProductObserver
         $currentStock = (int) $product->stock;
         $name = $product->external_name ?: $product->name ?: "Produto #{$product->getKey()}";
         $url = "/admin/products/{$product->getKey()}/edit";
-        $data = ['product_id' => $product->getKey(), 'stock' => $currentStock];
+        $data = [
+            'product_id' => $product->getKey(),
+            'stock' => $currentStock,
+            'translation_params' => ['product' => $name, 'stock' => $currentStock],
+        ];
 
         if ($previousStock > 0 && $currentStock <= 0) {
             $this->notifications->notifyAdmins('out_of_stock', 'Produto sem estoque', "{$name} ficou sem estoque.", $url, $data);

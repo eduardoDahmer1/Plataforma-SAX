@@ -23,7 +23,10 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
             title: 'Novo pedido',
             message: "O pedido #{$reference} foi recebido.",
             actionUrl: "/admin/orders/{$order->getKey()}",
-            data: ['order_id' => $order->getKey()],
+            data: [
+                'order_id' => $order->getKey(),
+                'translation_params' => ['reference' => $reference],
+            ],
         );
 
         $this->customerNotifications->notifyUser(
@@ -32,7 +35,10 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
             'Pedido recebido',
             "Recebemos seu pedido #{$reference}. Você pode acompanhar cada etapa por aqui.",
             "/orders/{$order->getKey()}",
-            ['order_id' => $order->getKey()],
+            [
+                'order_id' => $order->getKey(),
+                'translation_params' => ['reference' => $reference],
+            ],
         );
     }
 
@@ -40,7 +46,10 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
     {
         $reference = $order->order_number ?: $order->getKey();
         $url = "/admin/orders/{$order->getKey()}";
-        $data = ['order_id' => $order->getKey()];
+        $data = [
+            'order_id' => $order->getKey(),
+            'translation_params' => ['reference' => $reference],
+        ];
 
         if ($order->wasChanged('deposit_receipt') && filled($order->deposit_receipt)) {
             $this->notifications->notifyAdmins('deposit_receipt', 'Comprovante recebido', "O pedido #{$reference} recebeu um comprovante.", $url, $data);

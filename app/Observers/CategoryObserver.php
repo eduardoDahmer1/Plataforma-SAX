@@ -21,6 +21,9 @@ class CategoryObserver
 
     private function notify(Category $category): void
     {
-        $this->notifications->notifyCustomers('new_category', 'Nova categoria disponível', "Conheça a categoria {$category->name}.", "/categorias/{$category->slug}", ['category_id' => $category->id]);
+        $this->notifications->notifyCustomers('new_category', 'Nova categoria disponível', "Conheça a categoria {$category->name}.", "/categorias/{$category->slug}", [
+            'category_id' => $category->id,
+            'translation_params' => ['category' => $category->name],
+        ]);
     }
 }

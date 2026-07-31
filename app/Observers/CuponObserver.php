@@ -21,6 +21,11 @@ class CuponObserver
 
     private function notify(Cupon $cupon): void
     {
-        $this->notifications->notifyCustomers('new_coupon', 'Novo cupom disponível', "Use o cupom {$cupon->codigo} e aproveite {$cupon->rotuloDesconto()} de desconto.", '/cupons', ['cupon_id' => $cupon->id, 'code' => $cupon->codigo]);
+        $discount = $cupon->rotuloDesconto();
+        $this->notifications->notifyCustomers('new_coupon', 'Novo cupom disponível', "Use o cupom {$cupon->codigo} e aproveite {$discount} de desconto.", '/cupons', [
+            'cupon_id' => $cupon->id,
+            'code' => $cupon->codigo,
+            'translation_params' => ['code' => $cupon->codigo, 'discount' => $discount],
+        ]);
     }
 }

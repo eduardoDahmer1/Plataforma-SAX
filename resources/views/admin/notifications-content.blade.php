@@ -48,40 +48,40 @@
 
 <div class="sax-admin-notifications__header">
     <div>
-        <strong id="adminNotificationsTitle">Notificações</strong>
-        <span>Últimas movimentações do painel</span>
+        <strong id="adminNotificationsTitle">{{ __('messages.notifications_admin_title') }}</strong>
+        <span>{{ __('messages.notifications_admin_subtitle') }}</span>
     </div>
 
     <div class="sax-admin-notifications__header-actions">
         @if ($adminUnreadNotificationsCount > 0)
             <span class="sax-admin-notifications__unread" data-notifications-unread-count>
-                {{ $adminUnreadNotificationsCount }} {{ $adminUnreadNotificationsCount === 1 ? 'não lida' : 'não lidas' }}
+                {{ $adminUnreadNotificationsCount }} {{ $adminUnreadNotificationsCount === 1 ? __('messages.notifications_unread_singular') : __('messages.notifications_unread_plural') }}
             </span>
 
             <form action="{{ route('admin.notifications.read-all') }}" method="POST" data-notifications-read-all>
                 @csrf
                 <button type="submit" class="sax-admin-notifications__read-all">
-                    Marcar todas como lidas
+                    {{ __('messages.notifications_mark_all_read') }}
                 </button>
             </form>
         @endif
 
-        <button type="button" class="sax-admin-notifications__close" id="adminNotificationsClose" aria-label="Fechar notificações">
+        <button type="button" class="sax-admin-notifications__close" id="adminNotificationsClose" aria-label="{{ __('messages.notifications_close') }}">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
     </div>
 </div>
 
 <div class="px-3 py-2 border-bottom">
-    <label class="visually-hidden" for="adminNotificationsFilter">Filtrar notificações</label>
+    <label class="visually-hidden" for="adminNotificationsFilter">{{ __('messages.notifications_filter_label') }}</label>
     <select class="form-select form-select-sm" id="adminNotificationsFilter">
-        <option value="all">Todas as notificações</option>
-        <option value="orders">Pedidos</option>
-        <option value="payments">Pagamentos</option>
-        <option value="checkout">Checkout e carrinhos</option>
-        <option value="clients">Clientes</option>
-        <option value="contacts">Contatos e currículos</option>
-        <option value="catalog">Catálogo e estoque</option>
+        <option value="all">{{ __('messages.notifications_filter_all') }}</option>
+        <option value="orders">{{ __('messages.notifications_filter_orders') }}</option>
+        <option value="payments">{{ __('messages.notifications_filter_payments') }}</option>
+        <option value="checkout">{{ __('messages.notifications_filter_checkout') }}</option>
+        <option value="clients">{{ __('messages.notifications_filter_clients') }}</option>
+        <option value="contacts">{{ __('messages.notifications_filter_contacts') }}</option>
+        <option value="catalog">{{ __('messages.notifications_filter_catalog') }}</option>
         <option value="system">{{ __('messages.notifications_integrations_system') }}</option>
     </select>
 </div>
@@ -106,36 +106,36 @@
                 </span>
 
                 <span class="sax-admin-notifications__content">
-                    <strong>{{ $notification->title }}</strong>
-                    <span>{{ $notification->message }}</span>
+                    <strong>{{ $notification->translatedTitle() }}</strong>
+                    <span>{{ $notification->translatedMessage() }}</span>
                     <time datetime="{{ $notification->created_at?->toIso8601String() }}">
-                        {{ $notification->created_at?->diffForHumans() }}
+                        {{ $notification->created_at?->locale(app()->getLocale())->diffForHumans() }}
                     </time>
                 </span>
 
                 @if (is_null($notification->read_at))
-                    <span class="sax-admin-notifications__dot" aria-label="Não lida"></span>
+                    <span class="sax-admin-notifications__dot" aria-label="{{ __('messages.notifications_unread_singular') }}"></span>
                 @endif
             </button>
             @if (is_null($notification->read_at))
                 <button type="button" class="sax-admin-notifications__mark-read"
-                        data-notification-mark-read title="Marcar como lida">
+                        data-notification-mark-read title="{{ __('messages.notifications_mark_read') }}">
                     <i class="fa-solid fa-check" aria-hidden="true"></i>
-                    <span>Marcar como lida</span>
+                    <span>{{ __('messages.notifications_mark_read') }}</span>
                 </button>
             @endif
         </form>
     @empty
         <div class="sax-admin-notifications__empty">
             <i class="fa-regular fa-bell-slash" aria-hidden="true"></i>
-            <strong>Nenhuma notificação</strong>
-            <span>Novos pedidos e contatos aparecerão aqui.</span>
+            <strong>{{ __('messages.notifications_empty_title') }}</strong>
+            <span>{{ __('messages.notifications_admin_empty_message') }}</span>
         </div>
     @endforelse
 
     <div class="sax-admin-notifications__empty d-none" id="adminNotificationsFilteredEmpty">
         <i class="fa-regular fa-bell-slash" aria-hidden="true"></i>
-        <strong>Nenhuma notificação neste filtro</strong>
-        <span>Selecione outra categoria para ver mais movimentações.</span>
+        <strong>{{ __('messages.notifications_filtered_empty_title') }}</strong>
+        <span>{{ __('messages.notifications_admin_filtered_empty_message') }}</span>
     </div>
 </div>

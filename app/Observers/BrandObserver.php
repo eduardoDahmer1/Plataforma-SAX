@@ -21,6 +21,9 @@ class BrandObserver
 
     private function notify(Brand $brand): void
     {
-        $this->notifications->notifyCustomers('new_brand', 'Nova marca disponível', "A marca {$brand->name} chegou à SAX.", "/marcas/{$brand->slug}", ['brand_id' => $brand->id]);
+        $this->notifications->notifyCustomers('new_brand', 'Nova marca disponível', "A marca {$brand->name} chegou à SAX.", "/marcas/{$brand->slug}", [
+            'brand_id' => $brand->id,
+            'translation_params' => ['brand' => $brand->name],
+        ]);
     }
 }

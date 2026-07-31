@@ -28,7 +28,11 @@ class AbandonedCartObserver
             'Carrinho importante abandonado',
             "Um carrinho de {$displayTotal} foi abandonado.",
             "/admin/abandoned-carts/{$cart->getKey()}",
-            ['abandoned_cart_id' => $cart->getKey(), 'total' => (float) $cart->total],
+            [
+                'abandoned_cart_id' => $cart->getKey(),
+                'total' => (float) $cart->total,
+                'translation_params' => ['total' => $displayTotal],
+            ],
         );
     }
 
@@ -43,7 +47,11 @@ class AbandonedCartObserver
             'Cliente respondeu sobre o carrinho',
             "Foi recebida uma resposta sobre o carrinho abandonado #{$cart->getKey()}.",
             "/admin/abandoned-carts/{$cart->getKey()}",
-            ['abandoned_cart_id' => $cart->getKey(), 'reason' => $cart->feedback_reason],
+            [
+                'abandoned_cart_id' => $cart->getKey(),
+                'reason' => $cart->feedback_reason,
+                'translation_params' => ['cart' => $cart->getKey()],
+            ],
         );
     }
 }

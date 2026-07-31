@@ -5,7 +5,7 @@
         id="adminNotificationsButton"
         aria-controls="adminNotificationsDrawer"
         aria-expanded="false"
-        aria-label="Abrir notificações administrativas"
+        aria-label="{{ __('messages.notifications_open_admin') }}"
     >
         <i class="fa-regular fa-bell" aria-hidden="true"></i>
 
@@ -24,6 +24,8 @@
         aria-modal="true"
         aria-labelledby="adminNotificationsTitle"
         aria-hidden="true"
+        data-notifications-unread-singular="{{ __('messages.notifications_unread_singular') }}"
+        data-notifications-unread-plural="{{ __('messages.notifications_unread_plural') }}"
     >
         @include('admin.notifications-content')
     </aside>

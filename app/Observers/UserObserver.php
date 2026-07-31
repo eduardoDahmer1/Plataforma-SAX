@@ -21,7 +21,10 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             title: 'Novo usuário',
             message: "{$user->name} criou uma conta.",
             actionUrl: "/admin/clients/{$user->getKey()}",
-            data: ['user_id' => $user->getKey()],
+            data: [
+                'user_id' => $user->getKey(),
+                'translation_params' => ['name' => $user->name],
+            ],
         );
 
         $this->customerNotifications->notifyUser(
@@ -30,6 +33,7 @@ class UserObserver implements ShouldHandleEventsAfterCommit
             'Bem-vindo à SAX',
             'Sua conta foi criada. Complete seus dados para aproveitar uma experiência personalizada.',
             '/dashboard',
+            ['translation_params' => []],
         );
     }
 
@@ -40,7 +44,9 @@ class UserObserver implements ShouldHandleEventsAfterCommit
         }
 
         if ($user->wasChanged('email')) {
-            $this->customerNotifications->notifyUser($user, 'customer_email_changed', 'E-mail alterado', "O e-mail da sua conta foi alterado para {$user->email}.", '/dashboard');
+            $this->customerNotifications->notifyUser($user, 'customer_email_changed', 'E-mail alterado', "O e-mail da sua conta foi alterado para {$user->email}.", '/dashboard', [
+                'translation_params' => ['email' => $user->email],
+            ]);
         }
 
         if ($user->wasChanged('email_verified_at') && $user->email_verified_at) {

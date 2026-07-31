@@ -39,12 +39,12 @@ class RendixPixController extends Controller
 
         if ($order->isPaid()) {
             return redirect()->route('user.orders.show', $order)
-                ->with('success', 'O pagamento Pix deste pedido já foi confirmado.');
+                ->with('success', __('messages.pix_order_already_confirmed'));
         }
 
         if (!$this->gateway?->active || !$this->rendix->isConfigured()) {
             return redirect()->route('user.orders.show', $order)
-                ->with('warning', 'O Pix está temporariamente indisponível. Confira a configuração do gateway.');
+                ->with('warning', __('messages.pix_gateway_unavailable'));
         }
 
         $transaction = $order->paymentTransactions()
@@ -60,7 +60,7 @@ class RendixPixController extends Controller
 
         if ($order->isPaid()) {
             return redirect()->route('user.orders.show', $order)
-                ->with('success', 'Pagamento Pix confirmado!');
+                ->with('success', __('messages.pix_payment_confirmed'));
         }
 
         if (
@@ -71,7 +71,7 @@ class RendixPixController extends Controller
             $transaction = $this->createTransaction($order);
             if (!$transaction || !$transaction->isPayable()) {
                 return redirect()->route('user.orders.show', $order)
-                    ->with('warning', 'Não foi possível gerar o Pix agora. Tente novamente em alguns instantes.');
+                    ->with('warning', __('messages.pix_generation_temporarily_failed'));
             }
         }
 
@@ -99,8 +99,8 @@ class RendixPixController extends Controller
             'status' => $order->isPaid() ? 'paid' : $transaction->status,
             'provider_status' => $transaction->provider_status,
             'message' => $order->isPaid()
-                ? 'Pagamento confirmado!'
-                : ($transaction->failure_message ?: 'Aguardando pagamento Pix.'),
+                ? __('messages.payment_confirmed')
+                : ($transaction->failure_message ?: __('messages.pix_waiting_payment')),
             'expires_at' => $transaction->expires_at?->toIso8601String(),
             'redirect_url' => $order->isPaid() ? route('user.orders.show', $order) : null,
         ]);
@@ -112,7 +112,7 @@ class RendixPixController extends Controller
 
         if ($order->isPaid()) {
             return redirect()->route('user.orders.show', $order)
-                ->with('success', 'Pagamento já confirmado.');
+                ->with('success', __('messages.payment_already_confirmed'));
         }
 
         $latest = $order->paymentTransactions()
@@ -128,7 +128,7 @@ class RendixPixController extends Controller
 
         if ($order->isPaid()) {
             return redirect()->route('user.orders.show', $order)
-                ->with('success', 'Pagamento Pix confirmado!');
+                ->with('success', __('messages.pix_payment_confirmed'));
         }
 
         if ($latest?->environment === $this->rendix->environment() && $latest->isPayable()) {
@@ -153,7 +153,7 @@ class RendixPixController extends Controller
         ]);
 
         if (!$saleId && !$controlNumber) {
-            return response()->json(['success' => false, 'message' => 'Identificador da venda ausente'], 422);
+            return response()->json(['success' => false, 'message' => __('messages.pix_sale_identifier_missing')], 422);
         }
 
         $transaction = PaymentTransaction::query()
@@ -171,7 +171,7 @@ class RendixPixController extends Controller
         if (!$transaction) {
             Log::warning('Rendix Pix webhook sale not found', ['sale_id' => $saleId]);
 
-            return response()->json(['success' => false, 'message' => 'Venda não encontrada'], 404);
+            return response()->json(['success' => false, 'message' => __('messages.pix_sale_not_found')], 404);
         }
 
         // O webhook é apenas um gatilho. A confirmação é sempre consultada na API autenticada.
@@ -191,12 +191,12 @@ class RendixPixController extends Controller
             $response = $this->rendix->getTermsDocument();
         } catch (\Throwable $e) {
             Log::warning('Rendix Pix terms document failed', ['message' => $e->getMessage()]);
-            abort(502, 'Não foi possível carregar os Termos e Condições da Rendix.');
+            abort(502, __('messages.rendix_terms_load_failed'));
         }
         $contents = base64_decode((string) data_get($response, 'data.fileContents', ''), true);
 
         if (!$response['ok'] || $contents === false || !str_starts_with($contents, '%PDF')) {
-            abort(502, 'Não foi possível carregar os Termos e Condições da Rendix.');
+            abort(502, __('messages.rendix_terms_load_failed'));
         }
 
         $filename = basename((string) data_get($response, 'data.fileDownloadName', 'termos-rendix.pdf'));
@@ -235,7 +235,7 @@ class RendixPixController extends Controller
             $message = trim((string) data_get($response, 'data.message', ''));
             $this->markCreationFailed(
                 $transaction,
-                $message !== '' ? $message : 'A Rendix não conseguiu criar a venda Pix.',
+                $message !== '' ? $message : __('messages.pix_sale_creation_failed'),
                 (string) $response['status'],
             );
 
@@ -248,7 +248,7 @@ class RendixPixController extends Controller
         $qr = trim((string) data_get($sale, 'qrCodeBase64', ''));
 
         if ($saleId === '' || $pix === '' || $qr === '') {
-            $this->markCreationFailed($transaction, 'A Rendix retornou uma venda Pix incompleta.');
+            $this->markCreationFailed($transaction, __('messages.pix_incomplete_sale'));
 
             return $transaction->fresh();
         }
@@ -276,7 +276,7 @@ class RendixPixController extends Controller
         $order->update([
             'payment_status' => 'pending',
             'payment_response_code' => '2',
-            'payment_response_message' => 'Pix gerado e aguardando pagamento.',
+            'payment_response_message' => __('messages.pix_generated_waiting_payment'),
             'payment_currency' => 'BRL',
             'payment_amount' => data_get($sale, 'priceNationalCurrency'),
             'payment_exchange_rate' => data_get($sale, 'vetTax'),
@@ -305,7 +305,7 @@ class RendixPixController extends Controller
         $order = $transaction->order;
         $this->events->record(
             'payment',
-            'Falha ao gerar Pix',
+            __('messages.pix_generation_failure_title'),
             $message,
             'error',
             $order?->user_id,
@@ -323,7 +323,7 @@ class RendixPixController extends Controller
     private function authorizeOrder(Order $order): void
     {
         if (!auth()->check() || (int) auth()->id() !== (int) $order->user_id) {
-            abort(403, 'Acesso negado ao pedido.');
+            abort(403, __('messages.order_access_denied'));
         }
     }
 }

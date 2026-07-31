@@ -17,11 +17,11 @@ class IntegrationHeartbeatController extends Controller
 
         if ($configuredToken === '') {
             Log::error('Integration monitor endpoint is disabled because its token is not configured.');
-            return response()->json(['message' => 'Monitor não configurado.'], 503);
+            return response()->json(['message' => __('messages.integration_monitor_not_configured')], 503);
         }
 
         if ($receivedToken === '' || !hash_equals($configuredToken, $receivedToken)) {
-            return response()->json(['message' => 'Não autorizado.'], 401);
+            return response()->json(['message' => __('messages.unauthorized')], 401);
         }
 
         $data = $request->validate([

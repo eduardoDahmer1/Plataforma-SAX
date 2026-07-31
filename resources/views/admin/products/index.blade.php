@@ -39,7 +39,7 @@
                         @php
                             $highlightsValues = json_decode($product->highlights ?? '{}', true);
                             $lastEditedAt = $product->admin_edited_at ?? $product->updated_at;
-                            $lastEditedBy = $product->editor?->name ?? 'Sistema / integração';
+                            $lastEditedBy = $product->editor?->name ?? __('messages.product_audit_system_integration');
 
                             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                                 $imageUrl = asset('storage/' . $product->photo);
@@ -103,14 +103,14 @@
                                         </span>
                                     </div>
                                     <div class="d-flex flex-wrap align-items-center gap-2 x-small text-muted mt-1">
-                                        <span title="Data e hora da última edição registrada">
+                                        <span title="{{ __('messages.product_audit_datetime_title') }}">
                                             <i class="far fa-clock me-1"></i>
-                                            Atualizado em {{ $lastEditedAt?->format('d/m/Y \à\s H:i') ?? 'data não registrada' }}
+                                            {{ __('messages.product_audit_updated_at', ['date' => $lastEditedAt?->format('d/m/Y \à\s H:i') ?? __('messages.product_audit_date_not_registered')]) }}
                                         </span>
                                         <span class="d-none d-sm-inline">•</span>
-                                        <span title="Responsável pela última edição registrada">
+                                        <span title="{{ __('messages.product_audit_responsible_title') }}">
                                             <i class="far fa-user me-1"></i>
-                                            Por {{ $lastEditedBy }}
+                                            {{ __('messages.product_audit_by', ['name' => $lastEditedBy]) }}
                                         </span>
                                     </div>
                                 </div>

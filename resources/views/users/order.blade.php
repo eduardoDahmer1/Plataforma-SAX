@@ -80,10 +80,10 @@
             <div class="sax-order-message is-warning mb-4">
                 <i class="fa-brands fa-pix"></i>
                 <div>
-                    <strong>Seu Pix ainda está pendente.</strong>
-                    <span>Abra o QR Code para pagar ou gerar um novo código caso o anterior tenha expirado.</span>
+                    <strong>{{ __('messages.order_pix_pending_title') }}</strong>
+                    <span>{{ __('messages.order_pix_pending_body') }}</span>
                     <a href="{{ route('checkout.rendix.pix', $order->id) }}" class="sax-order-message__action">
-                        <i class="fas fa-qrcode"></i> Abrir pagamento Pix
+                        <i class="fas fa-qrcode"></i> {{ __('messages.order_pix_open_payment') }}
                     </a>
                 </div>
             </div>
@@ -165,7 +165,7 @@
 
                         @if ($order->payment_method === 'rendix_pix' && $order->payment_currency === 'BRL' && $order->payment_amount)
                             <div class="sax-order-pyg-summary mt-3">
-                                <span>Valor processado pela Rendix</span>
+                                <span>{{ __('messages.order_pix_processed_value') }}</span>
                                 <strong>R$ {{ number_format((float) $order->payment_amount, 2, ',', '.') }}</strong>
                                 @if ($order->payment_exchange_rate)
                                     <small>Taxa informada pela Rendix: {{ number_format((float) $order->payment_exchange_rate, 4, ',', '.') }}</small>
@@ -212,7 +212,7 @@
                             <div class="mt-3">
                                 <a href="{{ route('checkout.rendix.pix', $order->id) }}"
                                    class="btn btn-outline-success btn-sax-sm w-100 py-2">
-                                    <i class="fa-brands fa-pix me-2"></i> Abrir ou gerar Pix
+                                    <i class="fa-brands fa-pix me-2"></i> {{ __('messages.order_pix_open_or_generate') }}
                                 </a>
                             </div>
                         @endif

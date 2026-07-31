@@ -58,11 +58,11 @@ final class CustomerDocument
     public static function validationMessage(string $type): string
     {
         return match ($type) {
-            self::CPF => 'Informe um CPF brasileiro válido, com 11 dígitos.',
-            self::RG_BR => 'Informe um RG brasileiro válido, com 5 a 10 caracteres.',
-            self::CI_PY => 'Informe uma cédula paraguaia válida, com 5 a 10 dígitos.',
-            self::RUC_PY => 'Informe um RUC paraguaio válido, incluindo o dígito verificador.',
-            default => 'Selecione o tipo e informe um documento válido.',
+            self::CPF => __('messages.document_invalid_cpf'),
+            self::RG_BR => __('messages.document_invalid_rg_br'),
+            self::CI_PY => __('messages.document_invalid_ci_py'),
+            self::RUC_PY => __('messages.document_invalid_ruc_py'),
+            default => __('messages.document_invalid_generic'),
         };
     }
 

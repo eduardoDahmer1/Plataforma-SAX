@@ -2006,7 +2006,7 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
             })
             .then(async res => {
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data.message || 'Erro ao atualizar');
+                if (!res.ok) throw new Error(data.message || window.saxTranslations?.update_error || 'messages.update_error');
                 return data;
             })
             .then(data => {
@@ -2030,7 +2030,7 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
                 }
             })
             .catch((error) => {
-                alert(error.message || 'Erro ao atualizar');
+                alert(error.message || window.saxTranslations?.update_error || 'messages.update_error');
                 this.checked = !this.checked;
             });
         });
@@ -2046,7 +2046,7 @@ document.addEventListener('DOMContentLoaded', function () {
         Chart.defaults.font.family = 'Montserrat, Arial, sans-serif';
         Chart.defaults.color = '#667085';
         const grid = { color: 'rgba(16,24,40,.06)' };
-        new Chart(document.getElementById('trafficChart'), { type: 'line', data: { labels: read('trafficLabels'), datasets: [{ label: 'Páginas vistas', data: read('trafficViews'), borderColor: '#2970ff', backgroundColor: 'rgba(41,112,255,.1)', fill: true, tension: .35, pointRadius: 2 }, { label: 'Visitantes únicos', data: read('trafficVisitors'), borderColor: '#b39154', backgroundColor: 'transparent', tension: .35, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid }, x: { grid: { display: false } } } } });
+        new Chart(document.getElementById('trafficChart'), { type: 'line', data: { labels: read('trafficLabels'), datasets: [{ label: root.dataset.trafficViewsLabel, data: read('trafficViews'), borderColor: '#2970ff', backgroundColor: 'rgba(41,112,255,.1)', fill: true, tension: .35, pointRadius: 2 }, { label: root.dataset.trafficVisitorsLabel, data: read('trafficVisitors'), borderColor: '#b39154', backgroundColor: 'transparent', tension: .35, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid }, x: { grid: { display: false } } } } });
         const doughnut = (id, labels, data, colors) => new Chart(document.getElementById(id), { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } } });
         doughnut('paymentsChart', read('paymentLabels'), read('paymentValues'), ['#2970ff','#b39154','#12b76a','#98a2b3']);
         doughnut('ordersChart', read('orderLabels'), read('orderValues'), ['#12b76a','#f79009','#2970ff','#d92d20','#7f56d9','#98a2b3']);

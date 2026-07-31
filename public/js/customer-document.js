@@ -1,11 +1,12 @@
 (function () {
     'use strict';
 
+    const i18n = window.saxTranslations || {};
     const messages = {
-        cpf: 'Informe um CPF brasileiro válido, com 11 dígitos.',
-        rg_br: 'Informe um RG brasileiro válido, com 5 a 10 caracteres.',
-        ci_py: 'Informe uma cédula paraguaia válida, com 5 a 10 dígitos.',
-        ruc_py: 'Informe um RUC paraguaio válido, incluindo o dígito verificador.'
+        cpf: i18n.document_invalid_cpf,
+        rg_br: i18n.document_invalid_rg_br,
+        ci_py: i18n.document_invalid_ci_py,
+        ruc_py: i18n.document_invalid_ruc_py
     };
 
     function digits(value) {
@@ -107,7 +108,7 @@
 
         const validate = function (showFeedback) {
             const valid = isValid(input.value, type.value);
-            const message = valid ? '' : (messages[type.value] || 'Informe um documento válido.');
+            const message = valid ? '' : (messages[type.value] || i18n.document_invalid || 'messages.document_invalid_generic');
             input.setCustomValidity(message);
             input.classList.toggle('is-invalid', showFeedback && !valid);
             type.classList.toggle('is-invalid', showFeedback && !valid);

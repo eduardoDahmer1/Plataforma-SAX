@@ -29,14 +29,14 @@
             <button type="button" class="sax-payment-method" id="btn-deposito" data-payment-method="deposito" aria-pressed="false">
                 <i class="fa fa-university mb-2 d-block"></i>
                 {{ __('messages.deposito_transferencia') }}
-                <span class="sax-payment-caption">Transferencia o deposito bancario</span>
+                <span class="sax-payment-caption">{{ __('messages.checkout_deposit_caption') }}</span>
             </button>
 
             @if ($hasBancardV2)
                 <button type="button" class="sax-payment-method" id="btn-bancard_v2" data-payment-method="bancard_v2" aria-pressed="false">
                     <i class="fa fa-credit-card mb-2 d-block"></i>
                     {{ __('messages.checkout_bancard_label') }}
-                    <span class="sax-payment-caption">Cartão internacional · QR somente no Paraguai</span>
+                    <span class="sax-payment-caption">{{ __('messages.checkout_bancard_caption') }}</span>
                 </button>
             @endif
 
@@ -86,15 +86,15 @@
             <div class="sax-bancard-currency-notice__head">
                 <i class="fa-solid fa-money-bill-transfer"></i>
                 <div>
-                    <span>Moeda processada pelo Bancard</span>
-                    <strong>Guarani paraguaio (PYG)</strong>
+                    <span>{{ __('messages.checkout_bancard_processed_currency') }}</span>
+                    <strong>{{ __('messages.checkout_pyg_currency') }}</strong>
                 </div>
                 <strong class="sax-bancard-currency-notice__amount" id="bancard-pyg-total">
                     {{ $pygSign }} {{ number_format($totalPedido * $pygRate, 0, ',', '.') }}
                 </strong>
             </div>
             <p class="mb-0" id="bancard-country-warning">
-                O valor exibido em outra moeda é uma referência. A cobrança do cartão será enviada ao Bancard em guaranis.
+                {{ __('messages.checkout_bancard_currency_reference') }}
             </p>
         </div>
     </div>
@@ -116,22 +116,22 @@
                 <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-light sax-order-item-row">
                     <div class="sax-cart-img-wrapper sax-order-item-image-wrap">
                         <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
-                             alt="{{ $item->product->external_name ?? 'Produto' }}" class="img-fluid">
+                             alt="{{ $item->product->external_name ?? __('messages.table_product') }}" class="img-fluid">
                     </div>
                     <div class="flex-grow-1">
                         <p class="mb-0 sax-item-name text-truncate sax-order-item-name">
-                            {{ $item->product->external_name ?? 'Produto' }}
+                            {{ $item->product->external_name ?? __('messages.table_product') }}
                         </p>
                         <small class="text-muted d-block">{{ __('messages.quantidade') }}: {{ $item->quantity }}</small>
                         <small class="text-muted d-block">SKU: {{ $item->product->sku ?? '-' }}</small>
 
                         @if ($productSize !== '')
-                            <small class="text-muted d-block">Tamanho: {{ $productSize }}</small>
+                            <small class="text-muted d-block">{{ __('messages.tamanho') }}: {{ $productSize }}</small>
                         @endif
 
                         @if ($productColor !== '')
                             <small class="text-muted d-block sax-item-color-wrap">
-                                Cor:
+                                {{ __('messages.cor') }}:
                                 @if ($isHexColor)
                                     <i class="sax-item-color-dot" style="--item-color: {{ $normalizedColor }};"></i>
                                     {{ $normalizedColor }}
@@ -204,21 +204,21 @@
     <div class="sax-checkout-box mt-4">
         <div id="terms-validation-message" class="alert alert-warning border-0 rounded-3 mb-3 {{ $errors->has('accept_terms') ? '' : 'd-none' }}" role="alert">
             <i class="fa fa-info-circle me-2"></i>
-            <strong>Só falta uma confirmação:</strong> para continuar com sua compra, confirme que você leu e aceita nossas políticas e termos.
+            <strong>{{ __('messages.checkout_terms_confirmation_title') }}</strong> {{ __('messages.checkout_terms_confirmation_body') }}
         </div>
         <div class="form-check d-flex align-items-start gap-2 m-0">
             <input class="form-check-input mt-1" type="checkbox" name="accept_terms" value="1" id="accept_terms" @checked(old('accept_terms'))>
             <label class="form-check-label text-start" for="accept_terms">
-                Confirmo que li e aceito as
+                {{ __('messages.checkout_terms_accept_prefix') }}
                 <button type="button" class="btn btn-link d-inline p-0 align-baseline fw-bold text-decoration-underline"
                         data-bs-toggle="modal" data-bs-target="#checkoutPoliciesModal">
-                    Políticas de Privacidade, Compras, Vendas e Envios
+                    {{ __('messages.checkout_terms_policies_link') }}
                 </button>.
-                <span class="d-block small text-muted mt-1">O aceite é obrigatório para finalizar sua compra.</span>
+                <span class="d-block small text-muted mt-1">{{ __('messages.checkout_terms_required_note') }}</span>
             </label>
         </div>
         @error('accept_terms')
-            <div class="text-danger small mt-2">Você precisa aceitar as políticas e os termos para finalizar a compra.</div>
+            <div class="text-danger small mt-2">{{ __('messages.checkout_terms_required_error') }}</div>
         @enderror
     </div>
 
@@ -228,9 +228,9 @@
                 <div class="modal-header border-bottom px-4 py-3">
                     <div>
                         <span class="d-block small text-muted text-uppercase fw-bold tracking-wider">SAX Department</span>
-                        <h2 class="modal-title h4 fw-bold mb-0" id="checkoutPoliciesModalLabel">Políticas e Termos</h2>
+                        <h2 class="modal-title h4 fw-bold mb-0" id="checkoutPoliciesModalLabel">{{ __('messages.checkout_policies_title') }}</h2>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('messages.fechar') }}"></button>
                 </div>
 
                 <div class="modal-body p-4 p-lg-5">
@@ -238,15 +238,15 @@
                         <article class="checkout-policy-content {{ !$loop->last ? 'border-bottom pb-4 mb-4' : '' }}">
                             <h3 class="h5 fw-bold mb-3">{{ $policy->title }}</h3>
                             {!! $policy->content !!}
-                            <p class="small text-muted mb-0 mt-3">Última atualização: {{ $policy->updated_at->format('d/m/Y') }}</p>
+                            <p class="small text-muted mb-0 mt-3">{{ __('messages.checkout_policy_last_update', ['date' => $policy->updated_at->format('d/m/Y')]) }}</p>
                         </article>
                     @empty
-                        <div class="alert alert-light border mb-0">As políticas não estão disponíveis no momento.</div>
+                        <div class="alert alert-light border mb-0">{{ __('messages.checkout_policies_unavailable') }}</div>
                     @endforelse
                 </div>
 
                 <div class="modal-footer border-top px-4 py-3">
-                    <button type="button" class="btn btn-dark px-4" data-bs-dismiss="modal">Li e compreendi</button>
+                    <button type="button" class="btn btn-dark px-4" data-bs-dismiss="modal">{{ __('messages.checkout_policies_understood') }}</button>
                 </div>
             </div>
         </div>
@@ -266,7 +266,8 @@
     window.translations = {
         payment_bancard: "{{ __('messages.instrucao_pagamento_bancard') }}",
         payment_pix: @json(__('messages.checkout_pix_instruction')),
-        payment_deposito: "{{ __('messages.instrucao_pagamento_deposito') }}"
+        payment_deposito: "{{ __('messages.instrucao_pagamento_deposito') }}",
+        document_invalid: @json(__('messages.document_invalid_generic'))
     };
 
     window.cuponTexts = {

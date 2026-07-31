@@ -39,20 +39,20 @@
                         @enderror
                     </div>
 
-                    <div class="auth-section-label">Dados para compra</div>
+                    <div class="auth-section-label">{{ __('messages.dados_para_compra') }}</div>
 
                     @php
                         $registerDocumentType = old('document_type', old('phone_country', '595') === '55' ? 'cpf' : 'ci_py');
                     @endphp
                     <div class="form-group" data-document-group>
                         <div class="d-flex gap-2">
-                            <select class="form-input flex-shrink-0" style="width: 145px;" name="document_type" data-document-type required aria-label="Tipo de documento">
-                                <option value="cpf" {{ $registerDocumentType === 'cpf' ? 'selected' : '' }}>CPF Brasil</option>
-                                <option value="rg_br" {{ $registerDocumentType === 'rg_br' ? 'selected' : '' }}>RG Brasil</option>
-                                <option value="ci_py" {{ $registerDocumentType === 'ci_py' ? 'selected' : '' }}>CI Paraguai</option>
-                                <option value="ruc_py" {{ $registerDocumentType === 'ruc_py' ? 'selected' : '' }}>RUC Paraguai</option>
+                            <select class="form-input flex-shrink-0" style="width: 145px;" name="document_type" data-document-type required aria-label="{{ __('messages.document_type') }}">
+                                <option value="cpf" {{ $registerDocumentType === 'cpf' ? 'selected' : '' }}>{{ __('messages.document_type_cpf_br') }}</option>
+                                <option value="rg_br" {{ $registerDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
+                                <option value="ci_py" {{ $registerDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
+                                <option value="ruc_py" {{ $registerDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
                             </select>
-                            <input id="document" class="form-input flex-grow-1 @error('document') is-invalid @enderror" style="min-width: 0;" type="text" name="document" value="{{ old('document') }}" placeholder="Documento" required autocomplete="off" data-document-input />
+                            <input id="document" class="form-input flex-grow-1 @error('document') is-invalid @enderror" style="min-width: 0;" type="text" name="document" value="{{ old('document') }}" placeholder="{{ __('messages.label_documento') }}" required autocomplete="off" data-document-input />
                         </div>
                         <div class="sax-auth-field-error" data-document-feedback style="display:none;"></div>
                         @error('document')

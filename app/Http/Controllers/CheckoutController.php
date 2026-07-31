@@ -111,20 +111,20 @@ class CheckoutController extends Controller
         if ($request->input('payment_method') === RendixPixService::PROVIDER) {
             if ($documentType !== CustomerDocument::CPF) {
                 throw ValidationException::withMessages([
-                    'document' => 'Para pagar com Pix, selecione CPF brasileiro como tipo de documento.',
+                    'document' => __('messages.checkout_pix_requires_cpf'),
                 ]);
             }
 
             if ((string) $request->input('phone_country') !== '55') {
                 throw ValidationException::withMessages([
-                    'phone' => 'Para pagar com Pix, selecione Brasil (+55) e informe um celular brasileiro.',
+                    'phone' => __('messages.checkout_pix_requires_brazilian_phone'),
                 ]);
             }
 
             $rendixGateway = RendixPixService::gateway();
             if (!$rendixGateway?->active || !RendixPixService::fromPaymentMethod($rendixGateway)->isConfigured()) {
                 throw ValidationException::withMessages([
-                    'payment_method' => 'O Pix está temporariamente indisponível. Escolha outra forma de pagamento.',
+                    'payment_method' => __('messages.checkout_pix_unavailable'),
                 ]);
             }
         }

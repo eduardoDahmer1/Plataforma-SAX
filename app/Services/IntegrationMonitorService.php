@@ -25,7 +25,7 @@ class IntegrationMonitorService
         $monitor = DB::transaction(function () use ($payload, $occurredAt, $event, &$notifyFailure, &$notifyRecovery) {
             IntegrationMonitor::query()->firstOrCreate(
                 ['source' => $payload['source']],
-                ['name' => $payload['name'] ?? 'Integração de produtos']
+                ['name' => $payload['name'] ?? __('messages.integration_products_title')]
             );
 
             $monitor = IntegrationMonitor::query()
@@ -101,7 +101,7 @@ class IntegrationMonitorService
                 || $monitor->last_failure_notification_at === null
                 || $monitor->last_failure_notification_at->lte(now()->subMinutes($cooldownMinutes));
 
-            $message = mb_substr((string) ($payload['error_message'] ?? 'A integração terminou com erro.'), 0, 2000);
+            $message = mb_substr((string) ($payload['error_message'] ?? __('messages.integration_finished_with_error')), 0, 2000);
             $code = mb_substr((string) ($payload['error_code'] ?? 'integration_failed'), 0, 80);
 
             $run->fill([
@@ -134,7 +134,7 @@ class IntegrationMonitorService
         });
 
         if ($notifyFailure) {
-            $this->sendFailureNotification($monitor, 'integration_failed', 'Falha na integração de produtos');
+            $this->sendFailureNotification($monitor, 'integration_failed', __('messages.integration_failure_title'));
         } elseif ($notifyRecovery) {
             $this->sendRecoveryNotification($monitor);
         }
@@ -162,13 +162,15 @@ class IntegrationMonitorService
                 'status' => 'stale',
                 'outage_started_at' => $monitor->outage_started_at ?: $heartbeat,
                 'error_code' => 'heartbeat_stale',
-                'error_message' => 'O integrador não envia informações desde '.$heartbeat->format('d/m/Y H:i:s')
-                    .' (limite de '.$staleMinutes.' minutos).',
+                'error_message' => __('messages.integration_stale_message', [
+                    'date' => $heartbeat->format('d/m/Y H:i:s'),
+                    'minutes' => $staleMinutes,
+                ]),
                 'last_failure_notification_at' => now(),
             ]);
 
             $marked++;
-            $this->sendFailureNotification($monitor->fresh(), 'integration_stale', 'Integração de produtos sem comunicação');
+            $this->sendFailureNotification($monitor->fresh(), 'integration_stale', __('messages.integration_stale_title'));
         });
 
         return $marked;
@@ -176,7 +178,7 @@ class IntegrationMonitorService
 
     private function sendFailureNotification(IntegrationMonitor $monitor, string $type, string $title): void
     {
-        $message = $monitor->error_message ?: 'A integração de produtos está indisponível.';
+        $message = $monitor->error_message ?: __('messages.integration_unavailable');
         $this->notifications->notifyAdmins($type, $title, mb_substr($message, 0, 500), '/admin#integration-monitor', [
             'source' => $monitor->source,
             'status' => $monitor->status,
@@ -187,11 +189,14 @@ class IntegrationMonitorService
 
     private function sendRecoveryNotification(IntegrationMonitor $monitor): void
     {
-        $message = 'A integração voltou a concluir normalmente. Último sucesso: '.optional($monitor->last_success_at)->format('d/m/Y H:i').'.';
-        $this->notifications->notifyAdmins('integration_recovered', 'Integração de produtos recuperada', $message, '/admin#integration-monitor', [
+        $message = __('messages.integration_recovered_message', [
+            'date' => optional($monitor->last_success_at)->format('d/m/Y H:i'),
+        ]);
+        $title = __('messages.integration_recovered_title');
+        $this->notifications->notifyAdmins('integration_recovered', $title, $message, '/admin#integration-monitor', [
             'source' => $monitor->source,
             'status' => $monitor->status,
         ]);
-        $this->events->record('integration', 'Integração de produtos recuperada', $message, 'success', null, null, $monitor->source);
+        $this->events->record('integration', $title, $message, 'success', null, null, $monitor->source);
     }
 }

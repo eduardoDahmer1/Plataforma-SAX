@@ -66,7 +66,7 @@ class RegisteredUserController extends Controller
             'phone_country.required' => 'Selecione o codigo do pais.',
             'phone_number.required' => 'Informe seu telefone.',
             'phone_number.regex' => 'Informe um telefone valido, sem letras.',
-            'document_type.in' => 'Selecione um tipo de documento válido.',
+            'document_type.in' => __('messages.document_type_invalid'),
             'password.required' => 'Informe uma senha.',
             'password.confirmed' => 'A confirmacao da senha nao confere.',
             'password.min' => 'A senha deve ter pelo menos :min caracteres.',

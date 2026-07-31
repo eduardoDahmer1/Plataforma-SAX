@@ -204,7 +204,7 @@ class PaymentMethodController extends Controller
             && !\App\Services\RendixPixService::fromPaymentMethod($payment)->isConfigured()
         ) {
             return response()->json([
-                'message' => 'Configure as credenciais do ambiente Rendix selecionado antes de ativar o Pix.',
+                'message' => __('messages.rendix_credentials_required'),
             ], 422);
         }
 
@@ -343,20 +343,20 @@ class PaymentMethodController extends Controller
         }
 
         $prefix = $request->boolean('rendix_sandbox') ? 'sandbox' : 'production';
-        $labels = $prefix === 'sandbox' ? 'Sandbox' : 'Produção';
+        $labels = $prefix === 'sandbox' ? __('messages.environment_sandbox') : __('messages.environment_production');
         $errors = [];
 
         if (!filled($request->input($prefix . '_email'))) {
-            $errors[$prefix . '_email'] = "Informe o e-mail Rendix de {$labels} antes de ativar o Pix.";
+            $errors[$prefix . '_email'] = __('messages.rendix_email_required', ['environment' => $labels]);
         }
         if (!filled($request->input($prefix . '_merchant_id'))) {
-            $errors[$prefix . '_merchant_id'] = "Informe o MerchantId Rendix de {$labels} antes de ativar o Pix.";
+            $errors[$prefix . '_merchant_id'] = __('messages.rendix_merchant_id_required', ['environment' => $labels]);
         }
         if (!filled($request->input($prefix . '_password')) && empty($existing[$prefix . '_password'])) {
-            $errors[$prefix . '_password'] = "Informe a senha Rendix de {$labels} antes de ativar o Pix.";
+            $errors[$prefix . '_password'] = __('messages.rendix_password_required', ['environment' => $labels]);
         }
         if ($prefix === 'production' && !filled($request->input('production_base_url'))) {
-            $errors['production_base_url'] = 'Informe a URL base de produção fornecida pela Rendix.';
+            $errors['production_base_url'] = __('messages.rendix_production_url_required');
         }
 
         if ($errors !== []) {

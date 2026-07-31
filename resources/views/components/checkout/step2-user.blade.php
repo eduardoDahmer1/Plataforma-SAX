@@ -4,7 +4,7 @@
             <span class="step-number">02</span> {{ __('messages.passo_dados_pessoais') }}
         </h4>
 
-        <p class="sax-step-helper">Revise seus dados de contato para receber as atualizacoes do pedido.</p>
+        <p class="sax-step-helper">{{ __('messages.checkout_review_contact_data') }}</p>
 
         <div class="row g-4">
             <div class="col-md-6 sax-input-group">
@@ -24,11 +24,11 @@
             <div class="col-md-6 sax-input-group" data-document-group>
                 <label>{{ __('messages.documento_identidade') }} *</label>
                 <div class="d-flex gap-2">
-                    <select name="document_type" class="sax-form-control flex-shrink-0" style="width: 150px;" data-document-type required aria-label="Tipo de documento">
-                        <option value="cpf" {{ $checkoutDocumentType === 'cpf' ? 'selected' : '' }}>CPF Brasil</option>
-                        <option value="rg_br" {{ $checkoutDocumentType === 'rg_br' ? 'selected' : '' }}>RG Brasil</option>
-                        <option value="ci_py" {{ $checkoutDocumentType === 'ci_py' ? 'selected' : '' }}>CI Paraguai</option>
-                        <option value="ruc_py" {{ $checkoutDocumentType === 'ruc_py' ? 'selected' : '' }}>RUC Paraguai</option>
+                    <select name="document_type" class="sax-form-control flex-shrink-0" style="width: 150px;" data-document-type required aria-label="{{ __('messages.document_type') }}">
+                        <option value="cpf" {{ $checkoutDocumentType === 'cpf' ? 'selected' : '' }}>{{ __('messages.document_type_cpf_br') }}</option>
+                        <option value="rg_br" {{ $checkoutDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
+                        <option value="ci_py" {{ $checkoutDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
+                        <option value="ruc_py" {{ $checkoutDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
                     </select>
                     <input type="text" name="document" class="sax-form-control flex-grow-1" style="min-width: 0;"
                         value="{{ $checkoutDocument }}" autocomplete="off" data-document-input required>

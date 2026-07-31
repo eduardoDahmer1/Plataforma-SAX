@@ -90,11 +90,11 @@
             @endphp
             <div class="sax-auth-field" data-document-group>
               <div class="sax-auth-phone-row">
-                <select name="document_type" class="form-select sax-auth-phone-country" data-document-type required aria-label="Tipo de documento">
-                  <option value="cpf" {{ $modalDocumentType === 'cpf' ? 'selected' : '' }}>CPF Brasil</option>
-                  <option value="rg_br" {{ $modalDocumentType === 'rg_br' ? 'selected' : '' }}>RG Brasil</option>
-                  <option value="ci_py" {{ $modalDocumentType === 'ci_py' ? 'selected' : '' }}>CI Paraguai</option>
-                  <option value="ruc_py" {{ $modalDocumentType === 'ruc_py' ? 'selected' : '' }}>RUC Paraguai</option>
+                <select name="document_type" class="form-select sax-auth-phone-country" data-document-type required aria-label="{{ __('messages.document_type') }}">
+                  <option value="cpf" {{ $modalDocumentType === 'cpf' ? 'selected' : '' }}>{{ __('messages.document_type_cpf_br') }}</option>
+                  <option value="rg_br" {{ $modalDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
+                  <option value="ci_py" {{ $modalDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
+                  <option value="ruc_py" {{ $modalDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
                 </select>
                 <input id="register_document" type="text" name="document" value="{{ old('document') }}" placeholder="{{ __('messages.documento_ruc_ci_cpf') }}" required autocomplete="off" data-document-input class="form-control sax-auth-phone-number @error('document') is-invalid @enderror"/>
               </div>

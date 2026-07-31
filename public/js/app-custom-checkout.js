@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const documentGroup = document.querySelector('#step2 [data-document-group]');
         if (documentGroup?.saxValidateDocument && !documentGroup.saxValidateDocument(true)) {
-            showStepAlert(2, document.querySelector('#step2 [data-document-input]')?.validationMessage || 'Informe um documento válido para continuar.');
+            showStepAlert(2, document.querySelector('#step2 [data-document-input]')?.validationMessage || window.translations?.document_invalid || 'messages.document_invalid_generic');
             markFieldInvalid('#step2 input[name="document"]', true);
             return false;
         }

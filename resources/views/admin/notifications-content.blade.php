@@ -82,7 +82,7 @@
         <option value="clients">Clientes</option>
         <option value="contacts">Contatos e currículos</option>
         <option value="catalog">Catálogo e estoque</option>
-        <option value="system">Integrações e sistema</option>
+        <option value="system">{{ __('messages.notifications_integrations_system') }}</option>
     </select>
 </div>
 

@@ -121,15 +121,15 @@
                 <label class="sax-label">{{ __('messages.num_documento') }}</label>
                 <div class="d-flex gap-2">
                     <select name="document_type" class="form-select sax-input flex-shrink-0" style="width: 145px;" data-document-type required>
-                        <option value="cpf" {{ $profileDocumentType === 'cpf' ? 'selected' : '' }}>CPF Brasil</option>
-                        <option value="rg_br" {{ $profileDocumentType === 'rg_br' ? 'selected' : '' }}>RG Brasil</option>
-                        <option value="ci_py" {{ $profileDocumentType === 'ci_py' ? 'selected' : '' }}>CI Paraguai</option>
-                        <option value="ruc_py" {{ $profileDocumentType === 'ruc_py' ? 'selected' : '' }}>RUC Paraguai</option>
+                        <option value="cpf" {{ $profileDocumentType === 'cpf' ? 'selected' : '' }}>{{ __('messages.document_type_cpf_br') }}</option>
+                        <option value="rg_br" {{ $profileDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
+                        <option value="ci_py" {{ $profileDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
+                        <option value="ruc_py" {{ $profileDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
                     </select>
                     <input type="text" name="document" class="form-control sax-input flex-grow-1" style="min-width: 0;"
                         value="{{ $profileDocument }}" autocomplete="off" data-document-input required>
                 </div>
-                <small class="text-muted d-block mt-1">A pontuação é preenchida automaticamente.</small>
+                <small class="text-muted d-block mt-1">{{ __('messages.document_format_automatic') }}</small>
                 <small class="text-danger mt-1" data-document-feedback style="display:none;"></small>
                 @error('document')
                     <small class="text-danger mt-1 d-block">{{ $message }}</small>

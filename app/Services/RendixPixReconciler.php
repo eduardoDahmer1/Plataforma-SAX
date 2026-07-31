@@ -47,7 +47,7 @@ class RendixPixReconciler
         $localStatus = $rendix->localStatus($providerStatus);
 
         if ($localStatus === 'paid' && !$this->matchesExpectedSale($transaction, $sale)) {
-            $message = 'A confirmação Rendix não corresponde ao número, moeda ou valor esperado para o pedido.';
+            $message = __('messages.pix_confirmation_mismatch');
             $transaction->update([
                 'status' => 'verification_failed',
                 'provider_status' => $providerStatus,
@@ -57,7 +57,7 @@ class RendixPixReconciler
             ]);
             $this->events->record(
                 'payment',
-                'Confirmação Pix divergente',
+                __('messages.pix_confirmation_mismatch_title'),
                 $message,
                 'error',
                 $transaction->order?->user_id,

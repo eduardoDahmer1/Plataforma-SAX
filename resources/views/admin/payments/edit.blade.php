@@ -20,7 +20,7 @@
                 @if(isset($method)) @method('PUT') @endif
                 @if ($errors->any())
                     <div class="alert alert-danger border-0 rounded-3 mb-4">
-                        <strong>Revise a configuração:</strong>
+                        <strong>{{ __('messages.review_configuration') }}</strong>
                         <ul class="mb-0 mt-2">
                             @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
                         </ul>

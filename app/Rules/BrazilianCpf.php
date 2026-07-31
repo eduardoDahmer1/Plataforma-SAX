@@ -12,7 +12,7 @@ class BrazilianCpf implements ValidationRule
         $cpf = preg_replace('/\D+/', '', (string) $value);
 
         if (strlen($cpf) !== 11 || preg_match('/^(\d)\1{10}$/', $cpf)) {
-            $fail('Informe um CPF brasileiro válido para pagar com Pix.');
+            $fail($this->validationMessage());
             return;
         }
 
@@ -27,9 +27,16 @@ class BrazilianCpf implements ValidationRule
             $digit = $digit === 10 ? 0 : $digit;
 
             if ((int) $cpf[$position] !== $digit) {
-                $fail('Informe um CPF brasileiro válido para pagar com Pix.');
+                $fail($this->validationMessage());
                 return;
             }
         }
+    }
+
+    private function validationMessage(): string
+    {
+        return app()->bound('translator')
+            ? __('messages.pix_valid_cpf_required')
+            : 'messages.pix_valid_cpf_required';
     }
 }

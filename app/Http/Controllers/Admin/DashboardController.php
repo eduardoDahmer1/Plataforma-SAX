@@ -51,9 +51,15 @@ class DashboardController extends Controller
         ];
 
         $paymentMethods = Order::query()
-            ->selectRaw("CASE WHEN payment_method = 'bancard_v2' THEN 'Bancard V2' WHEN payment_method = 'rendix_pix' THEN 'Pix Rendix' WHEN payment_method = 'deposito' THEN 'Depósito' WHEN payment_method = 'whatsapp' THEN 'WhatsApp' ELSE 'Outros' END AS label")
-            ->selectRaw('COUNT(*) AS total')
-            ->groupBy('label')->pluck('total', 'label');
+            ->select('payment_method', DB::raw('COUNT(*) AS total'))
+            ->groupBy('payment_method')
+            ->pluck('total', 'payment_method')
+            ->mapWithKeys(fn ($total, $method) => [[
+                'bancard_v2' => 'Bancard V2',
+                'rendix_pix' => 'Pix Rendix',
+                'deposito' => __('messages.payment_deposit'),
+                'whatsapp' => 'WhatsApp',
+            ][$method] ?? __('messages.payment_other') => $total]);
 
         $orderStatuses = Order::select('status', DB::raw('COUNT(*) AS total'))
             ->groupBy('status')->pluck('total', 'status');
@@ -127,9 +133,9 @@ class DashboardController extends Controller
     public function report(string $period): Response
     {
         [$start, $label] = match ($period) {
-            'today' => [now()->startOfDay(), 'Hoje'],
-            'week' => [now()->subDays(6)->startOfDay(), 'Últimos 7 dias'],
-            'month' => [now()->startOfMonth(), 'Mês atual'],
+            'today' => [now()->startOfDay(), __('messages.period_today')],
+            'week' => [now()->subDays(6)->startOfDay(), __('messages.period_last_seven_days')],
+            'month' => [now()->startOfMonth(), __('messages.period_current_month')],
         };
         $end = now()->endOfDay();
         $orders = Order::whereBetween('created_at', [$start, $end]);

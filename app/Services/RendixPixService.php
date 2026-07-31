@@ -169,15 +169,15 @@ class RendixPixService
     public function statusDescription(string $providerStatus): string
     {
         return match ($providerStatus) {
-            '1' => 'Venda Pix iniciada.',
-            '2' => 'Pix aguardando pagamento.',
-            '3' => 'Pagamento Pix confirmado.',
-            '6' => 'O QR Code Pix expirou sem pagamento.',
-            '8' => 'O CPF de quem pagou é diferente do CPF informado na compra.',
-            '9' => 'O limite de pagamento do CPF foi excedido.',
-            '11' => 'A Rendix informou um erro ao processar a venda.',
-            '12' => 'Pagamento Pix cancelado e reembolsado.',
-            default => 'Pagamento Pix aguardando confirmação.',
+            '1' => __('messages.pix_status_created'),
+            '2' => __('messages.pix_status_pending'),
+            '3' => __('messages.pix_status_paid'),
+            '6' => __('messages.pix_status_expired'),
+            '8' => __('messages.pix_status_cpf_mismatch'),
+            '9' => __('messages.pix_status_cpf_limit'),
+            '11' => __('messages.pix_status_processing_error'),
+            '12' => __('messages.pix_status_refunded'),
+            default => __('messages.pix_status_waiting_confirmation'),
         };
     }
 
@@ -238,7 +238,7 @@ class RendixPixService
     private function accessToken(): string
     {
         if (!$this->isConfigured()) {
-            throw new \RuntimeException('Credenciais Rendix Pix não configuradas para o ambiente selecionado.');
+            throw new \RuntimeException(__('messages.rendix_credentials_not_configured'));
         }
 
         $cacheKey = $this->tokenCacheKey();
@@ -264,7 +264,7 @@ class RendixPixService
                 'http_status' => $response->status(),
                 'message' => data_get($body, 'message'),
             ]);
-            throw new \RuntimeException('Não foi possível autenticar na Rendix Pix.');
+            throw new \RuntimeException(__('messages.rendix_authentication_failed'));
         }
 
         $ttlMilliseconds = max(120000, (int) data_get($body, 'data.expirationInMilliSeconds', 3600000));

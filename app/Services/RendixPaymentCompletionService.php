@@ -44,7 +44,7 @@ class RendixPaymentCompletionService
                     'status' => 'paid',
                     'payment_status' => 'paid',
                     'payment_response_code' => '3',
-                    'payment_response_message' => 'Pagamento Pix confirmado pela Rendix.',
+                    'payment_response_message' => __('messages.pix_payment_confirmed_by_rendix'),
                     'payment_failed_at' => null,
                     'payment_currency' => 'BRL',
                     'payment_amount' => data_get($saleData, 'priceNationalCurrency', $lockedTransaction->national_amount),
@@ -73,8 +73,8 @@ class RendixPaymentCompletionService
         if ($newlyPaid) {
             $this->events->record(
                 'payment',
-                'Pagamento Pix confirmado',
-                'A Rendix confirmou o pagamento do pedido.',
+                __('messages.pix_payment_confirmed_title'),
+                __('messages.pix_payment_confirmed_event'),
                 'success',
                 $order->user_id,
                 $order->id,

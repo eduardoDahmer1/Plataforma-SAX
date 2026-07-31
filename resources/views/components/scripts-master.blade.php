@@ -28,6 +28,19 @@
 @endif
 
 <!-- 6. app-custom.js — Scripts globales del frontend (todas las rutas excepto checkout) -->
+@php
+    $saxTranslations = [
+        'update_error' => __('messages.update_error'),
+        'document_invalid' => __('messages.document_invalid_generic'),
+        'document_invalid_cpf' => __('messages.document_invalid_cpf'),
+        'document_invalid_rg_br' => __('messages.document_invalid_rg_br'),
+        'document_invalid_ci_py' => __('messages.document_invalid_ci_py'),
+        'document_invalid_ruc_py' => __('messages.document_invalid_ruc_py'),
+    ];
+@endphp
+<script>
+    window.saxTranslations = Object.assign({}, window.saxTranslations || {}, @json($saxTranslations));
+</script>
 @if(!Route::is('admin.*'))
     <script src="{{ asset('js/customer-document.js') }}?v={{ filemtime(public_path('js/customer-document.js')) }}"></script>
 @endif

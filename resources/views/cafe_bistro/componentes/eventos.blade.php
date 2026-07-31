@@ -11,7 +11,7 @@
                             @foreach($cafeBistro->eventos_galeria as $foto)
                                 <div class="swiper-slide">
                                     <img src="{{ asset('storage/' . $foto) }}"
-                                         alt="Evento"
+                                         alt="{{ __('messages.cafe_event_image_alt') }}"
                                          class="w-100 h-100"
                                          style="object-fit: cover;">
                                 </div>
@@ -20,18 +20,18 @@
                     </div>
                 @else
                     <div class="img-placeholder rounded" style="aspect-ratio: 4/5;">
-                        EVENTOS
+                        {{ __('messages.eventos_label') }}
                     </div>
                 @endif
             </div>
 
             {{-- Texto --}}
             <div class="col-lg-6" data-reveal="right">
-                <span class="eyebrow">{{ $t?->cafe_eventos_subtitulo ?? $cafeBistro->eventos_subtitulo ?? 'Celebrações' }}</span>
+                <span class="eyebrow">{{ $t?->cafe_eventos_subtitulo ?? $cafeBistro->eventos_subtitulo ?? __('messages.cafe_events_subtitle_fallback') }}</span>
                 <div class="divider"></div>
-                <h2 class="section-title mb-4">{{ $t?->cafe_eventos_titulo ?? $cafeBistro->eventos_titulo ?? 'O lugar perfeito para as suas celebrações' }}</h2>
+                <h2 class="section-title mb-4">{{ $t?->cafe_eventos_titulo ?? $cafeBistro->eventos_titulo ?? __('messages.cafe_events_title_fallback') }}</h2>
 
-                {!! nl2br(e($t?->cafe_eventos_texto ?? $cafeBistro->eventos_texto ?? 'Um espaço onde as ideias ganham vida e cada celebração se transforma em uma experiência única.')) !!}
+                {!! nl2br(e($t?->cafe_eventos_texto ?? $cafeBistro->eventos_texto ?? __('messages.cafe_events_text_fallback'))) !!}
 
                 {{-- Tipos de evento --}}
                 @if($cafeBistro->eventos_tipos)
@@ -44,7 +44,7 @@
 
                 {{-- CTA WhatsApp --}}
                 <a href="{{ $cafeBistro->whatsapp_link }}" target="_blank" rel="noopener" class="btn-cafe-white btn-cafe-white--whatsapp">
-                    <i class="bi bi-whatsapp"></i> Fale Conosco
+                    <i class="bi bi-whatsapp"></i> {{ __('messages.fale_conosco') }}
                 </a>
             </div>
 

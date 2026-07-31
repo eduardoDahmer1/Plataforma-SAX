@@ -12,17 +12,14 @@ class IntegrationMonitorService
     public function __construct(
         private AdminNotificationService $notifications,
         private BusinessEventService $events,
-    ) {
-    }
+    ) {}
 
     public function report(array $payload): IntegrationMonitor
     {
         $occurredAt = Carbon::parse($payload['occurred_at'] ?? now());
-        $notifyFailure = false;
-        $notifyRecovery = false;
         $event = (string) $payload['event'];
 
-        $monitor = DB::transaction(function () use ($payload, $occurredAt, $event, &$notifyFailure, &$notifyRecovery) {
+        $monitor = DB::transaction(function () use ($payload, $occurredAt, $event) {
             IntegrationMonitor::query()->firstOrCreate(
                 ['source' => $payload['source']],
                 ['name' => $payload['name'] ?? __('messages.integration_products_title')]
@@ -65,9 +62,6 @@ class IntegrationMonitorService
             }
 
             if ($event === 'succeeded') {
-                $notifyRecovery = $monitor->outage_started_at !== null
-                    || in_array($monitor->status, ['failed', 'stale'], true);
-
                 $run->fill([
                     'status' => 'success',
                     'started_at' => $run->started_at ?: $monitor->last_started_at ?: $occurredAt,
@@ -90,16 +84,12 @@ class IntegrationMonitorService
                     'error_code' => null,
                     'error_message' => null,
                     'duration_seconds' => $duration,
+                    'last_failure_notification_at' => null,
                     'metadata' => $metadata,
                 ])->save();
 
                 return $monitor;
             }
-
-            $cooldownMinutes = max(60, (int) config('services.integration_monitor.alert_cooldown_minutes', 720));
-            $notifyFailure = $monitor->outage_started_at === null
-                || $monitor->last_failure_notification_at === null
-                || $monitor->last_failure_notification_at->lte(now()->subMinutes($cooldownMinutes));
 
             $message = mb_substr((string) ($payload['error_message'] ?? __('messages.integration_finished_with_error')), 0, 2000);
             $code = mb_substr((string) ($payload['error_code'] ?? 'integration_failed'), 0, 80);
@@ -127,30 +117,43 @@ class IntegrationMonitorService
                 'error_message' => $message,
                 'duration_seconds' => $duration,
                 'metadata' => $metadata,
-                'last_failure_notification_at' => $notifyFailure ? now() : $monitor->last_failure_notification_at,
+                'last_failure_notification_at' => $monitor->outage_started_at === null
+                    ? null
+                    : $monitor->last_failure_notification_at,
             ])->save();
 
             return $monitor;
         });
-
-        if ($notifyFailure) {
-            $this->sendFailureNotification($monitor, 'integration_failed', __('messages.integration_failure_title'));
-        } elseif ($notifyRecovery) {
-            $this->sendRecoveryNotification($monitor);
-        }
 
         return $monitor->fresh();
     }
 
     public function checkForStaleIntegrations(): int
     {
-        $staleMinutes = max(30, (int) config('services.integration_monitor.stale_after_minutes', 180));
-        $threshold = now()->subMinutes($staleMinutes);
+        $alertAfterMinutes = max(30, (int) config('services.integration_monitor.failure_alert_after_minutes', 1440));
+        $threshold = now()->subMinutes($alertAfterMinutes);
         $marked = 0;
 
-        IntegrationMonitor::query()->eachById(function (IntegrationMonitor $monitor) use ($threshold, $staleMinutes, &$marked) {
+        IntegrationMonitor::query()->eachById(function (IntegrationMonitor $monitor) use ($threshold, $alertAfterMinutes, &$marked) {
+            if ($monitor->status === 'failed') {
+                $outageStarted = $monitor->outage_started_at ?: $monitor->last_failure_at;
+
+                if (! $outageStarted
+                    || $outageStarted->gt($threshold)
+                    || ($monitor->last_failure_notification_at
+                        && $monitor->last_failure_notification_at->gte($outageStarted))) {
+                    return;
+                }
+
+                $monitor->update(['last_failure_notification_at' => now()]);
+                $marked++;
+                $this->sendFailureNotification($monitor->fresh(), 'integration_failed', __('messages.integration_failure_title'));
+
+                return;
+            }
+
             $heartbeat = $monitor->last_heartbeat_at ?: $monitor->created_at;
-            if (!$heartbeat || $heartbeat->gt($threshold)) {
+            if (! $heartbeat || $heartbeat->gt($threshold)) {
                 return;
             }
 
@@ -164,7 +167,7 @@ class IntegrationMonitorService
                 'error_code' => 'heartbeat_stale',
                 'error_message' => __('messages.integration_stale_message', [
                     'date' => $heartbeat->format('d/m/Y H:i:s'),
-                    'minutes' => $staleMinutes,
+                    'minutes' => $alertAfterMinutes,
                 ]),
                 'last_failure_notification_at' => now(),
             ]);
@@ -183,20 +186,7 @@ class IntegrationMonitorService
             'source' => $monitor->source,
             'status' => $monitor->status,
             'error_code' => $monitor->error_code,
-        ]);
+        ], (bool) config('services.integration_monitor.email_alerts', true));
         $this->events->record('integration', $title, $message, 'error', null, null, $monitor->source);
-    }
-
-    private function sendRecoveryNotification(IntegrationMonitor $monitor): void
-    {
-        $message = __('messages.integration_recovered_message', [
-            'date' => optional($monitor->last_success_at)->format('d/m/Y H:i'),
-        ]);
-        $title = __('messages.integration_recovered_title');
-        $this->notifications->notifyAdmins('integration_recovered', $title, $message, '/admin#integration-monitor', [
-            'source' => $monitor->source,
-            'status' => $monitor->status,
-        ]);
-        $this->events->record('integration', $title, $message, 'success', null, null, $monitor->source);
     }
 }

@@ -5,42 +5,42 @@
 
             {{-- Horários --}}
             <div class="col-lg-6" data-reveal="left">
-                <span class="eyebrow">Funcionamento</span>
+                <span class="eyebrow">{{ __('messages.cafe_opening_label') }}</span>
                 <div class="divider"></div>
-                <h2 class="section-title mb-4">Horários</h2>
+                <h2 class="section-title mb-4">{{ __('messages.horarios') }}</h2>
 
                 @php $horarios = $cafeBistro->horarios ?? []; @endphp
                 <table class="horarios-table w-100">
                     <tbody>
                         <tr>
-                            <td class="horarios-dia">Segunda-feira</td>
+                            <td class="horarios-dia">{{ __('messages.cafe_monday') }}</td>
                             <td class="horarios-hora">{{ $horarios['segunda'] ?? '—' }}</td>
                         </tr>
                         <tr>
-                            <td class="horarios-dia">Terça-feira — Quinta-feira</td>
+                            <td class="horarios-dia">{{ __('messages.cafe_tuesday_thursday') }}</td>
                             <td class="horarios-hora">{{ $horarios['terca_quinta'] ?? '—' }}</td>
                         </tr>
                         <tr>
-                            <td class="horarios-dia">Sexta-feira — Sábado</td>
+                            <td class="horarios-dia">{{ __('messages.cafe_friday_saturday') }}</td>
                             <td class="horarios-hora">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
                         </tr>
                         <tr>
-                            <td class="horarios-dia">Domingo</td>
+                            <td class="horarios-dia">{{ __('messages.domingo') }}</td>
                             <td class="horarios-hora">{{ $horarios['domingo'] ?? '—' }}</td>
                         </tr>
                     </tbody>
                 </table>
 
                 <p class="horarios-nota mt-4">
-                    * Recepção de pedidos até 30 min antes do fechamento
+                    {{ __('messages.cafe_last_order_note') }}
                 </p>
             </div>
 
             {{-- Localização --}}
             <div class="col-lg-6" data-reveal="right">
-                <span class="eyebrow">Localização</span>
+                <span class="eyebrow">{{ __('messages.localizacao_label') }}</span>
                 <div class="divider"></div>
-                <h2 class="section-title mb-4">Onde estamos</h2>
+                <h2 class="section-title mb-4">{{ __('messages.cafe_where_we_are') }}</h2>
 
                 {{-- Mapa --}}
                 @if($cafeBistro->has_mapa)
@@ -57,7 +57,7 @@
                 {{-- Endereço --}}
                 <address class="horarios-endereco">
                     <i class="bi bi-geo-alt me-2"></i>
-                    {{ $t?->cafe_direccion ?? $cafeBistro->direccion ?? 'Shopping Dubai, Pedro Juan Caballero — Paraguai' }}
+                    {{ $t?->cafe_direccion ?? $cafeBistro->direccion ?? __('messages.cafe_address_fallback') }}
                 </address>
             </div>
 

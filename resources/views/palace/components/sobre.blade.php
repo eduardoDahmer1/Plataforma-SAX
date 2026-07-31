@@ -26,7 +26,7 @@
             <div class="col-lg-6 order-1 order-lg-2 palace-reveal" data-aos="zoom-in">
                 <div class="palace-image-frame">
                     <img src="{{ $palace->hero_imagem ? asset('storage/' . $palace->hero_imagem) : 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b' }}"
-                         class="palace-image-frame__img" alt="Palace Interior" loading="lazy">
+                         class="palace-image-frame__img" alt="{{ __('messages.palace_interior_image_alt') }}" loading="lazy">
                     <div class="palace-image-frame__accent d-none d-md-block"></div>
                 </div>
             </div>

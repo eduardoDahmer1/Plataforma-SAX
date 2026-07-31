@@ -15,7 +15,7 @@
             <div class="col-lg-6 position-relative" data-aos="fade-right">
                 <div class="image-stack">
                     <div class="main-img-wrapper">
-                        <img src="{{ $institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/800x600' }}" class="img-fluid about-img-1" alt="SAX Experience">
+                        <img src="{{ $institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/800x600' }}" class="img-fluid about-img-1" alt="{{ __('messages.institutional_about_image_alt') }}">
                     </div>
                     <div class="experience-card" data-aos="zoom-in" data-aos-delay="400">
                         <span class="card-number">20</span>
@@ -52,7 +52,7 @@
 
     <div class="about-banner-parallax">
         <div class="parallax-overlay"></div>
-        <img src="{{ $parallaxImage }}" class="parallax-img" alt="Luxury Interior"
+        <img src="{{ $parallaxImage }}" class="parallax-img" alt="{{ __('messages.institutional_interior_image_alt') }}"
              data-scenery-pool="{{ $sceneryUrls->toJson() }}">
         
         <div class="parallax-content text-center position-relative z-index-2">

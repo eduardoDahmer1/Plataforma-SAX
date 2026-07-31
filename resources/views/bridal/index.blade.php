@@ -1,6 +1,6 @@
 @extends('layout.internas')
 
-@section('title', $bridal->title ?? 'SAX Bridal')
+@section('title', $bridal->title ?? __('messages.seo_bridal_title'))
 
 @php
     // Traducción activa: cada texto y lista cae al idioma actual, con fallback
@@ -27,9 +27,9 @@
       'title'           => $t?->bridal_hero_title       ?? $bridal->hero_title,
       'description'     => $t?->bridal_hero_description ?? $bridal->hero_description,
       'primaryLink'     => '#contact',
-      'primaryText'     => 'Conoce más',
+      'primaryText'     => __('messages.bridal_learn_more'),
       'secondaryLink'   => route('contact.form'),
-      'secondaryText'   => 'Contáctanos',
+      'secondaryText'   => __('messages.bridal_contact_us'),
     ])
 
     {{-- Brand Ticker --}}
@@ -39,8 +39,8 @@
 
     {{-- Products Carousel --}}
     @include('bridal.componentes.products-carousel', [
-        'sectionLabel' => 'Colección',
-        'sectionTitle' => 'Nuestros Productos',
+        'sectionLabel' => __('messages.bridal_collection_label'),
+        'sectionTitle' => __('messages.bridal_our_products'),
         'products'     => $bridalProducts,
     ])
 
@@ -84,4 +84,3 @@
 @section('footer')
     @include('bridal.componentes.footer')
 @endsection
-

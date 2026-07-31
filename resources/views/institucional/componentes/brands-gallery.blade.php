@@ -34,7 +34,7 @@
                 @else
                     {{-- Fallback conceitual em caso de ausência de marcas no banco --}}
                     <div class="swiper-slide text-center opacity-50">
-                        <span class="x-small fw-bold tracking-wider text-muted">SAX Premium Brand</span>
+                        <span class="x-small fw-bold tracking-wider text-muted">{{ __('messages.institutional_premium_brand') }}</span>
                     </div>
                 @endif
             </div>
@@ -62,7 +62,7 @@
                                     {{ __('messages.gallery_view_details') ?? 'Ver Detalhes' }}
                                 </span>
                             </div>
-                            <img src="{{ asset('storage/' . $image) }}" class="img-fluid" alt="Gallery">
+                            <img src="{{ asset('storage/' . $image) }}" class="img-fluid" alt="{{ __('messages.institutional_gallery_image_alt') }}">
                         </a>
                     </div>
                 @endforeach
@@ -71,7 +71,7 @@
                 @for($i = 1; $i <= 4; $i++)
                     <div class="col-6 col-md-3" data-aos="fade-up">
                         <div class="gallery-card border bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                            <span class="text-muted x-small italic">SAX Space {{ $i }}</span>
+                            <span class="text-muted x-small italic">{{ __('messages.institutional_space_placeholder', ['number' => $i]) }}</span>
                         </div>
                     </div>
                 @endfor

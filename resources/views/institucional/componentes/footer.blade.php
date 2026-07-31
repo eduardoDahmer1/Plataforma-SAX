@@ -65,7 +65,7 @@
                     <li><a href="{{ route('bridal.index') }}" class="footer-link">SAX Bridal</a></li>
                     <li><a href="{{ route('contact.form') }}" class="footer-link">{{ __('messages.fale_conosco_menu') ?? 'Fale Conosco' }}</a></li>
                     <li><a href="#" class="footer-link">{{ __('messages.trabalhe_conosco_menu') ?? 'Trabalhe Conosco' }}</a></li>
-                    <li><a href="{{ route('policies.index') }}" class="footer-link">Políticas e Termos</a></li>
+                    <li><a href="{{ route('policies.index') }}" class="footer-link">{{ __('messages.policies_and_terms') }}</a></li>
                 </ul>
             </div>
 
@@ -78,7 +78,7 @@
                     <p class="copyright-text">&copy; {{ date('Y') }} SAX Department. {{ __('messages.direitos_reservados') ?? 'Todos os direitos reservados.' }}</p>
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
-                    <span class="location-text"><i class="bi bi-geo-alt me-2"></i> Ciudad del Este, Paraguai</span>
+                    <span class="location-text"><i class="bi bi-geo-alt me-2"></i> {{ __('messages.institutional_location') }}</span>
                 </div>
             </div>
         </div>

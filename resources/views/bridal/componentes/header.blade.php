@@ -4,8 +4,8 @@
 
         {{-- Desktop Nav Left --}}
         <nav class="nav-bridal-left d-none d-lg-flex align-items-center gap-4">
-            <span class="nav-link-bridal" style="cursor: default;">Institucional</span>
-            <a href="{{ route('home') }}" class="nav-link-bridal">Loja</a>
+            <span class="nav-link-bridal" style="cursor: default;">{{ __('messages.institucional_badge') }}</span>
+            <a href="{{ route('home') }}" class="nav-link-bridal">{{ __('messages.store') }}</a>
         </nav>
 
         {{-- Brand (centered) --}}
@@ -22,13 +22,13 @@
         <div class="nav-bridal-right d-flex align-items-center justify-content-end gap-3">
             <nav class="d-none d-lg-flex align-items-center gap-4 me-2">
                 <a href="{{ route('palace.index') }}" class="nav-link-bridal">Palace</a>
-                <a href="#contact" class="nav-link-bridal">Contacto</a>
+                <a href="#contact" class="nav-link-bridal">{{ __('messages.contato') }}</a>
             </nav>
 
             {{-- Mobile toggle --}}
             <button class="btn border-0 p-0 d-lg-none" type="button"
                     data-bs-toggle="collapse" data-bs-target="#bridalMobileNav"
-                    aria-controls="bridalMobileNav" aria-expanded="false" aria-label="Toggle navigation">
+                    aria-controls="bridalMobileNav" aria-expanded="false" aria-label="{{ __('messages.toggle_navigation') }}">
                 <span class="hamburger-line"></span>
                 <span class="hamburger-line hamburger-short"></span>
             </button>
@@ -39,10 +39,10 @@
     <div class="collapse d-lg-none" id="bridalMobileNav">
         <nav class="container py-4">
             <ul class="list-unstyled text-center mb-0">
-                <li><span class="nav-link-bridal d-block py-2" style="cursor: default;">Institucional</span></li>
-                <li><a href="{{ route('home') }}" class="nav-link-bridal d-block py-2">Loja</a></li>
+                <li><span class="nav-link-bridal d-block py-2" style="cursor: default;">{{ __('messages.institucional_badge') }}</span></li>
+                <li><a href="{{ route('home') }}" class="nav-link-bridal d-block py-2">{{ __('messages.store') }}</a></li>
                 <li><a href="{{ route('palace.index') }}" class="nav-link-bridal d-block py-2">Palace</a></li>
-                <li><a href="#contact" class="nav-link-bridal d-block py-2">Contacto</a></li>
+                <li><a href="#contact" class="nav-link-bridal d-block py-2">{{ __('messages.contato') }}</a></li>
             </ul>
         </nav>
     </div>

@@ -23,26 +23,27 @@
     elseif(Request::is('*bridal*')) $titleDefault = 'SAX Bridal';
     elseif(Request::is('*cafe*') || Request::is('*bistro*')) $titleDefault = 'SAX Café & Bistrô';
     elseif(Route::is('checkout.*')) $titleDefault = 'SAX - Checkout Seguro';
-    elseif(Request::is('*palace*')) $titleDefault = 'SAX Palace - Gastronomia & Eventos';
+    elseif(Request::is('*palace*')) $titleDefault = __('messages.seo_palace_title');
+    elseif(Request::is('*institucional*')) $titleDefault = __('messages.seo_institutional_title');
 @endphp
 
 <title>@yield('title', $titleDefault)</title>
 <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
-<meta name="description" content="@yield('meta_description', $marketingSettings->default_meta_description ?: 'SAX - E-commerce de luxo com mais de 1000 marcas exclusivas.')">
+<meta name="description" content="@yield('meta_description', $marketingSettings->default_meta_description ?: __('messages.seo_default_description'))">
 @if($marketingSettings->default_meta_keywords)<meta name="keywords" content="{{ $marketingSettings->default_meta_keywords }}">@endif
 <meta name="robots" content="{{ $robotsContent }}">
 <link rel="canonical" href="{{ $canonicalUrl }}">
 <meta name="author" content="{{ $marketingSettings->organization_name ?: 'SAX Full Service' }}">
 <meta property="og:site_name" content="{{ $marketingSettings->site_name ?: 'SAX Department' }}">
 <meta property="og:title" content="@yield('title', $marketingSettings->og_title ?: $titleDefault)">
-<meta property="og:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: 'SAX - E-commerce de luxo com mais de 1000 marcas exclusivas.')">
+<meta property="og:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: __('messages.seo_default_description'))">
 <meta property="og:url" content="{{ $canonicalUrl }}">
 <meta property="og:type" content="website">
 <meta property="og:image" content="{{ $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="@yield('title', $marketingSettings->og_title ?: $titleDefault)">
-<meta name="twitter:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: 'SAX - E-commerce de luxo')">
+<meta name="twitter:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: __('messages.seo_twitter_description'))">
 <meta name="twitter:image" content="{{ $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg') }}">
 @if($marketingSettings->twitter_site)<meta name="twitter:site" content="{{ str_starts_with($marketingSettings->twitter_site, '@') ? $marketingSettings->twitter_site : '@'.$marketingSettings->twitter_site }}">@endif
 @if($marketingSettings->google_site_verification)<meta name="google-site-verification" content="{{ $marketingSettings->google_site_verification }}">@endif

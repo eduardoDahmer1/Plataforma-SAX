@@ -1,6 +1,6 @@
 {{-- SAX Bridal — Palace Banner --}}
 <section class="palace-banner" id="palace">
-    <img src="{{ $backgroundImage }}" alt="Palace Experience" class="palace-banner-bg" loading="lazy">
+    <img src="{{ $backgroundImage }}" alt="{{ __('messages.bridal_palace_banner_alt') }}" class="palace-banner-bg" loading="lazy">
     <div class="palace-banner-overlay"></div>
 
     <div class="palace-banner-body text-center">
@@ -10,4 +10,3 @@
         <a href="{{ $link }}" class="btn-palace-cta">{{ $buttonText }}</a>
     </div>
 </section>
-

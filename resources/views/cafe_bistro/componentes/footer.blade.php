@@ -18,10 +18,7 @@
                     @endif
                 </div>
 
-                <p class="footer-descricao">
-                    Um espaço de sabores, cultura e encontros no coração do Shopping Dubai.
-                    Venha viver a experiência SAX.
-                </p>
+                <p class="footer-descricao">{{ __('messages.cafe_footer_description') }}</p>
 
                 <div class="footer-social">
                     @if($cafeBistro->instagram_url)
@@ -42,25 +39,25 @@
 
             {{-- Col 2: Horários resumidos --}}
             <div class="col-lg-4 col-md-6">
-                <h6 class="footer-col-title">Horários</h6>
+                <h6 class="footer-col-title">{{ __('messages.horarios') }}</h6>
 
                 @php $horarios = $cafeBistro->horarios ?? []; @endphp
                 <table class="footer-horarios w-100">
                     <tbody>
                         <tr>
-                            <td class="footer-dia">Segunda-feira</td>
+                            <td class="footer-dia">{{ __('messages.cafe_monday') }}</td>
                             <td class="footer-hora">{{ $horarios['segunda'] ?? '—' }}</td>
                         </tr>
                         <tr>
-                            <td class="footer-dia">Terça-feira — Quinta-feira</td>
+                            <td class="footer-dia">{{ __('messages.cafe_tuesday_thursday') }}</td>
                             <td class="footer-hora">{{ $horarios['terca_quinta'] ?? '—' }}</td>
                         </tr>
                         <tr>
-                            <td class="footer-dia">Sexta-feira — Sábado</td>
+                            <td class="footer-dia">{{ __('messages.cafe_friday_saturday') }}</td>
                             <td class="footer-hora">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
                         </tr>
                         <tr>
-                            <td class="footer-dia">Domingo</td>
+                            <td class="footer-dia">{{ __('messages.domingo') }}</td>
                             <td class="footer-hora">{{ $horarios['domingo'] ?? '—' }}</td>
                         </tr>
                     </tbody>
@@ -69,11 +66,11 @@
 
             {{-- Col 3: Endereço + Telefone + Reserva --}}
             <div class="col-lg-4 col-md-6">
-                <h6 class="footer-col-title">Localização & Contacto</h6>
+                <h6 class="footer-col-title">{{ __('messages.cafe_location_contact') }}</h6>
 
                 <address class="footer-endereco">
                     <i class="bi bi-geo-alt me-2"></i>
-                    {{ $cafeBistro->direccion ?? 'Shopping Dubai, Pedro Juan Caballero — Paraguai' }}
+                    {{ $t?->cafe_direccion ?? $cafeBistro->direccion ?? __('messages.cafe_address_fallback') }}
                 </address>
 
                 <p class="footer-telefone">
@@ -82,7 +79,7 @@
                 </p>
 
                 <a href="{{ $cafeBistro->whatsapp_link }}" target="_blank" rel="noopener" class="btn-reservar-cafe d-inline-block mt-2">
-                    Fazer Reserva
+                    {{ __('messages.cafe_make_reservation') }}
                 </a>
             </div>
 
@@ -91,8 +88,8 @@
         {{-- Linha inferior --}}
         <div class="footer-bottom">
             <p class="footer-copyright">
-                &copy; 2026 SAX Café &amp; Bistró &middot; Todos os direitos reservados
-                &middot; <a href="{{ route('policies.index') }}" class="text-reset">Políticas e Termos</a>
+                &copy; {{ date('Y') }} SAX Café &amp; Bistrô &middot; {{ __('messages.direitos_reservados') }}
+                &middot; <a href="{{ route('policies.index') }}" class="text-reset">{{ __('messages.policies_and_terms') }}</a>
             </p>
         </div>
 

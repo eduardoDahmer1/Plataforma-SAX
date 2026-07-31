@@ -7,23 +7,23 @@
             <div class="col-lg-7" data-reveal="left">
                 @if($cafeBistro->sobre_imagen)
                     <img src="{{ asset('storage/'.$cafeBistro->sobre_imagen) }}"
-                         alt="Sobre Nós"
+                         alt="{{ __('messages.cafe_about_image_alt') }}"
                          class="w-100 rounded"
                          style="height: 31.25rem; object-fit: cover;">
                 @else
                     <div class="img-placeholder rounded" style="height: 31.25rem;">
-                        FOTO
+                        {{ __('messages.photo_placeholder') }}
                     </div>
                 @endif
             </div>
 
             {{-- Texto --}}
             <div class="col-lg-5" data-reveal="right">
-                <span class="eyebrow">Sobre Nós</span>
+                <span class="eyebrow">{{ __('messages.sobre_nos') }}</span>
                 <div class="divider"></div>
-                <h2 class="section-title mb-4">{{ $t?->cafe_sobre_titulo ?? $cafeBistro->sobre_titulo ?? 'Um espaço para desfrutar sem pressa.' }}</h2>
+                <h2 class="section-title mb-4">{{ $t?->cafe_sobre_titulo ?? $cafeBistro->sobre_titulo ?? __('messages.cafe_about_title_fallback') }}</h2>
                 <p class="sobre-texto">
-                    {{ $t?->cafe_sobre_texto ?? $cafeBistro->sobre_texto ?? 'No SAX Café & Bistro, o aroma do café se encontra com sabores de diversas culturas. Ingredientes de primeira linha, um ambiente acolhedor e o cuidado em cada detalhe transformam cada visita em uma experiência para recordar.' }}
+                    {{ $t?->cafe_sobre_texto ?? $cafeBistro->sobre_texto ?? __('messages.cafe_about_text_fallback') }}
                 </p>
             </div>
 

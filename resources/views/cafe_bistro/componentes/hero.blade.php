@@ -11,22 +11,22 @@
     <div class="hero-overlay"></div>
 
     <div class="container hero-content">
-        <span class="eyebrow">SAX Café & Bistrô · PJC</span>
+        <span class="eyebrow">{{ __('messages.cafe_hero_eyebrow') }}</span>
 
         <h1 class="hero-title" data-reveal="up">
-            {{ $t?->cafe_hero_titulo ?? $cafeBistro->hero_titulo ?? 'Um lugar para saborear o momento.' }}
+            {{ $t?->cafe_hero_titulo ?? $cafeBistro->hero_titulo ?? __('messages.cafe_hero_title_fallback') }}
         </h1>
 
         <p class="hero-subtitle" data-reveal="up">
-            {{ $t?->cafe_hero_subtitulo ?? $cafeBistro->hero_subtitulo ?? 'Frescor ao amanhecer, cafés de origem e jantares para recordar.' }}
+            {{ $t?->cafe_hero_subtitulo ?? $cafeBistro->hero_subtitulo ?? __('messages.cafe_hero_subtitle_fallback') }}
         </p>
 
         <div class="hero-actions" data-reveal="up">
             <a href="{{ $cafeBistro->whatsapp_link }}" target="_blank" class="btn-cafe-primary">
-                Reservar Mesa
+                {{ __('messages.cafe_reserve_table') }}
             </a>
             <a href="#cardapio" class="btn-cafe-outline">
-                Ver a Carta
+                {{ __('messages.cafe_view_menu') }}
             </a>
         </div>
     </div>

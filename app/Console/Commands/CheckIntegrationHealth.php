@@ -9,7 +9,8 @@ use Illuminate\Console\Command;
 class CheckIntegrationHealth extends Command
 {
     protected $signature = 'integration:check-health';
-    protected $description = 'Detecta integrações que deixaram de enviar heartbeat';
+
+    protected $description = 'Detecta integrações em falha ou sem comunicação há 24 horas';
 
     public function handle(IntegrationMonitorService $service): int
     {

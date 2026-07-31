@@ -21,8 +21,8 @@ return [
 
     'integration_monitor' => [
         'token' => env('INTEGRATION_MONITOR_TOKEN'),
-        'stale_after_minutes' => env('INTEGRATION_STALE_AFTER_MINUTES', 180),
-        'alert_cooldown_minutes' => env('INTEGRATION_ALERT_COOLDOWN_MINUTES', 720),
+        'failure_alert_after_minutes' => env('INTEGRATION_FAILURE_ALERT_AFTER_MINUTES', 1440),
+        'email_alerts' => env('INTEGRATION_EMAIL_ALERTS_ENABLED', true),
     ],
 
 ];

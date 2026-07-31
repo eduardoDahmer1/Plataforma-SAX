@@ -3,8 +3,8 @@
     <div class="container">
 
         <div class="text-center mb-5" data-reveal="up">
-            <span class="title-gold">ENCUÉNTRANOS</span>
-            <h2 class="section-title">Nuestras Sucursales</h2>
+            <span class="title-gold">{{ __('messages.bridal_find_us') }}</span>
+            <h2 class="section-title">{{ __('messages.bridal_our_stores') }}</h2>
         </div>
 
         <div class="position-relative locations-swiper-wrap">
@@ -16,7 +16,7 @@
                             <div class="location-img-wrap">
                                 @if(!empty($location['image']))
                                     <img src="{{ asset('storage/' . $location['image']) }}"
-                                         alt="Sucursal {{ $location['name'] }}"
+                                         alt="{{ __('messages.bridal_store_image_alt', ['name' => $location['name']]) }}"
                                          class="location-img"
                                          loading="lazy" decoding="async">
                                 @endif
@@ -33,7 +33,7 @@
                                 @if(!empty($location['whatsapp_url']))
                                     <a href="{{ $location['whatsapp_url'] }}" target="_blank" rel="noopener" class="location-wa-btn">
                                         <i class="fab fa-whatsapp"></i>
-                                        Escribinos por WhatsApp
+                                        {{ __('messages.bridal_write_whatsapp') }}
                                     </a>
                                 @endif
                             </div>
@@ -48,4 +48,3 @@
 
     </div>
 </section>
-

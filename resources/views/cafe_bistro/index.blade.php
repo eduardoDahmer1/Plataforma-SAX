@@ -5,7 +5,7 @@
     $t = $cafeBistro->translations->firstWhere('locale', translation_locale());
 @endphp
 
-@section('title', ($t?->cafe_meta_title ?? $cafeBistro->meta_title) ?? 'SAX Café & Bistrô')
+@section('title', ($t?->cafe_meta_title ?? $cafeBistro->meta_title) ?? __('messages.seo_cafe_bistro_title'))
 
 @section('content')
     @include('cafe_bistro.componentes.hero')

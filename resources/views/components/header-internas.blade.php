@@ -20,7 +20,7 @@
 
     // 3. Configuração Visual (Mapeamento limpo)
     $config = [
-        'brand_name' => $isBridal ? 'Bridal' : ($isPalace ? 'Palace' : ($isBistro ? 'Café & Bistrô' : ($isInst ? 'Institucional' : 'SAX'))),
+        'brand_name' => $isBridal ? 'Bridal' : ($isPalace ? 'Palace' : ($isBistro ? 'Café & Bistrô' : ($isInst ? __('messages.institucional_badge') : 'SAX'))),
         'logo_key'   => $isBridal ? 'logo_bridal' : ($isPalace ? 'logo_palace' : ($isBistro ? 'logo_cafe_bistro' : ($isInst ? 'header_image' : ''))),
         'whatsapp'   => $whatsapp,
         'cta_label'  => ($isPalace || $isBistro) ? __('messages.reservar') : __('messages.fale_conosco'),
@@ -53,7 +53,8 @@
         </a>
 
         {{-- Botão Mobile --}}
-        <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#expNavbarMobile">
+        <button class="navbar-toggler border-0 shadow-none d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#expNavbarMobile"
+                aria-controls="expNavbarMobile" aria-expanded="false" aria-label="{{ __('messages.toggle_navigation') }}">
             <div class="hamburger-icon">
                 <span></span><span></span><span></span>
             </div>

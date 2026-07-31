@@ -1,7 +1,7 @@
 <section class="palace-hero palace-section" id="inicio">
     <div class="palace-hero__media">
         <img src="{{ $palace->hero_imagem ? asset('storage/' . $palace->hero_imagem) : 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b' }}"
-             class="palace-hero__image" alt="Hero" loading="eager">
+             class="palace-hero__image" alt="{{ __('messages.palace_hero_image_alt') }}" loading="eager">
         <div class="palace-hero__overlay"></div>
     </div>
 

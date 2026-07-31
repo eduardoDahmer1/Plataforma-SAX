@@ -19,7 +19,7 @@
                     {{-- Tornamos o slide clicável envolvendo o conteúdo em um link --}}
                     <a href="{{ route('categories.index') }}" class="swiper-slide">
                         <div class="hero-overlay"></div>
-                        <img src="{{ asset('storage/' . $slide) }}" alt="SAX Experience">
+                        <img src="{{ asset('storage/' . $slide) }}" alt="{{ __('messages.institutional_hero_image_alt') }}">
                         
                         <div class="hero-content text-center">
                             <div class="container">
@@ -50,7 +50,7 @@
                 {{-- Fallback elegante caso não existam imagens cadastradas no slider --}}
                 <div class="swiper-slide">
                     <div class="hero-overlay"></div>
-                    <img src="https://placehold.co/1920x1080" alt="SAX Experience">
+                    <img src="https://placehold.co/1920x1080" alt="{{ __('messages.institutional_hero_image_alt') }}">
                     <div class="hero-content text-center">
                         <div class="container">
                             <h1 class="hero-title">SAX Department</h1>

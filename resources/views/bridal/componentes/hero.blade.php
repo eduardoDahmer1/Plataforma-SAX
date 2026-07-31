@@ -1,7 +1,7 @@
 {{-- SAX Bridal — Hero Section --}}
 <section class="hero-bridal">
     {{-- Background image --}}
-    <img src="{{ $backgroundImage }}" class="hero-bg" alt="SAX Bridal Hero"
+    <img src="{{ $backgroundImage }}" class="hero-bg" alt="{{ __('messages.bridal_hero_image_alt') }}"
          fetchpriority="high" decoding="async">
 
     {{-- Top gradient: darkens only the navbar strip for legibility --}}
@@ -27,4 +27,3 @@
         </div>
     </div>
 </section>
-

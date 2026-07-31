@@ -22,7 +22,7 @@
                         @foreach(array_slice($galeria, 0, 4) as $foto)
                             <div class="col-6">
                                 <div class="palace-gallery-card" data-palace-tilt>
-                                    <img src="{{ asset('storage/' . $foto) }}" class="palace-gallery-card__img" alt="Evento Palace" loading="lazy">
+                                    <img src="{{ asset('storage/' . $foto) }}" class="palace-gallery-card__img" alt="{{ __('messages.palace_event_image_alt') }}" loading="lazy">
                                 </div>
                             </div>
                         @endforeach

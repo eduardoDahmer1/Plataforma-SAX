@@ -110,6 +110,7 @@
         </div>
     </div>
     <script src="{{ asset('js/customer-document.js') }}?v={{ filemtime(public_path('js/customer-document.js')) }}"></script>
+    <script src="{{ asset('js/phone-mask.js') }}?v={{ filemtime(public_path('js/phone-mask.js')) }}"></script>
 </body>
 
 </html>

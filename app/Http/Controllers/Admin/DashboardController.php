@@ -19,13 +19,14 @@ use App\Models\IntegrationMonitor;
 use App\Models\IntegrationRun;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $today = now()->toDateString();
         $start = now()->subDays(29)->startOfDay();
@@ -126,30 +127,49 @@ class DashboardController extends Controller
                 ->groupBy('device_type')->pluck('total', 'device_type');
         }
 
+        $reportSelection = $this->resolveReportPeriod($request);
+        $selectedReport = $this->buildReport(
+            $reportSelection['start'],
+            $reportSelection['end'],
+            $reportSelection['label']
+        );
+        $reportFilter = $reportSelection['filter'];
+
         return view('admin.dashboard.index', compact(
             'metrics', 'analytics', 'analyticsReady', 'paymentMethods', 'orderStatuses', 'recentOrders',
             'topProducts', 'trafficLabels', 'trafficViews', 'trafficVisitors', 'topPages', 'topClicks', 'devices', 'businessEvents',
-            'integrationMonitor', 'integrationRuns', 'integrationMonitoringReady', 'integrationEndpointConfigured'
+            'integrationMonitor', 'integrationRuns', 'integrationMonitoringReady', 'integrationEndpointConfigured',
+            'selectedReport', 'reportFilter'
         ));
     }
 
-    public function report(string $period): Response
+    public function report(Request $request, ?string $period = null): Response
     {
-        [$start, $label] = match ($period) {
-            'today' => [now()->startOfDay(), __('messages.period_today')],
-            'week' => [now()->subDays(6)->startOfDay(), __('messages.period_last_seven_days')],
-            'month' => [now()->startOfMonth(), __('messages.period_current_month')],
-        };
-        $end = now()->endOfDay();
+        $selection = $this->resolveReportPeriod($request, $period);
+        $report = $this->buildReport($selection['start'], $selection['end'], $selection['label']);
+        $filename = sprintf(
+            'relatorio-sax-%s-%s-a-%s.pdf',
+            $selection['type'],
+            $selection['start']->format('Y-m-d'),
+            $selection['end']->format('Y-m-d')
+        );
+
+        return Pdf::loadView('admin.dashboard.report', compact('report'))
+            ->setPaper('a4')
+            ->download($filename);
+    }
+
+    private function buildReport(Carbon $start, Carbon $end, string $label): array
+    {
         $orders = Order::whereBetween('created_at', [$start, $end]);
         $paidOrders = Order::whereBetween('created_at', [$start, $end])
             ->where(fn ($query) => $query->where('payment_status', 'paid')->orWhere('status', 'paid'));
         $analyticsReady = Schema::hasTable('site_analytics_events');
 
-        $report = [
+        return [
             'period' => $label,
-            'start' => $start,
-            'end' => $end,
+            'start' => $start->copy(),
+            'end' => $end->copy(),
             'orders' => (clone $orders)->count(),
             'paid_orders' => (clone $paidOrders)->count(),
             'sales_total' => (float) (clone $paidOrders)->sum('total'),
@@ -160,9 +180,136 @@ class DashboardController extends Controller
             'clicks' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'click')->whereBetween('created_at', [$start, $end])->count() : 0,
             'payment_methods' => (clone $orders)->select('payment_method', DB::raw('COUNT(*) total'))->groupBy('payment_method')->pluck('total', 'payment_method'),
         ];
+    }
 
-        return Pdf::loadView('admin.dashboard.report', compact('report'))
-            ->setPaper('a4')
-            ->download('relatorio-sax-' . $period . '-' . now()->format('Y-m-d') . '.pdf');
+    private function resolveReportPeriod(Request $request, ?string $legacyPeriod = null): array
+    {
+        $now = now();
+
+        if ($legacyPeriod !== null) {
+            [$type, $start, $end, $label] = match ($legacyPeriod) {
+                'week' => ['week', $now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay(), __('messages.period_last_seven_days')],
+                'month' => ['month', $now->copy()->startOfMonth(), $now->copy()->endOfDay(), __('messages.period_current_month')],
+                default => ['day', $now->copy()->startOfDay(), $now->copy()->endOfDay(), __('messages.period_today')],
+            };
+
+            return [
+                'type' => $type,
+                'start' => $start,
+                'end' => $end,
+                'label' => $label,
+                'filter' => $this->normalizedReportFilter($type, $start, $end),
+            ];
+        }
+
+        $type = in_array($request->string('report_type')->toString(), ['day', 'week', 'month', 'custom'], true)
+            ? $request->string('report_type')->toString()
+            : 'day';
+
+        [$start, $end] = match ($type) {
+            'week' => $this->weekRange($request->string('report_week')->toString(), $now),
+            'month' => $this->monthRange($request->string('report_month')->toString(), $now),
+            'custom' => $this->customRange(
+                $request->string('report_start')->toString(),
+                $request->string('report_end')->toString(),
+                $now
+            ),
+            default => $this->dayRange($request->string('report_day')->toString(), $now),
+        };
+
+        return [
+            'type' => $type,
+            'start' => $start,
+            'end' => $end,
+            'label' => $this->reportPeriodLabel($type, $start, $end),
+            'filter' => $this->normalizedReportFilter($type, $start, $end),
+        ];
+    }
+
+    private function dayRange(string $value, Carbon $fallback): array
+    {
+        $date = $this->dateFromFormat('Y-m-d', $value) ?? $fallback->copy();
+
+        return [$date->copy()->startOfDay(), $date->copy()->endOfDay()];
+    }
+
+    private function weekRange(string $value, Carbon $fallback): array
+    {
+        if (preg_match('/^(\d{4})-W(\d{2})$/', $value, $parts)) {
+            $candidate = $fallback->copy()->setISODate((int) $parts[1], (int) $parts[2], 1)->startOfDay();
+
+            if ($candidate->format('o-\\WW') === $value) {
+                return [$candidate, $candidate->copy()->endOfWeek()->endOfDay()];
+            }
+        }
+
+        $start = $fallback->copy()->startOfWeek()->startOfDay();
+
+        return [$start, $start->copy()->endOfWeek()->endOfDay()];
+    }
+
+    private function monthRange(string $value, Carbon $fallback): array
+    {
+        $month = preg_match('/^\d{4}-\d{2}$/', $value)
+            ? $this->dateFromFormat('Y-m-d', $value . '-01')
+            : null;
+        $month ??= $fallback->copy();
+
+        return [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()->endOfDay()];
+    }
+
+    private function customRange(string $startValue, string $endValue, Carbon $fallback): array
+    {
+        $start = $this->dateFromFormat('Y-m-d', $startValue) ?? $fallback->copy();
+        $end = $this->dateFromFormat('Y-m-d', $endValue) ?? $start->copy();
+
+        if ($end->lt($start)) {
+            [$start, $end] = [$end, $start];
+        }
+
+        return [$start->startOfDay(), $end->endOfDay()];
+    }
+
+    private function dateFromFormat(string $format, string $value): ?Carbon
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            $date = Carbon::createFromFormat('!' . $format, $value, config('app.timezone'));
+
+            return $date && $date->format($format) === $value ? $date : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function reportPeriodLabel(string $type, Carbon $start, Carbon $end): string
+    {
+        return match ($type) {
+            'day' => __('messages.report_period_day_label', ['date' => $start->format('d/m/Y')]),
+            'week' => __('messages.report_period_week_label', [
+                'start' => $start->format('d/m/Y'),
+                'end' => $end->format('d/m/Y'),
+            ]),
+            'month' => __('messages.report_period_month_label', ['month' => ucfirst($start->translatedFormat('F Y'))]),
+            default => __('messages.report_period_custom_label', [
+                'start' => $start->format('d/m/Y'),
+                'end' => $end->format('d/m/Y'),
+            ]),
+        };
+    }
+
+    private function normalizedReportFilter(string $type, Carbon $start, Carbon $end): array
+    {
+        return [
+            'type' => $type,
+            'day' => $start->format('Y-m-d'),
+            'week' => $start->format('o-\\WW'),
+            'month' => $start->format('Y-m'),
+            'start' => $start->format('Y-m-d'),
+            'end' => $end->format('Y-m-d'),
+        ];
     }
 }

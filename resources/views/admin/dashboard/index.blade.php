@@ -15,12 +15,114 @@
     </div>
 </section>
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
-    <strong class="me-2">{{ __('messages.admin_dashboard_download_report') }}</strong>
-    <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.reports.download', 'today') }}"><i class="fa-regular fa-file-pdf me-1"></i>{{ __('messages.period_today') }}</a>
-    <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.reports.download', 'week') }}"><i class="fa-regular fa-file-pdf me-1"></i>{{ __('messages.period_seven_days') }}</a>
-    <a class="btn btn-sm btn-dark" href="{{ route('admin.reports.download', 'month') }}"><i class="fa-regular fa-file-pdf me-1"></i>{{ __('messages.period_month') }}</a>
-</div>
+<section class="table-card mb-4" id="dashboard-report-period">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+        <div>
+            <div class="card-kicker">{{ __('messages.report_filter_kicker') }}</div>
+            <h2 class="card-heading mb-1">{{ __('messages.report_filter_title') }}</h2>
+            <p class="text-muted small mb-0">{{ __('messages.report_filter_subtitle') }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-start">
+            <a class="btn btn-sm {{ $reportFilter['type'] === 'day' && $reportFilter['day'] === now()->format('Y-m-d') ? 'btn-dark' : 'btn-outline-dark' }}" href="{{ route('admin.index', ['report_type' => 'day', 'report_day' => now()->format('Y-m-d')]) }}">
+                <i class="fa-solid fa-calendar-day me-1"></i>{{ __('messages.period_today') }}
+            </a>
+            <a class="btn btn-sm {{ $reportFilter['type'] === 'week' && $reportFilter['week'] === now()->format('o-\WW') ? 'btn-dark' : 'btn-outline-dark' }}" href="{{ route('admin.index', ['report_type' => 'week', 'report_week' => now()->format('o-\WW')]) }}">
+                <i class="fa-solid fa-calendar-week me-1"></i>{{ __('messages.report_current_week') }}
+            </a>
+            <a class="btn btn-sm {{ $reportFilter['type'] === 'month' && $reportFilter['month'] === now()->format('Y-m') ? 'btn-dark' : 'btn-outline-dark' }}" href="{{ route('admin.index', ['report_type' => 'month', 'report_month' => now()->format('Y-m')]) }}">
+                <i class="fa-regular fa-calendar me-1"></i>{{ __('messages.report_current_month') }}
+            </a>
+        </div>
+    </div>
+
+    <form method="GET" action="{{ route('admin.index') }}" id="dashboard-report-form" class="border rounded-3 p-3 bg-light mb-3">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4 col-xl-3">
+                <label class="form-label fw-semibold" for="report-type">{{ __('messages.report_period_type') }}</label>
+                <select class="form-select" id="report-type" name="report_type">
+                    <option value="day" @selected($reportFilter['type'] === 'day')>{{ __('messages.report_type_day') }}</option>
+                    <option value="week" @selected($reportFilter['type'] === 'week')>{{ __('messages.report_type_week') }}</option>
+                    <option value="month" @selected($reportFilter['type'] === 'month')>{{ __('messages.report_type_month') }}</option>
+                    <option value="custom" @selected($reportFilter['type'] === 'custom')>{{ __('messages.report_type_custom') }}</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-4 col-xl-3 report-period-field" data-report-period="day" @if($reportFilter['type'] !== 'day') hidden @endif>
+                <label class="form-label fw-semibold" for="report-day">{{ __('messages.report_choose_day') }}</label>
+                <input class="form-control" id="report-day" name="report_day" type="date" value="{{ $reportFilter['day'] }}">
+            </div>
+            <div class="col-12 col-md-4 col-xl-3 report-period-field" data-report-period="week" @if($reportFilter['type'] !== 'week') hidden @endif>
+                <label class="form-label fw-semibold" for="report-week">{{ __('messages.report_choose_week') }}</label>
+                <input class="form-control" id="report-week" name="report_week" type="week" value="{{ $reportFilter['week'] }}">
+            </div>
+            <div class="col-12 col-md-4 col-xl-3 report-period-field" data-report-period="month" @if($reportFilter['type'] !== 'month') hidden @endif>
+                <label class="form-label fw-semibold" for="report-month">{{ __('messages.report_choose_month') }}</label>
+                <input class="form-control" id="report-month" name="report_month" type="month" value="{{ $reportFilter['month'] }}">
+            </div>
+            <div class="col-12 col-md-4 col-xl-3 report-period-field" data-report-period="custom" @if($reportFilter['type'] !== 'custom') hidden @endif>
+                <label class="form-label fw-semibold" for="report-start">{{ __('messages.report_start_date') }}</label>
+                <input class="form-control" id="report-start" name="report_start" type="date" value="{{ $reportFilter['start'] }}">
+            </div>
+            <div class="col-12 col-md-4 col-xl-3 report-period-field" data-report-period="custom" @if($reportFilter['type'] !== 'custom') hidden @endif>
+                <label class="form-label fw-semibold" for="report-end">{{ __('messages.report_end_date') }}</label>
+                <input class="form-control" id="report-end" name="report_end" type="date" value="{{ $reportFilter['end'] }}">
+            </div>
+
+            <div class="col-12 col-xl d-flex flex-wrap gap-2 justify-content-xl-end">
+                <button class="btn btn-dark" type="submit">
+                    <i class="fa-solid fa-chart-column me-1"></i>{{ __('messages.report_view') }}
+                </button>
+                <button class="btn btn-outline-dark" type="submit" formaction="{{ route('admin.reports.download') }}">
+                    <i class="fa-regular fa-file-pdf me-1"></i>{{ __('messages.report_download_pdf') }}
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-2 align-items-md-center mb-3">
+        <div>
+            <span class="text-muted small">{{ __('messages.report_selected_period') }}</span>
+            <strong class="d-block">{{ $selectedReport['period'] }}</strong>
+        </div>
+        <span class="badge text-bg-dark align-self-start align-self-md-center">
+            {{ $selectedReport['start']->format('d/m/Y') }} — {{ $selectedReport['end']->format('d/m/Y') }}
+        </span>
+    </div>
+
+    @php
+        $reportCards = [
+            [__('messages.report_paid_sales'), $selectedReport['paid_orders'], 'fa-circle-check'],
+            [__('messages.report_sold_value_base'), 'US$ '.number_format($selectedReport['sales_total'], 2, ',', '.'), 'fa-money-bill-trend-up'],
+            [__('messages.report_orders_created'), $selectedReport['orders'], 'fa-receipt'],
+            [__('messages.report_new_customers'), $selectedReport['new_customers'], 'fa-user-plus'],
+            [__('messages.report_visitors'), $selectedReport['visitors'], 'fa-users'],
+            [__('messages.report_clicks'), $selectedReport['clicks'], 'fa-arrow-pointer'],
+            [__('messages.report_page_views'), $selectedReport['views'], 'fa-eye'],
+            [__('messages.report_abandoned_carts'), $selectedReport['abandoned_carts'], 'fa-cart-arrow-down'],
+        ];
+    @endphp
+    <div class="row g-2">
+        @foreach($reportCards as [$label, $value, $icon])
+            <div class="col-6 col-lg-3">
+                <div class="border rounded-3 p-3 h-100 bg-white">
+                    <div class="small text-muted text-uppercase"><i class="fa-solid {{ $icon }} me-1"></i>{{ $label }}</div>
+                    <div class="fs-5 fw-bold mt-1">{{ is_numeric($value) ? number_format($value, 0, ',', '.') : $value }}</div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    @if($selectedReport['payment_methods']->isNotEmpty())
+        <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
+            <span class="small text-muted me-1">{{ __('messages.report_orders_by_payment') }}:</span>
+            @foreach($selectedReport['payment_methods'] as $method => $total)
+                <span class="badge rounded-pill text-bg-light border">
+                    {{ ['bancard_v2' => 'Bancard V2', 'rendix_pix' => 'Pix Rendix', 'deposito' => __('messages.payment_deposit'), 'whatsapp' => 'WhatsApp'][$method] ?? ucfirst($method ?: __('messages.payment_other')) }}: {{ $total }}
+                </span>
+            @endforeach
+        </div>
+    @endif
+</section>
 
 @php
     $integrationStatus = $integrationMonitor?->status ?? 'never_reported';
@@ -154,4 +256,24 @@
 <div class="table-card mb-4"><div class="d-flex justify-content-between align-items-center"><div><h3 class="card-heading">{{ __('messages.dashboard_recent_orders') }}</h3><div class="card-kicker">{{ __('messages.dashboard_latest_store_activity') }}</div></div><a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-dark">{{ __('messages.view_all') }}</a></div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>{{ __('messages.table_order') }}</th><th>{{ __('messages.table_customer') }}</th><th>{{ __('messages.table_payment') }}</th><th>{{ __('messages.table_status') }}</th><th>{{ __('messages.total') }}</th><th>{{ __('messages.table_date') }}</th></tr></thead><tbody>@forelse($recentOrders as $order)<tr><td><a href="{{ route('admin.orders.show',$order) }}" class="fw-bold text-dark">#{{ $order->order_number ?: $order->id }}</a></td><td>{{ $order->user?->name ?: $order->name ?: __('messages.guest') }}</td><td>{{ ['bancard_v2'=>'Bancard V2','rendix_pix'=>'Pix Rendix','deposito'=>__('messages.payment_deposit'),'whatsapp'=>'WhatsApp'][$order->payment_method] ?? ucfirst($order->payment_method) }}</td><td><span class="badge-soft">{{ ucfirst($order->status) }}</span></td><td>{{ $order->currency_sign ?: 'US$' }} {{ number_format($order->total,2,',','.') }}</td><td>{{ $order->created_at?->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="6" class="text-center text-muted py-4">{{ __('messages.no_orders_found') }}</td></tr>@endforelse</tbody></table></div></div>
 
 <div class="table-card mb-4"><h3 class="card-heading">{{ __('messages.dashboard_recent_events') }}</h3><div class="card-kicker">{{ __('messages.dashboard_recent_events_note') }}</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>{{ __('messages.table_when') }}</th><th>{{ __('messages.table_customer') }}</th><th>{{ __('messages.table_event') }}</th><th>{{ __('messages.table_explanation') }}</th><th>{{ __('messages.table_reference') }}</th></tr></thead><tbody>@forelse($businessEvents as $event)<tr><td>{{ $event->created_at->format('d/m H:i') }}</td><td>{{ $event->user?->name ?: __('messages.not_identified') }}</td><td><span class="badge-soft">{{ $event->title }}</span></td><td>{{ $event->message ?: __('messages.no_additional_details') }}</td><td>@if($event->order)<a href="{{ route('admin.orders.show',$event->order) }}">#{{ $event->order->order_number ?: $event->order_id }}</a>@else{{ $event->reference ?: '—' }}@endif</td></tr>@empty<tr><td colspan="5" class="text-center text-muted py-4">{{ __('messages.dashboard_no_events') }}</td></tr>@endforelse</tbody></table></div></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const typeSelect = document.getElementById('report-type');
+    const periodFields = document.querySelectorAll('.report-period-field');
+
+    if (!typeSelect || !periodFields.length) {
+        return;
+    }
+
+    const updatePeriodFields = function () {
+        periodFields.forEach(function (field) {
+            field.hidden = field.dataset.reportPeriod !== typeSelect.value;
+        });
+    };
+
+    typeSelect.addEventListener('change', updatePeriodFields);
+    updatePeriodFields();
+});
+</script>
 @endsection

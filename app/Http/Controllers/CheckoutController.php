@@ -115,12 +115,6 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            if ((string) $request->input('phone_country') !== '55') {
-                throw ValidationException::withMessages([
-                    'phone' => __('messages.checkout_pix_requires_brazilian_phone'),
-                ]);
-            }
-
             $rendixGateway = RendixPixService::gateway();
             if (!$rendixGateway?->active || !RendixPixService::fromPaymentMethod($rendixGateway)->isConfigured()) {
                 throw ValidationException::withMessages([
@@ -203,6 +197,7 @@ class CheckoutController extends Controller
                 'document' => $request->input('document'),
                 'document_type' => $documentType,
                 'email' => $request->input('email'),
+                'phone_country' => (string) $request->input('phone_country'),
                 'phone' => $request->input('phone'),
                 'observations' => $observations,
                 'shipping' => $request->input('shipping'),

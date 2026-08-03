@@ -25,6 +25,7 @@ class Order extends Model
         'document',
         'document_type',
         'email',
+        'phone_country',
         'phone',
         'address',
         'city',

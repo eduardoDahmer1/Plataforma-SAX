@@ -41,6 +41,7 @@
 <script>
     window.saxTranslations = Object.assign({}, window.saxTranslations || {}, @json($saxTranslations));
 </script>
+<script src="{{ asset('js/phone-mask.js') }}?v={{ filemtime(public_path('js/phone-mask.js')) }}"></script>
 @if(!Route::is('admin.*'))
     <script src="{{ asset('js/customer-document.js') }}?v={{ filemtime(public_path('js/customer-document.js')) }}"></script>
 @endif

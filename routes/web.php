@@ -134,6 +134,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile', [UserController::class, 'update'])->name('user.profile.update');
     Route::get('/meus-enderecos', [UserAddressController::class, 'index'])->name('user.addresses.index');
     Route::post('/meus-enderecos', [UserAddressController::class, 'store'])->name('user.addresses.store');
+    Route::patch('/meus-enderecos/{address}', [UserAddressController::class, 'update'])->name('user.addresses.update');
     Route::patch('/meus-enderecos/{address}/padrao', [UserAddressController::class, 'makeDefault'])->name('user.addresses.default');
     Route::delete('/meus-enderecos/{address}', [UserAddressController::class, 'destroy'])->name('user.addresses.destroy');
     Route::get('/seguranca/senha', [UserController::class, 'editPassword'])->name('user.password.edit');
@@ -206,7 +207,7 @@ Route::post('/ajuda-carrinho/{token}', [\App\Http\Controllers\AbandonedCartFeedb
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
-    Route::get('/relatorios/{period}', [DashboardController::class, 'report'])->whereIn('period', ['today', 'week', 'month'])->name('reports.download');
+    Route::get('/relatorios/{period?}', [DashboardController::class, 'report'])->whereIn('period', ['today', 'week', 'month'])->name('reports.download');
     Route::get('banners', [ImageUploadController::class, 'index'])->name('banners.index');
     Route::get('marketing', [MarketingSettingController::class, 'edit'])->name('marketing.edit');
     Route::put('marketing', [MarketingSettingController::class, 'update'])->name('marketing.update');

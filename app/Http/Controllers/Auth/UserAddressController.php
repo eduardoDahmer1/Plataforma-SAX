@@ -54,6 +54,32 @@ class UserAddressController extends Controller
         return back()->with('success', 'Endereço padrão atualizado.');
     }
 
+    public function update(Request $request, UserAddress $address): RedirectResponse
+    {
+        abort_unless((int) $address->user_id === (int) $request->user()->id, 404);
+
+        $request->merge(['editing_address_id' => $address->id]);
+        $data = $this->validated($request);
+        $user = $request->user();
+
+        DB::transaction(function () use ($user, $address, $data): void {
+            $makeDefault = $address->is_default || (bool) ($data['is_default'] ?? false);
+            unset($data['is_default']);
+
+            if ($makeDefault) {
+                $user->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+            }
+
+            $address->update($data + ['is_default' => $makeDefault]);
+
+            if ($makeDefault) {
+                $this->syncLegacyAddress($user, $address);
+            }
+        });
+
+        return back()->with('success', 'Endereço atualizado com sucesso.');
+    }
+
     public function destroy(Request $request, UserAddress $address): RedirectResponse
     {
         abort_unless((int) $address->user_id === (int) $request->user()->id, 404);

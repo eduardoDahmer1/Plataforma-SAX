@@ -225,7 +225,7 @@
                         @if($order->phone)
                             @php
                                 // Prefijo del telefono del perfil del usuario (55=BR, 595=PY). 595 por defecto
-                                $ddi = optional($order->user)->phone_country ?: '595';
+                                $ddi = $order->phone_country ?: optional($order->user)->phone_country ?: '595';
                                 $whatsapp = $ddi . preg_replace('/\D/', '', $order->phone);
                             @endphp
                             <a href="https://wa.me/{{ $whatsapp }}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3 rounded-0 fw-bold">

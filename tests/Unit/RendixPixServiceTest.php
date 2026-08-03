@@ -52,4 +52,14 @@ class RendixPixServiceTest extends TestCase
         $this->assertSame('qr-base64', $sale['qrCodeBase64']);
         $this->assertSame('2026-07-30T16:32:36.825+00:00', $sale['qrCodeExpiration']);
     }
+
+    public function test_preserves_the_selected_brazilian_or_paraguayan_phone_country_code(): void
+    {
+        $service = new RendixPixService('https://sandbox.example', 'email@example.com', 'secret', '20');
+        $method = new \ReflectionMethod($service, 'normalizePhone');
+
+        $this->assertSame('+5545991588886', $method->invoke($service, '45 99158-8886', '55'));
+        $this->assertSame('+595981123456', $method->invoke($service, '0981 123456', '595'));
+        $this->assertSame('+595981123456', $method->invoke($service, '+595 981 123456', '595'));
+    }
 }

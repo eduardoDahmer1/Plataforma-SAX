@@ -96,7 +96,10 @@ class RendixPixService
             'cnpj' => '',
             'customerAcceptedTerms' => (bool) $order->rendix_terms_accepted_at,
             'controlNumber' => $transaction->control_number,
-            'phone' => $this->normalizeBrazilianPhone((string) $order->phone),
+            'phone' => $this->normalizePhone(
+                (string) $order->phone,
+                (string) ($order->phone_country ?: $order->user?->phone_country),
+            ),
             'email' => (string) $order->email,
             'isExternal' => true,
             'urlWebhook' => $webhookUrl,
@@ -278,14 +281,24 @@ class RendixPixService
         return 'rendix_pix_token:' . hash('sha256', $this->environment . '|' . $this->baseUrl . '|' . $this->email);
     }
 
-    private function normalizeBrazilianPhone(string $phone): string
+    private function normalizePhone(string $phone, string $countryCode = ''): string
     {
         $digits = preg_replace('/\D+/', '', $phone);
-        if (str_starts_with($digits, '55')) {
+        $countryCode = preg_replace('/\D+/', '', $countryCode);
+
+        if ($digits === '') {
+            return '';
+        }
+
+        if ($countryCode !== '' && str_starts_with($digits, $countryCode)) {
             return '+' . $digits;
         }
 
-        return '+55' . ltrim($digits, '0');
+        if ($countryCode !== '') {
+            return '+' . $countryCode . ltrim($digits, '0');
+        }
+
+        return str_starts_with(trim($phone), '+') ? '+' . $digits : $digits;
     }
 
     private static function normalizeArray(mixed $value): array

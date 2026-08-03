@@ -61,8 +61,44 @@
     {{-- Modal global de confirmación (forms con data-confirm) --}}
     <x-admin.confirm-modal />
 
+    @if(session('admin_access_restricted_area'))
+        <div class="modal fade" id="adminAccessRestrictedModal" tabindex="-1" aria-labelledby="adminAccessRestrictedTitle" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                    <div class="modal-body text-center px-4 px-md-5 py-5">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning-subtle text-warning-emphasis mb-3" style="width: 64px; height: 64px;">
+                            <i class="fa-solid fa-lock fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-3" id="adminAccessRestrictedTitle">
+                            {{ __('messages.admin_access_restricted_title') }}
+                        </h4>
+                        <p class="text-muted mb-4">
+                            {{ __('messages.admin_access_restricted_message', [
+                                'area' => __('messages.' . session('admin_access_restricted_area')),
+                            ]) }}
+                        </p>
+                        <button type="button" class="btn btn-dark rounded-2 px-4 py-2 fw-bold" data-bs-dismiss="modal">
+                            <i class="fa-solid fa-arrow-left me-2"></i>
+                            {{ __('messages.admin_back_to_dashboard') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <x-scripts-master />
 
+    @if(session('admin_access_restricted_area'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const modalElement = document.getElementById('adminAccessRestrictedModal');
+                if (modalElement && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+                }
+            });
+        </script>
+    @endif
 
 </body>
 

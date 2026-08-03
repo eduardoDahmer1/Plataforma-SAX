@@ -17,12 +17,12 @@ class CheckAdmin
      */
     public function handle(Request $request, Closure $next)
     {
-        // Verifica se o usuário está autenticado e se é do tipo Admin
-        if (Auth::check() && Auth::user()->user_type == 1) {
+        $user = Auth::user();
+
+        if ($user && $user->canAccessAdminRoute($request->route()?->getName())) {
             return $next($request);
         }
 
-        // Se o usuário não for Admin, redireciona para a página inicial
-        return redirect('/');
+        abort(403, __('messages.admin_access_denied'));
     }
 }

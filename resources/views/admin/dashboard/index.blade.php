@@ -55,9 +55,17 @@
             <strong>{{ $integrationMonitor->error_code ?: __('messages.integration_error') }}:</strong>
             {{ $integrationMonitor->error_message }}
         </div>
-    @elseif(!$integrationMonitor)
+    @elseif(!$integrationMonitoringReady)
         <div class="alert alert-secondary mt-3 mb-3">
             {{ __('messages.integration_not_initialized') }}
+        </div>
+    @elseif(!$integrationEndpointConfigured)
+        <div class="alert alert-warning mt-3 mb-3">
+            {{ __('messages.integration_token_missing') }}
+        </div>
+    @elseif(!$integrationMonitor)
+        <div class="alert alert-info mt-3 mb-3">
+            {{ __('messages.integration_waiting_first_report') }}
         </div>
     @endif
 

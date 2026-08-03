@@ -104,13 +104,13 @@
 @endif
 
 {{-- 6. Admin --}}
-@if(Route::is('admin.*') || Route::is('manutencao') || (Route::is('receipts.*') && auth()->user()?->user_type == 1))
+@if(Route::is('admin.*') || Route::is('manutencao') || (Route::is('receipts.*') && auth()->user()?->isMasterAdmin()))
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
 @endif
 
 {{-- 7. User / Dashboard (Adicionado aqui) --}}
-@if(Route::is('user.*') || Route::is('dashboard') || (Route::is('receipts.*') && auth()->user()?->user_type != 1))
+@if(Route::is('user.*') || Route::is('dashboard') || (Route::is('receipts.*') && !(auth()->user()?->isMasterAdmin() ?? false)))
     <link href="{{ asset('css/user.css') }}?v={{ file_exists(public_path('css/user.css')) ? filemtime(public_path('css/user.css')) : time() }}" rel="stylesheet">
 @endif
 

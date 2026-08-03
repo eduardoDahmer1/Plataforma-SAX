@@ -13,7 +13,7 @@ class PreventRequestsDuringMaintenance
         $setting = SystemSetting::firstOrFail(); // garante que existe
     
         // Admin sempre vê tudo
-        if ($user && $user->user_type == 1) {
+        if ($user && $user->isAdmin()) {
             return $next($request);
         }
     

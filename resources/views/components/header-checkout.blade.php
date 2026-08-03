@@ -53,7 +53,7 @@
             <a href="{{ route('home') }}" class="sax-nav-item">{{ __('messages.criancas') }}</a>
             
             @if(auth()->check())
-                @if(auth()->user()->user_type == 1)
+                @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.index') }}" class="sax-nav-item sax-gold">ADMIN</a>
                 @else
                     <a href="{{ route('user.dashboard') }}" class="sax-nav-item sax-gold">{{ __('messages.meu_painel') }}</a>

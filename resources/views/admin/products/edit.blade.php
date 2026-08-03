@@ -14,6 +14,7 @@
     @endphp
     @php
         $type = $type ?? 'product';
+        $createdAt = $item->created_at;
         $lastEditedAt = $item->admin_edited_at ?? $item->updated_at;
         $lastEditedBy = $item->editor?->name ?? __('messages.product_audit_system_integration');
     @endphp
@@ -23,14 +24,21 @@
 
         <div class="bg-light border rounded-3 px-3 py-3 mb-4">
             <div class="row g-3 align-items-center">
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-4">
+                    <span class="d-block text-muted text-uppercase fw-bold x-small-7 mb-1">{{ __('messages.product_audit_created') }}</span>
+                    <span class="fw-bold text-dark">
+                        <i class="far fa-calendar-plus me-1 text-muted"></i>
+                        {{ $createdAt?->format('d/m/Y \à\s H:i') ?? __('messages.product_audit_date_not_registered') }}
+                    </span>
+                </div>
+                <div class="col-12 col-md-4">
                     <span class="d-block text-muted text-uppercase fw-bold x-small-7 mb-1">{{ __('messages.product_audit_last_update') }}</span>
                     <span class="fw-bold text-dark">
                         <i class="far fa-clock me-1 text-muted"></i>
                         {{ $lastEditedAt?->format('d/m/Y \à\s H:i') ?? __('messages.product_audit_date_not_registered') }}
                     </span>
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-4">
                     <span class="d-block text-muted text-uppercase fw-bold x-small-7 mb-1">{{ __('messages.product_audit_updated_by') }}</span>
                     <span class="fw-bold text-dark">
                         <i class="far fa-user me-1 text-muted"></i>

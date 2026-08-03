@@ -16,7 +16,7 @@ class UserPreferenceController extends Controller
         $user = Auth::user();
 
         // Bloqueio para user_type = 1
-        if ($user->user_type == 1) {
+        if ($user->isAdmin()) {
             return redirect()->route('home')
                 ->with('erro', 'Seu perfil não permite usar favoritos');
         }
@@ -36,7 +36,7 @@ class UserPreferenceController extends Controller
         $user = Auth::user();
 
         // Bloqueio para user_type = 1
-        if ($user->user_type == 1) {
+        if ($user->isAdmin()) {
             return back()->with('error', 'Seu perfil não permite favoritar produtos.');
         }
 

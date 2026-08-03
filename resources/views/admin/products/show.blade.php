@@ -46,7 +46,7 @@
     </div>
 
     {{-- Verifica se o usuário é admin master --}}
-    @if(auth()->user()->user_type == 1)
+    @if(auth()->user()->isAdmin())
     <a href="{{ route('admin.uploads.index') }}" class="btn btn-primary mt-4">Voltar para a lista de arquivos</a>
     @endif
 

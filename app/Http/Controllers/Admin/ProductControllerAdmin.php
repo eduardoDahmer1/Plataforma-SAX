@@ -30,12 +30,17 @@ class ProductControllerAdmin extends Controller
         $statusFilter = $request->get('status_filter');
         $highlightFilter = $request->get('highlight_filter');
         $stockFilter = $request->get('stock_filter');
-        $sortBy = $request->get('sort_by');
+        $sortBy = $request->get('sort_by', 'latest');
+        $dateFilter = $request->get('date_filter');
         $productType = $request->get('product_type');
         $outletFilter = $request->get('outlet_filter');
-        $perPage = $request->get('per_page', 20);
+        $perPage = (int) $request->get('per_page', 20);
+        $perPage = in_array($perPage, [20, 30, 50, 100], true) ? $perPage : 20;
 
-        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id', 'updated_at', 'updated_by', 'admin_edited_at'];
+        $allowedSorts = ['latest', 'oldest', 'last_edit', 'old_edit', 'price_low', 'price_high', 'name_az', 'name_za'];
+        $sortBy = in_array($sortBy, $allowedSorts, true) ? $sortBy : 'latest';
+
+        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id', 'created_at', 'updated_at', 'updated_by', 'admin_edited_at'];
 
         $products = Product::select($productColumns)
             ->with([
@@ -101,21 +106,30 @@ class ProductControllerAdmin extends Controller
             })
             ->when($highlightFilter, fn($q) => $q->whereJsonContains('highlights', [$highlightFilter => '1']))
             ->when($stockFilter, fn($q) => $stockFilter === 'in_stock' ? $q->where('stock', '>', 0) : ($stockFilter === 'out_of_stock' ? $q->where('stock', 0) : null))
+            ->when($dateFilter, function ($q) use ($dateFilter) {
+                if ($dateFilter === 'with_date') {
+                    $q->whereNotNull('created_at');
+                } elseif ($dateFilter === 'without_date') {
+                    $q->whereNull('created_at');
+                }
+            })
             ->when(
                 $sortBy,
                 function ($q) use ($sortBy) {
                     switch ($sortBy) {
                         case 'latest':
-                            $q->orderBy('created_at', 'desc');
+                            $q->orderByRaw('created_at IS NULL ASC')->orderByDesc('created_at')->orderByDesc('id');
                             break;
                         case 'oldest':
-                            $q->orderBy('created_at', 'asc');
+                            $q->orderByRaw('created_at IS NULL ASC')->orderBy('created_at')->orderBy('id');
                             break;
                         case 'last_edit':
-                            $q->orderBy('updated_at', 'desc');
+                            $q->orderByRaw('COALESCE(admin_edited_at, updated_at) IS NULL ASC')
+                                ->orderByRaw('COALESCE(admin_edited_at, updated_at) DESC')->orderByDesc('id');
                             break;
                         case 'old_edit':
-                            $q->orderBy('updated_at', 'asc');
+                            $q->orderByRaw('COALESCE(admin_edited_at, updated_at) IS NULL ASC')
+                                ->orderByRaw('COALESCE(admin_edited_at, updated_at) ASC')->orderBy('id');
                             break;
                         case 'price_low':
                             $q->orderBy('price', 'asc');
@@ -130,13 +144,10 @@ class ProductControllerAdmin extends Controller
                             $q->orderByRaw("COALESCE(NULLIF(name, ''), external_name) desc");
                             break;
                         default:
-                            $q->orderBy('id', 'desc');
+                            $q->orderByRaw('created_at IS NULL ASC')->orderByDesc('created_at')->orderByDesc('id');
                             break;
                     }
-                },
-                function ($q) {
-                    $q->orderBy('id', 'desc');
-                },
+                }
             )
             ->paginate($perPage)
             ->appends($request->query());
@@ -154,7 +165,7 @@ class ProductControllerAdmin extends Controller
             return $product;
         });
 
-        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'productType', 'outletFilter', 'perPage', 'highlights'));
+        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'dateFilter', 'productType', 'outletFilter', 'perPage', 'highlights'));
     }
 
     public function outletForm()

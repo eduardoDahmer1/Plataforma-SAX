@@ -19,7 +19,7 @@
         {{-- Breadcrumb --}}
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb small mb-0">
-                @if (auth()->user()->user_type == 1)
+                @if (auth()->user()->isMasterAdmin())
                     <li class="breadcrumb-item">
                         <a href="{{ route('admin.dashboard') }}" class="text-secondary text-decoration-none">{{ __('messages.inicio') }}</a>
                     </li>

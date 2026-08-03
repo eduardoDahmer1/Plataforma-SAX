@@ -38,6 +38,7 @@
                     @foreach ($products as $product)
                         @php
                             $highlightsValues = json_decode($product->highlights ?? '{}', true);
+                            $createdAt = $product->created_at;
                             $lastEditedAt = $product->admin_edited_at ?? $product->updated_at;
                             $lastEditedBy = $product->editor?->name ?? __('messages.product_audit_system_integration');
 
@@ -103,6 +104,11 @@
                                         </span>
                                     </div>
                                     <div class="d-flex flex-wrap align-items-center gap-2 x-small text-muted mt-1">
+                                        <span title="{{ __('messages.product_audit_created_title') }}">
+                                            <i class="far fa-calendar-plus me-1"></i>
+                                            {{ __('messages.product_audit_created_at', ['date' => $createdAt?->format('d/m/Y \à\s H:i') ?? __('messages.product_audit_date_not_registered')]) }}
+                                        </span>
+                                        <span class="d-none d-sm-inline">•</span>
                                         <span title="{{ __('messages.product_audit_datetime_title') }}">
                                             <i class="far fa-clock me-1"></i>
                                             {{ __('messages.product_audit_updated_at', ['date' => $lastEditedAt?->format('d/m/Y \à\s H:i') ?? __('messages.product_audit_date_not_registered')]) }}

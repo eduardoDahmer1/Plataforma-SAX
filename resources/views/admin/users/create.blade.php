@@ -48,6 +48,7 @@
                         <option value="" disabled selected>{{ __('messages.selecione_placeholder') }}</option>
                         <option value="2" {{ old('user_type') == 2 ? 'selected' : '' }}>{{ __('messages.usuario_comum') }}</option>
                         <option value="1" {{ old('user_type') == 1 ? 'selected' : '' }}>{{ __('messages.admin_master') }}</option>
+                        <option value="4" {{ old('user_type') == 4 ? 'selected' : '' }}>{{ __('messages.admin_editor') }}</option>
                         <option value="3" {{ old('user_type') == 3 ? 'selected' : '' }}>{{ __('messages.usuario_curso_loja') }}</option>
                     </select>
                 </div>

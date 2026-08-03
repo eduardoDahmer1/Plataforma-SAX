@@ -18,7 +18,7 @@
 
         $currentUser = Auth::check() ? Auth::user() : null;
         $userName = $currentUser ? explode(' ', $currentUser->name)[0] : null;
-        $isAdminUser = $currentUser && $currentUser->user_type == 1;
+        $isAdminUser = $currentUser?->isAdmin() ?? false;
     @endphp
 
     <div class="sax-aux-nav d-none d-lg-block">

@@ -198,6 +198,53 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('cart-button')?.addEventListener('click', e => { e.preventDefault(); toggleCart(); });
         document.getElementById('cart-close')?.addEventListener('click', toggleCart);
         cartOverlay.addEventListener('click', toggleCart);
+
+        cartSidebar.addEventListener('submit', async event => {
+            const form = event.target.closest('[data-cart-remove-form]');
+            if (!form || form.dataset.submitting === 'true') return;
+
+            event.preventDefault();
+
+            // Después de una eliminación AJAX puede quedar una sola fila. En ese
+            // caso conservamos la regla existente y abrimos el modal de abandono.
+            if (cartSidebar.querySelectorAll('[data-cart-item]').length === 1) {
+                const modal = document.getElementById('abandonCartFeedbackModal');
+                if (modal) bootstrap.Modal.getOrCreateInstance(modal).show();
+                return;
+            }
+
+            form.dataset.submitting = 'true';
+
+            const button = form.querySelector('button[type="submit"]');
+            if (button) button.disabled = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method || 'POST',
+                    body: new FormData(form),
+                    headers: { 'Accept': 'application/json' },
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error('Não foi possível remover o produto.');
+                }
+
+                form.closest('[data-cart-item]')?.remove();
+
+                const itemsCount = cartSidebar.querySelector('[data-cart-items-count]');
+                const subtotal = cartSidebar.querySelector('.cart-subtotal-value');
+                const badge = document.querySelector('#cart-button .cart-badge');
+
+                if (itemsCount) itemsCount.textContent = data.items_text;
+                if (subtotal) subtotal.textContent = data.subtotal_formatted;
+                if (badge) badge.textContent = data.item_count;
+            } catch (error) {
+                alert('Não foi possível remover o produto. Tente novamente.');
+                form.dataset.submitting = 'false';
+                if (button) button.disabled = false;
+            }
+        });
     }
 
     // Notifications Sidebar (admin)

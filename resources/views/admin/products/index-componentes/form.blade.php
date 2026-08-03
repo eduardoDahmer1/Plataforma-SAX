@@ -77,12 +77,23 @@
         <div class="sax-filter-item">
             <label class="sax-filter-label">{{ __('messages.ordenar_por') }}</label>
             <select name="sort_by" class="form-select sax-filter-select">
-                <option value="">Mais recentes</option>
+                <option value="latest" @selected(($sortBy ?? request('sort_by', 'latest')) === 'latest')>{{ __('messages.products_sort_newest_added') }}</option>
                 <option value="oldest" @selected(request('sort_by') == 'oldest')>Mais antigos</option>
                 <option value="last_edit" @selected(request('sort_by') == 'last_edit')>Últimos editados</option>
+                <option value="old_edit" @selected(request('sort_by') == 'old_edit')>Editados há mais tempo</option>
                 <option value="price_low" @selected(request('sort_by') == 'price_low')>{{ __('messages.menor_preco') }}</option>
                 <option value="price_high" @selected(request('sort_by') == 'price_high')>{{ __('messages.maior_preco') }}</option>
                 <option value="name_az" @selected(request('sort_by') == 'name_az')>Nome (A–Z)</option>
+                <option value="name_za" @selected(request('sort_by') == 'name_za')>Nome (Z–A)</option>
+            </select>
+        </div>
+
+        <div class="sax-filter-item">
+            <label class="sax-filter-label">{{ __('messages.products_registration_date') }}</label>
+            <select name="date_filter" class="form-select sax-filter-select">
+                <option value="">{{ __('messages.products_all_dates') }}</option>
+                <option value="with_date" @selected(request('date_filter') === 'with_date')>{{ __('messages.products_with_registered_date') }}</option>
+                <option value="without_date" @selected(request('date_filter') === 'without_date')>{{ __('messages.products_without_registered_date') }}</option>
             </select>
         </div>
 
@@ -119,7 +130,7 @@
     </div>
 
     {{-- Link limpar (solo si hay filtros activos) --}}
-    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'highlight_filter', 'outlet_filter', 'product_type', 'stock_filter']))
+    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'date_filter', 'highlight_filter', 'outlet_filter', 'product_type', 'stock_filter']))
         <div class="mt-2 text-end">
             <a href="{{ route('admin.products.index') }}" class="sax-clear-filters">
                 <i class="fa fa-times me-1"></i> Limpar filtros

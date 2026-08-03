@@ -10,8 +10,9 @@ class ClientController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 20);
-        $query = User::whereIn('user_type', [1, 2, 3]);
+        $perPage = (int) $request->get('per_page', 20);
+        $perPage = in_array($perPage, [20, 30, 40, 100], true) ? $perPage : 20;
+        $query = User::whereIn('user_type', User::USER_TYPES);
 
         if ($request->filled('user_type')) {
             $query->where('user_type', $request->user_type);
@@ -25,7 +26,7 @@ class ClientController extends Controller
         }
 
         $users = $query->orderBy('created_at', 'desc')->paginate($perPage);
-        $userCount = User::whereIn('user_type', [1, 2, 3])->count();
+        $userCount = User::whereIn('user_type', User::USER_TYPES)->count();
 
         return view('admin.clients.index', compact('users', 'userCount', 'perPage'));
     }    

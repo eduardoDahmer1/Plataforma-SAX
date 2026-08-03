@@ -14,7 +14,7 @@ class ReceiptController extends Controller
         $order = $receipt->order->load('items.product', 'user');
 
         // El layout depende de quien abre el recibo
-        $layout = auth()->user()->user_type == 1
+        $layout = auth()->user()->isMasterAdmin()
             ? 'layout.admin'
             : 'layout.dashboard';
 
@@ -36,7 +36,7 @@ class ReceiptController extends Controller
     {
         $user = auth()->user();
 
-        $isAdmin = $user->user_type == 1;
+        $isAdmin = $user->isMasterAdmin();
         $isOwner = (int) $receipt->order->user_id === (int) $user->id;
 
         if (!$isAdmin && !$isOwner) {

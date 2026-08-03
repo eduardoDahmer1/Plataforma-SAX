@@ -220,7 +220,7 @@
                     </div>
 
                     @auth
-                        @if (auth()->user()->user_type == 1)
+                        @if (auth()->user()->isAdmin())
                             <div class="mb-2">
                                 <a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => request()->fullUrl()]) }}"
                                    class="btn btn-sm btn-outline-warning rounded-0" style="font-size: .7rem;">
@@ -336,7 +336,7 @@
                                         {{ $product->stock > 0 ? __('messages.adicionar_ao_carrinho') : __('messages.esgotado') }}
                                     </button>
                                 </form>
-                                @if (Auth::user()->user_type != 1)
+                                @if (!Auth::user()->isAdmin())
                                     <div class="wishlist-btn">
                                         <x-product-favorite-button :item="$product" />
                                     </div>

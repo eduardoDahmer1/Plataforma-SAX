@@ -32,17 +32,32 @@
                             <span class="text-muted small fw-bold">ID USUÁRIO</span>
                             <span class="fw-bold">#{{ $client->id }}</span>
                         </div>
+
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted small fw-bold">DATA CADASTRO</span>
                             <span>{{ $client->created_at->format('d/m/Y') }}</span>
                         </div>
+
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted small fw-bold">TIPO</span>
-                            {{-- user_type 1 é o administrador (ver middleware CheckAdmin) --}}
                             <span class="badge {{ $client->isAdmin() ? 'bg-dark' : 'bg-light text-dark border' }}">
                                 {{ $client->user_role }}
                             </span>
                         </div>
+
+                        <form action="{{ route('admin.users.updateType', $client->id) }}" method="POST" class="border-top mt-3 pt-3">
+                            @csrf
+                            <label for="client-user-type" class="d-block text-muted small fw-bold mb-1">{{ __('messages.change_user_type') }}</label>
+                            <div class="input-group">
+                                <select id="client-user-type" name="user_type" class="form-select rounded-0" {{ auth()->id() === $client->id ? 'disabled' : '' }}>
+                                    <option value="1" @selected((int) $client->user_type === 1)>{{ __('messages.admin_master') }}</option>
+                                    <option value="4" @selected((int) $client->user_type === 4)>{{ __('messages.admin_editor') }}</option>
+                                    <option value="2" @selected((int) $client->user_type === 2)>{{ __('messages.usuario_comum') }}</option>
+                                    <option value="3" @selected((int) $client->user_type === 3)>{{ __('messages.usuario_curso') }}</option>
+                                </select>
+                                <button class="btn btn-dark rounded-0" type="submit" {{ auth()->id() === $client->id ? 'disabled' : '' }}>{{ __('messages.save_btn') }}</button>
+                            </div>
+                        </form>
 
                         @php
                             $pedidosPagos = $client->orders->where('payment_status', 'paid');

@@ -79,7 +79,7 @@
             <x-cupon-selo :product="$item" variante="card" />
 
             <div class="position-absolute top-0 end-0 p-3">
-                @if (Auth::check() && Auth::user()->user_type != 1)
+                @if (Auth::check() && !Auth::user()->isAdmin())
                     <x-product-favorite-button :item="$item" />
                 @endif
             </div>

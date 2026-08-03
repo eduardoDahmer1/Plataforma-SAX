@@ -38,7 +38,7 @@ class DashboardController extends Controller
             'active_products' => Product::where('status', 1)->count(),
             'products' => Product::count(),
             'published_blogs' => Blog::published()->count(),
-            'customers' => User::where('user_type', '<>', 1)->count(),
+            'customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->count(),
             'orders' => Order::count(),
             'bancard_orders' => Order::where('payment_method', 'bancard_v2')->count(),
             'pix_orders' => Order::where('payment_method', 'rendix_pix')->count(),
@@ -84,10 +84,13 @@ class DashboardController extends Controller
             ? BusinessEvent::with(['user:id,name,email', 'order:id,order_number'])
                 ->latest()->limit(12)->get()
             : collect();
-        $integrationMonitor = Schema::hasTable('integration_monitors')
+        $integrationMonitoringReady = Schema::hasTable('integration_monitors')
+            && Schema::hasTable('integration_runs');
+        $integrationEndpointConfigured = filled(config('services.integration_monitor.token'));
+        $integrationMonitor = $integrationMonitoringReady
             ? IntegrationMonitor::where('source', 'catalog')->first()
             : null;
-        $integrationRuns = $integrationMonitor && Schema::hasTable('integration_runs')
+        $integrationRuns = $integrationMonitor
             ? IntegrationRun::where('integration_monitor_id', $integrationMonitor->id)
                 ->latest('started_at')
                 ->limit(5)
@@ -126,7 +129,7 @@ class DashboardController extends Controller
         return view('admin.dashboard.index', compact(
             'metrics', 'analytics', 'analyticsReady', 'paymentMethods', 'orderStatuses', 'recentOrders',
             'topProducts', 'trafficLabels', 'trafficViews', 'trafficVisitors', 'topPages', 'topClicks', 'devices', 'businessEvents',
-            'integrationMonitor', 'integrationRuns'
+            'integrationMonitor', 'integrationRuns', 'integrationMonitoringReady', 'integrationEndpointConfigured'
         ));
     }
 
@@ -150,7 +153,7 @@ class DashboardController extends Controller
             'orders' => (clone $orders)->count(),
             'paid_orders' => (clone $paidOrders)->count(),
             'sales_total' => (float) (clone $paidOrders)->sum('total'),
-            'new_customers' => User::where('user_type', '<>', 1)->whereBetween('created_at', [$start, $end])->count(),
+            'new_customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->whereBetween('created_at', [$start, $end])->count(),
             'abandoned_carts' => AbandonedCart::whereBetween('abandoned_at', [$start, $end])->count(),
             'views' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->count() : 0,
             'visitors' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->distinct('visitor_hash')->count('visitor_hash') : 0,

@@ -1,5 +1,6 @@
 @php
     $menuSuffix = isset($menuInstance) ? '-' . $menuInstance : '';
+    $isMasterAdmin = auth()->user()?->isMasterAdmin() ?? false;
     $catalogosOpen = request()->routeIs('admin.products.*', 'admin.brands.*', 'admin.categories.*', 'admin.subcategories.*', 'admin.categorias-filhas.*');
     $vendasOpen = request()->routeIs('admin.orders.*', 'admin.clients.*', 'admin.abandoned-carts.*');
     $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*', 'admin.policies.*');
@@ -49,6 +50,7 @@
             </div>
         </div>
 
+        @if($isMasterAdmin)
         {{-- Vendas --}}
         <div class="nav-group">
             <a class="sax-nav-item has-collapse {{ $vendasOpen ? '' : 'collapsed' }} {{ $vendasOpen ? 'active' : '' }}" data-bs-toggle="collapse" href="#menuVendas{{ $menuSuffix }}" aria-expanded="{{ $vendasOpen ? 'true' : 'false' }}">
@@ -64,6 +66,7 @@
                 <a href="{{ route('admin.abandoned-carts.index') }}" class="submenu-link {{ request()->routeIs('admin.abandoned-carts.*') ? 'active' : '' }}"><i class="fa-solid fa-cart-arrow-down"></i> Carrinhos abandonados</a>
             </div>
         </div>
+        @endif
 
         {{-- Conteúdos --}}
         <div class="nav-group">
@@ -99,6 +102,7 @@
             </div>
         </div>
 
+        @if($isMasterAdmin)
         {{-- Sistema --}}
         <p class="sax-sidebar-heading mt-3">Sistema</p>
         <div class="nav-group">
@@ -129,5 +133,6 @@
                 </a>
             </div>
         </div>
+        @endif
     </nav>
 </div>

@@ -47,7 +47,7 @@ class CartController extends Controller
             return redirect()->route('login')->with('error', 'Você precisa estar logado para adicionar ao carrinho.');
         }
 
-        if ($user->user_type == 1) {
+        if ($user->isAdmin()) {
             return back()->with('error', 'Seu perfil não tem permissão para adicionar produtos ao carrinho.');
         }
 
@@ -191,7 +191,7 @@ class CartController extends Controller
         return back()->with('success', 'Carrinho atualizado!');
     }
 
-    public function remove($productId)
+    public function remove(Request $request, $productId)
     {
         $user = auth()->user();
         if (!$user) {
@@ -206,6 +206,23 @@ class CartController extends Controller
 
         if ($removalResult === 'not_found') {
             return back()->with('error', __('messages.cart_product_not_found'));
+        }
+
+        if ($request->expectsJson()) {
+            $cart = Cart::available()
+                ->with('product:id,price')
+                ->where('user_id', $user->id)
+                ->get();
+
+            $subtotal = $cart->sum(
+                fn (Cart $item) => (float) $item->product->price * $item->quantity
+            );
+
+            return response()->json([
+                'item_count' => (int) $cart->sum('quantity'),
+                'items_text' => $cart->sum('quantity') . ' ' . __('messages.unidade_itens'),
+                'subtotal_formatted' => currency_format($subtotal),
+            ]);
         }
 
         return back()->with('success', __('messages.cart_product_removed'));

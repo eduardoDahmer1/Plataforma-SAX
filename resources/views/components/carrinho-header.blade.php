@@ -49,7 +49,7 @@
         <div class="cart-header">
             <div class="header-title">
                 <span class="fw-bold">{{ __('messages.itens_no_carrinho') }}</span>
-                <span class="items-count">{{ $cartCount }} {{ __('messages.unidade_itens') }}</span>
+                <span class="items-count" data-cart-items-count>{{ $cartCount }} {{ __('messages.unidade_itens') }}</span>
             </div>
             <button id="cart-close" class="close-drawer">&times;</button>
         </div>
@@ -72,7 +72,7 @@
                             $formattedPrice = $symbol . ' ' . number_format($convertedPrice, $decimals, $decimal, $thousand);
                             $formattedSubtotal = $symbol . ' ' . number_format($subtotalItem, $decimals, $decimal, $thousand);
                         @endphp
-                        <div class="cart-item">
+                        <div class="cart-item" data-cart-item>
                             <div class="item-image">
                                 <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
                                     alt="{{ $productName }}">
@@ -126,12 +126,20 @@
                                                 data-bs-target="#abandonCartFeedbackModal"
                                                 aria-label="{{ __('messages.cart_last_item_requires_abandon') }}"
                                                 title="{{ __('messages.cart_last_item_requires_abandon') }}">
-                                            <i class="fa fa-trash-o"></i>
+                                            <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                                         </button>
                                     @else
-                                        <form action="{{ route('cart.remove', $item->product_id) }}" method="POST" class="ms-auto">
+                                        <form action="{{ route('cart.remove', $item->product_id) }}"
+                                              method="POST"
+                                              class="ms-auto"
+                                              data-cart-remove-form>
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="remove-item-btn"><i class="fa fa-trash-o"></i></button>
+                                            <button type="submit"
+                                                    class="remove-item-btn"
+                                                    aria-label="{{ __('messages.remover') }}"
+                                                    title="{{ __('messages.remover') }}">
+                                                <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                            </button>
                                         </form>
                                     @endif
                                 </div>

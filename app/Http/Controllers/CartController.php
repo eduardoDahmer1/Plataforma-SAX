@@ -47,10 +47,6 @@ class CartController extends Controller
             return redirect()->route('login')->with('error', 'Você precisa estar logado para adicionar ao carrinho.');
         }
 
-        if ($user->isAdmin()) {
-            return back()->with('error', 'Seu perfil não tem permissão para adicionar produtos ao carrinho.');
-        }
-
         $productId = $request->input('product_id');
         $quantity  = (int) $request->input('quantity', 1);
 

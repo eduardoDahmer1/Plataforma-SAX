@@ -68,6 +68,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const categorySwiperEl = document.querySelector('.sax-category-swiper');
+    if (categorySwiperEl) {
+        const mobileCategories = window.matchMedia('(max-width: 767.98px)');
+        let categorySwiper = null;
+
+        const syncCategorySwiper = () => {
+            if (mobileCategories.matches && !categorySwiper) {
+                const slideCount = categorySwiperEl.querySelectorAll('.category-item').length;
+
+                categorySwiper = new Swiper(categorySwiperEl, {
+                    slidesPerView: 2,
+                    spaceBetween: 8,
+                    loop: slideCount > 2,
+                    speed: 550,
+                    grabCursor: true,
+                    watchOverflow: false,
+                    observer: true,
+                    observeParents: true,
+                    autoplay: false,
+                });
+            } else if (!mobileCategories.matches && categorySwiper) {
+                categorySwiper.destroy(true, true);
+                categorySwiper = null;
+            }
+        };
+
+        syncCategorySwiper();
+
+        if (typeof mobileCategories.addEventListener === 'function') {
+            mobileCategories.addEventListener('change', syncCategorySwiper);
+        } else {
+            mobileCategories.addListener(syncCategorySwiper);
+        }
+    }
+
     document.querySelectorAll('.accordion-trigger').forEach(trigger => {
         trigger.addEventListener('click', function () {
             const content = this.nextElementSibling;

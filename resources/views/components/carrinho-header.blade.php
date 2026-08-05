@@ -39,9 +39,8 @@
                 data-bs-target="#loginModal"
                 aria-haspopup="dialog"
             @elseif (!$hasCartItems)
-                data-bs-toggle="modal"
-                data-bs-target="#emptyCartModal"
-                aria-haspopup="dialog"
+                aria-disabled="true"
+                data-cart-empty="true"
             @else
                 aria-controls="cart-sidebar"
                 aria-expanded="false"
@@ -182,25 +181,6 @@
                 </div>
         </div>
     </div>
-    @elseif ($user)
-        <div class="modal fade sax-cart-empty-modal" id="emptyCartModal" tabindex="-1"
-             aria-labelledby="emptyCartModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content">
-                    <button type="button" class="sax-cart-empty-modal__close" data-bs-dismiss="modal"
-                            aria-label="{{ __('messages.fechar') }}">&times;</button>
-                    <div class="modal-body text-center">
-                        <span class="sax-cart-empty-modal__icon" aria-hidden="true">
-                            <i class="fa-solid fa-bag-shopping"></i>
-                        </span>
-                        <h2 id="emptyCartModalLabel">{{ __('messages.sacola_vazia') }}</h2>
-                        <a href="{{ route('search') }}" class="sax-cart-empty-modal__action">
-                            {{ __('messages.explorar_produtos') }}
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
     @endif
 </div>
 

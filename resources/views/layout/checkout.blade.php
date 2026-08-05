@@ -5,12 +5,12 @@
     <x-head-master />
 </head>
 
-<body class="bg-light">
+<body class="sax-storefront sax-checkout-page bg-light">
     <x-marketing-body-start />
 
     @include('components.header')
 
-    <main class="py-4 container">
+    <main class="sax-checkout-main py-4 container">
         @yield('content')
     </main>
 

@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
         overlay.addEventListener("click", () => {
             setDrawer(false);
         });
-        drawer.querySelectorAll("a.submenu-link").forEach(link => {
+        drawer.querySelectorAll("a.submenu-link, a.sax-nav-item:not(.has-collapse)").forEach(link => {
             link.addEventListener("click", () => setDrawer(false));
         });
         document.addEventListener("keydown", event => {

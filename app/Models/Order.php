@@ -96,6 +96,17 @@ class Order extends Model
         'rendix_terms_accepted_at' => 'datetime',
     ];
 
+    public function depositReceiptPath(): ?string
+    {
+        if (blank($this->deposit_receipt)) {
+            return null;
+        }
+
+        return str_starts_with($this->deposit_receipt, 'deposits/')
+            ? $this->deposit_receipt
+            : 'deposits/' . $this->deposit_receipt;
+    }
+
     // Relacionamento com itens do pedido
     public function items()
     {

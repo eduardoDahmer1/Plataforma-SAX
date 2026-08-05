@@ -4,10 +4,10 @@
     <div class="sax-menu-group">
         <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_minha_conta') }}</span>
         <div class="sax-menu-items">
-            <a href="{{ route('user.dashboard') }}" class="sax-menu-link">
+            <a href="{{ route('user.dashboard') }}" class="sax-menu-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">
                 <i class="fa fa-user-edit"></i> {{ __('messages.inicio_menu') }}
             </a>
-            <a href="{{ route('user.profile.edit') }}" class="sax-menu-link">
+            <a href="{{ route('user.profile.edit') }}" class="sax-menu-link {{ request()->routeIs('user.profile.*') ? 'active' : '' }}">
                 <i class="fa fa-user-edit"></i> {{ __('messages.menu_editar_dados') }}
             </a>
             <a href="{{ route('user.addresses.index') }}" class="sax-menu-link {{ request()->routeIs('user.addresses.*') ? 'active' : '' }}">
@@ -23,10 +23,10 @@
     <div class="sax-menu-group mt-4">
         <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_compras') }}</span>
         <div class="sax-menu-items">
-            <a href="{{ route('user.orders') }}" class="sax-menu-link">
+            <a href="{{ route('user.orders') }}" class="sax-menu-link {{ request()->routeIs('user.orders*') ? 'active' : '' }}">
                 <i class="fa fa-list"></i> {{ __('messages.menu_historico') }}
             </a>
-            <a href="{{ route('user.cupons') }}" class="sax-menu-link">
+            <a href="{{ route('user.cupons') }}" class="sax-menu-link {{ request()->routeIs('user.cupons') ? 'active' : '' }}">
                 <i class="fa fa-ticket-alt"></i> {{ __('messages.cupon_meus_cupons_titulo') }}
             </a>
             <a href="{{ route('user.abandoned-carts.index') }}" class="sax-menu-link">
@@ -47,7 +47,7 @@
     <div class="sax-menu-group mt-4">
         <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_preferencia') }}</span>
         <div class="sax-menu-items">
-            <a href="{{ route('user.preferences') }}" class="sax-menu-link">
+            <a href="{{ route('user.preferences') }}" class="sax-menu-link {{ request()->routeIs('user.preferences') ? 'active' : '' }}">
                 <i class="fa fa-star"></i> {{ __('messages.menu_wishlist') }}
             </a>
         </div>

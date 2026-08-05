@@ -48,7 +48,7 @@
 
             <div class="col-md-12 mb-3">
                 <label class="sax-label">{{ __('messages.telefone') }}</label>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 sax-user-phone-row">
                     <select name="phone_country" class="form-select sax-input w-auto">
                         <option value="55" {{ auth()->user()->phone_country == '55' ? 'selected' : '' }}>BRA (+55)</option>
                         <option value="595" {{ auth()->user()->phone_country == '595' ? 'selected' : '' }}>PRY (+595)</option>
@@ -119,7 +119,7 @@
             @endphp
             <div class="col-md-6 mb-3 mt-4" data-document-group>
                 <label class="sax-label">{{ __('messages.num_documento') }}</label>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 sax-user-document-row">
                     <select name="document_type" class="form-select sax-input flex-shrink-0" style="width: 145px;" data-document-type required>
                         <option value="cpf" {{ $profileDocumentType === 'cpf' ? 'selected' : '' }}>{{ __('messages.document_type_cpf_br') }}</option>
                         <option value="rg_br" {{ $profileDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>

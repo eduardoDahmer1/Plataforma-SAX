@@ -5,7 +5,7 @@
     <x-head-master />
 </head>
 
-<body>
+<body class="sax-storefront">
     <x-marketing-body-start />
 
     {{-- Header --}}

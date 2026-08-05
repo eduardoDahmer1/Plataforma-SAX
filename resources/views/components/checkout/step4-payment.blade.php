@@ -210,10 +210,8 @@
             <input class="form-check-input mt-1" type="checkbox" name="accept_terms" value="1" id="accept_terms" @checked(old('accept_terms'))>
             <label class="form-check-label text-start" for="accept_terms">
                 {{ __('messages.checkout_terms_accept_prefix') }}
-                <button type="button" class="btn btn-link d-inline p-0 align-baseline fw-bold text-decoration-underline"
-                        data-bs-toggle="modal" data-bs-target="#checkoutPoliciesModal">
-                    {{ __('messages.checkout_terms_policies_link') }}
-                </button>.
+                <button type="button" class="btn btn-link d-inline p-0 align-baseline fw-bold text-decoration-underline checkout-policy-link"
+                        data-bs-toggle="modal" data-bs-target="#checkoutPoliciesModal">{{ __('messages.checkout_terms_policies_link') }}</button>
                 <span class="d-block small text-muted mt-1">{{ __('messages.checkout_terms_required_note') }}</span>
             </label>
         </div>

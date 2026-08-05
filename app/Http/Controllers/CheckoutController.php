@@ -307,10 +307,8 @@ class CheckoutController extends Controller
 
             // 7. Comprovante de Depósito
             if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
-                $file = $request->file('deposit_receipt');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->storeAs('deposits', $filename, 'public');
-                $order->update(['deposit_receipt' => $filename]);
+                $filePath = $request->file('deposit_receipt')->store('deposits', 'public');
+                $order->update(['deposit_receipt' => $filePath]);
             }
             DB::commit();
             /**

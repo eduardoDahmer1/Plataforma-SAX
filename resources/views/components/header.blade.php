@@ -16,6 +16,14 @@
             'casa' => __('messages.casa'),
         ];
 
+        $mobileIconMap = [
+            'feminino' => 'fa-venus',
+            'masculino' => 'fa-mars',
+            'infantil' => 'fa-child-reaching',
+            'optico' => 'fa-glasses',
+            'casa' => 'fa-house',
+        ];
+
         $currentUser = Auth::check() ? Auth::user() : null;
         $userName = $currentUser ? explode(' ', $currentUser->name)[0] : null;
         $isAdminUser = $currentUser?->isAdmin() ?? false;
@@ -92,13 +100,10 @@
 
     <div class="sax-header-main container-fluid px-lg-5 py-3 border-top border-bottom bg-white">
         <div class="row align-items-center g-2">
-            <div class="col-3 d-lg-none">
+            <div class="col-3 d-lg-none sax-mobile-header-start">
                 <div class="sax-mobile-actions d-flex align-items-center gap-2">
-                    <button class="btn-menu-open" id="mobileMenuBtn" type="button" aria-label="{{ __('messages.abrir_menu') }}">
+                    <button class="btn-menu-open" id="mobileMenuBtn" type="button" aria-label="{{ __('messages.abrir_menu') }}" aria-controls="saxDrawer" aria-expanded="false">
                         <i class="fa fa-bars"></i>
-                    </button>
-                    <button class="btn-menu-open" id="mobileSearchBtn" type="button" aria-label="{{ __('messages.abrir_busca') }}">
-                        <i class="fa fa-search"></i>
                     </button>
                 </div>
             </div>
@@ -163,6 +168,26 @@
         </div>
     </div>
 
+    <div class="sax-mobile-discovery d-lg-none">
+        <button class="sax-mobile-searchbar" id="mobileSearchBar" type="button" aria-label="{{ __('messages.abrir_busca') }}">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <span>{{ __('messages.pesquisar') }}</span>
+            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+        </button>
+
+        <nav class="sax-mobile-category-nav" aria-label="{{ __('messages.categorias') }}">
+            <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
+                <i class="fa-solid fa-house" aria-hidden="true"></i>
+                <span>{{ __('messages.inicio') }}</span>
+            </a>
+            @foreach ($mainCategories as $cat)
+                <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}">
+                    <span>{{ $labelMap[$cat->slug] ?? $cat->name }}</span>
+                </a>
+            @endforeach
+        </nav>
+    </div>
+
     <nav class="sax-main-nav d-none d-lg-block">
         <div class="container text-center py-3">
             <ul class="list-inline m-0">
@@ -186,50 +211,55 @@
         </div>
     </nav>
 
-    <div id="saxDrawer" class="sax-drawer">
+    <div id="saxDrawer" class="sax-drawer" aria-hidden="true">
         <div class="drawer-header p-3 d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-uppercase tracking-2">{{ __('messages.menu') }}</span>
-            <button class="btn-close-drawer" id="closeDrawer"><i class="fa fa-times"></i></button>
+            <div class="drawer-header-copy">
+                <span>SAX</span>
+                <strong>{{ __('messages.menu') }}</strong>
+            </div>
+            <button class="btn-close-drawer" id="closeDrawer" type="button" aria-label="{{ __('messages.fechar') }}"><i class="fa fa-times"></i></button>
         </div>
 
         <div class="drawer-body">
             <div class="drawer-auth-section p-3">
                 @if ($currentUser)
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="user-avatar"><i class="fa fa-user"></i></div>
-                        <div class="ms-2">
-                            <small class="d-block text-muted">{{ __('messages.ola') }}</small>
-                            <span class="fw-bold">{{ $userName }}</span>
-                        </div>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}" class="btn btn-dark w-100 rounded-0">
-                            <i class="fa fa-cog me-2"></i> {{ __('messages.meu_painel') }}
-                        </a>
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-danger w-100 rounded-0">{{ __('messages.sair') }}</button>
-                        </form>
-                    </div>
+                    <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}" class="drawer-user-summary">
+                        <span class="user-avatar"><i class="fa fa-user"></i></span>
+                        <span class="drawer-user-copy">
+                            <small>{{ __('messages.ola') }}</small>
+                            <strong>{{ $userName }}</strong>
+                            <span>{{ __('messages.minha_conta') }}</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-right drawer-user-arrow" aria-hidden="true"></i>
+                    </a>
+                    <form action="{{ route('logout') }}" method="POST" class="drawer-signout-form">
+                        @csrf
+                        <button type="submit" class="drawer-signout">
+                            <i class="fa fa-sign-out-alt" aria-hidden="true"></i>
+                            <span>{{ __('messages.sair') }}</span>
+                        </button>
+                    </form>
                 @else
-                    <button class="btn btn-dark w-100 rounded-0 py-3" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    <button class="btn btn-dark w-100 py-3" data-bs-toggle="modal" data-bs-target="#loginModal">
                         <i class="fa fa-sign-in-alt me-2"></i> {{ __('messages.entrar') }}
                     </button>
                 @endif
             </div>
 
-            <ul class="list-unstyled mb-0">
+            <ul class="list-unstyled mb-0 drawer-navigation">
+                <li class="drawer-section-label">{{ __('messages.categorias') }}</li>
                 @foreach ($mainCategories as $cat)
                     <li>
-                        <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}" class="drawer-link fw-bold text-uppercase">
-                            {{ $labelMap[$cat->slug] ?? $cat->name }}
+                        <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}" class="drawer-link drawer-link--primary">
+                            <span class="drawer-link-icon"><i class="fa-solid {{ $mobileIconMap[$cat->slug] ?? 'fa-tag' }}"></i></span>
+                            <span>{{ $labelMap[$cat->slug] ?? $cat->name }}</span>
+                            <i class="fa-solid fa-chevron-right drawer-link-arrow"></i>
                         </a>
                     </li>
                 @endforeach
-                <li><x-language-selector variant="mobile" /></li>
+                <li class="drawer-preferences"><x-language-selector variant="mobile" /></li>
 
-                <hr class="my-2">
-
+                <li class="drawer-section-label">SAX Experiences</li>
                 <li><a href="{{ route('institucional.index') }}" class="drawer-link"><i class="fa fa-info-circle me-3"></i>{{ __('messages.institucional') }}</a></li>
                 <li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>{{ __('messages.bridal') }}</a></li>
                 <li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>{{ __('messages.sax_palace') }}</a></li>
@@ -248,6 +278,36 @@
 
     <x-search-mobile />
 </header>
+
+<nav class="sax-mobile-dock d-lg-none" aria-label="{{ __('messages.menu') }}">
+        <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
+            <i class="fa-solid fa-house" aria-hidden="true"></i>
+            <span>{{ __('messages.inicio') }}</span>
+        </a>
+        <a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            <span>{{ __('messages.categorias') }}</span>
+        </a>
+        <button type="button" id="mobileDockSearch" aria-label="{{ __('messages.abrir_busca') }}">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <span>{{ __('messages.pesquisar') }}</span>
+        </button>
+        @if ($currentUser)
+            <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}" class="{{ request()->routeIs('user.*') || request()->routeIs('admin.*') ? 'active' : '' }}">
+                <i class="fa-regular fa-user" aria-hidden="true"></i>
+                <span>{{ __('messages.minha_conta') }}</span>
+            </a>
+        @else
+            <button type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fa-regular fa-user" aria-hidden="true"></i>
+                <span>{{ __('messages.entrar') }}</span>
+            </button>
+        @endif
+        <button type="button" id="mobileDockCart" aria-label="{{ __('messages.carrinho') }}">
+            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+            <span>{{ __('messages.carrinho') }}</span>
+        </button>
+</nav>
 
 @include('components.modal-login')
 <script>

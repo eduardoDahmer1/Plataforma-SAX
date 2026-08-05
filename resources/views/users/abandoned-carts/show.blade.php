@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="sax-dashboard-wrapper">
-    <div class="d-flex justify-content-between align-items-end mb-4">
+    <div class="dashboard-header d-flex justify-content-between align-items-end mb-4">
         <div><h1 class="sax-title mb-2">{{ __('messages.user_cart_number', ['id' => $abandonedCart->id]) }}</h1><p class="sax-subtitle mb-0">{{ __('messages.user_saved_at', ['date' => $abandonedCart->abandoned_at->format('d/m/Y H:i')]) }}</p></div>
         <a href="{{ route('user.abandoned-carts.index') }}" class="btn btn-outline-dark btn-sm">{{ __('messages.voltar') }}</a>
     </div>

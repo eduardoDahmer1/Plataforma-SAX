@@ -199,7 +199,7 @@
 
         @media (max-width: 768px) {
             .whatsapp-container {
-                bottom: 16px;
+                bottom: calc(86px + env(safe-area-inset-bottom, 0px));
                 right: 14px;
             }
 

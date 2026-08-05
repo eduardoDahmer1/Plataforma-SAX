@@ -298,7 +298,7 @@
             gap: 10px;
             padding: 12px 14px;
             border: 1px solid #e0e5ec;
-            border-radius: 14px;
+            border-radius: 8px;
             background: #fff;
             box-shadow: 0 7px 22px rgba(16, 24, 40, 0.045);
         }
@@ -306,7 +306,7 @@
         .catalog-sort-toolbar .toolbar-control {
             padding: 6px 9px 6px 12px;
             border: 1px solid #e0e5ec;
-            border-radius: 11px;
+            border-radius: 6px;
             background: #f9fafb;
         }
 
@@ -363,7 +363,7 @@
             max-height: calc(100vh - 116px);
             background: #fff;
             border: 1px solid #dfe3ea;
-            border-radius: 14px;
+            border-radius: 8px;
             box-shadow: 0 8px 28px rgba(16, 24, 40, 0.07);
         }
 
@@ -418,7 +418,7 @@
             height: 54px;
             padding: 0 44px 0 15px;
             border: 1px solid #d7dee9;
-            border-radius: 12px;
+            border-radius: 6px;
             background: #fff;
             color: #344054;
             font-size: 0.82rem;
@@ -492,15 +492,14 @@
 
         @media (max-width: 767.98px) {
             .catalog-toolbar.search-toolbar {
-                display: flex !important;
-                flex-wrap: nowrap;
-                gap: 0.75rem;
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) auto !important;
+                gap: .55rem;
             }
 
             .catalog-toolbar .search-filter-button {
-                width: auto;
-                flex: 1 1 auto;
-                justify-content: center;
+                width: 100%;
+                justify-content: flex-start;
             }
 
             .catalog-toolbar .catalog-result-summary {
@@ -511,16 +510,15 @@
 
         @media (max-width: 380px) {
             .catalog-toolbar.search-toolbar {
-                flex-wrap: wrap;
+                grid-template-columns: minmax(0, 1fr) auto !important;
             }
 
             .catalog-toolbar .search-filter-button {
                 width: 100%;
-                flex-basis: 100%;
             }
 
             .catalog-toolbar .catalog-result-summary {
-                width: 100%;
+                width: auto;
                 justify-content: flex-end;
             }
         }

@@ -116,7 +116,7 @@ Route::get('/categorias-filhas', [PublicCategoriasFilhasController::class, 'inde
 Route::get('/categorias-filhas/{slug}', [PublicCategoriasFilhasController::class, 'show'])->name('categorias-filhas.show');
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
 Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('brands.show');
-Route::get('/cart', [CartController::class, 'view'])->name('cart.view');
+Route::get('/cart', [CartController::class, 'view'])->middleware('auth')->name('cart.view');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');

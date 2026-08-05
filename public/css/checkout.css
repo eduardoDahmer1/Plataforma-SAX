@@ -1127,3 +1127,585 @@ textarea {
 
 /* O selo de cupom do card/produto vive em app.css: é carregado no site todo,
    enquanto este arquivo só entra nas rotas de carrinho e checkout. */
+
+/* ==========================================================================
+   Checkout e carrinho mobile — escala compacta e consistente
+   ========================================================================== */
+.checkout-policy-link::after {
+    content: ".";
+}
+
+@media (max-width: 767.98px) {
+    .sax-checkout-page {
+        --checkout-radius: 8px;
+        font-size: 13px;
+    }
+
+    .sax-checkout-main {
+        max-width: 100%;
+        padding: .7rem .72rem 1.2rem !important;
+    }
+
+    .sax-checkout-container {
+        max-width: 100%;
+        margin-top: .35rem !important;
+        padding: 0 !important;
+    }
+
+    .sax-checkout-shell {
+        margin-bottom: .75rem;
+    }
+
+    .sax-checkout-progress {
+        gap: .42rem;
+        margin: .15rem 0 .7rem;
+    }
+
+    .sax-checkout-progress-step {
+        width: 28px;
+        height: 28px;
+        font-size: .64rem;
+    }
+
+    .sax-checkout-alert {
+        margin-bottom: .7rem !important;
+        padding: .7rem .8rem;
+        border-radius: var(--checkout-radius) !important;
+        font-size: .72rem;
+    }
+
+    .sax-checkout-box {
+        margin-bottom: .72rem;
+        padding: .95rem;
+        border-radius: var(--checkout-radius);
+        box-shadow: 0 10px 30px -26px rgba(0, 0, 0, .55);
+    }
+
+    .sax-checkout-box.mt-4 {
+        margin-top: .72rem !important;
+    }
+
+    .sax-checkout-box.text-center.py-5 {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .sax-checkout-box.text-center > h5 {
+        margin-bottom: .8rem !important;
+        font-size: .8rem;
+        letter-spacing: .1em;
+    }
+
+    .sax-step-title {
+        margin-bottom: .78rem;
+        padding-bottom: .65rem;
+        font-size: .76rem;
+        letter-spacing: .1em;
+    }
+
+    .step-number {
+        width: 25px;
+        height: 25px;
+        margin-right: .55rem;
+        font-size: .59rem;
+    }
+
+    .sax-step-helper {
+        margin-bottom: .85rem;
+        font-size: .72rem;
+        line-height: 1.45;
+    }
+
+    .sax-label,
+    .sax-input-group label {
+        margin-bottom: .25rem;
+        font-size: .59rem;
+        letter-spacing: .075em;
+    }
+
+    .sax-form-control {
+        min-height: 40px;
+        padding: .55rem 0;
+        font-size: .81rem;
+    }
+
+    .sax-input-group {
+        margin-bottom: .72rem !important;
+    }
+
+    .sax-checkout-phone-row {
+        gap: .45rem;
+    }
+
+    .sax-checkout-phone-row .sax-auth-phone-country {
+        min-height: 40px;
+        padding: .45rem .6rem;
+        border-radius: 6px;
+        font-size: .78rem;
+    }
+
+    .sax-cart-item {
+        gap: .65rem;
+        padding: .7rem 0;
+    }
+
+    .sax-cart-img-wrapper {
+        width: 60px;
+        min-width: 60px;
+        height: 68px;
+        border-radius: 6px;
+    }
+
+    .sax-item-brand {
+        font-size: .55rem;
+    }
+
+    .sax-item-name {
+        margin-bottom: .35rem;
+        font-size: .76rem;
+        line-height: 1.28;
+    }
+
+    .sax-item-meta,
+    .sax-order-item-row small {
+        font-size: .64rem;
+        line-height: 1.35;
+    }
+
+    .sax-item-subtotal {
+        font-size: .82rem;
+    }
+
+    .sax-cart-item-end {
+        font-size: .78rem;
+    }
+
+    .sax-total-section {
+        margin-top: .65rem;
+        padding-top: .65rem;
+    }
+
+    .total-count,
+    .total-label {
+        font-size: .65rem;
+    }
+
+    .total-value {
+        font-size: .98rem;
+    }
+
+    .sax-shipping-grid {
+        gap: .55rem;
+    }
+
+    .sax-method-card {
+        min-height: 64px;
+        padding: .7rem;
+        border-radius: 7px;
+    }
+
+    .sax-method-card .method-icon {
+        margin-bottom: .3rem;
+        font-size: .9rem;
+    }
+
+    .sax-method-card .method-text {
+        font-size: .59rem;
+        letter-spacing: .075em;
+    }
+
+    .sax-shipping-info-wrap,
+    .sax-address-preview,
+    .sax-map-container {
+        padding: .72rem;
+        border-radius: 7px;
+        font-size: .7rem;
+    }
+
+    .sax-selected-address {
+        margin-top: .8rem;
+        padding-top: .8rem;
+    }
+
+    .sax-selected-address__heading {
+        gap: .55rem;
+        margin-bottom: .7rem;
+    }
+
+    .sax-selected-address__icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .sax-selected-address__grid {
+        border-radius: 7px;
+    }
+
+    .sax-selected-address__field {
+        min-height: 56px;
+        padding: .62rem .7rem;
+    }
+
+    .sax-selected-address__field span {
+        margin-bottom: .2rem;
+        font-size: .54rem;
+    }
+
+    .sax-selected-address__field strong {
+        font-size: .7rem;
+    }
+
+    .sax-selected-address__manage {
+        margin-top: .65rem;
+        font-size: .68rem;
+    }
+
+    .sax-payment-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: .5rem !important;
+    }
+
+    .sax-payment-grid > :last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+
+    .sax-payment-method {
+        width: 100%;
+        min-height: 66px;
+        padding: .65rem .75rem;
+        border-radius: 7px;
+        font-size: .68rem;
+        letter-spacing: .06em;
+    }
+
+    .sax-payment-method i {
+        margin-bottom: .1rem !important;
+    }
+
+    .sax-payment-caption {
+        font-size: .59rem;
+    }
+
+    .sax-payment-notice {
+        margin-top: .75rem !important;
+        font-size: .66rem;
+    }
+
+    #rendix-pix-notice,
+    .sax-bancard-currency-notice {
+        margin-top: .65rem !important;
+        padding: .75rem;
+        border-radius: 7px !important;
+        font-size: .7rem;
+    }
+
+    #rendix-pix-notice .fs-4 {
+        font-size: 1rem !important;
+    }
+
+    #rendix-pix-notice .d-flex.gap-3 {
+        gap: .55rem !important;
+    }
+
+    #rendix-pix-notice .form-check {
+        margin-top: .65rem !important;
+        padding-top: .65rem !important;
+    }
+
+    .sax-order-item-row {
+        gap: .6rem !important;
+        margin-bottom: .55rem !important;
+        padding-bottom: .55rem !important;
+    }
+
+    .sax-order-item-image-wrap {
+        width: 48px;
+        min-width: 48px;
+        height: 52px;
+    }
+
+    .sax-order-item-name {
+        max-width: 150px;
+        font-size: .7rem;
+    }
+
+    .sax-summary-total {
+        font-size: .78rem;
+    }
+
+    .sax-summary-total .h5 {
+        font-size: .82rem;
+    }
+
+    .sax-summary-total .h4 {
+        font-size: 1rem;
+    }
+
+    .sax-cupon-box {
+        padding-top: .7rem;
+    }
+
+    .sax-cupon-label {
+        font-size: .62rem;
+    }
+
+    .sax-cupon-input-group {
+        gap: .4rem;
+    }
+
+    .sax-cupon-input {
+        min-height: 40px;
+        padding: .55rem .62rem;
+        font-size: .72rem;
+    }
+
+    .sax-cupon-btn {
+        min-height: 40px;
+        padding: .5rem .75rem;
+        font-size: .65rem;
+    }
+
+    #terms-validation-message {
+        margin-bottom: .65rem !important;
+        padding: .65rem .7rem;
+        font-size: .68rem;
+    }
+
+    #accept_terms + .form-check-label {
+        font-size: .76rem;
+        line-height: 1.38;
+    }
+
+    #accept_terms + .form-check-label .btn-link {
+        font-size: inherit;
+        line-height: inherit;
+    }
+
+    #accept_terms + .form-check-label .small {
+        font-size: .64rem;
+    }
+
+    .form-check-input {
+        flex: 0 0 auto;
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .sax-btn-next,
+    .sax-btn-prev,
+    .sax-btn-finish,
+    .sax-btn-wa {
+        min-height: 42px;
+        padding: .65rem .9rem;
+        border-radius: 6px;
+        font-size: .64rem;
+        letter-spacing: .085em;
+    }
+
+    .step > .d-flex.justify-content-between.mt-4 {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+        margin-top: .75rem !important;
+        justify-content: stretch !important;
+        align-items: stretch !important;
+        gap: .5rem !important;
+    }
+
+    .step > .d-flex.justify-content-between.mt-4 > .sax-btn-prev,
+    .step > .d-flex.justify-content-between.mt-4 > .sax-btn-finish {
+        display: flex;
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+    #checkoutPoliciesModal .modal-dialog {
+        margin: .55rem;
+    }
+
+    #checkoutPoliciesModal .modal-content {
+        border-radius: 8px !important;
+    }
+
+    #checkoutPoliciesModal .modal-header,
+    #checkoutPoliciesModal .modal-footer {
+        padding: .75rem !important;
+    }
+
+    #checkoutPoliciesModal .modal-body {
+        padding: .85rem !important;
+        font-size: .72rem;
+    }
+
+    #checkoutPoliciesModal .modal-title {
+        font-size: .92rem;
+    }
+
+    /* Página da sacola */
+    .sax-cart-page {
+        margin-top: .9rem !important;
+        margin-bottom: 1.25rem !important;
+        padding-right: .72rem;
+        padding-left: .72rem;
+    }
+
+    .sax-cart-page > .row {
+        --bs-gutter-y: .8rem;
+    }
+
+    .sax-cart-page .sax-cart-header {
+        margin-bottom: 0;
+        padding-bottom: .7rem;
+    }
+
+    .sax-cart-title {
+        font-size: 1.3rem;
+        letter-spacing: .06em;
+    }
+
+    .sax-cart-subtitle {
+        margin-top: .3rem;
+        font-size: .7rem;
+    }
+
+    .sax-cart-list-panel {
+        padding: .2rem .75rem;
+        border-radius: 8px;
+    }
+
+    .sax-cart-item-row {
+        gap: .7rem;
+        grid-template-columns: 74px minmax(0, 1fr);
+        padding: .8rem 0;
+    }
+
+    .sax-cart-item-media {
+        min-height: 92px;
+        padding: .4rem;
+        border-radius: 6px;
+    }
+
+    .sax-cart-item-image {
+        max-height: 78px;
+    }
+
+    .sax-cart-item-brand {
+        font-size: .55rem;
+    }
+
+    .sax-cart-item-name {
+        margin-bottom: .35rem !important;
+        font-size: .76rem;
+        line-height: 1.25;
+    }
+
+    .sax-cart-item-meta {
+        display: grid;
+        gap: .14rem;
+        font-size: .64rem;
+    }
+
+    .sax-cart-qty-area {
+        margin-top: .55rem !important;
+        flex-wrap: nowrap;
+    }
+
+    .quantity-control-sax {
+        border-radius: 6px;
+    }
+
+    .qty-btn-sax {
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        font-size: .72rem;
+    }
+
+    .qty-val-sax {
+        padding: 0 .55rem;
+        font-size: .67rem;
+    }
+
+    .btn-remove-sax {
+        padding: .35rem;
+        font-size: .58rem;
+        letter-spacing: .05em;
+    }
+
+    .sax-cart-item-price-wrap {
+        grid-column: 2;
+    }
+
+    .sax-cart-item-price {
+        font-size: .9rem;
+    }
+
+    .sax-cart-continue-link {
+        margin-top: .65rem;
+        font-size: .62rem;
+    }
+
+    .checkout-summary-sax {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .checkout-summary-sax h5 {
+        margin-bottom: .65rem;
+        font-size: .7rem;
+    }
+
+    .sax-summary-line {
+        margin-bottom: .4rem;
+        font-size: .72rem;
+    }
+
+    .sax-summary-total-line {
+        margin-top: .6rem;
+        padding-top: .6rem;
+        font-size: .92rem;
+    }
+
+    .checkout-summary-sax .mt-4 {
+        margin-top: .8rem !important;
+    }
+
+    .checkout-summary-sax .btn-outline-danger {
+        min-height: 42px;
+        padding: .6rem !important;
+        border-radius: 6px !important;
+        font-size: .64rem;
+    }
+
+    .sax-summary-security {
+        gap: .45rem;
+        font-size: .61rem;
+    }
+}
+
+@media (max-width: 374.98px) {
+    .sax-checkout-main {
+        padding-right: .5rem !important;
+        padding-left: .5rem !important;
+    }
+
+    .sax-checkout-box {
+        padding: .78rem;
+    }
+
+    .sax-cart-page {
+        padding-right: .5rem;
+        padding-left: .5rem;
+    }
+
+    .sax-cart-item-row {
+        grid-template-columns: 66px minmax(0, 1fr);
+    }
+
+    .sax-cart-item-media {
+        min-height: 82px;
+    }
+}

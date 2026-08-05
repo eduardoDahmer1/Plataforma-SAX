@@ -230,8 +230,8 @@
                                 <label class="sax-label d-block mb-2 text-center text-uppercase"
                                     style="font-size: 9px">{{ __('messages.comprovante_enviado_cap') }}</label>
                                 <div class="receipt-preview-link rounded border shadow-sm"
-                                    data-receipt-preview="{{ asset('storage/' . $order->deposit_receipt) }}">
-                                    <img src="{{ asset('storage/' . $order->deposit_receipt) }}"
+                                    data-receipt-preview="{{ asset('storage/' . $order->depositReceiptPath()) }}">
+                                    <img src="{{ asset('storage/' . $order->depositReceiptPath()) }}"
                                         class="img-fluid d-block mx-auto">
                                     <div class="overlay"><i class="fas fa-search-plus"></i>
                                         {{ __('messages.ver_ampliado') }}</div>

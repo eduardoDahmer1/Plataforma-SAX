@@ -359,8 +359,8 @@
                     @if ($order->deposit_receipt)
                         <div class="pt-4 mt-4 border-top border-secondary">
                             <label class="x-small fw-bold text-uppercase d-block mb-3 text-secondary text-center">Comprovante</label>
-                            <a href="{{ asset('storage/deposits/' . $order->deposit_receipt) }}" target="_blank" class="d-block border border-secondary p-1 rounded bg-white">
-                                <img src="{{ asset('storage/deposits/' . $order->deposit_receipt) }}" class="img-fluid d-block mx-auto" style="max-height: 150px;">
+                            <a href="{{ asset('storage/' . $order->depositReceiptPath()) }}" target="_blank" class="d-block border border-secondary p-1 rounded bg-white">
+                                <img src="{{ asset('storage/' . $order->depositReceiptPath()) }}" class="img-fluid d-block mx-auto" style="max-height: 150px;">
                             </a>
                         </div>
                     @endif

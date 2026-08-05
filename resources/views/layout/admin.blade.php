@@ -13,11 +13,15 @@
     <div class="container-fluid px-3 px-lg-4 px-xxl-5">
         {{-- Cabeçalho do Painel --}}
         <div class="sax-admin-header d-lg-none d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center gap-2">
+            <div class="sax-admin-mobile-entry d-flex align-items-center gap-2 w-100">
                 <button class="sax-btn-mobile" id="openAdminDrawer" type="button" aria-label="Abrir menu administrativo" aria-controls="adminDrawerMobile" aria-expanded="false">
                     <i class="fa fa-bars"></i>
                 </button>
-                <span class="fw-semibold">Painel administrativo</span>
+                <span class="sax-admin-mobile-entry__copy">
+                    <small>SAX</small>
+                    <strong>Painel administrativo</strong>
+                </span>
+                <i class="fa-solid fa-chevron-right sax-admin-mobile-entry__arrow" aria-hidden="true"></i>
             </div>
         </div>
 
@@ -44,11 +48,29 @@
     {{-- Drawer Mobile --}}
     <div class="drawer-overlay" id="adminDrawerOverlay"></div>
     <div class="drawer-mobile" id="adminDrawerMobile" role="dialog" aria-modal="true" aria-label="Menu administrativo" aria-hidden="true">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5>Menu</h5>
-            <button class="btn text-black" id="closeAdminDrawer">&times;</button>
+        <div class="admin-drawer-header drawer-header d-flex justify-content-between align-items-center">
+            <div class="drawer-header-copy">
+                <span>SAX</span>
+                <strong>Menu</strong>
+            </div>
+            <button class="btn-close-drawer" id="closeAdminDrawer" type="button" aria-label="Fechar menu">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
         </div>
-        @include('admin.menu-lateral', ['menuInstance' => 'mobile'])
+        <div class="admin-drawer-body">
+            <div class="drawer-auth-section admin-drawer-account">
+                <a href="{{ route('admin.index') }}" class="drawer-user-summary">
+                    <span class="user-avatar"><i class="fa-solid fa-user-shield"></i></span>
+                    <span class="drawer-user-copy">
+                        <small>{{ __('messages.ola') }}</small>
+                        <strong>{{ auth()->user()?->name }}</strong>
+                        <span>{{ auth()->user()?->isMasterAdmin() ? 'Admin Master' : 'Admin / Editor' }}</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right drawer-user-arrow" aria-hidden="true"></i>
+                </a>
+            </div>
+            @include('admin.menu-lateral', ['menuInstance' => 'mobile'])
+        </div>
     </div>
 
     <footer class="sax-admin-footer">

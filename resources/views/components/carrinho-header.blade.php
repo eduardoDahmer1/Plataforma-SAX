@@ -5,6 +5,7 @@
     $user = auth()->user();
     $cart = $user ? Cart::available()->with(['product.brand'])->where('user_id', $user->id)->get() : collect();
     $cartCount = $cart->sum('quantity');
+    $hasCartItems = $user && $cartCount > 0;
 
     $totalGeral = 0;
     $currencySession = session('currency');
@@ -29,7 +30,22 @@
 
 <div class="cart-wrapper">
     {{-- Botão do Carrinho (Badge) --}}
-    <button id="cart-button" class="cart-toggle-btn" aria-label="Abrir carrinho">
+    <button id="cart-button"
+            class="cart-toggle-btn"
+            type="button"
+            aria-label="{{ __('messages.carrinho') }}"
+            @if (!$user)
+                data-bs-toggle="modal"
+                data-bs-target="#loginModal"
+                aria-haspopup="dialog"
+            @elseif (!$hasCartItems)
+                data-bs-toggle="modal"
+                data-bs-target="#emptyCartModal"
+                aria-haspopup="dialog"
+            @else
+                aria-controls="cart-sidebar"
+                aria-expanded="false"
+            @endif>
         <div class="icon-container">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6z"></path>
@@ -43,9 +59,10 @@
         <span class="cart-label">{{ __('messages.carrinho') }}</span>
     </button>
 
+    @if ($hasCartItems)
     <div id="cart-overlay" class="cart-overlay"></div>
 
-    <div id="cart-sidebar" class="cart-sidebar">
+    <div id="cart-sidebar" class="cart-sidebar" role="dialog" aria-modal="true" aria-label="{{ __('messages.itens_no_carrinho') }}" aria-hidden="true">
         <div class="cart-header">
             <div class="header-title">
                 <span class="fw-bold">{{ __('messages.itens_no_carrinho') }}</span>
@@ -55,8 +72,7 @@
         </div>
 
         <div class="cart-body">
-            @if ($cartCount > 0)
-                <div class="cart-items-list">
+            <div class="cart-items-list">
                     @foreach ($cart as $item)
                         @php
                             $productName = $item->product->external_name ?? $item->product->name ?? 'Produto';
@@ -146,16 +162,10 @@
                             </div>
                         </div>
                     @endforeach
-                </div>
-            @else
-                <div class="empty-cart-msg text-center mt-5">
-                    <p>{{ __('messages.sacola_vazia') }}</p>
-                </div>
-            @endif
+            </div>
         </div>
 
-        @if ($cartCount > 0)
-            <div class="cart-footer border-top p-3 bg-white">
+        <div class="cart-footer border-top p-3 bg-white">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fw-bold">{{ __('messages.subtotal') }}:</span>
                     <span class="fw-bold h5 mb-0 text-dark cart-subtotal-value">
@@ -170,9 +180,30 @@
                         <i class="fa fa-trash-alt me-1"></i> {{ __('messages.cart_abandon_button') }}
                     </button>
                 </div>
-            </div>
-        @endif
+        </div>
     </div>
+    @elseif ($user)
+        <div class="modal fade sax-cart-empty-modal" id="emptyCartModal" tabindex="-1"
+             aria-labelledby="emptyCartModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <button type="button" class="sax-cart-empty-modal__close" data-bs-dismiss="modal"
+                            aria-label="{{ __('messages.fechar') }}">&times;</button>
+                    <div class="modal-body text-center">
+                        <span class="sax-cart-empty-modal__icon" aria-hidden="true">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </span>
+                        <h2 id="emptyCartModalLabel">{{ __('messages.sacola_vazia') }}</h2>
+                        <a href="{{ route('search') }}" class="sax-cart-empty-modal__action">
+                            {{ __('messages.explorar_produtos') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 
-@include('components.abandon-cart-modal')
+@if ($hasCartItems)
+    @include('components.abandon-cart-modal')
+@endif

@@ -17,7 +17,7 @@
 
     $initialStep = max(1, min(4, $initialStep));
 @endphp
-<div class="container mt-5">
+<div class="container mt-5 sax-checkout-container">
     @if ($errors->any() || session('error'))
         <div class="alert alert-danger border-0 rounded-3 mb-4 sax-checkout-alert">
             @if (session('error'))

@@ -17,7 +17,7 @@
 <div class="row g-3 mb-4">
     @forelse ($addresses as $address)
         <div class="col-lg-6">
-            <div class="card h-100 border rounded-4 p-4">
+            <div class="card h-100 border rounded-4 p-4 sax-address-card">
                 <div class="d-flex justify-content-between gap-3">
                     <div>
                         <h5 class="fw-bold mb-2">{{ $address->label }}</h5>
@@ -27,7 +27,7 @@
                         <span class="badge bg-dark align-self-start">Padrão</span>
                     @endif
                 </div>
-                <div class="d-flex flex-wrap gap-2 mt-4">
+                <div class="d-flex flex-wrap gap-2 mt-4 sax-address-actions">
                     <button type="button" class="btn btn-outline-dark btn-sm"
                             data-address-edit
                             data-action="{{ route('user.addresses.update', $address) }}"
@@ -58,7 +58,7 @@
     @endforelse
 </div>
 
-<div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+<div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 sax-address-form-card">
     <h4 class="fw-bold mb-4">Cadastrar novo endereço</h4>
     <form method="POST" action="{{ route('user.addresses.store') }}" class="row g-3" data-address-form>
         @csrf

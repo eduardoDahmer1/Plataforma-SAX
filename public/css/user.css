@@ -972,3 +972,1073 @@ color: var(--ink);
 padding: 0 15px;
 }
 }
+
+/* Área do cliente — mesma linguagem visual da loja */
+.sax-user-area {
+--user-radius: 8px;
+background: #f5f5f3;
+}
+
+.sax-user-area .sax-user-shell {
+max-width: 1480px;
+}
+
+.sax-user-area .sax-sidebar-menu {
+overflow: hidden;
+padding: 14px 10px;
+border-radius: var(--user-radius);
+background: #fff;
+box-shadow: 0 5px 18px rgba(18, 23, 31, .045);
+}
+
+.sax-user-area .sax-menu-label {
+padding: 8px 10px 9px;
+border: 0;
+}
+
+.sax-user-area .sax-menu-link {
+min-height: 42px;
+margin: 2px 0;
+padding: 9px 10px;
+border-radius: 6px;
+}
+
+.sax-user-area .sax-menu-link:hover,
+.sax-user-area .sax-menu-link.active {
+padding-left: 10px;
+background: #17191d;
+color: #fff;
+}
+
+.sax-user-area .sax-menu-link:hover i,
+.sax-user-area .sax-menu-link.active i {
+color: #fff;
+}
+
+.sax-user-area :where(.sax-premium-form, .sax-premium-card, .sax-info-card, .order-card-sax, .empty-state, .sax-table-container) {
+border-radius: var(--user-radius) !important;
+}
+
+.sax-user-area .sax-premium-form,
+.sax-user-area .sax-premium-card,
+.sax-user-area .sax-info-card,
+.sax-user-area .order-card-sax,
+.sax-user-area .empty-state {
+box-shadow: 0 4px 16px rgba(18, 23, 31, .045) !important;
+}
+
+.sax-user-area .dashboard-header .sax-title {
+letter-spacing: -.02em !important;
+text-transform: none !important;
+}
+
+.sax-user-area .btn,
+.sax-user-area .form-control,
+.sax-user-area .form-select {
+border-radius: 6px !important;
+}
+
+@media (max-width: 767.98px) {
+    .sax-user-area .sax-user-shell {
+        width: 100%;
+        padding: .75rem !important;
+    }
+
+    .sax-user-mobile-menu-trigger {
+        margin-bottom: .75rem !important;
+    }
+
+    .sax-user-mobile-menu-trigger .btn {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 .9rem;
+        border: 0;
+        background: #fff;
+        color: #17191d;
+        box-shadow: 0 4px 16px rgba(18, 23, 31, .05);
+        font-size: .76rem;
+        font-weight: 750;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .sax-user-menu-drawer {
+        width: min(90vw, 360px) !important;
+        border: 0;
+        border-radius: 0 8px 8px 0;
+        background: #f5f5f3;
+    }
+
+    .sax-user-menu-drawer .offcanvas-header {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        min-height: 72px;
+        padding: .85rem 1rem;
+        border: 0;
+        background: rgba(255, 255, 255, .97);
+        color: #17191d;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    .sax-user-menu-drawer .btn-close-drawer {
+        width: 2.45rem;
+        height: 2.45rem;
+        border: 0;
+        border-radius: 6px;
+        background: #f0f1f2;
+        color: #17191d;
+        font-size: .9rem;
+    }
+
+    .sax-user-drawer-body {
+        background: #f3f3f1;
+    }
+
+    .sax-user-drawer-account {
+        margin: .75rem .75rem 0 !important;
+        padding: .7rem !important;
+        border: 0 !important;
+        border-radius: 8px !important;
+        background: #fff;
+        box-shadow: 0 3px 12px rgba(18, 23, 31, .04) !important;
+    }
+
+    .sax-user-menu-drawer .sax-sidebar-menu {
+        margin: .75rem !important;
+        padding: .35rem !important;
+        border-radius: 8px;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .sax-user-menu-drawer .sax-menu-group {
+        margin-top: .85rem !important;
+    }
+
+    .sax-user-menu-drawer .sax-menu-group:first-child {
+        margin-top: 0 !important;
+    }
+
+    .sax-user-menu-drawer .sax-menu-label {
+        margin: 0;
+        padding: .55rem .45rem .4rem;
+        color: #858991;
+        font-size: .61rem;
+        letter-spacing: .16em;
+    }
+
+    .sax-user-menu-drawer .sax-menu-items {
+        gap: .35rem;
+    }
+
+    .sax-user-menu-drawer .sax-menu-link {
+        min-height: 48px;
+        margin: 0;
+        padding: .45rem .65rem;
+        border: 0 !important;
+        border-radius: 8px;
+        background: #fff !important;
+        color: #202329 !important;
+        box-shadow: 0 3px 12px rgba(18, 23, 31, .035);
+        font-size: .76rem;
+        font-weight: 700;
+    }
+
+    .sax-user-menu-drawer .sax-menu-link > i:first-child {
+        width: 2rem;
+        height: 2rem;
+        display: grid;
+        flex: 0 0 2rem;
+        margin-right: .65rem;
+        place-items: center;
+        border-radius: 6px;
+        background: #f0f1f2;
+        color: #69707a;
+    }
+
+    .sax-user-menu-drawer a.sax-menu-link::after {
+        margin-left: auto;
+        color: #a0a5ad;
+        content: "\f054";
+        font-family: "Font Awesome 6 Free";
+        font-size: .58rem;
+        font-weight: 900;
+    }
+
+    .sax-user-menu-drawer .sax-menu-link:hover,
+    .sax-user-menu-drawer .sax-menu-link.active {
+        padding-left: .65rem;
+        background: #111318 !important;
+        color: #fff !important;
+    }
+
+    .sax-user-menu-drawer .sax-menu-link:hover > i:first-child,
+    .sax-user-menu-drawer .sax-menu-link.active > i:first-child {
+        background: rgba(255, 255, 255, .12);
+        color: #fff;
+    }
+
+    .sax-user-menu-drawer .sax-menu-link.ps-4 {
+        min-height: 40px;
+        padding-left: .65rem !important;
+        font-size: .68rem;
+    }
+
+    .sax-user-menu-drawer .sax-menu-group.mt-5 {
+        padding-top: .65rem !important;
+        border: 0 !important;
+    }
+
+    .sax-user-area .dashboard-header {
+        margin-bottom: 1rem !important;
+        padding: 1rem;
+        border-radius: var(--user-radius);
+        background: #fff;
+    }
+
+    .sax-user-area .dashboard-header .sax-title {
+        margin-bottom: .3rem !important;
+        font-size: 1.45rem;
+    }
+
+    .sax-user-area .dashboard-header p {
+        font-size: .78rem;
+        line-height: 1.5;
+    }
+
+    .sax-user-area .sax-divider-black,
+    .sax-user-area .sax-divider-dark {
+        display: none;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .45rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 > div {
+        width: auto;
+        padding: 0;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 .border {
+        min-height: 92px;
+        display: flex;
+        padding: .75rem !important;
+        flex-direction: column;
+        justify-content: space-between;
+        border: 0 !important;
+        border-radius: var(--user-radius) !important;
+        box-shadow: 0 4px 14px rgba(18, 23, 31, .045);
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 .small {
+        font-size: .56rem;
+        line-height: 1.25;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 .fs-4 {
+        font-size: 1.25rem !important;
+    }
+
+    .sax-user-area .section-label {
+        margin: 1.2rem 0 .65rem !important;
+        padding: 0 .15rem;
+    }
+
+    .sax-user-area .sax-section-title {
+        font-size: .75rem;
+        letter-spacing: .08em;
+    }
+
+    .sax-user-area .sax-info-card {
+        min-height: 74px;
+        padding: .85rem;
+        border: 0;
+        background: #fff;
+    }
+
+    .sax-user-area .sax-premium-form,
+    .sax-user-area .card {
+        padding: 1rem !important;
+        border: 0 !important;
+    }
+
+    .sax-user-area .row.g-4,
+    .sax-user-area .row.g-3 {
+        --bs-gutter-y: .75rem;
+    }
+
+    .sax-user-area .order-content {
+        gap: .75rem;
+        padding: 1rem;
+    }
+
+    .sax-user-area .empty-state {
+        padding: 2rem 1rem;
+        background: #fff;
+    }
+}
+
+/* ==========================================================================
+   Minha Conta mobile — sistema visual unificado
+   ========================================================================== */
+@media (max-width: 767.98px) {
+    .sax-user-area {
+        --user-mobile-radius: 8px;
+        --user-mobile-space: .78rem;
+        --user-mobile-shadow: 0 7px 24px rgba(18, 23, 31, .055);
+        font-size: 13px;
+    }
+
+    .sax-user-area .sax-user-shell {
+        padding: .65rem .68rem calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .sax-user-area .sax-user-shell > .row {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .sax-user-area .sax-user-content {
+        min-width: 0;
+        padding: 0 !important;
+    }
+
+    .sax-user-area .sax-user-content > :where(div, section) {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper,
+    .sax-user-area .sax-orders-wrapper,
+    .sax-user-area .sax-edit-wrapper,
+    .sax-user-area .sax-wishlist-wrapper,
+    .sax-user-area .sax-password-wrapper,
+    .sax-user-area .sax-order-details-wrapper {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Entrada da conta e títulos de todas as páginas */
+    .sax-user-area .sax-user-mobile-menu-trigger .btn {
+        min-height: 44px;
+        padding: 0 .78rem;
+        border-radius: var(--user-mobile-radius) !important;
+        font-size: .69rem;
+        box-shadow: var(--user-mobile-shadow);
+    }
+
+    .sax-user-area .dashboard-header {
+        margin-bottom: .72rem !important;
+        padding: .85rem !important;
+        border: 0;
+        border-radius: var(--user-mobile-radius);
+        background: #fff;
+        box-shadow: var(--user-mobile-shadow);
+    }
+
+    .sax-user-area .dashboard-header > .d-flex,
+    .sax-user-area .dashboard-header.d-flex {
+        align-items: stretch !important;
+        gap: .65rem !important;
+    }
+
+    .sax-user-area .dashboard-header .sax-title,
+    .sax-user-area .dashboard-header h1.sax-title,
+    .sax-user-area .dashboard-header h2.sax-title {
+        margin: 0 0 .25rem !important;
+        font-size: 1.18rem;
+        font-weight: 750;
+        letter-spacing: -.015em !important;
+        line-height: 1.16;
+        text-transform: none !important;
+    }
+
+    .sax-user-area .dashboard-header :where(.sax-subtitle, p.text-muted) {
+        margin: 0 !important;
+        font-size: .68rem;
+        letter-spacing: .01em;
+        line-height: 1.45;
+        text-transform: none;
+    }
+
+    .sax-user-area .dashboard-header .password-eyebrow {
+        margin-bottom: .28rem;
+        font-size: .56rem;
+        letter-spacing: .11em;
+    }
+
+    .sax-user-area .dashboard-header .btn-back-minimal,
+    .sax-user-area .dashboard-header > a.btn {
+        display: inline-flex;
+        width: fit-content;
+        min-height: 34px;
+        padding: .4rem .62rem;
+        align-items: center;
+        justify-content: center;
+        align-self: flex-start;
+        border: 1px solid #e1e3e6;
+        border-radius: 6px;
+        background: #f7f7f7;
+        color: #454a52;
+        font-size: .61rem;
+        letter-spacing: .04em;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    .sax-user-area .dashboard-header .d-flex.flex-wrap.gap-2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: .45rem !important;
+    }
+
+    .sax-user-area .dashboard-header .d-flex.flex-wrap.gap-2 .btn {
+        width: 100%;
+        min-height: 38px;
+        padding: .48rem .55rem !important;
+        font-size: .62rem;
+    }
+
+    /* Superfícies, mensagens e controles compartilhados */
+    .sax-user-area .sax-user-content :where(.card, .sax-premium-card, .order-card-sax, .empty-state, .empty-wishlist, .sax-table-container) {
+        border-color: #eceef0 !important;
+        border-radius: var(--user-mobile-radius) !important;
+        box-shadow: var(--user-mobile-shadow) !important;
+    }
+
+    .sax-user-area .sax-user-content .card:not(.product-card-standard),
+    .sax-user-area .sax-user-content .sax-premium-form {
+        padding: .88rem !important;
+    }
+
+    .sax-user-area .sax-user-content .product-card-standard {
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .sax-user-area .sax-user-content .product-card-standard .card-body {
+        padding: .55rem .15rem .7rem !important;
+    }
+
+    .sax-user-area .alert {
+        margin-bottom: .7rem !important;
+        padding: .68rem .75rem;
+        border: 0;
+        border-radius: var(--user-mobile-radius) !important;
+        font-size: .68rem;
+        line-height: 1.45;
+        box-shadow: 0 5px 18px rgba(18, 23, 31, .045) !important;
+    }
+
+    .sax-user-area .alert ul {
+        padding-left: 1rem;
+    }
+
+    .sax-user-area .sax-label,
+    .sax-user-area .form-label {
+        margin-bottom: .32rem;
+        color: #737983;
+        font-size: .59rem;
+        letter-spacing: .075em;
+        text-transform: uppercase;
+    }
+
+    .sax-user-area :where(.sax-input, .form-control, .form-select) {
+        min-height: 42px;
+        padding: .55rem .6rem !important;
+        border: 1px solid #e1e4e8 !important;
+        border-radius: 6px !important;
+        background: #fff !important;
+        font-size: .76rem;
+    }
+
+    .sax-user-area :where(.sax-input, .form-control, .form-select):focus {
+        border-color: #686e77 !important;
+        box-shadow: 0 0 0 3px rgba(17, 24, 39, .055) !important;
+    }
+
+    .sax-user-area .sax-user-content :where(.btn, .btn-sax-black, .btn-sax-submit, .btn-sax-black-sm) {
+        min-height: 40px;
+        padding: .55rem .75rem;
+        border-radius: 6px !important;
+        font-size: .63rem;
+        font-weight: 750;
+        letter-spacing: .055em;
+        line-height: 1.2;
+    }
+
+    .sax-user-area .sax-user-content form > .d-flex.justify-content-end,
+    .sax-user-area .sax-user-content form > .text-end {
+        margin-top: .85rem !important;
+    }
+
+    .sax-user-area .sax-user-content form > .d-flex.justify-content-end .btn,
+    .sax-user-area .sax-user-content form > .text-end .btn {
+        width: 100%;
+    }
+
+    .sax-user-area .section-label {
+        margin: 1rem 0 .5rem !important;
+        padding: 0 .18rem;
+    }
+
+    .sax-user-area .sax-section-title {
+        font-size: .67rem;
+        letter-spacing: .085em;
+    }
+
+    .sax-user-area .section-label .btn-link-sax,
+    .sax-user-area .btn-link-sax {
+        font-size: .61rem;
+    }
+
+    .sax-user-area .empty-state,
+    .sax-user-area .empty-wishlist {
+        padding: 1.7rem .85rem !important;
+        border: 0 !important;
+        background: #fff;
+        font-size: .72rem;
+        letter-spacing: .01em;
+    }
+
+    /* Dashboard */
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 {
+        gap: .42rem !important;
+        margin-bottom: .8rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 .border {
+        min-height: 82px;
+        padding: .65rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 .small {
+        font-size: .5rem;
+        letter-spacing: .025em;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-4 .fs-4 {
+        font-size: 1.05rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-5 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .45rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-5 > div {
+        width: auto;
+        padding: 0;
+    }
+
+    .sax-user-area .sax-info-card {
+        min-height: 84px;
+        padding: .68rem;
+        align-items: flex-start;
+        gap: .5rem;
+    }
+
+    .sax-user-area .sax-info-card .card-icon-minimal {
+        width: 1.3rem;
+        flex: 0 0 1.3rem;
+        font-size: .82rem;
+    }
+
+    .sax-user-area .sax-info-card .card-details {
+        min-width: 0;
+    }
+
+    .sax-user-area .sax-info-card .card-details .label {
+        font-size: .49rem;
+    }
+
+    .sax-user-area .sax-info-card .card-details .value {
+        margin-top: .16rem;
+        font-size: .68rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .sax-user-area .order-container {
+        gap: .55rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .sax-user-area .order-card-sax {
+        margin-bottom: .55rem !important;
+        padding: .78rem !important;
+    }
+
+    .sax-user-area .order-content {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .65rem;
+        padding: 0;
+    }
+
+    .sax-user-area .order-content .order-action {
+        grid-column: 1 / -1;
+    }
+
+    .sax-user-area .order-content .order-action .btn-sax-black {
+        width: 100%;
+    }
+
+    .sax-user-area .order-id {
+        font-size: .94rem;
+    }
+
+    .sax-user-area .order-date,
+    .sax-user-area .status-indicator,
+    .sax-user-area .status-text-mobile {
+        font-size: .66rem;
+    }
+
+    /* Perfil e formulários */
+    .sax-user-area .sax-premium-form > .row,
+    .sax-user-area .sax-address-form-card form.row,
+    .sax-user-area #editAddressModal form .row {
+        --bs-gutter-y: .7rem;
+    }
+
+    .sax-user-area .sax-premium-form .mb-3,
+    .sax-user-area .sax-premium-form .mt-4 {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .sax-user-area .sax-user-phone-row {
+        display: grid !important;
+        grid-template-columns: 104px minmax(0, 1fr);
+        gap: .42rem !important;
+    }
+
+    .sax-user-area .sax-user-phone-row .w-auto {
+        width: 100% !important;
+    }
+
+    .sax-user-area .sax-user-document-row {
+        display: grid !important;
+        grid-template-columns: 112px minmax(0, 1fr);
+        gap: .42rem !important;
+    }
+
+    .sax-user-area .sax-user-document-row select {
+        width: 100% !important;
+    }
+
+    .sax-user-area .sax-premium-form .row.g-3.p-3.rounded-3.border {
+        margin: 0;
+        padding: .72rem !important;
+        border: 0 !important;
+        border-radius: 7px !important;
+        background: #f6f7f8 !important;
+    }
+
+    .sax-user-area .sax-premium-form .row.g-3.p-3.rounded-3.border .small {
+        font-size: .57rem;
+        letter-spacing: .065em;
+    }
+
+    /* Endereços */
+    .sax-user-area .sax-address-card {
+        padding: .82rem !important;
+    }
+
+    .sax-user-area .sax-address-card h5 {
+        margin-bottom: .3rem !important;
+        font-size: .86rem;
+    }
+
+    .sax-user-area .sax-address-card p {
+        font-size: .67rem;
+        line-height: 1.45;
+    }
+
+    .sax-user-area .sax-address-card .badge {
+        padding: .32rem .45rem;
+        font-size: .52rem;
+    }
+
+    .sax-user-area .sax-address-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .4rem !important;
+        margin-top: .72rem !important;
+    }
+
+    .sax-user-area .sax-address-actions form,
+    .sax-user-area .sax-address-actions .btn {
+        width: 100%;
+    }
+
+    .sax-user-area .sax-address-actions .btn {
+        min-height: 36px;
+        padding: .4rem .45rem;
+        font-size: .58rem;
+    }
+
+    .sax-user-area .sax-address-form-card h4 {
+        margin-bottom: .8rem !important;
+        font-size: .95rem;
+    }
+
+    .sax-user-area #editAddressModal .modal-dialog {
+        margin: .55rem;
+    }
+
+    .sax-user-area #editAddressModal .modal-content {
+        max-height: calc(100dvh - 1.1rem);
+        border-radius: 8px !important;
+    }
+
+    .sax-user-area #editAddressModal .modal-header,
+    .sax-user-area #editAddressModal .modal-body,
+    .sax-user-area #editAddressModal .modal-footer {
+        padding: .8rem !important;
+    }
+
+    .sax-user-area #editAddressModal .modal-title {
+        font-size: .95rem;
+    }
+
+    .sax-user-area #editAddressModal .modal-footer {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .45rem;
+    }
+
+    .sax-user-area #editAddressModal .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+
+    /* Histórico de pedidos */
+    .sax-user-area .sax-orders-wrapper .order-mobile-header {
+        padding-bottom: .55rem;
+        border-bottom: 1px solid #eef0f2;
+    }
+
+    .sax-user-area .sax-orders-wrapper .order-mobile-body {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .55rem;
+        margin-top: .65rem !important;
+    }
+
+    .sax-user-area .sax-orders-wrapper .order-mobile-body > div {
+        margin-bottom: 0 !important;
+    }
+
+    .sax-user-area .badge-payment-sax,
+    .sax-user-area .badge-payment,
+    .sax-user-area .status-badge-custom {
+        padding: .3rem .48rem;
+        font-size: .55rem;
+        line-height: 1.2;
+    }
+
+    /* Detalhe do pedido */
+    .sax-user-area .sax-order-hero {
+        min-height: 0;
+        border-radius: var(--user-mobile-radius);
+        grid-template-columns: 1fr;
+    }
+
+    .sax-user-area .sax-order-hero__main,
+    .sax-user-area .sax-order-hero__total {
+        padding: .9rem;
+    }
+
+    .sax-user-area .sax-order-back {
+        margin-bottom: .8rem;
+        font-size: .58rem;
+    }
+
+    .sax-user-area .sax-order-eyebrow {
+        font-size: .55rem;
+    }
+
+    .sax-user-area .sax-order-hero h1 {
+        margin-bottom: .35rem;
+        font-size: 1.22rem;
+        overflow-wrap: anywhere;
+    }
+
+    .sax-user-area .sax-order-hero p {
+        font-size: .67rem;
+    }
+
+    .sax-user-area .sax-order-hero__total {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: .25rem .7rem;
+        align-items: center;
+        border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .sax-user-area .sax-order-hero__total > strong {
+        margin: 0;
+        font-size: 1.05rem;
+        text-align: right;
+    }
+
+    .sax-user-area .sax-order-hero__total .status-badge-custom {
+        grid-column: 1 / -1;
+        width: fit-content;
+        margin-top: .35rem;
+    }
+
+    .sax-user-area .sax-order-progress {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-radius: var(--user-mobile-radius);
+    }
+
+    .sax-user-area .sax-order-progress__step {
+        min-height: 54px;
+        padding: .55rem .65rem;
+        gap: .5rem;
+    }
+
+    .sax-user-area .sax-order-progress__step::after {
+        display: none;
+    }
+
+    .sax-user-area .sax-order-progress__step > span {
+        width: 27px;
+        height: 27px;
+        flex: 0 0 27px;
+        font-size: .65rem;
+    }
+
+    .sax-user-area .sax-order-progress__step strong {
+        font-size: .56rem;
+    }
+
+    .sax-user-area .sax-order-message {
+        gap: .65rem;
+        padding: .72rem;
+        border-radius: var(--user-mobile-radius);
+    }
+
+    .sax-user-area .sax-order-message strong {
+        font-size: .72rem;
+    }
+
+    .sax-user-area .sax-order-message span {
+        font-size: .64rem;
+    }
+
+    .sax-user-area .sax-order-message__action {
+        padding: .55rem .65rem;
+        border-radius: 6px;
+        font-size: .57rem;
+    }
+
+    .sax-user-area .sax-order-details-wrapper > .row.g-4 {
+        --bs-gutter-y: .7rem;
+        margin-bottom: .9rem !important;
+    }
+
+    .sax-user-area .card-sax-header {
+        padding: .7rem .78rem;
+        font-size: .63rem;
+    }
+
+    .sax-user-area .card-sax-body {
+        padding: .78rem;
+    }
+
+    .sax-user-area .info-row {
+        margin: 0;
+        padding: .58rem 0;
+        gap: .65rem;
+    }
+
+    .sax-user-area .info-row .label,
+    .sax-user-area .label {
+        font-size: .56rem;
+    }
+
+    .sax-user-area .sax-order-pyg-summary {
+        padding: .7rem;
+        border-radius: 7px;
+    }
+
+    /* Senha */
+    .sax-user-area .password-panel {
+        padding: .88rem !important;
+    }
+
+    .sax-user-area .password-panel-heading {
+        gap: .65rem;
+        margin-bottom: .85rem !important;
+        padding-bottom: .75rem;
+    }
+
+    .sax-user-area .password-icon {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        border-radius: 6px;
+        font-size: .72rem;
+    }
+
+    .sax-user-area .password-panel-heading h3 {
+        font-size: .74rem;
+    }
+
+    .sax-user-area .password-panel-heading p {
+        font-size: .64rem;
+    }
+
+    .sax-user-area .password-input-wrap .sax-input {
+        min-height: 42px;
+        padding-right: 2.5rem !important;
+    }
+
+    .sax-user-area .password-requirements {
+        margin-top: .75rem !important;
+        padding: .65rem;
+        border-radius: 7px;
+        font-size: .64rem;
+    }
+
+    /* Cupons, favoritos e tabelas */
+    .sax-user-area .sax-wishlist-wrapper .card:not(.product-card-standard) .card-body {
+        padding: .8rem !important;
+    }
+
+    .sax-user-area .sax-wishlist-wrapper .card:not(.product-card-standard) .card-body h5 {
+        font-size: .88rem;
+    }
+
+    .sax-user-area .sax-wishlist-wrapper .card:not(.product-card-standard) .card-body > .d-flex,
+    .sax-user-area .sax-wishlist-wrapper .card:not(.product-card-standard) .card-body.d-flex {
+        align-items: stretch !important;
+    }
+
+    .sax-user-area .sax-wishlist-wrapper .card:not(.product-card-standard) .card-body .d-flex.gap-2 {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: .4rem !important;
+    }
+
+    .sax-user-area .sax-wishlist-wrapper .card:not(.product-card-standard) .card-body .d-flex.gap-2 > * {
+        width: 100%;
+    }
+
+    .sax-user-area .sax-wishlist-wrapper .card:not(.product-card-standard) .card-body .btn,
+    .sax-user-area .sax-wishlist-wrapper form.flex-shrink-0,
+    .sax-user-area .sax-wishlist-wrapper form.flex-shrink-0 .btn {
+        width: 100%;
+    }
+
+    .sax-user-area .sax-wishlist-wrapper .table-responsive {
+        margin: 0 -.88rem -.88rem;
+        width: calc(100% + 1.76rem);
+    }
+
+    .sax-user-area .sax-wishlist-wrapper table {
+        min-width: 570px;
+        font-size: .68rem;
+    }
+
+    .sax-user-area .sax-wishlist-wrapper .row.g-1 {
+        --bs-gutter-x: .45rem;
+        --bs-gutter-y: .65rem;
+    }
+
+    /* Carrinhos abandonados */
+    .sax-user-area .sax-dashboard-wrapper > .d-flex.flex-column.gap-3 {
+        gap: .55rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .d-flex.flex-column.gap-3 > .border {
+        padding: .78rem !important;
+        border: 0 !important;
+        border-radius: var(--user-mobile-radius) !important;
+        box-shadow: var(--user-mobile-shadow);
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .border.bg-white.overflow-hidden > .d-flex {
+        display: grid !important;
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: .65rem !important;
+        padding: .72rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .border.bg-white.overflow-hidden img {
+        width: 58px !important;
+        height: 66px !important;
+        border-radius: 6px !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .border.bg-white.overflow-hidden > .d-flex > strong {
+        grid-column: 2;
+        font-size: .72rem;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .d-flex.justify-content-between.border {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: .65rem;
+        padding: .78rem !important;
+        border: 0 !important;
+        border-radius: var(--user-mobile-radius) !important;
+        box-shadow: var(--user-mobile-shadow);
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .d-flex.justify-content-between.border form,
+    .sax-user-area .sax-dashboard-wrapper > .d-flex.justify-content-between.border .btn {
+        width: 100%;
+    }
+
+    /* Paginação */
+    .sax-user-area .pagination {
+        flex-wrap: wrap;
+        gap: .22rem;
+    }
+
+    .sax-user-area .page-link {
+        min-width: 32px;
+        min-height: 32px;
+        display: grid;
+        padding: .35rem;
+        place-items: center;
+        border-radius: 5px !important;
+        font-size: .62rem;
+    }
+}
+
+@media (max-width: 329.98px) {
+    .sax-user-area .sax-user-shell {
+        padding-right: .5rem !important;
+        padding-left: .5rem !important;
+    }
+
+    .sax-user-area .sax-dashboard-wrapper > .row.g-3.mb-5 {
+        grid-template-columns: 1fr;
+    }
+
+    .sax-user-area .sax-info-card {
+        min-height: 68px;
+    }
+
+    .sax-user-area .sax-user-document-row {
+        grid-template-columns: 104px minmax(0, 1fr);
+    }
+}

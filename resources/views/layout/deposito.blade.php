@@ -69,9 +69,9 @@
                                 {{ __('messages.comprovante_enviado_cap') }}
                             </label>
 
-                            <a href="{{ asset('storage/' . $order->deposit_receipt) }}" target="_blank"
+                            <a href="{{ asset('storage/' . $order->depositReceiptPath()) }}" target="_blank"
                                 class="receipt-preview-link rounded border shadow-sm">
-                                <img src="{{ asset('storage/' . $order->deposit_receipt) }}"
+                                <img src="{{ asset('storage/' . $order->depositReceiptPath()) }}"
                                     class="img-fluid d-block mx-auto">
                                 <div class="overlay">
                                     <i class="fas fa-search-plus"></i> {{ __('messages.ver_ampliado') }}

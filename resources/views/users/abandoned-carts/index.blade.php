@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="sax-dashboard-wrapper">
-    <div class="d-flex justify-content-between align-items-end mb-4">
+    <div class="dashboard-header d-flex justify-content-between align-items-end mb-4">
         <div>
             <h1 class="sax-title mb-2">{{ __('messages.user_abandoned_carts') }}</h1>
             <p class="sax-subtitle mb-0">{{ __('messages.user_abandoned_carts_subtitle') }}</p>

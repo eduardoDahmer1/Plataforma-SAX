@@ -129,8 +129,8 @@ class OrderController extends Controller
         $order = Order::with('items')->findOrFail($id);
 
         // Deleta comprovante, se existir
-        if ($order->deposit_receipt && Storage::disk('public')->exists('deposits/' . $order->deposit_receipt)) {
-            Storage::disk('public')->delete('deposits/' . $order->deposit_receipt);
+        if ($order->depositReceiptPath() && Storage::disk('public')->exists($order->depositReceiptPath())) {
+            Storage::disk('public')->delete($order->depositReceiptPath());
         }
 
         // Deleta itens do pedido
@@ -152,11 +152,7 @@ class OrderController extends Controller
         ]);
 
         if ($request->hasFile('deposit_receipt')) {
-            $file = $request->file('deposit_receipt');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('deposits', $filename, 'public');
-
-            $order->deposit_receipt = $filename;
+            $order->deposit_receipt = $request->file('deposit_receipt')->store('deposits', 'public');
             $order->save();
         }
 

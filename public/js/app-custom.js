@@ -126,6 +126,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const isOpen = drawer.classList.contains('active');
             document.body.style.overflow = isOpen ? 'hidden' : '';
             siteHeader?.classList.toggle('menu-open', isOpen);
+            drawer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         };
         document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleDrawer);
         document.getElementById('closeDrawer')?.addEventListener('click', toggleDrawer);
@@ -148,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         document.getElementById('mobileSearchBtn')?.addEventListener('click', openSearch);
+        document.getElementById('mobileSearchBar')?.addEventListener('click', openSearch);
+        document.getElementById('mobileDockSearch')?.addEventListener('click', openSearch);
         document.getElementById('closeSearch')?.addEventListener('click', closeSearch);
 
         searchOverlay.addEventListener('click', e => {
@@ -162,6 +166,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    document.getElementById('mobileDockCart')?.addEventListener('click', () => {
+        document.getElementById('cart-button')?.click();
+    });
 
     // Drawer Accordion
     document.querySelectorAll('.toggle-sub').forEach(btn => {
@@ -193,11 +201,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             cartSidebar.classList.toggle('open');
             cartOverlay.classList.toggle('open');
-            document.body.style.overflow = cartSidebar.classList.contains('open') ? 'hidden' : '';
+            const isCartOpen = cartSidebar.classList.contains('open');
+            document.body.classList.toggle('sax-cart-drawer-open', isCartOpen);
+            cartSidebar.setAttribute('aria-hidden', isCartOpen ? 'false' : 'true');
+            document.getElementById('cart-button')?.setAttribute('aria-expanded', isCartOpen ? 'true' : 'false');
+            document.body.style.overflow = isCartOpen ? 'hidden' : '';
         };
         document.getElementById('cart-button')?.addEventListener('click', e => { e.preventDefault(); toggleCart(); });
         document.getElementById('cart-close')?.addEventListener('click', toggleCart);
         cartOverlay.addEventListener('click', toggleCart);
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && cartSidebar.classList.contains('open')) {
+                toggleCart();
+            }
+        });
 
         cartSidebar.addEventListener('submit', async event => {
             const form = event.target.closest('[data-cart-remove-form]');

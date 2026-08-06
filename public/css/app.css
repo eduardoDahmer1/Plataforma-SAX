@@ -5424,6 +5424,120 @@ transform: scale(1.5);
     }
 }
 
+/* Pausa preventiva das compras quando o catálogo perde comunicação. */
+.sax-catalog-pause {
+    position: relative;
+    z-index: 20;
+    color: #5c4300;
+    background: #fff5d7;
+    border-top: 1px solid #f0cf70;
+    border-bottom: 1px solid #f0cf70;
+}
+
+.sax-catalog-pause__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    min-height: 52px;
+    padding-top: .7rem;
+    padding-bottom: .7rem;
+}
+
+.sax-catalog-pause__inner div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .2rem .5rem;
+    font-size: .84rem;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.sax-catalog-pause__inner strong {
+    color: #302400;
+}
+
+.sax-catalog-pause__icon {
+    display: inline-grid;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    color: #302400;
+    background: rgba(255, 255, 255, .72);
+    border-radius: 8px;
+}
+
+.sax-catalog-pause-modal .modal-dialog {
+    width: min(92vw, 460px);
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.sax-catalog-pause-modal .modal-content {
+    position: relative;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 22px 70px rgba(0, 0, 0, .22);
+}
+
+.sax-catalog-pause-modal .modal-body {
+    padding: 2.25rem 2rem 2rem;
+}
+
+.sax-catalog-pause-modal__close {
+    position: absolute;
+    z-index: 2;
+    top: .9rem;
+    right: .9rem;
+}
+
+.sax-catalog-pause-modal__icon {
+    display: inline-grid;
+    width: 54px;
+    height: 54px;
+    margin-bottom: 1rem;
+    place-items: center;
+    color: #7a5900;
+    background: #fff2c7;
+    border-radius: 10px;
+}
+
+.sax-catalog-pause-modal h2 {
+    margin-bottom: .75rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.sax-catalog-pause-modal p {
+    margin-bottom: 1.35rem;
+    color: #58606d;
+    font-size: .94rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 575.98px) {
+    .sax-catalog-pause__inner {
+        justify-content: flex-start;
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .sax-catalog-pause__inner div {
+        display: block;
+        text-align: left;
+    }
+
+    .sax-catalog-pause__inner span {
+        display: block;
+    }
+
+    .sax-catalog-pause-modal .modal-body {
+        padding: 2rem 1.25rem 1.25rem;
+    }
+}
+
 /* ==========================================================================
    Carrinho e escala tipográfica mobile
    ========================================================================== */
@@ -5754,6 +5868,20 @@ transform: scale(1.5);
 .sax-admin-notifications__drawer form[data-notification-item] {
     position: relative;
     border-bottom: 1px solid #eef2f7;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__operational {
+    position: relative;
+    border-bottom: 1px solid #fde7b0;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__operational .sax-admin-notifications__item {
+    background: #fffaf0;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__icon.is-update {
+    background: #fff1c7;
+    color: #9a6700;
 }
 
 .sax-admin-notifications__drawer .sax-admin-notifications__mark-read {

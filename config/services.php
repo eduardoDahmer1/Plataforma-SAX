@@ -25,4 +25,17 @@ return [
         'email_alerts' => env('INTEGRATION_EMAIL_ALERTS_ENABLED', true),
     ],
 
+    'deepseek' => [
+        'api_key' => env('DEEPSEEK_API_KEY'),
+        'base_url' => env('DEEPSEEK_BASE_URL', 'https://api.deepseek.com'),
+        'model' => env('DEEPSEEK_MODEL', 'deepseek-v4-flash'),
+        'timeout' => (int) env('DEEPSEEK_TIMEOUT', 60),
+    ],
+
+    'geonames' => [
+        'username' => env('GEONAMES_USERNAME'),
+        'base_url' => env('GEONAMES_BASE_URL', 'https://secure.geonames.org'),
+        'timeout' => (int) env('GEONAMES_TIMEOUT', 12),
+    ],
+
 ];

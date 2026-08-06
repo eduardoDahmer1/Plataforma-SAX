@@ -9,6 +9,8 @@
     <x-marketing-body-start />
 
     @include('components.header')
+    @include('components.catalog-integration-notice')
+    @include('components.store-control-notice')
 
     <main class="sax-user-shell py-4 container">
         <div class="row g-lg-4">

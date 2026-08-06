@@ -39,18 +39,20 @@ class SystemController extends Controller
         $user = auth()->user();
     
         // Só admins podem alterar
-        if (!$user || $user->user_type != 1) {
+        if (!$user || !$user->isMasterAdmin()) {
             return redirect()->back()->with('error', 'Você não tem permissão.');
         }
     
         // Busca a primeira configuração do sistema
         $setting = SystemSetting::firstOrFail();
     
-        // Alterna entre 1 (manutenção) e 2 (ativo)
-        $setting->maintenance = $setting->maintenance == 1 ? 2 : 1;
+        // Mantém compatibilidade com registros antigos que usavam 2 para ativo,
+        // mas passa a salvar o estado normal como 0 (booleano convencional).
+        $inMaintenance = (int) $setting->getRawOriginal('maintenance') === 1;
+        $setting->maintenance = $inMaintenance ? 0 : 1;
         $setting->save();
     
-        $msg = $setting->maintenance == 1
+        $msg = (int) $setting->maintenance === 1
             ? '🔧 Sistema em manutenção (admins ainda podem acessar)!'
             : '🚀 Sistema ativado!';
     

@@ -19,6 +19,7 @@
         'admin.activate.*',
         'admin.languages.*',
         'admin.marketing.*'
+        ,'admin.store-controls.*'
     );
 @endphp
 
@@ -114,6 +115,9 @@
                 <i class="fa-solid fa-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="collapse sax-submenu {{ $sistemaOpen ? 'show' : '' }}" id="menuSistema{{ $menuSuffix }}">
+                <a href="{{ route('admin.store-controls.edit') }}" class="submenu-link {{ request()->routeIs('admin.store-controls.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-sliders"></i> {{ __('messages.store_controls_menu') }}
+                </a>
                 <a href="{{ route('admin.banners.index') }}" class="submenu-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-images"></i> {{ __('messages.menu_banners_home') }}
                 </a>

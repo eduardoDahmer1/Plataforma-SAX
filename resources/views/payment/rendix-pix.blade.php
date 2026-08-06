@@ -138,8 +138,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(@json(route('checkout.rendix.pix.status', $order)), {
                 headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
             });
-            if (!response.ok) return;
             const data = await response.json();
+            if (response.status === 503 && ['store_feature_disabled', 'catalog_integration_unavailable'].includes(data.code) && data.redirect_url) {
+                finished = true;
+                window.location.href = data.redirect_url;
+                return;
+            }
+            if (!response.ok) return;
             if (data.status === 'paid') {
                 finished = true;
                 statusBox.classList.remove('is-error');

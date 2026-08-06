@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductControllerAdmin;
 use App\Http\Controllers\Admin\SubcategoryControllerAdmin;
 use App\Http\Controllers\Admin\SystemController;
+use App\Http\Controllers\Admin\StoreControlController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\AllCategoriesController;
 use App\Http\Controllers\Auth\UserController;
@@ -116,10 +117,10 @@ Route::get('/categorias-filhas', [PublicCategoriasFilhasController::class, 'inde
 Route::get('/categorias-filhas/{slug}', [PublicCategoriasFilhasController::class, 'show'])->name('categorias-filhas.show');
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
 Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('brands.show');
-Route::get('/cart', [CartController::class, 'view'])->middleware('auth')->name('cart.view');
-Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
+Route::get('/cart', [CartController::class, 'view'])->middleware(['auth', 'store.feature:cart', 'catalog.healthy'])->name('cart.view');
+Route::post('/cart/add', [CartController::class, 'add'])->middleware(['store.feature:add_to_cart', 'catalog.healthy'])->name('cart.add');
+Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->middleware('store.feature:cart')->name('cart.update');
+Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->middleware('store.feature:cart')->name('cart.remove');
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
 Route::get('/blogs/ajax-search', [BlogController::class, 'ajaxSearch'])->name('blogs.ajax-search');
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
@@ -147,17 +148,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/receipts/{receipt}/download', [ReceiptController::class, 'download'])->name('receipts.download');
     Route::get('/meus-preferidos', [UserPreferenceController::class, 'index'])->name('user.preferences');
     Route::post('/user/preferences/toggle', [UserPreferenceController::class, 'toggle'])->name('user.preferences.toggle');
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->middleware(['store.feature:checkout', 'catalog.healthy'])->name('checkout.index');
+    Route::post('/checkout/store', [CheckoutController::class, 'store'])->middleware(['store.feature:checkout', 'catalog.healthy'])->name('checkout.store');
     Route::get('/checkout/success', [UserController::class, 'checkoutSuccess'])->name('checkout.success');
     Route::get('/checkout/error', fn () => view('checkout.error'))->name('checkout.error');
-    Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->name('cart.addAndCheckout');
+    Route::post('/cart/add-and-checkout', [CartController::class, 'addAndCheckout'])->middleware(['store.feature:add_to_cart', 'store.feature:checkout', 'catalog.healthy'])->name('cart.addAndCheckout');
     Route::delete('/cart/abandon', [CartController::class, 'abandon'])->name('cart.abandon');
     Route::get('/carrinhos-abandonados', [\App\Http\Controllers\AbandonedCartController::class, 'index'])->name('user.abandoned-carts.index');
     Route::get('/carrinhos-abandonados/{abandonedCart}', [\App\Http\Controllers\AbandonedCartController::class, 'show'])->name('user.abandoned-carts.show');
-    Route::post('/carrinhos-abandonados/{abandonedCart}/restaurar', [\App\Http\Controllers\AbandonedCartController::class, 'restore'])->name('user.abandoned-carts.restore');
+    Route::post('/carrinhos-abandonados/{abandonedCart}/restaurar', [\App\Http\Controllers\AbandonedCartController::class, 'restore'])->middleware(['store.feature:add_to_cart', 'catalog.healthy'])->name('user.abandoned-carts.restore');
 
     Route::get('/checkout/bancard-v2/{order}', [\App\Http\Controllers\BancardV2Controller::class, 'checkoutPage'])
+        ->middleware(['store.feature:bancard', 'catalog.healthy'])
         ->whereNumber('order')
         ->name('checkout.bancard.v2');
     Route::get('/checkout/bancard-v2/{order}/cancel', [\App\Http\Controllers\BancardV2Controller::class, 'cancelCheckout'])
@@ -165,24 +167,25 @@ Route::middleware('auth')->group(function () {
         ->name('checkout.bancard.v2.cancel');
 
     Route::get('/checkout/pix/{order}', [\App\Http\Controllers\RendixPixController::class, 'checkoutPage'])
+        ->middleware(['store.feature:pix', 'catalog.healthy'])
         ->whereNumber('order')
         ->name('checkout.rendix.pix');
     Route::get('/checkout/pix/{order}/status', [\App\Http\Controllers\RendixPixController::class, 'status'])
-        ->middleware('throttle:20,1')
+        ->middleware(['store.feature:pix', 'catalog.healthy', 'throttle:20,1'])
         ->whereNumber('order')
         ->name('checkout.rendix.pix.status');
     Route::post('/checkout/pix/{order}/renovar', [\App\Http\Controllers\RendixPixController::class, 'renew'])
-        ->middleware('throttle:5,1')
+        ->middleware(['store.feature:pix', 'catalog.healthy', 'throttle:5,1'])
         ->whereNumber('order')
         ->name('checkout.rendix.pix.renew');
     Route::get('/checkout/pix/termos/rendix', [\App\Http\Controllers\RendixPixController::class, 'terms'])
         ->middleware('throttle:10,1')
         ->name('checkout.rendix.pix.terms');
 
-    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->name('checkout.deposito');
-    Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->name('checkout.deposito.submit');
-    Route::get('/checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->name('checkout.whatsapp');
-    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->name('orders.deposit.submit');
+    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->middleware(['store.feature:deposit', 'catalog.healthy'])->name('checkout.deposito');
+    Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->middleware(['store.feature:deposit', 'catalog.healthy'])->name('checkout.deposito.submit');
+    Route::get('/checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->middleware(['store.feature:checkout', 'catalog.healthy'])->name('checkout.whatsapp');
+    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->middleware(['store.feature:deposit', 'catalog.healthy'])->name('orders.deposit.submit');
     Route::get('cupons', [CuponUserController::class, 'index'])->name('user.cupons');
     Route::post('notifications/read-all', [\App\Http\Controllers\Auth\UserNotificationController::class, 'markAllAsRead'])->name('user.notifications.read-all');
     Route::post('notifications/{notification}/read', [\App\Http\Controllers\Auth\UserNotificationController::class, 'markAsRead'])->whereNumber('notification')->name('user.notifications.read');
@@ -211,6 +214,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('banners', [ImageUploadController::class, 'index'])->name('banners.index');
     Route::get('marketing', [MarketingSettingController::class, 'edit'])->name('marketing.edit');
     Route::put('marketing', [MarketingSettingController::class, 'update'])->name('marketing.update');
+    Route::get('controle-loja', [StoreControlController::class, 'edit'])->name('store-controls.edit');
+    Route::put('controle-loja', [StoreControlController::class, 'update'])->name('store-controls.update');
     Route::redirect('visao-geral', '/admin')->name('overview');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::resource('languages', \App\Http\Controllers\Admin\LanguageControllerAdmin::class);
@@ -227,6 +232,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('activate-control', [ActivateBrandsAndCategoriesController::class, 'index'])->name('activate.index');
     Route::post('activate-toggle/{type}/{id}', [ActivateBrandsAndCategoriesController::class, 'toggleStatus'])->name('activate.toggle');
     Route::get('products/search', [ProductControllerAdmin::class, 'search'])->name('products.search');
+    Route::post('products/{product}/complete-with-ai', [ProductControllerAdmin::class, 'completeWithAi'])
+        ->middleware('throttle:20,1')
+        ->name('products.completeWithAi');
     Route::get('sections-home', [AdminHighlightController::class, 'index'])->name('sections_home.index');
     Route::patch('sections-home/update', [AdminHighlightController::class, 'update'])->name('sections_home.update');
     Route::post('currencies', [CurrencyControllerAdmin::class, 'store'])->name('currencies.store');

@@ -55,5 +55,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin' => \App\Http\Middleware\CheckAdmin::class,
         'cliente' => \App\Http\Middleware\EnsureUserIsClient::class,
+        'catalog.healthy' => \App\Http\Middleware\EnsureCatalogIntegrationHealthy::class,
+        'store.feature' => \App\Http\Middleware\EnsureStoreFeatureEnabled::class,
     ];
 }

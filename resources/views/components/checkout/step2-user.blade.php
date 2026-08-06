@@ -29,6 +29,7 @@
                         <option value="rg_br" {{ $checkoutDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
                         <option value="ci_py" {{ $checkoutDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
                         <option value="ruc_py" {{ $checkoutDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
+                        <option value="foreign" {{ $checkoutDocumentType === 'foreign' ? 'selected' : '' }}>Passaporte / documento internacional</option>
                     </select>
                     <input type="text" name="document" class="sax-form-control flex-grow-1" style="min-width: 0;"
                         value="{{ $checkoutDocument }}" autocomplete="off" data-document-input required>
@@ -52,6 +53,8 @@
                     <select name="phone_country"
                         class="sax-auth-phone-country @error('phone_country') is-invalid @enderror" 
                         required
+                        data-world-phone-country
+                        data-selected="{{ old('phone_country') ?? (auth()->user()->phone_country ?? '595') }}"
                         aria-label="Codigo do pais">
                         <option value="595" {{ (old('phone_country') ?? (auth()->user()->phone_country ?? '595')) == '595' ? 'selected' : '' }}>
                             PRY (+595)

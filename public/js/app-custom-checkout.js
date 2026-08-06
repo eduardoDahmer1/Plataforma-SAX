@@ -137,6 +137,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 markFieldInvalid('#shipping_address_id', true);
                 return false;
             }
+            const selectedOption = document.querySelector('#shipping_address_id option:checked');
+            const savedCountry = selectedOption?.dataset.country || '';
+            if (savedCountry && !['brasil', 'paraguai'].includes(savedCountry)) {
+                showStepAlert(3, 'Este endereço internacional será enviado pela DHL. A cotação estará disponível assim que as credenciais DHL forem configuradas.');
+                return false;
+            }
             return true;
         }
 
@@ -158,6 +164,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!country) {
                 showStepAlert(3, 'Selecione o pais de entrega para continuar.');
+                markFieldInvalid('#country', true);
+                return false;
+            }
+
+            if (!['brasil', 'paraguai'].includes(country)) {
+                showStepAlert(3, 'País internacional selecionado: a entrega será feita pela DHL. A cotação ainda precisa ser habilitada antes de concluir a compra.');
                 markFieldInvalid('#country', true);
                 return false;
             }
@@ -192,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
 
-            if (!district) {
+            if (!district && ['brasil', 'paraguai'].includes(country)) {
                 showStepAlert(3, 'Informe o bairro para continuar.');
                 markFieldInvalid('input[name="district"]', true);
                 return false;
@@ -344,6 +356,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        if (pais !== 'paraguai') {
+            if (freteDisplay) freteDisplay.innerText = 'Cotação DHL pendente';
+            if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
+            if (freteValorInput) freteValorInput.value = '0.00';
+            updateBancardCurrencyNotice();
+            return;
+        }
+
         if (freteDisplay) freteDisplay.innerText = 'Calculando...';
 
         fetch("/checkout/calcular-frete", {
@@ -410,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const country = option?.dataset.country || '';
         const city = option?.dataset.city || '';
         const fields = {
-            country: country === 'paraguai' ? 'Paraguai' : 'Brasil',
+            country: option?.dataset.countryName || (country === 'paraguai' ? 'Paraguai' : (country === 'brasil' ? 'Brasil' : country)),
             state: option?.dataset.state || 'Não informado',
             city: city || 'Não informada',
             street: option?.dataset.street || 'Não informada',
@@ -462,9 +482,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
                 if (freteValorInput) freteValorInput.value = '0.00';
 
-            } else {
+            } else if (country.toLowerCase() === 'paraguai') {
                 infoContent.innerHTML = '<i class="fa fa-truck me-2"></i> <strong>Envio Nacional (Paraguai):</strong> O custo do frete será calculado com base na sua cidade e adicionado ao total abaixo.';
                 if (freteDisplay) freteDisplay.innerText = 'Calculando...';
+            } else {
+                infoContent.innerHTML = '<i class="fa fa-plane me-2"></i> <strong>Entrega internacional via DHL:</strong> o endereço já pode ser cadastrado. A compra será liberada após a configuração da cotação DHL.';
+                if (freteDisplay) freteDisplay.innerText = 'Cotação DHL pendente';
+                if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
+                if (freteValorInput) freteValorInput.value = '0.00';
             }
         }
     }
@@ -500,6 +525,54 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    function selectedCountryIso2() {
+        if (countrySelect.value === 'brasil') return 'BR';
+        if (countrySelect.value === 'paraguai') return 'PY';
+        return countrySelect.options[countrySelect.selectedIndex]?.dataset.iso2 || countrySelect.value.toUpperCase();
+    }
+
+    function loadInternationalStates() {
+        const iso2 = selectedCountryIso2();
+        stateSelect.innerHTML = '<option value="">Carregando estados / províncias...</option>';
+        citySelect.innerHTML = '<option value="">Selecione a região primeiro...</option>';
+        citySelect.disabled = true;
+
+        fetch(`/api/locations/subdivisions?country=${encodeURIComponent(iso2)}`, { headers: { Accept: 'application/json' } })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(payload => {
+                if (selectedCountryIso2() !== iso2) return;
+                stateSelect.innerHTML = '<option value="">Selecione o estado / província</option>';
+                (payload.data || []).forEach(item => {
+                    const option = new Option(item.name, item.name);
+                    option.dataset.code = item.code;
+                    stateSelect.add(option);
+                });
+                if (stateSelect.dataset.selected) {
+                    stateSelect.value = stateSelect.dataset.selected;
+                    stateSelect.dispatchEvent(new Event('change'));
+                }
+            })
+            .catch(() => {
+                stateSelect.innerHTML = '<option value="">Confirme a conta GeoNames e tente novamente</option>';
+            });
+    }
+
+    function loadInternationalCities(adminCode) {
+        const iso2 = selectedCountryIso2();
+        fetch(`/api/locations/cities?country=${encodeURIComponent(iso2)}&admin_code=${encodeURIComponent(adminCode)}`, { headers: { Accept: 'application/json' } })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(payload => {
+                if (selectedCountryIso2() !== iso2) return;
+                citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
+                (payload.data || []).forEach(item => citySelect.add(new Option(item.name, item.name)));
+                citySelect.disabled = false;
+                if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
+            })
+            .catch(() => {
+                citySelect.innerHTML = '<option value="">Não foi possível carregar as cidades</option>';
+            });
+    }
+
     stateSelect.addEventListener('change', function() {
         const country = countrySelect.value;
         if (!this.value) return;
@@ -515,13 +588,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     data.forEach(c => citySelect.innerHTML += `<option value="${c.nome}">${c.nome}</option>`);
                     if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
                 });
-        } else if (paraguayData) {
+        } else if (country === 'paraguai' && paraguayData) {
             const cities = paraguayData
                 .filter(item => item.admin_name === this.value)
                 .sort((a, b) => a.city.localeCompare(b.city, 'es', { sensitivity: 'base' }));
             citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
             cities.forEach(c => citySelect.innerHTML += `<option value="${c.city}">${c.city}</option>`);
             if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
+        } else {
+            const adminCode = this.options[this.selectedIndex]?.dataset.code;
+            if (adminCode) loadInternationalCities(adminCode);
         }
     });
 
@@ -529,18 +605,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.toggleCountryFields = function() {
         const country = countrySelect.value;
+        const districtInput = document.querySelector('input[name="district"]');
         citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
         citySelect.disabled = true;
+        postalInput.required = country !== 'paraguai';
+        if (districtInput) districtInput.required = ['brasil', 'paraguai'].includes(country);
         if (country === 'brasil') {
             labelPostal.innerText = "CEP";
             postalInput.placeholder = "00000-000";
             labelState.innerText = "Estado";
             loadBrasilStates();
-        } else {
+        } else if (country === 'paraguai') {
             labelPostal.innerText = "Código da Casa (opcional)";
             postalInput.placeholder = "Ex: 1234";
             labelState.innerText = "Departamento";
             loadParaguayData();
+        } else {
+            labelPostal.innerText = "Código postal";
+            postalInput.placeholder = "Ex.: 10001";
+            labelState.innerText = "Estado / Província / Região";
+            loadInternationalStates();
         }
         updateShippingMessage(document.querySelector('input[name="shipping"]:checked')?.value);
     }

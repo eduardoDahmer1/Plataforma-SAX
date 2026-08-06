@@ -327,15 +327,34 @@
                             </a>
                         @elseif (Auth::check())
                             <div class="d-flex buy-actions">
-                                <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    <button type="submit"
-                                            class="btn btn-dark w-100 text-uppercase fw-bold rounded-0 add-to-cart-btn"
-                                            {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                                        {{ $product->stock > 0 ? __('messages.adicionar_ao_carrinho') : __('messages.esgotado') }}
+                                @if (! (($storeControls['cart_enabled'] ?? true) && ($storeControls['add_to_cart_enabled'] ?? true)) && ($storeControls['whatsapp_enabled'] ?? true))
+                                    <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $displayName) }}"
+                                       target="_blank" rel="noopener"
+                                       class="btn btn-success w-100 text-uppercase fw-bold rounded-1 add-to-cart-btn">
+                                        <i class="fab fa-whatsapp me-2"></i>{{ __('messages.store_whatsapp_product_button') }}
+                                    </a>
+                                @elseif (! (($storeControls['cart_enabled'] ?? true) && ($storeControls['add_to_cart_enabled'] ?? true)))
+                                    <button type="button" class="btn btn-dark w-100 text-uppercase fw-bold rounded-1 add-to-cart-btn"
+                                        data-bs-toggle="modal" data-bs-target="#storeControlPauseModal">
+                                        {{ __('messages.store_checkout_paused_button') }}
                                     </button>
-                                </form>
+                                @elseif (! ($catalogIntegrationStatus['available'] ?? true))
+                                    <button type="button"
+                                        class="btn btn-dark w-100 text-uppercase fw-bold rounded-0 add-to-cart-btn"
+                                        data-bs-toggle="modal" data-bs-target="#catalogIntegrationPauseModal">
+                                        {{ __('messages.catalog_purchase_paused_button') }}
+                                    </button>
+                                @else
+                                    <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1">
+                                        @csrf
+                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                        <button type="submit"
+                                                class="btn btn-dark w-100 text-uppercase fw-bold rounded-0 add-to-cart-btn"
+                                                {{ $product->stock <= 0 ? 'disabled' : '' }}>
+                                            {{ $product->stock > 0 ? __('messages.adicionar_ao_carrinho') : __('messages.esgotado') }}
+                                        </button>
+                                    </form>
+                                @endif
                                 @if (!Auth::user()->isAdmin())
                                     <div class="wishlist-btn">
                                         <x-product-favorite-button :item="$product" />

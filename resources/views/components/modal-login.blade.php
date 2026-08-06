@@ -95,6 +95,7 @@
                   <option value="rg_br" {{ $modalDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
                   <option value="ci_py" {{ $modalDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
                   <option value="ruc_py" {{ $modalDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
+                  <option value="foreign" {{ $modalDocumentType === 'foreign' ? 'selected' : '' }}>Passaporte / documento internacional</option>
                 </select>
                 <input id="register_document" type="text" name="document" value="{{ old('document') }}" placeholder="{{ __('messages.documento_ruc_ci_cpf') }}" required autocomplete="off" data-document-input class="form-control sax-auth-phone-number @error('document') is-invalid @enderror"/>
               </div>
@@ -105,7 +106,7 @@
             </div>
             <div class="sax-auth-field">
               <div class="sax-auth-phone-row">
-                <select name="phone_country" class="form-select sax-auth-phone-country @error('phone_country') is-invalid @enderror" required>
+                <select name="phone_country" class="form-select sax-auth-phone-country @error('phone_country') is-invalid @enderror" required data-world-phone-country data-selected="{{ old('phone_country', '595') }}">
                   <option value="595" {{ old('phone_country', '595') == '595' ? 'selected' : '' }}>PRY (+595)</option>
                   <option value="55" {{ old('phone_country') == '55' ? 'selected' : '' }}>BRA (+55)</option>
                 </select>

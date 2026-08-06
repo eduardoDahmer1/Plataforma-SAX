@@ -33,4 +33,15 @@ class ProductRelationshipTest extends TestCase
 
         $this->assertSame('A17C5B', $product->relationshipColorKey());
     }
+
+    public function test_reference_size_and_color_are_extracted_from_go_name(): void
+    {
+        $product = new Product([
+            'external_name' => 'MARCA MODELO AB12345 #M *001',
+        ]);
+
+        $this->assertSame('AB12345', $product->relationshipReferenceKey());
+        $this->assertSame('M', $product->inferredSize());
+        $this->assertSame('001', $product->relationshipColorKey());
+    }
 }

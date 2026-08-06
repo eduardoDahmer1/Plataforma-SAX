@@ -51,6 +51,7 @@
                                 <option value="rg_br" {{ $registerDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
                                 <option value="ci_py" {{ $registerDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
                                 <option value="ruc_py" {{ $registerDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
+                                <option value="foreign" {{ $registerDocumentType === 'foreign' ? 'selected' : '' }}>Passaporte / documento internacional</option>
                             </select>
                             <input id="document" class="form-input flex-grow-1 @error('document') is-invalid @enderror" style="min-width: 0;" type="text" name="document" value="{{ old('document') }}" placeholder="{{ __('messages.label_documento') }}" required autocomplete="off" data-document-input />
                         </div>
@@ -61,7 +62,7 @@
                     </div>
 
                     <div class="form-group">
-                        <select id="phone_country" class="form-input @error('phone_country') is-invalid @enderror" name="phone_country" required>
+                        <select id="phone_country" class="form-input @error('phone_country') is-invalid @enderror" name="phone_country" required data-world-phone-country data-selected="{{ old('phone_country', '595') }}">
                             <option value="595" {{ old('phone_country', '595') == '595' ? 'selected' : '' }}>PRY (+595)</option>
                             <option value="55" {{ old('phone_country') == '55' ? 'selected' : '' }}>BRA (+55)</option>
                         </select>

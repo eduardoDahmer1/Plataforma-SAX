@@ -6,7 +6,8 @@
         cpf: i18n.document_invalid_cpf,
         rg_br: i18n.document_invalid_rg_br,
         ci_py: i18n.document_invalid_ci_py,
-        ruc_py: i18n.document_invalid_ruc_py
+        ruc_py: i18n.document_invalid_ruc_py,
+        foreign: 'Informe um passaporte ou documento internacional válido.'
     };
 
     function digits(value) {
@@ -18,6 +19,9 @@
     }
 
     function format(value, type) {
+        if (type === 'foreign') {
+            return String(value || '').toUpperCase().replace(/[^\p{L}\p{N}.\/\- ]/gu, '').slice(0, 30);
+        }
         if (type === 'cpf') {
             const number = digits(value).slice(0, 11);
             return number
@@ -69,6 +73,10 @@
     }
 
     function isValid(value, type) {
+        if (type === 'foreign') {
+            const clean = String(value || '').replace(/[^\p{L}\p{N}]/gu, '');
+            return clean.length >= 4 && clean.length <= 30;
+        }
         if (type === 'cpf') return validCpf(value);
         if (type === 'ci_py') {
             const number = digits(value);
@@ -89,7 +97,8 @@
             cpf: ['000.000.000-00', 14, 'numeric'],
             rg_br: ['00.000.000-0', 13, 'text'],
             ci_py: ['0.000.000', 13, 'numeric'],
-            ruc_py: ['80012345-6', 10, 'numeric']
+            ruc_py: ['80012345-6', 10, 'numeric'],
+            foreign: ['Passaporte / documento', 30, 'text']
         };
         const current = settings[type] || settings.ci_py;
         input.placeholder = current[0];

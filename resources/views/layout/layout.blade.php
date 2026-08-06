@@ -10,6 +10,8 @@
 
     {{-- Header --}}
     @include('components.header')
+    @include('components.catalog-integration-notice')
+    @include('components.store-control-notice')
 
     <main>
         @yield('content')

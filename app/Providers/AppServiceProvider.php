@@ -16,6 +16,9 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
+use App\Services\CatalogIntegrationAvailabilityService;
+use App\Services\IntegrationMonitorService;
+use App\Services\StoreControlService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,7 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(CatalogIntegrationAvailabilityService::class);
+        $this->app->singleton(StoreControlService::class);
     }
 
     /**
@@ -109,6 +113,17 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
+            // Segurança adicional: o cron continua sendo o mecanismo principal,
+            // mas o painel detecta indisponibilidade mesmo se o scheduler do
+            // ambiente ainda não estiver configurado.
+            if (Cache::add('integration_monitor_admin_fallback_check', true, now()->addMinutes(5))) {
+                try {
+                    app(IntegrationMonitorService::class)->checkForStaleIntegrations();
+                } catch (\Throwable $exception) {
+                    report($exception);
+                }
+            }
+
             $view->with([
                 'adminNotifications' => $admin->adminNotifications()
                     ->latest()
@@ -124,14 +139,43 @@ class AppServiceProvider extends ServiceProvider
             $customer = auth()->user();
 
             if (! $customer || $customer->isAdmin()) {
-                $view->with(['customerNotifications' => collect(), 'customerUnreadNotificationsCount' => 0]);
+                $view->with([
+                    'customerNotifications' => collect(),
+                    'customerOperationalAlerts' => collect(),
+                    'customerPersistedUnreadNotificationsCount' => 0,
+                    'customerUnreadNotificationsCount' => 0,
+                ]);
                 return;
             }
 
+            $operationalAlerts = collect();
+            $catalogStatus = app(CatalogIntegrationAvailabilityService::class)->status();
+
+            if (! ($catalogStatus['available'] ?? true)) {
+                $operationalAlerts->push([
+                    'category' => 'updates',
+                    'icon' => 'fa-arrows-rotate',
+                    'title' => __('messages.catalog_purchase_paused_title'),
+                    'message' => __('messages.catalog_purchase_paused_message'),
+                ]);
+            }
+
+            $persistedUnreadCount = $customer->adminNotifications()->whereNull('read_at')->count();
+
             $view->with([
                 'customerNotifications' => $customer->adminNotifications()->latest()->limit(30)->get(),
-                'customerUnreadNotificationsCount' => $customer->adminNotifications()->whereNull('read_at')->count(),
+                'customerOperationalAlerts' => $operationalAlerts,
+                'customerPersistedUnreadNotificationsCount' => $persistedUnreadCount,
+                'customerUnreadNotificationsCount' => $persistedUnreadCount + $operationalAlerts->count(),
             ]);
+        });
+
+        View::composer('*', function ($view) {
+            $view->with(
+                'catalogIntegrationStatus',
+                app(CatalogIntegrationAvailabilityService::class)->status()
+            );
+            $view->with('storeControls', app(StoreControlService::class)->settings());
         });
 
         /**

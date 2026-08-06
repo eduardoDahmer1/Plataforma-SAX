@@ -7,7 +7,10 @@ use App\Models\UserAddress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use App\Support\CountrySupport;
+use App\Services\StoreControlService;
 
 class UserAddressController extends Controller
 {
@@ -98,15 +101,28 @@ class UserAddressController extends Controller
 
     private function validated(Request $request): array
     {
+        $country = CountrySupport::normalizeForStorage($request->input('country'));
+        $request->merge(['country' => $country]);
+
+        if (CountrySupport::usesDhl($country) && ! app(StoreControlService::class)->enabled('geonames')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'country' => 'As localidades internacionais ainda não estão habilitadas. Selecione Brasil ou Paraguai.',
+            ]);
+        }
+
         return $request->validate([
             'label' => ['required', 'string', 'max:80'],
-            'country' => ['required', 'in:brasil,paraguai'],
-            'postal_code' => ['required_if:country,brasil', 'nullable', 'string', 'max:30'],
+            'country' => ['required', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! CountrySupport::isSupported($value)) {
+                    $fail('Selecione um país válido.');
+                }
+            }],
+            'postal_code' => [Rule::requiredIf(! CountrySupport::isParaguay($country)), 'nullable', 'string', 'max:30'],
             'state' => ['required', 'string', 'max:120'],
             'city' => ['required', 'string', 'max:120'],
             'street' => ['required', 'string', 'max:255'],
             'number' => ['required', 'string', 'max:40'],
-            'district' => ['required', 'string', 'max:160'],
+            'district' => [Rule::requiredIf(! CountrySupport::usesDhl($country)), 'nullable', 'string', 'max:160'],
             'complement' => ['nullable', 'string', 'max:255'],
             'is_default' => ['nullable', 'boolean'],
         ]);
@@ -136,7 +152,7 @@ class UserAddressController extends Controller
 
         $address = $user->addresses()->create([
             'label' => 'Endereço principal',
-            'country' => in_array(mb_strtolower((string) $user->country), ['paraguai', 'py'], true) ? 'paraguai' : 'brasil',
+            'country' => CountrySupport::normalizeForStorage($user->country) ?: CountrySupport::BRAZIL,
             'postal_code' => $user->cep,
             'state' => $user->state,
             'city' => $user->city,

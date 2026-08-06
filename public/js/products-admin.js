@@ -4,6 +4,115 @@
 // Se carga en las 3 rutas vía scripts-master.blade.php.
 // ============================
 
+document.addEventListener('DOMContentLoaded', function () {
+    const aiButton = document.getElementById('completeProductWithAiBtn');
+    const aiFeedback = document.getElementById('productEditFeedback');
+    let currentProposal = null;
+
+    if (!aiButton || !aiFeedback) return;
+
+    function escapeHtml(value) {
+        const element = document.createElement('div');
+        element.textContent = value == null ? '' : String(value);
+        return element.innerHTML;
+    }
+
+    function descriptionToHtml(value) {
+        return String(value || '').split(/\n{2,}/).filter(Boolean).map(function (paragraph) {
+            return '<p>' + escapeHtml(paragraph).replaceAll('\n', '<br>') + '</p>';
+        }).join('');
+    }
+
+    function applyTaxonomyToForm(taxonomy) {
+        const categorySelect = document.getElementById('category_id');
+        const subcategorySelect = document.getElementById('subcategory_id');
+        const childCategorySelect = document.getElementById('categoriasfilhas_id');
+        const subcategoryId = taxonomy?.subcategory_id;
+        const childCategoryId = taxonomy?.childcategory_id;
+
+        if (!categorySelect || !subcategorySelect || !childCategorySelect || !subcategoryId) return;
+
+        // Reutiliza a cascata existente e mantém a categoria principal intacta.
+        categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        const hasSubcategory = Array.from(subcategorySelect.options).some(function (option) {
+            return String(option.value) === String(subcategoryId);
+        });
+        if (!hasSubcategory) return;
+
+        subcategorySelect.value = String(subcategoryId);
+        subcategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+        if (!childCategoryId) return;
+        const hasChildCategory = Array.from(childCategorySelect.options).some(function (option) {
+            return String(option.value) === String(childCategoryId);
+        });
+        if (hasChildCategory) childCategorySelect.value = String(childCategoryId);
+    }
+
+    function applyProposalToForm() {
+        if (!currentProposal) return;
+
+        const fieldMap = { pt_br: 'pt', es: 'es', en: 'en' };
+        Object.entries(fieldMap).forEach(function (entry) {
+            const sourceLanguage = entry[0];
+            const fieldLanguage = entry[1];
+            const nameField = document.getElementById('real-name-' + fieldLanguage);
+            const descriptionField = document.getElementById('real-desc-' + fieldLanguage);
+            if (nameField && currentProposal.commercial_name?.[sourceLanguage]) {
+                nameField.value = currentProposal.commercial_name[sourceLanguage];
+            }
+            if (descriptionField && currentProposal.descriptions?.[sourceLanguage]) {
+                descriptionField.value = descriptionToHtml(currentProposal.descriptions[sourceLanguage]);
+            }
+        });
+
+        const visibleName = document.getElementById('visual-name-input');
+        const activeNameLanguage = window.currentLangs?.name || 'pt';
+        if (visibleName) visibleName.value = document.getElementById('real-name-' + activeNameLanguage)?.value || '';
+
+        const editor = typeof tinymce !== 'undefined' ? tinymce.get('editor-product') : null;
+        const activeDescriptionLanguage = window.currentLangs?.desc || 'pt';
+        if (editor) editor.setContent(document.getElementById('real-desc-' + activeDescriptionLanguage)?.value || '');
+
+        applyTaxonomyToForm(currentProposal.taxonomy_selection);
+
+    }
+
+    aiButton.addEventListener('click', async function () {
+        const originalHtml = aiButton.innerHTML;
+        aiButton.disabled = true;
+        aiButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
+        aiFeedback.className = 'alert d-none';
+        currentProposal = null;
+
+        try {
+            const response = await fetch(aiButton.dataset.aiUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'No fue posible generar la propuesta.');
+
+            currentProposal = data.proposal;
+            applyProposalToForm();
+            aiFeedback.className = 'alert alert-success';
+            aiFeedback.textContent = 'La IA completó el formulario. Revisá nombres, descripciones y clasificación antes de guardar.';
+            window.saxToast ? saxToast('success', 'Formulario completado con IA; todavía no fue guardado.') : null;
+        } catch (error) {
+            aiFeedback.className = 'alert alert-danger';
+            aiFeedback.textContent = error.message || 'No fue posible generar la propuesta.';
+        } finally {
+            aiButton.disabled = false;
+            aiButton.innerHTML = originalHtml;
+        }
+    });
+
+});
+
 // ======== Edit: Buscador de productos hijo (tamaño/color) ========
 // Archivo: resources/views/admin/products/edit.blade.php
 document.addEventListener('DOMContentLoaded', function () {
@@ -63,7 +172,43 @@ document.addEventListener('DOMContentLoaded', function () {
             if (badge) badge.textContent = selectedDiv.querySelectorAll(':scope > [data-id]').length;
         }
 
-        function searchProducts() {
+        function selectResultCard(card) {
+            if (!card) return;
+
+            const id = card.getAttribute('data-id');
+            if (!id || selectedDiv.querySelector('div[data-id="' + id + '"]')) return;
+
+            const name = card.querySelector('.card-text')?.textContent || '';
+            const imgSrc = card.querySelector('img')?.src || noImage;
+            const color = card.getAttribute('data-color');
+            const inferredColor = card.getAttribute('data-inferred-color');
+            const size = card.getAttribute('data-size');
+            const sku = card.getAttribute('data-sku');
+
+            const newCard = document.createElement('div');
+            newCard.className = 'col-6 col-md-4 col-lg-2';
+            newCard.setAttribute('data-id', id);
+            newCard.innerHTML = '<div class="card border-success h-100 position-relative">' +
+                '<img src="' + imgSrc + '" class="card-img-top" style="height:120px; object-fit:cover;">' +
+                '<div class="card-body p-2">' +
+                '<span class="badge bg-success mb-1">Relacionado</span>' +
+                '<p class="card-text m-0 fw-bold">' + name + '</p>' +
+                (sku ? '<small class="text-muted d-block mt-1">SKU: ' + sku + '</small>' : '') +
+                (color ? '<div class="d-flex align-items-center mt-1">' +
+                    '<span style="display:inline-block;width:16px;height:16px;background:' + color + ';border:1px solid #ccc;margin-right:5px;"></span>' +
+                    '<small>' + color + '</small></div>' : '') +
+                (context === 'color' && inferredColor ?
+                    '<small class="text-muted d-block mt-1">Código original: *' + inferredColor + '</small>' : '') +
+                (size ? '<div class="mt-1"><small class="text-muted">Tamanho: ' + size + '</small></div>' : '') +
+                '<button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-item">' +
+                '<i class="fas fa-times"></i></button>' +
+                '<input type="hidden" name="' + hiddenName + '[]" value="' + id + '">' +
+                '</div></div>';
+            selectedDiv.appendChild(newCard);
+            updateSelectedCount();
+        }
+
+        function searchProducts(autoSelectMatches = false) {
             const query = searchInput.value.trim();
             if (query.length < 2) {
                 resultsDiv.style.display = 'none';
@@ -81,6 +226,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if ((context === 'size' || context === 'color') && resultsDiv.dataset.currentReferenceKey) {
                 params.append('current_reference_key', resultsDiv.dataset.currentReferenceKey);
+            }
+            if (context === 'size' && resultsDiv.dataset.currentSize) {
+                params.append('current_size', resultsDiv.dataset.currentSize);
             }
 
             fetch(searchUrl + '?' + params.toString())
@@ -119,56 +267,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     resultsDiv.style.display = 'flex';
                     resultsDiv.style.flexWrap = 'wrap';
                     if (resultsLabel) resultsLabel.classList.remove('d-none');
+
+                    if (autoSelectMatches && resultsDiv.dataset.autoSelect === '1') {
+                        resultsDiv.querySelectorAll('.card[data-id]').forEach(selectResultCard);
+                    }
                 })
                 .catch(function (err) { console.error('Falha na busca de produtos:', err); });
         }
 
-        searchBtn.addEventListener('click', searchProducts);
+        searchBtn.addEventListener('click', function () { searchProducts(false); });
         searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                searchProducts();
+                searchProducts(false);
             }
         });
 
         if (searchInput.dataset.autoSearch === '1' && searchInput.value.trim().length >= 2) {
-            window.setTimeout(searchProducts, 80);
+            window.setTimeout(function () { searchProducts(true); }, 80);
         }
 
         resultsDiv.addEventListener('click', function (e) {
             const card = e.target.closest('.card');
-            if (!card) return;
-            const id = card.getAttribute('data-id');
-            if (selectedDiv.querySelector('div[data-id="' + id + '"]')) return;
-
-            const name = card.querySelector('.card-text').textContent;
-            const imgSrc = card.querySelector('img').src;
-            const color = card.getAttribute('data-color');
-            const inferredColor = card.getAttribute('data-inferred-color');
-            const size = card.getAttribute('data-size');
-            const sku = card.getAttribute('data-sku');
-
-            const newCard = document.createElement('div');
-            newCard.className = 'col-6 col-md-4 col-lg-2';
-            newCard.setAttribute('data-id', id);
-            newCard.innerHTML = '<div class="card border-success h-100 position-relative">' +
-                '<img src="' + imgSrc + '" class="card-img-top" style="height:120px; object-fit:cover;">' +
-                '<div class="card-body p-2">' +
-                '<span class="badge bg-success mb-1">Relacionado</span>' +
-                '<p class="card-text m-0 fw-bold">' + name + '</p>' +
-                (sku ? '<small class="text-muted d-block mt-1">SKU: ' + sku + '</small>' : '') +
-                (color ? '<div class="d-flex align-items-center mt-1">' +
-                    '<span style="display:inline-block;width:16px;height:16px;background:' + color + ';border:1px solid #ccc;margin-right:5px;"></span>' +
-                    '<small>' + color + '</small></div>' : '') +
-                (context === 'color' && inferredColor ?
-                    '<small class="text-muted d-block mt-1">Código original: *' + inferredColor + '</small>' : '') +
-                (size ? '<div class="mt-1"><small class="text-muted">Tamanho: ' + size + '</small></div>' : '') +
-                '<button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-item">' +
-                '<i class="fas fa-times"></i></button>' +
-                '<input type="hidden" name="' + hiddenName + '[]" value="' + id + '">' +
-                '</div></div>';
-            selectedDiv.appendChild(newCard);
-            updateSelectedCount();
+            selectResultCard(card);
         });
 
         selectedDiv.addEventListener('click', function (e) {

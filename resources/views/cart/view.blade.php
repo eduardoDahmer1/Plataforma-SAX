@@ -167,17 +167,32 @@
                     </div>
 
                     <div class="d-grid gap-2 mt-4">
+                        @php($manualCheckoutEnabled = (bool) (($storeControls['cart_enabled'] ?? true) && ($storeControls['checkout_enabled'] ?? true)))
                         <form action="{{ route('checkout.index') }}" method="GET">
-                            <button type="submit" class="sax-btn-next w-100">
-                                <i class="fas fa-lock me-2"></i>{{ __('messages.finalizar_compra') }}
+                            <button type="{{ (($catalogIntegrationStatus['available'] ?? true) && $manualCheckoutEnabled) ? 'submit' : 'button' }}"
+                                class="sax-btn-next w-100"
+                                @if (! ($catalogIntegrationStatus['available'] ?? true))
+                                    data-bs-toggle="modal" data-bs-target="#catalogIntegrationPauseModal"
+                                @elseif (! $manualCheckoutEnabled)
+                                    data-bs-toggle="modal" data-bs-target="#storeControlPauseModal"
+                                @endif>
+                                <i class="fas fa-lock me-2"></i>{{ $manualCheckoutEnabled ? __('messages.finalizar_compra') : __('messages.store_checkout_paused_button') }}
                             </button>
                         </form>
 
+                        @if($storeControls['whatsapp_enabled'] ?? true)
                         <form action="{{ route('checkout.whatsapp') }}" method="GET">
-                            <button type="submit" class="sax-btn-wa w-100">
+                            <button type="{{ (($catalogIntegrationStatus['available'] ?? true) && $manualCheckoutEnabled) ? 'submit' : 'button' }}"
+                                class="sax-btn-wa w-100"
+                                @if (! ($catalogIntegrationStatus['available'] ?? true))
+                                    data-bs-toggle="modal" data-bs-target="#catalogIntegrationPauseModal"
+                                @elseif (! $manualCheckoutEnabled)
+                                    data-bs-toggle="modal" data-bs-target="#storeControlPauseModal"
+                                @endif>
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.checkout_whatsapp') }}
                             </button>
                         </form>
+                        @endif
 
                         <div>
                             <button type="button" class="btn btn-outline-danger w-100 py-2 fw-bold text-uppercase" data-bs-toggle="modal" data-bs-target="#abandonCartFeedbackModal">

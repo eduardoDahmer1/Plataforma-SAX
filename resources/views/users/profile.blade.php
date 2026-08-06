@@ -31,7 +31,7 @@
         </div>
     @endif
 
-    <form action="{{ route('user.profile.update') }}" method="POST" class="sax-premium-form card border-0 shadow-sm rounded-4 p-4 p-md-5">
+    <form action="{{ route('user.profile.update') }}" method="POST" class="sax-premium-form card border-0 shadow-sm rounded-4 p-4 p-md-5" data-address-form>
         @csrf
         @method('PUT')
 
@@ -49,7 +49,7 @@
             <div class="col-md-12 mb-3">
                 <label class="sax-label">{{ __('messages.telefone') }}</label>
                 <div class="d-flex gap-2 sax-user-phone-row">
-                    <select name="phone_country" class="form-select sax-input w-auto">
+                    <select name="phone_country" class="form-select sax-input w-auto" data-world-phone-country data-selected="{{ old('phone_country', auth()->user()->phone_country) }}">
                         <option value="55" {{ auth()->user()->phone_country == '55' ? 'selected' : '' }}>BRA (+55)</option>
                         <option value="595" {{ auth()->user()->phone_country == '595' ? 'selected' : '' }}>PRY (+595)</option>
                     </select>
@@ -62,34 +62,33 @@
                 <div class="row g-3 p-3 rounded-3 border" style="background: #fbfbfb;">
                     <div class="col-md-12">
                         <label class="small text-muted text-uppercase fw-bold">País</label>
-                        <select name="country" id="country" class="form-select sax-input">
-                            <option value="brasil" {{ old('country', auth()->user()->country) == 'brasil' ? 'selected' : '' }}>Brasil</option>
-                            <option value="paraguai" {{ old('country', auth()->user()->country) == 'paraguai' ? 'selected' : '' }}>Paraguai</option>
+                        <select name="country" id="country" class="form-select sax-input" data-address-country>
+                            <x-country-options :selected="old('country', auth()->user()->country ?: 'brasil')" />
                         </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="small text-muted text-uppercase fw-bold" id="label-postal">CEP</label>
-                        <input type="text" name="postal_code" id="postal_code" class="form-control sax-input" value="{{ old('cep', auth()->user()->cep) }}" placeholder="00000-000">
+                        <label class="small text-muted text-uppercase fw-bold" id="label-postal" data-address-postal-label>CEP</label>
+                        <input type="text" name="postal_code" id="postal_code" class="form-control sax-input" value="{{ old('cep', auth()->user()->cep) }}" placeholder="00000-000" data-address-postal-code>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="small text-muted text-uppercase fw-bold" id="label-state">Estado</label>
-                        <select id="state-select" name="state" class="form-select sax-input" data-selected="{{ old('state', auth()->user()->state) }}">
+                        <label class="small text-muted text-uppercase fw-bold" id="label-state" data-address-state-label>Estado</label>
+                        <select id="state-select" name="state" class="form-select sax-input" data-selected="{{ old('state', auth()->user()->state) }}" data-address-state>
                             <option value="">Selecione...</option>
                         </select>
                     </div>
 
                     <div class="col-md-4">
                         <label class="small text-muted text-uppercase fw-bold">Cidade</label>
-                        <select id="city-select" name="city" class="form-select sax-input" data-selected="{{ old('city', auth()->user()->city) }}" disabled>
+                        <select id="city-select" name="city" class="form-select sax-input" data-selected="{{ old('city', auth()->user()->city) }}" disabled data-address-city>
                             <option value="">Selecione o estado...</option>
                         </select>
                     </div>
 
                     <div class="col-md-8">
                         <label class="small text-muted text-uppercase fw-bold">Rua / Endereço</label>
-                        <input type="text" name="address" class="form-control sax-input" value="{{ old('address', auth()->user()->address) }}">
+                        <input type="text" name="address" class="form-control sax-input" value="{{ old('address', auth()->user()->address) }}" data-address-street>
                     </div>
 
                     <div class="col-md-4">
@@ -99,7 +98,7 @@
 
                     <div class="col-md-6">
                         <label class="small text-muted text-uppercase fw-bold">Bairro</label>
-                        <input type="text" name="district" class="form-control sax-input" value="{{ old('district', auth()->user()->district) }}">
+                        <input type="text" name="district" class="form-control sax-input" value="{{ old('district', auth()->user()->district) }}" data-address-district>
                     </div>
 
                     <div class="col-md-6">
@@ -125,6 +124,7 @@
                         <option value="rg_br" {{ $profileDocumentType === 'rg_br' ? 'selected' : '' }}>{{ __('messages.document_type_rg_br') }}</option>
                         <option value="ci_py" {{ $profileDocumentType === 'ci_py' ? 'selected' : '' }}>{{ __('messages.document_type_ci_py') }}</option>
                         <option value="ruc_py" {{ $profileDocumentType === 'ruc_py' ? 'selected' : '' }}>{{ __('messages.document_type_ruc_py') }}</option>
+                        <option value="foreign" {{ $profileDocumentType === 'foreign' ? 'selected' : '' }}>Passaporte / documento internacional</option>
                     </select>
                     <input type="text" name="document" class="form-control sax-input flex-grow-1" style="min-width: 0;"
                         value="{{ $profileDocument }}" autocomplete="off" data-document-input required>
@@ -167,128 +167,6 @@
 
 @endsection
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    try {
-        const countryEl = document.getElementById('country');
-        const stateEl = document.getElementById('state-select');
-        const cityEl = document.getElementById('city-select');
-        const postalEl = document.getElementById('postal_code');
-        const labelPostal = document.getElementById('label-postal');
-
-        if (!countryEl || !stateEl || !cityEl) return;
-
-        function updateLabels() {
-            stateEl.innerHTML = '<option value="">Carregando...</option>';
-            cityEl.innerHTML = '<option value="">Selecione o estado...</option>';
-            cityEl.disabled = true;
-
-            if (countryEl.value === 'brasil') {
-                if (labelPostal) labelPostal.innerText = "CEP";
-                if (postalEl) postalEl.placeholder = "00000-000";
-                loadStatesBR();
-            } else if (countryEl.value === 'paraguai') {
-                if (labelPostal) labelPostal.innerText = "Código Postal";
-                if (postalEl) postalEl.placeholder = "Ex: 7000";
-                loadStatesPY();
-            }
-        }
-
-        function loadStatesBR() {
-            const current = stateEl.getAttribute('data-selected');
-            fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome')
-                .then(r => r.json())
-                .then(data => {
-                    let options = '<option value="">Selecione...</option>';
-                    data.forEach(uf => {
-                        const sel = (uf.sigla === current) ? 'selected' : '';
-                        options += `<option value="${uf.sigla}" data-id="${uf.id}" ${sel}>${uf.nome}</option>`;
-                    });
-                    stateEl.innerHTML = options;
-                    if (stateEl.value) {
-                        stateEl.dispatchEvent(new Event('change'));
-                    }
-                }).catch(err => console.error("Erro IBGE:", err));
-        }
-
-        function loadStatesPY() {
-            const current = stateEl.getAttribute('data-selected');
-            fetch('/data/py.json')
-                .then(r => r.json())
-                .then(data => {
-                    const depts = [...new Set(data.map(i => i.admin_name))].sort();
-                    let options = '<option value="">Selecione...</option>';
-                    depts.forEach(d => {
-                        const sel = (d === current) ? 'selected' : '';
-                        options += `<option value="${d}" ${sel}>${d}</option>`;
-                    });
-                    stateEl.innerHTML = options;
-
-                    if (stateEl.value) {
-                        stateEl.dispatchEvent(new Event('change'));
-                    }
-                }).catch(err => {
-                    console.error("Erro PY JSON:", err);
-                    stateEl.innerHTML = '<option value="">Erro ao carregar</option>';
-                });
-        }
-
-        stateEl.addEventListener('change', function () {
-            const country = countryEl.value;
-            const currentCity = cityEl.getAttribute('data-selected');
-
-            if (!this.value || this.value === "Carregando...") {
-                cityEl.disabled = true;
-                return;
-            }
-
-            cityEl.disabled = false;
-            cityEl.innerHTML = '<option value="">Carregando...</option>';
-
-            if (country === 'brasil') {
-                const id = this.options[this.selectedIndex].getAttribute('data-id');
-                if (!id) return;
-                fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${id}/municipios`)
-                    .then(r => r.json())
-                    .then(data => {
-                        let options = '<option value="">Selecione...</option>';
-                        data.forEach(c => {
-                            const sel = (c.nome === currentCity) ? 'selected' : '';
-                            options += `<option value="${c.nome}" ${sel}>${c.nome}</option>`;
-                        });
-                        cityEl.innerHTML = options;
-                        cityEl.removeAttribute('data-selected');
-                    });
-            } else if (country === 'paraguai') {
-                const selectedDept = this.value;
-                fetch('/data/py.json')
-                    .then(r => r.json())
-                    .then(data => {
-                        const cities = data.filter(item => item.admin_name === selectedDept)
-                            .map(item => item.city)
-                            .sort();
-
-                        let options = '<option value="">Selecione...</option>';
-                        cities.forEach(cityName => {
-                            const sel = (cityName === currentCity) ? 'selected' : '';
-                            options += `<option value="${cityName}" ${sel}>${cityName}</option>`;
-                        });
-                        cityEl.innerHTML = options;
-                        cityEl.removeAttribute('data-selected');
-                    }).catch(err => {
-                        cityEl.innerHTML = '<option value="">Erro ao carregar</option>';
-                    });
-            }
-        });
-
-        countryEl.addEventListener('change', updateLabels);
-
-        if (countryEl.value) {
-            updateLabels();
-        }
-
-    } catch (e) {
-        console.warn("Script de endereços isolado de erro externo:", e);
-    }
-});
-</script>
+@push('scripts')
+    <script src="{{ asset('js/user-addresses.js') }}?v={{ filemtime(public_path('js/user-addresses.js')) }}"></script>
+@endpush

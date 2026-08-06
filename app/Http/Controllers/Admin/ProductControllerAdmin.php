@@ -12,6 +12,7 @@ use App\Models\ProductTranslation;
 use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
 use App\Services\ImageConverterService;
+use App\Services\DeepSeekCatalogService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,21 @@ use Illuminate\Http\Response;
 
 class ProductControllerAdmin extends Controller
 {
+    public function completeWithAi(Product $product, DeepSeekCatalogService $deepSeek)
+    {
+        $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
+
+        try {
+            return response()->json($deepSeek->generateProductProposal($product));
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'message' => $exception->getMessage() ?: 'No fue posible generar la propuesta.',
+            ], 502);
+        }
+    }
+
     public function index(Request $request)
     {
         $search = $request->get('search');
@@ -264,6 +280,7 @@ class ProductControllerAdmin extends Controller
         $context = $request->get('context');
         $currentColorKey = (string) $request->get('current_color_key', '');
         $currentReferenceKey = (string) $request->get('current_reference_key', '');
+        $currentSizeKey = Str::upper(Str::ascii(trim((string) $request->get('current_size', ''))));
 
         $products = Product::where(function ($query) use ($q) {
             $query
@@ -288,6 +305,9 @@ class ProductControllerAdmin extends Controller
         if ($context === 'size' && $currentColorKey !== '') {
             $products = $products
                 ->filter(fn (Product $product) => $product->relationshipColorKey() === $currentColorKey)
+                ->when($currentSizeKey !== '', fn ($items) => $items->reject(
+                    fn (Product $product) => Str::upper(Str::ascii(trim((string) $product->inferredSize()))) === $currentSizeKey
+                ))
                 ->values();
         }
 

@@ -53,6 +53,14 @@
 
         <div id="productEditFeedback" class="d-none"></div>
 
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-3 border rounded-3 bg-light-subtle">
+            <button type="button" id="completeProductWithAiBtn" class="btn btn-outline-primary"
+                    data-ai-url="{{ route('admin.products.completeWithAi', $item->id) }}">
+                <i class="fas fa-wand-magic-sparkles me-2"></i>Completar con IA
+            </button>
+            <span class="small text-muted">Completa nombres, descripciones y clasificación en el formulario. El operador revisa y guarda manualmente.</span>
+        </div>
+
         <form id="productEditForm" class="product-edit-form" action="{{ isset($item) ? route('admin.products.update', $item->id) : route('admin.products.store') }}"
             method="POST" enctype="multipart/form-data">
             @csrf
@@ -461,8 +469,8 @@
                                     class="fas fa-search"></i></button>
                         </div>
                         <div id="parent_results_label" class="relationship-section-label d-none">Sugestões encontradas</div>
-                        <div id="parent_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}"></div>
-                        <div class="relationship-section-label mt-3">Já relacionados <span class="relationship-count" data-count-for="selected_parents">{{ count($item->selected_size_children ?? []) }}</span></div>
+                        <div id="parent_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}" data-current-size="{{ $item->inferredSize() }}" data-auto-select="{{ empty($item->parent_id) && (($item->product_role ?? 'P') !== 'F') ? '1' : '0' }}"></div>
+                        <div class="relationship-section-label mt-3">Selecionados para relacionar <span class="relationship-count" data-count-for="selected_parents">{{ count($item->selected_size_children ?? []) }}</span></div>
                         <div id="selected_parents" class="row g-2 mt-2">
                             @if (!empty($item->selected_size_children))
                                 @php
@@ -506,7 +514,7 @@
                             @endif
                         </div>
                         <small class="form-text text-muted d-block mt-2">
-                            Variantes com a mesma referência e cor são pré-selecionadas automaticamente. Elas herdam os dados comuns do produto pai; SKU, estoque e tamanho continuam próprios de cada filho.
+                            Variantes com a mesma referência e cor, mas tamanho diferente, são pré-selecionadas. Elas só serão relacionadas ao salvar; SKU, estoque e tamanho continuam próprios de cada filho.
                         </small>
                     </div>
 
@@ -520,8 +528,8 @@
                                     class="fas fa-search"></i></button>
                         </div>
                         <div id="color_results_label" class="relationship-section-label d-none">Sugestões de outras cores</div>
-                        <div id="color_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}"></div>
-                        <div class="relationship-section-label mt-3">Já relacionados <span class="relationship-count" data-count-for="selected_colors">{{ count($item->selected_color_family_members ?? []) }}</span></div>
+                        <div id="color_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}" data-current-size="{{ $item->inferredSize() }}" data-auto-select="{{ empty($item->parent_id) && (($item->product_role ?? 'P') !== 'F') ? '1' : '0' }}"></div>
+                        <div class="relationship-section-label mt-3">Selecionados para relacionar <span class="relationship-count" data-count-for="selected_colors">{{ count($item->selected_color_family_members ?? []) }}</span></div>
                         <div id="selected_colors" class="row g-2 mt-2">
                             @if (!empty($item->selected_color_family_members))
                                 @php

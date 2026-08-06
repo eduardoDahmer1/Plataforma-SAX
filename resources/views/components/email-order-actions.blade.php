@@ -21,11 +21,13 @@
     $isPaid = $order->payment_status === 'paid' || $order->status === 'paid';
     $primaryUrl = $orderUrl;
     $primaryLabel = $copy['view_order'];
+    $paymentMethodEnabled = app(\App\Services\CatalogIntegrationAvailabilityService::class)->isAvailable()
+        && app(\App\Services\StoreControlService::class)->paymentEnabled((string) $order->payment_method);
 
-    if (!$isPaid && $order->payment_method === 'bancard_v2') {
+    if (!$isPaid && $order->payment_method === 'bancard_v2' && $paymentMethodEnabled) {
         $primaryUrl = route('checkout.bancard.v2', $order->id);
         $primaryLabel = $copy['pay_bancard'];
-    } elseif (!$isPaid && $order->payment_method === 'deposito') {
+    } elseif (!$isPaid && $order->payment_method === 'deposito' && $paymentMethodEnabled) {
         $primaryLabel = $copy['upload_receipt'];
     } elseif ($isPaid && $order->receipt) {
         $primaryUrl = route('receipts.show', $order->receipt);

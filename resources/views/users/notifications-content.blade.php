@@ -20,10 +20,12 @@
     <div class="sax-admin-notifications__header-actions">
         @if ($customerUnreadNotificationsCount > 0)
             <span class="sax-admin-notifications__unread" data-notifications-unread-count>{{ $customerUnreadNotificationsCount }} {{ $customerUnreadNotificationsCount === 1 ? __('messages.notifications_unread_singular') : __('messages.notifications_unread_plural') }}</span>
-            <form action="{{ route('user.notifications.read-all') }}" method="POST" data-notifications-read-all>
-                @csrf
-                <button type="submit" class="sax-admin-notifications__read-all">{{ __('messages.notifications_mark_all_read') }}</button>
-            </form>
+            @if ($customerPersistedUnreadNotificationsCount > 0)
+                <form action="{{ route('user.notifications.read-all') }}" method="POST" data-notifications-read-all>
+                    @csrf
+                    <button type="submit" class="sax-admin-notifications__read-all">{{ __('messages.notifications_mark_all_read') }}</button>
+                </form>
+            @endif
         @endif
         <button type="button" class="sax-admin-notifications__close" id="adminNotificationsClose" aria-label="{{ __('messages.notifications_close') }}"><i class="fa-solid fa-xmark"></i></button>
     </div>
@@ -39,11 +41,26 @@
         <option value="account">{{ __('messages.notifications_filter_account') }}</option>
         <option value="coupons">{{ __('messages.notifications_filter_coupons') }}</option>
         <option value="news">{{ __('messages.notifications_filter_news') }}</option>
+        <option value="updates">{{ __('messages.catalog_purchase_paused_title') }}</option>
     </select>
 </div>
 
 <div class="sax-admin-notifications__list">
-    @forelse ($customerNotifications as $notification)
+    @foreach ($customerOperationalAlerts as $alert)
+        <div class="sax-admin-notifications__operational" data-notification-item
+             data-notification-category="{{ $alert['category'] }}" data-operational-alert>
+            <div class="sax-admin-notifications__item">
+                <span class="sax-admin-notifications__icon is-update"><i class="fa-solid {{ $alert['icon'] }}"></i></span>
+                <span class="sax-admin-notifications__content">
+                    <strong>{{ $alert['title'] }}</strong>
+                    <span>{{ $alert['message'] }}</span>
+                </span>
+                <span class="sax-admin-notifications__dot" aria-hidden="true"></span>
+            </div>
+        </div>
+    @endforeach
+
+    @foreach ($customerNotifications as $notification)
         @php($category = $categories[$notification->type] ?? 'account')
         <form action="{{ route('user.notifications.read', $notification) }}" method="POST"
               data-notification-item data-notification-category="{{ $category }}">
@@ -64,9 +81,11 @@
                 </button>
             @endif
         </form>
-    @empty
+    @endforeach
+
+    @if ($customerOperationalAlerts->isEmpty() && $customerNotifications->isEmpty())
         <div class="sax-admin-notifications__empty"><i class="fa-regular fa-bell-slash"></i><strong>{{ __('messages.notifications_empty_title') }}</strong><span>{{ __('messages.notifications_customer_empty_message') }}</span></div>
-    @endforelse
+    @endif
     <div class="sax-admin-notifications__empty d-none" id="adminNotificationsFilteredEmpty">
         <i class="fa-regular fa-bell-slash"></i><strong>{{ __('messages.notifications_filtered_empty_title') }}</strong><span>{{ __('messages.notifications_customer_filtered_empty_message') }}</span>
     </div>

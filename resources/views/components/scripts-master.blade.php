@@ -41,6 +41,48 @@
 <script>
     window.saxTranslations = Object.assign({}, window.saxTranslations || {}, @json($saxTranslations));
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.saxCatalogPurchasingAvailable !== false) return;
+
+        const modalElement = document.getElementById('catalogIntegrationPauseModal');
+        const showPauseModal = function () {
+            if (modalElement && window.bootstrap) {
+                bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            }
+        };
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
+
+            let pathname = '';
+            try {
+                pathname = new URL(form.action || window.location.href, window.location.origin)
+                    .pathname
+                    .replace(/\/+$/, '');
+            } catch (error) {
+                return;
+            }
+
+            const startsNewPurchase = /\/cart\/add(?:-and-checkout)?$/.test(pathname)
+                || pathname === '/checkout'
+                || pathname === '/checkout/store'
+                || pathname === '/checkout/whatsapp'
+                || /\/carrinhos-abandonados\/[^/]+\/restaurar$/.test(pathname);
+
+            if (startsNewPurchase) {
+                event.preventDefault();
+                showPauseModal();
+            }
+        }, true);
+
+        if (window.saxCatalogPurchaseWasBlocked) {
+            showPauseModal();
+        }
+    });
+</script>
+<script src="{{ asset('js/world-locations.js') }}?v={{ filemtime(public_path('js/world-locations.js')) }}"></script>
 <script src="{{ asset('js/phone-mask.js') }}?v={{ filemtime(public_path('js/phone-mask.js')) }}"></script>
 @if(!Route::is('admin.*'))
     <script src="{{ asset('js/customer-document.js') }}?v={{ filemtime(public_path('js/customer-document.js')) }}"></script>

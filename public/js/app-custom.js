@@ -319,7 +319,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const unreadItems = notificationsDrawer.querySelectorAll(
                 '[data-notification-item] .sax-admin-notifications__item.is-unread'
             );
-            const unreadCount = unreadItems.length;
+            const operationalAlerts = notificationsDrawer.querySelectorAll('[data-operational-alert]');
+            const unreadCount = unreadItems.length + operationalAlerts.length;
             const unreadLabel = notificationsDrawer.querySelector('[data-notifications-unread-count]');
             const readAllForm = notificationsDrawer.querySelector('[data-notifications-read-all]');
             const badge = notificationMenu?.querySelector('[data-notifications-badge]');
@@ -332,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 unreadLabel.classList.toggle('d-none', unreadCount === 0);
             }
 
-            readAllForm?.classList.toggle('d-none', unreadCount === 0);
+            readAllForm?.classList.toggle('d-none', unreadItems.length === 0);
 
             if (badge) {
                 badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
@@ -593,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function () {
             hasError = true;
         }
 
-        if (!countryValue || !['55', '595'].includes(countryValue)) {
+        if (!/^\d{1,6}$/.test(countryValue)) {
             registerPhoneCountry?.classList.add('is-invalid');
             hasError = true;
         }

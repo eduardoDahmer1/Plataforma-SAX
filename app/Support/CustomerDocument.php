@@ -8,10 +8,11 @@ final class CustomerDocument
     public const RG_BR = 'rg_br';
     public const CI_PY = 'ci_py';
     public const RUC_PY = 'ruc_py';
+    public const FOREIGN = 'foreign';
 
     public static function types(): array
     {
-        return [self::CPF, self::RG_BR, self::CI_PY, self::RUC_PY];
+        return [self::CPF, self::RG_BR, self::CI_PY, self::RUC_PY, self::FOREIGN];
     }
 
     public static function inferType(?string $type, mixed $value, ?string $countryCode = null): string
@@ -40,6 +41,7 @@ final class CustomerDocument
             self::RG_BR => self::formatRg($value),
             self::CI_PY => self::formatCi($value),
             self::RUC_PY => self::formatRuc($value),
+            self::FOREIGN => self::formatForeign($value),
             default => trim((string) $value),
         };
     }
@@ -51,6 +53,7 @@ final class CustomerDocument
             self::RG_BR => self::isValidRg($value),
             self::CI_PY => self::isValidCi($value),
             self::RUC_PY => self::isValidRuc($value),
+            self::FOREIGN => self::isValidForeign($value),
             default => false,
         };
     }
@@ -62,6 +65,7 @@ final class CustomerDocument
             self::RG_BR => __('messages.document_invalid_rg_br'),
             self::CI_PY => __('messages.document_invalid_ci_py'),
             self::RUC_PY => __('messages.document_invalid_ruc_py'),
+            self::FOREIGN => 'Informe um passaporte ou documento internacional válido.',
             default => __('messages.document_invalid_generic'),
         };
     }
@@ -174,5 +178,17 @@ final class CustomerDocument
         if (strlen($digits) <= 3) return $digits;
 
         return substr($digits, 0, -1).'-'.substr($digits, -1);
+    }
+
+    private static function formatForeign(mixed $value): string
+    {
+        return substr(preg_replace('/[^\pL\pN.\/\- ]/u', '', strtoupper(trim((string) $value))), 0, 30);
+    }
+
+    private static function isValidForeign(mixed $value): bool
+    {
+        $clean = preg_replace('/[^\pL\pN]/u', '', trim((string) $value));
+
+        return mb_strlen($clean) >= 4 && mb_strlen($clean) <= 30;
     }
 }

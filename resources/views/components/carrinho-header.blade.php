@@ -6,6 +6,9 @@
     $cart = $user ? Cart::available()->with(['product.brand'])->where('user_id', $user->id)->get() : collect();
     $cartCount = $cart->sum('quantity');
     $hasCartItems = $user && $cartCount > 0;
+    $manualCartEnabled = (bool) ($storeControls['cart_enabled'] ?? true);
+    $catalogAvailable = (bool) ($catalogIntegrationStatus['available'] ?? true);
+    $cartPurchasingAvailable = $manualCartEnabled && $catalogAvailable;
 
     $totalGeral = 0;
     $currencySession = session('currency');
@@ -38,6 +41,14 @@
                 data-bs-toggle="modal"
                 data-bs-target="#loginModal"
                 aria-haspopup="dialog"
+            @elseif (!$catalogAvailable)
+                data-bs-toggle="modal"
+                data-bs-target="#catalogIntegrationPauseModal"
+                aria-haspopup="dialog"
+            @elseif (!$manualCartEnabled)
+                data-bs-toggle="modal"
+                data-bs-target="#storeControlPauseModal"
+                aria-haspopup="dialog"
             @elseif (!$hasCartItems)
                 aria-disabled="true"
                 data-cart-empty="true"
@@ -58,7 +69,7 @@
         <span class="cart-label">{{ __('messages.carrinho') }}</span>
     </button>
 
-    @if ($hasCartItems)
+    @if ($hasCartItems && $cartPurchasingAvailable)
     <div id="cart-overlay" class="cart-overlay"></div>
 
     <div id="cart-sidebar" class="cart-sidebar" role="dialog" aria-modal="true" aria-label="{{ __('messages.itens_no_carrinho') }}" aria-hidden="true">
@@ -184,6 +195,6 @@
     @endif
 </div>
 
-@if ($hasCartItems)
+@if ($hasCartItems && $cartPurchasingAvailable)
     @include('components.abandon-cart-modal')
 @endif

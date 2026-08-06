@@ -69,8 +69,7 @@
         <div class="col-md-6">
             <label class="sax-label">País</label>
             <select name="country" class="form-select sax-input" required data-address-country>
-                <option value="brasil" {{ !old('editing_address_id') && old('country') === 'brasil' ? 'selected' : '' }}>Brasil</option>
-                <option value="paraguai" {{ !old('editing_address_id') && old('country') === 'paraguai' ? 'selected' : '' }}>Paraguai</option>
+                <x-country-options :selected="!old('editing_address_id') ? old('country', 'brasil') : 'brasil'" />
             </select>
         </div>
         <div class="col-md-4">
@@ -91,7 +90,7 @@
         </div>
         <div class="col-md-8"><label class="sax-label">Rua / Endereço</label><input name="street" class="form-control sax-input" value="{{ old('editing_address_id') ? '' : old('street') }}" required data-address-street></div>
         <div class="col-md-4"><label class="sax-label">Número</label><input name="number" class="form-control sax-input" value="{{ old('editing_address_id') ? '' : old('number') }}" required></div>
-        <div class="col-md-6"><label class="sax-label">Bairro</label><input name="district" class="form-control sax-input" value="{{ old('editing_address_id') ? '' : old('district') }}" required></div>
+        <div class="col-md-6"><label class="sax-label">Bairro</label><input name="district" class="form-control sax-input" value="{{ old('editing_address_id') ? '' : old('district') }}" required data-address-district></div>
         <div class="col-md-6"><label class="sax-label">Complemento</label><input name="complement" class="form-control sax-input" value="{{ old('editing_address_id') ? '' : old('complement') }}"></div>
         <div class="col-12">
             <label class="d-flex align-items-center gap-2"><input type="checkbox" name="is_default" value="1" {{ !old('editing_address_id') && old('is_default') ? 'checked' : '' }}><span>Definir como endereço padrão</span></label>
@@ -125,8 +124,7 @@
                         <div class="col-md-6">
                             <label class="sax-label">País</label>
                             <select name="country" class="form-select sax-input" required data-address-country>
-                                <option value="brasil">Brasil</option>
-                                <option value="paraguai">Paraguai</option>
+                                <x-country-options selected="brasil" />
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -155,7 +153,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="sax-label">Bairro</label>
-                            <input name="district" class="form-control sax-input" required>
+                            <input name="district" class="form-control sax-input" required data-address-district>
                         </div>
                         <div class="col-md-6">
                             <label class="sax-label">Complemento</label>

@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const state = form.querySelector('[data-address-state]');
         const city = form.querySelector('[data-address-city]');
         const street = form.querySelector('[data-address-street]');
+        const district = form.querySelector('[data-address-district]');
 
         if (!country || !state || !city) return null;
 
@@ -101,6 +102,60 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         }
 
+        function countryIso2() {
+            if (country.value === 'brasil') return 'BR';
+            if (country.value === 'paraguai') return 'PY';
+            return country.options[country.selectedIndex]?.dataset.iso2 || country.value.toUpperCase();
+        }
+
+        function loadInternationalStates(sequence) {
+            const iso2 = countryIso2();
+            state.innerHTML = '<option value="">Carregando estados / províncias...</option>';
+            city.innerHTML = '<option value="">Selecione a região primeiro...</option>';
+            city.disabled = true;
+
+            fetch(`/api/locations/subdivisions?country=${encodeURIComponent(iso2)}`, { headers: { Accept: 'application/json' } })
+                .then(response => response.ok ? response.json() : Promise.reject())
+                .then(payload => {
+                    if (sequence !== loadSequence || countryIso2() !== iso2) return;
+                    state.innerHTML = '<option value="">Selecione o estado / província</option>';
+                    (payload.data || []).forEach(item => {
+                        const option = new Option(item.name, item.name);
+                        option.dataset.code = item.code;
+                        state.add(option);
+                    });
+
+                    if (selectedState) {
+                        state.value = selectedState;
+                        state.dispatchEvent(new Event('change'));
+                    }
+                })
+                .catch(() => {
+                    if (sequence !== loadSequence) return;
+                    state.innerHTML = '<option value="">Confirme a conta GeoNames e tente novamente</option>';
+                });
+        }
+
+        function loadInternationalCities(adminCode, sequence) {
+            const iso2 = countryIso2();
+            city.disabled = true;
+            city.innerHTML = '<option value="">Carregando cidades...</option>';
+
+            fetch(`/api/locations/cities?country=${encodeURIComponent(iso2)}&admin_code=${encodeURIComponent(adminCode)}`, { headers: { Accept: 'application/json' } })
+                .then(response => response.ok ? response.json() : Promise.reject())
+                .then(payload => {
+                    if (sequence !== loadSequence || countryIso2() !== iso2) return;
+                    city.innerHTML = '<option value="">Selecione a cidade</option>';
+                    (payload.data || []).forEach(item => city.add(new Option(item.name, item.name)));
+                    city.disabled = false;
+                    selectSavedCity();
+                })
+                .catch(() => {
+                    if (sequence !== loadSequence) return;
+                    city.innerHTML = '<option value="">Não foi possível carregar as cidades</option>';
+                });
+        }
+
         function updateCountry(preserveSelection) {
             if (!preserveSelection) {
                 selectedState = '';
@@ -109,15 +164,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const sequence = ++loadSequence;
             const isBrazil = country.value === 'brasil';
-            postalLabel.textContent = isBrazil ? 'CEP' : 'Código postal';
-            stateLabel.textContent = isBrazil ? 'Estado' : 'Departamento';
+            const isParaguay = country.value === 'paraguai';
+            if (postalLabel) postalLabel.textContent = isBrazil ? 'CEP' : 'Código postal';
+            if (stateLabel) stateLabel.textContent = isBrazil ? 'Estado' : (isParaguay ? 'Departamento' : 'Estado / Província / Região');
             if (postalCode) {
                 postalCode.placeholder = isBrazil ? '00000-000' : 'Ex.: 1234';
-                postalCode.required = isBrazil;
+                postalCode.required = !isParaguay;
             }
+            if (district) district.required = isBrazil || isParaguay;
 
             if (isBrazil) loadBrazilStates(sequence);
-            else loadParaguay(sequence);
+            else if (isParaguay) loadParaguay(sequence);
+            else loadInternationalStates(sequence);
         }
 
         state.addEventListener('change', function () {
@@ -131,6 +189,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (country.value === 'brasil') {
                 const stateId = state.options[state.selectedIndex]?.dataset.id;
                 if (stateId) loadBrazilCities(stateId, sequence);
+                return;
+            }
+
+            if (country.value !== 'paraguai') {
+                const adminCode = state.options[state.selectedIndex]?.dataset.code;
+                if (adminCode) loadInternationalCities(adminCode, sequence);
                 return;
             }
 
@@ -181,7 +245,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             selectedState = address.state || '';
             selectedCity = address.city || '';
-            country.value = address.country === 'paraguai' ? 'paraguai' : 'brasil';
+            country.value = address.country || 'brasil';
+            if (!Array.from(country.options).some(option => option.value === country.value)) {
+                country.value = 'brasil';
+            }
 
             const defaultCheckbox = form.querySelector('[data-address-default]');
             const defaultHelp = form.querySelector('[data-default-help]');

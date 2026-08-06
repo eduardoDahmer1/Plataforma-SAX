@@ -55,6 +55,7 @@
                         <option value="{{ $address->id }}"
                                 data-label="{{ $address->label }}"
                                 data-country="{{ $address->country }}"
+                                data-country-name="{{ \App\Support\CountrySupport::name($address->country) }}"
                                 data-state="{{ $address->state }}"
                                 data-city="{{ $address->city }}"
                                 data-street="{{ $address->street }}"
@@ -80,7 +81,7 @@
                     </div>
                     <div class="sax-selected-address__grid" id="selected-address-preview">
                         <div class="sax-selected-address__field">
-                            <span>País</span><strong data-address-field="country">{{ $selectedAddress?->country === 'paraguai' ? 'Paraguai' : 'Brasil' }}</strong>
+                            <span>País</span><strong data-address-field="country">{{ $selectedAddress ? \App\Support\CountrySupport::name($selectedAddress->country) : 'Não informado' }}</strong>
                         </div>
                         <div class="sax-selected-address__field">
                             <span>Estado / Departamento</span><strong data-address-field="state">{{ $selectedAddress?->state ?: 'Não informado' }}</strong>
@@ -122,9 +123,8 @@
                 </div>
                 <div class="col-12">
                     <label class="sax-label">{{ __('messages.escolha_o_pais') }}</label>
-                    <select name="country" id="country" class="sax-form-control">
-                        <option value="brasil" {{ $selectedCountry === 'brasil' ? 'selected' : '' }}>Brasil</option>
-                        <option value="paraguai" {{ $selectedCountry === 'paraguai' ? 'selected' : '' }}>Paraguai</option>
+                    <select name="country" id="country" class="sax-form-control" data-address-country>
+                        <x-country-options :selected="$selectedCountry" />
                     </select>
                 </div>
 
@@ -151,7 +151,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="sax-label">{{ __('messages.bairro') ?? 'Bairro' }}</label>
-                        <input type="text" name="district" class="sax-form-control" value="{{ old('district') }}">
+                        <input type="text" name="district" class="sax-form-control" value="{{ old('district') }}" data-address-district>
                     </div>
                     <div class="col-md-6">
                         <label class="sax-label">{{ __('messages.complemento') ?? 'Complemento' }}</label>

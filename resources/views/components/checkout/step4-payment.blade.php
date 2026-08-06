@@ -11,6 +11,7 @@
 
         $hasBancardV2 = false;
         $hasRendixPix = false;
+        $hasDeposit = (bool) ($storeControls['deposit_enabled'] ?? true);
         foreach (($paymentMethods ?? collect()) as $method) {
             $methodName = mb_strtolower(trim((string) ($method->name ?? '')));
             if (($method->type ?? null) === 'gateway' && $methodName === 'bancard v2') {
@@ -26,11 +27,13 @@
         <h5 class="mb-4 text-uppercase tracking-wider">{{ __('messages.forma_pagamento') }}</h5>
 
         <div class="d-flex justify-content-center flex-wrap gap-3 sax-payment-grid">
+            @if($hasDeposit)
             <button type="button" class="sax-payment-method" id="btn-deposito" data-payment-method="deposito" aria-pressed="false">
                 <i class="fa fa-university mb-2 d-block"></i>
                 {{ __('messages.deposito_transferencia') }}
                 <span class="sax-payment-caption">{{ __('messages.checkout_deposit_caption') }}</span>
             </button>
+            @endif
 
             @if ($hasBancardV2)
                 <button type="button" class="sax-payment-method" id="btn-bancard_v2" data-payment-method="bancard_v2" aria-pressed="false">
@@ -48,6 +51,12 @@
                 </button>
             @endif
         </div>
+
+        @if(! $hasDeposit && ! $hasBancardV2 && ! $hasRendixPix)
+            <div class="alert alert-warning border-0 mt-3 mb-0">
+                {{ __('messages.store_payment_disabled_message') }}
+            </div>
+        @endif
 
         @if ($hasRendixPix)
             <div class="alert alert-success border-0 rounded-3 mt-3 mb-0 text-start d-none" id="rendix-pix-notice">
@@ -99,7 +108,8 @@
         </div>
     </div>
 
-    <input type="hidden" name="payment_method" id="payment_method" value="{{ old('payment_method', 'deposito') }}">
+    @php($firstPaymentMethod = $hasDeposit ? 'deposito' : ($hasBancardV2 ? 'bancard_v2' : ($hasRendixPix ? 'rendix_pix' : '')))
+    <input type="hidden" name="payment_method" id="payment_method" value="{{ old('payment_method', $firstPaymentMethod) }}">
     <input type="hidden" name="total_final" id="total_final" value="{{ $totalPedido }}">
 
     <div class="sax-checkout-box mt-4">
@@ -254,7 +264,7 @@
         <button type="button" class="sax-btn-prev" onclick="prevStep(3)">
             <i class="fa fa-arrow-left me-2"></i> {{ __('messages.voltar') }}
         </button>
-        <button type="submit" class="sax-btn-finish" id="checkoutSubmit">
+        <button type="submit" class="sax-btn-finish" id="checkoutSubmit" @disabled($firstPaymentMethod === '')>
             <i class="fa fa-check me-2"></i> {{ __('messages.finalizar_compra') }}
         </button>
     </div>

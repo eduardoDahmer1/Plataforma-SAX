@@ -24,13 +24,17 @@ use App\Services\RendixPixService;
 use Illuminate\Validation\ValidationException;
 use App\Rules\CustomerDocumentRule;
 use App\Support\CustomerDocument;
+use App\Support\CountrySupport;
+use Illuminate\Validation\Rule;
+use App\Services\StoreControlService;
 
 class CheckoutController extends Controller
 {
     public function __construct(
         private CuponService $cupons,
         private BusinessEventService $events,
-        private AdminNotificationService $adminNotifications
+        private AdminNotificationService $adminNotifications,
+        private StoreControlService $storeControls
     )
     {
     }
@@ -42,7 +46,9 @@ class CheckoutController extends Controller
         $this->ensureLegacyAddress($user);
         $addresses = $user->addresses()->get();
         $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
-        $paymentMethods = PaymentMethod::where('active', 1)->get();
+        $paymentMethods = PaymentMethod::where('active', 1)->get()
+            ->filter(fn (PaymentMethod $method): bool => $this->paymentModelIsManuallyEnabled($method))
+            ->values();
         $policies = Policy::where('is_active', true)->orderBy('id')->get();
         $pygCurrency = Currency::where('name', 'PYG')->orWhere('sign', 'GS$')->first();
 
@@ -63,6 +69,15 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
+
+        if ($request->input('shipping') === '2') {
+            $request->merge([
+                'country' => CountrySupport::normalizeForStorage($request->input('country')),
+            ]);
+        }
+        $request->merge([
+            'phone_country' => preg_replace('/\D+/', '', (string) $request->input('phone_country', $user->phone_country)),
+        ]);
 
         $documentType = CustomerDocument::inferType(
             $request->input('document_type'),
@@ -85,18 +100,22 @@ class CheckoutController extends Controller
             'document_type' => ['required', 'string', 'in:'.implode(',', CustomerDocument::types())],
             'email' => 'required|email',
             'phone' => 'required|string',
-            'phone_country' => 'required|in:55,595',
+            'phone_country' => ['required', 'string', 'regex:/^\d{1,6}$/'],
             'shipping' => 'required|in:1,2,3',
             'shipping_address_id' => 'required_if:shipping,1|nullable|integer',
             'payment_method' => 'required|in:deposito,bancard_v2,rendix_pix,whatsapp',
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street' => 'required_if:shipping,2',
             'number' => 'required_if:shipping,2',
-            'district' => 'required_if:shipping,2',
+            'district' => [Rule::requiredIf(fn (): bool => $request->input('shipping') === '2' && ! CountrySupport::usesDhl($request->input('country'))), 'nullable', 'string', 'max:160'],
             'city' => 'required_if:shipping,2|nullable|string',
             'state' => 'required_if:shipping,2|nullable|string',
-            'country' => 'required_if:shipping,2',
-            'cep' => 'required_if:shipping,2',
+            'country' => ['required_if:shipping,2', 'nullable', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value !== null && $value !== '' && ! CountrySupport::isSupported($value)) {
+                    $fail('Selecione um país válido.');
+                }
+            }],
+            'cep' => [Rule::requiredIf(fn (): bool => $request->input('shipping') === '2' && ! CountrySupport::isParaguay($request->input('country'))), 'nullable', 'string', 'max:30'],
             'address_label' => 'required_if:shipping,2|nullable|string|max:80',
             'make_default_address' => 'nullable|boolean',
             'frete_valor' => 'nullable|numeric', // Validamos o campo que enviamos via JS
@@ -107,6 +126,13 @@ class CheckoutController extends Controller
                 ? 'accepted'
                 : 'nullable',
         ]);
+
+        $paymentMethod = (string) $request->input('payment_method');
+        if (! $this->storeControls->paymentEnabled($paymentMethod)) {
+            throw ValidationException::withMessages([
+                'payment_method' => __('messages.store_payment_disabled_message'),
+            ]);
+        }
 
         if ($request->input('payment_method') === RendixPixService::PROVIDER) {
             if ($documentType !== CustomerDocument::CPF) {
@@ -128,9 +154,6 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
         }
 
-        $frete = (float) $request->input('frete_valor', 0);
-        $paymentMethod = $request->input('payment_method');
-
         $selectedAddress = null;
         if ($request->input('shipping') === '1') {
             $selectedAddress = $user->addresses()
@@ -141,6 +164,32 @@ class CheckoutController extends Controller
                 return back()->withErrors(['shipping_address_id' => 'Selecione um endereço válido para entrega.'])->withInput();
             }
         }
+
+        $destinationCountry = match ((string) $request->input('shipping')) {
+            '1' => $selectedAddress?->country,
+            '2' => $request->input('country'),
+            '3' => CountrySupport::PARAGUAY,
+            default => null,
+        };
+
+        if (CountrySupport::usesDhl($destinationCountry) && ! $this->storeControls->enabled('geonames')) {
+            throw ValidationException::withMessages([
+                'country' => 'As entregas internacionais ainda não estão habilitadas. Selecione Brasil ou Paraguai.',
+            ]);
+        }
+
+        if (CountrySupport::usesDhl($destinationCountry)) {
+            throw ValidationException::withMessages([
+                'country' => 'Este endereço internacional será atendido pela DHL. A cotação ainda precisa ser habilitada com as credenciais DHL antes de concluir a compra.',
+            ]);
+        }
+
+        // O frete é sempre decidido no servidor. O valor oculto do navegador não
+        // pode transformar uma entrega internacional ou paraguaia em frete grátis.
+        $destinationCity = (string) ($selectedAddress?->city ?: $request->input('city'));
+        $frete = CountrySupport::isParaguay($destinationCountry) && $request->input('shipping') !== '3'
+            ? $this->calcularFrete($destinationCity)
+            : 0.0;
 
         // O cupom vem da sessão e é recalculado aqui no servidor: o valor enviado pelo
         // navegador nunca é usado para definir o desconto.
@@ -221,17 +270,8 @@ class CheckoutController extends Controller
                         'city' => $address->city,
                         'state' => $address->state,
                         'cep' => $address->postal_code,
-                        'country' => $address->country === 'paraguai' ? 'PY' : 'BR',
+                        'country' => CountrySupport::iso2($address->country),
                     ]);
-
-                    if ($address->country === 'paraguai' && ! empty($address->city)) {
-                        $valorFrete = $this->calcularFrete($address->city);
-                        
-                        $order->update(['shipping_cost' => $valorFrete]);
-                        
-                        $novoTotal = max(0, ($subtotal - $desconto) + $valorFrete);
-                        $order->update(['total' => $novoTotal]);
-                    }
                     break;
                 case '2':
                     $makeDefault = $request->boolean('make_default_address') || ! $user->addresses()->exists();
@@ -242,7 +282,7 @@ class CheckoutController extends Controller
 
                     $address = $user->addresses()->create([
                         'label' => $request->input('address_label', 'Meu endereço'),
-                        'country' => $request->input('country'),
+                        'country' => CountrySupport::normalizeForStorage($request->input('country')),
                         'postal_code' => $request->input('cep'),
                         'state' => $request->input('state'),
                         'city' => $request->input('city'),
@@ -261,7 +301,7 @@ class CheckoutController extends Controller
                         'street' => $address->street, 'number' => $address->number,
                         'district' => $address->district, 'complement' => $address->complement,
                         'city' => $address->city ?? '', 'state' => $address->state ?? '',
-                        'cep' => $address->postal_code ?? '', 'country' => $address->country === 'paraguai' ? 'PY' : 'BR',
+                        'cep' => $address->postal_code ?? '', 'country' => CountrySupport::iso2($address->country),
                     ]);
                     break;
                 case '3':
@@ -363,6 +403,21 @@ class CheckoutController extends Controller
         }
     }
 
+    private function paymentModelIsManuallyEnabled(PaymentMethod $method): bool
+    {
+        $name = mb_strtolower(trim((string) $method->name));
+
+        if (($method->type ?? null) === 'gateway' && $name === 'bancard v2') {
+            return $this->storeControls->enabled('bancard');
+        }
+
+        if (($method->type ?? null) === 'gateway' && in_array($name, ['rendix pix', 'pix rendix', 'pix'], true)) {
+            return $this->storeControls->enabled('pix');
+        }
+
+        return true;
+    }
+
     private function ensureLegacyAddress($user): void
     {
         if ($user->addresses()->exists() || ! filled($user->address) || ! filled($user->number) || ! filled($user->district)) {
@@ -371,7 +426,7 @@ class CheckoutController extends Controller
 
         $user->addresses()->create([
             'label' => 'Endereço principal',
-            'country' => in_array(mb_strtolower((string) $user->country), ['paraguai', 'py'], true) ? 'paraguai' : 'brasil',
+            'country' => CountrySupport::normalizeForStorage($user->country) ?: CountrySupport::BRAZIL,
             'postal_code' => $user->cep,
             'state' => $user->state,
             'city' => $user->city,
@@ -423,13 +478,20 @@ class CheckoutController extends Controller
         }
 
         $cidade = $request->input('city');
-        $pais = $request->input('country');
+        $pais = CountrySupport::normalizeForStorage($request->input('country'));
 
         // Subtotal e desconto em valor base (USD); o cupom já entra no total do frete.
         $resumo = $this->cupons->resumoDoCarrinho(auth()->user());
         $totalComDesconto = $resumo['total'];
 
-        if ($pais !== 'paraguai' || empty(trim($cidade))) {
+        if (CountrySupport::usesDhl($pais)) {
+            return response()->json([
+                'error' => 'dhl_not_configured',
+                'message' => 'A cotação internacional será feita pela DHL e ainda não está habilitada.',
+            ], 409);
+        }
+
+        if (! CountrySupport::isParaguay($pais) || empty(trim($cidade))) {
             return response()->json([
                 'frete'              => 0,
                 'frete_formatado'    => currency_format(0),

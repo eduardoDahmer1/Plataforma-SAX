@@ -11,6 +11,11 @@
             if (in_array($order->status, ['processing', 'shipped'], true)) $progress = 3;
             if (in_array($order->status, ['completed', 'delivered'], true)) $progress = 4;
             $isParaguay = $order->shipping == 3 || strtoupper((string) $order->country) === 'PY';
+            $catalogAvailable = (bool) ($catalogIntegrationStatus['available'] ?? true);
+            $controlledPaymentMethods = ['deposito', 'bancard_v2', 'rendix_pix'];
+            $paymentMethodManuallyEnabled = ! in_array((string) $order->payment_method, $controlledPaymentMethods, true)
+                || app(\App\Services\StoreControlService::class)->paymentEnabled((string) $order->payment_method);
+            $paymentMethodEnabled = $catalogAvailable && $paymentMethodManuallyEnabled;
         @endphp
         @if (session('warning'))
             <div class="alert alert-warning mb-4 shadow-sm border-0" role="alert"><i
@@ -60,6 +65,22 @@
             <div class="sax-order-message is-danger mb-4">
                 <i class="fas fa-circle-exclamation"></i>
                 <div><strong>Este pedido não foi concluído.</strong><span>Confira o status do pagamento abaixo ou fale com nossa equipe para receber ajuda.</span></div>
+            </div>
+        @elseif (! $isPaid && ! $catalogAvailable)
+            <div class="sax-order-message is-warning mb-4">
+                <i class="fas fa-sync-alt"></i>
+                <div>
+                    <strong>{{ __('messages.catalog_purchase_paused_title') }}</strong>
+                    <span>{{ __('messages.catalog_purchase_paused_message') }}</span>
+                </div>
+            </div>
+        @elseif (! $isPaid && ! $paymentMethodManuallyEnabled)
+            <div class="sax-order-message is-warning mb-4">
+                <i class="fas fa-lock"></i>
+                <div>
+                    <strong>{{ __('messages.store_payment_disabled_title') }}</strong>
+                    <span>{{ __('messages.store_payment_disabled_message') }}</span>
+                </div>
             </div>
         @elseif (! $isPaid && $order->payment_method === 'bancard_v2')
             <div class="sax-order-message is-warning mb-4">
@@ -198,7 +219,7 @@
                                         <i class="fas fa-check-circle me-2"></i> {{ __('messages.ver_confirmacao') }}
                                     </a>
                                 </div>
-                            @elseif ($order->payment_status !== 'paid')
+                            @elseif ($order->payment_status !== 'paid' && $paymentMethodEnabled)
                                 <div class="mt-3">
                                     <a href="{{ route('checkout.bancard.v2', $order->id) }}"
                                         class="btn btn-outline-primary btn-sax-sm w-100 py-2">
@@ -208,7 +229,7 @@
                                 </div>
                             @endif
                         @endif
-                        @if (($order->payment_method ?? null) === 'rendix_pix' && $order->payment_status !== 'paid')
+                        @if (($order->payment_method ?? null) === 'rendix_pix' && $order->payment_status !== 'paid' && $paymentMethodEnabled)
                             <div class="mt-3">
                                 <a href="{{ route('checkout.rendix.pix', $order->id) }}"
                                    class="btn btn-outline-success btn-sax-sm w-100 py-2">
@@ -216,7 +237,7 @@
                                 </a>
                             </div>
                         @endif
-                        @if ($order->payment_method === 'deposito' && $order->payment_status !== 'paid')
+                        @if ($order->payment_method === 'deposito' && $order->payment_status !== 'paid' && $paymentMethodEnabled)
                             <div class="mt-3">
                                 <button type="button" class="btn btn-outline-dark btn-sax-sm w-100 py-2"
                                     data-bs-toggle="modal" data-bs-target="#modalContasBancarias">
@@ -236,7 +257,7 @@
                                     <div class="overlay"><i class="fas fa-search-plus"></i>
                                         {{ __('messages.ver_ampliado') }}</div>
                                 </div>
-                            @elseif ($order->payment_method === 'deposito' && $order->payment_status !== 'paid' && $order->status !== 'canceled')
+                            @elseif ($order->payment_method === 'deposito' && $order->payment_status !== 'paid' && $order->status !== 'canceled' && $paymentMethodEnabled)
                                 <div class="upload-sax-box border-dashed p-3 text-center">
                                     <h6 class="x-small fw-bold text-success mb-3"><i class="fa fa-file-upload me-1"></i>
                                         {{ __('messages.adjuntar_comprovante') }}</h6>

@@ -52,7 +52,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:'.User::class],
             'document_type' => ['required', 'string', 'in:'.implode(',', CustomerDocument::types())],
             'document' => ['required', 'string', 'max:30', new CustomerDocumentRule($documentType)],
-            'phone_country' => ['required', 'string', 'in:55,595'],
+            'phone_country' => ['required', 'string', 'regex:/^\d{1,6}$/'],
             'phone_number' => ['required', 'string', 'regex:/^[0-9\s()+\-]{7,20}$/'],
             'password' => ['required', 'confirmed', 'min:8', 'max:72', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
         ], [
@@ -62,7 +62,7 @@ class RegisteredUserController extends Controller
             'email.email' => 'Informe um e-mail valido.',
             'email.unique' => 'Este e-mail ja esta cadastrado.',
             'document.required' => 'Informe seu documento.',
-            'phone_country.in' => 'Selecione um codigo de pais valido.',
+            'phone_country.regex' => 'Selecione um codigo de pais valido.',
             'phone_country.required' => 'Selecione o codigo do pais.',
             'phone_number.required' => 'Informe seu telefone.',
             'phone_number.regex' => 'Informe um telefone valido, sem letras.',

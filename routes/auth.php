@@ -22,7 +22,7 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store'])
-        ->middleware('throttle:8,1');
+        ->name('login.store');
 
     // Recuperação de Senha (Esqueci a senha)
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])

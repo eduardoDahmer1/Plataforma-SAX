@@ -15,6 +15,7 @@ use App\Models\PaymentMethod;
 use App\Mail\PasswordChangedMail;
 use App\Rules\CustomerDocumentRule;
 use App\Support\CustomerDocument;
+use App\Support\CountrySupport;
 
 class UserController extends Controller
 {
@@ -63,6 +64,12 @@ class UserController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        $country = CountrySupport::normalizeForStorage($request->input('country', $user->country));
+        $request->merge([
+            'country' => $country,
+            'phone_country' => preg_replace('/\D+/', '', (string) $request->input('phone_country', $user->phone_country)),
+        ]);
+
         $documentType = CustomerDocument::inferType(
             $request->input('document_type'),
             $request->input('document'),
@@ -77,7 +84,11 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'country' => 'nullable|string|max:100',
+            'country' => ['nullable', 'string', 'max:100', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value !== null && $value !== '' && ! CountrySupport::isSupported($value)) {
+                    $fail('Selecione um país válido.');
+                }
+            }],
             'address' => 'nullable|string|max:255',
             'number' => 'nullable|string|max:20',
             'district' => 'nullable|string|max:255',
@@ -88,6 +99,8 @@ class UserController extends Controller
             'document' => ['required', 'string', 'max:30', new CustomerDocumentRule($documentType)],
             'postal_code' => 'nullable|string|max:20',
             'cep' => 'nullable|string|max:20',
+            'phone_country' => ['nullable', 'string', 'regex:/^\d{1,6}$/'],
+            'phone_number' => ['nullable', 'string', 'regex:/^[0-9\s()+\-]{7,20}$/'],
         ]);
 
         // 2. Coleta os dados básicos
@@ -125,10 +138,14 @@ class UserController extends Controller
         try {
             $user->update($data);
 
-            if (filled($data['address'] ?? null) && filled($data['number'] ?? null) && filled($data['district'] ?? null)) {
+            if (
+                filled($data['address'] ?? null)
+                && filled($data['number'] ?? null)
+                && (CountrySupport::usesDhl($data['country'] ?? null) || filled($data['district'] ?? null))
+            ) {
                 $addressData = [
                     'label' => 'Endereço principal',
-                    'country' => $data['country'] ?? 'brasil',
+                    'country' => $data['country'] ?: CountrySupport::BRAZIL,
                     'postal_code' => $data['cep'] ?? null,
                     'state' => $data['state'] ?? null,
                     'city' => $data['city'] ?? null,

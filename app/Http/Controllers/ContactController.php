@@ -3,22 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Models\JobFlyer;
 use App\Models\Language;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
     public function showForm()
     {
         $locale = session('locale', config('app.locale'));
-        
+
         App::setLocale($locale);
 
         $lang = Language::all();
 
-        return view('contact.form', compact('lang', 'locale'));
+        $flyers = JobFlyer::active()->get();
+
+        return view('contact.form', compact('lang', 'locale', 'flyers'));
     }
 
     public function store(Request $request)
@@ -31,6 +33,7 @@ class ContactController extends Controller
             'email' => 'required|email',
             'phone' => 'nullable|string|max:20',
             'message' => 'required|string',
+            'store_name' => $type === 2 ? 'required|string|max:255' : 'nullable|string|max:255',
             'attachment' => $type === 2 ? 'required|file|mimes:pdf,jpg,jpeg,png|max:2048' : 'nullable',
         ];
 

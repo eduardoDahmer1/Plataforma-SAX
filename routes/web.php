@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ContactControllerAdmin;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\InstitucionalAdminController;
+use App\Http\Controllers\Admin\JobFlyerControllerAdmin;
 use App\Http\Controllers\Admin\MarketingSettingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\OrderController;
@@ -331,6 +332,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('brands/{brand}/upload-internal-banner', [BrandControllerAdmin::class, 'uploadInternalBanner'])->name('brands.uploadInternalBanner');
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);
     Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
+    Route::get('trabalhe-conosco', [JobFlyerControllerAdmin::class, 'index'])->name('trabalhe_conosco.index');
+    Route::post('trabalhe-conosco', [JobFlyerControllerAdmin::class, 'store'])->name('trabalhe_conosco.store');
+    Route::post('trabalhe-conosco/{jobFlyer}/toggle', [JobFlyerControllerAdmin::class, 'toggle'])->name('trabalhe_conosco.toggle');
+    Route::post('trabalhe-conosco/{jobFlyer}/move/{direction}', [JobFlyerControllerAdmin::class, 'move'])
+        ->whereIn('direction', ['up', 'down'])
+        ->name('trabalhe_conosco.move');
+    Route::delete('trabalhe-conosco/{jobFlyer}', [JobFlyerControllerAdmin::class, 'destroy'])->name('trabalhe_conosco.destroy');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])
         ->name('notifications.read-all');
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])

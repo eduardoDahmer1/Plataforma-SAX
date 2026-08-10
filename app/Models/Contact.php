@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Contact extends Model
 {
+    /** Lojas disponíveis para o formulário de currículo (Trabalhe Conosco). */
+    public const STORES = [
+        'cde' => 'Ciudad del Este',
+        'asuncion' => 'Asunción',
+        'pjc' => 'Pedro Juan Caballero',
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -13,6 +20,6 @@ class Contact extends Model
         'message',
         'contact_type',
         'attachment',  // TEM QUE TER AQUI
+        'store_name',
     ];
-
 }

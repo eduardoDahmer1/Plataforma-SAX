@@ -108,7 +108,11 @@
         </div>
     </div>
 
-    @php($firstPaymentMethod = $hasDeposit ? 'deposito' : ($hasBancardV2 ? 'bancard_v2' : ($hasRendixPix ? 'rendix_pix' : '')))
+    @php
+        $firstPaymentMethod = $hasDeposit
+            ? 'deposito'
+            : ($hasBancardV2 ? 'bancard_v2' : ($hasRendixPix ? 'rendix_pix' : ''));
+    @endphp
     <input type="hidden" name="payment_method" id="payment_method" value="{{ old('payment_method', $firstPaymentMethod) }}">
     <input type="hidden" name="total_final" id="total_final" value="{{ $totalPedido }}">
 

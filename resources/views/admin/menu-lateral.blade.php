@@ -81,6 +81,7 @@
             <div class="collapse sax-submenu {{ $conteudosOpen ? 'show' : '' }}" id="menuConteudos{{ $menuSuffix }}">
                 <a href="{{ route('admin.blogs.index') }}" class="submenu-link {{ request()->routeIs('admin.blogs.*') ? 'active' : '' }}"><i class="fa-solid fa-blog"></i> {{ __('messages.menu_blog') }}</a>
                 <a href="{{ route('admin.contatos.index') }}" class="submenu-link {{ request()->routeIs('admin.contatos.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> {{ __('messages.menu_contato') }}</a>
+                <a href="{{ route('admin.trabalhe_conosco.index') }}" class="submenu-link {{ request()->routeIs('admin.trabalhe_conosco.*') ? 'active' : '' }}"><i class="fa-solid fa-user-tie"></i> Trabalhe conosco</a>
                 <a href="{{ route('admin.policies.index') }}" class="submenu-link {{ request()->routeIs('admin.policies.*') ? 'active' : '' }}"><i class="fa-solid fa-scale-balanced"></i> {{ __('messages.menu_politicas') }}</a>
             </div>
         </div>

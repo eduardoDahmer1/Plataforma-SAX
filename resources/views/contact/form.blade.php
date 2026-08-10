@@ -25,43 +25,84 @@
                     </button>
                 </div>
 
-                <form action="{{ route('contact.store') }}" method="POST" id="contactForm" enctype="multipart/form-data" class="sax-form">
-                    @csrf
-                    <input type="hidden" name="contact_type" id="contact_type" value="1">
+                <div class="contact-grid">
+                    <form action="{{ route('contact.store') }}" method="POST" id="contactForm" enctype="multipart/form-data" class="sax-form">
+                        @csrf
+                        <input type="hidden" name="contact_type" id="contact_type" value="1">
 
-                    <div class="row g-3 g-md-4">
-                        <div class="col-md-4">
-                            <label class="sax-label">{{ __('messages.nome_completo') }}</label>
-                            <input type="text" name="name" class="form-control sax-input" placeholder="Ex: Maria Silva" required>
-                        </div>
+                        <div class="row g-3 g-md-4">
+                            <div class="col-md-4">
+                                <label class="sax-label">{{ __('messages.nome_completo') }}</label>
+                                <input type="text" name="name" class="form-control sax-input" placeholder="Ex: Maria Silva" required>
+                            </div>
 
-                        <div class="col-md-4">
-                            <label class="sax-label">{{ __('messages.email') }}</label>
-                            <input type="email" name="email" class="form-control sax-input" placeholder="email@exemplo.com" required>
-                        </div>
+                            <div class="col-md-4">
+                                <label class="sax-label">{{ __('messages.email') }}</label>
+                                <input type="email" name="email" class="form-control sax-input" placeholder="email@exemplo.com" required>
+                            </div>
 
-                        <div class="col-md-4">
-                            <label class="sax-label">{{ __('messages.telefone') }}</label>
-                            <input type="text" name="phone" class="form-control sax-input" placeholder="+595 XXX XXXXXX">
-                        </div>
+                            <div class="col-md-4">
+                                <label class="sax-label">{{ __('messages.telefone') }}</label>
+                                <input type="text" name="phone" class="form-control sax-input" placeholder="+595 XXX XXXXXX">
+                            </div>
 
-                        <div class="col-md-12 form-field" data-type="1 2">
-                            <label class="sax-label">{{ __('messages.mensagem') }}</label>
-                            <textarea name="message" class="form-control sax-input" rows="5" placeholder="{{ __('messages.como_ajudar') }}" required></textarea>
-                        </div>
+                            <div class="col-md-12 form-field" data-type="1 2">
+                                <label class="sax-label">{{ __('messages.mensagem') }}</label>
+                                <textarea name="message" class="form-control sax-input" rows="5" placeholder="{{ __('messages.como_ajudar') }}" required></textarea>
+                            </div>
 
-                        <div class="col-md-12 form-field" data-type="2" style="display:none;">
-                            <label class="sax-label">{{ __('messages.anexar_curriculo') ?? 'ANEXAR CURRÍCULO (PDF/IMG)' }}</label>
-                            <input type="file" name="attachment" class="form-control sax-input" accept=".pdf,image/*">
-                        </div>
+                            <div class="col-md-12 form-field" data-type="2" style="display:none;">
+                                <label class="sax-label">{{ __('messages.loja_desejada') !== 'messages.loja_desejada' ? __('messages.loja_desejada') : 'LOJA DESEJADA' }}</label>
+                                <select name="store_name" class="form-control sax-input">
+                                    @foreach (\App\Models\Contact::STORES as $storeName)
+                                        <option value="{{ $storeName }}">{{ $storeName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                        <div class="col-md-4 ms-auto">
-                            <button type="submit" class="btn btn-sax-submit w-100">
-                                {{ __('messages.enviar') }}
-                            </button>
+                            <div class="col-md-12 form-field" data-type="2" style="display:none;">
+                                <label class="sax-label">{{ __('messages.anexar_curriculo') ?? 'ANEXAR CURRÍCULO (PDF/IMG)' }}</label>
+                                <input type="file" name="attachment" class="form-control sax-input" accept=".pdf,image/*">
+                            </div>
+
+                            <div class="col-md-4 ms-auto">
+                                <button type="submit" class="btn btn-sax-submit w-100">
+                                    {{ __('messages.enviar') }}
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+
+                    @if($flyers->isNotEmpty())
+                        <aside class="contact-flyers form-field" data-type="2" style="display:none;">
+                            <div class="contact-flyers-head">
+                                <h2 class="contact-flyers-title">VAGAS EM DESTAQUE</h2>
+                                <p class="contact-flyers-sub">Confira nossas oportunidades</p>
+                            </div>
+
+                            <div class="swiper jobFlyersSwiper">
+                                <div class="swiper-wrapper">
+                                    @foreach ($flyers as $flyer)
+                                        <div class="swiper-slide">
+                                            <div class="contact-flyer-frame">
+                                                <img src="{{ asset('storage/' . $flyer->image) }}" alt="Flyer Trabalhe Conosco" loading="lazy">
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="job-flyers-pagination swiper-pagination"></div>
+                                <div class="job-flyers-nav">
+                                    <button type="button" class="job-flyers-btn job-flyers-prev" aria-label="Flyer anterior">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button type="button" class="job-flyers-btn job-flyers-next" aria-label="Próximo flyer">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </aside>
+                    @endif
+                </div>
             </div>
 
             <div class="contact-locations">
@@ -224,6 +265,112 @@
             opacity: .95;
         }
 
+        .contact-grid {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .contact-grid > form {
+            flex: 1 1 66%;
+            min-width: 0;
+        }
+
+        .contact-flyers {
+            flex: 0 1 34%;
+            max-width: 320px;
+            min-width: 0;
+        }
+
+        .contact-flyers-head {
+            margin-bottom: 1rem;
+        }
+
+        .contact-flyers-title {
+            margin: 0;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .16em;
+            font-weight: 700;
+            color: #141311;
+        }
+
+        .contact-flyers-sub {
+            margin: .4rem 0 0;
+            font-size: .72rem;
+            color: #7f786d;
+        }
+
+        .contact-flyer-frame {
+            aspect-ratio: 9 / 16;
+            border: 1px solid #ebe5db;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f8f5ef;
+        }
+
+        .contact-flyer-frame img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .job-flyers-pagination.swiper-pagination {
+            position: static;
+            margin-top: 1rem;
+        }
+
+        .job-flyers-pagination .swiper-pagination-bullet {
+            width: 7px;
+            height: 7px;
+            background: #141311;
+            opacity: .22;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        .job-flyers-pagination .swiper-pagination-bullet-active {
+            opacity: 1;
+            transform: scale(1.25);
+        }
+
+        .job-flyers-nav {
+            display: flex;
+            justify-content: center;
+            gap: .6rem;
+            margin-top: .6rem;
+        }
+
+        .job-flyers-btn {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e5dfd4;
+            border-radius: 50%;
+            background: #fff;
+            color: #141311;
+            font-size: .68rem;
+            transition: background-color .2s ease, border-color .2s ease, color .2s ease, opacity .2s ease;
+        }
+
+        .job-flyers-btn:hover {
+            background: #161412;
+            border-color: #161412;
+            color: #fff;
+        }
+
+        .job-flyers-btn.swiper-button-disabled {
+            opacity: .3;
+            pointer-events: none;
+        }
+
+        .job-flyers-nav.is-hidden,
+        .job-flyers-pagination.is-hidden {
+            display: none;
+        }
+
         .map-section-title {
             margin: 0;
             font-size: 1rem;
@@ -281,6 +428,56 @@
                 width: 100%;
                 justify-content: space-between;
             }
+
+            .contact-grid {
+                flex-direction: column;
+            }
+
+            .contact-flyers {
+                max-width: 280px;
+                margin-inline: auto;
+            }
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const flyersEl = document.querySelector('.jobFlyersSwiper');
+            if (!flyersEl || typeof Swiper === 'undefined') return;
+
+            const slideCount = flyersEl.querySelectorAll('.swiper-slide').length;
+            const single = slideCount < 2;
+            let initialized = false;
+
+            window.afterFormTypeChange = function (type) {
+                if (type !== 2 || initialized) return;
+                initialized = true;
+
+                if (single) {
+                    flyersEl.querySelector('.job-flyers-nav')?.classList.add('is-hidden');
+                    flyersEl.querySelector('.job-flyers-pagination')?.classList.add('is-hidden');
+                }
+
+                new Swiper(flyersEl, {
+                    slidesPerView: 1,
+                    spaceBetween: 16,
+                    autoplay: single ? false : {
+                        delay: 4500,
+                        disableOnInteraction: false,
+                    },
+                    pagination: {
+                        el: flyersEl.querySelector('.job-flyers-pagination'),
+                        clickable: true,
+                    },
+                    navigation: {
+                        prevEl: flyersEl.querySelector('.job-flyers-prev'),
+                        nextEl: flyersEl.querySelector('.job-flyers-next'),
+                    },
+                    loop: !single,
+                });
+            };
+        });
+    </script>
 @endpush

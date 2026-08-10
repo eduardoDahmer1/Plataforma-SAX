@@ -41,6 +41,8 @@ function setFormType(type) {
 
     document.querySelector('input[name="name"]').required  = true;
     document.querySelector('input[name="email"]').required = true;
+
+    window.afterFormTypeChange?.(type);
 }
 setFormType(1);
 

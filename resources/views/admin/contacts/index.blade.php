@@ -146,6 +146,12 @@
                                 <span class="sax-msg__label">{{ __('messages.contato_tipo') }}</span>
                                 <span class="sax-msg__value">{{ $info['rotulo'] }}</span>
                             </div>
+                            @if ($contact->store_name)
+                                <div>
+                                    <span class="sax-msg__label">Loja</span>
+                                    <span class="sax-msg__value">{{ $contact->store_name }}</span>
+                                </div>
+                            @endif
                             <div>
                                 <span class="sax-msg__label">E-mail</span>
                                 <a class="sax-msg__value" href="mailto:{{ $contact->email }}">{{ $contact->email ?: '—' }}</a>

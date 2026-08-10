@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const paymentMethodsAllowed = ['deposito', 'bancard_v2', 'rendix_pix', 'whatsapp'];
 
+    // A validacao do checkout e feita por etapa abaixo e novamente no servidor.
+    // Sem isto, o navegador pode bloquear silenciosamente o submit por causa de
+    // um campo required pertencente a uma etapa/metodo de entrega oculto.
+    if (checkoutForm) checkoutForm.noValidate = true;
+
     function getStepElement(stepNumber) {
         return document.getElementById(`step${stepNumber}`);
     }
@@ -232,6 +237,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!paymentMethodsAllowed.includes(paymentMethod)) {
             showStepAlert(4, 'Selecione uma forma de pagamento valida para concluir.');
             return false;
+        }
+
+        if (paymentMethod === 'rendix_pix') {
+            const pixTerms = document.getElementById('accept_pix_terms');
+            if (!pixTerms?.checked) {
+                showStepAlert(4, 'Leia e aceite os Termos e Condicoes da Rendix para pagar com Pix.');
+                markFieldInvalid('#accept_pix_terms', true);
+                return false;
+            }
         }
 
         const acceptTerms = document.getElementById('accept_terms');
@@ -665,6 +679,19 @@ document.addEventListener('DOMContentLoaded', function () {
         if(shippingAlternative) shippingAlternative.style.display = value == 2 ? 'block' : 'none';
         if(shippingStore) shippingStore.style.display = value == 3 ? 'block' : 'none';
 
+        // Somente os campos do metodo de entrega ativo participam do formulario.
+        // Isso evita que inputs required escondidos impeçam a finalizacao sem
+        // disparar o evento submit nem mostrar uma mensagem ao cliente.
+        [
+            [shippingRegistered, value == 1],
+            [shippingAlternative, value == 2],
+            [shippingStore, value == 3]
+        ].forEach(([section, enabled]) => {
+            section?.querySelectorAll('input, select, textarea').forEach((field) => {
+                field.disabled = !enabled;
+            });
+        });
+
         document.querySelectorAll('.sax-method-card').forEach(card => card.classList.remove('active'));
         document.getElementById('label-ship-' + value)?.classList.add('active');
         updateShippingMessage(value);
@@ -927,7 +954,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!validateStep4()) {
                 e.preventDefault();
                 showStep(4);
+                return;
             }
+
+            const submitButton = checkoutForm.querySelector('button[type="submit"]');
+            if (submitButton) submitButton.disabled = true;
         });
     }
 });

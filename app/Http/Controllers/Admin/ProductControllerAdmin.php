@@ -3,32 +3,32 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
 use App\Models\Brand;
+use App\Models\CategoriasFilhas;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\ProductTranslation;
 use App\Models\Subcategory;
-use App\Models\CategoriasFilhas;
 use App\Services\ImageConverterService;
-use App\Services\DeepSeekCatalogService;
+use App\Services\OpenAICatalogService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class ProductControllerAdmin extends Controller
 {
-    public function completeWithAi(Product $product, DeepSeekCatalogService $deepSeek)
+    public function completeWithAi(Product $product, OpenAICatalogService $openAi)
     {
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
-            return response()->json($deepSeek->generateProductProposal($product));
+            return response()->json($openAi->generateProductProposal($product));
         } catch (\Throwable $exception) {
             report($exception);
 
@@ -63,14 +63,14 @@ class ProductControllerAdmin extends Controller
                 'brand:id,name',
                 'editor:id,name,email',
             ])
-            ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
+            ->when($search, fn ($q) => $q->where(function ($q2) use ($search) {
                 $q2->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('external_name', 'LIKE', "%{$search}%")
                     ->orWhere('sku', 'LIKE', "%{$search}%")
                     ->orWhere('slug', 'LIKE', "%{$search}%");
             }))
-            ->when($brandId, fn($q) => $q->where('brand_id', $brandId))
-            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($brandId, fn ($q) => $q->where('brand_id', $brandId))
+            ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
             ->when($productType, function ($q) use ($productType) {
                 if ($productType === 'parent') {
                     $q->whereNull('parent_id');
@@ -120,8 +120,8 @@ class ProductControllerAdmin extends Controller
                         break;
                 }
             })
-            ->when($highlightFilter, fn($q) => $q->whereJsonContains('highlights', [$highlightFilter => '1']))
-            ->when($stockFilter, fn($q) => $stockFilter === 'in_stock' ? $q->where('stock', '>', 0) : ($stockFilter === 'out_of_stock' ? $q->where('stock', 0) : null))
+            ->when($highlightFilter, fn ($q) => $q->whereJsonContains('highlights', [$highlightFilter => '1']))
+            ->when($stockFilter, fn ($q) => $stockFilter === 'in_stock' ? $q->where('stock', '>', 0) : ($stockFilter === 'out_of_stock' ? $q->where('stock', 0) : null))
             ->when($dateFilter, function ($q) use ($dateFilter) {
                 if ($dateFilter === 'with_date') {
                     $q->whereNotNull('created_at');
@@ -178,6 +178,7 @@ class ProductControllerAdmin extends Controller
 
         $products->getCollection()->transform(function ($product) {
             $product->imageUrl = $product->photo_url;
+
             return $product;
         });
 
@@ -288,7 +289,7 @@ class ProductControllerAdmin extends Controller
                 ->orWhere('external_name', 'like', "%{$q}%")
                 ->orWhere('sku', 'like', "%{$q}%");
         })
-            ->when($excludeId, fn($query) => $query->where('id', '!=', $excludeId))
+            ->when($excludeId, fn ($query) => $query->where('id', '!=', $excludeId))
             ->orderBy('external_name')
             // Uma mesma cor pode possuir muitos tamanhos. Na busca de família de
             // cor precisamos de uma amostra maior antes de eliminar as repetições.
@@ -379,7 +380,9 @@ class ProductControllerAdmin extends Controller
         if ($request->has('colors_values')) {
             $colors = array_values(array_unique(array_map('strtoupper', (array) $request->input('colors_values'))));
             $data['color'] = $colors[0] ?? null;
-            if (Product::supportsMultipleColors()) $data['colors'] = $colors;
+            if (Product::supportsMultipleColors()) {
+                $data['colors'] = $colors;
+            }
         }
 
         if ($request->hasFile('gallery')) {
@@ -391,6 +394,7 @@ class ProductControllerAdmin extends Controller
         }
 
         Product::create($data);
+
         return redirect()->route('admin.products.index')->with('success', 'Produto criado com sucesso!');
     }
 
@@ -418,14 +422,13 @@ class ProductControllerAdmin extends Controller
         $item->selected_size_children = Product::where('parent_id', $item->id)
             ->where('product_role', 'F')
             ->get(['id', 'name', 'external_name', 'color', 'size'])
-            ->filter(fn (Product $child) =>
-                $child->relationshipReferenceKey() === $itemReferenceKey
+            ->filter(fn (Product $child) => $child->relationshipReferenceKey() === $itemReferenceKey
                 && $child->relationshipColorKey() === $itemColorKey
             )
             ->pluck('id')
             ->values()
             ->toArray();
-        $familyRootId = !empty($item->color_parent_id) ? (int) $item->color_parent_id : (int) $item->id;
+        $familyRootId = ! empty($item->color_parent_id) ? (int) $item->color_parent_id : (int) $item->id;
         $item->selected_color_family_members = Product::where('color_parent_id', $familyRootId)->where('product_role', 'P')->where('id', '!=', $item->id)->pluck('id')->toArray();
 
         $sizeChildrenProducts = Product::whereIn('id', $item->selected_size_children)
@@ -444,11 +447,11 @@ class ProductControllerAdmin extends Controller
         if (is_string($item->parent_id) && str_contains($item->parent_id, ',')) {
             $item->parent_id =
                 collect(explode(',', $item->parent_id))
-                    ->map(fn($parentId) => (int) trim($parentId))
-                    ->first(fn($parentId) => $parentId > 0) ?:
+                    ->map(fn ($parentId) => (int) trim($parentId))
+                    ->first(fn ($parentId) => $parentId > 0) ?:
                 null;
         } elseif (is_array($item->parent_id)) {
-            $item->parent_id = collect($item->parent_id)->map(fn($parentId) => (int) $parentId)->first(fn($parentId) => $parentId > 0) ?: null;
+            $item->parent_id = collect($item->parent_id)->map(fn ($parentId) => (int) $parentId)->first(fn ($parentId) => $parentId > 0) ?: null;
         }
 
         return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale', 'suggestedColor', 'suggestedColorSource'));
@@ -496,7 +499,7 @@ class ProductControllerAdmin extends Controller
                     'name' => (string) $colorName,
                     'normalized' => $normalizedName,
                     'matches' => $normalizedName !== ''
-                        && preg_match('/(?:^|\s)' . preg_quote($normalizedName, '/') . '(?:$|\s)/', $searchableName),
+                        && preg_match('/(?:^|\s)'.preg_quote($normalizedName, '/').'(?:$|\s)/', $searchableName),
                 ];
             })
             ->filter(fn ($entry) => $entry['matches'])
@@ -511,7 +514,7 @@ class ProductControllerAdmin extends Controller
                 return [null, null];
             }
 
-            return [$semanticMatches['hex'], 'nome comercial: ' . $semanticMatches['name']];
+            return [$semanticMatches['hex'], 'nome comercial: '.$semanticMatches['name']];
         }
 
         if ($hasValidCurrentColor) {
@@ -528,8 +531,8 @@ class ProductControllerAdmin extends Controller
             ->where('id', '!=', $product->id)
             ->whereNotNull('color')
             ->where(function ($query) use ($colorCode) {
-                $query->where('external_name', 'like', '%*' . $colorCode . '%')
-                    ->orWhere('name', 'like', '%*' . $colorCode . '%');
+                $query->where('external_name', 'like', '%*'.$colorCode.'%')
+                    ->orWhere('name', 'like', '%*'.$colorCode.'%');
             })
             ->limit(500)
             ->get(['name', 'external_name', 'color'])
@@ -548,7 +551,7 @@ class ProductControllerAdmin extends Controller
         $historicalHex = $historicalColors->keys()->first();
 
         return $historicalHex
-            ? [$historicalHex, 'código comercial *' . $colorCode]
+            ? [$historicalHex, 'código comercial *'.$colorCode]
             : [null, null];
     }
 
@@ -562,7 +565,7 @@ class ProductControllerAdmin extends Controller
         $product = Product::findOrFail($id);
 
         $request->validate([
-            'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
+            'sku' => 'required|string|max:255|unique:products,sku,'.$product->id,
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'brand_id' => 'nullable|exists:brands,id',
@@ -587,24 +590,23 @@ class ProductControllerAdmin extends Controller
 
         try {
             return DB::transaction(function () use ($request, $product) {
-                $isCurrentlySizeVariant = ($product->product_role ?? null) === 'F' || !empty($product->parent_id);
+                $isCurrentlySizeVariant = ($product->product_role ?? null) === 'F' || ! empty($product->parent_id);
                 $promoteToParent = $request->boolean('force_as_parent') && $isCurrentlySizeVariant;
-                $originalFamilyRootId = !empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
-                $selectedSizeChildIds = array_values(array_filter(array_unique(array_filter((array) $request->input('parent_id', []))), fn($childId) => (int) $childId !== (int) $product->id));
-                $selectedColorFamilyMemberIds = array_values(array_filter(array_unique(array_filter((array) $request->input('color_parent_id', []))), fn($memberId) => (int) $memberId !== (int) $product->id));
+                $originalFamilyRootId = ! empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
+                $selectedSizeChildIds = array_values(array_filter(array_unique(array_filter((array) $request->input('parent_id', []))), fn ($childId) => (int) $childId !== (int) $product->id));
+                $selectedColorFamilyMemberIds = array_values(array_filter(array_unique(array_filter((array) $request->input('color_parent_id', []))), fn ($memberId) => (int) $memberId !== (int) $product->id));
 
                 if ($isCurrentlySizeVariant) {
                     $selectedSizeChildIds = [];
                     $selectedColorFamilyMemberIds = [];
                 }
 
-                if (!empty($selectedSizeChildIds)) {
+                if (! empty($selectedSizeChildIds)) {
                     $currentReferenceKey = $product->relationshipReferenceKey();
                     $currentColorKey = $product->relationshipColorKey();
                     $selectedSizeChildIds = Product::whereIn('id', $selectedSizeChildIds)
                         ->get(['id', 'name', 'external_name', 'color', 'size'])
-                        ->filter(fn (Product $candidate) =>
-                            $candidate->relationshipReferenceKey() === $currentReferenceKey
+                        ->filter(fn (Product $candidate) => $candidate->relationshipReferenceKey() === $currentReferenceKey
                             && $candidate->relationshipColorKey() === $currentColorKey
                         )
                         ->pluck('id')
@@ -628,8 +630,7 @@ class ProductControllerAdmin extends Controller
                     $sameColorSiblingIds = Product::where('parent_id', $oldParentId)
                         ->where('id', '!=', $candidate->id)
                         ->get(['id', 'name', 'external_name', 'color', 'size'])
-                        ->filter(fn (Product $sibling) =>
-                            $sibling->relationshipReferenceKey() === $candidateReferenceKey
+                        ->filter(fn (Product $sibling) => $sibling->relationshipReferenceKey() === $candidateReferenceKey
                             && $sibling->relationshipColorKey() === $candidateColorKey
                         )
                         ->pluck('id');
@@ -649,10 +650,10 @@ class ProductControllerAdmin extends Controller
                     }
                 }
 
-                $selectedColorFamilyMemberIds = Product::whereIn('id', $selectedColorFamilyMemberIds)->where('product_role', 'P')->pluck('id')->map(fn($memberId) => (int) $memberId)->unique()->values()->toArray();
+                $selectedColorFamilyMemberIds = Product::whereIn('id', $selectedColorFamilyMemberIds)->where('product_role', 'P')->pluck('id')->map(fn ($memberId) => (int) $memberId)->unique()->values()->toArray();
                 $selectedColorFamilyMembers = Product::whereIn('id', $selectedColorFamilyMemberIds)->get(['id', 'color_parent_id']);
                 $resolveExistingFamilyRoot = function (Product $anchor): ?int {
-                    $candidateRootId = !empty($anchor->color_parent_id) ? (int) $anchor->color_parent_id : (int) $anchor->id;
+                    $candidateRootId = ! empty($anchor->color_parent_id) ? (int) $anchor->color_parent_id : (int) $anchor->id;
                     $hasOtherAnchorsInFamily = Product::where('product_role', 'P')
                         ->where('id', '!=', $anchor->id)
                         ->where(function ($query) use ($candidateRootId) {
@@ -666,7 +667,7 @@ class ProductControllerAdmin extends Controller
 
                     return null;
                 };
-                $selectedExistingFamilyRoots = $selectedColorFamilyMembers->map(fn($member) => $resolveExistingFamilyRoot($member))->filter(fn($rootId) => !is_null($rootId))->map(fn($rootId) => (int) $rootId)->unique()->values()->toArray();
+                $selectedExistingFamilyRoots = $selectedColorFamilyMembers->map(fn ($member) => $resolveExistingFamilyRoot($member))->filter(fn ($rootId) => ! is_null($rootId))->map(fn ($rootId) => (int) $rootId)->unique()->values()->toArray();
 
                 if (count($selectedExistingFamilyRoots) > 1) {
                     throw ValidationException::withMessages([
@@ -674,7 +675,7 @@ class ProductControllerAdmin extends Controller
                     ]);
                 }
 
-                $shouldSyncColorFamily = !$isCurrentlySizeVariant || $promoteToParent;
+                $shouldSyncColorFamily = ! $isCurrentlySizeVariant || $promoteToParent;
                 $targetFamilyRootId = $promoteToParent ? (int) $product->id : ($shouldSyncColorFamily ? $selectedExistingFamilyRoots[0] ?? (int) $product->id : $originalFamilyRootId);
                 $currentFamilyAnchorIds = $shouldSyncColorFamily
                     ? Product::where('product_role', 'P')
@@ -682,7 +683,7 @@ class ProductControllerAdmin extends Controller
                             $query->where('id', $originalFamilyRootId)->orWhere('color_parent_id', $originalFamilyRootId);
                         })
                         ->pluck('id')
-                        ->map(fn($anchorId) => (int) $anchorId)
+                        ->map(fn ($anchorId) => (int) $anchorId)
                         ->unique()
                         ->values()
                         ->toArray()
@@ -699,18 +700,22 @@ class ProductControllerAdmin extends Controller
 
                 if ($request->has('no_color')) {
                     $data['color'] = null;
-                    if (Product::supportsMultipleColors()) $data['colors'] = [];
+                    if (Product::supportsMultipleColors()) {
+                        $data['colors'] = [];
+                    }
                 } elseif ($request->has('colors_values')) {
                     $colors = array_values(array_unique(array_map('strtoupper', (array) $request->input('colors_values'))));
                     $data['color'] = $colors[0] ?? null;
-                    if (Product::supportsMultipleColors()) $data['colors'] = $colors;
+                    if (Product::supportsMultipleColors()) {
+                        $data['colors'] = $colors;
+                    }
                 }
 
                 if ($request->hasFile('photo')) {
                     if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                         $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
 
-                        if (!$usedElsewhere) {
+                        if (! $usedElsewhere) {
                             Storage::disk('public')->delete($product->photo);
                         }
                     }
@@ -718,7 +723,7 @@ class ProductControllerAdmin extends Controller
                 }
 
                 $currentGallery = is_string($product->gallery) ? json_decode($product->gallery, true) : $product->gallery ?? [];
-                if (!is_array($currentGallery)) {
+                if (! is_array($currentGallery)) {
                     $currentGallery = [];
                 }
 
@@ -744,7 +749,7 @@ class ProductControllerAdmin extends Controller
                 $data['highlights'] = json_encode($request->input('highlights', []));
                 $data['stores'] = json_encode($request->input('stores', []));
                 $data['color_parent_id'] = $targetFamilyRootId;
-                $data['product_role'] = $promoteToParent || !empty($selectedSizeChildIds) || !empty($selectedColorFamilyMemberIds) ? 'P' : ($product->product_role ?: 'P');
+                $data['product_role'] = $promoteToParent || ! empty($selectedSizeChildIds) || ! empty($selectedColorFamilyMemberIds) ? 'P' : ($product->product_role ?: 'P');
                 if ($data['product_role'] === 'P') {
                     $data['parent_id'] = null;
                 }
@@ -766,10 +771,10 @@ class ProductControllerAdmin extends Controller
                         ProductTranslation::updateOrCreate(
                             [
                                 'product_id' => $product->id,
-                                'locale'     => $locale,
+                                'locale' => $locale,
                             ],
                             [
-                                'name'    => $translationData['name'] ?? null,
+                                'name' => $translationData['name'] ?? null,
                                 'details' => $translationData['details'] ?? null,
                             ]
                         );
@@ -784,7 +789,7 @@ class ProductControllerAdmin extends Controller
                         'product_role' => 'P',
                     ]);
 
-                if (!empty($selectedSizeChildIds)) {
+                if (! empty($selectedSizeChildIds)) {
                     $children = Product::whereIn('id', $selectedSizeChildIds)
                         ->where('id', '!=', $product->id)
                         ->get();
@@ -815,7 +820,7 @@ class ProductControllerAdmin extends Controller
                             $childData['colors'] = json_encode($product->product_colors);
                         }
 
-                        if (!$child->is_outlet) {
+                        if (! $child->is_outlet) {
                             $childData['status'] = $product->status;
                         }
 
@@ -855,7 +860,7 @@ class ProductControllerAdmin extends Controller
                             ]);
                     }
 
-                    $colorAnchorsToAttach = Product::whereIn('id', $desiredColorAnchorIds)->where('product_role', 'P')->pluck('id')->map(fn($anchorId) => (int) $anchorId)->unique()->values()->toArray();
+                    $colorAnchorsToAttach = Product::whereIn('id', $desiredColorAnchorIds)->where('product_role', 'P')->pluck('id')->map(fn ($anchorId) => (int) $anchorId)->unique()->values()->toArray();
 
                     foreach ($colorAnchorsToAttach as $anchorId) {
                         Product::where('id', $anchorId)
@@ -897,33 +902,35 @@ class ProductControllerAdmin extends Controller
                     'errors' => $e->errors(),
                 ], 422);
             }
+
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            \Log::error('Erro no Update de Produto: ' . $e->getMessage());
+            \Log::error('Erro no Update de Produto: '.$e->getMessage());
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erro ao salvar: ' . $e->getMessage(),
+                    'message' => 'Erro ao salvar: '.$e->getMessage(),
                 ], 500);
             }
 
             return back()
-                ->with('error', 'Erro ao salvar: ' . $e->getMessage())
+                ->with('error', 'Erro ao salvar: '.$e->getMessage())
                 ->withInput();
         }
     }
 
     private function convertToWebp($image, $type)
     {
-       
+
         try {
             return app(ImageConverterService::class)->toWebp($image, "products/{$type}", [
                 'quality' => 85,
-                'strict'  => true,
+                'strict' => true,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Erro na conversão WebP: ' . $e->getMessage());
+            \Log::error('Erro na conversão WebP: '.$e->getMessage());
+
             return null;
         }
     }
@@ -932,7 +939,7 @@ class ProductControllerAdmin extends Controller
     {
         if ($product->photo && Storage::disk('public')->exists($product->photo)) {
             $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
-            if (!$usedElsewhere) {
+            if (! $usedElsewhere) {
                 Storage::disk('public')->delete($product->photo);
             }
         }
@@ -944,7 +951,7 @@ class ProductControllerAdmin extends Controller
                     $usedElsewhere = Product::where('gallery', 'like', "%{$img}%")
                         ->where('id', '!=', $product->id)
                         ->exists();
-                    if (!$usedElsewhere) {
+                    if (! $usedElsewhere) {
                         Storage::disk('public')->delete($img);
                     }
                 }
@@ -956,13 +963,13 @@ class ProductControllerAdmin extends Controller
     {
         $product = Product::findOrFail($productId);
 
-        if (!$product->gallery) {
+        if (! $product->gallery) {
             return redirect()->back()->with('error', 'Produto não possui galeria.');
         }
 
         $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
 
-        if (!is_array($gallery)) {
+        if (! is_array($gallery)) {
             $gallery = [];
         }
 
@@ -980,7 +987,7 @@ class ProductControllerAdmin extends Controller
                 ->where('id', '!=', $product->id)
                 ->exists();
 
-            if (!$usedElsewhere) {
+            if (! $usedElsewhere) {
                 Storage::disk('public')->delete($imagePath);
             }
         }
@@ -999,7 +1006,7 @@ class ProductControllerAdmin extends Controller
         $imagesToDelete = explode(',', $request->image_names);
 
         $gallery = is_array($product->gallery) ? $product->gallery : json_decode($product->gallery, true);
-        if (!is_array($gallery)) {
+        if (! is_array($gallery)) {
             return redirect()->back();
         }
 
@@ -1011,7 +1018,7 @@ class ProductControllerAdmin extends Controller
                         ->where('id', '!=', $product->id)
                         ->exists();
 
-                    if (!$usedElsewhere) {
+                    if (! $usedElsewhere) {
                         Storage::disk('public')->delete($img);
                     }
                 }
@@ -1027,7 +1034,7 @@ class ProductControllerAdmin extends Controller
 
         return redirect()
             ->back()
-            ->with('success', count($imagesToDelete) . ' imagens removidas.');
+            ->with('success', count($imagesToDelete).' imagens removidas.');
     }
 
     public function deletePhoto($productId)
@@ -1036,7 +1043,7 @@ class ProductControllerAdmin extends Controller
         if ($product->photo && Storage::disk('public')->exists($product->photo)) {
             $usedElsewhere = Product::where('photo', $product->photo)->where('id', '!=', $product->id)->exists();
 
-            if (!$usedElsewhere) {
+            if (! $usedElsewhere) {
                 Storage::disk('public')->delete($product->photo);
             }
 
@@ -1044,8 +1051,10 @@ class ProductControllerAdmin extends Controller
             $product->updated_by = auth()->id();
             $product->admin_edited_at = now();
             $product->save();
+
             return redirect()->back()->with('success', 'Foto principal removida com sucesso!');
         }
+
         return redirect()->back()->with('error', 'Produto não possui foto principal.');
     }
 
@@ -1080,9 +1089,9 @@ class ProductControllerAdmin extends Controller
         foreach ($products as $product) {
             $shouldBeActive = $product->meetsActiveRequirements();
 
-            if ($shouldBeActive && !$product->status) {
+            if ($shouldBeActive && ! $product->status) {
                 $toActivate[] = $product->id;
-            } elseif (!$shouldBeActive && $product->status) {
+            } elseif (! $shouldBeActive && $product->status) {
                 $toDeactivate[] = $product->id;
             }
         }
@@ -1092,11 +1101,11 @@ class ProductControllerAdmin extends Controller
             'admin_edited_at' => now(),
         ];
 
-        if (!empty($toActivate)) {
+        if (! empty($toActivate)) {
             Product::whereIn('id', $toActivate)->update(array_merge(['status' => 1], $auditData));
         }
 
-        if (!empty($toDeactivate)) {
+        if (! empty($toDeactivate)) {
             Product::whereIn('id', $toDeactivate)->update(array_merge(['status' => 0], $auditData));
         }
 
@@ -1104,7 +1113,7 @@ class ProductControllerAdmin extends Controller
             'success' => true,
             'activated_ids' => $toActivate,
             'deactivated_ids' => $toDeactivate,
-            'message' => count($toActivate) . ' produto(s) ativado(s) e ' . count($toDeactivate) . ' desativado(s).',
+            'message' => count($toActivate).' produto(s) ativado(s) e '.count($toDeactivate).' desativado(s).',
         ]);
     }
 
@@ -1137,7 +1146,7 @@ class ProductControllerAdmin extends Controller
             ], 422);
         }
 
-        $product->status = !$product->status;
+        $product->status = ! $product->status;
         $product->updated_by = auth()->id();
         $product->admin_edited_at = now();
         $product->save();
@@ -1184,7 +1193,7 @@ class ProductControllerAdmin extends Controller
             $data = Carbon::now()->subMonths($i);
             $mesesDisponiveis[] = [
                 'value' => $data->format('Y-m'),
-                'label' => $data->translatedFormat('F Y')
+                'label' => $data->translatedFormat('F Y'),
             ];
         }
 

@@ -7,6 +7,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const aiButton = document.getElementById('completeProductWithAiBtn');
     const aiFeedback = document.getElementById('productEditFeedback');
+    const aiResearch = document.getElementById('productAiResearch');
     let currentProposal = null;
 
     if (!aiButton || !aiFeedback) return;
@@ -78,11 +79,53 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
+    function renderResearch(research) {
+        if (!aiResearch) return;
+        aiResearch.replaceChildren();
+        const sources = Array.isArray(research?.sources) ? research.sources : [];
+        const warning = research?.warning;
+        if (!sources.length && !warning) {
+            aiResearch.className = 'd-none mb-4';
+            return;
+        }
+
+        aiResearch.className = 'alert alert-info mb-4';
+        const heading = document.createElement('div');
+        heading.className = 'fw-bold mb-1';
+        heading.textContent = research?.status === 'matched' ? 'Fuentes consultadas' : 'Investigación web';
+        aiResearch.appendChild(heading);
+
+        if (warning) {
+            const notice = document.createElement('div');
+            notice.className = 'small mb-2';
+            notice.textContent = warning;
+            aiResearch.appendChild(notice);
+        }
+
+        if (sources.length) {
+            const list = document.createElement('ul');
+            list.className = 'small mb-0 ps-3';
+            sources.forEach(function (source) {
+                if (!source || typeof source.url !== 'string' || !/^https?:\/\//i.test(source.url)) return;
+                const item = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = source.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = source.title || source.url;
+                item.appendChild(link);
+                list.appendChild(item);
+            });
+            aiResearch.appendChild(list);
+        }
+    }
+
     aiButton.addEventListener('click', async function () {
         const originalHtml = aiButton.innerHTML;
         aiButton.disabled = true;
         aiButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
         aiFeedback.className = 'alert d-none';
+        if (aiResearch) aiResearch.className = 'd-none mb-4';
         currentProposal = null;
 
         try {
@@ -99,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             currentProposal = data.proposal;
             applyProposalToForm();
+            renderResearch(data.research);
             aiFeedback.className = 'alert alert-success';
             aiFeedback.textContent = 'La IA completó el formulario. Revisá nombres, descripciones y clasificación antes de guardar.';
             window.saxToast ? saxToast('success', 'Formulario completado con IA; todavía no fue guardado.') : null;

@@ -52,6 +52,7 @@
         </div>
 
         <div id="productEditFeedback" class="d-none"></div>
+        <div id="productAiResearch" class="d-none mb-4"></div>
 
         <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-3 border rounded-3 bg-light-subtle">
             <button type="button" id="completeProductWithAiBtn" class="btn btn-outline-primary"

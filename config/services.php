@@ -25,11 +25,13 @@ return [
         'email_alerts' => env('INTEGRATION_EMAIL_ALERTS_ENABLED', true),
     ],
 
-    'deepseek' => [
-        'api_key' => env('DEEPSEEK_API_KEY'),
-        'base_url' => env('DEEPSEEK_BASE_URL', 'https://api.deepseek.com'),
-        'model' => env('DEEPSEEK_MODEL', 'deepseek-v4-flash'),
-        'timeout' => (int) env('DEEPSEEK_TIMEOUT', 60),
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+        'model' => env('OPENAI_MODEL', 'gpt-5.6-luna'),
+        'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        'timeout' => (int) env('OPENAI_TIMEOUT', 90),
+        'max_output_tokens' => (int) env('OPENAI_MAX_OUTPUT_TOKENS', 3000),
     ],
 
     'geonames' => [

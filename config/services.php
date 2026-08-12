@@ -30,6 +30,8 @@ return [
         'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
         'model' => env('OPENAI_MODEL', 'gpt-5.6-luna'),
         'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        'catalog_reasoning_effort' => env('OPENAI_CATALOG_REASONING_EFFORT', 'medium'),
+        'catalog_search_context_size' => env('OPENAI_CATALOG_SEARCH_CONTEXT_SIZE', 'high'),
         'timeout' => (int) env('OPENAI_TIMEOUT', 90),
         'max_output_tokens' => (int) env('OPENAI_MAX_OUTPUT_TOKENS', 3000),
     ],

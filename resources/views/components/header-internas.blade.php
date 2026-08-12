@@ -35,11 +35,109 @@
 
     $siteAttributes = View::shared('attributes');
     $hasCustomLogo  = $siteAttributes && !empty($siteAttributes->{$config['logo_key']});
+    // No Institucional, `header_image` e uma imagem editorial/hero, nao um
+    // logotipo horizontal apropriado para a barra compacta do mobile.
+    $hasMobileLogo  = $hasCustomLogo && !$isInst;
 
     // 4. Idioma e moeda são renderizados por <x-locale-currency-selector variant="nav" />
 @endphp
 
-<header class="navbar navbar-expand-lg fixed-top exp-header transition-all" id="mainHeader">
+{{-- Header mobile exclusivo das experiências: inspirado no app da loja,
+     preservando identidade, atalhos e navegação editorial próprios. --}}
+<header class="exp-mobile-appbar d-lg-none" id="experienceMobileHeader">
+    <div class="exp-mobile-appbar__top">
+        <button class="exp-mobile-appbar__button" type="button"
+                data-bs-toggle="collapse" data-bs-target="#expAppMenu"
+                aria-controls="expAppMenu" aria-expanded="false"
+                aria-label="{{ __('messages.toggle_navigation') }}">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
+
+        <a class="exp-mobile-appbar__brand" href="{{ request()->url() }}" aria-label="SAX {{ $config['brand_name'] }}">
+            @if($hasMobileLogo)
+                <img src="{{ asset('storage/uploads/' . $siteAttributes->{$config['logo_key']}) }}"
+                     alt="SAX {{ $config['brand_name'] }}" decoding="async">
+            @else
+                <span class="exp-mobile-appbar__sax">SAX</span>
+                <span class="exp-mobile-appbar__name">{{ $config['brand_name'] }}</span>
+            @endif
+        </a>
+
+        <div class="exp-mobile-appbar__actions">
+            <a href="{{ route('home') }}" class="exp-mobile-appbar__button" aria-label="{{ __('messages.ir_para_loja') }}">
+                <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+            </a>
+            @if($config['whatsapp'] !== '#')
+                <a href="{{ $config['whatsapp'] }}" target="_blank" rel="noopener"
+                   class="exp-mobile-appbar__button exp-mobile-appbar__button--accent"
+                   aria-label="{{ $config['cta_label'] }}">
+                    <i class="bi {{ $config['cta_icon'] }}" aria-hidden="true"></i>
+                </a>
+            @endif
+        </div>
+    </div>
+
+    <div class="collapse exp-mobile-panel" id="expAppMenu">
+        <div class="exp-mobile-panel__heading">
+            <div>
+                <span>SAX</span>
+                <strong>{{ __('messages.experiencias') }}</strong>
+            </div>
+            <button type="button" class="exp-mobile-panel__close"
+                    data-bs-toggle="collapse" data-bs-target="#expAppMenu"
+                    aria-label="{{ __('messages.fechar') }}">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <nav class="exp-mobile-panel__grid" aria-label="{{ __('messages.experiencias') }}">
+            <a href="{{ route('institucional.index') }}" class="{{ $isInst ? 'active' : '' }}">
+                <i class="fa-solid fa-landmark" aria-hidden="true"></i>
+                <span>{{ __('messages.institucional') }}</span>
+            </a>
+            <a href="{{ route('bridal.index') }}" class="{{ $isBridal ? 'active' : '' }}">
+                <i class="fa-solid fa-ring" aria-hidden="true"></i>
+                <span>{{ __('messages.bridal') }}</span>
+            </a>
+            <a href="{{ route('palace.index') }}" class="{{ $isPalace ? 'active' : '' }}">
+                <i class="fa-solid fa-crown" aria-hidden="true"></i>
+                <span>{{ __('messages.palace') }}</span>
+            </a>
+            <a href="{{ route('cafe_bistro.index') }}" class="{{ $isBistro ? 'active' : '' }}">
+                <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+                <span>{{ __('messages.cafe_bistro') }}</span>
+            </a>
+        </nav>
+
+        <div class="exp-mobile-panel__links">
+            <a href="{{ route('home') }}">
+                <span><i class="fa-solid fa-store" aria-hidden="true"></i>{{ __('messages.ir_para_loja') }}</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a href="{{ route('blogs.index') }}">
+                <span><i class="fa-regular fa-newspaper" aria-hidden="true"></i>{{ __('messages.sax_news_tag') }}</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a href="{{ route('contact.form') }}">
+                <span><i class="fa-regular fa-envelope" aria-hidden="true"></i>{{ __('messages.contato') }}</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <div class="exp-mobile-panel__preferences">
+            <x-locale-currency-selector variant="mobile" />
+        </div>
+
+        @if($config['whatsapp'] !== '#')
+            <a href="{{ $config['whatsapp'] }}" target="_blank" rel="noopener" class="exp-mobile-panel__cta">
+                <i class="bi {{ $config['cta_icon'] }}" aria-hidden="true"></i>
+                <span>{{ strtoupper($config['cta_label']) }}</span>
+            </a>
+        @endif
+    </div>
+</header>
+
+<header class="navbar navbar-expand-lg fixed-top exp-header d-none d-lg-flex transition-all" id="mainHeader">
     <div class="container-fluid px-lg-5">
         
         <a class="navbar-brand exp-logo" href="{{ url('/') }}">
@@ -143,6 +241,30 @@
         </div>
     </div>
 </header>
+
+{{-- Navegação compacta exclusiva das experiências no mobile. --}}
+<nav class="sax-mobile-dock sax-mobile-dock--experiences d-lg-none" aria-label="{{ __('messages.experiencias') }}">
+    <a href="{{ route('home') }}">
+        <i class="fa-solid fa-house" aria-hidden="true"></i>
+        <span>{{ __('messages.inicio') }}</span>
+    </a>
+    <a href="{{ route('institucional.index') }}" class="{{ request()->routeIs('institucional.index') ? 'active' : '' }}">
+        <i class="fa-solid fa-landmark" aria-hidden="true"></i>
+        <span>{{ __('messages.institucional') }}</span>
+    </a>
+    <a href="{{ route('bridal.index') }}" class="{{ request()->routeIs('bridal.index') ? 'active' : '' }}">
+        <i class="fa-solid fa-ring" aria-hidden="true"></i>
+        <span>{{ __('messages.bridal') }}</span>
+    </a>
+    <a href="{{ route('palace.index') }}" class="{{ request()->routeIs('palace.index') ? 'active' : '' }}">
+        <i class="fa-solid fa-crown" aria-hidden="true"></i>
+        <span>{{ __('messages.palace') }}</span>
+    </a>
+    <a href="{{ route('cafe_bistro.index') }}" class="{{ request()->routeIs('cafe_bistro.index') ? 'active' : '' }}">
+        <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+        <span>{{ __('messages.cafe_bistro') }}</span>
+    </a>
+</nav>
 <style>
     html{
         overflow-x: hidden !important;

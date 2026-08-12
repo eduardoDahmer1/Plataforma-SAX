@@ -75,23 +75,50 @@ Convierte los datos internos recibidos en información comercial estandarizada e
 Brasil, español e inglés. Conserva con máxima fidelidad la marca, modelo, referencia, variante,
 color y tamaño o volumen. No traduzcas marcas, nombres propios, referencias ni códigos.
 
-Puedes usar web_search cuando existan identificadores suficientes (marca, GTIN, MPN, referencia
-o nombre original) para buscar una coincidencia del producto. Prioriza el sitio oficial de la
-marca, distribuidores autorizados y fuentes comerciales confiables. No afirmes que una búsqueda
-confirmó un dato si no existe una coincidencia clara. Si no hay coincidencia confiable, devuelve
-web_research.status como not_found y continúa usando únicamente los datos internos.
+Usa web_search para investigar el producto. Busca con amplitud suficiente antes de concluir que no
+existe una coincidencia. Prueba sucesivamente: (1) GTIN exacto; (2) marca con MPN o referencia exacta;
+(3) la referencia con y sin espacios, guiones o separadores; y (4) marca, nombre original y variante.
+No limites la investigación a tres páginas: el sistema mostrará después únicamente las tres mejores.
+
+Para verificar una coincidencia, compara marca, referencia o identificador, modelo y variante dentro
+del contenido de la página. Que la referencia aparezca en la URL es una señal fuerte y debe recibir
+prioridad, pero no es un requisito si la página identifica inequívocamente el producto en su contenido.
+Prioriza, en este orden: sitio oficial de la marca, distribuidores autorizados y comercios reconocidos
+y confiables. Si no existe una fuente oficial, puedes usar una fuente comercial confiable. Descarta
+agregadores, resultados genéricos, marketplaces de vendedores no verificados, páginas sin relación
+clara y contenido duplicado. Antes de responder, selecciona en web_research.selected_source_urls
+como máximo las tres URLs más confiables y específicas que realmente respalden la identificación.
+Solo después de agotar las búsquedas razonables, devuelve web_research.status como not_found y
+continúa usando únicamente los datos internos.
 
 Los datos externos deben quedar identificados en web_research.findings y nunca pueden reemplazar
 la categoría principal fixed_category ni permitir IDs fuera de allowed_subcategories y
 allowed_child_categories. No inventes características, materiales, medidas, ingredientes,
 concentraciones, rendimiento u otras especificaciones. Separa hechos de sugerencias y agrega la
-información faltante a missing_data. Mantén el mismo contenido factual en los tres idiomas.
+información faltante a missing_data. missing_data, warnings, web_research y editorial_summary son
+exclusivamente para revisión administrativa: nunca menciones faltantes, incertidumbre, fuentes ni
+advertencias dentro de commercial_name o descriptions.
 
 Si original_name contiene una talla después de #, reconócela pero no la incluyas en el nombre
 comercial. Si contiene un código después de *, trátalo como código de color y no lo conviertas en
 un color comercial sin evidencia explícita. Los tres nombres comerciales deben estar en MAYÚSCULAS.
-Cada descripción completa debe tener entre 70 y 120 palabras y short_description debe ser una sola
-oración concisa. No menciones la IA en el contenido comercial.
+
+Redacta cada descripción completa con entre 150 y 220 palabras, distribuidas en dos o tres párrafos
+separados por una línea en blanco. El tono debe ser elegante, cuidado y cercano, dirigido
+principalmente a clientes que valoran la calidad y están dispuestos a invertir en buenos productos.
+Abre con una presentación atractiva, desarrolla características verificadas junto con beneficios
+prácticos derivados directamente del propio producto. Habla exclusivamente del producto: su
+identidad, diseño, materiales, acabados, construcción, función y cualidades verificadas que sean
+pertinentes. No menciones tallas de ropa o calzado, números o letras de talla ni disponibilidad de
+tallas, aunque esos datos aparezcan en la entrada. Sí puedes conservar capacidades o volúmenes
+intrínsecos, como 100 ml, cuando sean esenciales para identificar el producto. No recomiendes con
+qué combinarlo y no describas conjuntos, accesorios complementarios, estilismos, ocasiones de uso
+ni otros productos. Evita repeticiones, relleno, clichés, superlativos absolutos y el uso frecuente
+de frases como "el mejor", "garantizado" o "lujoso". No confundas elegancia con exageración.
+
+Escribe pt_br, es y en de manera natural e idiomática para cada público; no hagas traducciones
+literales. Las tres versiones deben conservar exactamente los mismos hechos, sin añadir datos en
+un idioma que no aparezcan en los demás. No menciones la IA en el contenido comercial.
 PROMPT;
 
         $response = Http::withToken($apiKey)
@@ -103,9 +130,12 @@ PROMPT;
                 'instructions' => $instructions,
                 'input' => "Prepare a product catalog proposal from this known JSON data:\n".
                     json_encode($knownData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                'reasoning' => ['effort' => (string) config('services.openai.reasoning_effort', 'low')],
-                'tools' => [['type' => 'web_search']],
-                'tool_choice' => 'auto',
+                'reasoning' => ['effort' => (string) config('services.openai.catalog_reasoning_effort', 'medium')],
+                'tools' => [[
+                    'type' => 'web_search',
+                    'search_context_size' => (string) config('services.openai.catalog_search_context_size', 'high'),
+                ]],
+                'tool_choice' => 'required',
                 'include' => ['web_search_call.action.sources'],
                 'store' => false,
                 'max_output_tokens' => (int) config('services.openai.max_output_tokens', 3000),
@@ -152,7 +182,11 @@ PROMPT;
             $allowedChildCategories->keyBy(fn (CategoriasFilhas $childCategory) => (int) $childCategory->id),
         );
 
-        $sources = $this->extractSources($payload);
+        $sources = $this->extractSources(
+            $payload,
+            $product->ref_code,
+            (array) data_get($proposal, 'web_research.selected_source_urls', []),
+        );
         $researchStatus = data_get($proposal, 'web_research.status') === 'matched' && $sources !== []
             ? 'matched'
             : 'not_found';
@@ -189,8 +223,15 @@ PROMPT;
         return trim(implode("\n", $texts));
     }
 
-    private function extractSources(array $payload): array
+    private function extractSources(array $payload, ?string $referenceCode = null, array $selectedUrls = []): array
     {
+        $selectedUrlOrder = [];
+        foreach ($selectedUrls as $index => $selectedUrl) {
+            if (is_string($selectedUrl) && filter_var($selectedUrl, FILTER_VALIDATE_URL)) {
+                $selectedUrlOrder[$selectedUrl] = $index;
+            }
+        }
+
         $sources = [];
         foreach ((array) data_get($payload, 'output', []) as $item) {
             if (data_get($item, 'type') !== 'web_search_call') {
@@ -201,11 +242,48 @@ PROMPT;
                 if (! is_string($url) || ! filter_var($url, FILTER_VALIDATE_URL) || ! in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
                     continue;
                 }
-                $sources[$url] = ['title' => (string) data_get($source, 'title', $url), 'url' => $url];
+                $sources[$url] ??= [
+                    'title' => (string) data_get($source, 'title', $url),
+                    'url' => $url,
+                    'has_reference' => $this->urlContainsReference($url, $referenceCode),
+                    'selected_order' => $selectedUrlOrder[$url] ?? null,
+                ];
             }
         }
 
-        return array_values($sources);
+        $sources = array_values($sources);
+        usort($sources, function (array $left, array $right) {
+            $leftSelected = $left['selected_order'] !== null;
+            $rightSelected = $right['selected_order'] !== null;
+            if ($leftSelected !== $rightSelected) {
+                return $rightSelected <=> $leftSelected;
+            }
+            if ($leftSelected && $left['selected_order'] !== $right['selected_order']) {
+                return $left['selected_order'] <=> $right['selected_order'];
+            }
+
+            return (int) $right['has_reference'] <=> (int) $left['has_reference'];
+        });
+
+        return array_map(function (array $source) {
+            unset($source['has_reference']);
+            unset($source['selected_order']);
+
+            return $source;
+        }, array_slice($sources, 0, 3));
+    }
+
+    private function urlContainsReference(string $url, ?string $referenceCode): bool
+    {
+        $normalizedReference = preg_replace('/[^a-z0-9]+/', '', mb_strtolower(trim((string) $referenceCode), 'UTF-8'));
+        if (! is_string($normalizedReference) || mb_strlen($normalizedReference) < 4) {
+            return false;
+        }
+
+        $decodedUrl = rawurldecode($url);
+        $normalizedUrl = preg_replace('/[^a-z0-9]+/', '', mb_strtolower($decodedUrl, 'UTF-8'));
+
+        return is_string($normalizedUrl) && str_contains($normalizedUrl, $normalizedReference);
     }
 
     private function responseSchema(): array
@@ -222,7 +300,6 @@ PROMPT;
             'properties' => [
                 'editorial_summary' => ['type' => 'string'],
                 'commercial_name' => $languageText,
-                'short_description' => $languageText,
                 'descriptions' => $languageText,
                 'verified_attributes' => ['type' => 'array', 'items' => [
                     'type' => 'object',
@@ -241,9 +318,9 @@ PROMPT;
                 'missing_data' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'warnings' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
-                'web_research' => ['type' => 'object', 'properties' => ['status' => ['type' => 'string', 'enum' => ['matched', 'not_found']], 'findings' => ['type' => 'array', 'items' => ['type' => 'string']]], 'required' => ['status', 'findings'], 'additionalProperties' => false],
+                'web_research' => ['type' => 'object', 'properties' => ['status' => ['type' => 'string', 'enum' => ['matched', 'not_found']], 'findings' => ['type' => 'array', 'items' => ['type' => 'string']], 'selected_source_urls' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 3]], 'required' => ['status', 'findings', 'selected_source_urls'], 'additionalProperties' => false],
             ],
-            'required' => ['editorial_summary', 'commercial_name', 'short_description', 'descriptions', 'verified_attributes', 'suggested_attributes', 'seo', 'taxonomy_selection', 'missing_data', 'warnings', 'confidence', 'web_research'],
+            'required' => ['editorial_summary', 'commercial_name', 'descriptions', 'verified_attributes', 'suggested_attributes', 'seo', 'taxonomy_selection', 'missing_data', 'warnings', 'confidence', 'web_research'],
             'additionalProperties' => false,
         ];
     }

@@ -61,6 +61,28 @@
             @endforeach
         </div>
 
+        @if ($order->orderNotes->isNotEmpty())
+            <section class="sax-premium-card shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-sax-header bg-white border-bottom d-flex align-items-center gap-2">
+                    <i class="fa-regular fa-message"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold">{{ __('messages.order_notes_customer_title') }}</h6>
+                        <span class="text-secondary fw-normal">{{ __('messages.order_notes_customer_subtitle') }}</span>
+                    </div>
+                </div>
+                <div class="card-sax-body d-grid gap-3">
+                    @foreach ($order->orderNotes as $note)
+                        <article class="border-start border-dark border-3 bg-light px-3 py-3 rounded-end">
+                            <p class="mb-2 text-dark" style="white-space: pre-line;">{{ $note->displayMessage() }}</p>
+                            <time class="x-small text-secondary text-uppercase fw-bold" datetime="{{ $note->created_at->toIso8601String() }}">
+                                <i class="fa-regular fa-clock me-1"></i>{{ $note->created_at->format('d/m/Y H:i') }}
+                            </time>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         @if ($isCanceled)
             <div class="sax-order-message is-danger mb-4">
                 <i class="fas fa-circle-exclamation"></i>

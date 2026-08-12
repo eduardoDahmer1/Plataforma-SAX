@@ -135,6 +135,11 @@ class Order extends Model
         return $this->hasMany(PaymentTransaction::class);
     }
 
+    public function orderNotes()
+    {
+        return $this->hasMany(OrderNote::class)->latest();
+    }
+
     public function isPaid(): bool
     {
         return $this->status === 'paid' || $this->payment_status === 'paid';

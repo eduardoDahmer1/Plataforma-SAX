@@ -278,6 +278,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('categories/{id}/upload-banner', [CategoryControllerAdmin::class, 'uploadBanner'])->name('categories.uploadBanner');
     Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
+    Route::post('orders/{order}/notes', [OrderController::class, 'storeNote'])->name('orders.notes.store');
     Route::resource('clients', ClientController::class)->only(['index', 'show']);
     Route::resource('abandoned-carts', \App\Http\Controllers\Admin\AbandonedCartControllerAdmin::class)
         ->parameters(['abandoned-carts' => 'abandonedCart'])

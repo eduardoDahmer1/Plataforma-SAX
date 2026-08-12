@@ -5,7 +5,7 @@
     <x-head-master />
 </head>
 
-<body>
+<body class="experience-page experience-page--bridal">
     <x-marketing-body-start />
     <x-header-internas />
 

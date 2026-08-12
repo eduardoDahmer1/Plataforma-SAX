@@ -5,7 +5,7 @@
     <x-head-master />
 </head>
 
-<body>
+<body class="experience-page experience-page--institutional">
     <x-marketing-body-start />
     <x-header-internas />
 

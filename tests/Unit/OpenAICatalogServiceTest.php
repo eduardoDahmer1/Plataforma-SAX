@@ -25,7 +25,6 @@ class OpenAICatalogServiceTest extends TestCase
                         'text' => json_encode([
                             'editorial_summary' => 'Resumen',
                             'commercial_name' => ['pt_br' => 'marca produto', 'es' => 'marca producto', 'en' => 'brand product'],
-                            'short_description' => ['pt_br' => 'Uma frase.', 'es' => 'Una frase.', 'en' => 'One sentence.'],
                             'descriptions' => ['pt_br' => str_repeat('Descrição factual. ', 8), 'es' => str_repeat('Descripción factual. ', 8), 'en' => str_repeat('Factual description. ', 8)],
                             'verified_attributes' => ['brand' => 'Marca'],
                             'suggested_attributes' => [],
@@ -34,14 +33,25 @@ class OpenAICatalogServiceTest extends TestCase
                             'missing_data' => [],
                             'warnings' => [],
                             'confidence' => 'medium',
-                            'web_research' => ['status' => 'matched', 'findings' => ['Coincidencia encontrada']],
+                            'web_research' => [
+                                'status' => 'matched',
+                                'findings' => ['Coincidencia encontrada'],
+                                'selected_source_urls' => [
+                                    'https://brand.example/products/ref-123',
+                                    'https://retailer.example/product',
+                                    'https://distributor.example/item',
+                                ],
+                            ],
                         ], JSON_UNESCAPED_UNICODE),
                     ]],
                 ], [
                     'type' => 'web_search_call',
                     'action' => ['sources' => [
-                        ['title' => 'Fuente oficial', 'url' => 'https://brand.example/product'],
-                        ['title' => 'Fuente oficial duplicada', 'url' => 'https://brand.example/product'],
+                        ['title' => 'Fuente comercial', 'url' => 'https://retailer.example/product'],
+                        ['title' => 'Fuente oficial', 'url' => 'https://brand.example/products/ref-123'],
+                        ['title' => 'Fuente oficial duplicada', 'url' => 'https://brand.example/products/ref-123'],
+                        ['title' => 'Distribuidor', 'url' => 'https://distributor.example/item'],
+                        ['title' => 'Cuarta fuente', 'url' => 'https://fourth.example/item'],
                         ['title' => 'No válida', 'url' => 'javascript:alert(1)'],
                     ]],
                 ]],
@@ -53,6 +63,7 @@ class OpenAICatalogServiceTest extends TestCase
             'sku' => 'SKU-1',
             'external_name' => 'Marca Produto',
             'name' => 'Produto atual',
+            'ref_code' => 'REF-123',
             'category_id' => null,
         ]);
         $product->setRelation('brand', null);
@@ -65,7 +76,11 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertSame('MARCA PRODUTO', $result['proposal']['commercial_name']['pt_br']);
         $this->assertNull($result['proposal']['taxonomy_selection']['subcategory_id']);
         $this->assertSame('matched', $result['research']['status']);
-        $this->assertSame([['title' => 'Fuente oficial', 'url' => 'https://brand.example/product']], $result['research']['sources']);
+        $this->assertSame([
+            ['title' => 'Fuente oficial', 'url' => 'https://brand.example/products/ref-123'],
+            ['title' => 'Fuente comercial', 'url' => 'https://retailer.example/product'],
+            ['title' => 'Distribuidor', 'url' => 'https://distributor.example/item'],
+        ], $result['research']['sources']);
         $this->assertSame(['input_tokens' => 10, 'output_tokens' => 20], $result['usage']);
 
         Http::assertSent(function ($request) {
@@ -75,8 +90,16 @@ class OpenAICatalogServiceTest extends TestCase
                 && $request->hasHeader('Authorization', 'Bearer test-key')
                 && $body['model'] === 'gpt-5.6-luna'
                 && $body['tools'][0]['type'] === 'web_search'
+                && $body['tools'][0]['search_context_size'] === 'high'
+                && $body['tool_choice'] === 'required'
+                && $body['reasoning']['effort'] === 'medium'
                 && $body['text']['format']['type'] === 'json_schema'
                 && $body['text']['format']['schema']['properties']['verified_attributes']['type'] === 'array'
+                && ! isset($body['text']['format']['schema']['properties']['short_description'])
+                && str_contains($body['instructions'], 'entre 150 y 220 palabras')
+                && str_contains($body['instructions'], 'No limites la investigación a tres páginas')
+                && str_contains($body['instructions'], 'No menciones tallas de ropa o calzado')
+                && str_contains($body['instructions'], 'No recomiendes con qué combinarlo')
                 && $body['store'] === false;
         });
     }
@@ -92,10 +115,10 @@ class OpenAICatalogServiceTest extends TestCase
                     'type' => 'output_text',
                     'text' => json_encode([
                         'editorial_summary' => '', 'commercial_name' => ['pt_br' => 'A', 'es' => 'A', 'en' => 'A'],
-                        'short_description' => ['pt_br' => 'A', 'es' => 'A', 'en' => 'A'], 'descriptions' => ['pt_br' => 'A', 'es' => 'A', 'en' => 'A'],
+                        'descriptions' => ['pt_br' => 'A', 'es' => 'A', 'en' => 'A'],
                         'verified_attributes' => [], 'suggested_attributes' => [], 'seo' => ['title_pt_br' => '', 'meta_description_pt_br' => '', 'search_terms' => []],
                         'taxonomy_selection' => ['subcategory_id' => null, 'childcategory_id' => null, 'reason' => '', 'confidence' => 'low'],
-                        'missing_data' => [], 'warnings' => [], 'confidence' => 'low', 'web_research' => ['status' => 'not_found', 'findings' => []],
+                        'missing_data' => [], 'warnings' => [], 'confidence' => 'low', 'web_research' => ['status' => 'not_found', 'findings' => [], 'selected_source_urls' => []],
                     ], JSON_UNESCAPED_UNICODE),
                 ]],
             ]],

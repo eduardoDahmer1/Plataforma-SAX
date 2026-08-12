@@ -242,7 +242,7 @@ class UserController extends Controller
         $user = Auth::user();
 
         // Busca o pedido com os itens
-        $order = Order::with(['items', 'receipt', 'cupon'])->where('id', $id)->where('user_id', $user->id)->firstOrFail();
+        $order = Order::with(['items', 'receipt', 'cupon', 'orderNotes'])->where('id', $id)->where('user_id', $user->id)->firstOrFail();
 
         // BUSCA AS CONTAS BANCÁRIAS
         // Removi o 'status' para evitar o erro de coluna não encontrada

@@ -137,6 +137,75 @@
                     </div>
                 </div>
             </section>
+
+            {{-- Atualizações publicadas pela equipe --}}
+            <section class="mt-4 bg-white p-3 p-lg-4 rounded shadow-sm border">
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-4 pb-3 border-bottom">
+                    <div>
+                        <h6 class="fw-bold text-uppercase tracking-wider mb-1">
+                            <i class="fa-regular fa-message me-2"></i>{{ __('messages.order_notes_admin_title') }}
+                        </h6>
+                        <p class="small text-secondary mb-0">{{ __('messages.order_notes_admin_subtitle') }}</p>
+                    </div>
+                    <span class="badge bg-dark align-self-start px-3 py-2">
+                        {{ $order->orderNotes->count() }}
+                    </span>
+                </div>
+
+                <form action="{{ route('admin.orders.notes.store', $order) }}" method="POST" id="order-note-form" class="mb-4">
+                    @csrf
+                    <div class="row g-3 align-items-end">
+                        <div class="col-lg-8">
+                            <label for="order-note-type" class="x-small text-secondary text-uppercase fw-bold mb-2 d-block">
+                                {{ __('messages.order_notes_select_label') }}
+                            </label>
+                            <select id="order-note-type" name="note_type"
+                                    class="form-select rounded-1 @error('note_type') is-invalid @enderror" required>
+                                <option value="">{{ __('messages.order_notes_select_placeholder') }}</option>
+                                @foreach ($orderNotePresets as $type => $label)
+                                    <option value="{{ $type }}" @selected(old('note_type') === $type)>{{ $label }}</option>
+                                @endforeach
+                                <option value="other" @selected(old('note_type') === 'other')>{{ __('messages.order_notes_other') }}</option>
+                            </select>
+                            @error('note_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-lg-4">
+                            <button type="submit" class="btn btn-dark w-100 rounded-1 text-uppercase fw-bold tracking-wider py-2">
+                                <i class="fa-solid fa-paper-plane me-2"></i>{{ __('messages.order_notes_publish') }}
+                            </button>
+                        </div>
+                        <div class="col-12" id="order-note-custom-wrapper" @if(old('note_type') !== 'other') hidden @endif>
+                            <label for="order-note-custom" class="x-small text-secondary text-uppercase fw-bold mb-2 d-block">
+                                {{ __('messages.order_notes_custom_label') }}
+                            </label>
+                            <textarea id="order-note-custom" name="note_custom" rows="4" maxlength="1000"
+                                      class="form-control rounded-1 @error('note_custom') is-invalid @enderror"
+                                      placeholder="{{ __('messages.order_notes_custom_placeholder') }}">{{ old('note_custom') }}</textarea>
+                            @error('note_custom')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </form>
+
+                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3">{{ __('messages.order_notes_history') }}</h6>
+                <div class="d-grid gap-2">
+                    @forelse ($order->orderNotes as $note)
+                        <article class="border-start border-dark border-3 bg-light px-3 py-3 rounded-end">
+                            <p class="small text-dark mb-2" style="white-space: pre-line;">{{ $note->displayMessage() }}</p>
+                            <div class="d-flex flex-wrap gap-2 text-secondary" style="font-size: 11px;">
+                                <span><i class="fa-regular fa-user me-1"></i>{{ __('messages.order_notes_published_by', ['name' => $note->author?->name ?: 'SAX']) }}</span>
+                                <span aria-hidden="true">•</span>
+                                <time datetime="{{ $note->created_at->toIso8601String() }}">
+                                    <i class="fa-regular fa-clock me-1"></i>{{ $note->created_at->format('d/m/Y H:i') }}
+                                </time>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="border border-dashed p-3 text-secondary small rounded-1">
+                            {{ __('messages.order_notes_empty') }}
+                        </div>
+                    @endforelse
+                </div>
+            </section>
         </div>
 
         {{-- Coluna Lateral --}}
@@ -370,3 +439,26 @@
     </div>
 </x-admin.card>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const typeField = document.getElementById('order-note-type');
+    const customWrapper = document.getElementById('order-note-custom-wrapper');
+    const customField = document.getElementById('order-note-custom');
+
+    if (!typeField || !customWrapper || !customField) return;
+
+    const updateCustomField = function () {
+        const isOther = typeField.value === 'other';
+        customWrapper.hidden = !isOther;
+        customField.required = isOther;
+
+        if (!isOther) customField.value = '';
+    };
+
+    typeField.addEventListener('change', updateCustomField);
+    updateCustomField();
+});
+</script>
+@endpush

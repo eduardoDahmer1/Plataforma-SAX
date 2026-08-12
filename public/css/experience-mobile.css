@@ -1,0 +1,1262 @@
+/*
+ * SAX Experiences — camada visual exclusivamente mobile.
+ * Bridal, Institucional, Palace e Café & Bistrô compartilham uma navegação
+ * editorial própria e preservam integralmente os respectivos layouts de desktop.
+ */
+
+@media (max-width: 991.98px) {
+    :root {
+        --experience-bg: #f5f5f3;
+        --experience-surface: #fff;
+        --experience-ink: #151619;
+        --experience-muted: #70747c;
+        --experience-line: #e9e9e6;
+        --experience-radius: 14px;
+        --experience-shadow: 0 12px 34px rgba(15, 23, 42, .08);
+    }
+
+    html,
+    body.experience-page {
+        max-width: 100%;
+        overflow-x: hidden !important;
+    }
+
+    body.experience-page {
+        background: var(--experience-bg);
+        color: var(--experience-ink);
+        padding-bottom: calc(5.1rem + env(safe-area-inset-bottom, 0px));
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body.experience-page main {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        overflow: clip;
+    }
+
+    /* Ritmo tipográfico e espaçamento comum aos quatro universos. */
+    body.experience-page main h1 {
+        font-size: clamp(2.15rem, 11vw, 3.45rem);
+        line-height: .98;
+        text-wrap: balance;
+    }
+
+    body.experience-page main h2,
+    body.experience-page main .section-title,
+    body.experience-page main .section-title-elegant,
+    body.experience-page main .palace-section__title {
+        font-size: clamp(1.65rem, 8vw, 2.45rem);
+        line-height: 1.08;
+        text-wrap: balance;
+    }
+
+    body.experience-page main h3 {
+        font-size: clamp(1.2rem, 5.7vw, 1.65rem);
+        line-height: 1.18;
+    }
+
+    body.experience-page main p,
+    body.experience-page main li {
+        font-size: .91rem;
+        line-height: 1.65;
+    }
+
+    body.experience-page main .container,
+    body.experience-page footer .container {
+        width: 100%;
+        max-width: 100%;
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    body.experience-page main .section-padding,
+    body.experience-page main .palace-section,
+    body.experience-page main .section-about,
+    body.experience-page main .features-elegant,
+    body.experience-page main .counter-section {
+        padding-top: 3.5rem;
+        padding-bottom: 3.5rem;
+    }
+
+    /* Cards e mídia: superfícies mais limpas, com cantos discretos. */
+    body.experience-page main :is(
+        .service-card,
+        .promo-card,
+        .testimonial-card,
+        .location-card,
+        .card-feature,
+        .timeline-box,
+        .palace-card,
+        .palace-event-panel,
+        .palace-contact-panel,
+        .carta-card,
+        .evento-card,
+        .horario-card
+    ) {
+        border: 1px solid var(--experience-line) !important;
+        border-radius: var(--experience-radius) !important;
+        box-shadow: var(--experience-shadow) !important;
+    }
+
+    body.experience-page main img,
+    body.experience-page main video,
+    body.experience-page main iframe {
+        max-width: 100%;
+    }
+
+    body.experience-page main :is(
+        .promo-card img,
+        .service-card img,
+        .palace-card__img,
+        .palace-image-frame__img,
+        .evento-card img
+    ) {
+        border-radius: calc(var(--experience-radius) - 2px);
+    }
+
+    body.experience-page main :is(.btn, .btn-sax, .btn-discover, .palace-btn, .btn-reservar-cafe) {
+        min-height: 46px;
+        padding: .8rem 1.05rem;
+        border-radius: 10px !important;
+        font-size: .7rem;
+        font-weight: 750;
+        letter-spacing: .1em;
+    }
+
+    /* Hero compacto como uma tela de abertura de aplicativo. */
+    body.experience-page :is(.hero-bridal, .hero-slider, .palace-hero, .hero-cafe) {
+        min-height: min(680px, calc(100svh - 150px));
+        height: auto;
+        max-height: none;
+    }
+
+    body.experience-page :is(.hero-body, .hero-content, .palace-hero__container) {
+        padding-bottom: 2rem;
+    }
+
+    body.experience-page .hero-slider .swiper-slide,
+    body.experience-page .hero-slider .swiper-slide img {
+        min-height: min(680px, calc(100svh - 150px));
+    }
+
+    body.experience-page .hero-actions,
+    body.experience-page .palace-hero__actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: .65rem;
+    }
+
+    body.experience-page .hero-actions > *,
+    body.experience-page .palace-hero__actions > * {
+        width: 100%;
+        margin: 0 !important;
+        text-align: center;
+    }
+
+    /* Footer único visualmente: o conteúdo de cada experiência continua próprio. */
+    body.experience-page :is(.footer-bridal-v2, .footer-inst, .palace-footer, .footer-cafe) {
+        margin: 0 !important;
+        padding: 2.6rem 0 calc(6.4rem + env(safe-area-inset-bottom, 0px)) !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: #101113 !important;
+        color: #f7f7f5 !important;
+        text-align: left !important;
+    }
+
+    body.experience-page .palace-footer__surface {
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        text-align: left !important;
+    }
+
+    body.experience-page footer .row {
+        --bs-gutter-y: 1.35rem;
+    }
+
+    body.experience-page footer [class*="col-"] {
+        width: 100%;
+        padding: 0;
+    }
+
+    body.experience-page footer :is(.footer-brand-v2, .footer-brand-inst, .footer-logo-placeholder) {
+        display: inline-flex;
+        align-items: baseline;
+        gap: .45rem;
+        margin-bottom: .75rem;
+        color: #fff !important;
+        font-size: 1.8rem;
+        text-decoration: none;
+    }
+
+    body.experience-page footer :is(.footer-brand-v2 img, .logo-footer) {
+        width: auto;
+        max-width: 170px;
+        height: 42px;
+        object-fit: contain;
+    }
+
+    body.experience-page footer :is(.footer-desc-v2, .footer-desc-inst, .footer-descricao, .palace-footer__copy) {
+        max-width: 42rem;
+        margin-bottom: 1rem;
+        color: #aeb1b7 !important;
+        font-size: .82rem;
+        line-height: 1.7;
+    }
+
+    body.experience-page footer :is(.footer-social-v2, .footer-social-inst, .footer-social, .palace-footer__socials) {
+        display: flex;
+        justify-content: flex-start !important;
+        gap: .55rem !important;
+    }
+
+    body.experience-page footer :is(.footer-social-link, .social-link-minimal) {
+        display: inline-grid;
+        width: 40px;
+        height: 40px;
+        padding: 0 !important;
+        place-items: center;
+        border: 0 !important;
+        border-radius: 10px !important;
+        background: #1d1f22 !important;
+        color: #fff !important;
+        font-size: 0;
+        text-decoration: none;
+    }
+
+    body.experience-page footer .social-link-minimal::first-letter {
+        font-size: .7rem;
+    }
+
+    body.experience-page footer .palace-footer__socials .social-link-minimal {
+        width: auto;
+        min-width: 40px;
+        padding: 0 .8rem !important;
+        font-size: .65rem;
+    }
+
+    body.experience-page footer .footer-col-title,
+    body.experience-page footer h6 {
+        margin: .35rem 0 .65rem !important;
+        color: #fff !important;
+        font-size: .68rem !important;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    body.experience-page footer :is(.footer-hours, .footer-horarios, .footer-stats-list, .palace-footer__list) {
+        overflow: hidden;
+        border: 1px solid #282a2e;
+        border-radius: 12px;
+        background: #17181b;
+    }
+
+    body.experience-page footer :is(.footer-hours-row, .footer-horarios tr, .stat-item, .palace-footer__row) {
+        min-height: 44px;
+        padding: .72rem .8rem !important;
+        border-bottom: 1px solid #282a2e !important;
+        color: #c4c6ca !important;
+        font-size: .75rem;
+    }
+
+    body.experience-page footer .footer-links-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .45rem;
+        margin: 0;
+        padding: 0;
+    }
+
+    body.experience-page footer .footer-links-list li {
+        margin: 0;
+        list-style: none;
+    }
+
+    body.experience-page footer .footer-link {
+        display: flex;
+        min-height: 42px;
+        padding: .65rem .7rem;
+        align-items: center;
+        border-radius: 10px;
+        background: #1a1c1f;
+        color: #c7c9cd !important;
+        font-size: .68rem;
+        line-height: 1.25;
+        text-decoration: none;
+    }
+
+    body.experience-page footer :is(.footer-copyright, .footer-bottom) {
+        margin-top: 1.5rem !important;
+        padding-top: 1rem !important;
+        border-top: 1px solid #282a2e !important;
+        color: #747880 !important;
+        text-align: left !important;
+    }
+
+    body.experience-page footer :is(.footer-copyright p, .footer-copyright, .copyright-text, .location-text) {
+        color: #747880 !important;
+        font-size: .65rem !important;
+        line-height: 1.5;
+    }
+
+    body.experience-page .sax-mobile-dock {
+        z-index: 1070;
+    }
+
+    body.experience-page #backToTop {
+        bottom: calc(6.2rem + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+@media (max-width: 575.98px) {
+    body.experience-page main .container,
+    body.experience-page footer .container {
+        padding-right: .8rem;
+        padding-left: .8rem;
+    }
+
+    body.experience-page main .section-padding,
+    body.experience-page main .palace-section,
+    body.experience-page main .section-about,
+    body.experience-page main .features-elegant,
+    body.experience-page main .counter-section {
+        padding-top: 2.8rem;
+        padding-bottom: 2.8rem;
+    }
+
+    body.experience-page footer .footer-links-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/*
+ * Refinamento mobile v2
+ * Mantido em um bloco posterior para neutralizar regras antigas dos quatro
+ * temas sem alterar nenhuma medida ou composição do desktop.
+ */
+@media (max-width: 991.98px) {
+    body.experience-page {
+        --experience-radius: 8px;
+        --experience-shadow: 0 8px 24px rgba(15, 23, 42, .07);
+        padding-top: 0 !important;
+        font-size: 14px;
+    }
+
+    body.experience-page .exp-mobile-appbar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 1085;
+        color: var(--header-scroll-text);
+        background: var(--header-scroll-bg);
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, .12);
+        backdrop-filter: blur(18px) saturate(145%);
+        -webkit-backdrop-filter: blur(18px) saturate(145%);
+    }
+
+    body.experience-page .exp-mobile-appbar__top {
+        position: relative;
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr) 86px;
+        min-height: 66px;
+        padding: .65rem .75rem;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    body.experience-page .exp-mobile-appbar__button,
+    body.experience-page .exp-mobile-panel__close {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, .15);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .06);
+        color: inherit;
+        text-decoration: none;
+        box-shadow: none;
+    }
+
+    body.experience-page .exp-mobile-appbar__button--accent {
+        border-color: var(--header-accent);
+        background: var(--header-accent);
+        color: #111;
+    }
+
+    body.experience-page .exp-mobile-appbar__brand {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    body.experience-page .exp-mobile-appbar__brand img {
+        display: block;
+        width: auto;
+        max-width: min(39vw, 142px);
+        height: 40px;
+        object-fit: contain;
+        filter: var(--logo-filter);
+    }
+
+    body.experience-page .exp-mobile-appbar__sax {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        line-height: 1;
+    }
+
+    body.experience-page .exp-mobile-appbar__name {
+        margin-top: .18rem;
+        color: var(--header-accent);
+        font-size: .48rem;
+        font-weight: 700;
+        letter-spacing: .22em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    body.experience-page .exp-mobile-appbar__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .4rem;
+    }
+
+    @media (max-width: 339.98px) {
+        body.experience-page .exp-mobile-appbar__top {
+            grid-template-columns: 46px minmax(0, 1fr) 84px;
+            padding-inline: .5rem;
+            gap: .3rem;
+        }
+
+        body.experience-page .exp-mobile-appbar__button,
+        body.experience-page .exp-mobile-panel__close {
+            width: 40px;
+            height: 40px;
+        }
+    }
+
+    body.experience-page .exp-mobile-panel {
+        max-height: calc(100dvh - 66px);
+        padding: 0 .85rem 1rem;
+        overflow-y: auto;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+        background: var(--header-scroll-bg);
+        overscroll-behavior: contain;
+    }
+
+    body.experience-page .exp-mobile-panel__heading {
+        display: flex;
+        padding: 1rem 0 .85rem;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    body.experience-page .exp-mobile-panel__heading div {
+        display: flex;
+        flex-direction: column;
+        gap: .15rem;
+    }
+
+    body.experience-page .exp-mobile-panel__heading span {
+        color: var(--header-accent);
+        font-size: .55rem;
+        font-weight: 800;
+        letter-spacing: .24em;
+    }
+
+    body.experience-page .exp-mobile-panel__heading strong {
+        font-size: 1.05rem;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    body.experience-page .exp-mobile-panel__grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .5rem;
+    }
+
+    body.experience-page .exp-mobile-panel__grid a {
+        display: flex;
+        min-height: 72px;
+        padding: .8rem;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .65rem;
+        border: 1px solid rgba(255, 255, 255, .1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .045);
+        color: inherit;
+        font-size: .68rem;
+        font-weight: 750;
+        letter-spacing: .06em;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    body.experience-page .exp-mobile-panel__grid a i {
+        color: var(--header-accent);
+        font-size: 1rem;
+    }
+
+    body.experience-page .exp-mobile-panel__grid a.active {
+        border-color: var(--header-accent);
+        background: var(--header-accent);
+        color: #111;
+    }
+
+    body.experience-page .exp-mobile-panel__grid a.active i {
+        color: #111;
+    }
+
+    body.experience-page .exp-mobile-panel__links {
+        margin-top: .8rem;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    body.experience-page .exp-mobile-panel__links > a {
+        display: flex;
+        min-height: 48px;
+        padding: .72rem .2rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, .08);
+        color: inherit;
+        font-size: .72rem;
+        font-weight: 650;
+        letter-spacing: .05em;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    body.experience-page .exp-mobile-panel__links > a span {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    body.experience-page .exp-mobile-panel__links > a span i {
+        width: 18px;
+        color: var(--header-accent);
+        text-align: center;
+    }
+
+    body.experience-page .exp-mobile-panel__preferences {
+        margin-top: .8rem;
+        padding: .2rem .75rem;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, .1);
+        border-radius: 8px;
+    }
+
+    body.experience-page .exp-mobile-panel__preferences .sax-lc-trigger {
+        min-height: 44px;
+        color: var(--header-scroll-text);
+    }
+
+    body.experience-page .exp-mobile-panel__preferences .sax-lc-trigger::after {
+        border-top-color: var(--header-accent);
+    }
+
+    body.experience-page .exp-mobile-panel__preferences .sax-lc-menu {
+        background: transparent;
+    }
+
+    body.experience-page .exp-mobile-panel__preferences .sax-lc-option {
+        color: var(--header-scroll-text);
+    }
+
+    body.experience-page .exp-mobile-panel__cta {
+        display: flex;
+        min-height: 48px;
+        margin-top: .8rem;
+        padding: .75rem 1rem;
+        align-items: center;
+        justify-content: center;
+        gap: .6rem;
+        border-radius: 8px;
+        background: var(--header-accent);
+        color: #111;
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        text-decoration: none;
+    }
+
+    body.experience-page main {
+        padding-top: 66px;
+    }
+
+    body.experience-page--bridal .exp-mobile-appbar {
+        border-color: rgba(44, 44, 44, .12);
+        box-shadow: 0 8px 26px rgba(44, 44, 44, .1);
+    }
+
+    body.experience-page--bridal .exp-mobile-appbar__button,
+    body.experience-page--bridal .exp-mobile-panel__close {
+        border-color: rgba(44, 44, 44, .14);
+        background: rgba(44, 44, 44, .045);
+    }
+
+    body.experience-page--bridal .exp-mobile-panel {
+        border-color: rgba(44, 44, 44, .12);
+    }
+
+    body.experience-page--bridal .exp-mobile-panel__grid a,
+    body.experience-page--bridal .exp-mobile-panel__preferences {
+        border-color: rgba(44, 44, 44, .12);
+        background: rgba(44, 44, 44, .035);
+    }
+
+    body.experience-page--bridal .exp-mobile-panel__links,
+    body.experience-page--bridal .exp-mobile-panel__links > a {
+        border-color: rgba(44, 44, 44, .1);
+    }
+
+    body.experience-page--bistro #modalCardapio {
+        z-index: 12050;
+    }
+
+    body.experience-page--bistro #modalCardapio .modal-dialog {
+        min-height: calc(100dvh - 1rem);
+        margin: .5rem;
+    }
+
+    body.experience-page--bistro #modalCardapio .carta-modal-content {
+        max-height: calc(100dvh - 1rem);
+        overflow-y: auto;
+        border-radius: 8px;
+    }
+
+    body.experience-page--bistro #modalCardapio .carta-modal-close {
+        position: sticky;
+        top: .75rem;
+        right: .75rem;
+        z-index: 20;
+        width: 44px;
+        height: 44px;
+        margin-right: .75rem;
+        margin-left: auto;
+        flex: 0 0 44px;
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 8px;
+        pointer-events: auto;
+        touch-action: manipulation;
+    }
+
+    body.experience-page--bistro #modalCardapio .carta-modal-header {
+        margin-top: -44px;
+        padding: 1rem 4.25rem 1rem 1rem;
+    }
+
+    body.experience-page--bistro.modal-open .modal-backdrop {
+        z-index: 12040;
+    }
+
+    body.experience-page main {
+        min-height: 1px;
+    }
+
+    body.experience-page main .row {
+        --bs-gutter-x: 1rem;
+    }
+
+    body.experience-page main h1 {
+        font-size: clamp(2rem, 10vw, 3rem);
+        line-height: 1.02;
+        letter-spacing: -.025em;
+    }
+
+    body.experience-page main h2,
+    body.experience-page main .section-title,
+    body.experience-page main .section-title-elegant,
+    body.experience-page main .palace-section__title,
+    body.experience-page main .arabe-title {
+        font-size: clamp(1.62rem, 7vw, 2.2rem);
+        line-height: 1.12;
+        letter-spacing: -.015em;
+    }
+
+    body.experience-page main h3 {
+        font-size: clamp(1.12rem, 5vw, 1.45rem);
+    }
+
+    body.experience-page main p,
+    body.experience-page main li,
+    body.experience-page main address,
+    body.experience-page main td {
+        font-size: .86rem;
+        line-height: 1.58;
+    }
+
+    body.experience-page main :is(.eyebrow, .top-subtitle, .palace-eyebrow, .title-gold) {
+        font-size: .62rem;
+        letter-spacing: .2em;
+        line-height: 1.4;
+    }
+
+    body.experience-page main .section-padding,
+    body.experience-page main .palace-section,
+    body.experience-page main .section-about,
+    body.experience-page main .features-elegant,
+    body.experience-page main .counter-section {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+
+    body.experience-page main :is(.py-5, .py-lg-6) {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+
+    body.experience-page main :is(.mb-5, .my-5) {
+        margin-bottom: 1.6rem !important;
+    }
+
+    body.experience-page main :is(
+        .service-card,
+        .promo-card,
+        .testimonial-card,
+        .location-card,
+        .card-feature,
+        .timeline-box,
+        .palace-card,
+        .palace-event-panel,
+        .palace-contact-panel,
+        .palace-hours-card,
+        .palace-map-shell,
+        .carta-item,
+        .evento-card,
+        .horario-card,
+        .video-card
+    ) {
+        border-radius: 8px !important;
+    }
+
+    body.experience-page main :is(
+        .promo-card img,
+        .service-card img,
+        .palace-card__img,
+        .palace-image-frame__img,
+        .img-main,
+        .carta-img,
+        .evento-card img,
+        .eventosSwiper,
+        .eventosSwiper img,
+        .map-container,
+        .map-container iframe
+    ) {
+        border-radius: 7px !important;
+    }
+
+    body.experience-page main :is(
+        .btn,
+        .btn-sax,
+        .btn-discover,
+        .palace-btn,
+        .btn-arabe-gold,
+        .btn-cafe-primary,
+        .btn-cafe-outline,
+        .btn-cafe-white,
+        .btn-reservar-cafe,
+        .btn-carta-download
+    ) {
+        min-height: 44px;
+        max-width: 100%;
+        padding: .72rem .9rem !important;
+        border-radius: 7px !important;
+        font-size: .66rem !important;
+        letter-spacing: .11em !important;
+        line-height: 1.3;
+        white-space: normal;
+    }
+
+    /* Conteúdo animado nunca pode permanecer invisível em touch quando AOS
+       ou IntersectionObserver for bloqueado pelo navegador. */
+    body.experience-page main [data-reveal],
+    body.experience-page main .palace-reveal,
+    body.experience-page footer [data-reveal],
+    body.experience-page footer .palace-reveal {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+    }
+
+    /* Rodapé: elimina gutters negativos do Bootstrap que cortavam o texto. */
+    body.experience-page :is(.footer-bridal-v2, .footer-inst, .palace-footer, .footer-cafe) {
+        padding-top: 2.35rem !important;
+    }
+
+    body.experience-page footer .container {
+        overflow: hidden;
+    }
+
+    body.experience-page footer .row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 1.55rem !important;
+        width: 100%;
+        margin: 0 !important;
+    }
+
+    body.experience-page footer [class*="col-"] {
+        min-width: 0;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-align: left !important;
+    }
+
+    body.experience-page footer :is(.footer-brand-v2, .footer-brand-inst, .footer-logo-placeholder) {
+        margin-bottom: .65rem;
+    }
+
+    body.experience-page footer :is(.footer-desc-v2, .footer-desc-inst, .footer-descricao, .palace-footer__copy) {
+        margin-bottom: .85rem !important;
+        color: #b6bac1 !important;
+        font-size: .78rem !important;
+        line-height: 1.58 !important;
+    }
+
+    body.experience-page footer :is(.footer-social-v2, .footer-social-inst, .footer-social, .palace-footer__socials) {
+        justify-content: flex-start !important;
+        margin: 0 !important;
+    }
+
+    body.experience-page footer :is(.footer-social-link, .social-link-minimal) {
+        border-radius: 7px !important;
+    }
+
+    body.experience-page footer .footer-col-title,
+    body.experience-page footer h6 {
+        margin: 0 0 .6rem !important;
+    }
+
+    body.experience-page footer :is(.footer-hours, .footer-horarios, .footer-stats-list, .palace-footer__list) {
+        width: 100%;
+        border-radius: 7px !important;
+    }
+
+    body.experience-page footer :is(.footer-hours-row, .footer-horarios tr, .stat-item, .palace-footer__row) {
+        display: flex !important;
+        min-height: 42px;
+        gap: .8rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: .68rem .75rem !important;
+    }
+
+    body.experience-page footer :is(
+        .footer-hours-row span,
+        .footer-dia,
+        .footer-hora,
+        .stat-label,
+        .stat-value,
+        .palace-footer__row span
+    ) {
+        color: #c9ccd1 !important;
+        font-size: .73rem !important;
+        line-height: 1.35;
+    }
+
+    body.experience-page footer :is(.footer-hours-row span:last-child, .footer-hora, .stat-value, .palace-footer__row span:last-child) {
+        flex: 0 0 auto;
+        color: #fff !important;
+        font-weight: 650;
+        text-align: right;
+    }
+
+    body.experience-page footer .footer-links-list {
+        grid-template-columns: 1fr !important;
+        gap: .38rem;
+    }
+
+    body.experience-page footer .footer-link {
+        min-height: 40px;
+        padding: .62rem .72rem;
+        border: 1px solid #26282c;
+        border-radius: 6px;
+        background: #191b1e;
+    }
+
+    body.experience-page footer :is(.footer-copyright, .footer-bottom) {
+        margin-top: .25rem !important;
+        padding-top: 1rem !important;
+    }
+
+    body.experience-page footer :is(.footer-address, .footer-endereco, .footer-telefone) {
+        color: #b6bac1 !important;
+        font-size: .78rem !important;
+        line-height: 1.55;
+    }
+
+    body.experience-page .sax-mobile-dock {
+        border-radius: 10px !important;
+    }
+
+    body.experience-page .sax-mobile-dock a {
+        border-radius: 7px !important;
+    }
+
+    body.experience-page .sax-mobile-dock--experiences a {
+        gap: .28rem;
+        padding-right: .12rem;
+        padding-left: .12rem;
+    }
+
+    body.experience-page .sax-mobile-dock--experiences span {
+        font-size: clamp(.44rem, 2vw, .52rem);
+        letter-spacing: 0;
+    }
+
+    /* Institucional */
+    body.experience-page--institutional main {
+        background: #f6f6f4;
+    }
+
+    body.experience-page--institutional .hero-slider,
+    body.experience-page--institutional .hero-slider .swiper-slide,
+    body.experience-page--institutional .hero-slider .swiper-slide img {
+        min-height: clamp(430px, 72svh, 610px);
+        height: clamp(430px, 72svh, 610px);
+    }
+
+    body.experience-page--institutional .hero-content .container {
+        padding-right: 1.15rem;
+        padding-left: 1.15rem;
+    }
+
+    body.experience-page--institutional .hero-title {
+        max-width: 12ch;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    body.experience-page--institutional .features-elegant > .container,
+    body.experience-page--institutional .timeline-section > .container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    body.experience-page--institutional .card-feature,
+    body.experience-page--institutional .timeline-box {
+        padding: 1.35rem 1.1rem !important;
+        text-align: left;
+    }
+
+    body.experience-page--institutional .main-timeline {
+        margin: 1.5rem auto 0;
+    }
+
+    body.experience-page--institutional .timeline-container {
+        margin-bottom: 1.25rem;
+        padding: 0 0 0 3rem;
+    }
+
+    body.experience-page--institutional .main-timeline::after {
+        left: 14px;
+    }
+
+    body.experience-page--institutional .timeline-container::after {
+        left: 8px;
+        top: 22px;
+    }
+
+    body.experience-page--institutional .timeline-date {
+        font-size: 1.5rem;
+    }
+
+    body.experience-page--institutional .counter-section {
+        background-attachment: scroll !important;
+    }
+
+    body.experience-page--institutional .counter-number {
+        font-size: 2.6rem;
+    }
+
+    body.experience-page--institutional .tour-virtual-section {
+        padding: 3rem 0 !important;
+    }
+
+    body.experience-page--institutional .video-card {
+        padding: .7rem;
+    }
+
+    body.experience-page--institutional .video-label {
+        font-size: 1.12rem;
+    }
+
+    /* Bridal */
+    body.experience-page--bridal main {
+        background: #fbfaf8;
+    }
+
+    body.experience-page--bridal .hero-bridal {
+        min-height: clamp(440px, 72svh, 620px);
+    }
+
+    body.experience-page--bridal .hero-body {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    body.experience-page--bridal .hero-heading {
+        font-size: clamp(2rem, 10vw, 3rem);
+    }
+
+    body.experience-page--bridal .services-grid,
+    body.experience-page--bridal .testimonials-grid {
+        gap: .8rem;
+    }
+
+    body.experience-page--bridal :is(.service-card, .testimonial-card, .location-card) {
+        padding: 1.05rem !important;
+    }
+
+    body.experience-page--bridal .location-body {
+        padding: 1rem 0 0;
+    }
+
+    /* Palace */
+    body.experience-page--palace {
+        --radius-lg: 9px;
+        --radius-md: 8px;
+        --radius-sm: 6px;
+        background: #09090a;
+    }
+
+    body.experience-page--palace .palace-main {
+        background: #09090a;
+    }
+
+    body.experience-page--palace .palace-hero {
+        min-height: clamp(460px, 74svh, 630px);
+        padding-top: 2rem;
+    }
+
+    body.experience-page--palace .palace-hero__container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    body.experience-page--palace .palace-image-frame__img,
+    body.experience-page--palace .palace-card__img {
+        min-height: 260px;
+    }
+
+    body.experience-page--palace :is(.palace-copy, .content-wrapper, .palace-section__header) {
+        text-align: left !important;
+    }
+
+    body.experience-page--palace .palace-eyebrow {
+        justify-content: flex-start;
+    }
+
+    body.experience-page--palace .palace-contact-panel {
+        padding: 1.25rem !important;
+        background: #141416 !important;
+        text-align: left !important;
+    }
+
+    body.experience-page--palace .palace-contact-panel__address {
+        margin-bottom: 1rem !important;
+        color: #c5c0b7;
+        text-align: left;
+    }
+
+    body.experience-page--palace .palace-hours-card {
+        padding: .85rem !important;
+        border: 1px solid rgba(223, 186, 107, .18) !important;
+        background: #0d0e10 !important;
+        box-shadow: none !important;
+    }
+
+    body.experience-page--palace .palace-hours-card__row {
+        display: flex;
+        gap: .7rem;
+        justify-content: space-between;
+        padding: .72rem 0;
+        color: #c5c0b7;
+        font-size: .76rem;
+    }
+
+    body.experience-page--palace .palace-hours-card__row span:last-child {
+        color: #fff;
+        font-weight: 650;
+        text-align: right;
+    }
+
+    body.experience-page--palace .palace-map-shell {
+        min-height: 290px;
+        max-height: 360px;
+        overflow: hidden;
+    }
+
+    body.experience-page--palace .palace-map-shell iframe {
+        min-height: 290px;
+    }
+
+    body.experience-page--palace .palace-footer__contact-card {
+        padding: .85rem !important;
+        border: 1px solid rgba(223, 186, 107, .24);
+        border-radius: 7px !important;
+    }
+
+    /* Café & Bistrô: os templates usam nomes de variáveis que não existiam no
+       tema original. Defini-las devolve o fundo escuro e o contraste correto. */
+    body.experience-page--bistro {
+        --azul-navy: #172741;
+        --azul-profundo: #0f1d35;
+        --deep: #0f1d35;
+        --navy: #172741;
+        --paper: #fff;
+        --soft: #e8edf5;
+        background: #0f1d35;
+        color: #e8edf5;
+    }
+
+    body.experience-page--bistro main {
+        background: #0f1d35;
+        color: #e8edf5;
+    }
+
+    body.experience-page--bistro main section {
+        color: #e8edf5;
+    }
+
+    body.experience-page--bistro main :is(h1, h2, h3, h4, h5, h6, .section-title, .eyebrow) {
+        color: #fff !important;
+    }
+
+    body.experience-page--bistro main :is(.sobre-texto, .horarios-endereco, .horarios-dia, .horarios-hora, .eventos-tipos-list, p, li, address) {
+        color: #c5cfdd !important;
+    }
+
+    body.experience-page--bistro .hero-cafe {
+        min-height: clamp(440px, 72svh, 620px);
+    }
+
+    body.experience-page--bistro .section-padding {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+
+    body.experience-page--bistro #sobre img,
+    body.experience-page--bistro #sobre .img-placeholder {
+        height: clamp(260px, 78vw, 390px) !important;
+        border-radius: 8px !important;
+    }
+
+    body.experience-page--bistro .carta-grid {
+        gap: .65rem;
+    }
+
+    body.experience-page--bistro .carta-item {
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    body.experience-page--bistro .eventosSwiper {
+        max-height: 480px;
+    }
+
+    body.experience-page--bistro .horarios-table {
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, .035);
+    }
+
+    body.experience-page--bistro .horarios-table tr {
+        border-bottom-color: rgba(255, 255, 255, .11);
+    }
+
+    body.experience-page--bistro .horarios-table td {
+        padding: .72rem .65rem;
+    }
+
+    body.experience-page--bistro #horarios iframe,
+    body.experience-page--bistro #horarios .rounded {
+        border-radius: 8px !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    body.experience-page main .container,
+    body.experience-page footer .container {
+        padding-right: .75rem;
+        padding-left: .75rem;
+    }
+
+    body.experience-page main .section-padding,
+    body.experience-page main .palace-section,
+    body.experience-page main .section-about,
+    body.experience-page main .features-elegant,
+    body.experience-page main .counter-section {
+        padding-top: 2.55rem;
+        padding-bottom: 2.55rem;
+    }
+
+    body.experience-page main :is(.btn, .btn-sax, .btn-discover, .palace-btn, .btn-arabe-gold, .btn-cafe-white) {
+        width: 100%;
+    }
+
+    body.experience-page footer :is(.footer-hours-row, .footer-horarios tr, .stat-item, .palace-footer__row) {
+        gap: .5rem;
+        padding-right: .62rem !important;
+        padding-left: .62rem !important;
+    }
+
+    body.experience-page--palace .palace-contact-panel {
+        padding: 1rem !important;
+    }
+
+    body.experience-page--bistro .carta-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 319.98px) {
+    body.experience-page main .container,
+    body.experience-page footer .container {
+        padding-right: .55rem;
+        padding-left: .55rem;
+    }
+
+    body.experience-page main h1 {
+        font-size: 1.8rem;
+    }
+
+    body.experience-page main h2,
+    body.experience-page main .section-title,
+    body.experience-page main .section-title-elegant,
+    body.experience-page main .palace-section__title,
+    body.experience-page main .arabe-title {
+        font-size: 1.45rem;
+    }
+
+    body.experience-page footer :is(.footer-hours-row, .footer-horarios tr, .stat-item, .palace-footer__row) {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    body.experience-page footer :is(.footer-hours-row span:last-child, .footer-hora, .stat-value, .palace-footer__row span:last-child) {
+        text-align: left;
+    }
+}

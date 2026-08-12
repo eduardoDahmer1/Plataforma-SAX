@@ -84,6 +84,8 @@
         <link href="{{ asset('css/institucional.css') }}?v={{ filemtime(public_path('css/institucional.css')) }}" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
     @endif
+
+    <link href="{{ asset('css/experience-mobile.css') }}?v={{ file_exists(public_path('css/experience-mobile.css')) ? filemtime(public_path('css/experience-mobile.css')) : time() }}" rel="stylesheet">
 @endif
 
 {{-- 3. Checkout + Carrinho --}}

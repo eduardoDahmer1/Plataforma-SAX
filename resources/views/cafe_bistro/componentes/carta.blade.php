@@ -41,7 +41,7 @@
         <div class="modal-content carta-modal-content">
 
             {{-- Botão fechar — canto superior direito --}}
-            <button type="button" class="carta-modal-close" data-bs-dismiss="modal" aria-label="{{ __('messages.fechar') }}">
+            <button type="button" class="carta-modal-close" id="closeModalCardapio" data-bs-dismiss="modal" aria-label="{{ __('messages.fechar') }}">
                 <i class="bi bi-x-lg"></i>
             </button>
 
@@ -90,3 +90,20 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalElement = document.getElementById('modalCardapio');
+        const closeButton = document.getElementById('closeModalCardapio');
+
+        if (!modalElement || !closeButton) return;
+
+        closeButton.addEventListener('click', function () {
+            if (window.bootstrap?.Modal) {
+                window.bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+            }
+        });
+    });
+</script>
+@endpush

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem; // Importante para o método store
+use App\Models\OrderNote;
 use App\Services\ReceiptService;
+use App\Services\CustomerNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPaidMail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
@@ -119,8 +122,48 @@ class OrderController extends Controller
     // Mostra detalhes do pedido
     public function show($id)
     {
-        $order = Order::with(['user', 'items.product', 'receipt', 'cupon'])->findOrFail($id);
-        return view('admin.orders.show', compact('order'));
+        $order = Order::with(['user', 'items.product', 'receipt', 'cupon', 'orderNotes.author'])->findOrFail($id);
+        $orderNotePresets = OrderNote::presetOptions();
+
+        return view('admin.orders.show', compact('order', 'orderNotePresets'));
+    }
+
+    public function storeNote(
+        Request $request,
+        Order $order,
+        CustomerNotificationService $customerNotifications
+    ) {
+        $allowedTypes = array_merge(array_keys(OrderNote::presets()), [OrderNote::TYPE_OTHER]);
+
+        $validated = $request->validate([
+            'note_type' => ['required', Rule::in($allowedTypes)],
+            'note_custom' => ['nullable', 'required_if:note_type,'.OrderNote::TYPE_OTHER, 'string', 'max:1000'],
+        ]);
+
+        $message = $validated['note_type'] === OrderNote::TYPE_OTHER
+            ? trim((string) $validated['note_custom'])
+            : OrderNote::messageForType($validated['note_type']);
+
+        $order->orderNotes()->create([
+            'created_by' => $request->user()?->id,
+            'type' => $validated['note_type'],
+            'message' => $message,
+        ]);
+
+        $reference = $order->order_number ?: $order->getKey();
+        $customerNotifications->notifyUser(
+            $order->user_id,
+            'customer_order_note',
+            'Pedido atualizado',
+            "O pedido #{$reference} recebeu uma nova observação da equipe SAX.",
+            "/orders/{$order->getKey()}",
+            [
+                'order_id' => $order->getKey(),
+                'translation_params' => ['reference' => $reference],
+            ],
+        );
+
+        return redirect()->back()->with('success', __('messages.order_note_created_success'));
     }
 
     // Deleta pedido

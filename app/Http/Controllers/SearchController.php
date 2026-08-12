@@ -8,10 +8,16 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
+use App\Services\ProductSearchService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
 class SearchController extends Controller
 {
+    public function __construct(private readonly ProductSearchService $productSearch)
+    {
+    }
+
     private const BASE_PRODUCT_COLS = [
         'id', 'name', 'external_name', 'sku', 'price', 'stock',
         'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id',
@@ -36,29 +42,29 @@ class SearchController extends Controller
         return self::$resolvedProductCols;
     }
 
+    private function qualifiedProductCols(): array
+    {
+        return array_map(fn (string $column) => 'products.' . $column, $this->productCols());
+    }
+
     private function baseQuery(Request $request)
     {
         $query = Product::query()
             ->inActiveCategory()
-            ->select($this->productCols())
+            ->select($this->qualifiedProductCols())
             ->with([
                 'brand:id,name',
                 'translations' => fn($query) => $query->where('locale', translation_locale()),
             ])
-            ->where('is_outlet', false)
-            ->where('status', 1)
-            ->where('product_role', 'P')
-            ->where('stock', '>', 0)
-            ->whereNotNull('photo')
-            ->where('photo', '!=', '');
+            ->where('products.is_outlet', false)
+            ->where('products.status', 1)
+            ->where('products.product_role', 'P')
+            ->where('products.stock', '>', 0)
+            ->whereNotNull('products.photo')
+            ->where('products.photo', '!=', '');
 
         if ($request->filled('search')) {
-            $term = '%' . $request->search . '%';
-            $query->where(fn($q) => $q
-                ->where('external_name', 'like', $term)
-                ->orWhere('name', 'like', $term)
-                ->orWhere('sku', 'like', $term)
-            );
+            $this->productSearch->apply($query, $request->string('search')->toString());
         }
 
         return $query;
@@ -142,24 +148,31 @@ class SearchController extends Controller
     private function applyFilters($query, Request $request)
     {
         return $query
-            ->when($request->brand,           fn($q) => $q->where('brand_id',       $request->brand))
-            ->when($request->category,        fn($q) => $q->where('category_id',    $request->category))
-            ->when($request->subcategory,     fn($q) => $q->where('subcategory_id', $request->subcategory))
-            ->when($request->categoriasfilhas,fn($q) => $q->where('childcategory_id',$request->categoriasfilhas))
-            ->when($request->min_price,       fn($q) => $q->where('price', '>=',    $request->min_price))
-            ->when($request->max_price,       fn($q) => $q->where('price', '<=',    $request->max_price));
+            ->when($request->brand,           fn($q) => $q->where('products.brand_id',       $request->brand))
+            ->when($request->category,        fn($q) => $q->where('products.category_id',    $request->category))
+            ->when($request->subcategory,     fn($q) => $q->where('products.subcategory_id', $request->subcategory))
+            ->when($request->categoriasfilhas,fn($q) => $q->where('products.childcategory_id',$request->categoriasfilhas))
+            ->when($request->min_price,       fn($q) => $q->where('products.price', '>=',    $request->min_price))
+            ->when($request->max_price,       fn($q) => $q->where('products.price', '<=',    $request->max_price));
     }
 
-    private function applySorting($query, ?string $sortBy)
+    private function applySorting($query, ?string $sortBy, ?string $search = null)
     {
+        if (!$sortBy && filled($search)) {
+            $this->productSearch->applyRelevance($query, $search);
+            $query->orderBy('products.id', 'desc');
+
+            return;
+        }
+
         match ($sortBy) {
-            'latest'     => $query->orderBy('created_at', 'desc'),
-            'oldest'     => $query->orderBy('created_at', 'asc'),
-            'name_az'    => $query->orderBy('external_name', 'asc'),
-            'name_za'    => $query->orderBy('external_name', 'desc'),
-            'price_low'  => $query->orderBy('price', 'asc'),
-            'price_high' => $query->orderBy('price', 'desc'),
-            default      => $query->orderBy('id', 'desc'),
+            'latest'     => $query->orderBy('products.created_at', 'desc'),
+            'oldest'     => $query->orderBy('products.created_at', 'asc'),
+            'name_az'    => $query->orderBy('products.external_name', 'asc'),
+            'name_za'    => $query->orderBy('products.external_name', 'desc'),
+            'price_low'  => $query->orderBy('products.price', 'asc'),
+            'price_high' => $query->orderBy('products.price', 'desc'),
+            default      => $query->orderBy('products.id', 'desc'),
         };
     }
 
@@ -187,9 +200,9 @@ class SearchController extends Controller
     public function index(Request $request)
     {
         $base      = $this->baseQuery($request);
-        $sidebar   = $this->sidebarData((clone $base)->pluck('id'));
+        $sidebar   = $this->sidebarData((clone $base)->pluck('products.id'));
         $query     = $this->applyFilters(clone $base, $request);
-        $this->applySorting($query, $request->sort_by);
+        $this->applySorting($query, $request->sort_by, $request->search);
 
         $paginated = $query->paginate($request->get('per_page', 36))->withQueryString();
         $this->attachCardColors($paginated);
@@ -204,7 +217,7 @@ class SearchController extends Controller
     public function ajaxSearch(Request $request)
     {
         $query = $this->applyFilters($this->baseQuery($request), $request);
-        $this->applySorting($query, $request->sort_by);
+        $this->applySorting($query, $request->sort_by, $request->search);
 
         $paginated = $query->paginate((int) $request->get('per_page', 36))->withQueryString();
         $this->attachCardColors($paginated);
@@ -224,26 +237,24 @@ class SearchController extends Controller
             return response()->json([]);
         }
 
-        $term = '%' . $search . '%';
-
         $products = Product::query()
             ->inActiveCategory()
-            ->select(['id', 'name', 'external_name', 'sku', 'price', 'photo', 'slug', 'brand_id', 'category_id'])
+            ->select([
+                'products.id', 'products.name', 'products.external_name', 'products.sku',
+                'products.price', 'products.photo', 'products.slug', 'products.brand_id',
+                'products.category_id',
+            ])
             ->with(['brand:id,name', 'category:id,name'])
-            ->where('is_outlet', false)
-            ->where('status', 1)
-            ->where('product_role', 'P')
-            ->where('stock', '>', 0)
-            ->whereNotNull('photo')
-            ->where('photo', '!=', '')
-            ->where(fn($q) => $q
-                ->where('name', 'like', $term)
-                ->orWhere('external_name', 'like', $term)
-                ->orWhere('sku', 'like', $term)
-            )
-            ->orderByRaw('CASE WHEN name = ? THEN 1 WHEN name LIKE ? THEN 2 ELSE 3 END', [$search, $search . '%'])
-            ->orderBy('name')
-            ->limit(50)
+            ->where('products.is_outlet', false)
+            ->where('products.status', 1)
+            ->where('products.product_role', 'P')
+            ->where('products.stock', '>', 0)
+            ->whereNotNull('products.photo')
+            ->where('products.photo', '!=', '')
+            ->tap(fn (Builder $query) => $this->productSearch->apply($query, $search))
+            ->tap(fn (Builder $query) => $this->productSearch->applyRelevance($query, $search))
+            ->orderBy('products.name')
+            ->limit(60)
             ->get();
 
         return response()->json($products->map(fn($p) => [

@@ -30,7 +30,7 @@ class SubcategoryControllerAdmin extends Controller
 
     public function create()
     {
-        $categories = Category::all();
+        $categories = Category::query()->orderBy('name')->get(['id', 'name']);
         return view('admin.subcategories.create', compact('categories'));
     }
 
@@ -64,7 +64,7 @@ class SubcategoryControllerAdmin extends Controller
 
     public function edit(Subcategory $subcategory)
     {
-        $categories = Category::all();
+        $categories = Category::query()->orderBy('name')->get(['id', 'name']);
         return view('admin.subcategories.edit', compact('subcategory', 'categories'));
     }
 

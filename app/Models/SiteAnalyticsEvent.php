@@ -17,6 +17,9 @@ class SiteAnalyticsEvent extends Model
         'element_text',
         'device_type',
         'referrer_host',
+        'country_code',
+        'country_name',
+        'country_source',
     ];
 
     protected $casts = [

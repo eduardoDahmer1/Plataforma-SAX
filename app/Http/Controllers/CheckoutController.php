@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Cart;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 use App\Services\CuponService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -27,6 +28,10 @@ use App\Support\CustomerDocument;
 use App\Support\CountrySupport;
 use Illuminate\Validation\Rule;
 use App\Services\StoreControlService;
+use App\Exceptions\DhlApiException;
+use App\Services\Dhl\DhlCheckoutQuoteService;
+use App\Services\Dhl\DhlProductMeasurementEstimator;
+use InvalidArgumentException;
 
 class CheckoutController extends Controller
 {
@@ -34,7 +39,9 @@ class CheckoutController extends Controller
         private CuponService $cupons,
         private BusinessEventService $events,
         private AdminNotificationService $adminNotifications,
-        private StoreControlService $storeControls
+        private StoreControlService $storeControls,
+        private DhlCheckoutQuoteService $dhlQuotes,
+        private DhlProductMeasurementEstimator $dhlMeasurements,
     )
     {
     }
@@ -45,7 +52,7 @@ class CheckoutController extends Controller
         $user = auth()->user();
         $this->ensureLegacyAddress($user);
         $addresses = $user->addresses()->get();
-        $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
+        $cart = Cart::available()->with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])->where('user_id', $user->id)->get();
         $paymentMethods = PaymentMethod::where('active', 1)->get()
             ->filter(fn (PaymentMethod $method): bool => $this->paymentModelIsManuallyEnabled($method))
             ->values();
@@ -56,6 +63,10 @@ class CheckoutController extends Controller
             if ($item->product) {
                 $item->product->formatted_price = currency_format($item->product->price);
                 $item->product->formatted_previous_price = $item->product->previous_price ? currency_format($item->product->previous_price) : null;
+                $item->product->setAttribute(
+                    'dhl_shipping_measurement',
+                    $this->dhlMeasurements->forProduct($item->product, true),
+                );
             }
             return $item;
         });
@@ -107,7 +118,10 @@ class CheckoutController extends Controller
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
             'street' => 'required_if:shipping,2',
             'number' => 'required_if:shipping,2',
-            'district' => [Rule::requiredIf(fn (): bool => $request->input('shipping') === '2' && ! CountrySupport::usesDhl($request->input('country'))), 'nullable', 'string', 'max:160'],
+            'district' => [Rule::requiredIf(fn (): bool => $request->input('shipping') === '2' && (
+                CountrySupport::isBrazil($request->input('country'))
+                || CountrySupport::isParaguay($request->input('country'))
+            )), 'nullable', 'string', 'max:160'],
             'city' => 'required_if:shipping,2|nullable|string',
             'state' => 'required_if:shipping,2|nullable|string',
             'country' => ['required_if:shipping,2', 'nullable', function (string $attribute, mixed $value, \Closure $fail): void {
@@ -149,7 +163,7 @@ class CheckoutController extends Controller
             }
         }
 
-        $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
+        $cart = Cart::available()->with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])->where('user_id', $user->id)->get();
         if ($cart->isEmpty()) {
             return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
         }
@@ -172,15 +186,11 @@ class CheckoutController extends Controller
             default => null,
         };
 
-        if (CountrySupport::usesDhl($destinationCountry) && ! $this->storeControls->enabled('geonames')) {
+        if (CountrySupport::usesDhl($destinationCountry)
+            && ! CountrySupport::isBrazil($destinationCountry)
+            && ! $this->storeControls->enabled('geonames')) {
             throw ValidationException::withMessages([
                 'country' => 'As entregas internacionais ainda não estão habilitadas. Selecione Brasil ou Paraguai.',
-            ]);
-        }
-
-        if (CountrySupport::usesDhl($destinationCountry)) {
-            throw ValidationException::withMessages([
-                'country' => 'Este endereço internacional será atendido pela DHL. A cotação ainda precisa ser habilitada com as credenciais DHL antes de concluir a compra.',
             ]);
         }
 
@@ -190,6 +200,7 @@ class CheckoutController extends Controller
         $frete = CountrySupport::isParaguay($destinationCountry) && $request->input('shipping') !== '3'
             ? $this->calcularFrete($destinationCity)
             : 0.0;
+        $dhlQuote = null;
 
         // O cupom vem da sessão e é recalculado aqui no servidor: o valor enviado pelo
         // navegador nunca é usado para definir o desconto.
@@ -202,6 +213,32 @@ class CheckoutController extends Controller
 
         if ($resumo['aviso']) {
             return back()->with('error', $resumo['aviso'])->withInput();
+        }
+
+        if (CountrySupport::usesDhl($destinationCountry)) {
+            $destinationAddress = $selectedAddress ?: (object) [
+                'country' => $request->input('country'),
+                'postal_code' => $request->input('cep'),
+                'city' => $request->input('city'),
+                'state' => $request->input('state'),
+                'street' => $request->input('street'),
+                'number' => $request->input('number'),
+                'district' => $request->input('district'),
+            ];
+
+            try {
+                $dhlQuote = $this->dhlQuotes->quote(
+                    $itensValidos,
+                    $this->dhlDestination($destinationAddress),
+                    (float) $subtotal,
+                    (float) ($subtotal - $desconto),
+                );
+                $frete = (float) $dhlQuote['price'];
+            } catch (DhlApiException|InvalidArgumentException $exception) {
+                return back()->withErrors([
+                    'country' => 'Não foi possível confirmar o frete DHL: '.$exception->getMessage(),
+                ])->withInput();
+            }
         }
 
         $total = max(0, ($subtotal - $desconto) + $frete);
@@ -238,6 +275,13 @@ class CheckoutController extends Controller
                 'status' => 'pending',
                 'total' => $total,
                 'shipping_cost' => $frete,
+                'shipping_provider' => $dhlQuote['provider'] ?? null,
+                'shipping_currency' => $dhlQuote['currency'] ?? null,
+                'shipping_markup_percent' => $dhlQuote['markup_percent'] ?? null,
+                'shipping_billable_weight_kg' => $dhlQuote['billable_weight'] ?? null,
+                'shipping_package_count' => $dhlQuote['package_count'] ?? null,
+                'shipping_packages' => $dhlQuote['packages'] ?? null,
+                'delivery_method' => $dhlQuote ? 'dhl' : null,
                 'payment_method' => $paymentMethod,
                 'cupon_id' => $cupon->id ?? null,
                 'discount' => $desconto,
@@ -333,6 +377,7 @@ class CheckoutController extends Controller
                     'external_name' => $cartItem->product->external_name,
                     'slug' => $cartItem->product->slug,
                     'sku' => $cartItem->product->sku,
+                    ...$this->orderItemShippingSnapshot($cartItem->product),
                 ]);
             }
 
@@ -473,22 +518,58 @@ class CheckoutController extends Controller
     
     public function ajaxCalcularFrete(Request $request)
     {
-        if (!$request->has(['city', 'country'])) {
-            return response()->json(['error' => 'Dados insuficientes'], 400);
-        }
+        $pais = CountrySupport::normalizeForStorage($request->input('country'));
+
+        $request->validate([
+            'city' => ['required', 'string', 'max:120'],
+            'country' => ['required', 'string', 'max:40'],
+            'postal_code' => [Rule::requiredIf(CountrySupport::usesDhl($pais)), 'nullable', 'string', 'max:30'],
+            'state' => ['nullable', 'string', 'max:120'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'number' => ['nullable', 'string', 'max:40'],
+            'district' => ['nullable', 'string', 'max:160'],
+        ]);
 
         $cidade = $request->input('city');
-        $pais = CountrySupport::normalizeForStorage($request->input('country'));
 
         // Subtotal e desconto em valor base (USD); o cupom já entra no total do frete.
         $resumo = $this->cupons->resumoDoCarrinho(auth()->user());
         $totalComDesconto = $resumo['total'];
 
         if (CountrySupport::usesDhl($pais)) {
-            return response()->json([
-                'error' => 'dhl_not_configured',
-                'message' => 'A cotação internacional será feita pela DHL e ainda não está habilitada.',
-            ], 409);
+            $cart = Cart::available()
+                ->with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])
+                ->where('user_id', auth()->id())
+                ->get();
+
+            try {
+                $quote = $this->dhlQuotes->quote($cart, [
+                    'country_code' => CountrySupport::iso2($pais),
+                    'postal_code' => (string) $request->input('postal_code'),
+                    'city_name' => (string) $cidade,
+                    'province_code' => (string) $request->input('state'),
+                    'district_name' => (string) $request->input('district'),
+                    'address_line_1' => trim((string) $request->input('street').' '.(string) $request->input('number')),
+                ], (float) $resumo['subtotal'], (float) $totalComDesconto);
+
+                return response()->json([
+                    'frete' => $quote['price'],
+                    'frete_formatado' => $quote['free_shipping'] ? 'Frete grátis' : currency_format($quote['price']),
+                    'total_formatado' => currency_format($totalComDesconto + $quote['price']),
+                    'dhl' => Arr::only($quote, [
+                        'reference', 'service_name', 'price', 'average_price_per_package',
+                        'currency', 'estimated_delivery_at', 'free_shipping', 'packages',
+                        'package_count', 'item_count', 'actual_weight', 'billable_weight',
+                        'uses_estimates', 'requires_manual_review', 'review_items',
+                        'taxes_included', 'tax_notice', 'expires_at',
+                    ]),
+                ]);
+            } catch (DhlApiException|InvalidArgumentException $exception) {
+                return response()->json([
+                    'error' => 'dhl_quote_failed',
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
         }
 
         if (! CountrySupport::isParaguay($pais) || empty(trim($cidade))) {
@@ -510,6 +591,36 @@ class CheckoutController extends Controller
             'desconto_formatado' => currency_format($resumo['desconto']),
             'total_formatado'    => currency_format($totalComDesconto + $frete),
         ]);
+    }
+
+    private function dhlDestination(object $address): array
+    {
+        return [
+            'country_code' => CountrySupport::iso2($address->country ?? ''),
+            'postal_code' => (string) ($address->postal_code ?? ''),
+            'city_name' => (string) ($address->city ?? ''),
+            'province_code' => (string) ($address->state ?? ''),
+            'district_name' => (string) ($address->district ?? ''),
+            'address_line_1' => trim((string) ($address->street ?? '').' '.(string) ($address->number ?? '')),
+        ];
+    }
+
+    private function orderItemShippingSnapshot(Product $product): array
+    {
+        $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
+        $measurement = $this->dhlMeasurements->forProduct($product, true);
+
+        return [
+            'product_brand' => $product->brand?->name,
+            'product_size' => $product->size ?: $product->inferredSize(),
+            'product_color' => $product->color,
+            'shipping_profile' => $measurement['profile'],
+            'shipping_weight_kg' => $measurement['weight'],
+            'shipping_length_cm' => $measurement['length'],
+            'shipping_width_cm' => $measurement['width'],
+            'shipping_height_cm' => $measurement['height'],
+            'shipping_measurement_estimated' => $measurement['estimated'],
+        ];
     }
 
     public function whatsapp(Request $request)
@@ -565,6 +676,10 @@ class CheckoutController extends Controller
                     'quantity' => $cartItem->quantity,
                     'price' => $cartItem->product->price,
                     'name' => $cartItem->product->name,
+                    'external_name' => $cartItem->product->external_name,
+                    'slug' => $cartItem->product->slug,
+                    'sku' => $cartItem->product->sku,
+                    ...$this->orderItemShippingSnapshot($cartItem->product),
                 ]);
             }
 

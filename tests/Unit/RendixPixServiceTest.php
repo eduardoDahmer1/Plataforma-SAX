@@ -19,6 +19,7 @@ class RendixPixServiceTest extends TestCase
         $this->assertSame('failed', $service->localStatus('9'));
         $this->assertSame('failed', $service->localStatus('11'));
         $this->assertSame('refunded', $service->localStatus('12'));
+        $this->assertSame('cpf_mismatch_refund', $service->localStatus('16'));
     }
 
     public function test_extracts_sale_id_from_common_webhook_shapes(): void

@@ -19,21 +19,25 @@ class BridalController extends Controller
 
         // IDs de las marcas específicas para Bridal(brand ticker)
         $idbrands = [641, 1444, 1237, 1236, 664, 951, 610];
-        $brands   = Brand::where('status', 1)->whereIn('id', $idbrands)->get();
+        $brands = Cache::remember('bridal_active_brands', now()->addMinutes(30), fn () =>
+            Brand::where('status', 1)->whereIn('id', $idbrands)->get()
+        );
 
         // obtener los productos relacionados con las marcas específicas, asegurando que tengan una foto válida
-        $bridalProducts = Product::inActiveCategory()
-            ->with(['brand', 'translations'])
-            ->whereIn('brand_id', $idbrands)
-            ->where('is_outlet', false)
-            ->where('status', 1)
-            ->where('product_role', 'P')
-            ->where('stock', '>', 0)
-            ->latest()
-            ->whereNotNull('photo')
-            ->where('photo', '!=', '')
-            ->take(10)
-            ->get();
+        $bridalProducts = Cache::remember('bridal_active_products', now()->addMinutes(10), fn () =>
+            Product::inActiveCategory()
+                ->with(['brand', 'translations'])
+                ->whereIn('brand_id', $idbrands)
+                ->where('is_outlet', false)
+                ->where('status', 1)
+                ->where('product_role', 'P')
+                ->where('stock', '>', 0)
+                ->latest()
+                ->whereNotNull('photo')
+                ->where('photo', '!=', '')
+                ->take(10)
+                ->get()
+        );
 
         return view('bridal.index', compact('bridal', 'brands', 'bridalProducts'));
     }

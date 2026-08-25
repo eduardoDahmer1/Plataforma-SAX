@@ -66,7 +66,6 @@ class Product extends Model
         'catalog_id',
         'ref_code',
         'ref_code_int',
-        'mpn',
         'free_shipping',
         'max_quantity',
         'weight',
@@ -91,7 +90,6 @@ class Product extends Model
         'product_size',
         'product_role',
         'synced',
-        'gtin',
         'promotion_price',
         'updated_by',
         'admin_edited_at',
@@ -105,6 +103,15 @@ class Product extends Model
         'brand_id',
         'parent_id',
         'color_parent_id',
+        'shipping_weight_kg',
+        'shipping_length_cm',
+        'shipping_width_cm',
+        'shipping_height_cm',
+        'shipping_hs_code',
+        'shipping_country_of_origin',
+        'shipping_customs_description',
+        'shipping_is_dangerous_goods',
+        'shipping_profile',
     ];
 
     // Casts para JSON/array
@@ -117,6 +124,11 @@ class Product extends Model
         'admin_edited_at' => 'datetime',
         'is_outlet' => 'boolean',
         'status_before_outlet' => 'boolean',
+        'shipping_weight_kg' => 'float',
+        'shipping_length_cm' => 'float',
+        'shipping_width_cm' => 'float',
+        'shipping_height_cm' => 'float',
+        'shipping_is_dangerous_goods' => 'boolean',
     ];
 
     protected static ?bool $hasColorParentColumn = null;
@@ -162,6 +174,28 @@ class Product extends Model
             $stops[] = $color . ' ' . round(($index + 1) * $step, 3) . '%';
         }
         return 'background: linear-gradient(90deg, ' . implode(', ', $stops) . ');';
+    }
+
+    public function aiPreparation()
+    {
+        return $this->hasOne(ProductAiPreparation::class);
+    }
+
+    public function productAiDisplayStatus(): string
+    {
+        $status = $this->aiPreparation?->status;
+
+        if ($status === ProductAiPreparation::STATUS_COMPLETED) {
+            return static::hasUsableImage($this->photo, $this->gallery)
+                ? 'prepared'
+                : 'missing_photo';
+        }
+
+        if (in_array($status, [ProductAiPreparation::STATUS_NOT_FOUND, ProductAiPreparation::STATUS_FAILED], true)) {
+            return 'review';
+        }
+
+        return 'pending';
     }
 
     protected static function booted(): void
@@ -338,6 +372,38 @@ class Product extends Model
     public function relationshipSearchTerm(): string
     {
         return $this->relationshipReferenceKey() ?: $this->referenceLabel();
+    }
+
+    /**
+     * Build the product identity used by external catalog searches.
+     *
+     * Integrator names normally end with #size and *color. Every remaining
+     * token containing a number is treated as a manufacturer reference
+     * candidate because the integration does not provide a dedicated MPN.
+     */
+    public function manufacturerSearchIdentity(): array
+    {
+        $source = $this->referenceSource();
+        $identity = trim((string) ((preg_split('/[#*]/u', $source, 2) ?: [$source])[0] ?? ''));
+        $normalizedIdentity = strtoupper(Str::ascii($identity));
+
+        preg_match_all(
+            '/(?<![A-Z0-9])(?=[A-Z0-9._\/-]*\d)[A-Z0-9]+(?:[._\/-][A-Z0-9]+)*(?![A-Z0-9])/u',
+            $normalizedIdentity,
+            $matches,
+        );
+
+        $references = collect($matches[0] ?? [])
+            ->map(fn ($reference) => trim((string) $reference, '._-/'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return [
+            'name' => $identity,
+            'reference_candidates' => $references,
+        ];
     }
 
     public function inferredColorKey(): string

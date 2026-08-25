@@ -37,7 +37,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // 1. Tradução Dinâmica via Banco de Dados
-        if (Schema::hasTable('languages')) {
+        $languagesTableExists = Cache::remember(
+            'schema.languages_table_exists',
+            now()->addHours(24),
+            fn () => Schema::hasTable('languages')
+        );
+
+        if ($languagesTableExists) {
             $allTranslations = Cache::remember('all_translations_db', now()->addHours(24), function () {
                 return Language::all();
             });
@@ -50,7 +56,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // 2. Compartilha atributos globais
-        View::share('attributes', Attribute::first());
+        $attributes = Schema::hasTable('attributes')
+            ? Cache::remember('global_attributes_model', now()->addHours(24), fn () => Attribute::first())
+            : null;
+
+        View::share('attributes', $attributes);
 
         // 3. Carrega helper de moeda
         if (file_exists(app_path('Helpers/CurrencyHelper.php'))) {
@@ -79,26 +89,33 @@ class AppServiceProvider extends ServiceProvider
          * 6. MEGA MENU COMPOSER (Header)
          * Aqui carregamos a árvore completa para o menu superior
          */
-        View::composer(['layout.layout', 'layout.header', 'components.header'], function ($view) {
-            $headerCategories = Cache::remember('header_categories_tree', now()->addHours(24), function () {
-                return Category::where('status', 1)
-                    ->with([
-                        'subcategories' => function ($q) {
-                            // Removido o where status aqui
-                            $q->orderBy('name')->with([
-                                'categoriasfilhas' => function ($sq) {
-                                    // Verifica se na tabela childcategories existe a coluna status,
-                                    // se não existir, remova daqui também.
-                                    $sq->orderBy('name');
+        $headerViewData = null;
+        View::composer(['layout.layout', 'layout.header', 'components.header'], function ($view) use (&$headerViewData) {
+            if ($headerViewData === null) {
+                $headerViewData = [
+                    'headerCategories' => Cache::remember('header_categories_tree', now()->addHours(24), function () {
+                        return Category::where('status', 1)
+                            ->with([
+                                'subcategories' => function ($q) {
+                                    $q->orderBy('name')->with([
+                                        'categoriasfilhas' => fn ($sq) => $sq->orderBy('name'),
+                                    ]);
                                 },
-                            ]);
-                        },
-                    ])
-                    ->orderBy('name')
-                    ->get();
-            });
+                            ])
+                            ->orderBy('name')
+                            ->get();
+                    }),
+                    'mainCategories' => Cache::remember('header_main_categories', now()->addHours(24), function () {
+                        return Category::query()
+                            ->where('status', 1)
+                            ->whereIn('slug', ['feminino', 'masculino', 'infantil', 'optico', 'casa'])
+                            ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'optico', 'casa')")
+                            ->get(['id', 'name', 'slug']);
+                    }),
+                ];
+            }
 
-            $view->with('headerCategories', $headerCategories);
+            $view->with($headerViewData);
         });
 
         View::composer('admin.notifications-menu', function ($view) {
@@ -117,11 +134,15 @@ class AppServiceProvider extends ServiceProvider
             // mas o painel detecta indisponibilidade mesmo se o scheduler do
             // ambiente ainda não estiver configurado.
             if (Cache::add('integration_monitor_admin_fallback_check', true, now()->addMinutes(5))) {
-                try {
-                    app(IntegrationMonitorService::class)->checkForStaleIntegrations();
-                } catch (\Throwable $exception) {
-                    report($exception);
-                }
+                // A verificação pode consultar serviços e tabelas de integração. Rode
+                // após enviar a resposta para não bloquear a navegação do painel.
+                app()->terminating(function () {
+                    try {
+                        app(IntegrationMonitorService::class)->checkForStaleIntegrations();
+                    } catch (\Throwable $exception) {
+                        report($exception);
+                    }
+                });
             }
 
             $view->with([
@@ -170,23 +191,18 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        View::composer('*', function ($view) {
-            $view->with(
-                'catalogIntegrationStatus',
-                app(CatalogIntegrationAvailabilityService::class)->status()
-            );
-            $view->with('storeControls', app(StoreControlService::class)->settings());
-        });
+        $globalViewData = null;
+        View::composer('*', function ($view) use (&$globalViewData) {
+            if ($globalViewData === null) {
+                $attribute = Schema::hasTable('attributes')
+                    ? Cache::remember('global_attributes_db', now()->addHours(24), function () {
+                        return DB::table('attributes')->where('id', 1)->first();
+                    })
+                    : null;
 
-        /**
-         * 7. ATRIBUTOS E BANNERS GLOBAIS
-         */
-        View::composer('*', function ($view) {
-            $attribute = Cache::remember('global_attributes_db', now()->addHours(24), function () {
-                return DB::table('attributes')->where('id', 1)->first();
-            });
-
-            $view->with([
+                $globalViewData = [
+                'catalogIntegrationStatus' => app(CatalogIntegrationAvailabilityService::class)->status(),
+                'storeControls' => app(StoreControlService::class)->settings(),
                 'locale' => App::getLocale(),
                 'webpImage' => $attribute?->header_image ?? null,
                 'banner1' => $attribute?->banner1 ?? null,
@@ -214,7 +230,10 @@ class AppServiceProvider extends ServiceProvider
                 'banner9_link' => $attribute?->banner9_link ?? null,
                 'banner10_link' => $attribute?->banner10_link ?? null,
                 'whatsapp_banner' => $attribute?->whatsapp_banner ?? null,
-            ]);
+                ];
+            }
+
+            $view->with($globalViewData);
         });
 
         View::composer(['site.products.index', 'site.categories.show', 'components.sidebar-filters'], function ($view) {

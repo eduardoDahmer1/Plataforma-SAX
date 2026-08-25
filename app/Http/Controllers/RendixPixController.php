@@ -7,6 +7,7 @@ use App\Models\PaymentTransaction;
 use App\Services\BusinessEventService;
 use App\Services\RendixPixReconciler;
 use App\Services\RendixPixService;
+use App\Support\CustomerDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,6 +69,11 @@ class RendixPixController extends Controller
             || $transaction->environment !== $this->rendix->environment()
             || !$transaction->isPayable()
         ) {
+            if ($this->requiresCpfRetry($transaction) && !$this->syncOrderCpfFromUser($order)) {
+                return redirect()->route('user.profile.edit')
+                    ->with('warning', __('messages.rendix_pix_cpf_update_required'));
+            }
+
             $transaction = $this->createTransaction($order);
             if (!$transaction || !$transaction->isPayable()) {
                 return redirect()->route('user.orders.show', $order)
@@ -135,9 +141,19 @@ class RendixPixController extends Controller
             return redirect()->route('checkout.rendix.pix', $order);
         }
 
-        $this->createTransaction($order);
+        if ($this->requiresCpfRetry($latest) && !$this->syncOrderCpfFromUser($order)) {
+            return redirect()->route('user.profile.edit')
+                ->with('warning', __('messages.rendix_pix_cpf_update_required'));
+        }
 
-        return redirect()->route('checkout.rendix.pix', $order);
+        $transaction = $this->createTransaction($order);
+        if (!$transaction || !$transaction->isPayable()) {
+            return redirect()->route('user.orders.show', $order)
+                ->with('warning', __('messages.pix_generation_temporarily_failed'));
+        }
+
+        return redirect()->route('checkout.rendix.pix', $order)
+            ->with('success', __('messages.rendix_pix_new_generated'));
     }
 
     public function webhook(Request $request): JsonResponse
@@ -280,6 +296,7 @@ class RendixPixController extends Controller
             'payment_currency' => 'BRL',
             'payment_amount' => data_get($sale, 'priceNationalCurrency'),
             'payment_exchange_rate' => data_get($sale, 'vetTax'),
+            'payment_failed_at' => null,
         ]);
 
         return $transaction->fresh();
@@ -325,5 +342,37 @@ class RendixPixController extends Controller
         if (!auth()->check() || (int) auth()->id() !== (int) $order->user_id) {
             abort(403, __('messages.order_access_denied'));
         }
+    }
+
+    private function requiresCpfRetry(?PaymentTransaction $transaction): bool
+    {
+        return $transaction !== null
+            && (
+                $transaction->status === 'cpf_mismatch_refund'
+                || in_array((string) $transaction->provider_status, ['8', '16'], true)
+            );
+    }
+
+    private function syncOrderCpfFromUser(Order $order): bool
+    {
+        $user = auth()->user();
+        $cpf = (string) $user?->document;
+        $documentType = CustomerDocument::inferType(
+            $user?->document_type,
+            $cpf,
+            $user?->phone_country,
+        );
+
+        if ($documentType !== CustomerDocument::CPF || !CustomerDocument::isValidCpf($cpf)) {
+            return false;
+        }
+
+        $order->update([
+            'document' => CustomerDocument::format($cpf, CustomerDocument::CPF),
+            'document_type' => CustomerDocument::CPF,
+        ]);
+        $order->refresh();
+
+        return true;
     }
 }

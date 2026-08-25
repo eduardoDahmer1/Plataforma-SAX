@@ -1,12 +1,7 @@
 <header class="sax-header">
     @php
-        use App\Models\Category;
-
         $menuSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
-
-        $mainCategories = Category::whereIn('slug', $menuSlugs)
-            ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'optico', 'casa')")
-            ->get();
+        $mainCategories = $mainCategories ?? collect();
 
         $labelMap = [
             'feminino' => __('messages.mulher'),
@@ -223,7 +218,7 @@
         <div class="drawer-body">
             <div class="drawer-auth-section p-3">
                 @if ($currentUser)
-                    <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}" class="drawer-user-summary">
+                    <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}" class="drawer-user-summary" @if($isAdminUser) data-admin-entry @endif>
                         <span class="user-avatar"><i class="fa fa-user"></i></span>
                         <span class="drawer-user-copy">
                             <small>{{ __('messages.ola') }}</small>
@@ -293,7 +288,7 @@
             <span>{{ __('messages.pesquisar') }}</span>
         </button>
         @if ($currentUser)
-            <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}" class="{{ request()->routeIs('user.*') || request()->routeIs('admin.*') ? 'active' : '' }}">
+            <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}" class="{{ request()->routeIs('user.*') || request()->routeIs('admin.*') ? 'active' : '' }}" @if($isAdminUser) data-admin-entry @endif>
                 <i class="fa-regular fa-user" aria-hidden="true"></i>
                 <span>{{ __('messages.minha_conta') }}</span>
             </a>

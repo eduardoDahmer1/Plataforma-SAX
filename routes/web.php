@@ -21,10 +21,13 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PalaceAdminController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductControllerAdmin;
+use App\Http\Controllers\Admin\ProductAiBatchController;
 use App\Http\Controllers\Admin\SubcategoryControllerAdmin;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\StoreControlController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DhlSettingController;
+use App\Http\Controllers\Admin\DhlMeasurementRuleController;
 use App\Http\Controllers\AllCategoriesController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\Auth\UserAddressController;
@@ -141,10 +144,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/meus-enderecos/{address}', [UserAddressController::class, 'destroy'])->name('user.addresses.destroy');
     Route::get('/seguranca/senha', [UserController::class, 'editPassword'])->name('user.password.edit');
     Route::put('/seguranca/senha', [UserController::class, 'updatePassword'])->name('user.password.update');
-    Route::post('/checkout/calcular-frete', [CheckoutController::class, 'ajaxCalcularFrete'])->name('checkout.calcular-frete');
+    Route::post('/checkout/calcular-frete', [CheckoutController::class, 'ajaxCalcularFrete'])->middleware('throttle:30,1')->name('checkout.calcular-frete');
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');
+    Route::post('/orders/{order}/rendix-refund-request', [\App\Http\Controllers\RendixRefundRequestController::class, 'store'])
+        ->whereNumber('order')
+        ->name('user.orders.rendix-refund-request');
     Route::get('/receipts/{receipt}', [ReceiptController::class, 'show'])->name('receipts.show');
     Route::get('/receipts/{receipt}/download', [ReceiptController::class, 'download'])->name('receipts.download');
     Route::get('/meus-preferidos', [UserPreferenceController::class, 'index'])->name('user.preferences');
@@ -217,6 +223,16 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::put('marketing', [MarketingSettingController::class, 'update'])->name('marketing.update');
     Route::get('controle-loja', [StoreControlController::class, 'edit'])->name('store-controls.edit');
     Route::put('controle-loja', [StoreControlController::class, 'update'])->name('store-controls.update');
+    Route::get('dhl', [DhlSettingController::class, 'edit'])->name('dhl.edit');
+    Route::get('dhl/medidas', [DhlMeasurementRuleController::class, 'index'])->name('dhl.measurements.index');
+    Route::put('dhl/medidas/{measurementRule}', [DhlMeasurementRuleController::class, 'update'])->name('dhl.measurements.update');
+    Route::post('dhl/medidas/sincronizar', [DhlMeasurementRuleController::class, 'sync'])->name('dhl.measurements.sync');
+    Route::get('dhl/localidades/paises', [DhlSettingController::class, 'countries'])->middleware('throttle:30,1')->name('dhl.locations.countries');
+    Route::get('dhl/localidades/subdivisoes', [DhlSettingController::class, 'subdivisions'])->middleware('throttle:60,1')->name('dhl.locations.subdivisions');
+    Route::get('dhl/localidades/cidades', [DhlSettingController::class, 'cities'])->middleware('throttle:60,1')->name('dhl.locations.cities');
+    Route::get('dhl/localidades/codigos-postais', [DhlSettingController::class, 'postalCodes'])->middleware('throttle:60,1')->name('dhl.locations.postal-codes');
+    Route::put('dhl', [DhlSettingController::class, 'update'])->name('dhl.update');
+    Route::post('dhl/testar', [DhlSettingController::class, 'test'])->name('dhl.test');
     Route::redirect('visao-geral', '/admin')->name('overview');
     Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::resource('languages', \App\Http\Controllers\Admin\LanguageControllerAdmin::class);
@@ -233,6 +249,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('activate-control', [ActivateBrandsAndCategoriesController::class, 'index'])->name('activate.index');
     Route::post('activate-toggle/{type}/{id}', [ActivateBrandsAndCategoriesController::class, 'toggleStatus'])->name('activate.toggle');
     Route::get('products/search', [ProductControllerAdmin::class, 'search'])->name('products.search');
+    Route::get('products/ai-batches', [ProductAiBatchController::class, 'index'])->name('products.ai-batches.index');
+    Route::post('products/ai-batches/preview', [ProductAiBatchController::class, 'preview'])->name('products.ai-batches.preview');
+    Route::get('products/ai-batches/catalog-products',[ProductAiBatchController::class, 'catalogProducts'])->name('products.ai-batches.catalog-products');
+    Route::get('products/ai-batches/{batch}', [ProductAiBatchController::class, 'show'])->whereNumber('batch')->name('products.ai-batches.show');
+    Route::post('products/ai-batches/{batch}/dispatch', [ProductAiBatchController::class, 'dispatch'])->whereNumber('batch')->name('products.ai-batches.dispatch');
+    Route::get('products/ai-batches/{batch}/status', [ProductAiBatchController::class, 'status'])->whereNumber('batch')->name('products.ai-batches.status');
     Route::post('products/{product}/complete-with-ai', [ProductControllerAdmin::class, 'completeWithAi'])
         ->middleware('throttle:20,1')
         ->name('products.completeWithAi');
@@ -279,6 +301,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
     Route::post('orders/{order}/notes', [OrderController::class, 'storeNote'])->name('orders.notes.store');
+    Route::post('orders/{order}/rendix-refund', [OrderController::class, 'refundRendix'])
+        ->name('orders.rendix-refund');
     Route::resource('clients', ClientController::class)->only(['index', 'show']);
     Route::resource('abandoned-carts', \App\Http\Controllers\Admin\AbandonedCartControllerAdmin::class)
         ->parameters(['abandoned-carts' => 'abandonedCart'])

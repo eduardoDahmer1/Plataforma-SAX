@@ -74,7 +74,9 @@
         </div>
         <div class="col-md-4">
             <label class="sax-label" data-address-postal-label>CEP</label>
-            <input name="postal_code" class="form-control sax-input" value="{{ old('editing_address_id') ? '' : old('postal_code') }}" placeholder="00000-000" data-address-postal-code>
+            <input name="postal_code" class="form-control sax-input" value="{{ old('editing_address_id') ? '' : old('postal_code') }}" placeholder="00000-000" list="new-address-postal-options" autocomplete="postal-code" data-address-postal-code>
+            <datalist id="new-address-postal-options" data-address-postal-options></datalist>
+            <div class="form-text" data-address-postal-hint>Informe o código postal exato do endereço.</div>
         </div>
         <div class="col-md-4">
             <label class="sax-label" data-address-state-label>Estado</label>
@@ -129,7 +131,9 @@
                         </div>
                         <div class="col-md-4">
                             <label class="sax-label" data-address-postal-label>CEP</label>
-                            <input name="postal_code" class="form-control sax-input" placeholder="00000-000" data-address-postal-code>
+                            <input name="postal_code" class="form-control sax-input" placeholder="00000-000" list="edit-address-postal-options" autocomplete="postal-code" data-address-postal-code>
+                            <datalist id="edit-address-postal-options" data-address-postal-options></datalist>
+                            <div class="form-text" data-address-postal-hint>Informe o código postal exato do endereço.</div>
                         </div>
                         <div class="col-md-4">
                             <label class="sax-label" data-address-state-label>Estado</label>

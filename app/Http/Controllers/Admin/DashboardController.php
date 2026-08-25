@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -31,25 +32,41 @@ class DashboardController extends Controller
         $today = now()->toDateString();
         $start = now()->subDays(29)->startOfDay();
 
-        $metrics = [
-            'brands' => Brand::count(),
-            'categories' => Category::count(),
-            'subcategories' => Subcategory::count(),
-            'childcategories' => CategoriasFilhas::count(),
-            'active_products' => Product::where('status', 1)->count(),
-            'products' => Product::count(),
-            'published_blogs' => Blog::published()->count(),
-            'customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->count(),
-            'orders' => Order::count(),
-            'bancard_orders' => Order::where('payment_method', 'bancard_v2')->count(),
-            'pix_orders' => Order::where('payment_method', 'rendix_pix')->count(),
-            'deposit_orders' => Order::where('payment_method', 'deposito')->count(),
-            'whatsapp_orders' => Order::where('payment_method', 'whatsapp')->count(),
-            'low_stock' => Product::where('status', 1)->where('stock', '>', 0)->where('stock', '<=', 5)->count(),
-            'out_of_stock' => Product::where('status', 1)->where('stock', '<=', 0)->count(),
-            'abandoned_carts' => AbandonedCart::where('status', 'abandoned')->count(),
-            'contacts' => Contact::count(),
-        ];
+        $metrics = Cache::remember('admin.dashboard.metrics', now()->addSeconds(30), function () {
+            $productMetrics = Product::query()->selectRaw(
+                'COUNT(*) AS total, '
+                .'SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS active_total, '
+                .'SUM(CASE WHEN status = 1 AND stock BETWEEN 1 AND 5 THEN 1 ELSE 0 END) AS low_stock, '
+                .'SUM(CASE WHEN status = 1 AND stock <= 0 THEN 1 ELSE 0 END) AS out_of_stock'
+            )->first();
+            $orderMetrics = Order::query()->selectRaw(
+                'COUNT(*) AS total, '
+                ."SUM(CASE WHEN payment_method = 'bancard_v2' THEN 1 ELSE 0 END) AS bancard_total, "
+                ."SUM(CASE WHEN payment_method = 'rendix_pix' THEN 1 ELSE 0 END) AS pix_total, "
+                ."SUM(CASE WHEN payment_method = 'deposito' THEN 1 ELSE 0 END) AS deposit_total, "
+                ."SUM(CASE WHEN payment_method = 'whatsapp' THEN 1 ELSE 0 END) AS whatsapp_total"
+            )->first();
+
+            return [
+                'brands' => Brand::count(),
+                'categories' => Category::count(),
+                'subcategories' => Subcategory::count(),
+                'childcategories' => CategoriasFilhas::count(),
+                'active_products' => (int) $productMetrics->active_total,
+                'products' => (int) $productMetrics->total,
+                'published_blogs' => Blog::published()->count(),
+                'customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->count(),
+                'orders' => (int) $orderMetrics->total,
+                'bancard_orders' => (int) $orderMetrics->bancard_total,
+                'pix_orders' => (int) $orderMetrics->pix_total,
+                'deposit_orders' => (int) $orderMetrics->deposit_total,
+                'whatsapp_orders' => (int) $orderMetrics->whatsapp_total,
+                'low_stock' => (int) $productMetrics->low_stock,
+                'out_of_stock' => (int) $productMetrics->out_of_stock,
+                'abandoned_carts' => AbandonedCart::where('status', 'abandoned')->count(),
+                'contacts' => Contact::count(),
+            ];
+        });
 
         $paymentMethods = Order::query()
             ->select('payment_method', DB::raw('COUNT(*) AS total'))
@@ -68,7 +85,7 @@ class DashboardController extends Controller
         $recentOrders = Order::with('user')->latest()->limit(6)->get();
         $topProducts = Product::orderByDesc('views')->limit(6)->get(['id', 'name', 'external_name', 'views', 'stock']);
 
-        $analyticsReady = Schema::hasTable('site_analytics_events');
+        $analyticsReady = Cache::remember('schema.site_analytics_events', 3600, fn () => Schema::hasTable('site_analytics_events'));
         $analytics = [
             'views_today' => 0,
             'visitors_today' => 0,
@@ -81,12 +98,14 @@ class DashboardController extends Controller
         $topPages = collect();
         $topClicks = collect();
         $devices = collect();
-        $businessEvents = Schema::hasTable('business_events')
+        $businessEventsReady = Cache::remember('schema.business_events', 3600, fn () => Schema::hasTable('business_events'));
+        $businessEvents = $businessEventsReady
             ? BusinessEvent::with(['user:id,name,email', 'order:id,order_number'])
                 ->latest()->limit(12)->get()
             : collect();
-        $integrationMonitoringReady = Schema::hasTable('integration_monitors')
-            && Schema::hasTable('integration_runs');
+        $integrationMonitoringReady = Cache::remember('schema.integration_monitoring', 3600, fn () =>
+            Schema::hasTable('integration_monitors') && Schema::hasTable('integration_runs')
+        );
         $integrationEndpointConfigured = filled(config('services.integration_monitor.token'));
         $integrationMonitor = $integrationMonitoringReady
             ? IntegrationMonitor::where('source', 'catalog')->first()
@@ -165,6 +184,18 @@ class DashboardController extends Controller
         $paidOrders = Order::whereBetween('created_at', [$start, $end])
             ->where(fn ($query) => $query->where('payment_status', 'paid')->orWhere('status', 'paid'));
         $analyticsReady = Schema::hasTable('site_analytics_events');
+        $countryTrackingReady = $analyticsReady && Schema::hasColumn('site_analytics_events', 'country_code');
+
+        $visitorsByCountry = $countryTrackingReady
+            ? SiteAnalyticsEvent::where('event_type', 'page_view')
+                ->whereBetween('created_at', [$start, $end])
+                ->selectRaw("COALESCE(country_code, 'XX') AS country_code")
+                ->selectRaw("COALESCE(country_name, ?) AS country_name", [__('messages.report_country_unknown')])
+                ->selectRaw('COUNT(DISTINCT visitor_hash) AS visitors')
+                ->groupBy('country_code', 'country_name')
+                ->orderByDesc('visitors')
+                ->get()
+            : collect();
 
         return [
             'period' => $label,
@@ -178,6 +209,7 @@ class DashboardController extends Controller
             'views' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->count() : 0,
             'visitors' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->distinct('visitor_hash')->count('visitor_hash') : 0,
             'clicks' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'click')->whereBetween('created_at', [$start, $end])->count() : 0,
+            'visitors_by_country' => $visitorsByCountry,
             'payment_methods' => (clone $orders)->select('payment_method', DB::raw('COUNT(*) total'))->groupBy('payment_method')->pluck('total', 'payment_method'),
         ];
     }

@@ -18,8 +18,9 @@
         'admin.cupons.*',
         'admin.activate.*',
         'admin.languages.*',
-        'admin.marketing.*'
-        ,'admin.store-controls.*'
+        'admin.marketing.*',
+        'admin.store-controls.*',
+        'admin.dhl.*'
     );
 @endphp
 
@@ -42,7 +43,8 @@
                 <i class="fa-solid fa-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="collapse sax-submenu {{ $catalogosOpen ? 'show' : '' }}" id="menuCatalogos{{ $menuSuffix }}">
-                <a href="{{ route('admin.products.index') }}" class="submenu-link {{ request()->routeIs('admin.products.*') && !request()->routeIs('admin.products.outlet.*') ? 'active' : '' }}"><i class="fa-solid fa-box"></i> {{ __('messages.menu_produtos') }}</a>
+                <a href="{{ route('admin.products.index') }}" class="submenu-link {{ request()->routeIs('admin.products.*') && !request()->routeIs('admin.products.outlet.*', 'admin.products.ai-batches.*') ? 'active' : '' }}"><i class="fa-solid fa-box"></i> {{ __('messages.menu_produtos') }}</a>
+                <a href="{{ route('admin.products.ai-batches.index') }}" class="submenu-link {{ request()->routeIs('admin.products.ai-batches.*') ? 'active' : '' }}"><i class="fa-solid fa-wand-magic-sparkles"></i> IA em lote</a>
                 <a href="{{ route('admin.products.outlet.form') }}" class="submenu-link {{ request()->routeIs('admin.products.outlet.*') ? 'active' : '' }}"><i class="fa-solid fa-box-open"></i> Gestão de outlet</a>
                 <a href="{{ route('admin.brands.index') }}" class="submenu-link {{ request()->routeIs('admin.brands.*') ? 'active' : '' }}"><i class="fa-solid fa-copyright"></i> {{ __('messages.menu_marcas') }}</a>
                 <a href="{{ route('admin.categories.index') }}" class="submenu-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}"><i class="fa-solid fa-tags"></i> {{ __('messages.menu_categorias') }}</a>
@@ -118,6 +120,12 @@
             <div class="collapse sax-submenu {{ $sistemaOpen ? 'show' : '' }}" id="menuSistema{{ $menuSuffix }}">
                 <a href="{{ route('admin.store-controls.edit') }}" class="submenu-link {{ request()->routeIs('admin.store-controls.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders"></i> {{ __('messages.store_controls_menu') }}
+                </a>
+                <a href="{{ route('admin.dhl.edit') }}" class="submenu-link {{ request()->routeIs('admin.dhl.edit') ? 'active' : '' }}">
+                    <i class="fa-solid fa-plane-departure"></i> DHL Express
+                </a>
+                <a href="{{ route('admin.dhl.measurements.index') }}" class="submenu-link {{ request()->routeIs('admin.dhl.measurements.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-ruler-combined"></i> Medidas médias DHL
                 </a>
                 <a href="{{ route('admin.banners.index') }}" class="submenu-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-images"></i> {{ __('messages.menu_banners_home') }}

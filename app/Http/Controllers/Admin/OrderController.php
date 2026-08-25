@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPaidMail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Services\ImageConverterService;
+use App\Services\RendixPixRefundService;
 
 class OrderController extends Controller
 {
@@ -24,8 +26,13 @@ class OrderController extends Controller
     // Lista pedidos
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 20);
-        $query = Order::with(['user', 'items', 'cupon']);
+        $perPage = (int) $request->get('per_page', 20);
+        $perPage = in_array($perPage, [20, 50, 100], true) ? $perPage : 20;
+        $query = Order::with([
+            'user:id,name,email',
+            'items:id,order_id,price,quantity',
+            'cupon:id,codigo',
+        ]);
 
         if ($request->filled('payment_method')) {
             $query->where('payment_method', $request->payment_method);
@@ -122,10 +129,35 @@ class OrderController extends Controller
     // Mostra detalhes do pedido
     public function show($id)
     {
-        $order = Order::with(['user', 'items.product', 'receipt', 'cupon', 'orderNotes.author'])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'receipt', 'cupon', 'orderNotes.author', 'paymentTransactions'])->findOrFail($id);
         $orderNotePresets = OrderNote::presetOptions();
+        $rendixRefundTransaction = $order->paymentTransactions
+            ->where('provider', \App\Services\RendixPixService::PROVIDER)
+            ->where('status', 'paid')
+            ->whereNull('refunded_at')
+            ->sortByDesc('id')
+            ->first();
 
-        return view('admin.orders.show', compact('order', 'orderNotePresets'));
+        return view('admin.orders.show', compact('order', 'orderNotePresets', 'rendixRefundTransaction'));
+    }
+
+    public function refundRendix(Order $order, RendixPixRefundService $refunds)
+    {
+        abort_unless(request()->user()?->isMasterAdmin(), 403);
+
+        try {
+            $refunds->refund($order, request()->user());
+
+            return redirect()->back()->with('success', __('messages.rendix_refund_success'));
+        } catch (\Throwable $e) {
+            Log::warning('Admin could not refund Rendix Pix order', [
+                'order_id' => $order->getKey(),
+                'admin_id' => request()->user()?->getKey(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', $e->getMessage() ?: __('messages.rendix_refund_failed'));
+        }
     }
 
     public function storeNote(
@@ -195,7 +227,10 @@ class OrderController extends Controller
         ]);
 
         if ($request->hasFile('deposit_receipt')) {
-            $order->deposit_receipt = $request->file('deposit_receipt')->store('deposits', 'public');
+            $file = $request->file('deposit_receipt');
+            $order->deposit_receipt = strtolower($file->getClientOriginalExtension()) === 'pdf'
+                ? $file->store('deposits', 'public')
+                : app(ImageConverterService::class)->toWebp($file, 'deposits', ['quality' => 85, 'strict' => true]);
             $order->save();
         }
 

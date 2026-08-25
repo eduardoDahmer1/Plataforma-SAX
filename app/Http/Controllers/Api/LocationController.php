@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\GeoNamesService;
+use App\Services\StoreControlService;
 use App\Support\CountryCallingCodes;
 use App\Support\CountrySupport;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use App\Services\StoreControlService;
 
 class LocationController extends Controller
 {
@@ -21,13 +21,16 @@ class LocationController extends Controller
         if (! $controls->enabled('geonames')) {
             $countries = collect(CountrySupport::countries($locale))
                 ->whereIn('iso2', ['BR', 'PY'])
-                ->map(fn (array $country): array => $country + ['calling_code' => CountryCallingCodes::for($country['iso2'])])
+                ->map(fn (array $country): array => $country + [
+                    'calling_code' => CountryCallingCodes::for($country['iso2']),
+                    'postal_code_format' => $country['iso2'] === 'BR' ? '#####-###' : '',
+                ])
                 ->values();
 
             return response()->json(['success' => true, 'geonames_available' => false, 'data' => $countries]);
         }
         $remoteResult = Cache::remember(
-            'geonames:countries:resolved:'.$locale,
+            'geonames:countries:resolved:v2:'.$locale,
             now()->addMinutes(15),
             function () use ($geoNames, $locale): array {
                 try {
@@ -56,6 +59,7 @@ class LocationController extends Controller
                     'calling_code' => $remoteCallingCode !== ''
                         ? $remoteCallingCode
                         : CountryCallingCodes::for($country['iso2']),
+                    'postal_code_format' => trim((string) ($geoNamesCountry['postal_code_format'] ?? '')),
                 ];
             })
             ->values();
@@ -69,7 +73,9 @@ class LocationController extends Controller
 
     public function subdivisions(Request $request, GeoNamesService $geoNames, StoreControlService $controls): JsonResponse
     {
-        if (! $controls->enabled('geonames')) return $this->disabledResponse();
+        if (! $controls->enabled('geonames')) {
+            return $this->disabledResponse();
+        }
         $validated = $request->validate([
             'country' => ['required', 'string', 'size:2'],
         ]);
@@ -82,7 +88,9 @@ class LocationController extends Controller
 
     public function cities(Request $request, GeoNamesService $geoNames, StoreControlService $controls): JsonResponse
     {
-        if (! $controls->enabled('geonames')) return $this->disabledResponse();
+        if (! $controls->enabled('geonames')) {
+            return $this->disabledResponse();
+        }
         $validated = $request->validate([
             'country' => ['required', 'string', 'size:2'],
             'admin_code' => ['required', 'string', 'max:20'],
@@ -92,6 +100,24 @@ class LocationController extends Controller
             $validated['country'],
             $validated['admin_code'],
             app()->getLocale()
+        ));
+    }
+
+    public function postalCodes(Request $request, GeoNamesService $geoNames, StoreControlService $controls): JsonResponse
+    {
+        if (! $controls->enabled('geonames')) {
+            return $this->disabledResponse();
+        }
+        $validated = $request->validate([
+            'country' => ['required', 'string', 'size:2'],
+            'city' => ['required', 'string', 'max:120'],
+            'admin_code' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        return $this->geoNamesResponse(fn (): array => $geoNames->postalCodes(
+            $validated['country'],
+            $validated['city'],
+            $validated['admin_code'] ?? null,
         ));
     }
 

@@ -104,7 +104,9 @@ class UserAddressController extends Controller
         $country = CountrySupport::normalizeForStorage($request->input('country'));
         $request->merge(['country' => $country]);
 
-        if (CountrySupport::usesDhl($country) && ! app(StoreControlService::class)->enabled('geonames')) {
+        if (CountrySupport::usesDhl($country)
+            && ! CountrySupport::isBrazil($country)
+            && ! app(StoreControlService::class)->enabled('geonames')) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'country' => 'As localidades internacionais ainda não estão habilitadas. Selecione Brasil ou Paraguai.',
             ]);
@@ -122,7 +124,9 @@ class UserAddressController extends Controller
             'city' => ['required', 'string', 'max:120'],
             'street' => ['required', 'string', 'max:255'],
             'number' => ['required', 'string', 'max:40'],
-            'district' => [Rule::requiredIf(! CountrySupport::usesDhl($country)), 'nullable', 'string', 'max:160'],
+            'district' => [Rule::requiredIf(
+                CountrySupport::isBrazil($country) || CountrySupport::isParaguay($country)
+            ), 'nullable', 'string', 'max:160'],
             'complement' => ['nullable', 'string', 'max:255'],
             'is_default' => ['nullable', 'boolean'],
         ]);

@@ -5,6 +5,7 @@
         'customer_order_canceled' => 'orders', 'customer_order_note' => 'orders',
         'customer_payment_paid' => 'payments',
         'customer_payment_failed' => 'payments', 'customer_payment_refunded' => 'payments',
+        'customer_refund_request' => 'payments',
         'customer_password_changed' => 'security', 'customer_email_changed' => 'security',
         'customer_email_verified' => 'security', 'customer_welcome' => 'account',
         'customer_profile_updated' => 'account', 'new_category' => 'news',

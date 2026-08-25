@@ -30,7 +30,7 @@ class CategoriasFilhasControllerAdmin extends Controller
 
     public function create()
     {
-        $subcategories = Subcategory::all();
+        $subcategories = Subcategory::query()->orderBy('name')->get(['id', 'name']);
         return view('admin.categoriasfilhas.create', compact('subcategories'));
     }
 
@@ -75,7 +75,7 @@ class CategoriasFilhasControllerAdmin extends Controller
     {
         // O parâmetro deve bater com o nome na rota {categorias_filha}
         $categoriasfilhas = $categorias_filha;
-        $subcategories = Subcategory::all();
+        $subcategories = Subcategory::query()->orderBy('name')->get(['id', 'name']);
 
         return view('admin.categoriasfilhas.edit', compact('categoriasfilhas', 'subcategories'));
     }

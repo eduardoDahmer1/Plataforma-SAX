@@ -29,4 +29,5 @@ Route::prefix('locations')->middleware('throttle:60,1')->group(function () {
     Route::get('/countries', [LocationController::class, 'countries'])->name('api.locations.countries');
     Route::get('/subdivisions', [LocationController::class, 'subdivisions'])->name('api.locations.subdivisions');
     Route::get('/cities', [LocationController::class, 'cities'])->name('api.locations.cities');
+    Route::get('/postal-codes', [LocationController::class, 'postalCodes'])->name('api.locations.postal-codes');
 });

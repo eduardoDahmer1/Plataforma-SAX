@@ -31,6 +31,11 @@
                 <div><span>{{ $pixText('rendix_pix_expires') }}</span><strong id="pixCountdown">05:00</strong></div>
             </div>
 
+            <div class="alert alert-warning border-warning-subtle mb-4 pix-cpf-warning" role="alert">
+                <strong class="d-block mb-1"><i class="fa-solid fa-id-card me-2"></i>{{ $pixText('rendix_cpf_holder_warning_title') }}</strong>
+                <span>{{ $pixText('rendix_cpf_holder_warning_message') }}</span>
+            </div>
+
             <div class="pix-content">
                 <div class="pix-qr-column">
                     <div class="pix-qr-wrap">
@@ -64,8 +69,8 @@
             </div>
 
             <div class="pix-expired d-none" id="pixExpiredBox">
-                <strong>{{ $pixText('rendix_pix_expired_title') }}</strong>
-                <span>{{ $pixText('rendix_pix_expired_message') }}</span>
+                <strong id="pixRetryTitle">{{ $pixText('rendix_pix_expired_title') }}</strong>
+                <span id="pixRetryMessage">{{ $pixText('rendix_pix_expired_message') }}</span>
                 <form method="POST" action="{{ route('checkout.rendix.pix.renew', $order) }}">
                     @csrf
                     <button type="submit" class="btn btn-dark"><i class="fas fa-rotate me-2"></i>{{ $pixText('rendix_pix_generate_new') }}</button>
@@ -94,6 +99,10 @@
         'paidMessage' => $pixText('rendix_pix_paid_message'),
         'paidCountdown' => $pixText('rendix_pix_paid_countdown'),
         'failedStatus' => $pixText('rendix_pix_failed_status'),
+        'cpfMismatchStatus' => $pixText('rendix_pix_cpf_mismatch_status'),
+        'cpfMismatchMessage' => $pixText('rendix_pix_cpf_mismatch_message'),
+        'cpfMismatchActionTitle' => $pixText('rendix_pix_cpf_mismatch_action_title'),
+        'cpfMismatchActionMessage' => $pixText('rendix_pix_cpf_mismatch_action_message'),
         'reconnecting' => $pixText('rendix_pix_reconnecting'),
     ];
 @endphp
@@ -106,6 +115,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusBox = document.getElementById('pixStatusBox');
     const statusTitle = document.getElementById('pixStatusTitle');
     const statusMessage = document.getElementById('pixStatusMessage');
+    const retryTitle = document.getElementById('pixRetryTitle');
+    const retryMessage = document.getElementById('pixRetryMessage');
     let finished = false;
 
     document.getElementById('copyPixButton')?.addEventListener('click', async function () {
@@ -153,10 +164,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 statusMessage.textContent = pixText.paidMessage;
                 countdown.textContent = pixText.paidCountdown;
                 setTimeout(() => window.location.href = data.redirect_url, 1200);
-            } else if (['expired', 'failed', 'verification_failed'].includes(data.status)) {
+            } else if (['expired', 'failed', 'verification_failed', 'refunded', 'cpf_mismatch_refund'].includes(data.status)) {
+                finished = true;
+                const cpfMismatch = data.status === 'cpf_mismatch_refund';
                 statusBox.classList.add('is-error');
-                statusTitle.textContent = data.status === 'expired' ? pixText.expiredStatus : pixText.failedStatus;
-                statusMessage.textContent = data.message;
+                statusTitle.textContent = cpfMismatch
+                    ? pixText.cpfMismatchStatus
+                    : (data.status === 'expired' ? pixText.expiredStatus : pixText.failedStatus);
+                statusMessage.textContent = cpfMismatch ? pixText.cpfMismatchMessage : data.message;
+                retryTitle.textContent = cpfMismatch ? pixText.cpfMismatchActionTitle : pixText.expiredStatus;
+                retryMessage.textContent = cpfMismatch ? pixText.cpfMismatchActionMessage : pixText.expiredStatusMessage;
                 expiredBox.classList.remove('d-none');
             }
         } catch (_) {

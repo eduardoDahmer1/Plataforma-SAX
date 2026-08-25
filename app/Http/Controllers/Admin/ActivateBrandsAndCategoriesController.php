@@ -40,8 +40,24 @@ class ActivateBrandsAndCategoriesController extends Controller
         $model->status = $data['active'] ? 1 : 2;
         $model->save();
 
-        // Limpa o cache para as mudanças refletirem no site imediatamente
-        Cache::flush();
+        // Invalida somente os caches que dependem de marcas/categorias. Um flush
+        // global deixava todas as páginas lentas logo após cada alternância.
+        foreach ([
+            'header_categories_tree',
+            'header_main_categories',
+            'all_categories_tree_active',
+            'filter_full_tree_active',
+            'filter_brands_list_active',
+            'categories_home_strip_random_15min',
+            'home_brands_3d_random_15min',
+            'categories_all',
+            'admin.dashboard.metrics',
+            'bridal_active_brands',
+            'bridal_active_products',
+            "brand_{$model->slug}",
+        ] as $key) {
+            Cache::forget($key);
+        }
 
         $label = ($type === 'brand') ? __('messages.marca') : __('messages.categoria');
         $ativo = $model->status == 1;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BlogCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageConverterService;
 
 class BlogCategoryController extends Controller
 {
@@ -96,29 +97,10 @@ class BlogCategoryController extends Controller
     // Função para processar e converter imagem para WebP
     private function processImage($file)
     {
-        $originalPath = $file->store('blog_category_banners', 'public');
-        $fullPath = storage_path('app/public/' . $originalPath);
-        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-
-        $image = null;
-        if (in_array($extension, ['jpg', 'jpeg'])) {
-            $image = imagecreatefromjpeg($fullPath);
-        } elseif ($extension === 'png') {
-            $image = imagecreatefrompng($fullPath);
-            imagepalettetotruecolor($image);
-            imagealphablending($image, true);
-            imagesavealpha($image, true);
-        }
-
-        if ($image) {
-            $webpPath = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $fullPath);
-            imagewebp($image, $webpPath, 85);
-            imagedestroy($image);
-            @unlink($fullPath);
-
-            return preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $originalPath);
-        }
-
-        return $originalPath;
+        return app(ImageConverterService::class)->toWebp(
+            $file,
+            'blog_category_banners',
+            ['quality' => 85, 'strict' => true]
+        );
     }
 }

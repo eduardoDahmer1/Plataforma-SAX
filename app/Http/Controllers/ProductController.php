@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Generalsetting;
 use App\Models\Attribute;
 use App\Services\DailyMostViewedProducts;
+use App\Services\Dhl\DhlProductMeasurementEstimator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
@@ -27,7 +28,11 @@ class ProductController extends Controller
         return $query->with(['cupons' => fn($q) => $q->ativos()]);
     }
 
-    public function show($id_or_slug, DailyMostViewedProducts $dailyMostViewedProducts)
+    public function show(
+        $id_or_slug,
+        DailyMostViewedProducts $dailyMostViewedProducts,
+        DhlProductMeasurementEstimator $dhlMeasurements,
+    )
     {
         $product = Product::inActiveCategory()
             ->where(fn ($query) => $query
@@ -98,6 +103,7 @@ class ProductController extends Controller
         $settings   = Cache::remember('general_settings',  600, fn() => Generalsetting::first());
         $similares  = $this->getSimilares($product);
         $mostViewed = $dailyMostViewedProducts->get(12);
+        $dhlMeasurement = $dhlMeasurements->forProduct($product, true);
 
         return view('produtos.show', [
             'product'           => $product,
@@ -109,6 +115,7 @@ class ProductController extends Controller
             'mostViewed'        => $mostViewed,
             'settings'          => $settings,
             'attribute'         => $attribute,
+            'dhlMeasurement'    => $dhlMeasurement,
         ]);
     }
 

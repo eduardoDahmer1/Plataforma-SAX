@@ -54,6 +54,62 @@
         <div id="productEditFeedback" class="d-none"></div>
         <div id="productAiResearch" class="d-none mb-4"></div>
 
+        @php
+            $aiPreparation = $item->aiPreparation;
+            $aiDisplayStatus = $item->productAiDisplayStatus();
+            $aiStatusPresentation = [
+                'prepared' => ['Produto preparado', 'success', 'fa-circle-check'],
+                'missing_photo' => ['Falta fotografia', 'warning', 'fa-camera'],
+                'review' => ['Error: Revisar', 'danger', 'fa-triangle-exclamation'],
+                'pending' => ['Pendente', 'secondary', 'fa-clock'],
+            ][$aiDisplayStatus];
+        @endphp
+        <div class="border rounded-3 p-3 mb-4 bg-light-subtle">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <span class="badge text-bg-{{ $aiStatusPresentation[1] }}">
+                        <i class="fas {{ $aiStatusPresentation[2] }} me-1"></i>{{ $aiStatusPresentation[0] }}
+                    </span>
+                    @if ($aiPreparation?->model)
+                        <span class="small text-muted ms-2">Modelo: {{ $aiPreparation->model }}</span>
+                    @endif
+                </div>
+                @if ($aiPreparation?->completed_at || $aiPreparation?->generated_at)
+                    <span class="small text-muted">
+                        {{ ($aiPreparation->completed_at ?? $aiPreparation->generated_at)->format('d/m/Y H:i') }}
+                    </span>
+                @endif
+            </div>
+            @if ($aiPreparation?->error_message)
+                <div class="small text-danger mt-2">{{ $aiPreparation->error_message }}</div>
+            @endif
+            @if (!empty($aiPreparation?->sources))
+                <div class="small mt-2">
+                    <strong class="d-block mb-1">Fontes:</strong>
+                    <ul class="mb-0 ps-3">
+                        @foreach ($aiPreparation->sources as $source)
+                            @if (is_array($source) && !empty($source['url']))
+                                @php
+                                    $sourceUrl = (string) $source['url'];
+                                    $sourceHost = parse_url($sourceUrl, PHP_URL_HOST);
+                                    $sourceTitle = trim((string) ($source['title'] ?? ''));
+                                    $sourceLabel = $sourceTitle !== '' && $sourceTitle !== $sourceUrl
+                                        ? $sourceTitle
+                                        : ($sourceHost ?: $sourceUrl);
+                                @endphp
+                                <li class="mb-1">
+                                    <a href="{{ $sourceUrl }}" target="_blank" rel="noopener noreferrer"
+                                        class="text-break" title="{{ $sourceUrl }}">
+                                        {{ $sourceLabel }}
+                                    </a>
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+        </div>
+
         <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-3 border rounded-3 bg-light-subtle">
             <button type="button" id="completeProductWithAiBtn" class="btn btn-outline-primary"
                     data-ai-url="{{ route('admin.products.completeWithAi', $item->id) }}">
@@ -67,6 +123,7 @@
             @csrf
             @method('PUT')
             <input type="hidden" name="return_to" value="{{ request('return_to') }}">
+            <input type="hidden" id="productAiGeneratedAt" name="ai_generated_at" value="">
 
             <div class="row g-4 product-edit-grid">
                 @if ($type === 'product')
@@ -172,6 +229,92 @@
                         <label for="stock" class="form-label"><i class="fas fa-boxes me-1"></i>Estoque</label>
                         <input type="number" id="stock" name="stock" class="form-control"
                             value="{{ old('stock', $item->stock ?? 0) }}">
+                    </div>
+
+                    @php
+                        $dhlHasExactMeasurements = filled($item->shipping_weight_kg)
+                            && filled($item->shipping_length_cm)
+                            && filled($item->shipping_width_cm)
+                            && filled($item->shipping_height_cm);
+                    @endphp
+                    <div class="col-12">
+                        <section class="border border-warning rounded-3 p-3 p-lg-4 bg-warning-subtle">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+                                <div>
+                                    <h3 class="h6 text-uppercase fw-bold mb-1"><i class="fa-solid fa-plane-departure me-2"></i>Logística internacional DHL</h3>
+                                    <p class="small text-muted mb-0">Os campos abaixo são opcionais e substituem a média automática somente quando houver medidas reais do produto.</p>
+                                </div>
+                                <span class="badge {{ $dhlEffectiveMeasurement['restricted'] ? 'bg-danger' : ($dhlHasExactMeasurements ? 'bg-success' : 'bg-primary') }} align-self-start">
+                                    {{ $dhlEffectiveMeasurement['restricted'] ? 'Requer revisão' : ($dhlHasExactMeasurements ? 'Medidas reais' : 'Média automática') }}
+                                </span>
+                            </div>
+                            <div class="bg-white border rounded-3 px-3 py-2 mb-3 small">
+                                <span class="text-muted">Usado atualmente no cálculo:</span>
+                                <strong class="ms-1">{{ number_format($dhlEffectiveMeasurement['weight'], 3, ',', '.') }} kg · {{ number_format($dhlEffectiveMeasurement['length'], 1, ',', '.') }} × {{ number_format($dhlEffectiveMeasurement['width'], 1, ',', '.') }} × {{ number_format($dhlEffectiveMeasurement['height'], 1, ',', '.') }} cm</strong>
+                                <span class="badge bg-light text-dark border rounded-pill fw-normal ms-2">{{ $dhlEffectiveMeasurement['label'] }}</span>
+                                @if ($dhlEffectiveMeasurement['restricted'])
+                                    <div class="text-warning-emphasis mt-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>A média será usada na cotação; a aceitação do conteúdo deve ser confirmada pela expedição.</div>
+                                @elseif (! $dhlHasExactMeasurements)
+                                    <div class="text-muted mt-1">Não é necessário editar este produto: a medida já vem predefinida pela categoria. Preencha abaixo apenas quando tiver os valores reais.</div>
+                                @endif
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-bold" for="shipping_profile">Perfil provisório de embalagem</label>
+                                    <select class="form-select" id="shipping_profile" name="shipping_profile">
+                                        <option value="" @selected(old('shipping_profile', $item->shipping_profile) === null)>Automático pelo tipo/nome do produto</option>
+                                        @foreach (\App\Services\Dhl\DhlProductMeasurementEstimator::profiles() as $profileCode => $profileData)
+                                            <option value="{{ $profileCode }}" @selected(old('shipping_profile', $item->shipping_profile) === $profileCode)>{{ $profileData['label'] }} — {{ number_format($profileData['weight'], 3, ',', '.') }} kg / {{ $profileData['length'] }}×{{ $profileData['width'] }}×{{ $profileData['height'] }} cm</option>
+                                        @endforeach
+                                        <option value="restricted" @selected(old('shipping_profile', $item->shipping_profile) === 'restricted')>Restrito — exige validação manual DHL</option>
+                                    </select>
+                                    <div class="form-text">Opcional. Se ficar em automático, o sistema usa primeiro categoria filha, depois subcategoria e categoria. Itens sujeitos a regras especiais continuam sendo cotados pela média e ficam sinalizados para conferência da expedição.</div>
+                                </div>
+                                <div class="col-6 col-lg-3">
+                                    <label class="form-label fw-bold" for="shipping_weight_kg">Peso (kg)</label>
+                                    <input type="number" step="0.001" min="0.001" class="form-control" id="shipping_weight_kg" name="shipping_weight_kg"
+                                        placeholder="{{ number_format($dhlEffectiveMeasurement['weight'], 3, '.', '') }}" value="{{ old('shipping_weight_kg', $item->shipping_weight_kg) }}">
+                                </div>
+                                <div class="col-6 col-lg-3">
+                                    <label class="form-label fw-bold" for="shipping_length_cm">Comprimento (cm)</label>
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="shipping_length_cm" name="shipping_length_cm"
+                                        placeholder="{{ number_format($dhlEffectiveMeasurement['length'], 2, '.', '') }}" value="{{ old('shipping_length_cm', $item->shipping_length_cm) }}">
+                                </div>
+                                <div class="col-6 col-lg-3">
+                                    <label class="form-label fw-bold" for="shipping_width_cm">Largura (cm)</label>
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="shipping_width_cm" name="shipping_width_cm"
+                                        placeholder="{{ number_format($dhlEffectiveMeasurement['width'], 2, '.', '') }}" value="{{ old('shipping_width_cm', $item->shipping_width_cm) }}">
+                                </div>
+                                <div class="col-6 col-lg-3">
+                                    <label class="form-label fw-bold" for="shipping_height_cm">Altura (cm)</label>
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="shipping_height_cm" name="shipping_height_cm"
+                                        placeholder="{{ number_format($dhlEffectiveMeasurement['height'], 2, '.', '') }}" value="{{ old('shipping_height_cm', $item->shipping_height_cm) }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold" for="shipping_hs_code">Código HS</label>
+                                    <input class="form-control" maxlength="20" id="shipping_hs_code" name="shipping_hs_code"
+                                        placeholder="Ex.: 420221" value="{{ old('shipping_hs_code', $item->shipping_hs_code) }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold" for="shipping_country_of_origin">País de origem ISO-2</label>
+                                    <input class="form-control text-uppercase" maxlength="2" id="shipping_country_of_origin" name="shipping_country_of_origin"
+                                        placeholder="Ex.: IT" value="{{ old('shipping_country_of_origin', $item->shipping_country_of_origin) }}">
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold" for="shipping_customs_description">Descrição aduaneira em inglês</label>
+                                    <input class="form-control" maxlength="255" id="shipping_customs_description" name="shipping_customs_description"
+                                        placeholder="Ex.: Leather handbag" value="{{ old('shipping_customs_description', $item->shipping_customs_description) }}">
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input type="hidden" name="shipping_is_dangerous_goods" value="0">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="shipping_is_dangerous_goods" name="shipping_is_dangerous_goods" value="1"
+                                            @checked(old('shipping_is_dangerous_goods', $item->shipping_is_dangerous_goods))>
+                                        <label class="form-check-label fw-bold" for="shipping_is_dangerous_goods">Produto perigoso ou restrito (perfume, aerossol, bateria, álcool etc.)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
 
                     <div class="col-12">

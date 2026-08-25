@@ -6,6 +6,9 @@
         title="{{ __('messages.menu_produtos') }}"
         description="Exibindo <span class='text-dark fw-bold'>{{ $products->count() }}</span> de {{ $products->total() }} produtos registrados">
         <x-slot:actions>
+            <a href="{{ route('admin.products.ai-batches.index') }}" class="btn btn-outline-primary btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="fa fa-wand-magic-sparkles me-2"></i> IA em lote
+            </a>
             <a href="{{ route('admin.products.outlet.form') }}" class="btn btn-outline-danger btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
                 <i class="fa fa-box-open me-2"></i> Gestão de outlet
             </a>
@@ -41,6 +44,14 @@
                             $createdAt = $product->created_at;
                             $lastEditedAt = $product->admin_edited_at ?? $product->updated_at;
                             $lastEditedBy = $product->editor?->name ?? __('messages.product_audit_system_integration');
+                            $aiDisplayStatus = $product->productAiDisplayStatus();
+                            $aiStatusPresentation = [
+                                'prepared' => ['Produto preparado', 'success'],
+                                'missing_photo' => ['Falta fotografia', 'warning'],
+                                'review' => ['Requer revisão', 'danger'],
+                                'pending' => ['Pendente', 'secondary'],
+                            ][$aiDisplayStatus];
+                            $dhlMeasurement = $product->dhl_shipping_measurement;
 
                             if ($product->photo && Storage::disk('public')->exists($product->photo)) {
                                 $imageUrl = asset('storage/' . $product->photo);
@@ -88,6 +99,9 @@
                                         <span class="product-status-pill {{ $product->status ? 'is-on' : 'is-off' }}">
                                             {{ $product->status ? __('messages.status_ativo') : __('messages.status_inativo') }}
                                         </span>
+                                        <span class="badge text-bg-{{ $aiStatusPresentation[1] }} rounded-0 x-small-7 fw-bold">
+                                            {{ $aiStatusPresentation[0] }}
+                                        </span>
                                         @if ($product->is_outlet)
                                             <span class="badge bg-danger text-white rounded-0 x-small-7 fw-bold">OUTLET · FORA DO E-COMMERCE</span>
                                         @endif
@@ -102,6 +116,19 @@
                                         <span class="text-muted fw-normal">
                                             {{ $product->stock > 0 ? 'Estoque: ' . $product->stock : 'Sem estoque' }}
                                         </span>
+                                    </div>
+                                    <div class="x-small text-muted mt-1 text-truncate"
+                                        title="{{ $dhlMeasurement['estimated'] ? __('messages.admin_dhl_measurement_estimated_title', ['source' => $dhlMeasurement['label']]) : __('messages.admin_dhl_measurement_exact_title') }}">
+                                        <i class="fa-solid fa-ruler-combined me-1" aria-hidden="true"></i>
+                                        {{ __('messages.admin_dhl_measurement_summary', [
+                                            'weight' => number_format($dhlMeasurement['weight'], 3, ',', '.'),
+                                            'length' => number_format($dhlMeasurement['length'], 1, ',', '.'),
+                                            'width' => number_format($dhlMeasurement['width'], 1, ',', '.'),
+                                            'height' => number_format($dhlMeasurement['height'], 1, ',', '.'),
+                                        ]) }}
+                                        @if ($dhlMeasurement['restricted'])
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border ms-1">Revisão</span>
+                                        @endif
                                     </div>
                                     <div class="d-flex flex-wrap align-items-center gap-2 x-small text-muted mt-1">
                                         <span title="{{ __('messages.product_audit_created_title') }}">

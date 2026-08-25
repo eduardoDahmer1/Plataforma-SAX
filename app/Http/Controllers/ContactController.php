@@ -7,6 +7,7 @@ use App\Models\JobFlyer;
 use App\Models\Language;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 
 class ContactController extends Controller
 {
@@ -16,9 +17,10 @@ class ContactController extends Controller
 
         App::setLocale($locale);
 
-        $lang = Language::all();
-
-        $flyers = JobFlyer::active()->get();
+        $lang = Cache::remember('contact_languages', now()->addHours(24), fn () => Language::all());
+        $flyers = Cache::remember('contact_active_job_flyers', now()->addMinutes(10), fn () =>
+            JobFlyer::active()->orderBy('sort_order')->get()
+        );
 
         return view('contact.form', compact('lang', 'locale', 'flyers'));
     }

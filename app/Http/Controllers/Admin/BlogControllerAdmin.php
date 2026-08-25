@@ -60,14 +60,14 @@ class BlogControllerAdmin extends Controller
             ->paginate($perPage)
             ->appends($request->query());
 
-        $categories = BlogCategory::orderBy('name')->get();
+        $categories = BlogCategory::orderBy('name')->get(['id', 'name']);
 
         return view('admin.blogs.index', compact('blogs', 'categories'));
     }
 
     public function create()
     {
-        $categories = BlogCategory::orderBy('name')->get();
+        $categories = BlogCategory::orderBy('name')->get(['id', 'name']);
         return view('admin.blogs.create', compact('categories'));
     }
 
@@ -96,7 +96,7 @@ class BlogControllerAdmin extends Controller
 
     public function edit(Blog $blog)
     {
-        $categories = BlogCategory::orderBy('name')->get();
+        $categories = BlogCategory::orderBy('name')->get(['id', 'name']);
         return view('admin.blogs.edit', compact('blog', 'categories'));
     }
 

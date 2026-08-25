@@ -45,6 +45,7 @@ class RendixPixReconciler
         $sale = $rendix->extractSaleData($response['data']);
         $providerStatus = $rendix->providerStatus($sale);
         $localStatus = $rendix->localStatus($providerStatus);
+        $previousProviderStatus = (string) $transaction->provider_status;
 
         if ($localStatus === 'paid' && !$this->matchesExpectedSale($transaction, $sale)) {
             $message = __('messages.pix_confirmation_mismatch');
@@ -75,6 +76,7 @@ class RendixPixReconciler
         }
 
         $description = $rendix->statusDescription($providerStatus);
+        $isFailure = in_array($localStatus, ['failed', 'expired', 'cpf_mismatch_refund'], true);
         $transaction->update([
             'status' => $localStatus,
             'provider_status' => $providerStatus,
@@ -82,14 +84,35 @@ class RendixPixReconciler
             'foreign_amount' => data_get($sale, 'priceInForeignCurrency', $transaction->foreign_amount),
             'exchange_rate' => data_get($sale, 'vetTax', $transaction->exchange_rate),
             'refunded_at' => $localStatus === 'refunded' ? ($transaction->refunded_at ?: now()) : $transaction->refunded_at,
-            'failure_code' => in_array($localStatus, ['failed', 'expired'], true) ? $providerStatus : null,
-            'failure_message' => in_array($localStatus, ['failed', 'expired'], true) ? $description : null,
+            'failure_code' => $isFailure ? $providerStatus : null,
+            'failure_message' => $isFailure ? $description : null,
             'provider_payload' => $sale,
         ]);
 
+        if ($localStatus === 'cpf_mismatch_refund') {
+            $transaction->order()->update([
+                'payment_status' => 'failed',
+                'payment_response_code' => $providerStatus,
+                'payment_response_message' => $description,
+                'payment_failed_at' => $transaction->order?->payment_failed_at ?: now(),
+            ]);
+
+            if ($previousProviderStatus !== $providerStatus) {
+                $this->events->record(
+                    'payment',
+                    __('messages.rendix_pix_cpf_mismatch_status'),
+                    $description,
+                    'warning',
+                    $transaction->order?->user_id,
+                    $transaction->order_id,
+                    (string) $transaction->external_id,
+                );
+            }
+        }
+
         if ($localStatus === 'refunded') {
             $transaction->order()->update([
-                'status' => 'refunded',
+                'status' => 'canceled',
                 'payment_status' => 'refunded',
                 'payment_response_code' => '12',
                 'payment_response_message' => $description,

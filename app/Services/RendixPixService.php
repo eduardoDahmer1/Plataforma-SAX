@@ -116,6 +116,31 @@ class RendixPixService
         return $this->authorizedRequest('get', '/efx/v1/external/sell/' . rawurlencode($saleId));
     }
 
+    /**
+     * Simula o reembolso antes de confirmá-lo na Rendix.
+     * O valor é informado na moeda original da venda (USD no checkout SAX).
+     */
+    public function previewRefund(string $saleId, float $amount): array
+    {
+        return $this->authorizedRequest(
+            'get',
+            '/efx/v1/external/sell/process-refund/' . rawurlencode($saleId),
+            ['refund' => $this->refundAmount($amount)],
+        );
+    }
+
+    /**
+     * Confirma o cancelamento financeiro/reembolso integral da venda.
+     */
+    public function refundSale(string $saleId, float $amount): array
+    {
+        return $this->authorizedRequest(
+            'patch',
+            '/efx/v1/sell/cancel/' . rawurlencode($saleId),
+            ['refund' => ['amount' => $this->refundAmount($amount)]],
+        );
+    }
+
     public function getTermsDocument(): array
     {
         return $this->authorizedRequest('get', '/efx/gerenciador/venda/v1/vendas/termo');
@@ -165,6 +190,9 @@ class RendixPixService
             '6' => 'expired',
             '8', '9', '11' => 'failed',
             '12' => 'refunded',
+            // A cobrança foi consumida, mas o Pix foi devolvido porque o CPF
+            // informado na venda diverge do CPF do titular da conta pagadora.
+            '16' => 'cpf_mismatch_refund',
             default => 'pending',
         };
     }
@@ -180,6 +208,7 @@ class RendixPixService
             '9' => __('messages.pix_status_cpf_limit'),
             '11' => __('messages.pix_status_processing_error'),
             '12' => __('messages.pix_status_refunded'),
+            '16' => __('messages.pix_status_cpf_reversal'),
             default => __('messages.pix_status_waiting_confirmation'),
         };
     }
@@ -299,6 +328,15 @@ class RendixPixService
         }
 
         return str_starts_with(trim($phone), '+') ? '+' . $digits : $digits;
+    }
+
+    private function refundAmount(float $amount): float
+    {
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException(__('messages.rendix_refund_invalid_amount'));
+        }
+
+        return round($amount, 2);
     }
 
     private static function normalizeArray(mixed $value): array

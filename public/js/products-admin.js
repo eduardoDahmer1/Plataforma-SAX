@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const aiButton = document.getElementById('completeProductWithAiBtn');
     const aiFeedback = document.getElementById('productEditFeedback');
     const aiResearch = document.getElementById('productAiResearch');
+    const aiGeneratedAt = document.getElementById('productAiGeneratedAt');
     let currentProposal = null;
 
     if (!aiButton || !aiFeedback) return;
@@ -112,7 +113,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.href = source.url;
                 link.target = '_blank';
                 link.rel = 'noopener noreferrer';
-                link.textContent = source.title || source.url;
+                link.className = 'text-break';
+                link.title = source.url;
+                const sourceTitle = typeof source.title === 'string' ? source.title.trim() : '';
+                link.textContent = sourceTitle && sourceTitle !== source.url
+                    ? sourceTitle
+                    : new URL(source.url).hostname;
                 item.appendChild(link);
                 list.appendChild(item);
             });
@@ -126,6 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
         aiButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
         aiFeedback.className = 'alert d-none';
         if (aiResearch) aiResearch.className = 'd-none mb-4';
+        if (aiGeneratedAt) aiGeneratedAt.value = '';
         currentProposal = null;
 
         try {
@@ -137,18 +144,35 @@ document.addEventListener('DOMContentLoaded', function () {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 }
             });
-            const data = await response.json();
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                throw new Error('El servidor respondió con un formato inválido (HTTP ' + response.status + ').');
+            }
             if (!response.ok) throw new Error(data.message || 'No fue posible generar la propuesta.');
 
             currentProposal = data.proposal;
+            if (aiGeneratedAt && data.preparation?.status === 'generated' && data.preparation?.generated_at) {
+                aiGeneratedAt.value = data.preparation.generated_at;
+            }
             applyProposalToForm();
             renderResearch(data.research);
-            aiFeedback.className = 'alert alert-success';
-            aiFeedback.textContent = 'La IA completó el formulario. Revisá nombres, descripciones y clasificación antes de guardar.';
-            window.saxToast ? saxToast('success', 'Formulario completado con IA; todavía no fue guardado.') : null;
+            const requiresReview = data.preparation?.status === 'not_found';
+            aiFeedback.className = requiresReview ? 'alert alert-warning' : 'alert alert-success';
+            aiFeedback.textContent = requiresReview
+                ? 'La IA no encontró una coincidencia web confiable. Podés revisar la propuesta, pero el producto seguirá marcado para revisión.'
+                : 'La IA completó el formulario. Revisá nombres, descripciones y clasificación antes de guardar.';
+            window.saxToast
+                ? saxToast(requiresReview ? 'warning' : 'success', requiresReview
+                    ? 'Producto no encontrado; requiere revisión.'
+                    : 'Formulario completado con IA; todavía no fue guardado.')
+                : null;
         } catch (error) {
             aiFeedback.className = 'alert alert-danger';
-            aiFeedback.textContent = error.message || 'No fue posible generar la propuesta.';
+            aiFeedback.textContent = error instanceof TypeError
+                ? 'No se pudo conectar con el servidor. Verificá tu conexión, el estado del servidor y los logs de Laravel.'
+                : (error.message || 'No fue posible generar la propuesta.');
         } finally {
             aiButton.disabled = false;
             aiButton.innerHTML = originalHtml;
@@ -417,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Adicionado select[name="per_page"]
     var selects = filterForm.querySelectorAll(
-        'select[name="status_filter"], select[name="sort_by"], select[name="highlight_filter"], select[name="brand_id"], select[name="category_id"], select[name="product_type"], select[name="per_page"]'
+        'select[name="status_filter"], select[name="sort_by"], select[name="highlight_filter"], select[name="brand_id"], select[name="category_id"], select[name="product_type"], select[name="ai_preparation_filter"], select[name="per_page"]'
     );
 
     selects.forEach(function (select) {

@@ -15,12 +15,14 @@ use Illuminate\Support\Str;
 use App\Mail\AbandonedCartHelpMail;
 use App\Services\BusinessEventService;
 use App\Services\CatalogIntegrationAvailabilityService;
+use App\Services\Dhl\DhlProductMeasurementEstimator;
 
 class CartController extends Controller
 {
     public function __construct(
         private CuponService $cupons,
-        private CatalogIntegrationAvailabilityService $catalogAvailability
+        private CatalogIntegrationAvailabilityService $catalogAvailability,
+        private DhlProductMeasurementEstimator $dhlMeasurements,
     )
     {
     }
@@ -90,8 +92,11 @@ class CartController extends Controller
                 ->available()
                 ->with([
                     // category_id/brand_id são necessários para avaliar o escopo dos cupons.
-                    'product:id,brand_id,category_id,external_name,photo,price,previous_price,sku,stock,parent_id,color_parent_id,status,product_role',
+                    'product:id,brand_id,category_id,subcategory_id,childcategory_id,name,external_name,slug,photo,price,previous_price,sku,stock,size,color,parent_id,color_parent_id,status,product_role,shipping_weight_kg,shipping_length_cm,shipping_width_cm,shipping_height_cm,shipping_is_dangerous_goods,shipping_profile',
                     'product.brand:id,name',
+                    'product.category:id,name',
+                    'product.subcategory:id,name',
+                    'product.categoriasFilhas:id,name',
                 ])
                 ->get();
         }
@@ -112,6 +117,11 @@ class CartController extends Controller
                     $prev = $item->product->previous_price * $rate;
                     $item->product->formatted_previous_price = $symbol . ' ' . number_format($prev, $decimals, $decimal, $thousand);
                 }
+
+                $item->product->setAttribute(
+                    'dhl_shipping_measurement',
+                    $this->dhlMeasurements->forProduct($item->product, true),
+                );
             }
             return $item;
         });

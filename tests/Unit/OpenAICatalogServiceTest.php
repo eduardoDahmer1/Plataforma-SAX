@@ -61,7 +61,7 @@ class OpenAICatalogServiceTest extends TestCase
 
         $product = Product::make([
             'sku' => 'SKU-1',
-            'external_name' => 'Marca Produto',
+            'external_name' => 'Marca Produto REF-123 #U *BL1',
             'name' => 'Produto atual',
             'ref_code' => 'REF-123',
             'category_id' => null,
@@ -74,6 +74,7 @@ class OpenAICatalogServiceTest extends TestCase
         $result = app(OpenAICatalogService::class)->generateProductProposal($product);
 
         $this->assertSame('MARCA PRODUTO', $result['proposal']['commercial_name']['pt_br']);
+        $this->assertSame(str_repeat('Descripción factual. ', 8), $result['proposal']['descriptions']['es']);
         $this->assertNull($result['proposal']['taxonomy_selection']['subcategory_id']);
         $this->assertSame('matched', $result['research']['status']);
         $this->assertSame([
@@ -96,12 +97,32 @@ class OpenAICatalogServiceTest extends TestCase
                 && $body['text']['format']['type'] === 'json_schema'
                 && $body['text']['format']['schema']['properties']['verified_attributes']['type'] === 'array'
                 && ! isset($body['text']['format']['schema']['properties']['short_description'])
-                && str_contains($body['instructions'], 'entre 150 y 220 palabras')
-                && str_contains($body['instructions'], 'No limites la investigación a tres páginas')
-                && str_contains($body['instructions'], 'No menciones tallas de ropa o calzado')
-                && str_contains($body['instructions'], 'No recomiendes con qué combinarlo')
                 && $body['store'] === false;
         });
+
+        $recordedRequest = Http::recorded()[0][0];
+        $requestBody = $recordedRequest->data();
+        $knownData = json_decode(str($requestBody['input'])->after("\n")->toString(), true);
+
+        $this->assertStringContainsString('80 a 160 palabras como referencia editorial', $requestBody['instructions']);
+        $this->assertStringContainsString('60 a 100 palabras es correcta', $requestBody['instructions']);
+        $this->assertStringContainsString('cada párrafo debe aportar información', $requestBody['instructions']);
+        $this->assertStringContainsString('otra variante del mismo modelo', $requestBody['instructions']);
+        $this->assertStringContainsString('actitud urbana', $requestBody['instructions']);
+        $this->assertStringContainsString('texto final que verá el cliente', $requestBody['instructions']);
+        $this->assertStringContainsString('para esta referencia', $requestBody['instructions']);
+        $this->assertStringContainsString('URLs, enlaces, citas, referencias bibliográficas', $requestBody['instructions']);
+        $this->assertStringContainsString('deben devolverse únicamente dentro de web_research', $requestBody['instructions']);
+        $this->assertStringContainsString('nunca escribas una frase', $requestBody['instructions']);
+        $this->assertStringContainsString('Solo los tres campos commercial_name', $requestBody['instructions']);
+        $this->assertStringNotContainsString('entre 150 y 220 palabras', $requestBody['instructions']);
+        $this->assertStringContainsString('No limites la investigación a tres páginas', $requestBody['instructions']);
+        $this->assertStringContainsString('manufacturer_reference_candidates', $requestBody['instructions']);
+        $this->assertStringNotContainsString('GTIN exacto', $requestBody['instructions']);
+        $this->assertStringContainsString('No recomiendes con', $requestBody['instructions']);
+        $this->assertSame(['REF-123'], $knownData['manufacturer_reference_candidates']);
+        $this->assertArrayNotHasKey('gtin', $knownData);
+        $this->assertArrayNotHasKey('mpn', $knownData);
     }
 
     public function test_it_continues_with_internal_data_when_web_research_finds_nothing(): void

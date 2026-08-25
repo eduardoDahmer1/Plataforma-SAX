@@ -16,6 +16,7 @@ use App\Mail\PasswordChangedMail;
 use App\Rules\CustomerDocumentRule;
 use App\Support\CustomerDocument;
 use App\Support\CountrySupport;
+use App\Services\Dhl\DhlProductMeasurementEstimator;
 
 class UserController extends Controller
 {
@@ -24,33 +25,27 @@ class UserController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Busca os pedidos do usuário
-        $orders = Order::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+        $ordersCount = Order::where('user_id', $user->id)->count();
+        $orders = Order::where('user_id', $user->id)
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'created_at', 'payment_method', 'status']);
 
-        // 2. BUSCA SEGURA DO HISTÓRICO (Compatível com MySQL antigo)
+        $userHistory = \App\Models\Product::query()
+            ->inActiveCategory()
+            ->where('products.status', 1)
+            ->where('products.is_outlet', false)
+            ->with(['brand', 'translations'])
+            ->join('product_views_history', 'products.id', '=', 'product_views_history.product_id')
+            ->where('product_views_history.user_id', $user->id)
+            ->orderByDesc('product_views_history.updated_at')
+            ->select('products.*')
+            ->limit(12)
+            ->get()
+            ->unique('id')
+            ->values();
 
-        // Primeiro: Pegamos apenas os IDs dos produtos que ele viu
-        $productIds = \DB::table('product_views_history')->where('user_id', $user->id)->orderBy('updated_at', 'DESC')->limit(12)->pluck('product_id')->toArray();
-
-        $userHistory = collect(); // Inicializa vazio
-
-        if (!empty($productIds)) {
-            // Segundo: Buscamos os produtos reais usando esses IDs
-            $userHistory = \App\Models\Product::whereIn('products.id', $productIds)
-                ->inActiveCategory()
-                ->where('status', 1)
-                ->where('is_outlet', false)
-                ->with(['brand', 'translations'])
-                // Join para garantir a ordem cronológica exata do histórico
-                ->join('product_views_history', 'products.id', '=', 'product_views_history.product_id')
-                ->where('product_views_history.user_id', $user->id)
-                ->orderBy('product_views_history.updated_at', 'DESC')
-                ->select('products.*')
-                ->get()
-                ->unique('id'); // Garante que não repita se houver lixo no banco
-        }
-
-        return view('users.dashboard', compact('user', 'orders', 'userHistory'));
+        return view('users.dashboard', compact('user', 'orders', 'ordersCount', 'userHistory'));
     }
 
     public function edit()
@@ -232,17 +227,51 @@ class UserController extends Controller
     public function orders()
     {
         $user = Auth::user();
-        $orders = Order::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+        $orders = Order::where('user_id', $user->id)
+            ->latest()
+            ->paginate(20);
 
         return view('users.orders', compact('orders'));
     }
 
-    public function showOrder($id)
+    public function showOrder($id, DhlProductMeasurementEstimator $dhlMeasurements)
     {
         $user = Auth::user();
 
         // Busca o pedido com os itens
-        $order = Order::with(['items', 'receipt', 'cupon', 'orderNotes'])->where('id', $id)->where('user_id', $user->id)->firstOrFail();
+        $order = Order::with([
+            'items.product.brand:id,name',
+            'items.product.category:id,name',
+            'items.product.subcategory:id,name',
+            'items.product.categoriasFilhas:id,name',
+            'receipt', 'cupon', 'orderNotes', 'paymentTransactions',
+        ])->where('id', $id)->where('user_id', $user->id)->firstOrFail();
+
+        $order->items->each(function ($item) use ($dhlMeasurements): void {
+            $hasSnapshot = min(
+                (float) $item->shipping_weight_kg,
+                (float) $item->shipping_length_cm,
+                (float) $item->shipping_width_cm,
+                (float) $item->shipping_height_cm,
+            ) > 0;
+
+            if ($hasSnapshot) {
+                $measurement = [
+                    'profile' => (string) $item->shipping_profile,
+                    'weight' => (float) $item->shipping_weight_kg,
+                    'length' => (float) $item->shipping_length_cm,
+                    'width' => (float) $item->shipping_width_cm,
+                    'height' => (float) $item->shipping_height_cm,
+                    'estimated' => (bool) $item->shipping_measurement_estimated,
+                ];
+            } elseif ($item->product) {
+                $measurement = $dhlMeasurements->forProduct($item->product, true);
+            } else {
+                $measurement = null;
+            }
+
+            $item->setAttribute('dhl_shipping_measurement', $measurement);
+        });
 
         // BUSCA AS CONTAS BANCÁRIAS
         // Removi o 'status' para evitar o erro de coluna não encontrada

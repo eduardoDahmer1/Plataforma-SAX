@@ -3,6 +3,8 @@
 @section('content')
 
 <x-admin.card>
+    <x-admin.alert />
+
     {{-- Navegação e ID --}}
     <div class="d-flex justify-content-between align-items-center mb-4 mb-lg-5 header-actions">
         <div>
@@ -264,6 +266,56 @@
                     </form>
                 </div>
 
+                @if(
+                    request()->user()?->isMasterAdmin()
+                    && $order->payment_method === 'rendix_pix'
+                    && $order->payment_status === 'paid'
+                    && $rendixRefundTransaction
+                )
+                    <div class="border border-danger p-4 mb-4 bg-white shadow-sm rounded">
+                        @if ($order->refund_request_status === 'pending')
+                            @php
+                                $refundReasonLabels = [
+                                    'changed_mind' => __('messages.rendix_refund_reason_changed_mind'),
+                                    'duplicate' => __('messages.rendix_refund_reason_duplicate'),
+                                    'wrong_data' => __('messages.rendix_refund_reason_wrong_data'),
+                                    'delivery' => __('messages.rendix_refund_reason_delivery'),
+                                    'other' => __('messages.rendix_refund_reason_other'),
+                                ];
+                            @endphp
+                            <div class="alert alert-warning rounded-1 mb-3">
+                                <strong class="d-block mb-1"><i class="fa-solid fa-bell me-1"></i>{{ __('messages.rendix_refund_request_admin_pending') }}</strong>
+                                <span class="d-block small">
+                                    {{ __('messages.rendix_refund_request_reason') }}:
+                                    {{ $refundReasonLabels[$order->refund_request_reason] ?? $order->refund_request_reason }}
+                                </span>
+                                @if ($order->refund_requested_at)
+                                    <span class="d-block x-small text-secondary mt-1">{{ __('messages.rendix_refund_request_requested_at') }} {{ $order->refund_requested_at->format('d/m/Y H:i') }}</span>
+                                @endif
+                                @if ($order->refund_request_details)
+                                    <p class="small mb-0 mt-2" style="white-space:pre-line">{{ $order->refund_request_details }}</p>
+                                @endif
+                            </div>
+                        @endif
+                        <h6 class="x-small fw-bold text-uppercase tracking-wider mb-2 text-danger">
+                            <i class="fa-solid fa-rotate-left me-1"></i>{{ __('messages.rendix_refund_card_title') }}
+                        </h6>
+                        <p class="small text-secondary mb-2">{{ __('messages.rendix_refund_card_description') }}</p>
+                        <div class="d-flex justify-content-between small border-top border-bottom py-2 mb-3">
+                            <span>{{ __('messages.rendix_refund_amount') }}</span>
+                            <strong>US$ {{ number_format((float) $rendixRefundTransaction->foreign_amount, 2, ',', '.') }}</strong>
+                        </div>
+                        <form action="{{ route('admin.orders.rendix-refund', $order) }}" method="POST"
+                              onsubmit='if (!confirm(@js(__("messages.rendix_refund_confirm")))) return false; this.querySelector("button[type=submit]").disabled = true; return true;'>
+                            @csrf
+                            <button type="submit" class="btn btn-danger w-100 rounded-0 text-uppercase fw-bold tracking-wider py-2">
+                                {{ __('messages.rendix_refund_action') }}
+                            </button>
+                        </form>
+                        <small class="d-block text-secondary mt-2">{{ __('messages.rendix_refund_irreversible_notice') }}</small>
+                    </div>
+                @endif
+
                 {{-- Comprador --}}
                 <div class="border p-4 mb-4 bg-white shadow-sm rounded">
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.comprador_card') }}</h6>
@@ -390,6 +442,27 @@
                         <span class="x-small text-secondary text-uppercase">{{ __('messages.frete') }}</span>
                         <span class="small fw-bold">{{ order_money($order, $order->shipping_cost ?? 0) }}</span>
                     </div>
+
+                    @if ($order->shipping_provider === 'dhl')
+                        <div class="mt-3 p-3 rounded border border-secondary" style="background:rgba(255,255,255,.04);">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="x-small text-secondary text-uppercase">Volumes / peso faturável</span>
+                                <strong class="x-small">{{ $order->shipping_package_count }} / {{ number_format((float) $order->shipping_billable_weight_kg, 3, ',', '.') }} kg</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="x-small text-secondary text-uppercase">Frete cobrado / acréscimo aplicado</span>
+                                <strong class="x-small">{{ $order->shipping_currency }} {{ number_format((float) $order->shipping_cost, 2, ',', '.') }} / {{ number_format((float) $order->shipping_markup_percent, 2, ',', '.') }}%</strong>
+                            </div>
+                            @if (is_array($order->shipping_packages))
+                                <ul class="x-small text-secondary ps-3 mb-2">
+                                    @foreach ($order->shipping_packages as $package)
+                                        <li>{{ $package['name'] ?? 'Caixa DHL' }} — {{ $package['item_count'] ?? 0 }} item(ns), {{ number_format((float) ($package['billable_weight'] ?? 0), 3, ',', '.') }} kg faturáveis</li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                            <div class="x-small text-secondary">Impostos e taxas de importação não incluídos; responsabilidade do destinatário no destino.</div>
+                        </div>
+                    @endif
 
                     <div class="d-flex justify-content-between mt-4 pt-3 border-top border-secondary">
                         <span class="small text-uppercase fw-bold text-secondary">{{ __('messages.total_final') }}</span>

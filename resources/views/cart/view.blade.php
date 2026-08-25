@@ -22,6 +22,7 @@
             @php
                 $totalCarrinho = 0;
                 $totalItens = 0;
+                $totalProductWeight = 0;
                 $cupon = $resumo['cupon'] ?? null;
                 $itensComDesconto = $resumo['itens_elegiveis'] ?? [];
             @endphp
@@ -34,6 +35,10 @@
                             $itemTotal = $unitPrice * $item->quantity;
                             $totalCarrinho += $itemTotal;
                             $totalItens += $item->quantity;
+                            $shippingMeasurement = $item->product->dhl_shipping_measurement ?? null;
+                            $totalProductWeight += $shippingMeasurement
+                                ? ((float) $shippingMeasurement['weight'] * (int) $item->quantity)
+                                : 0;
                         @endphp
 
                         <article class="sax-cart-item-row">
@@ -52,6 +57,20 @@
                                     <span>{{ __('messages.preco') }}: {{ currency_format($unitPrice) }}</span>
                                     <span>{{ __('messages.quantidade_abreviada') }}: {{ $item->quantity }}</span>
                                 </div>
+
+                                @if ($shippingMeasurement)
+                                    <div class="sax-item-logistics" title="{{ $shippingMeasurement['estimated'] ? 'Referência logística estimada pelo tipo do produto' : 'Peso e medidas reais do produto' }}">
+                                        <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+                                        <span>{{ number_format($shippingMeasurement['weight'], 3, ',', '.') }} kg por unidade</span>
+                                        @if ($item->quantity > 1)
+                                            <span class="sax-item-logistics-separator" aria-hidden="true"></span>
+                                            <strong>{{ number_format($shippingMeasurement['weight'] * $item->quantity, 3, ',', '.') }} kg no item</strong>
+                                        @endif
+                                        <span class="sax-item-logistics-separator" aria-hidden="true"></span>
+                                        <span>{{ number_format($shippingMeasurement['length'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['width'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['height'], 1, ',', '.') }} cm</span>
+                                        @if ($shippingMeasurement['estimated'])<span class="sax-item-logistics-kind">média</span>@endif
+                                    </div>
+                                @endif
 
                                 <div class="sax-cart-qty-area mt-3">
                                     <div class="quantity-control-sax">
@@ -117,6 +136,11 @@
                     <div class="sax-summary-line">
                         <span>{{ __('messages.itens_selecionados') }}</span>
                         <strong>{{ $totalItens }}</strong>
+                    </div>
+
+                    <div class="sax-summary-line">
+                        <span>Peso dos produtos <small class="text-muted">(sem embalagem)</small></span>
+                        <strong>{{ number_format($totalProductWeight, 3, ',', '.') }} kg</strong>
                     </div>
 
                     <div class="sax-summary-line">

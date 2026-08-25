@@ -7,8 +7,10 @@ use App\Models\Brand;
 use App\Models\CategoriasFilhas;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductAiPreparation;
 use App\Models\ProductTranslation;
 use App\Models\Subcategory;
+use App\Services\Dhl\DhlProductMeasurementEstimator;
 use App\Services\ImageConverterService;
 use App\Services\OpenAICatalogService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -28,17 +30,57 @@ class ProductControllerAdmin extends Controller
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
-            return response()->json($openAi->generateProductProposal($product));
+            $result = $openAi->generateProductProposal($product);
+            $matched = data_get($result, 'research.status') === 'matched';
+            $generatedAt = now()->setMicrosecond(0);
+
+            $preparation = ProductAiPreparation::updateOrCreate(
+                ['product_id' => $product->id],
+                [
+                    'status' => $matched
+                        ? ProductAiPreparation::STATUS_GENERATED
+                        : ProductAiPreparation::STATUS_NOT_FOUND,
+                    'sources' => array_slice((array) data_get($result, 'research.sources', []), 0, 3),
+                    'confidence' => data_get($result, 'proposal.confidence'),
+                    'model' => data_get($result, 'source.model'),
+                    'error_message' => $matched ? null : data_get($result, 'research.warning'),
+                    'generated_at' => $generatedAt,
+                    'completed_at' => null,
+                ],
+            );
+
+            $result['preparation'] = [
+                'status' => $preparation->status,
+                'generated_at' => $matched ? $generatedAt->toISOString() : null,
+            ];
+
+            return response()->json($result);
         } catch (\Throwable $exception) {
             report($exception);
+            $safeError = $exception instanceof \RuntimeException
+                ? ($exception->getMessage() ?: 'No fue posible generar la propuesta.')
+                : 'No fue posible generar la propuesta.';
+
+            ProductAiPreparation::updateOrCreate(
+                ['product_id' => $product->id],
+                [
+                    'status' => ProductAiPreparation::STATUS_FAILED,
+                    'sources' => [],
+                    'confidence' => null,
+                    'model' => (string) config('services.openai.model'),
+                    'error_message' => $safeError,
+                    'generated_at' => now(),
+                    'completed_at' => null,
+                ],
+            );
 
             return response()->json([
-                'message' => $exception->getMessage() ?: 'No fue posible generar la propuesta.',
+                'message' => $safeError,
             ], 502);
         }
     }
 
-    public function index(Request $request)
+    public function index(Request $request, DhlProductMeasurementEstimator $dhlMeasurements)
     {
         $search = $request->get('search');
         $brandId = $request->get('brand_id');
@@ -49,6 +91,7 @@ class ProductControllerAdmin extends Controller
         $sortBy = $request->get('sort_by', 'latest');
         $dateFilter = $request->get('date_filter');
         $productType = $request->get('product_type');
+        $aiPreparationFilter = $request->get('ai_preparation_filter');
         $outletFilter = $request->get('outlet_filter');
         $perPage = (int) $request->get('per_page', 20);
         $perPage = in_array($perPage, [20, 30, 50, 100], true) ? $perPage : 20;
@@ -56,12 +99,23 @@ class ProductControllerAdmin extends Controller
         $allowedSorts = ['latest', 'oldest', 'last_edit', 'old_edit', 'price_low', 'price_high', 'name_az', 'name_za'];
         $sortBy = in_array($sortBy, $allowedSorts, true) ? $sortBy : 'latest';
 
-        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id', 'created_at', 'updated_at', 'updated_by', 'admin_edited_at'];
+        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id', 'shipping_profile', 'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm', 'shipping_height_cm', 'shipping_is_dangerous_goods', 'created_at', 'updated_at', 'updated_by', 'admin_edited_at'];
+
+        $productsWithUsableImages = null;
+        if (in_array($aiPreparationFilter, ['prepared', 'missing_photo'], true)) {
+            $productsWithUsableImages = Product::query()
+                ->whereHas('aiPreparation', fn ($query) => $query->where('status', ProductAiPreparation::STATUS_COMPLETED))
+                ->get(['id', 'photo', 'gallery'])
+                ->filter(fn (Product $candidate) => Product::hasUsableImage($candidate->photo, $candidate->gallery))
+                ->pluck('id')
+                ->all();
+        }
 
         $products = Product::select($productColumns)
             ->with([
                 'brand:id,name',
                 'editor:id,name,email',
+                'aiPreparation:id,product_id,status,sources,confidence,model,error_message,generated_at,completed_at',
             ])
             ->when($search, fn ($q) => $q->where(function ($q2) use ($search) {
                 $q2->where('name', 'LIKE', "%{$search}%")
@@ -96,6 +150,22 @@ class ProductControllerAdmin extends Controller
                 }
             })
             ->when($outletFilter !== null && $outletFilter !== '', fn ($q) => $q->where('is_outlet', $outletFilter === 'outlet'))
+            ->when($aiPreparationFilter, function ($query) use ($aiPreparationFilter, $productsWithUsableImages) {
+                match ($aiPreparationFilter) {
+                    'pending' => $query->where(function ($pending) {
+                        $pending->whereDoesntHave('aiPreparation')
+                            ->orWhereHas('aiPreparation', fn ($preparation) => $preparation->where('status', ProductAiPreparation::STATUS_GENERATED));
+                    }),
+                    'prepared' => $query
+                        ->whereHas('aiPreparation', fn ($preparation) => $preparation->where('status', ProductAiPreparation::STATUS_COMPLETED))
+                        ->whereIn('products.id', $productsWithUsableImages ?? []),
+                    'missing_photo' => $query
+                        ->whereHas('aiPreparation', fn ($preparation) => $preparation->where('status', ProductAiPreparation::STATUS_COMPLETED))
+                        ->whereNotIn('products.id', $productsWithUsableImages ?? []),
+                    'review' => $query->whereHas('aiPreparation', fn ($preparation) => $preparation->whereIn('status', [ProductAiPreparation::STATUS_NOT_FOUND, ProductAiPreparation::STATUS_FAILED])),
+                    default => null,
+                };
+            })
             ->when($statusFilter, function ($q) use ($statusFilter) {
                 switch ($statusFilter) {
                     case 'active':
@@ -168,16 +238,17 @@ class ProductControllerAdmin extends Controller
             ->paginate($perPage)
             ->appends($request->query());
 
-        $brands = Brand::where('status', 1)->orderBy('name')->get();
-        $categories = Category::where('status', 1)->orderBy('name')->get();
+        $brands = Brand::where('status', 1)->orderBy('name')->get(['id', 'name']);
+        $categories = Category::where('status', 1)->orderBy('name')->get(['id', 'name']);
 
         $highlights = [
             'destaque' => 'Destaques',
             'lancamentos' => 'Lançamentos',
         ];
 
-        $products->getCollection()->transform(function ($product) {
+        $products->getCollection()->transform(function ($product) use ($dhlMeasurements) {
             $product->imageUrl = $product->photo_url;
+            $product->setAttribute('dhl_shipping_measurement', $dhlMeasurements->forProduct($product, true));
 
             return $product;
         });
@@ -265,13 +336,7 @@ class ProductControllerAdmin extends Controller
 
     public function create()
     {
-        $brands = Brand::all();
-        $categories = Category::all();
-        $subcategories = collect();
-        $categoriasfilhas = collect();
-        $products = Product::all();
-
-        return view('admin.products.create', compact('brands', 'categories', 'subcategories', 'categoriasfilhas', 'products'));
+        return view('admin.products.create');
     }
 
     public function search(Request $request)
@@ -364,9 +429,31 @@ class ProductControllerAdmin extends Controller
             'color_parent_id' => 'nullable|array',
             'color_parent_id.*' => 'nullable|exists:products,id',
             'size' => 'nullable|string|max:50',
+            'shipping_weight_kg' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_length_cm' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_width_cm' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_height_cm' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_hs_code' => 'nullable|string|max:20',
+            'shipping_country_of_origin' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
+            'shipping_customs_description' => 'nullable|string|max:255',
+            'shipping_is_dangerous_goods' => 'nullable|boolean',
+            'shipping_profile' => 'nullable|in:accessory,eyewear,apparel_light,apparel_heavy,footwear,handbag,home,kids_tshirt,tshirt,polo,shirt,top,dress,pants,shorts,skirt,sweater,jacket,outfit,small_apparel,kids_footwear,perfume,wine,spirits,aerosol,battery,tobacco,furniture,restricted',
         ]);
 
-        $data = $request->only(['sku', 'external_name', 'description', 'price', 'stock', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'parent_id', 'color', 'size']);
+        $data = $request->only([
+            'sku', 'external_name', 'description', 'price', 'stock', 'brand_id',
+            'category_id', 'subcategory_id', 'childcategory_id', 'parent_id', 'color', 'size',
+            'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm', 'shipping_height_cm',
+            'shipping_hs_code', 'shipping_country_of_origin', 'shipping_customs_description',
+            'shipping_profile',
+        ]);
+        $data['shipping_country_of_origin'] = $request->filled('shipping_country_of_origin')
+            ? strtoupper(trim((string) $request->input('shipping_country_of_origin')))
+            : null;
+        $data['shipping_hs_code'] = $request->filled('shipping_hs_code')
+            ? preg_replace('/\s+/', '', (string) $request->input('shipping_hs_code'))
+            : null;
+        $data['shipping_is_dangerous_goods'] = $request->boolean('shipping_is_dangerous_goods');
 
         $data['highlights'] = $request->input('highlights', []);
         $data['product_role'] = 'P';
@@ -398,7 +485,7 @@ class ProductControllerAdmin extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Produto criado com sucesso!');
     }
 
-    public function edit($id)
+    public function edit($id, DhlProductMeasurementEstimator $dhlMeasurements)
     {
         $item = Product::with([
             'brand:id,name,slug',
@@ -406,6 +493,7 @@ class ProductControllerAdmin extends Controller
             'subcategory:id,name,slug,category_id',
             'categoriasfilhas:id,name,slug,subcategory_id',
             'translations:id,product_id,locale,name,details',
+            'aiPreparation:id,product_id,status,sources,confidence,model,error_message,generated_at,completed_at',
             'parent:id,name,external_name',
             'editor:id,name,email',
         ])->findOrFail($id);
@@ -443,6 +531,7 @@ class ProductControllerAdmin extends Controller
 
         $translationsByLocale = $item->translations->keyBy('locale');
         [$suggestedColor, $suggestedColorSource] = $this->suggestColorForProduct($item);
+        $dhlEffectiveMeasurement = $dhlMeasurements->forProduct($item, true);
 
         if (is_string($item->parent_id) && str_contains($item->parent_id, ',')) {
             $item->parent_id =
@@ -454,7 +543,7 @@ class ProductControllerAdmin extends Controller
             $item->parent_id = collect($item->parent_id)->map(fn ($parentId) => (int) $parentId)->first(fn ($parentId) => $parentId > 0) ?: null;
         }
 
-        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale', 'suggestedColor', 'suggestedColorSource'));
+        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale', 'suggestedColor', 'suggestedColorSource', 'dhlEffectiveMeasurement'));
     }
 
     private function suggestColorForProduct(Product $product): array
@@ -560,6 +649,24 @@ class ProductControllerAdmin extends Controller
         return trim(preg_replace('/[^A-Z0-9]+/', ' ', strtoupper(Str::ascii($value))) ?: '');
     }
 
+    private function requestHasCompleteAiCatalogContent(Request $request): bool
+    {
+        if (! $request->filled('category_id') || ! $request->filled('subcategory_id')) {
+            return false;
+        }
+
+        foreach (['pt-br', 'es', 'en'] as $locale) {
+            $name = trim((string) $request->input("translate.{$locale}.name"));
+            $description = trim(strip_tags((string) $request->input("translate.{$locale}.details")));
+
+            if ($name === '' || $description === '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
@@ -582,6 +689,16 @@ class ProductControllerAdmin extends Controller
             'size' => 'nullable|string|max:50',
             'colors_values' => 'nullable|array|max:8',
             'colors_values.*' => ['string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'ai_generated_at' => 'nullable|date',
+            'shipping_weight_kg' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_length_cm' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_width_cm' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_height_cm' => 'nullable|numeric|gt:0|max:1000',
+            'shipping_hs_code' => 'nullable|string|max:20',
+            'shipping_country_of_origin' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
+            'shipping_customs_description' => 'nullable|string|max:255',
+            'shipping_is_dangerous_goods' => 'nullable|boolean',
+            'shipping_profile' => 'nullable|in:accessory,eyewear,apparel_light,apparel_heavy,footwear,handbag,home,kids_tshirt,tshirt,polo,shirt,top,dress,pants,shorts,skirt,sweater,jacket,outfit,small_apparel,kids_footwear,perfume,wine,spirits,aerosol,battery,tobacco,furniture,restricted',
 
             'translate' => 'nullable|array',
             'translate.*.name' => 'nullable|string|max:255',
@@ -595,6 +712,15 @@ class ProductControllerAdmin extends Controller
                 $originalFamilyRootId = ! empty($product->color_parent_id) ? (int) $product->color_parent_id : (int) $product->id;
                 $selectedSizeChildIds = array_values(array_filter(array_unique(array_filter((array) $request->input('parent_id', []))), fn ($childId) => (int) $childId !== (int) $product->id));
                 $selectedColorFamilyMemberIds = array_values(array_filter(array_unique(array_filter((array) $request->input('color_parent_id', []))), fn ($memberId) => (int) $memberId !== (int) $product->id));
+                $aiPreparation = ProductAiPreparation::where('product_id', $product->id)->lockForUpdate()->first();
+                $submittedAiGeneratedAt = $request->filled('ai_generated_at')
+                    ? Carbon::parse((string) $request->input('ai_generated_at'))
+                    : null;
+                $shouldCompleteAiPreparation = $aiPreparation?->status === ProductAiPreparation::STATUS_GENERATED
+                    && $aiPreparation->generated_at
+                    && $submittedAiGeneratedAt
+                    && $aiPreparation->generated_at->equalTo($submittedAiGeneratedAt)
+                    && $this->requestHasCompleteAiCatalogContent($request);
 
                 if ($isCurrentlySizeVariant) {
                     $selectedSizeChildIds = [];
@@ -690,7 +816,19 @@ class ProductControllerAdmin extends Controller
                     : [];
                 $desiredColorAnchorIds = $shouldSyncColorFamily ? array_values(array_unique(array_merge([(int) $product->id], $selectedColorFamilyMemberIds))) : [];
 
-                $data = $request->only(['sku', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'size', 'price', 'stock']);
+                $data = $request->only([
+                    'sku', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'size', 'price', 'stock',
+                    'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm', 'shipping_height_cm',
+                    'shipping_hs_code', 'shipping_country_of_origin', 'shipping_customs_description',
+                    'shipping_profile',
+                ]);
+                $data['shipping_country_of_origin'] = $request->filled('shipping_country_of_origin')
+                    ? strtoupper(trim((string) $request->input('shipping_country_of_origin')))
+                    : null;
+                $data['shipping_hs_code'] = $request->filled('shipping_hs_code')
+                    ? preg_replace('/\s+/', '', (string) $request->input('shipping_hs_code'))
+                    : null;
+                $data['shipping_is_dangerous_goods'] = $request->boolean('shipping_is_dangerous_goods');
                 $data['size'] = filled($data['size'] ?? null) ? trim((string) $data['size']) : $product->inferredSize();
 
                 if ($request->has('translate.pt-br')) {
@@ -874,6 +1012,32 @@ class ProductControllerAdmin extends Controller
                             ->update([
                                 'color_parent_id' => $targetFamilyRootId,
                             ]);
+                    }
+                }
+
+                if ($shouldCompleteAiPreparation) {
+                    $completedAt = now();
+                    $aiPreparation->update([
+                        'status' => ProductAiPreparation::STATUS_COMPLETED,
+                        'error_message' => null,
+                        'completed_at' => $completedAt,
+                    ]);
+
+                    if (! empty($selectedSizeChildIds)) {
+                        foreach ($selectedSizeChildIds as $childId) {
+                            ProductAiPreparation::updateOrCreate(
+                                ['product_id' => $childId],
+                                [
+                                    'status' => ProductAiPreparation::STATUS_COMPLETED,
+                                    'sources' => $aiPreparation->sources,
+                                    'confidence' => $aiPreparation->confidence,
+                                    'model' => $aiPreparation->model,
+                                    'error_message' => null,
+                                    'generated_at' => $aiPreparation->generated_at,
+                                    'completed_at' => $completedAt,
+                                ],
+                            );
+                        }
                     }
                 }
 

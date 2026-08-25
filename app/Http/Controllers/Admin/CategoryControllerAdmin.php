@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryControllerAdmin extends Controller
 {
@@ -53,6 +54,7 @@ class CategoryControllerAdmin extends Controller
         }
 
         Category::create($data);
+        $this->clearNavigationCaches();
 
         return redirect()->route('admin.categories.index')->with('success', 'Categoria criada com sucesso.');
     }
@@ -96,6 +98,7 @@ class CategoryControllerAdmin extends Controller
         }
 
         $category->update($data);
+        $this->clearNavigationCaches();
 
         return redirect()->route('admin.categories.index')->with('success', 'Categoria atualizada com sucesso.');
     }
@@ -110,6 +113,7 @@ class CategoryControllerAdmin extends Controller
         }
 
         $category->delete();
+        $this->clearNavigationCaches();
 
         return redirect()->route('admin.categories.index')->with('success', 'Categoria excluída com sucesso.');
     }
@@ -126,6 +130,7 @@ class CategoryControllerAdmin extends Controller
         $path = $this->convertToWebp($request->file('photo'), 'photo');
         $category->photo = $path;
         $category->save();
+        $this->clearNavigationCaches();
 
         return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
     }
@@ -142,6 +147,7 @@ class CategoryControllerAdmin extends Controller
         $path = $this->convertToWebp($request->file('banner'), 'banner');
         $category->banner = $path;
         $category->save();
+        $this->clearNavigationCaches();
 
         return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
     }
@@ -166,6 +172,7 @@ class CategoryControllerAdmin extends Controller
             Storage::disk('public')->delete($category->photo);
             $category->photo = null;
             $category->save();
+            $this->clearNavigationCaches();
         }
 
         return back()->with('success', 'Imagem removida com sucesso.');
@@ -179,8 +186,23 @@ class CategoryControllerAdmin extends Controller
             Storage::disk('public')->delete($category->banner);
             $category->banner = null;
             $category->save();
+            $this->clearNavigationCaches();
         }
 
         return back()->with('success', 'Imagem removida com sucesso.');
+    }
+
+    private function clearNavigationCaches(): void
+    {
+        foreach ([
+            'header_categories_tree',
+            'header_main_categories',
+            'all_categories_tree_active',
+            'filter_full_tree_active',
+            'categories_home_strip_random_15min',
+            'categories_all',
+        ] as $key) {
+            Cache::forget($key);
+        }
     }
 }

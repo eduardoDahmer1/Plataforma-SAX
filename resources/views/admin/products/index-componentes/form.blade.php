@@ -120,6 +120,17 @@
         </div>
 
         <div class="sax-filter-item">
+            <label class="sax-filter-label">Preparação com IA</label>
+            <select name="ai_preparation_filter" class="form-select sax-filter-select">
+                <option value="">Todos</option>
+                <option value="pending" @selected(request('ai_preparation_filter') === 'pending')>Pendentes</option>
+                <option value="prepared" @selected(request('ai_preparation_filter') === 'prepared')>Preparados</option>
+                <option value="missing_photo" @selected(request('ai_preparation_filter') === 'missing_photo')>Sem fotografia</option>
+                <option value="review" @selected(request('ai_preparation_filter') === 'review')>Requerem revisão</option>
+            </select>
+        </div>
+
+        <div class="sax-filter-item">
             <label class="sax-filter-label">Exibir</label>
             <select name="per_page" class="form-select sax-filter-select" onchange="this.form.submit()">
                 @foreach([20, 30, 50, 100] as $opt)
@@ -130,7 +141,7 @@
     </div>
 
     {{-- Link limpar (solo si hay filtros activos) --}}
-    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'date_filter', 'highlight_filter', 'outlet_filter', 'product_type', 'stock_filter']))
+    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'date_filter', 'highlight_filter', 'outlet_filter', 'product_type', 'stock_filter', 'ai_preparation_filter']))
         <div class="mt-2 text-end">
             <a href="{{ route('admin.products.index') }}" class="sax-clear-filters">
                 <i class="fa fa-times me-1"></i> Limpar filtros

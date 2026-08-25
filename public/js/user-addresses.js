@@ -4,7 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function createAddressFormController(form) {
         const country = form.querySelector('[data-address-country]');
         const postalCode = form.querySelector('[data-address-postal-code]');
+        const postalOptions = form.querySelector('[data-address-postal-options]');
         const postalLabel = form.querySelector('[data-address-postal-label]');
+        const postalHint = form.querySelector('[data-address-postal-hint]');
         const stateLabel = form.querySelector('[data-address-state-label]');
         const state = form.querySelector('[data-address-state]');
         const city = form.querySelector('[data-address-city]');
@@ -108,6 +110,32 @@ document.addEventListener('DOMContentLoaded', function () {
             return country.options[country.selectedIndex]?.dataset.iso2 || country.value.toUpperCase();
         }
 
+        function loadPostalSuggestions() {
+            if (!postalCode || !postalOptions || !window.SaxWorldLocations?.postalCodes) return;
+            postalOptions.innerHTML = '';
+            if (country.value === 'brasil' || country.value === 'paraguai' || !city.value) return;
+
+            const iso2 = countryIso2();
+            const cityName = city.value;
+            const adminCode = state.options[state.selectedIndex]?.dataset.code || '';
+            if (postalHint) postalHint.textContent = 'Buscando códigos postais da cidade...';
+
+            window.SaxWorldLocations.postalCodes(iso2, cityName, adminCode).then(function (items) {
+                if (countryIso2() !== iso2 || city.value !== cityName) return;
+                items.forEach(function (item) {
+                    const option = document.createElement('option');
+                    option.value = item.postal_code;
+                    option.label = [item.place_name, item.admin_name].filter(Boolean).join(' — ');
+                    postalOptions.appendChild(option);
+                });
+                if (postalHint) {
+                    postalHint.textContent = items.length
+                        ? `${items.length} sugestão(ões). Selecione uma e confirme o código exato com o destinatário.`
+                        : 'Não encontramos sugestão. Informe o código postal oficial do endereço.';
+                }
+            });
+        }
+
         function loadInternationalStates(sequence) {
             const iso2 = countryIso2();
             state.innerHTML = '<option value="">Carregando estados / províncias...</option>';
@@ -149,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     (payload.data || []).forEach(item => city.add(new Option(item.name, item.name)));
                     city.disabled = false;
                     selectSavedCity();
+                    loadPostalSuggestions();
                 })
                 .catch(() => {
                     if (sequence !== loadSequence) return;
@@ -163,6 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const sequence = ++loadSequence;
+            if (postalOptions) postalOptions.innerHTML = '';
             const isBrazil = country.value === 'brasil';
             const isParaguay = country.value === 'paraguai';
             if (postalLabel) postalLabel.textContent = isBrazil ? 'CEP' : 'Código postal';
@@ -170,6 +200,20 @@ document.addEventListener('DOMContentLoaded', function () {
             if (postalCode) {
                 postalCode.placeholder = isBrazil ? '00000-000' : 'Ex.: 1234';
                 postalCode.required = !isParaguay;
+            }
+            if (postalHint) {
+                if (isBrazil) postalHint.textContent = 'Formato: 00000-000.';
+                else if (isParaguay) postalHint.textContent = 'Opcional para entrega local no Paraguai.';
+                else {
+                    postalHint.textContent = 'Consultando o formato postal do país...';
+                    window.SaxWorldLocations?.postalGuide(countryIso2()).then(function (guide) {
+                        if (sequence !== loadSequence) return;
+                        if (guide.example && postalCode) postalCode.placeholder = `Ex.: ${guide.example}`;
+                        postalHint.textContent = guide.format
+                            ? `Formato orientativo: ${guide.format}. Use o código postal exato do endereço.`
+                            : 'Informe o código postal oficial do endereço. A DHL validará o formato na cotação.';
+                    });
+                }
             }
             if (district) district.required = isBrazil || isParaguay;
 
@@ -210,6 +254,8 @@ document.addEventListener('DOMContentLoaded', function () {
         country.addEventListener('change', function () {
             updateCountry(false);
         });
+
+        city.addEventListener('change', loadPostalSuggestions);
 
         postalCode?.addEventListener('input', function () {
             if (country.value !== 'brasil') return;

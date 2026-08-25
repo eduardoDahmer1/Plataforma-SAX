@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Attribute;
+use App\Services\ImageConverterService;
 
 class ImageUploadController extends Controller
 {
@@ -50,63 +52,25 @@ class ImageUploadController extends Controller
 
     private function processImageUpload($file, $filename)
     {
-        $tempPath = $file->getRealPath();
-        $extension = strtolower($file->getClientOriginalExtension());
-
-        if ($extension === 'webp' || $extension === 'svg') {
-            Storage::disk('public')->delete("uploads/{$filename}");
-            Storage::disk('public')->putFileAs('uploads', $file, $filename);
-            return $filename;
-        }
-
-        $imageResource = null;
-
-        switch ($extension) {
-            case 'jpeg':
-            case 'jpg':
-                $imageResource = imagecreatefromjpeg($tempPath);
-                break;
-            case 'png':
-                $imageResource = imagecreatefrompng($tempPath);
-                break;
-            case 'gif':
-                $imageResource = imagecreatefromgif($tempPath);
-                break;
-            default:
-                return null;
-        }
-
-        if (!$imageResource) return null;
-
-        if (!imageistruecolor($imageResource)) {
-            imagepalettetotruecolor($imageResource);
-        }
-
-        ob_start();
-        imagewebp($imageResource, null, 90);
-        $webpData = ob_get_clean();
-        imagedestroy($imageResource);
-
         Storage::disk('public')->delete("uploads/{$filename}");
-        Storage::disk('public')->put("uploads/{$filename}", $webpData);
 
-        return $filename;
+        $path = app(ImageConverterService::class)->toWebp($file, 'uploads', [
+            'filename' => $filename,
+            'quality' => 90,
+            'strict' => true,
+        ]);
+
+        return basename($path);
     }
 
     private function uploadImage(Request $request, $field, $filename)
     {
         $request->validate([
-            $field => 'required|mimes:jpeg,jpg,png,gif,webp,svg|max:10240',
+            $field => 'required|image|mimes:jpeg,jpg,png,gif,webp,bmp,svg,avif|max:10240',
         ]);
 
         if ($request->hasFile($field) && $request->file($field)->isValid()) {
             $file = $request->file($field);
-            $extension = strtolower($file->getClientOriginalExtension());
-            
-            if ($extension === 'svg') {
-                $filename = str_replace('.webp', '.svg', $filename);
-            }
-
             $processed = $this->processImageUpload($file, $filename);
 
             if (!$processed) {
@@ -154,6 +118,10 @@ class ImageUploadController extends Controller
         
         if ($attribute) {
             $attribute->update(['text_topo' => $request->text_topo]);
+            Cache::forget('global_attributes_model');
+            Cache::forget('global_attributes_db');
+            Cache::forget('global_attributes');
+            Cache::forget('system_attributes');
             return redirect()->back()->with('success', 'Texto do topo atualizado com sucesso!');
         }
 

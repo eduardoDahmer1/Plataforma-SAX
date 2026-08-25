@@ -17,6 +17,7 @@
                     $isHexColor = preg_match('/^#?[0-9A-Fa-f]{6}$/', $productColor) === 1;
                     $normalizedColor = $isHexColor ? ('#' . ltrim($productColor, '#')) : null;
                     $subtotalItem = ($item->product->price ?? 0) * $item->quantity;
+                    $shippingMeasurement = $item->product->dhl_shipping_measurement ?? null;
                     $totalCarrinho += $subtotalItem;
                     $totalItens += $item->quantity;
                 @endphp
@@ -51,6 +52,23 @@
                                 </span>
                             @endif
                         </div>
+
+                        @if ($shippingMeasurement && min(
+                            (float) $shippingMeasurement['weight'],
+                            (float) $shippingMeasurement['length'],
+                            (float) $shippingMeasurement['width'],
+                            (float) $shippingMeasurement['height'],
+                        ) > 0)
+                            <div class="sax-item-logistics" title="{{ $shippingMeasurement['estimated'] ? 'Referência logística estimada pela categoria' : 'Peso e medidas reais do produto' }}">
+                                <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+                                <span>{{ number_format($shippingMeasurement['weight'], 3, ',', '.') }} kg</span>
+                                <span class="sax-item-logistics-separator" aria-hidden="true"></span>
+                                <span>{{ number_format($shippingMeasurement['length'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['width'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['height'], 1, ',', '.') }} cm</span>
+                                @if ($shippingMeasurement['estimated'])
+                                    <span class="sax-item-logistics-kind">média</span>
+                                @endif
+                            </div>
+                        @endif
                     </div>
 
                     <div class="sax-cart-item-end">

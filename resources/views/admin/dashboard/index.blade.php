@@ -122,6 +122,28 @@
             @endforeach
         </div>
     @endif
+
+    @if($selectedReport['visitors_by_country']->isNotEmpty())
+        <div class="mt-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-1 mb-2">
+                <strong>{{ __('messages.report_visitors_by_country') }}</strong>
+                <span class="small text-muted">{{ __('messages.report_country_tracking_note') }}</span>
+            </div>
+            <div class="table-responsive border rounded-3">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr><th>{{ __('messages.report_country') }}</th><th class="text-end">{{ __('messages.report_identified_visitors') }}</th></tr></thead>
+                    <tbody>
+                    @foreach($selectedReport['visitors_by_country'] as $country)
+                        <tr>
+                            <td>{{ $country->country_code !== 'XX' ? $country->country_code.' · ' : '' }}{{ $country->country_name }}</td>
+                            <td class="text-end fw-semibold">{{ number_format($country->visitors, 0, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 </section>
 
 @php

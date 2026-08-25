@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Policy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PolicyControllerAdmin extends Controller
 {
@@ -28,6 +29,7 @@ class PolicyControllerAdmin extends Controller
 
         $data['is_active'] = $request->boolean('is_active');
         $policy->update($data);
+        Cache::forget('public_active_policies');
 
         return redirect()->route('admin.policies.index')->with('success', 'Política atualizada com sucesso.');
     }

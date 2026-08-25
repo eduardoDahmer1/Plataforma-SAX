@@ -20,7 +20,7 @@
         <div class="col-12 col-md-4">
             <div class="border rounded-3 p-3 h-100 bg-white">
                 <div class="small text-muted text-uppercase fw-semibold">{{ __('messages.pedidos_recentes') }}</div>
-                <div class="fs-4 fw-bold mt-1">{{ $orders->count() }}</div>
+                <div class="fs-4 fw-bold mt-1">{{ $ordersCount ?? $orders->count() }}</div>
             </div>
         </div>
         <div class="col-12 col-md-4">

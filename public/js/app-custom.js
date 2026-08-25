@@ -173,6 +173,18 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('cart-button')?.click();
     });
 
+    // No mobile, overlays e drawers podem permanecer sobre o link durante a
+    // transição do toque. A captura garante que a entrada do administrador
+    // sempre navegue para o painel, tanto pelo drawer quanto pelo dock inferior.
+    document.addEventListener('click', event => {
+        const adminEntry = event.target.closest('a[data-admin-entry]');
+        if (!adminEntry) return;
+
+        event.preventDefault();
+        document.body.style.overflow = '';
+        window.location.assign(adminEntry.href);
+    }, true);
+
     // Drawer Accordion
     document.querySelectorAll('.toggle-sub').forEach(btn => {
         btn.addEventListener('click', function () {

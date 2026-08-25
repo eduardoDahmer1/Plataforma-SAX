@@ -18,6 +18,23 @@ class OrderItem extends Model
         'external_name', // Caso seja produto externo/afiliado
         'slug',
         'sku',
+        'product_brand',
+        'product_size',
+        'product_color',
+        'shipping_profile',
+        'shipping_weight_kg',
+        'shipping_length_cm',
+        'shipping_width_cm',
+        'shipping_height_cm',
+        'shipping_measurement_estimated',
+    ];
+
+    protected $casts = [
+        'shipping_weight_kg' => 'float',
+        'shipping_length_cm' => 'float',
+        'shipping_width_cm' => 'float',
+        'shipping_height_cm' => 'float',
+        'shipping_measurement_estimated' => 'boolean',
     ];
 
     public function order()

@@ -17,6 +17,7 @@
         <p class="sax-step-helper">Escolha a forma de entrega e confirme o destino do pedido.</p>
 
         <input type="hidden" name="frete_valor" id="frete_valor" value="0">
+        <input type="hidden" id="dhl_quote_reference" value="">
 
         <div class="sax-shipping-grid mb-4">
             <label class="sax-method-card {{ $selectedShipping === 1 ? 'active' : '' }}" id="label-ship-1">
@@ -44,6 +45,7 @@
                     <i class="fa fa-info-circle me-3 text-dark"></i>
                     <div id="shipping-info-content" class="small text-dark"></div>
                 </div>
+                <div id="dhl-packaging-summary" class="small mt-3 pt-3 border-top" style="display:none;"></div>
             </div>
         </div>
 
@@ -131,7 +133,9 @@
                 <div id="dynamic_address_section" class="row g-3 mx-0 px-0">
                     <div class="col-md-4" id="cep_container">
                         <label class="sax-label" id="label-postal">CEP</label>
-                        <input type="text" id="postal_code" name="cep" class="sax-form-control" placeholder="00000-000" value="{{ old('cep') }}">
+                        <input type="text" id="postal_code" name="cep" class="sax-form-control" placeholder="00000-000" value="{{ old('cep') }}" list="checkout-postal-options" autocomplete="postal-code">
+                        <datalist id="checkout-postal-options"></datalist>
+                        <div class="form-text" id="postal-format-hint">Informe o código postal exato do endereço.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="sax-label" id="label-state">Estado</label>

@@ -11,6 +11,7 @@ use App\Models\CategoriasFilhas;
 use App\Services\ProductSearchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Cache;
 
 class SearchController extends Controller
 {
@@ -35,7 +36,9 @@ class SearchController extends Controller
         $table = (new Product())->getTable();
         $optional = ['size', 'color', 'colors', 'color_parent_id'];
 
-        $existingOptional = array_values(array_filter($optional, fn($column) => Schema::hasColumn($table, $column)));
+        $existingOptional = Cache::remember('schema.search_product_optional_columns', now()->addHours(24), function () use ($optional, $table) {
+            return array_values(array_filter($optional, fn($column) => Schema::hasColumn($table, $column)));
+        });
 
         self::$resolvedProductCols = array_merge(self::BASE_PRODUCT_COLS, $existingOptional);
 
@@ -72,7 +75,12 @@ class SearchController extends Controller
 
     private function attachCardColors($paginated): void
     {
-        if (!Schema::hasColumn((new Product())->getTable(), 'color_parent_id') || !Schema::hasColumn((new Product())->getTable(), 'color')) {
+        $hasColorColumns = Cache::remember('schema.search_product_color_columns', now()->addHours(24), fn () =>
+            Schema::hasColumn((new Product())->getTable(), 'color_parent_id')
+            && Schema::hasColumn((new Product())->getTable(), 'color')
+        );
+
+        if (! $hasColorColumns) {
             return;
         }
 
@@ -176,9 +184,15 @@ class SearchController extends Controller
         };
     }
 
-    private function sidebarData($productIds): array
+    private function sidebarData(Builder $matchingProducts): array
     {
-        $hasProducts = fn($q) => $q->whereIn('id', $productIds);
+        // Mantém o mesmo conjunto de filtros, mas deixa o banco resolver os IDs
+        // em subconsulta. Evita trazer milhares de IDs para a memória do PHP e
+        // reenviá-los quatro vezes em cláusulas IN.
+        $matchingProductIds = (clone $matchingProducts)
+            ->setEagerLoads([])
+            ->select('products.id');
+        $hasProducts = fn($q) => $q->whereIn('products.id', clone $matchingProductIds);
 
         return [
             'brands' => Brand::where('status', 1)
@@ -200,7 +214,7 @@ class SearchController extends Controller
     public function index(Request $request)
     {
         $base      = $this->baseQuery($request);
-        $sidebar   = $this->sidebarData((clone $base)->pluck('products.id'));
+        $sidebar   = $this->sidebarData(clone $base);
         $query     = $this->applyFilters(clone $base, $request);
         $this->applySorting($query, $request->sort_by, $request->search);
 

@@ -34,6 +34,14 @@ class CountrySupportTest extends TestCase
         $this->assertSame('dhl', CountrySupport::shippingProvider('DE'));
     }
 
+    public function test_brazil_uses_dhl_and_paraguay_keeps_local_shipping(): void
+    {
+        $this->assertTrue(CountrySupport::usesDhl('brasil'));
+        $this->assertSame('dhl', CountrySupport::shippingProvider('BR'));
+        $this->assertFalse(CountrySupport::usesDhl('paraguai'));
+        $this->assertSame('local_py', CountrySupport::shippingProvider('PY'));
+    }
+
     public function test_non_country_icu_regions_are_rejected(): void
     {
         $this->assertFalse(CountrySupport::isSupported('EU'));

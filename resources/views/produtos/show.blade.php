@@ -243,6 +243,24 @@
                     </div>
                     <p class="product-reference mb-3">{{ __('messages.ref_prefix') }} {{ $product->sku }}</p>
 
+                    @if (isset($dhlMeasurement) && min(
+                        (float) $dhlMeasurement['weight'],
+                        (float) $dhlMeasurement['length'],
+                        (float) $dhlMeasurement['width'],
+                        (float) $dhlMeasurement['height'],
+                    ) > 0)
+                        <div class="product-logistics-reference" title="{{ $dhlMeasurement['estimated'] ? 'Referência logística estimada pela categoria' : 'Peso e medidas reais do produto' }}">
+                            <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+                            <span class="product-logistics-label">Peso e medidas</span>
+                            <span>{{ number_format($dhlMeasurement['weight'], 3, ',', '.') }} kg</span>
+                            <span class="product-logistics-divider" aria-hidden="true"></span>
+                            <span>{{ number_format($dhlMeasurement['length'], 1, ',', '.') }} × {{ number_format($dhlMeasurement['width'], 1, ',', '.') }} × {{ number_format($dhlMeasurement['height'], 1, ',', '.') }} cm</span>
+                            @if ($dhlMeasurement['estimated'])
+                                <span class="product-logistics-kind">média</span>
+                            @endif
+                        </div>
+                    @endif
+
                     <div class="product-price-block mb-4">
                         @if ($product->previous_price > $product->price)
                             <span class="text-muted text-decoration-line-through me-2 small fw-light">{{ currency_format($product->previous_price) }}</span>

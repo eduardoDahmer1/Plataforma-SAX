@@ -54,15 +54,11 @@ final class CountrySupport
         $normalized = self::normalizeForStorage($country);
 
         return $normalized !== ''
-            && ! in_array($normalized, [self::BRAZIL, self::PARAGUAY], true);
+            && $normalized !== self::PARAGUAY;
     }
 
     public static function shippingProvider(mixed $country): string
     {
-        if (self::isBrazil($country)) {
-            return 'manual_br';
-        }
-
         if (self::isParaguay($country)) {
             return 'local_py';
         }
@@ -101,7 +97,6 @@ final class CountrySupport
                 },
                 'name' => $name,
                 'shipping_provider' => match ($iso2) {
-                    'BR' => 'manual_br',
                     'PY' => 'local_py',
                     default => 'dhl',
                 },

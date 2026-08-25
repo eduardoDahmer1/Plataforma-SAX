@@ -16,6 +16,24 @@
             $paymentMethodManuallyEnabled = ! in_array((string) $order->payment_method, $controlledPaymentMethods, true)
                 || app(\App\Services\StoreControlService::class)->paymentEnabled((string) $order->payment_method);
             $paymentMethodEnabled = $catalogAvailable && $paymentMethodManuallyEnabled;
+            $rendixRefundableTransaction = $order->paymentTransactions
+                ->where('provider', \App\Services\RendixPixService::PROVIDER)
+                ->where('status', 'paid')
+                ->whereNull('refunded_at')
+                ->whereNotNull('external_id')
+                ->sortByDesc('id')
+                ->first();
+            $rendixRefundRequestAvailable = $order->payment_method === \App\Services\RendixPixService::PROVIDER
+                && $order->payment_status === 'paid'
+                && ! in_array($order->status, ['shipped', 'completed', 'delivered', 'canceled', 'cancelled', 'failed'], true)
+                && $rendixRefundableTransaction;
+            $rendixRefundReasons = [
+                'changed_mind' => __('messages.rendix_refund_reason_changed_mind'),
+                'duplicate' => __('messages.rendix_refund_reason_duplicate'),
+                'wrong_data' => __('messages.rendix_refund_reason_wrong_data'),
+                'delivery' => __('messages.rendix_refund_reason_delivery'),
+                'other' => __('messages.rendix_refund_reason_other'),
+            ];
         @endphp
         @if (session('warning'))
             <div class="alert alert-warning mb-4 shadow-sm border-0" role="alert"><i
@@ -28,6 +46,11 @@
         @if (session('info'))
             <div class="alert alert-info mb-4 shadow-sm border-0" role="alert"><i class="fas fa-info-circle me-2"></i>
                 {{ session('info') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger mb-4 shadow-sm border-0" role="alert">
+                <i class="fas fa-circle-exclamation me-2"></i>{{ $errors->first() }}
+            </div>
         @endif
 
         <div class="sax-order-hero mb-4">
@@ -125,6 +148,7 @@
                 <div>
                     <strong>{{ __('messages.order_pix_pending_title') }}</strong>
                     <span>{{ __('messages.order_pix_pending_body') }}</span>
+                    <span class="mt-2 fw-bold"><i class="fa-solid fa-id-card me-1"></i>{{ __('messages.rendix_cpf_holder_warning_message') }}</span>
                     <a href="{{ route('checkout.rendix.pix', $order->id) }}" class="sax-order-message__action">
                         <i class="fas fa-qrcode"></i> {{ __('messages.order_pix_open_payment') }}
                     </a>
@@ -135,6 +159,59 @@
                 <i class="fas fa-shield-alt"></i>
                 <div><strong>Pagamento confirmado.</strong><span>Agora você pode acompanhar a preparação e a entrega do pedido por esta página.</span></div>
             </div>
+        @endif
+
+        @if ($order->refund_request_status === 'pending')
+            <section class="sax-premium-card shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-sax-body d-flex align-items-start gap-3 p-4">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-warning-subtle text-warning-emphasis flex-shrink-0"
+                          style="width:42px;height:42px;border-radius:8px">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </span>
+                    <div>
+                        <h6 class="mb-1 fw-bold">{{ __('messages.rendix_refund_request_pending_title') }}</h6>
+                        <p class="small text-secondary mb-2">{{ __('messages.rendix_refund_request_pending_message') }}</p>
+                        <span class="d-block x-small text-uppercase fw-bold text-secondary">
+                            {{ __('messages.rendix_refund_request_reason') }}:
+                            {{ $rendixRefundReasons[$order->refund_request_reason] ?? $order->refund_request_reason }}
+                        </span>
+                        @if ($order->refund_request_details)
+                            <p class="small mb-0 mt-2" style="white-space:pre-line">{{ $order->refund_request_details }}</p>
+                        @endif
+                    </div>
+                </div>
+            </section>
+        @elseif ($rendixRefundRequestAvailable)
+            <section class="sax-premium-card shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-sax-header bg-white border-bottom">
+                    <h6 class="mb-0 fw-bold"><i class="fa-solid fa-rotate-left me-2"></i>{{ __('messages.rendix_refund_request_title') }}</h6>
+                </div>
+                <div class="card-sax-body p-4">
+                    <p class="small text-secondary mb-3">{{ __('messages.rendix_refund_request_description') }}</p>
+                    <form action="{{ route('user.orders.rendix-refund-request', $order) }}" method="POST"
+                          onsubmit='return confirm(@js(__("messages.rendix_refund_request_confirm")));'>
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label for="refund-request-reason" class="sax-label d-block mb-2">{{ __('messages.rendix_refund_request_reason_label') }}</label>
+                                <select id="refund-request-reason" name="reason" class="form-select rounded-1" required>
+                                    <option value="">{{ __('messages.selecione_uma_opcao') }}</option>
+                                    @foreach ($rendixRefundReasons as $reasonValue => $reasonLabel)
+                                        <option value="{{ $reasonValue }}" @selected(old('reason') === $reasonValue)>{{ $reasonLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-7">
+                                <label for="refund-request-details" class="sax-label d-block mb-2">{{ __('messages.rendix_refund_request_details_label') }}</label>
+                                <textarea id="refund-request-details" name="details" class="form-control rounded-1" rows="3" maxlength="1000">{{ old('details') }}</textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-danger btn-sax-sm mt-3 px-4 py-2 fw-bold text-uppercase">
+                            <i class="fa-regular fa-paper-plane me-2"></i>{{ __('messages.rendix_refund_request_submit') }}
+                        </button>
+                    </form>
+                </div>
+            </section>
         @endif
 
         <div class="row g-4 mb-5">
@@ -187,6 +264,25 @@
                                     {{ order_money($order, $order->shipping_cost ?? 0) }}
                                 </span>
                             </div>
+
+                            @if ($order->shipping_provider === 'dhl')
+                                <div class="p-2 mb-2 border rounded-3 bg-white x-small text-secondary">
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <span>DHL · {{ $order->shipping_package_count ?? 0 }} volume(s)</span>
+                                        <strong>{{ number_format((float) $order->shipping_billable_weight_kg, 3, ',', '.') }} kg faturáveis</strong>
+                                    </div>
+                                    @if (is_array($order->shipping_packages))
+                                        @foreach ($order->shipping_packages as $package)
+                                            <div class="mt-1">
+                                                {{ $package['name'] ?? 'Embalagem DHL' }} ·
+                                                {{ $package['item_count'] ?? 0 }} item(ns) ·
+                                                {{ number_format((float) ($package['weight'] ?? 0), 3, ',', '.') }} kg reais ·
+                                                {{ number_format((float) ($package['billable_weight'] ?? 0), 3, ',', '.') }} kg faturáveis
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
+                            @endif
 
                             <hr class="my-2">
 
@@ -352,16 +448,41 @@
         </h5>
         <div class="order-items-list">
             @foreach ($order->items as $item)
+                @php
+                    $shippingMeasurement = $item->dhl_shipping_measurement;
+                    $itemBrand = $item->product_brand ?: $item->product?->brand?->name;
+                    $itemSize = $item->product_size ?: $item->product?->size;
+                    $itemColor = $item->product_color ?: $item->product?->color;
+                @endphp
                 <div class="item-sax-row shadow-sm border-0 rounded-4 bg-white p-3 mb-3">
                     <div class="row align-items-center">
                         <div class="col-3 col-md-2 text-center"><img
-                                src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
+                                src="{{ $item->product?->photo_url ?? asset('storage/uploads/noimage.webp') }}"
                                 class="img-fluid rounded-3 object-fit-contain shadow-sm" style="max-height: 80px;"></div>
                         <div class="col-9 col-md-4">
+                            @if ($itemBrand)
+                                <div class="x-small text-secondary text-uppercase fw-bold mb-1">{{ $itemBrand }}</div>
+                            @endif
                             <h6 class="mb-1 text-uppercase fw-bold small text-dark">
-                                {{ $item->name ?? ($item->product->external_name ?? 'Producto') }}</h6>
-                            <span class="badge bg-light text-secondary border x-small fw-normal">SKU:
-                                {{ $item->sku ?? '-' }}</span>
+                                {{ $item->name ?? ($item->product?->external_name ?? 'Produto') }}</h6>
+                            <div class="d-flex flex-wrap gap-1 mb-1">
+                                <span class="badge bg-light text-secondary border x-small fw-normal">SKU: {{ $item->sku ?? '-' }}</span>
+                                @if ($itemSize)<span class="badge bg-light text-secondary border x-small fw-normal">Tamanho: {{ $itemSize }}</span>@endif
+                                @if ($itemColor)<span class="badge bg-light text-secondary border x-small fw-normal">Cor: {{ $itemColor }}</span>@endif
+                            </div>
+                            @if ($shippingMeasurement)
+                                <div class="x-small text-secondary">
+                                    <i class="fa-solid fa-box-open me-1"></i>
+                                    {{ number_format($shippingMeasurement['weight'], 3, ',', '.') }} kg/un. ·
+                                    {{ number_format($shippingMeasurement['length'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['width'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['height'], 1, ',', '.') }} cm
+                                    @if ($shippingMeasurement['estimated'])
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border ms-1">média</span>
+                                    @endif
+                                </div>
+                                @if ($item->quantity > 1)
+                                    <div class="x-small fw-bold text-dark mt-1">Peso dos {{ $item->quantity }} itens: {{ number_format($shippingMeasurement['weight'] * $item->quantity, 3, ',', '.') }} kg</div>
+                                @endif
+                            @endif
                         </div>
                         <div class="col-4 col-md-2 mt-3 mt-md-0 text-center"><label
                                 class="sax-label d-block text-muted">{{ __('messages.cant_abrev') }}</label><span

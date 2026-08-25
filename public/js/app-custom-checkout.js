@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const paymentMethodsAllowed = ['deposito', 'bancard_v2', 'rendix_pix', 'whatsapp'];
+    const isParaguayCountry = country => ['paraguai', 'paraguay', 'py'].includes(String(country || '').trim().toLowerCase());
+    const isDhlCountry = country => String(country || '').trim() !== '' && !isParaguayCountry(country);
 
     // A validacao do checkout e feita por etapa abaixo e novamente no servidor.
     // Sem isto, o navegador pode bloquear silenciosamente o submit por causa de
@@ -144,9 +146,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const selectedOption = document.querySelector('#shipping_address_id option:checked');
             const savedCountry = selectedOption?.dataset.country || '';
-            if (savedCountry && !['brasil', 'paraguai'].includes(savedCountry)) {
-                showStepAlert(3, 'Este endereço internacional será enviado pela DHL. A cotação estará disponível assim que as credenciais DHL forem configuradas.');
-                return false;
+            if (isDhlCountry(savedCountry)) {
+                if (!fieldValue('#dhl_quote_reference')) {
+                    showStepAlert(3, 'Aguarde a cotação DHL deste endereço antes de continuar.');
+                    return false;
+                }
             }
             return true;
         }
@@ -173,16 +177,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
 
-            if (!['brasil', 'paraguai'].includes(country)) {
-                showStepAlert(3, 'País internacional selecionado: a entrega será feita pela DHL. A cotação ainda precisa ser habilitada antes de concluir a compra.');
-                markFieldInvalid('#country', true);
-                return false;
-            }
-
-            if (!cep) {
+            if (!cep && !isParaguayCountry(country)) {
                 showStepAlert(3, 'Informe o CEP/Codigo postal para continuar.');
                 markFieldInvalid('#postal_code', true);
                 return false;
+            }
+
+            if (isDhlCountry(country)) {
+                if (!fieldValue('#dhl_quote_reference')) {
+                    showStepAlert(3, 'Aguarde a validação do código postal e a cotação DHL para continuar.');
+                    return false;
+                }
             }
 
             if (!street) {
@@ -303,7 +308,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const stateSelect = document.getElementById('state-select');
     const citySelect = document.getElementById('city-select');
     const postalInput = document.getElementById('postal_code');
+    const postalOptions = document.getElementById('checkout-postal-options');
     const labelPostal = document.getElementById('label-postal');
+    const postalFormatHint = document.getElementById('postal-format-hint');
     const labelState = document.getElementById('label-state');
     const storeSelect = document.getElementById('storeSelect');
     const storeMaps = document.querySelectorAll('.store-map');
@@ -321,9 +328,60 @@ document.addEventListener('DOMContentLoaded', function () {
     const bancardPygTotal = document.getElementById('bancard-pyg-total');
     const bancardCountryWarning = document.getElementById('bancard-country-warning');
     const confirmSaveAddress = document.getElementById('confirmSaveAddress');
+    const dhlQuoteReferenceInput = document.getElementById('dhl_quote_reference');
+    const dhlPackagingSummary = document.getElementById('dhl-packaging-summary');
 
     let paraguayData = null;
     let observationsValues = { 1: '', 2: '', 3: '' };
+    let shippingRequestSequence = 0;
+    let shippingCalculationTimer = null;
+
+    function escapeHtml(value) {
+        const element = document.createElement('div');
+        element.textContent = String(value ?? '');
+        return element.innerHTML;
+    }
+
+    function resetDhlQuote() {
+        shippingRequestSequence++;
+        if (dhlQuoteReferenceInput) dhlQuoteReferenceInput.value = '';
+        if (dhlPackagingSummary) {
+            dhlPackagingSummary.style.display = 'none';
+            dhlPackagingSummary.innerHTML = '';
+        }
+    }
+
+    function renderDhlQuote(quote) {
+        if (!quote || !dhlPackagingSummary) return;
+        const packages = Array.isArray(quote.packages) ? quote.packages : [];
+        const packageLines = packages.map((pack, index) => {
+            const itemCount = Number(pack.item_count || 0);
+            const weight = Number(pack.billable_weight || 0).toFixed(3);
+            return `<li>Volume ${index + 1}: <strong>${escapeHtml(pack.name || 'Caixa DHL')}</strong> — ${itemCount} item(ns), peso faturável ${weight} kg</li>`;
+        }).join('');
+        const estimateNotice = quote.uses_estimates
+            ? '<div class="text-warning-emphasis mt-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>Estimativa provisória baseada no tipo dos produtos; a expedição confirmará peso e medidas reais.</div>'
+            : '';
+        const reviewNames = Array.isArray(quote.review_items)
+            ? quote.review_items.map((item) => escapeHtml(item.name || item.sku || 'Produto')).join(', ')
+            : '';
+        const reviewNotice = quote.requires_manual_review
+            ? `<div class="text-warning-emphasis mt-2"><i class="fa-solid fa-shield-halved me-1"></i>A tarifa foi calculada, mas a expedição deve confirmar com a DHL a aceitação de: ${reviewNames || 'produto sujeito a revisão'}.</div>`
+            : '';
+        const freeNotice = quote.free_shipping ? '<div class="text-success fw-bold mt-2">Promoção de frete grátis aplicada.</div>' : '';
+        const currency = escapeHtml(quote.currency || 'USD');
+        const totalShipping = Number(quote.price || 0).toFixed(2);
+        const averageShipping = Number(quote.average_price_per_package || 0).toFixed(2);
+
+        dhlPackagingSummary.innerHTML = `
+            <div class="fw-bold mb-1">Composição automática: ${quote.package_count} volume(s)</div>
+            <ul class="mb-1 ps-3">${packageLines}</ul>
+            <div>Peso real estimado: ${Number(quote.actual_weight || 0).toFixed(3)} kg · Peso faturável: ${Number(quote.billable_weight || 0).toFixed(3)} kg</div>
+            <div>Frete total: <strong>${currency} ${totalShipping}</strong> · média informativa por volume: ${currency} ${averageShipping}</div>
+            ${estimateNotice}${reviewNotice}${freeNotice}
+            <div class="mt-2"><strong>Importante:</strong> ${escapeHtml(quote.tax_notice || 'Impostos e taxas locais serão cobrados no destino quando aplicáveis.')}</div>`;
+        dhlPackagingSummary.style.display = 'block';
+    }
 
     // Total do pedido já com o cupom abatido, antes do frete. Quando não há frete
     // (retirada na loja ou envio a combinar), é ele que vai para o total geral —
@@ -335,6 +393,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function calcularFrete() {
+        window.clearTimeout(shippingCalculationTimer);
+        shippingCalculationTimer = window.setTimeout(executarCalculoFrete, 350);
+    }
+
+    function executarCalculoFrete() {
+        resetDhlQuote();
+        const requestSequence = shippingRequestSequence;
         const radioSelected = document.querySelector('input[name="shipping"]:checked')?.value;
         
         if (radioSelected === '3') {
@@ -361,43 +426,89 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!cidade || !pais) return;
 
-        if (pais === 'brasil') {
-            if (freteDisplay) freteDisplay.innerText = 'Frete via WhatsApp';
-            
-            if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
-            if (freteValorInput) freteValorInput.value = '0.00';
-            updateBancardCurrencyNotice();
-            return;
+        const isDhl = isDhlCountry(pais);
+        if (freteDisplay) freteDisplay.innerText = isDhl ? 'Calculando DHL...' : 'Calculando...';
+
+        let destination = { city: cidade, country: pais };
+        if (radioSelected === '1') {
+            const option = addressSelect?.options[addressSelect.selectedIndex];
+            destination = {
+                ...destination,
+                postal_code: option?.dataset.postalCode || '',
+                state: option?.dataset.state || '',
+                street: option?.dataset.street || '',
+                number: option?.dataset.number || '',
+                district: option?.dataset.district || ''
+            };
+        } else {
+            destination = {
+                ...destination,
+                postal_code: postalInput?.value || '',
+                state: stateSelect?.value || '',
+                street: document.querySelector('input[name="street"]')?.value || '',
+                number: document.querySelector('input[name="number"]')?.value || '',
+                district: document.querySelector('input[name="district"]')?.value || ''
+            };
         }
 
-        if (pais !== 'paraguai') {
-            if (freteDisplay) freteDisplay.innerText = 'Cotação DHL pendente';
-            if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
-            if (freteValorInput) freteValorInput.value = '0.00';
-            updateBancardCurrencyNotice();
+        if (isDhl && !String(destination.postal_code || '').trim()) {
+            if (freteDisplay) freteDisplay.innerText = 'Informe o CEP / código postal';
+            if (infoContent) infoContent.innerHTML = '<i class="fa-solid fa-location-dot me-2"></i><strong>CEP necessário para a DHL:</strong> informe o código postal do destino ou atualize o endereço salvo antes de continuar.';
             return;
         }
-
-        if (freteDisplay) freteDisplay.innerText = 'Calculando...';
 
         fetch("/checkout/calcular-frete", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: JSON.stringify({ city: cidade, country: pais })
+            body: JSON.stringify(destination)
         })
-        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(async res => {
+            const contentType = String(res.headers.get('content-type') || '').toLowerCase();
+            let data = null;
+
+            if (contentType.includes('application/json')) {
+                try {
+                    data = await res.json();
+                } catch (error) {
+                    data = null;
+                }
+            }
+
+            if (res.status === 429) {
+                throw new Error('Foram feitas várias atualizações seguidas. Aguarde alguns segundos para uma nova cotação.');
+            }
+
+            if (!res.ok) {
+                throw new Error(data?.message || 'O serviço de cotação está temporariamente indisponível. Tente novamente em instantes.');
+            }
+
+            if (!data || typeof data !== 'object') {
+                throw new Error('O serviço de cotação devolveu uma resposta inesperada. Tente novamente em instantes.');
+            }
+
+            return data;
+        })
         .then(data => {
+            if (requestSequence !== shippingRequestSequence) return;
             if (freteDisplay) freteDisplay.innerText = data.frete_formatado;
             if (totalDisplay) totalDisplay.innerText = data.total_formatado;
             if (freteValorInput) freteValorInput.value = (parseFloat(data.frete) || 0).toFixed(2);
+            if (data.dhl) {
+                if (dhlQuoteReferenceInput) dhlQuoteReferenceInput.value = data.dhl.reference || '';
+                renderDhlQuote(data.dhl);
+                if (infoContent) infoContent.innerHTML = `<i class="fa fa-plane me-2"></i> <strong>${escapeHtml(data.dhl.service_name || 'DHL Express')}:</strong> ${Number(data.dhl.package_count || 0)} volume(s) calculado(s) automaticamente. Tributos de importação não estão incluídos.`;
+            }
             updateBancardCurrencyNotice();
         })
         .catch(error => {
+            if (requestSequence !== shippingRequestSequence) return;
             console.error('Erro no cálculo:', error);
-            if (freteDisplay) freteDisplay.innerText = 'Erro ao calcular';
+            if (freteDisplay) freteDisplay.innerText = 'Cotação indisponível';
+            if (infoContent && isDhl) infoContent.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Não foi possível cotar pela DHL:</strong> ${escapeHtml(error.message)}`;
         });
     }
 
@@ -490,18 +601,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 ? (document.getElementById('user_country_data')?.value || 'brasil') 
                 : (countrySelect?.value || 'brasil');
 
-            if (country.toLowerCase() === 'brasil') {
-                infoContent.innerHTML = '<i class="fab fa-whatsapp me-2"></i> <strong>Entrega no Brasil:</strong> Após finalizar o pedido, nossa equipe entrará em contato pelo WhatsApp para confirmar a melhor opção de envio e o valor do frete. <strong>O frete não está incluído no total abaixo.</strong>';
-                if (freteDisplay) freteDisplay.innerText = 'Frete via WhatsApp';
-                if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
-                if (freteValorInput) freteValorInput.value = '0.00';
-
-            } else if (country.toLowerCase() === 'paraguai') {
+            if (isParaguayCountry(country)) {
                 infoContent.innerHTML = '<i class="fa fa-truck me-2"></i> <strong>Envio Nacional (Paraguai):</strong> O custo do frete será calculado com base na sua cidade e adicionado ao total abaixo.';
                 if (freteDisplay) freteDisplay.innerText = 'Calculando...';
             } else {
-                infoContent.innerHTML = '<i class="fa fa-plane me-2"></i> <strong>Entrega internacional via DHL:</strong> o endereço já pode ser cadastrado. A compra será liberada após a configuração da cotação DHL.';
-                if (freteDisplay) freteDisplay.innerText = 'Cotação DHL pendente';
+                const destinationLabel = country.toLowerCase() === 'brasil' || country.toLowerCase() === 'br'
+                    ? 'Entrega ao Brasil via DHL'
+                    : 'Entrega internacional via DHL';
+                infoContent.innerHTML = `<i class="fa fa-plane me-2"></i> <strong>${destinationLabel}:</strong> o frete será calculado pelo CEP, destino e pelos volumes montados automaticamente. Impostos e taxas locais serão cobrados do destinatário quando aplicáveis.`;
+                if (freteDisplay) freteDisplay.innerText = 'Aguardando endereço';
                 if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
                 if (freteValorInput) freteValorInput.value = '0.00';
             }
@@ -545,6 +653,50 @@ document.addEventListener('DOMContentLoaded', function () {
         return countrySelect.options[countrySelect.selectedIndex]?.dataset.iso2 || countrySelect.value.toUpperCase();
     }
 
+    function updatePostalGuide() {
+        if (!postalInput || !postalFormatHint || !window.SaxWorldLocations?.postalGuide) return;
+        const iso2 = selectedCountryIso2();
+
+        window.SaxWorldLocations.postalGuide(iso2).then(function (guide) {
+            if (selectedCountryIso2() !== iso2) return;
+            if (guide.example) postalInput.placeholder = `Ex.: ${guide.example}`;
+            postalFormatHint.textContent = guide.format
+                ? `Formato orientativo: ${guide.format}. Use o código postal exato do endereço de entrega.`
+                : 'Informe o código postal oficial do endereço. A DHL validará o formato ao calcular o frete.';
+        });
+    }
+
+    function loadPostalSuggestions() {
+        if (!postalOptions || !postalInput || !window.SaxWorldLocations?.postalCodes) return;
+        postalOptions.innerHTML = '';
+        const country = countrySelect?.value || '';
+        if (!isDhlCountry(country) || country === 'brasil' || !citySelect?.value) return;
+
+        const iso2 = selectedCountryIso2();
+        const cityName = citySelect.value;
+        const adminCode = stateSelect?.options[stateSelect.selectedIndex]?.dataset.code || '';
+        if (postalFormatHint) postalFormatHint.textContent = 'Buscando códigos postais da cidade...';
+
+        window.SaxWorldLocations.postalCodes(iso2, cityName, adminCode).then(function (items) {
+            if (selectedCountryIso2() !== iso2 || citySelect.value !== cityName) return;
+            items.forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item.postal_code;
+                option.label = [item.place_name, item.admin_name].filter(Boolean).join(' — ');
+                postalOptions.appendChild(option);
+            });
+
+            const limitation = ['CA', 'IE', 'MT'].includes(iso2)
+                ? ' O GeoNames pode retornar apenas a parte inicial nesse país; complete conforme o endereço.'
+                : '';
+            if (postalFormatHint) {
+                postalFormatHint.textContent = items.length
+                    ? `${items.length} sugestão(ões). Selecione uma e confirme o código exato do endereço.${limitation}`
+                    : 'Não encontramos uma sugestão. Informe o código postal oficial do endereço de entrega.';
+            }
+        });
+    }
+
     function loadInternationalStates() {
         const iso2 = selectedCountryIso2();
         stateSelect.innerHTML = '<option value="">Carregando estados / províncias...</option>';
@@ -580,7 +732,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
                 (payload.data || []).forEach(item => citySelect.add(new Option(item.name, item.name)));
                 citySelect.disabled = false;
-                if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
+                if (citySelect.dataset.selected) {
+                    citySelect.value = citySelect.dataset.selected;
+                    citySelect.dispatchEvent(new Event('change'));
+                }
             })
             .catch(() => {
                 citySelect.innerHTML = '<option value="">Não foi possível carregar as cidades</option>';
@@ -588,6 +743,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     stateSelect.addEventListener('change', function() {
+        resetDhlQuote();
         const country = countrySelect.value;
         if (!this.value) return;
         citySelect.disabled = false;
@@ -600,7 +756,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(data => {
                     citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
                     data.forEach(c => citySelect.innerHTML += `<option value="${c.nome}">${c.nome}</option>`);
-                    if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
+                    if (citySelect.dataset.selected) {
+                        citySelect.value = citySelect.dataset.selected;
+                        citySelect.dispatchEvent(new Event('change'));
+                    }
                 });
         } else if (country === 'paraguai' && paraguayData) {
             const cities = paraguayData
@@ -608,18 +767,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 .sort((a, b) => a.city.localeCompare(b.city, 'es', { sensitivity: 'base' }));
             citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
             cities.forEach(c => citySelect.innerHTML += `<option value="${c.city}">${c.city}</option>`);
-            if (citySelect.dataset.selected) citySelect.value = citySelect.dataset.selected;
+            if (citySelect.dataset.selected) {
+                citySelect.value = citySelect.dataset.selected;
+                citySelect.dispatchEvent(new Event('change'));
+            }
         } else {
             const adminCode = this.options[this.selectedIndex]?.dataset.code;
             if (adminCode) loadInternationalCities(adminCode);
         }
     });
 
-    citySelect.addEventListener('change', calcularFrete);
+    citySelect.addEventListener('change', function () {
+        loadPostalSuggestions();
+        calcularFrete();
+    });
 
     window.toggleCountryFields = function() {
+        resetDhlQuote();
         const country = countrySelect.value;
         const districtInput = document.querySelector('input[name="district"]');
+        if (postalOptions) postalOptions.innerHTML = '';
         citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
         citySelect.disabled = true;
         postalInput.required = country !== 'paraguai';
@@ -628,51 +795,69 @@ document.addEventListener('DOMContentLoaded', function () {
             labelPostal.innerText = "CEP";
             postalInput.placeholder = "00000-000";
             labelState.innerText = "Estado";
+            if (postalFormatHint) postalFormatHint.textContent = 'Formato: 00000-000.';
             loadBrasilStates();
         } else if (country === 'paraguai') {
             labelPostal.innerText = "Código da Casa (opcional)";
             postalInput.placeholder = "Ex: 1234";
             labelState.innerText = "Departamento";
+            if (postalFormatHint) postalFormatHint.textContent = 'Opcional para entrega local no Paraguai.';
             loadParaguayData();
         } else {
             labelPostal.innerText = "Código postal";
             postalInput.placeholder = "Ex.: 10001";
             labelState.innerText = "Estado / Província / Região";
+            if (postalFormatHint) postalFormatHint.textContent = 'Consultando o formato postal do país...';
+            updatePostalGuide();
             loadInternationalStates();
         }
         updateShippingMessage(document.querySelector('input[name="shipping"]:checked')?.value);
     }
 
     if (postalInput) {
-        postalInput.addEventListener('input', function(e) {
-            if (countrySelect.value === 'brasil') {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 5) value = value.substring(0, 5) + '-' + value.substring(5, 8);
-                e.target.value = value;
-            }
-        });
-        postalInput.addEventListener('blur', function() {
-            const cep = this.value.replace(/\D/g, '');
-            if (countrySelect.value === 'brasil' && cep.length === 8) {
-                fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (!data.erro) {
-                            document.querySelector('input[name="street"]').value = data.logradouro;
-                            stateSelect.value = data.uf;
-                            stateSelect.dispatchEvent(new Event('change'));
-                            setTimeout(() => {
-                                const cityOp = Array.from(citySelect.options).find(o => o.text.toUpperCase() === data.localidade.toUpperCase());
-                                if (cityOp) {
-                                    citySelect.value = cityOp.value;
-                                    citySelect.dispatchEvent(new Event('change'));
-                                }
-                            }, 1000);
-                        }
-                    });
-            }
-        });
+        if (postalInput.dataset.dhlListenersBound !== '1') {
+            postalInput.dataset.dhlListenersBound = '1';
+            postalInput.addEventListener('input', function(e) {
+                resetDhlQuote();
+                if (countrySelect.value === 'brasil') {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 5) value = value.substring(0, 5) + '-' + value.substring(5, 8);
+                    e.target.value = value;
+                }
+            });
+            postalInput.addEventListener('blur', function() {
+                const cep = this.value.replace(/\D/g, '');
+                if (countrySelect.value === 'brasil' && cep.length === 8) {
+                    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.erro) {
+                                document.querySelector('input[name="street"]').value = data.logradouro;
+                                stateSelect.value = data.uf;
+                                stateSelect.dispatchEvent(new Event('change'));
+                                setTimeout(() => {
+                                    const cityOp = Array.from(citySelect.options).find(o => o.text.toUpperCase() === data.localidade.toUpperCase());
+                                    if (cityOp) {
+                                        citySelect.value = cityOp.value;
+                                        citySelect.dispatchEvent(new Event('change'));
+                                    }
+                                }, 1000);
+                            }
+                        });
+                } else if (isDhlCountry(countrySelect.value) && this.value.trim()) {
+                    calcularFrete();
+                }
+            });
+        }
     }
+
+    document.querySelectorAll('input[name="street"], input[name="number"], input[name="district"]').forEach((field) => {
+        field.addEventListener('input', resetDhlQuote);
+        field.addEventListener('blur', function () {
+            const country = countrySelect?.value || '';
+            if (isDhlCountry(country) && citySelect?.value) calcularFrete();
+        });
+    });
 
     window.handleShippingSelection = function(value) {
         if(shippingRegistered) shippingRegistered.style.display = value == 1 ? 'block' : 'none';
@@ -724,6 +909,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    if (countrySelect && countrySelect.value) {
+        countrySelect.dispatchEvent(new Event('change'));
+    }
+
     const checkedRadio = document.querySelector('input[name="shipping"]:checked');
     
     if (checkedRadio) {
@@ -732,10 +921,6 @@ document.addEventListener('DOMContentLoaded', function () {
     
     if (storeSelect) {
         window.updateStoreMap();
-    }
-
-    if (checkedRadio && checkedRadio.value !== '3') {
-        calcularFrete();
     }
 
     window.selectPayment = function(method) {
@@ -780,14 +965,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     acceptTerms?.addEventListener('change', syncTermsAcceptance);
     syncTermsAcceptance();
-
-    if (countrySelect && countrySelect.value) {
-        countrySelect.dispatchEvent(new Event('change'));
-    }
-    
-    if (typeof window.toggleCountryFields === 'function') {
-        window.toggleCountryFields();
-    }
 
     /* ----------------------------------------------------------------------
      * Cupom no checkout

@@ -42,6 +42,14 @@ return [
             'after_commit' => false,
         ],
 
+        'product-ai' => [
+            'driver' => 'database',
+            'table' => 'product_ai_jobs',
+            'queue' => 'product-ai',
+            'retry_after' => 210,
+            'after_commit' => true,
+        ],
+
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => 'localhost',

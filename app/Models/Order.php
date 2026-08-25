@@ -47,8 +47,20 @@ class Order extends Model
         'payment_response_code',
         'payment_response_message',
         'payment_failed_at',
+        'refund_request_status',
+        'refund_request_reason',
+        'refund_request_details',
+        'refund_requested_at',
+        'refund_request_resolved_at',
+        'refund_request_resolved_by',
 
         'shipping_cost',
+        'shipping_provider',
+        'shipping_currency',
+        'shipping_markup_percent',
+        'shipping_billable_weight_kg',
+        'shipping_package_count',
+        'shipping_packages',
         'packing_cost',
         'tax',
 
@@ -92,8 +104,11 @@ class Order extends Model
 
     protected $casts = [
         'payment_failed_at' => 'datetime',
+        'refund_requested_at' => 'datetime',
+        'refund_request_resolved_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
         'rendix_terms_accepted_at' => 'datetime',
+        'shipping_packages' => 'array',
     ];
 
     public function depositReceiptPath(): ?string

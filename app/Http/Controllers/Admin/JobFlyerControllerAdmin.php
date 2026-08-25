@@ -7,6 +7,7 @@ use App\Models\JobFlyer;
 use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class JobFlyerControllerAdmin extends Controller
 {
@@ -32,6 +33,7 @@ class JobFlyerControllerAdmin extends Controller
             'is_active' => true,
             'sort_order' => $maxOrder + 1,
         ]);
+        Cache::forget('contact_active_job_flyers');
 
         return redirect()->route('admin.trabalhe_conosco.index')
             ->with('success', 'Flyer adicionado com sucesso.');
@@ -42,6 +44,7 @@ class JobFlyerControllerAdmin extends Controller
         $jobFlyer->update([
             'is_active' => ! $jobFlyer->is_active,
         ]);
+        Cache::forget('contact_active_job_flyers');
 
         return redirect()->back()
             ->with('success', $jobFlyer->is_active ? 'Flyer ativado.' : 'Flyer desativado.');
@@ -61,6 +64,7 @@ class JobFlyerControllerAdmin extends Controller
             $currentOrder = $jobFlyer->sort_order;
             $jobFlyer->update(['sort_order' => $neighbor->sort_order]);
             $neighbor->update(['sort_order' => $currentOrder]);
+            Cache::forget('contact_active_job_flyers');
         }
 
         return redirect()->back();
@@ -71,6 +75,7 @@ class JobFlyerControllerAdmin extends Controller
         Storage::disk('public')->delete($jobFlyer->image);
 
         $jobFlyer->delete();
+        Cache::forget('contact_active_job_flyers');
 
         return redirect()->route('admin.trabalhe_conosco.index')
             ->with('success', 'Flyer removido.');

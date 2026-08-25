@@ -2227,6 +2227,27 @@ gap: 4px 10px;
 margin-bottom: 8px;
 }
 
+.item-logistics-row {
+align-items: center;
+color: #96918a;
+display: flex;
+flex-wrap: wrap;
+font-size: 9px;
+gap: 4px;
+line-height: 1.25;
+margin: -2px 0 8px;
+}
+
+.item-logistics-row i { color: #aaa49d; font-size: 8px; }
+.item-logistics-row small {
+border: 1px solid #ddd8d1;
+border-radius: 999px;
+font-size: 7px;
+letter-spacing: .07em;
+padding: 1px 4px;
+text-transform: uppercase;
+}
+
 .item-color-wrap {
 align-items: center;
 display: inline-flex;

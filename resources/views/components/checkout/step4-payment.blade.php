@@ -67,6 +67,10 @@
                         <span class="d-block small mt-1">
                             {{ __('messages.checkout_pix_notice_body') }}
                         </span>
+                        <span class="d-block small mt-2 fw-bold">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                            {{ __('messages.rendix_cpf_holder_warning_message') }}
+                        </span>
                     </div>
                 </div>
                 <div class="form-check mt-3 pt-3 border-top border-success-subtle">

@@ -70,6 +70,7 @@
                     <div class="col-md-4">
                         <label class="small text-muted text-uppercase fw-bold" id="label-postal" data-address-postal-label>CEP</label>
                         <input type="text" name="postal_code" id="postal_code" class="form-control sax-input" value="{{ old('cep', auth()->user()->cep) }}" placeholder="00000-000" data-address-postal-code>
+                        <div class="form-text" data-address-postal-hint>Informe o código postal exato do endereço.</div>
                     </div>
 
                     <div class="col-md-4">

@@ -33,8 +33,12 @@ class OpenAICatalogService
                 ->get(['id', 'name', 'slug', 'subcategory_id', 'category_id'])
             : collect();
 
+        $manufacturerIdentity = $product->manufacturerSearchIdentity();
+        $manufacturerReferences = (array) ($manufacturerIdentity['reference_candidates'] ?? []);
+        $normalizedManufacturerName = $this->normalizeSearchText($manufacturerIdentity['name'] ?? null);
+
         $knownData = [
-            'sku' => $product->sku,
+            'internal_sku' => $product->sku,
             'original_name' => $product->external_name,
             'current_commercial_name' => $product->name,
             'current_description' => $product->description,
@@ -46,9 +50,21 @@ class OpenAICatalogService
             'color' => $product->color,
             'material' => $product->material,
             'measure' => $product->measure,
-            'gtin' => $product->gtin,
-            'mpn' => $product->mpn,
-            'reference_code' => $product->ref_code,
+            'internal_reference_code' => $product->ref_code,
+            'manufacturer_reference_candidates' => $manufacturerReferences,
+            'search_hints' => [
+                'brand' => $product->brand?->name,
+                'product_identity_normalized' => $normalizedManufacturerName,
+                'exact_reference_candidates' => $manufacturerReferences,
+                'brand_and_reference_candidates' => array_values(array_map(
+                    fn ($reference) => trim(implode(' ', array_filter([$product->brand?->name, $reference]))),
+                    $manufacturerReferences,
+                )),
+                'brand_and_product' => trim(implode(' ', array_filter([
+                    $product->brand?->name,
+                    $normalizedManufacturerName,
+                ]))),
+            ],
             'taxonomy' => [
                 'fixed_category' => [
                     'id' => $product->category_id,
@@ -72,12 +88,21 @@ La salida debe cumplir exactamente el JSON Schema recibido. La propuesta será r
 persona y nunca debe tratarse automáticamente como información verificada.
 
 Convierte los datos internos recibidos en información comercial estandarizada en portugués de
-Brasil, español e inglés. Conserva con máxima fidelidad la marca, modelo, referencia, variante,
-color y tamaño o volumen. No traduzcas marcas, nombres propios, referencias ni códigos.
+Brasil, español e inglés. Conserva con máxima fidelidad la marca, modelo, referencia y variante al
+identificar el producto. Usa color y tamaño o volumen únicamente para verificar la variante, pero
+nunca los incluyas en commercial_name ni en descriptions. No traduzcas marcas, nombres propios,
+referencias ni códigos.
 
-Usa web_search para investigar el producto. Busca con amplitud suficiente antes de concluir que no
-existe una coincidencia. Prueba sucesivamente: (1) GTIN exacto; (2) marca con MPN o referencia exacta;
-(3) la referencia con y sin espacios, guiones o separadores; y (4) marca, nombre original y variante.
+Usa web_search para investigar el producto. La integración no proporciona GTIN ni un campo MPN
+separado. manufacturer_reference_candidates contiene todos los códigos con números extraídos del
+nombre original antes de la talla (#) y el color (*); trátalos como posibles MPN o referencias del
+fabricante. Busca con amplitud suficiente antes de concluir que no existe una coincidencia. Prueba
+sucesivamente: (1) cada referencia candidata exacta entre comillas; (2) la marca con cada referencia;
+(3) cada referencia con y sin espacios, guiones, puntos o barras; y (4) marca con el nombre normalizado.
+No confundas internal_sku ni internal_reference_code con referencias públicas del fabricante: úsalos
+solamente como último recurso si no existen candidatos extraídos. Ignora símbolos de talla y códigos
+de color que puedan impedir coincidencias, pero no elimines letras o números que formen parte de la
+marca, modelo o referencia.
 No limites la investigación a tres páginas: el sistema mostrará después únicamente las tres mejores.
 
 Para verificar una coincidencia, compara marca, referencia o identificador, modelo y variante dentro
@@ -93,28 +118,58 @@ continúa usando únicamente los datos internos.
 
 Los datos externos deben quedar identificados en web_research.findings y nunca pueden reemplazar
 la categoría principal fixed_category ni permitir IDs fuera de allowed_subcategories y
-allowed_child_categories. No inventes características, materiales, medidas, ingredientes,
+allowed_child_categories. Una característica solo puede presentarse como un hecho cuando esté
+respaldada por los datos internos o por una fuente web confiable que corresponda inequívocamente al
+producto identificado. No deduzcas características a partir de la marca, la categoría, productos
+similares, otra variante del mismo modelo ni conocimiento general sobre la colección. Si un dato no
+puede verificarse razonablemente, omítelo. No inventes materiales, medidas, ingredientes,
 concentraciones, rendimiento u otras especificaciones. Separa hechos de sugerencias y agrega la
 información faltante a missing_data. missing_data, warnings, web_research y editorial_summary son
 exclusivamente para revisión administrativa: nunca menciones faltantes, incertidumbre, fuentes ni
 advertencias dentro de commercial_name o descriptions.
 
+Las descriptions son el texto final que verá el cliente en la tienda, no un informe para el operador.
+Nunca hables del proceso de investigación, de la referencia consultada ni del grado de verificación.
+No uses expresiones como "característica confirmada", "dato verificado", "para esta referencia",
+"según las fuentes", "producto identificado", "información disponible" ni equivalentes en portugués
+o inglés. Estas reglas de comprobación son internas: presenta directamente los hechos del producto,
+sin explicar cómo fueron encontrados o validados y sin dirigirte al administrador.
+Las descriptions deben contener únicamente el texto comercial final del producto. Nunca incluyas
+URLs, enlaces, citas, referencias bibliográficas, nombres de fuentes, dominios, marcadores de citación
+ni expresiones como "según la web oficial" o "según el fabricante", tampoco sus equivalentes en
+portugués o inglés. Las fuentes se utilizan exclusivamente para investigar y verificar información y
+deben devolverse únicamente dentro de web_research.
+
 Si original_name contiene una talla después de #, reconócela pero no la incluyas en el nombre
 comercial. Si contiene un código después de *, trátalo como código de color y no lo conviertas en
-un color comercial sin evidencia explícita. Los tres nombres comerciales deben estar en MAYÚSCULAS.
+un color comercial sin evidencia explícita. Solo los tres campos commercial_name deben estar en
+MAYÚSCULAS. Las descriptions deben usar capitalización natural de oración: nunca escribas una frase
+o un párrafo completo en mayúsculas. Conserva mayúsculas únicamente en siglas, códigos y nombres de
+marca cuando su escritura oficial lo requiera.
 
-Redacta cada descripción completa con entre 150 y 220 palabras, distribuidas en dos o tres párrafos
-separados por una línea en blanco. El tono debe ser elegante, cuidado y cercano, dirigido
-principalmente a clientes que valoran la calidad y están dispuestos a invertir en buenos productos.
-Abre con una presentación atractiva, desarrolla características verificadas junto con beneficios
-prácticos derivados directamente del propio producto. Habla exclusivamente del producto: su
-identidad, diseño, materiales, acabados, construcción, función y cualidades verificadas que sean
-pertinentes. No menciones tallas de ropa o calzado, números o letras de talla ni disponibilidad de
-tallas, aunque esos datos aparezcan en la entrada. Sí puedes conservar capacidades o volúmenes
-intrínsecos, como 100 ml, cuando sean esenciales para identificar el producto. No recomiendes con
-qué combinarlo y no describas conjuntos, accesorios complementarios, estilismos, ocasiones de uso
-ni otros productos. Evita repeticiones, relleno, clichés, superlativos absolutos y el uso frecuente
-de frases como "el mejor", "garantizado" o "lujoso". No confundas elegancia con exageración.
+Regla obligatoria para el contenido comercial: commercial_name y descriptions no deben mencionar
+ningún color, talla, tamaño, medida, volumen, capacidad ni variante basada en esas características.
+Aunque estos datos aparezcan en la entrada o sean confirmados por las fuentes, omítelos por completo
+del nombre y de las descripciones. La descripción debe centrarse únicamente en la identidad, diseño,
+materiales, acabados, construcción, función y demás cualidades del producto.
+
+Adapta la extensión de cada descripción a la cantidad de información verificable disponible. Usa
+aproximadamente 80 a 160 palabras como referencia editorial, no como una cuota obligatoria. Si
+existen pocos datos verificables, una descripción de aproximadamente 60 a 100 palabras es correcta
+y preferible a completar longitud con inferencias, repeticiones o lenguaje genérico. Puede utilizar
+uno, dos o tres párrafos separados por una línea en blanco; cada párrafo debe aportar información
+nueva y concreta sobre el producto.
+
+Prioriza colección o línea, materiales, construcción, acabados, tecnologías, funciones, componentes
+y detalles distintivos propios del modelo cuando estén verificados. Habla exclusivamente de la
+identidad y las características específicas del producto. No uses expresiones de relleno como
+"actitud urbana", "líneas arquitectónicas", "diseño vigente", "ejecución cuidada", "para quienes
+valoran" o "presencia marcada". No menciones colores, tallas, tamaños, medidas, capacidades o
+volúmenes, aunque esos datos aparezcan en la entrada o sean esenciales para identificar el producto.
+No recomiendes con qué combinarlo y no describas conjuntos, accesorios complementarios, estilismos,
+ocasiones de uso ni otros productos. Evita repeticiones, clichés, superlativos absolutos y frases
+como "el mejor", "garantizado" o "lujoso". Precisión e información útil tienen prioridad sobre tono
+comercial y longitud.
 
 Escribe pt_br, es y en de manera natural e idiomática para cada público; no hagas traducciones
 literales. Las tres versiones deben conservar exactamente los mismos hechos, sin añadir datos en
@@ -184,7 +239,7 @@ PROMPT;
 
         $sources = $this->extractSources(
             $payload,
-            $product->ref_code,
+            $manufacturerReferences,
             (array) data_get($proposal, 'web_research.selected_source_urls', []),
         );
         $researchStatus = data_get($proposal, 'web_research.status') === 'matched' && $sources !== []
@@ -223,7 +278,20 @@ PROMPT;
         return trim(implode("\n", $texts));
     }
 
-    private function extractSources(array $payload, ?string $referenceCode = null, array $selectedUrls = []): array
+    private function normalizeSearchText(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        $value = preg_replace('/[#*]+[^\s]*/u', ' ', $value) ?? $value;
+        $value = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $value) ?? $value;
+
+        return trim(preg_replace('/\s+/u', ' ', $value) ?? $value) ?: null;
+    }
+
+    private function extractSources(array $payload, array $referenceCandidates = [], array $selectedUrls = []): array
     {
         $selectedUrlOrder = [];
         foreach ($selectedUrls as $index => $selectedUrl) {
@@ -245,7 +313,7 @@ PROMPT;
                 $sources[$url] ??= [
                     'title' => (string) data_get($source, 'title', $url),
                     'url' => $url,
-                    'has_reference' => $this->urlContainsReference($url, $referenceCode),
+                    'has_reference' => $this->urlContainsReference($url, $referenceCandidates),
                     'selected_order' => $selectedUrlOrder[$url] ?? null,
                 ];
             }
@@ -273,17 +341,29 @@ PROMPT;
         }, array_slice($sources, 0, 3));
     }
 
-    private function urlContainsReference(string $url, ?string $referenceCode): bool
+    private function urlContainsReference(string $url, array $referenceCandidates): bool
     {
-        $normalizedReference = preg_replace('/[^a-z0-9]+/', '', mb_strtolower(trim((string) $referenceCode), 'UTF-8'));
-        if (! is_string($normalizedReference) || mb_strlen($normalizedReference) < 4) {
-            return false;
-        }
-
         $decodedUrl = rawurldecode($url);
         $normalizedUrl = preg_replace('/[^a-z0-9]+/', '', mb_strtolower($decodedUrl, 'UTF-8'));
 
-        return is_string($normalizedUrl) && str_contains($normalizedUrl, $normalizedReference);
+        if (! is_string($normalizedUrl)) {
+            return false;
+        }
+
+        foreach ($referenceCandidates as $referenceCandidate) {
+            $normalizedReference = preg_replace(
+                '/[^a-z0-9]+/',
+                '',
+                mb_strtolower(trim((string) $referenceCandidate), 'UTF-8'),
+            );
+            if (is_string($normalizedReference)
+                && mb_strlen($normalizedReference) >= 4
+                && str_contains($normalizedUrl, $normalizedReference)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function responseSchema(): array

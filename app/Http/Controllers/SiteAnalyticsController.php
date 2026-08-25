@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SiteAnalyticsEvent;
+use App\Services\VisitorCountryResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 
 class SiteAnalyticsController extends Controller
 {
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, VisitorCountryResolver $countryResolver): JsonResponse
     {
         if (!Cache::remember('site_analytics_table_exists', 60, fn () => Schema::hasTable('site_analytics_events'))) {
             return response()->json(null, 204);
@@ -33,6 +34,8 @@ class SiteAnalyticsController extends Controller
             return response()->json(null, 204);
         }
 
+        $country = $countryResolver->resolve($request);
+
         SiteAnalyticsEvent::create([
             'event_date' => now()->toDateString(),
             'event_type' => $data['event_type'],
@@ -44,6 +47,9 @@ class SiteAnalyticsController extends Controller
             'element_text' => $data['element_text'] ?? null,
             'device_type' => $data['device_type'] ?? null,
             'referrer_host' => $data['referrer_host'] ?? null,
+            'country_code' => $country['code'] ?? null,
+            'country_name' => $country['name'] ?? null,
+            'country_source' => $country['source'] ?? null,
         ]);
 
         return response()->json(['stored' => true], 201);

@@ -74,8 +74,9 @@ document.addEventListener('DOMContentLoaded', function () {
         let categorySwiper = null;
 
         const syncCategorySwiper = () => {
-            if (mobileCategories.matches && !categorySwiper) {
-                const slideCount = categorySwiperEl.querySelectorAll('.category-item').length;
+            const slideCount = categorySwiperEl.querySelectorAll('.category-item').length;
+
+            if (mobileCategories.matches && slideCount > 2 && !categorySwiper) {
 
                 categorySwiper = new Swiper(categorySwiperEl, {
                     slidesPerView: 2,

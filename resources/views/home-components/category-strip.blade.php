@@ -1,7 +1,17 @@
-<section class="sax-category-strip py-5">
+@php
+    $categoryCount = $categories->count();
+    $categoryLayout = match (true) {
+        $categoryCount >= 5 => 'many',
+        $categoryCount === 3 => 'three',
+        $categoryCount <= 2 => 'few',
+        default => 'four',
+    };
+@endphp
+
+<section class="sax-category-strip sax-category-strip--{{ $categoryLayout }} py-5">
     <div class="container-fluid px-lg-5">
-        <div class="sax-category-swiper swiper">
-            <div class="category-wrapper swiper-wrapper">
+        <div class="sax-category-swiper swiper" data-category-count="{{ $categoryCount }}">
+            <div class="category-wrapper category-wrapper--{{ $categoryLayout }} category-wrapper--count-{{ $categoryCount }} swiper-wrapper">
                 @foreach($categories as $cat)
                     @php
                         $displayName = __("messages.{$cat->slug}");

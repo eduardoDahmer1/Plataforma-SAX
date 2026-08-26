@@ -86,11 +86,11 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrap();
 
         /**
-         * 6. MEGA MENU COMPOSER (Header)
-         * Aqui carregamos a árvore completa para o menu superior
+         * 6. NAVEGAÇÃO COMPARTILHADA (Header e Footer)
+         * Aqui carregamos a árvore completa e a lista principal uma única vez.
          */
         $headerViewData = null;
-        View::composer(['layout.layout', 'layout.header', 'components.header'], function ($view) use (&$headerViewData) {
+        View::composer(['layout.layout', 'layout.header', 'components.header', 'components.footer'], function ($view) use (&$headerViewData) {
             if ($headerViewData === null) {
                 $headerViewData = [
                     'headerCategories' => Cache::remember('header_categories_tree', now()->addHours(24), function () {

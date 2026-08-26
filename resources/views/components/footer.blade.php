@@ -3,21 +3,17 @@
         @php
             $storeControls = app(\App\Services\StoreControlService::class);
             $isOtica = $storeControls->isOtica();
-            $menuSlugs = ['feminino', 'masculino', 'infantil', 'otica', 'casa'];
-            
-            $footerCategories = \App\Models\Category::whereIn('slug', $menuSlugs)
-                ->orderByRaw("FIELD(slug, 'feminino', 'masculino', 'infantil', 'otica', 'casa')")
-                ->get();
+            $footerCategories = $mainCategories ?? collect();
 
             $labelMap = [
-                'feminino'  => __('messages.feminino'),
-                'masculino' => __('messages.masculino'),
-                'infantil'  => __('messages.infantil'),
-                'otica'     => __('messages.otica'),
+                'feminino'  => __('messages.mulher'),
+                'masculino' => __('messages.homem'),
+                'infantil'  => __('messages.criancas'),
+                'optico'    => __('messages.lente'),
                 'casa'      => __('messages.casa'),
             ];
             if ($isOtica) {
-                $opticalTerms = ['optico', 'otica', 'oculos', 'lente', 'eyewear', 'optical', 'vision'];
+                $opticalTerms = ['optico', 'otica', 'oculos', 'lente', 'eyewear', 'optical'];
                 $footerCategories = $footerCategories->filter(function ($category) use ($opticalTerms) {
                     $text = strtolower(($category->slug ?? '') . ' ' . ($category->name ?? ''));
                     return collect($opticalTerms)->contains(fn ($term) => str_contains($text, $term));

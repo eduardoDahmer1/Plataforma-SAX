@@ -2,6 +2,7 @@
     <div class="container">
         @php
             $storeControls = app(\App\Services\StoreControlService::class);
+            $isOtica = $storeControls->isOtica();
             $menuSlugs = ['feminino', 'masculino', 'infantil', 'otica', 'casa'];
             
             $footerCategories = \App\Models\Category::whereIn('slug', $menuSlugs)
@@ -15,8 +16,8 @@
                 'otica'     => __('messages.otica'),
                 'casa'      => __('messages.casa'),
             ];
-            if ($storeControls->isOtica()) {
-                $opticalTerms = ['optico', 'otica', 'oculos', 'lente', 'eyewear', 'optical'];
+            if ($isOtica) {
+                $opticalTerms = ['optico', 'otica', 'oculos', 'lente', 'eyewear', 'optical', 'vision'];
                 $footerCategories = $footerCategories->filter(function ($category) use ($opticalTerms) {
                     $text = strtolower(($category->slug ?? '') . ' ' . ($category->name ?? ''));
                     return collect($opticalTerms)->contains(fn ($term) => str_contains($text, $term));
@@ -43,8 +44,10 @@
                         @foreach ($footerCategories as $cat)
                             <li><a href="{{ url('categorias/' . $cat->slug) }}">{{ $labelMap[$cat->slug] ?? strtoupper($cat->name) }}</a></li>
                         @endforeach
-                        <li><a href="{{ route('categories.index') }}">{{ __('messages.todas_categorias') }}</a></li>
-                        <li><a href="{{ route('brands.index') }}">{{ __('messages.nossas_marcas') }}</a></li>
+                        @unless ($isOtica)
+                            <li><a href="{{ route('categories.index') }}">{{ __('messages.todas_categorias') }}</a></li>
+                            <li><a href="{{ route('brands.index') }}">{{ __('messages.nossas_marcas') }}</a></li>
+                        @endunless
                     </ul>
                 </details>@endif
 
@@ -81,9 +84,9 @@
                             </a>
                         </li>
                     @endforeach
-                    @if ($storeControls->navigationVisible('footer', 'bridal'))<li><a href="{{ route('bridal.index') }}">{{ __('messages.bridal') }}</a></li>@endif
-                    @if ($storeControls->navigationVisible('footer', 'palace'))<li><a href="{{ route('palace.index') }}">{{ __('messages.palace') }}</a></li>@endif
-                    <li><a href="{{ route('categories.index') }}">{{ __('messages.todas_categorias') }}</a></li>
+                    @if (!$isOtica && $storeControls->navigationVisible('footer', 'bridal'))<li><a href="{{ route('bridal.index') }}">{{ __('messages.bridal') }}</a></li>@endif
+                    @if (!$isOtica && $storeControls->navigationVisible('footer', 'palace'))<li><a href="{{ route('palace.index') }}">{{ __('messages.palace') }}</a></li>@endif
+                    @unless ($isOtica)<li><a href="{{ route('categories.index') }}">{{ __('messages.todas_categorias') }}</a></li>@endunless
                 </ul>
             </div>@endif
 
@@ -91,12 +94,14 @@
                 <div class="column-content">
                     <h6 class="footer-title">{{ __('messages.sobre_nos') }}</h6>
                     <ul class="footer-links">
-                        <li><a href="{{ route('all-categories.index') }}">{{ __('messages.categorias_gerais') }}</a></li>
-                        <li><a href="{{ route('brands.index') }}">{{ __('messages.nossas_marcas') }}</a></li>
+                        @unless ($isOtica)
+                            <li><a href="{{ route('all-categories.index') }}">{{ __('messages.categorias_gerais') }}</a></li>
+                            <li><a href="{{ route('brands.index') }}">{{ __('messages.nossas_marcas') }}</a></li>
+                        @endunless
                         @if ($storeControls->navigationVisible('footer', 'blog'))<li><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>@endif
                         @if ($storeControls->navigationVisible('footer', 'palace'))<li><a href="{{ route('palace.index') }}">SAX Palace</a></li>@endif
                         @if ($storeControls->navigationVisible('footer', 'contact'))<li><a href="{{ route('contact.form') }}">{{ __('messages.trabalhe_conosco') }}</a></li>@endif
-                        <li><a href="https://saxdepartment.com/categorias-filhas/edition-privee">édition privée</a></li>
+                        @unless ($isOtica)<li><a href="https://saxdepartment.com/categorias-filhas/edition-privee">édition privée</a></li>@endunless
                     </ul>
                 </div>
             </div>

@@ -63,6 +63,27 @@ return [
             ]) : [],
         ],
 
+        // Banco da outra vitrine SAX. É usado somente pelo sincronizador de
+        // produtos ópticos e permanece desativado enquanto não houver opt-in.
+        'catalog_peer' => [
+            'driver' => 'mysql',
+            'host' => env('CATALOG_PEER_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('CATALOG_PEER_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('CATALOG_PEER_DB_DATABASE'),
+            'username' => env('CATALOG_PEER_DB_USERNAME') ?: env('DB_USERNAME'),
+            'password' => env('CATALOG_PEER_DB_PASSWORD') ?: env('DB_PASSWORD'),
+            'unix_socket' => env('CATALOG_PEER_DB_SOCKET', env('DB_SOCKET', '')),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),

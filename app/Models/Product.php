@@ -238,9 +238,36 @@ class Product extends Model
             });
         });
 
-        static::saved(function () {
+        static::saved(function (Product $product) {
             Cache::forget('storefront_product_card_color_variants_v2');
             self::$cardColorVariantMap = null;
+
+            if (app()->runningInConsole()
+                || ! config('catalog-sync.enabled')
+                || ! request()->is('admin/*')) {
+                return;
+            }
+
+            $productId = (int) $product->getKey();
+            // Executa no término da requisição: assim todas as alterações de
+            // traduções e variantes feitas na mesma transação já estão visíveis.
+            app()->terminating(function () use ($productId): void {
+                try {
+                    app(\App\Services\OpticalProductSyncService::class)->syncFamily($productId);
+                } catch (\Throwable $exception) {
+                    report($exception);
+
+                    if (Cache::add("catalog_peer_sync_failure:{$productId}", true, now()->addMinutes(15))) {
+                        app(\App\Services\AdminNotificationService::class)->notifyAdmins(
+                            'catalog_peer_sync_failed',
+                            'Falha ao sincronizar produto óptico',
+                            "O produto #{$productId} foi salvo nesta loja, mas não pôde ser enviado à outra vitrine. Verifique a conexão antes de uma nova edição.",
+                            '/admin/produtos',
+                            ['product_id' => $productId, 'error' => mb_substr($exception->getMessage(), 0, 500)],
+                        );
+                    }
+                }
+            });
         });
 
         static::deleted(function () {

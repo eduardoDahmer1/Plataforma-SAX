@@ -77,6 +77,17 @@ return new class extends Migration
         }
 
         DB::statement('ALTER TABLE `order_items` MODIFY `product_id` BIGINT UNSIGNED NULL');
+
+        // Pode haver referências órfãs deixadas por uma limpeza manual feita
+        // com a chave estrangeira desabilitada/removida. Elas precisam virar
+        // NULL antes que o MySQL permita recriar a restrição.
+        DB::statement(
+            'UPDATE `order_items` AS oi '
+            .'LEFT JOIN `products` AS p ON p.`id` = oi.`product_id` '
+            .'SET oi.`product_id` = NULL '
+            .'WHERE oi.`product_id` IS NOT NULL AND p.`id` IS NULL'
+        );
+
         DB::statement(
             'ALTER TABLE `order_items` ADD CONSTRAINT `order_items_product_id_foreign` '
             .'FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE '.$deleteRule

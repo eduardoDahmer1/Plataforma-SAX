@@ -2,6 +2,15 @@
     @php
         $menuSlugs = ['feminino', 'masculino', 'infantil', 'optico', 'casa'];
         $mainCategories = $mainCategories ?? collect();
+        $storeControls = app(\App\Services\StoreControlService::class);
+        $visibleMainCategories = $mainCategories;
+        if ($storeControls->isOtica()) {
+            $opticalTerms = ['optico', 'otica', 'oculos', 'lente', 'eyewear', 'optical'];
+            $visibleMainCategories = $mainCategories->filter(function ($category) use ($opticalTerms) {
+                $text = strtolower(($category->slug ?? '') . ' ' . ($category->name ?? ''));
+                return collect($opticalTerms)->contains(fn ($term) => str_contains($text, $term));
+            });
+        }
 
         $labelMap = [
             'feminino' => __('messages.mulher'),
@@ -30,11 +39,11 @@
                 <li class="list-inline-item">
                     <x-language-selector variant="desktop" />
                 </li>
-                <li class="list-inline-item"><a href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a></li>
-                <li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
+                @if ($storeControls->navigationVisible('header', 'blog'))<li class="list-inline-item"><a href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'palace'))<li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'contact'))<li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>@endif
 
-                <li class="list-inline-item border-start ps-3 dropdown-mega-parent">
+                @if ($storeControls->navigationVisible('header', 'categories'))<li class="list-inline-item border-start ps-3 dropdown-mega-parent">
                     <a href="{{ route('categories.index') }}" class="mega-menu-trigger">
                         {{ __('messages.categorias') }}
                         <i class="fa fa-chevron-down" aria-hidden="true"></i>
@@ -85,10 +94,10 @@
                             </div>
                         </div>
                     </div>
-                </li>
-                <li class="list-inline-item border-start ps-3">
+                </li>@endif
+                @if ($storeControls->navigationVisible('header', 'categories'))<li class="list-inline-item border-start ps-3">
                     <a href="{{ route('all-categories.index') }}">{{ __('messages.categorias_gerais') }}</a>
-                </li>
+                </li>@endif
             </ul>
         </div>
     </div>
@@ -175,7 +184,7 @@
                 <i class="fa-solid fa-house" aria-hidden="true"></i>
                 <span>{{ __('messages.inicio') }}</span>
             </a>
-            @foreach ($mainCategories as $cat)
+            @foreach ($visibleMainCategories as $cat)
                 <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}">
                     <span>{{ $labelMap[$cat->slug] ?? $cat->name }}</span>
                 </a>
@@ -186,22 +195,22 @@
     <nav class="sax-main-nav d-none d-lg-block">
         <div class="container text-center py-3">
             <ul class="list-inline m-0">
-                @foreach ($mainCategories as $cat)
+                @foreach ($visibleMainCategories as $cat)
                     <li class="list-inline-item">
                         <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}">
                             {{ $labelMap[$cat->slug] ?? strtoupper($cat->name) }}
                         </a>
                     </li>
                 @endforeach
-                <li class="list-inline-item">
+                @if ($storeControls->navigationVisible('header', 'institucional'))<li class="list-inline-item">
                     <a href="{{ route('institucional.index') }}" class="text-institucional">{{ __('messages.institucional') }}</a>
-                </li>
-                <li class="list-inline-item"><a href="{{ route('bridal.index') }}" class="text-bridal">{{ __('messages.bridal') }}</a></li>
-                <li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">{{ __('messages.palace') }}</a></li>
-                <li class="list-inline-item">
+                </li>@endif
+                @if ($storeControls->navigationVisible('header', 'bridal'))<li class="list-inline-item"><a href="{{ route('bridal.index') }}" class="text-bridal">{{ __('messages.bridal') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'palace'))<li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">{{ __('messages.palace') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'cafe'))<li class="list-inline-item">
                     <a href="{{ route('cafe_bistro.index') }}" class="text-bistro">{{ __('messages.cafe_bistro') }}</a>
-                </li>
-                <li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">{{ __('messages.sax_news_tag') }}</a></li>
+                </li>@endif
+                @if ($storeControls->navigationVisible('header', 'blog'))<li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">{{ __('messages.sax_news_tag') }}</a></li>@endif
             </ul>
         </div>
     </nav>
@@ -243,7 +252,7 @@
 
             <ul class="list-unstyled mb-0 drawer-navigation">
                 <li class="drawer-section-label">{{ __('messages.categorias') }}</li>
-                @foreach ($mainCategories as $cat)
+                @foreach ($visibleMainCategories as $cat)
                     <li>
                         <a href="{{ route('categories.show', $cat->slug ?? $cat->id) }}" class="drawer-link drawer-link--primary">
                             <span class="drawer-link-icon"><i class="fa-solid {{ $mobileIconMap[$cat->slug] ?? 'fa-tag' }}"></i></span>
@@ -255,12 +264,12 @@
                 <li class="drawer-preferences"><x-language-selector variant="mobile" /></li>
 
                 <li class="drawer-section-label">SAX Experiences</li>
-                <li><a href="{{ route('institucional.index') }}" class="drawer-link"><i class="fa fa-info-circle me-3"></i>{{ __('messages.institucional') }}</a></li>
-                <li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>{{ __('messages.bridal') }}</a></li>
-                <li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>{{ __('messages.sax_palace') }}</a></li>
-                <li><a href="{{ route('cafe_bistro.index') }}" class="drawer-link"><i class="fa fa-coffee me-3"></i>{{ __('messages.cafe_bistro') }}</a></li>
-                <li><a href="{{ route('blogs.index') }}" class="drawer-link"><i class="fa fa-newspaper me-3"></i>{{ __('messages.sax_news_tag') }}</a></li>
-                <li><a href="{{ route('contact.form') }}" class="drawer-link"><i class="fa fa-envelope me-3"></i>{{ __('messages.contato') }}</a></li>
+                @if ($storeControls->navigationVisible('header', 'institucional'))<li><a href="{{ route('institucional.index') }}" class="drawer-link"><i class="fa fa-info-circle me-3"></i>{{ __('messages.institucional') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'bridal'))<li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>{{ __('messages.bridal') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'palace'))<li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>{{ __('messages.sax_palace') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'cafe'))<li><a href="{{ route('cafe_bistro.index') }}" class="drawer-link"><i class="fa fa-coffee me-3"></i>{{ __('messages.cafe_bistro') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'blog'))<li><a href="{{ route('blogs.index') }}" class="drawer-link"><i class="fa fa-newspaper me-3"></i>{{ __('messages.sax_news_tag') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'contact'))<li><a href="{{ route('contact.form') }}" class="drawer-link"><i class="fa fa-envelope me-3"></i>{{ __('messages.contato') }}</a></li>@endif
                 <li><a href="{{ route('categories.index') }}" class="drawer-link"><i class="fa fa-th me-3"></i>{{ __('messages.categorias') }}</a></li>
                 <li><a href="{{ route('brands.index') }}" class="drawer-link"><i class="fa fa-tag me-3"></i>{{ __('messages.nossas_marcas') }}</a></li>
                 <li><a href="{{ route('search') }}" class="drawer-link"><i class="fa fa-search me-3"></i>{{ __('messages.pesquisar') }}</a></li>

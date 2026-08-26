@@ -25,7 +25,10 @@ class StoreControlService
             }
 
             return array_merge($defaults, collect(array_keys($defaults))
-                ->mapWithKeys(fn (string $key): array => [$key => (bool) $settings->{$key}])
+                ->mapWithKeys(function (string $key) use ($settings): array {
+                    $value = $settings->{$key};
+                    return [$key => $key === 'store_profile' ? ($value ?: 'stage') : (bool) $value];
+                })
                 ->all());
         });
     }
@@ -33,6 +36,7 @@ class StoreControlService
     public function defaults(): array
     {
         return [
+            'store_profile' => 'stage',
             'cart_enabled' => true,
             'checkout_enabled' => true,
             'add_to_cart_enabled' => true,
@@ -42,6 +46,20 @@ class StoreControlService
             'whatsapp_enabled' => true,
             // O catálogo mundial deve ser liberado conscientemente no painel.
             'geonames_enabled' => false,
+            'header_categories_enabled' => true,
+            'header_institucional_enabled' => true,
+            'header_bridal_enabled' => true,
+            'header_palace_enabled' => true,
+            'header_cafe_enabled' => true,
+            'header_blog_enabled' => true,
+            'header_contact_enabled' => true,
+            'footer_categories_enabled' => true,
+            'footer_institucional_enabled' => true,
+            'footer_bridal_enabled' => true,
+            'footer_palace_enabled' => true,
+            'footer_cafe_enabled' => true,
+            'footer_blog_enabled' => true,
+            'footer_contact_enabled' => true,
         ];
     }
 
@@ -71,6 +89,21 @@ class StoreControlService
             'whatsapp' => $this->enabled('whatsapp'),
             default => false,
         };
+    }
+
+    public function storeProfile(): string
+    {
+        return (string) ($this->settings()['store_profile'] ?? 'stage');
+    }
+
+    public function isOtica(): bool
+    {
+        return $this->storeProfile() === 'otica';
+    }
+
+    public function navigationVisible(string $area, string $section): bool
+    {
+        return (bool) ($this->settings()[sprintf('%s_%s_enabled', $area, $section)] ?? true);
     }
 
     public function clearCache(): void

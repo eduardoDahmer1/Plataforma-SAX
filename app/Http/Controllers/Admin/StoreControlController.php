@@ -20,6 +20,10 @@ class StoreControlController extends Controller
         'pix_enabled',
         'whatsapp_enabled',
         'geonames_enabled',
+        'header_categories_enabled', 'header_institucional_enabled', 'header_bridal_enabled',
+        'header_palace_enabled', 'header_cafe_enabled', 'header_blog_enabled', 'header_contact_enabled',
+        'footer_categories_enabled', 'footer_institucional_enabled', 'footer_bridal_enabled',
+        'footer_palace_enabled', 'footer_cafe_enabled', 'footer_blog_enabled', 'footer_contact_enabled',
     ];
 
     public function edit(StoreControlService $controls): View
@@ -33,12 +37,14 @@ class StoreControlController extends Controller
     {
         $this->ensureMasterAdmin();
 
-        $request->validate(collect(self::FIELDS)->mapWithKeys(
+        $request->validate(array_merge([
+            'store_profile' => ['required', 'in:stage,sax,otica'],
+        ], collect(self::FIELDS)->mapWithKeys(
             fn (string $field): array => [$field => ['nullable', 'boolean']]
-        )->all());
+        )->all()));
 
         $settings = SystemSetting::query()->firstOrCreate([], ['maintenance' => false]);
-        $settings->fill(collect(self::FIELDS)->mapWithKeys(
+        $settings->fill(['store_profile' => $request->string('store_profile')->toString()] + collect(self::FIELDS)->mapWithKeys(
             fn (string $field): array => [$field => $request->boolean($field)]
         )->all())->save();
 

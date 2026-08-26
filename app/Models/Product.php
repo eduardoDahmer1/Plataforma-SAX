@@ -13,6 +13,8 @@ class Product extends Model
 {
     public const MINIMUM_VISIBLE_PRICE = 3.0;
 
+    /** O perfil Ótica filtra o storefront sem esconder o catálogo no painel. */
+
     protected $table = 'products';
 
     protected $fillable = [
@@ -206,6 +208,34 @@ class Product extends Model
                 '>=',
                 self::MINIMUM_VISIBLE_PRICE
             );
+        });
+
+        // Na loja Ótica, exibe somente produtos ligados ao universo óptico.
+        // O catálogo administrativo e os demais perfis permanecem completos.
+        static::addGlobalScope('store_profile', function (Builder $query): void {
+            if (app()->runningInConsole() || request()->is('admin') || request()->is('admin/*')) {
+                return;
+            }
+
+            try {
+                if (!app(\App\Services\StoreControlService::class)->isOtica()) {
+                    return;
+                }
+            } catch (\Throwable) {
+                return;
+            }
+
+            $terms = ['ocul', 'otica', 'optic', 'lente', 'eyewear', 'armac', 'vision'];
+            $query->where(function (Builder $scope) use ($terms): void {
+                foreach ($terms as $term) {
+                    $like = '%' . $term . '%';
+                    $scope->orWhereRaw('LOWER(products.name) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(products.external_name) LIKE ?', [$like])
+                        ->orWhereHas('category', fn (Builder $q) => $q->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(slug) LIKE ?', [$like]))
+                        ->orWhereHas('subcategory', fn (Builder $q) => $q->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(slug) LIKE ?', [$like]))
+                        ->orWhereHas('categoriasFilhas', fn (Builder $q) => $q->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(slug) LIKE ?', [$like]));
+                }
+            });
         });
 
         static::saved(function () {

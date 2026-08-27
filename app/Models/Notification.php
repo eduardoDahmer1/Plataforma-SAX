@@ -18,11 +18,13 @@ class Notification extends Model
         'action_url',
         'data',
         'read_at',
+        'archived_at',
     ];
 
     protected $casts = [
         'data' => 'array',
         'read_at' => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

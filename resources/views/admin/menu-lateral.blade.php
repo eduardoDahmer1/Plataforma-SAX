@@ -33,6 +33,11 @@
             <span class="nav-text">Visão geral</span>
         </a>
 
+        <a href="{{ route('admin.notifications.index') }}" class="sax-nav-item {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
+            <div class="nav-icon-box bg-soft-info"><i class="fa-regular fa-bell"></i></div>
+            <span class="nav-text">{{ __('messages.notifications_menu') }}</span>
+        </a>
+
         {{-- Catálogos --}}
         <div class="nav-group">
             <a class="sax-nav-item has-collapse {{ $catalogosOpen ? '' : 'collapsed' }} {{ $catalogosOpen ? 'active' : '' }}" data-bs-toggle="collapse" href="#menuCatalogos{{ $menuSuffix }}" aria-expanded="{{ $catalogosOpen ? 'true' : 'false' }}">

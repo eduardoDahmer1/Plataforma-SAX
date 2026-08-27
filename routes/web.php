@@ -364,8 +364,21 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
         ->whereIn('direction', ['up', 'down'])
         ->name('trabalhe_conosco.move');
     Route::delete('trabalhe-conosco/{jobFlyer}', [JobFlyerControllerAdmin::class, 'destroy'])->name('trabalhe_conosco.destroy');
+    Route::get('notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])
         ->name('notifications.read-all');
+    Route::post('notifications/bulk', [NotificationController::class, 'bulkAction'])
+        ->name('notifications.bulk');
+    Route::post('notifications/{notification}/archive', [NotificationController::class, 'archive'])
+        ->whereNumber('notification')
+        ->name('notifications.archive');
+    Route::post('notifications/{notification}/restore', [NotificationController::class, 'restore'])
+        ->whereNumber('notification')
+        ->name('notifications.restore');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])
+        ->whereNumber('notification')
+        ->name('notifications.destroy');
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
         ->whereNumber('notification')
         ->name('notifications.read');

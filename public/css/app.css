@@ -5872,6 +5872,20 @@ transform: scale(1.5);
     outline: none;
 }
 
+.sax-admin-notifications__view-page {
+    color: #2563eb;
+    font-size: .68rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.sax-admin-notifications__view-page:hover,
+.sax-admin-notifications__view-page:focus-visible {
+    color: #1d4ed8;
+    text-decoration: underline;
+    outline: none;
+}
+
 .sax-admin-notifications__close {
     display: inline-grid;
     width: 2rem;
@@ -5896,11 +5910,87 @@ transform: scale(1.5);
     overflow-y: auto;
 }
 
+.sax-admin-notifications__filters {
+    display: grid;
+    padding: .7rem 1rem;
+    gap: .5rem;
+    border-bottom: 1px solid #eef2f7;
+    background: #fff;
+}
+
+.sax-admin-notifications__filter-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: .5rem;
+}
+
+.sax-admin-notifications__bulk {
+    display: grid;
+    padding: .55rem 1rem;
+    gap: .45rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: .68rem;
+}
+
+.sax-admin-notifications__select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.sax-admin-notifications__select-all input,
+.sax-admin-notifications__checkbox input {
+    width: .95rem;
+    height: .95rem;
+    accent-color: #111827;
+}
+
+.sax-admin-notifications__bulk-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.sax-admin-notifications__bulk-actions button {
+    display: inline-flex;
+    padding: .3rem .5rem;
+    align-items: center;
+    gap: .3rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .35rem;
+    background: #fff;
+    color: #334155;
+    font-size: .66rem;
+    font-weight: 700;
+}
+
+.sax-admin-notifications__bulk-actions button:hover:not(:disabled),
+.sax-admin-notifications__bulk-actions button:focus-visible:not(:disabled) {
+    border-color: #64748b;
+    color: #111827;
+    outline: none;
+}
+
+.sax-admin-notifications__bulk-actions button:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+.sax-admin-notifications__bulk-actions button.is-danger,
+.sax-admin-notifications__item-actions button.is-danger {
+    color: #b42318;
+}
+
 .sax-admin-notifications__drawer .sax-admin-notifications__item {
     position: relative;
     display: flex;
     width: 100%;
-    padding: 1rem;
+    padding: 1rem 1rem 2.8rem 3.35rem;
     align-items: flex-start;
     gap: .75rem;
     border: 0;
@@ -5910,9 +6000,22 @@ transform: scale(1.5);
     text-align: left;
 }
 
-.sax-admin-notifications__drawer form[data-notification-item] {
+.sax-admin-notifications__drawer .sax-admin-notifications__row {
     position: relative;
     border-bottom: 1px solid #eef2f7;
+}
+
+.sax-admin-notifications__drawer form[data-notification-read-form] {
+    margin: 0;
+}
+
+.sax-admin-notifications__checkbox {
+    position: absolute;
+    z-index: 2;
+    top: 1.65rem;
+    left: 1rem;
+    display: inline-flex;
+    cursor: pointer;
 }
 
 .sax-admin-notifications__drawer .sax-admin-notifications__operational {
@@ -5929,26 +6032,43 @@ transform: scale(1.5);
     color: #9a6700;
 }
 
-.sax-admin-notifications__drawer .sax-admin-notifications__mark-read {
+.sax-admin-notifications__drawer .sax-admin-notifications__item-actions {
     position: absolute;
     right: 1rem;
     bottom: .55rem;
+    left: 3.35rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .15rem .45rem;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__item-actions form {
+    margin: 0;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__item-actions button {
     display: inline-flex;
     align-items: center;
-    gap: .3rem;
+    gap: .25rem;
     padding: .15rem .35rem;
     border: 0;
     background: transparent;
-    color: #2563eb;
+    color: #475569;
     font-size: .66rem;
     line-height: 1.2;
 }
 
-.sax-admin-notifications__drawer .sax-admin-notifications__mark-read:hover,
-.sax-admin-notifications__drawer .sax-admin-notifications__mark-read:focus-visible {
-    color: #1d4ed8;
+.sax-admin-notifications__drawer .sax-admin-notifications__item-actions button:hover,
+.sax-admin-notifications__drawer .sax-admin-notifications__item-actions button:focus-visible {
+    color: #111827;
     text-decoration: underline;
     outline: none;
+}
+
+.sax-admin-notifications__drawer .sax-admin-notifications__item-actions [data-notification-mark-read] {
+    color: #2563eb;
 }
 
 .sax-admin-notifications__drawer .sax-admin-notifications__item:hover,
@@ -5959,7 +6079,6 @@ transform: scale(1.5);
 
 .sax-admin-notifications__drawer .sax-admin-notifications__item.is-unread {
     background: #f8fbff;
-    padding-bottom: 2.8rem;
 }
 
 .sax-admin-notifications__drawer .sax-admin-notifications__icon {

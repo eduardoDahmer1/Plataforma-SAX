@@ -148,10 +148,10 @@ class AppServiceProvider extends ServiceProvider
             $view->with([
                 'adminNotifications' => $admin->adminNotifications()
                     ->latest()
-                    ->limit(30)
                     ->get(),
                 'adminUnreadNotificationsCount' => $admin->adminNotifications()
                     ->whereNull('read_at')
+                    ->whereNull('archived_at')
                     ->count(),
             ]);
         });

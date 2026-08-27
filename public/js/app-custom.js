@@ -311,27 +311,82 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const notificationsFilter = document.getElementById('adminNotificationsFilter');
+        const notificationsView = document.getElementById('adminNotificationsView');
+        const notificationsLimit = document.getElementById('adminNotificationsLimit');
+        const notificationsEmpty = document.getElementById('adminNotificationsEmpty');
         const filteredEmpty = document.getElementById('adminNotificationsFilteredEmpty');
+        const bulkForm = document.getElementById('adminNotificationsBulkForm');
+        const selectAll = document.getElementById('adminNotificationsSelectAll');
+        const selectedCountLabel = notificationsDrawer.querySelector('[data-notifications-selected-count]');
 
-        notificationsFilter?.addEventListener('change', function () {
+        const visibleNotificationRows = () => Array.from(
+            notificationsDrawer.querySelectorAll('[data-notification-item]:not(.d-none)')
+        );
+
+        const refreshBulkState = () => {
+            const selected = notificationsDrawer.querySelectorAll('[data-notification-select]:checked');
+            const visible = visibleNotificationRows();
+            const selectedVisible = visible.filter(row => row.querySelector('[data-notification-select]:checked'));
+            const countTemplate = notificationsDrawer.dataset.notificationsSelectedTemplate || ':count';
+
+            if (selectedCountLabel) {
+                selectedCountLabel.textContent = countTemplate.replace(':count', String(selected.length));
+            }
+
+            bulkForm?.querySelectorAll('[data-notifications-bulk-action]').forEach(button => {
+                button.disabled = selected.length === 0;
+            });
+
+            if (selectAll) {
+                selectAll.checked = visible.length > 0 && selectedVisible.length === visible.length;
+                selectAll.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visible.length;
+            }
+        };
+
+        const applyNotificationFilters = () => {
             let visibleItems = 0;
+            const notificationRows = notificationsDrawer.querySelectorAll('[data-notification-item]');
+            const maximum = notificationsLimit?.value === 'all'
+                ? Number.POSITIVE_INFINITY
+                : Number(notificationsLimit?.value || 30);
+            const view = notificationsView?.value || 'active';
 
-            notificationsDrawer.querySelectorAll('[data-notification-item]').forEach(function (item) {
-                const visible = notificationsFilter.value === 'all'
+            notificationRows.forEach(function (item) {
+                const categoryMatches = !notificationsFilter
+                    || notificationsFilter.value === 'all'
                     || item.dataset.notificationCategory === notificationsFilter.value;
+                const isArchived = item.dataset.notificationArchived === '1';
+                const viewMatches = view === 'all'
+                    || (view === 'archived' ? isArchived : !isArchived);
+                const visible = categoryMatches && viewMatches && visibleItems < maximum;
+
                 item.classList.toggle('d-none', !visible);
                 if (visible) visibleItems++;
             });
 
-            filteredEmpty?.classList.toggle('d-none', visibleItems > 0);
-        });
+            notificationsEmpty?.classList.toggle('d-none', notificationRows.length > 0);
+            filteredEmpty?.classList.toggle(
+                'd-none',
+                visibleItems > 0 || (notificationRows.length === 0 && notificationsEmpty)
+            );
+
+            bulkForm?.querySelector('[data-notifications-bulk-action="archive"]')
+                ?.classList.toggle('d-none', view === 'archived');
+            bulkForm?.querySelector('[data-notifications-bulk-action="restore"]')
+                ?.classList.toggle('d-none', view === 'active');
+            refreshBulkState();
+        };
+
+        notificationsFilter?.addEventListener('change', applyNotificationFilters);
+        notificationsView?.addEventListener('change', applyNotificationFilters);
+        notificationsLimit?.addEventListener('change', applyNotificationFilters);
 
         // Marking notifications should not reload the current page. Individual
         // notifications still navigate after their read state is persisted.
         const notificationMenu = notificationsDrawer.closest('.sax-admin-notifications');
         const refreshNotificationState = () => {
             const unreadItems = notificationsDrawer.querySelectorAll(
-                '[data-notification-item] .sax-admin-notifications__item.is-unread'
+                '[data-notification-item][data-notification-archived="0"] .sax-admin-notifications__item.is-unread'
             );
             const operationalAlerts = notificationsDrawer.querySelectorAll('[data-operational-alert]');
             const unreadCount = unreadItems.length + operationalAlerts.length;
@@ -355,13 +410,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        const markItemAsReadInView = form => {
-            const item = form.querySelector('.sax-admin-notifications__item');
+        const markItemAsReadInView = row => {
+            const item = row?.querySelector('.sax-admin-notifications__item');
             if (!item) return;
 
             item.classList.remove('is-unread');
-            form.querySelector('.sax-admin-notifications__dot')?.remove();
-            form.querySelector('[data-notification-mark-read]')?.remove();
+            row.querySelector('.sax-admin-notifications__dot')?.remove();
+            row.querySelector('[data-notification-mark-read]')?.remove();
             refreshNotificationState();
         };
 
@@ -389,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (form.dataset.notificationsReadAll !== undefined) {
                     notificationsDrawer.querySelectorAll(
-                        '[data-notification-item] .sax-admin-notifications__item.is-unread'
+                        '[data-notification-item][data-notification-archived="0"] .sax-admin-notifications__item.is-unread'
                     ).forEach(item => {
                         item.classList.remove('is-unread');
                         item.closest('[data-notification-item]')
@@ -399,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     refreshNotificationState();
                 } else {
-                    markItemAsReadInView(form);
+                    markItemAsReadInView(form.closest('[data-notification-item]'));
                 }
 
                 if (navigate && data.destination) {
@@ -414,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        notificationsDrawer.querySelectorAll('form[data-notification-item]').forEach(form => {
+        notificationsDrawer.querySelectorAll('form[data-notification-read-form]').forEach(form => {
             form.addEventListener('submit', event => {
                 event.preventDefault();
                 submitNotificationAsync(form, { navigate: true });
@@ -431,10 +486,119 @@ document.addEventListener('DOMContentLoaded', function () {
         notificationsDrawer.querySelectorAll('[data-notification-mark-read]').forEach(button => {
             button.addEventListener('click', event => {
                 event.preventDefault();
-                const form = button.closest('form[data-notification-item]');
+                const form = button.closest('[data-notification-item]')?.querySelector('[data-notification-read-form]');
                 if (form) submitNotificationAsync(form, { trigger: button });
             });
         });
+
+        const updateRowAfterAction = (row, action) => {
+            if (!row) return;
+
+            if (action === 'delete') {
+                row.remove();
+                return;
+            }
+
+            const archived = action === 'archive';
+            row.dataset.notificationArchived = archived ? '1' : '0';
+            row.querySelector('[data-notification-action="archive"]')?.classList.toggle('d-none', archived);
+            row.querySelector('[data-notification-action="restore"]')?.classList.toggle('d-none', !archived);
+
+            if (archived) markItemAsReadInView(row);
+            const checkbox = row.querySelector('[data-notification-select]');
+            if (checkbox) checkbox.checked = false;
+        };
+
+        const submitActionForm = async (form) => {
+            const action = form.dataset.notificationAction;
+            if (action === 'delete' && !window.confirm(notificationsDrawer.dataset.notificationsDeleteConfirm || '')) {
+                return;
+            }
+
+            const button = form.querySelector('button[type="submit"]');
+            if (button) button.disabled = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method || 'POST',
+                    body: new FormData(form),
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!response.ok) throw new Error(`Notification action failed: ${response.status}`);
+
+                updateRowAfterAction(form.closest('[data-notification-item]'), action);
+                applyNotificationFilters();
+                refreshNotificationState();
+            } catch (error) {
+                if (button) button.disabled = false;
+                alert(notificationsDrawer.dataset.notificationsActionError || '');
+            }
+        };
+
+        notificationsDrawer.querySelectorAll('[data-notification-action]').forEach(form => {
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                submitActionForm(form);
+            });
+        });
+
+        notificationsDrawer.querySelectorAll('[data-notification-select]').forEach(checkbox => {
+            checkbox.addEventListener('change', refreshBulkState);
+        });
+
+        selectAll?.addEventListener('change', () => {
+            visibleNotificationRows().forEach(row => {
+                const checkbox = row.querySelector('[data-notification-select]');
+                if (checkbox) checkbox.checked = selectAll.checked;
+            });
+            refreshBulkState();
+        });
+
+        bulkForm?.addEventListener('submit', async event => {
+            event.preventDefault();
+
+            const action = event.submitter?.value;
+            const selected = Array.from(notificationsDrawer.querySelectorAll('[data-notification-select]:checked'));
+            if (!action || selected.length === 0) return;
+            if (action === 'delete' && !window.confirm(notificationsDrawer.dataset.notificationsDeleteConfirm || '')) {
+                return;
+            }
+
+            const formData = new FormData(bulkForm);
+            formData.set('action', action);
+            selected.forEach(checkbox => formData.append('notification_ids[]', checkbox.value));
+            bulkForm.querySelectorAll('button').forEach(button => { button.disabled = true; });
+
+            try {
+                const response = await fetch(bulkForm.action, {
+                    method: bulkForm.method || 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!response.ok) throw new Error(`Bulk notification action failed: ${response.status}`);
+
+                selected.forEach(checkbox => {
+                    updateRowAfterAction(checkbox.closest('[data-notification-item]'), action);
+                });
+                applyNotificationFilters();
+                refreshNotificationState();
+            } catch (error) {
+                alert(notificationsDrawer.dataset.notificationsActionError || '');
+                refreshBulkState();
+            }
+        });
+
+        applyNotificationFilters();
     }
 
     // User Profile: SAX registration field

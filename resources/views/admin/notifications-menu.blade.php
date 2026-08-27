@@ -26,6 +26,9 @@
         aria-hidden="true"
         data-notifications-unread-singular="{{ __('messages.notifications_unread_singular') }}"
         data-notifications-unread-plural="{{ __('messages.notifications_unread_plural') }}"
+        data-notifications-selected-template="{{ __('messages.notifications_selected_count', ['count' => ':count']) }}"
+        data-notifications-delete-confirm="{{ __('messages.notifications_delete_confirm') }}"
+        data-notifications-action-error="{{ __('messages.notifications_action_error') }}"
     >
         @include('admin.notifications-content')
     </aside>

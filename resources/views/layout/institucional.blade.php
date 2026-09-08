@@ -14,8 +14,6 @@
     </main>
 
     @include('institucional.componentes.footer')
-    @include('components.whatsapp')
-
     <x-scripts-master />
 </body>
 

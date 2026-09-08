@@ -13,8 +13,6 @@
     </main>
 
     @include('cafe_bistro.componentes.footer')
-    @include('components.whatsapp')
-
     <x-scripts-master />
 </body>
 </html>

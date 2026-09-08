@@ -65,12 +65,15 @@
                aria-label="{{ $displayName }}">
                 <img src="{{ $fotoExibir }}"
                      class="card-img-top img-fluid rounded-0 product-card-standard__image product-card-standard__image--primary"
-                     alt="{{ $displayName }}">
+                     alt="{{ $displayName }}"
+                     loading="lazy"
+                     decoding="async">
                 @if($hoverPhotoUrl)
                     <img src="{{ $hoverPhotoUrl }}"
                          class="card-img-top img-fluid rounded-0 product-card-standard__image product-card-standard__image--secondary"
                          alt=""
                          loading="lazy"
+                         decoding="async"
                          aria-hidden="true">
                 @endif
             </a>

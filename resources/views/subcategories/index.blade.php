@@ -27,9 +27,11 @@
                 <div class="card-img-top text-center p-3">
                     @if($subcategory->photo && Storage::disk('public')->exists($subcategory->photo))
                         <img src="{{ Storage::url($subcategory->photo) }}" alt="{{ $subcategory->name }}"
+                             loading="lazy" decoding="async"
                              class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
                     @else
                         <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem"
+                             loading="lazy" decoding="async"
                              class="img-fluid rounded-3" style="max-height: 150px; object-fit: contain;">
                     @endif
                 </div>

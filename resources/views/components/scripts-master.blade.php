@@ -17,8 +17,15 @@
 <!-- 2. Bootstrap JS (universal) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- 3. Swiper JS (Liberado para o Dashboard agora) -->
-@if(!Route::is('checkout.*') && !Route::is('manutencao'))
+<!-- 3. Swiper JS (somente páginas que possuem carrossel) -->
+@php
+    $isThemedPublicPage = !Route::is('admin.*') && (
+        Request::is('*cafe*') || Request::is('*bistro*') || Request::is('*bridal*')
+        || Request::is('*palace*') || Request::is('*institucional*')
+    );
+    $usesSwiper = Route::is('home', 'produto.show', 'admin.produto.show', 'contact.form', 'user.dashboard') || $isThemedPublicPage;
+@endphp
+@if($usesSwiper)
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 @endif
 
@@ -102,9 +109,11 @@
     <script src="{{ asset('js/site-analytics.js') }}?v={{ filemtime(public_path('js/site-analytics.js')) }}" defer></script>
 @endif
 
-<!-- 7. TinyMCE + admin.js (solo admin) -->
-@if(Route::is('admin.*') || Route::is('manutencao'))
+<!-- 7. TinyMCE somente nos editores ricos; admin.js em todo o painel -->
+@if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.policies.edit', 'admin.institucional.edit'))
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>
+@endif
+@if(Route::is('admin.*') || Route::is('manutencao'))
     <script src="{{ asset('js/admin.js') }}?v={{ filemtime(public_path('js/admin.js')) }}"></script>
 @endif
 

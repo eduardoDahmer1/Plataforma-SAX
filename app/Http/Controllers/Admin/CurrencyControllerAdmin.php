@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Currency;
 
 class CurrencyControllerAdmin extends Controller
@@ -39,6 +40,8 @@ class CurrencyControllerAdmin extends Controller
             'is_default' => false,
         ]);
 
+        Cache::forget('currency_selector_options');
+
         return back()->with('success', 'Moeda adicionada com sucesso!');
     }
 
@@ -67,6 +70,8 @@ class CurrencyControllerAdmin extends Controller
             'decimal_digits' => $request->decimal_digits ?? 2,
         ]);
 
+        Cache::forget('currency_selector_options');
+
         return back()->with('success', 'Moeda atualizada com sucesso!');
     }
 
@@ -79,6 +84,8 @@ class CurrencyControllerAdmin extends Controller
         Currency::query()->update(['is_default' => false]);
 
         $currency->update(['is_default' => true]);
+
+        Cache::forget('currency_selector_options');
 
         return back()->with('success', 'Moeda definida como padrão!');
     }

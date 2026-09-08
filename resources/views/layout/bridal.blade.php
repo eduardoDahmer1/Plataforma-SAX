@@ -13,8 +13,6 @@
     </main>
 
     @include('bridal.componentes.footer')
-    @include('components.whatsapp')
-
     <x-scripts-master />
 </body>
 </html>

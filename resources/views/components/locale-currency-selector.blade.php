@@ -2,6 +2,7 @@
 
 @php
     use App\Models\Currency;
+    use Illuminate\Support\Facades\Cache;
 
     // --- Idioma (independente da moeda) ---
     $langMap = [
@@ -14,7 +15,9 @@
     $currentLang   = $langMap[$currentLocale] ?? $langMap['pt_BR'];
 
     // --- Moeda (independente do idioma) ---
-    $currencies = Currency::orderByDesc('is_default')->get();
+    $currencies = Cache::remember('currency_selector_options', now()->addHour(), fn () =>
+        Currency::orderByDesc('is_default')->get()
+    );
 
     $sessionCurrency = session('currency');
     $currentCurrencyId = is_object($sessionCurrency)

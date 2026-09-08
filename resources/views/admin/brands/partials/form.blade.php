@@ -38,9 +38,12 @@
         </div>
     @else
         <div class="sax-catf__grid">
-            <x-admin.field name="image" type="file" :label="__('messages.logotipo_oficial_label')" hint="Recomendado: 800 × 800 px, fundo transparente." />
-            <x-admin.field name="banner" type="file" :label="__('messages.banner_promocional_label')" hint="Recomendado: 1200 × 675 px (16:9)." />
-            <x-admin.field name="internal_banner" type="file" :label="__('messages.banner_interno_label')" hint="Recomendado: 1920 × 560 px; área segura central." />
+            <x-admin.media-field field="image" :label="__('messages.logotipo_oficial_label')" ratio="square"
+                dimensions="800 × 800 px" usage="Logotipo com respiro e fundo transparente." />
+            <x-admin.media-field field="banner" :label="__('messages.banner_promocional_label')" ratio="banner"
+                dimensions="1200 × 675 px" usage="Campanha da marca na home e apoio lateral." />
+            <x-admin.media-field field="internal_banner" :label="__('messages.banner_interno_label')" ratio="banner"
+                dimensions="1920 × 560 px" usage="Hero no topo da página da marca." />
         </div>
     @endif
 </x-admin.catalog-form>

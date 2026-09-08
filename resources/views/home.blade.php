@@ -78,6 +78,8 @@
                                             src="{{ asset('storage/uploads/' . $banner9) }}"
                                             class="img-fluid w-100 exclusive-media"
                                             alt="{{ __('messages.colecao_exclusiva_sax') }}"
+                                            loading="lazy"
+                                            decoding="async"
                                             onerror="this.style.display='none'"
                                         >
                                     </a>
@@ -86,6 +88,8 @@
                                         src="{{ asset('storage/uploads/' . $banner9) }}"
                                         class="img-fluid w-100 exclusive-media"
                                         alt="{{ __('messages.colecao_exclusiva_sax') }}"
+                                        loading="lazy"
+                                        decoding="async"
                                         onerror="this.style.display='none'"
                                     >
                                 @endif

@@ -58,7 +58,13 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // 2. Compartilha atributos globais
-        $attributes = Schema::hasTable('attributes')
+        $attributesTableExists = Cache::remember(
+            'schema.attributes_table_exists',
+            now()->addHours(24),
+            fn () => Schema::hasTable('attributes')
+        );
+
+        $attributes = $attributesTableExists
             ? Cache::remember('global_attributes_model', now()->addHours(24), fn () => Attribute::first())
             : null;
 
@@ -194,9 +200,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $globalViewData = null;
-        View::composer('*', function ($view) use (&$globalViewData) {
+        View::composer('*', function ($view) use (&$globalViewData, $attributesTableExists) {
             if ($globalViewData === null) {
-                $attribute = Schema::hasTable('attributes')
+                $attribute = $attributesTableExists
                     ? Cache::remember('global_attributes_db', now()->addHours(24), function () {
                         return DB::table('attributes')->where('id', 1)->first();
                     })

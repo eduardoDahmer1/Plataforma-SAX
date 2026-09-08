@@ -1221,26 +1221,45 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// ======== Admin: AJAX image upload genérico ========
-// Activa en cualquier input con data-upload-url (recursos con id: categories, brands, etc.)
-// Sin data-upload-url → el handler ignora el input (compatibilidad con CREATE)
+// ======== Admin: preview + AJAX image upload genérico ========
 document.addEventListener('change', function (e) {
     var input = e.target;
-    if (!input.dataset.uploadUrl) return;
+    if (!input.dataset.previewId) return;
     if (!input.files || !input.files[0]) return;
 
     var previewImg = document.getElementById(input.dataset.previewId);
-    var wrapper    = input.closest('.media-upload-preview');
+    var wrapper    = input.closest('.media-upload-preview, .sax-file-dropzone');
     var emptyState = wrapper ? wrapper.querySelector('.empty-upload') : null;
+    var dropzoneEmpty = wrapper ? wrapper.querySelector('.sax-file-dropzone__empty') : null;
     var deleteBtn  = wrapper ? wrapper.querySelector('.btn-delete-media') : null;
+    var viewBtn    = wrapper ? wrapper.querySelector('[data-media-view]') : null;
+    var previousSrc = previewImg ? (previewImg.getAttribute('src') || '') : '';
+    var previousDisplay = previewImg ? previewImg.style.display : 'none';
+
+    function restorePreview() {
+        if (previewImg) {
+            if (previousSrc) previewImg.src = previousSrc;
+            else previewImg.removeAttribute('src');
+            previewImg.style.display = previousDisplay;
+        }
+        if (emptyState) emptyState.style.display = previousSrc ? 'none' : '';
+        if (viewBtn) viewBtn.style.display = previousSrc ? '' : 'none';
+    }
 
     // Preview instantáneo antes de confirmar la subida
+    if (input.dataset.previewObjectUrl) URL.revokeObjectURL(input.dataset.previewObjectUrl);
     var objectUrl = URL.createObjectURL(input.files[0]);
+    input.dataset.previewObjectUrl = objectUrl;
     if (previewImg) {
         previewImg.src = objectUrl;
         previewImg.style.display = '';
     }
     if (emptyState) emptyState.style.display = 'none';
+    if (dropzoneEmpty) dropzoneEmpty.style.display = 'none';
+    if (viewBtn) viewBtn.style.display = '';
+
+    // No cadastro novo, o arquivo continua sendo enviado junto com o formulário.
+    if (!input.dataset.uploadUrl) return;
 
     // Nombre del campo: 'preview-photo' → 'photo', 'preview-banner' → 'banner'
     var fieldName = input.dataset.previewId.replace('preview-', '');
@@ -1258,14 +1277,52 @@ document.addEventListener('change', function (e) {
             if (data.success) {
                 if (previewImg) previewImg.src = data.url;
                 if (deleteBtn)  deleteBtn.style.display = '';
+                if (viewBtn)    viewBtn.style.display = '';
                 // Limpia el input para que el submit del form principal no reenvíe el archivo
                 input.value = '';
+            } else {
+                restorePreview();
             }
         })
         .catch(function (err) {
             URL.revokeObjectURL(objectUrl);
+            restorePreview();
             console.error('Erro ao enviar imagem:', err);
         });
+});
+
+// ======== Admin: visualização ampliada de qualquer mídia ========
+document.addEventListener('click', function (event) {
+    var trigger = event.target.closest('[data-media-view]');
+    if (!trigger) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    var field = trigger.closest('.sax-media-field');
+    var image = field ? field.querySelector('.media-upload-preview img, .sax-file-dropzone > img') : null;
+    var source = image ? (image.currentSrc || image.src) : '';
+    var modalElement = document.getElementById('adminMediaViewer');
+    if (!source || !modalElement || typeof bootstrap === 'undefined') return;
+
+    var modalImage = document.getElementById('adminMediaViewerImage');
+    var modalTitle = document.getElementById('adminMediaViewerTitle');
+    var modalMeta = document.getElementById('adminMediaViewerMeta');
+    var originalLink = document.getElementById('adminMediaViewerOriginal');
+    var label = field?.querySelector('.sax-media-field__label')?.textContent?.trim() || 'Imagem';
+    var dimensions = field?.querySelector('.admin-media-spec strong')?.textContent?.trim() || '';
+
+    modalImage.src = source;
+    modalImage.alt = label;
+    modalTitle.textContent = label;
+    modalMeta.textContent = dimensions ? 'Formato recomendado: ' + dimensions : '';
+    originalLink.href = source;
+    bootstrap.Modal.getOrCreateInstance(modalElement).show();
+});
+
+document.getElementById('adminMediaViewer')?.addEventListener('hidden.bs.modal', function () {
+    var modalImage = document.getElementById('adminMediaViewerImage');
+    if (modalImage) modalImage.removeAttribute('src');
 });
 
 // ======== Categories Edit: confirmación de borrado ========

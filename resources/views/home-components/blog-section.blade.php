@@ -14,7 +14,8 @@
                                 ? Storage::url($blog->image)
                                 : asset('storage/uploads/noimage.webp');
                         @endphp
-                        <img src="{{ $img }}" alt="{{ $blog->title }}" class="w-100 object-fit-cover" style="height: 170px;">
+                        <img src="{{ $img }}" alt="{{ $blog->title }}" class="w-100 object-fit-cover"
+                             loading="lazy" decoding="async" style="height: 170px;">
                         <span class="position-absolute top-0 start-0 m-2 px-3 py-1 rounded-pill bg-dark text-white small fw-semibold">
                             {{ $blog->category->name ?? 'Sem categoria' }}
                         </span>

@@ -97,6 +97,22 @@
         (root || document).querySelectorAll('[data-world-phone-country]').forEach(populatePhoneCountry);
     }
 
+    function initVisible(root) {
+        (root || document).querySelectorAll('[data-world-phone-country]').forEach(select => {
+            if (select.offsetParent !== null) populatePhoneCountry(select);
+        });
+    }
+
     window.SaxWorldLocations = { countries, postalGuide, postalCodes, init };
-    document.addEventListener('DOMContentLoaded', () => init(document));
+    document.addEventListener('DOMContentLoaded', () => initVisible(document));
+    document.addEventListener('focusin', event => {
+        const select = event.target.closest?.('[data-world-phone-country]');
+        if (select) populatePhoneCountry(select);
+    });
+    document.addEventListener('shown.bs.modal', event => init(event.target));
+    document.addEventListener('shown.bs.tab', event => {
+        const selector = event.target.getAttribute('data-bs-target');
+        const target = selector ? document.querySelector(selector) : null;
+        if (target) init(target);
+    });
 }());

@@ -30,9 +30,9 @@
                             {{-- Área da Imagem com efeito Grayscale --}}
                             <div class="card-img-box">
                                 @if($child->photo && Storage::disk('public')->exists($child->photo))
-                                    <img src="{{ Storage::url($child->photo) }}" alt="{{ $child->name }}" loading="lazy">
+                                    <img src="{{ Storage::url($child->photo) }}" alt="{{ $child->name }}" loading="lazy" decoding="async">
                                 @else
-                                    <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem">
+                                    <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="Sem imagem" loading="lazy" decoding="async">
                                 @endif
                             </div>
 

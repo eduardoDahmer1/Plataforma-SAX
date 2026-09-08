@@ -25,6 +25,12 @@
     elseif(Route::is('checkout.*')) $titleDefault = 'SAX - Checkout Seguro';
     elseif(Request::is('*palace*')) $titleDefault = __('messages.seo_palace_title');
     elseif(Request::is('*institucional*')) $titleDefault = __('messages.seo_institutional_title');
+
+    $isThemedPublicPage = !Route::is('admin.*') && (
+        Request::is('*cafe*') || Request::is('*bistro*') || Request::is('*bridal*')
+        || Request::is('*palace*') || Request::is('*institucional*')
+    );
+    $usesSwiper = Route::is('home', 'produto.show', 'admin.produto.show', 'contact.form', 'user.dashboard') || $isThemedPublicPage;
 @endphp
 
 <title>@yield('title', $titleDefault)</title>
@@ -59,8 +65,12 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+@if($isThemedPublicPage)
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+@endif
+@if($usesSwiper)
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+@endif
 <link href="{{ asset('css/app.css') }}?v={{ file_exists(public_path('css/app.css')) ? filemtime(public_path('css/app.css')) : time() }}" rel="stylesheet">
 @if(Route::is('home', 'categories.*', 'subcategories.*', 'categorias-filhas.*', 'brands.*'))
     <link href="{{ asset('css/banner-system.css') }}?v={{ filemtime(public_path('css/banner-system.css')) }}" rel="stylesheet">
@@ -70,7 +80,7 @@
 @endif
 
 {{-- Temáticas: Café & Bistrô, Bridal, Palace, Institucional (solo público, nunca en admin) --}}
-@if(!Route::is('admin.*') && (Request::is('*cafe*') || Request::is('*bistro*') || Request::is('*bridal*') || Request::is('*palace*') || Request::is('*institucional*')))
+@if($isThemedPublicPage)
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 
     @if(Request::is('*cafe*') || Request::is('*bistro*'))
@@ -98,7 +108,7 @@
 @endif
 
 {{-- 4. Detalhes do Produto --}}
-@if(Route::is('produto.show') || Route::is('product.show'))
+@if(Route::is('produto.show', 'admin.produto.show'))
     <link href="{{ asset('css/show-products.css') }}?v={{ filemtime(public_path('css/show-products.css')) }}" rel="stylesheet">
 @endif
 

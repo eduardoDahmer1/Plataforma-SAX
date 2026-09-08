@@ -27,4 +27,6 @@
     </div>
 </header>
 
-@include('components.modal-login')
+@guest
+    @include('components.modal-login')
+@endguest

@@ -322,7 +322,9 @@
         </button>
 </nav>
 
-@include('components.modal-login')
+@guest
+    @include('components.modal-login')
+@endguest
 <script>
     window.saxSearchLang = {
         sku_prefix: @json(__('messages.sku_prefix')),

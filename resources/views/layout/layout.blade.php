@@ -22,8 +22,6 @@
         <i class="fa fa-arrow-up"></i>
     </button>
 
-    @include('components.whatsapp')
-
     {{-- Footer --}}
     @include('components.footer')
 

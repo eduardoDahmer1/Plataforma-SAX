@@ -10,12 +10,14 @@
                     <div class="row g-3 g-xl-4 pt-2 pt-md-4 palace-story-grid">
                         <div class="col-6">
                             <div class="palace-stat-card">
+                                <i class="bi bi-award palace-stat-card__icon" aria-hidden="true"></i>
                                 <span class="palace-stat-card__value">1000+</span>
                                 <span class="palace-stat-card__label">{{ __('messages.rotulos_label') }}</span>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="palace-stat-card">
+                                <i class="bi bi-buildings palace-stat-card__icon" aria-hidden="true"></i>
                                 <span class="palace-stat-card__value">{{ __('messages.piso_label') }}</span>
                                 <span class="palace-stat-card__label">{{ __('messages.vista_prime_label') }}</span>
                             </div>

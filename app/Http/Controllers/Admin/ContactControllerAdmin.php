@@ -53,6 +53,7 @@ class ContactControllerAdmin extends Controller
             1     => $contagem[1] ?? 0,
             2     => $contagem[2] ?? 0,
             3     => $contagem[3] ?? 0,
+            4     => $contagem[4] ?? 0,
         ];
 
         $stats = [
@@ -60,6 +61,7 @@ class ContactControllerAdmin extends Controller
             'consultas' => $totais[1],
             'curriculos' => $totais[2],
             'newsletters' => $totais[3],
+            'optical' => $totais[4],
         ];
 
         return view('admin.contacts.index', compact(

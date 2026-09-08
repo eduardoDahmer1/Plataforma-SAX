@@ -62,6 +62,9 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <link href="{{ asset('css/app.css') }}?v={{ file_exists(public_path('css/app.css')) ? filemtime(public_path('css/app.css')) : time() }}" rel="stylesheet">
+@if(Route::is('home', 'categories.*', 'subcategories.*', 'categorias-filhas.*', 'brands.*'))
+    <link href="{{ asset('css/banner-system.css') }}?v={{ filemtime(public_path('css/banner-system.css')) }}" rel="stylesheet">
+@endif
 @if(!Request::is('*cafe*') && !Request::is('*bistro*') && !Request::is('*bridal*') && !Request::is('*palace*') && !Request::is('*institucional*'))
     <link href="{{ asset('css/auth.css') }}?v={{ file_exists(public_path('css/auth.css')) ? filemtime(public_path('css/auth.css')) : time() }}" rel="stylesheet">
 @endif
@@ -117,5 +120,16 @@
 @endif
 
 @stack('styles')
+
+{{-- Identidade visual dinâmica: uma leitura em cache e somente CSS variables. --}}
+@if(!Route::is('admin.*'))
+    @php
+        $themeRuntime = app(\App\Services\ThemeSettingsService::class);
+        $themeFontUrl = $themeRuntime->fontStylesheetUrl(request());
+        $themeRuntimeCss = $themeRuntime->cssForRequest(request());
+    @endphp
+    @if($themeFontUrl)<link href="{{ $themeFontUrl }}" rel="stylesheet">@endif
+    @if($themeRuntimeCss)<style id="sax-runtime-theme">{!! $themeRuntimeCss !!}</style>@endif
+@endif
 @stack('head-scripts')
 <x-marketing-head :settings="$marketingSettings" />

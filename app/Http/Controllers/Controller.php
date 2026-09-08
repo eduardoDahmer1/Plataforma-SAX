@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use App\Services\CategoryDisplayService;
+use App\Services\VisibleCatalogProductsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
 
@@ -38,13 +39,10 @@ class Controller extends BaseController
 
     protected function applyActiveProductScope($query)
     {
-        return $query
-            ->inActiveCategory()
-            ->where('status', 1)
-            ->where('product_role', 'P')
-            ->where('stock', '>', 0)
-            ->whereNotNull('photo')
-            ->where('photo', '!=', '');
+        return $query->whereIn(
+            $query->getModel()->qualifyColumn('id'),
+            VisibleCatalogProductsService::builder()->select('products.id')
+        );
     }
 
     protected function applyCatalogSorting($query, ?string $sortBy)
@@ -137,13 +135,24 @@ class Controller extends BaseController
             ->values();
     }
 
-    protected function buildFilterBrandsList()
+    /**
+     * Retorna somente as marcas que possuem produtos atualmente visíveis.
+     *
+     * Quando um filtro de catálogo é informado, a lista é limitada aos
+     * produtos daquela categoria, subcategoria ou categoria filha.
+     */
+    protected function buildFilterBrandsList(?callable $applyProductFilter = null)
     {
+        $visibleProducts = VisibleCatalogProductsService::builder();
+
+        if ($applyProductFilter) {
+            $applyProductFilter($visibleProducts);
+        }
+
         return \App\Models\Brand::where('status', 1)
-            ->withCount([
-                'products as active_products_count' => fn($q) => $this->applyActiveProductScope($q),
-            ])
-            ->having('active_products_count', '>', 0)
+            ->whereIn('brands.id', (clone $visibleProducts)
+                ->whereNotNull('products.brand_id')
+                ->select('products.brand_id'))
             ->orderBy('name')
             ->get();
     }

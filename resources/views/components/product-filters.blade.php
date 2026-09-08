@@ -5,6 +5,8 @@
     $curSubId = is_object($currentSub) ? $currentSub->id : $currentSub;
     $curChildId = is_object($currentChild) ? $currentChild->id : $currentChild;
     $uid = uniqid('pf_', false);
+    $isEditionPrivee = static fn ($item) => \Illuminate\Support\Str::slug((string) ($item->slug ?? $item->name ?? '')) === 'edition-privee'
+        || \Illuminate\Support\Str::slug((string) ($item->name ?? '')) === 'edition-privee';
 @endphp
 
 <div class="product-filters-wrapper" id="{{ $uid }}" data-filter-root>
@@ -29,7 +31,7 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <a
                             href="{{ route('categories.show', $cat->slug ?? $cat->id) }}"
-                            class="filter-link filter-link-main flex-grow-1 {{ $curCatId == $cat->id ? 'active fw-bold' : '' }}"
+                            class="filter-link filter-link-main flex-grow-1 {{ $isEditionPrivee($cat) ? 'filter-link-edition-privee' : '' }} {{ $curCatId == $cat->id ? 'active fw-bold' : '' }}"
                             data-prefetch>
                             {{ $cat->name }}
                         </a>
@@ -58,7 +60,7 @@
                                         <div class="d-flex align-items-center justify-content-between">
                                             <a
                                                 href="{{ route('subcategories.show', $sub->slug ?? $sub->id) }}"
-                                                class="filter-link filter-link-sub {{ $curSubId == $sub->id ? 'active fw-bold text-dark' : '' }}"
+                                                class="filter-link filter-link-sub {{ $isEditionPrivee($sub) ? 'filter-link-edition-privee' : '' }} {{ $curSubId == $sub->id ? 'active fw-bold text-dark' : '' }}"
                                                 data-prefetch>
                                                 {{ $sub->name }}
                                             </a>
@@ -84,7 +86,7 @@
                                                         <li data-filter-item data-filter-name="{{ mb_strtolower($filha->name) }}">
                                                             <a
                                                                 href="{{ route('categorias-filhas.show', $filha->slug ?? $filha->id) }}"
-                                                                class="filter-link filter-link-child {{ $curChildId == $filha->id ? 'active fw-bold text-dark opacity-100' : '' }}"
+                                                                class="filter-link filter-link-child {{ $isEditionPrivee($filha) ? 'filter-link-edition-privee' : '' }} {{ $curChildId == $filha->id ? 'active fw-bold text-dark opacity-100' : '' }}"
                                                                 data-prefetch>
                                                                 {{ $filha->name }}
                                                             </a>
@@ -309,6 +311,10 @@
         transition: color 0.16s ease, transform 0.16s ease;
         letter-spacing: 0.45px;
         line-height: 1.35;
+    }
+
+    .filter-link.filter-link-edition-privee {
+        text-transform: lowercase !important;
     }
 
     .filter-link:hover,

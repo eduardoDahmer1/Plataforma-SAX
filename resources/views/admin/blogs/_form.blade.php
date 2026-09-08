@@ -70,8 +70,9 @@
         <div class="p-4">
             <x-admin.image-upload name="image" previewId="blogCoverPreview"
                 :currentImage="$blog?->image ? Storage::url($blog->image) : null"
-                placeholder="https://placehold.co/1200x400/1a1a1a/ffffff?text=Imagem+de+Capa"
-                height="220px" maxSize="8MB" />
+                placeholder="https://placehold.co/1600x1000/1a1a1a/ffffff?text=Imagem+de+Capa"
+                height="300px" maxSize="10MB" dimensions="1600 × 1000 px · proporção 8:5"
+                usage="Capa principal do artigo. Mantenha pessoas e textos na área central." />
 
             <label for="image_caption" class="sax-label mt-3">{{ __('messages.creditos_imagem_placeholder') }}</label>
             <input type="text" id="image_caption" name="image_caption" class="form-control sax-input-sm"
@@ -87,6 +88,10 @@
             :subtitle="__('messages.corpo_conteudo_desc')" />
 
         <div class="p-4">
+            <div class="admin-media-spec mb-3">
+                <i class="fa-solid fa-expand"></i>
+                <span><strong>1400 px de largura recomendada</strong><small>Imagens inseridas no texto mantêm a altura proporcional.</small></span>
+            </div>
             <div class="editor-rich-wrapper">
                 <textarea id="editor-blog" name="content"
                           data-upload-url="{{ route('admin.blogs.upload-image') }}">{{ old('content', $blog?->content ?? '') }}</textarea>
@@ -101,6 +106,10 @@
             :subtitle="__('messages.galeria_imagens_desc')" />
 
         <div class="p-4">
+            <div class="admin-media-spec mb-3">
+                <i class="fa-solid fa-expand"></i>
+                <span><strong>1400 × 1050 px · proporção 4:3</strong><small>Até 10 imagens. Use a mesma proporção para uma galeria mais uniforme.</small></span>
+            </div>
             <div id="blogGaleriaPreview" class="gallery-preview-grid mb-3">
                 @foreach($blog?->gallery ?? [] as $index => $foto)
                     <div class="gallery-preview-item is-existing shadow-sm border">
@@ -117,7 +126,7 @@
                 <input type="file" id="blogGalleryInput" name="gallery[]" class="upload-input" multiple accept="image/*">
                 <i class="fas fa-images mb-2 opacity-25 fa-lg"></i>
                 <p class="x-small fw-bold m-0">{{ __('messages.click_or_drag_images') }}</p>
-                <p class="x-small text-muted m-0">{{ __('messages.image_formats_max_each') }}</p>
+                <p class="x-small text-muted m-0">1400 × 1050 px · JPG, PNG ou WEBP · máximo 10 MB cada</p>
             </div>
 
             <p class="x-small text-muted mt-2 mb-0">

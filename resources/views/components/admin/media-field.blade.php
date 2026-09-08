@@ -5,6 +5,8 @@
     'uploadUrl'  => null,   // presente → modo EDIT (AJAX); ausente → modo CREATE (submit normal)
     'showDelete' => false,  // true → renderiza botón borrar (la vista pone el form delete fuera del form principal)
     'ratio'      => 'square', // 'square' | 'banner'
+    'dimensions' => null,
+    'usage'      => null,
 ])
 
 @php
@@ -15,6 +17,12 @@
 
 @if($label)
     <label class="sax-label-tiny mb-2 d-block text-center">{{ $label }}</label>
+@endif
+@if($dimensions)
+    <div class="admin-media-spec mb-2">
+        <i class="fa-solid fa-expand"></i>
+        <span><strong>{{ $dimensions }}</strong>@if($usage)<small>{{ $usage }}</small>@endif</span>
+    </div>
 @endif
 
 @if($uploadUrl)

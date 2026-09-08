@@ -85,6 +85,8 @@
                         :currentImage="$bridal->hero_image ? asset('storage/'.$bridal->hero_image) : null"
                         placeholder="https://placehold.co/600x400/121212/D4AF37?text=Hero"
                         :label="__('messages.hero_image_label')"
+                        dimensions="1920 × 1080 px"
+                        usage="Hero responsivo; mantenha o foco no centro."
                     />
                 </div>
             </div>

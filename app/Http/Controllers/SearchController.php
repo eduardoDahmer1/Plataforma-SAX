@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
 use App\Services\ProductSearchService;
+use App\Services\VisibleCatalogProductsService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
@@ -52,19 +53,12 @@ class SearchController extends Controller
 
     private function baseQuery(Request $request)
     {
-        $query = Product::query()
-            ->inActiveCategory()
+        $query = VisibleCatalogProductsService::builder()
             ->select($this->qualifiedProductCols())
             ->with([
                 'brand:id,name',
                 'translations' => fn($query) => $query->where('locale', translation_locale()),
-            ])
-            ->where('products.is_outlet', false)
-            ->where('products.status', 1)
-            ->where('products.product_role', 'P')
-            ->where('products.stock', '>', 0)
-            ->whereNotNull('products.photo')
-            ->where('products.photo', '!=', '');
+            ]);
 
         if ($request->filled('search')) {
             $this->productSearch->apply($query, $request->string('search')->toString());
@@ -104,13 +98,8 @@ class SearchController extends Controller
             $variantColumns[] = 'colors';
         }
 
-        $variants = Product::query()
-            ->inActiveCategory()
+        $variants = VisibleCatalogProductsService::builder()
             ->select($variantColumns)
-            ->where('is_outlet', false)
-            ->where('status', 1)
-            ->where('stock', '>', 0)
-            ->where('product_role', 'P')
             ->where(function ($q) use ($familyIds) {
                 $q->whereIn('id', $familyIds)
                     ->orWhereIn('color_parent_id', $familyIds);
@@ -251,20 +240,13 @@ class SearchController extends Controller
             return response()->json([]);
         }
 
-        $products = Product::query()
-            ->inActiveCategory()
+        $products = VisibleCatalogProductsService::builder()
             ->select([
                 'products.id', 'products.name', 'products.external_name', 'products.sku',
                 'products.price', 'products.photo', 'products.slug', 'products.brand_id',
                 'products.category_id',
             ])
             ->with(['brand:id,name', 'category:id,name'])
-            ->where('products.is_outlet', false)
-            ->where('products.status', 1)
-            ->where('products.product_role', 'P')
-            ->where('products.stock', '>', 0)
-            ->whereNotNull('products.photo')
-            ->where('products.photo', '!=', '')
             ->tap(fn (Builder $query) => $this->productSearch->apply($query, $search))
             ->tap(fn (Builder $query) => $this->productSearch->applyRelevance($query, $search))
             ->orderBy('products.name')

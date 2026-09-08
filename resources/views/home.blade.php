@@ -19,15 +19,16 @@
 
         $exclusiveCategories = collect($categories ?? [])->take(3);
         $exclusiveDescription = __('messages.exclusive_description');
-        $stackedBanners = collect([
-            ['image' => $banner6 ?? null, 'link' => $banner6_link ?? null, 'label' => __('messages.selecao_curada')],
-            ['image' => $banner7 ?? null, 'link' => $banner7_link ?? null, 'label' => __('messages.novidades_da_temporada')],
-            ['image' => $banner8 ?? null, 'link' => $banner8_link ?? null, 'label' => __('messages.destaques_da_casa')],
-        ])->filter(fn ($banner) => filled($banner['image']));
+        $stackedBanners = collect($homeEditorialBanners ?? [])->values()->map(fn ($banner, $index) => [
+            'image' => $banner->image,
+            'image_url' => $banner->image_url,
+            'link' => $banner->link,
+            'label' => [__('messages.selecao_curada'), __('messages.novidades_da_temporada'), __('messages.destaques_da_casa')][$index % 3],
+        ]);
     @endphp
 
     <div class="sax-home-wrapper">
-        @include('home-components.main-slider', ['limit' => 5])
+        @include('home-components.main-slider', ['limit' => 20])
 
         <x-alert type="success" :message="session('success')" />
 
@@ -70,11 +71,11 @@
 
                     <div class="col-lg-7">
                         <div class="exclusive-media-wrap h-100">
-                            @if (isset($banner1) && $banner1)
-                                @if (!empty($banner1_link))
-                                    <a href="{{ $banner1_link }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('messages.abrir_banner_principal') }}">
+                            @if (isset($banner9) && $banner9)
+                                @if (!empty($banner9_link))
+                                    <a href="{{ $banner9_link }}" aria-label="{{ __('messages.abrir_banner_principal') }}">
                                         <img
-                                            src="{{ asset('storage/uploads/' . $banner1) }}"
+                                            src="{{ asset('storage/uploads/' . $banner9) }}"
                                             class="img-fluid w-100 exclusive-media"
                                             alt="{{ __('messages.colecao_exclusiva_sax') }}"
                                             onerror="this.style.display='none'"
@@ -82,7 +83,7 @@
                                     </a>
                                 @else
                                     <img
-                                        src="{{ asset('storage/uploads/' . $banner1) }}"
+                                        src="{{ asset('storage/uploads/' . $banner9) }}"
                                         class="img-fluid w-100 exclusive-media"
                                         alt="{{ __('messages.colecao_exclusiva_sax') }}"
                                         onerror="this.style.display='none'"
@@ -117,36 +118,39 @@
             </div>
         @endif
 
-        <section class="sax-stacked-banners py-5">
+        <section class="sax-stacked-banners py-5" aria-label="Destaques editoriais SAX">
             <div class="container-fluid px-lg-5">
                 @if ($stackedBanners->isNotEmpty())
-                    <div class="stacked-banners-grid">
-                        @foreach ($stackedBanners as $banner)
-                            <article class="stacked-banner-card">
-                                <div class="stacked-banner-card__media">
-                                    @if (!empty($banner['link']))
-                                        <a href="{{ $banner['link'] }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir {{ $banner['label'] }}">
+                    <div class="stacked-banners-heading">
+                        <div><span>{{ __('messages.curadoria_sax') }}</span><h2>{{ __('messages.destaques_da_casa') }}</h2></div>
+                        @if($stackedBanners->count() > 1)
+                            <div class="stacked-banner-controls">
+                                <button type="button" class="editorial-prev" aria-label="Destaque anterior"><i class="fa-solid fa-arrow-left"></i></button>
+                                <button type="button" class="editorial-next" aria-label="Próximo destaque"><i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="swiper editorialBannerSwiper">
+                        <div class="swiper-wrapper">
+                            @foreach ($stackedBanners as $banner)
+                                @php $isExternal = filled($banner['link']) && !str_starts_with($banner['link'], url('/')) && !str_starts_with($banner['link'], '/'); @endphp
+                                <div class="swiper-slide">
+                                    <article class="stacked-banner-card">
+                                        @if (!empty($banner['link']))
+                                            <a href="{{ $banner['link'] }}" @if($isExternal) target="_blank" rel="noopener noreferrer" @endif aria-label="Abrir {{ $banner['label'] }}">
+                                        @endif
                                             <img
-                                                src="{{ asset('storage/uploads/' . $banner['image']) }}"
-                                                class="img-fluid w-100"
+                                                src="{{ $banner['image_url'] }}"
                                                 alt="{{ $banner['label'] }}"
-                                                onerror="this.src='https://placehold.co/1400x680?text=SAX+Banner'"
-                                            >
-                                        </a>
-                                    @else
-                                        <img
-                                            src="{{ asset('storage/uploads/' . $banner['image']) }}"
-                                            class="img-fluid w-100"
-                                            alt="{{ $banner['label'] }}"
-                                            onerror="this.src='https://placehold.co/1400x680?text=SAX+Banner'"
-                                        >
-                                    @endif
+                                                width="1600" height="760" loading="lazy" decoding="async">
+                                            <span class="stacked-banner-card__index">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                                            <span class="stacked-banner-card__overlay"><small>{{ __('messages.curadoria_sax') }}</small><strong>{{ $banner['label'] }}</strong>@if (!empty($banner['link']))<b>{{ __('messages.descobrir_btn') }} <i class="fa-solid fa-arrow-right"></i></b>@endif</span>
+                                        @if (!empty($banner['link']))</a>@endif
+                                    </article>
                                 </div>
-                                <div class="stacked-banner-card__overlay">
-                                    <span>{{ $banner['label'] }}</span>
-                                </div>
-                            </article>
-                        @endforeach
+                            @endforeach
+                        </div>
+                        <div class="editorial-pagination"></div>
                     </div>
                 @endif
             </div>

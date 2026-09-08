@@ -53,17 +53,23 @@
                         @if ($storeControls->navigationVisible('footer', 'institucional'))<li><a href="{{ route('institucional.index') }}">{{ __('messages.institucional') }}</a></li>@endif
                         @if ($storeControls->navigationVisible('footer', 'bridal'))<li><a href="{{ route('bridal.index') }}">{{ __('messages.bridal') }}</a></li>@endif
                         @if ($storeControls->navigationVisible('footer', 'palace'))<li><a href="{{ route('palace.index') }}">{{ __('messages.palace') }}</a></li>@endif
-                        @if ($storeControls->navigationVisible('footer', 'cafe'))<li><a href="{{ route('cafe_bistro.index') }}">{{ __('messages.cafe_bistro') }}</a></li>@endif
+                        @if ($storeControls->navigationVisible('footer', 'cafe'))
+                            <li><a href="{{ route('cafe_bistro.index') }}">{{ __('messages.cafe_bistro_pjc') }}</a></li>
+                            <li><a href="{{ route('cafe_bistro.show', 'asuncion') }}">{{ __('messages.cafe_bistro_asuncion') }}</a></li>
+                        @endif
                         @if ($storeControls->navigationVisible('footer', 'blog'))<li><a href="{{ route('blogs.index') }}">#SAXNEWS</a></li>@endif
                     </ul>
                 </details>@endif
 
-                @if ($storeControls->navigationVisible('footer', 'contact'))<details>
+                @if ($storeControls->navigationVisible('footer', 'contact') || $storeControls->navigationVisible('footer', 'guide'))<details>
                     <summary>{{ __('messages.atendimento') }} <i class="fa-solid fa-chevron-down"></i></summary>
                     <ul>
-                        <li><a href="{{ route('contact.form') }}">{{ __('messages.ajuda') }}</a></li>
-                        <li><a href="{{ route('policies.index') }}">Políticas e Termos</a></li>
-                        <li><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
+                        @if ($storeControls->navigationVisible('footer', 'contact'))
+                            <li><a href="{{ route('contact.form') }}">{{ __('messages.ajuda') }}</a></li>
+                            <li><a href="{{ route('policies.index') }}">Políticas e Termos</a></li>
+                            <li><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>
+                        @endif
+                        @if ($storeControls->navigationVisible('footer', 'guide'))<li><a href="{{ route('contact.guide') }}">{{ __($isOtica ? 'messages.contact_guide_nav_optical' : 'messages.contact_guide_nav_general') }}</a></li>@endif
                     </ul>
                 </details>@endif
             </div>
@@ -107,6 +113,7 @@
                     <h6 class="footer-title">{{ __('messages.atendimento') }}</h6>
                     <ul class="footer-links">
                         <li><a href="{{ route('contact.form') }}">{{ __('messages.ajuda') }}</a></li>
+                        @if ($storeControls->navigationVisible('footer', 'guide'))<li><a href="{{ route('contact.guide') }}">{{ __($isOtica ? 'messages.contact_guide_nav_optical' : 'messages.contact_guide_nav_general') }}</a></li>@endif
                         <li><a href="{{ route('policies.index') }}">Políticas e Termos</a></li>
                     </ul>
 

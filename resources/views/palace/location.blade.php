@@ -37,6 +37,12 @@
                             <i class="bi bi-whatsapp"></i>
                             {{ __('messages.falar_concierge_btn') }}
                         </a>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($t->palace_contato_endereco ?? $palace->contato_endereco ?? 'SAX Palace') }}"
+                           target="_blank" rel="noopener" class="palace-map-link">
+                            <i class="bi bi-map" aria-hidden="true"></i>
+                            {{ __('messages.localizacao_label') }}
+                            <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </div>
             </div>

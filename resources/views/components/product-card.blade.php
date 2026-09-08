@@ -53,7 +53,6 @@
         ->take(6)
         ->values();
 
-    $productSize = trim((string) ($item->size ?? ''));
     $hoverPhotoUrl = $item->card_hover_photo_url;
 @endphp
 
@@ -126,9 +125,6 @@
                     </div>
                 @endif
 
-                @if ($productSize !== '')
-                    <span class="product-card-standard__size">{{ __('messages.tam_prefix') }} {{ $productSize }}</span>
-                @endif
             </div>
         </div>
     </div>

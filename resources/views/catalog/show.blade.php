@@ -36,6 +36,7 @@
                 $heroBannerUrl = $resolveStorageUrl($banner_horizontal);
             }
 
+            $sideBannerUsesDefault = false;
             $sideBannerUrl = $resolveStorageUrl($isBrand
                 ? ($entity->banner ?? null)
                 : ($entity->internal_banner ?? null));
@@ -46,7 +47,10 @@
 
             if (!$sideBannerUrl && !empty($banner_horizontal ?? null)) {
                 $sideBannerUrl = $resolveStorageUrl($banner_horizontal);
+                $sideBannerUsesDefault = filled($sideBannerUrl);
             }
+
+            $sideBannerLink = $sideBannerUsesDefault ? ($banner_horizontal_link ?? null) : null;
 
             $entityName = $entity->name ?? '';
             $mobileFilterId = 'catalogMobileFilter_' . ($entity->id ?? uniqid());
@@ -133,12 +137,9 @@
                     </div>
 
                     @if ($sideBannerUrl)
-                        <div class="sticky-banner-lateral catalog-sidebar-banner mt-3">
-                            <img
-                                src="{{ $sideBannerUrl }}"
-                                class="img-fluid banner-v-render"
-                                alt="{{ $entityName }} Promo"
-                                onerror="this.src='{{ $fallbackImg }}'">
+                        <div class="mt-3">
+                            <x-catalog-side-banner :image="$sideBannerUrl" :link="$sideBannerLink"
+                                :alt="$entityName.' Promo'" :fallback="$fallbackImg" />
                         </div>
                     @endif
                 </aside>
@@ -154,6 +155,8 @@
                     @if ($products->count())
                         @php
                             $productLocale = translation_locale();
+                            $mobileBannerAfter = min(4, $products->count());
+                            $tabletBannerAfter = min(6, $products->count());
                             $products->getCollection()->load([
                                 'translations' => fn ($query) => $query->where('locale', $productLocale),
                             ]);
@@ -161,6 +164,18 @@
                         <div class="row g-2 g-md-3">
                             @foreach ($products as $item)
                                 <x-product-card :item="$item" :cartItems="$cartItems ?? []" gridClass="col-6 col-md-4 col-xl-3" />
+                                @if($sideBannerUrl && $loop->iteration === $mobileBannerAfter)
+                                    <div class="col-12 d-md-none catalog-mobile-editorial-slot">
+                                        <x-catalog-side-banner :image="$sideBannerUrl" :link="$sideBannerLink"
+                                            :alt="$entityName.' Promo'" :fallback="$fallbackImg" mobile />
+                                    </div>
+                                @endif
+                                @if($sideBannerUrl && $loop->iteration === $tabletBannerAfter)
+                                    <div class="col-12 d-none d-md-block d-lg-none catalog-mobile-editorial-slot">
+                                        <x-catalog-side-banner :image="$sideBannerUrl" :link="$sideBannerLink"
+                                            :alt="$entityName.' Promo'" :fallback="$fallbackImg" mobile />
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
 
@@ -196,15 +211,6 @@
                         :currentChild="$currentChild ?? null" />
                 </div>
 
-                @if ($sideBannerUrl)
-                    <div class="sticky-banner-lateral catalog-sidebar-banner mt-3">
-                        <img
-                            src="{{ $sideBannerUrl }}"
-                            class="img-fluid banner-v-render"
-                            alt="{{ $entityName }} Promo"
-                            onerror="this.src='{{ $fallbackImg }}'">
-                    </div>
-                @endif
             </div>
         </div>
     </div>

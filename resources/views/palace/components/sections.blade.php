@@ -30,7 +30,7 @@
 
             @foreach($refeicoes as $item)
             <div class="col-md-4 palace-reveal" data-aos="fade-up">
-                <div class="palace-card palace-card--menu h-100" data-palace-tilt>
+                <div class="palace-card palace-card--menu h-100" data-palace-tilt style="--card-index: {{ $loop->index }}">
                     <div class="palace-card__media ratio ratio-4x3">
                         <img src="{{ $item['img'] }}" class="palace-card__img" alt="{{ $item['tit'] }}" loading="lazy">
                         <div class="palace-card__overlay">
@@ -38,6 +38,7 @@
                         </div>
                     </div>
                     <div class="palace-card__body">
+                        <span class="palace-card__number">0{{ $loop->iteration }}</span>
                         <p class="palace-card__text">{{ $item['desc'] ?? __('messages.experiencia_gastronomica_placeholder') }}</p>
                     </div>
                 </div>

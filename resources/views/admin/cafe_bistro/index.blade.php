@@ -9,8 +9,8 @@
 
 <x-admin.card>
     <x-admin.page-header
-        title="SAX Café & Bistrô"
-        description=""
+        :title="'SAX Café & Bistrô — '.($cafeBistro->name ?? '')"
+        :description="__('messages.cafe_bistro_admin_units')"
         divider="sax-divider-bistro">
         <x-slot:actions>
             <a href="{{ route('admin.cafe_bistro.edit', $cafeBistro->id) }}" class="btn btn-dark-bistro px-4 shadow-sm rounded-pill fw-bold">
@@ -20,6 +20,15 @@
     </x-admin.page-header>
 
     <x-admin.alert />
+
+    <div class="d-flex flex-wrap gap-2 mb-4" aria-label="{{ __('messages.cafe_bistro_choose_location') }}">
+        @foreach($cafeBistros as $location)
+            <a href="{{ route('admin.cafe_bistro.index', ['location' => $location->slug]) }}"
+               class="btn {{ $location->is($cafeBistro) ? 'btn-dark-bistro' : 'btn-outline-secondary' }} rounded-pill px-4">
+                <i class="fas fa-location-dot me-2"></i>{{ $location->name }}
+            </a>
+        @endforeach
+    </div>
 
     <div class="row g-4">
 

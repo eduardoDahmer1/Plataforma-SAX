@@ -22,7 +22,7 @@ class ContactsExport implements FromCollection, WithHeadings
     {
         $query = Contact::query();
 
-        if ($this->type && in_array((string) $this->type, ['1', '2', '3'], true)) {
+        if ($this->type && in_array((string) $this->type, ['1', '2', '3', '4'], true)) {
             $query->where('contact_type', $this->type);
         }
 

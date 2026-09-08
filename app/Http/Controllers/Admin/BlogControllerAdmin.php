@@ -187,7 +187,7 @@ class BlogControllerAdmin extends Controller
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:2000',
             'slug' => 'nullable|string|max:255',
-            'image' => 'nullable|image',
+            'image' => 'nullable|image|max:10240',
             'image_caption' => 'nullable|string|max:255',
             'content' => 'required|string',
             'meta_description' => 'nullable|string|max:160',
@@ -197,7 +197,7 @@ class BlogControllerAdmin extends Controller
             'featured' => 'sometimes|boolean',
             'category_id' => 'nullable|exists:blog_categories,id',
             'gallery' => 'nullable|array|max:' . self::MAX_GALLERY_IMAGES,
-            'gallery.*' => 'nullable|image',
+            'gallery.*' => 'nullable|image|max:10240',
         ], [
             'gallery.max' => 'A galeria pode ter no máximo ' . self::MAX_GALLERY_IMAGES . ' imagens.',
             'gallery.*.image' => 'Um dos arquivos da galeria não é uma imagem válida.',

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Contact;
@@ -11,26 +10,16 @@ use App\Models\Cart;
 use App\Models\Blog;
 use App\Models\Generalsetting;
 use App\Models\Attribute;
+use App\Models\HomeBanner;
 use App\Services\DailyMostViewedProducts;
+use App\Services\VisibleCatalogProductsService;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
-    private const PRODUCT_BASE_SCOPES = [
-        ['status', 1],
-        ['product_role', 'P'],
-        ['stock', '>', 0],
-    ];
-
     private function activeProducts()
     {
-        return Product::inActiveCategory()
-            ->where('status', 1)
-            ->where('is_outlet', false)
-            ->where('product_role', 'P')
-            ->where('stock', '>', 0)
-            ->whereNotNull('photo')
-            ->where('photo', '!=', '')
+        return VisibleCatalogProductsService::builder()
             ->with(['brand', 'translations']);
     }
 
@@ -76,6 +65,12 @@ class HomeController extends Controller
         $settings  = Cache::remember('general_settings',  600, fn() => Generalsetting::first());
         $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
         $weeklyBanners = $this->weeklyRotatedHomeBanners($attribute);
+        $homeBannerGroups = Cache::remember('home_banners_active_v1', 600, fn () => HomeBanner::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('group'));
 
         $highlightTypes = [
             'destaque', 'mais_vendidos', 'melhores_avaliacoes', 'super_desconto',
@@ -85,7 +80,7 @@ class HomeController extends Controller
         $highlights = [];
         foreach ($highlightTypes as $key) {
             $highlights[$key] = Cache::remember(
-                "highlight_products_{$key}_" . now()->format('Y_W'),
+                "highlight_products_visible_catalog_v2_{$key}_" . now()->format('Y_W'),
                 now()->addDays(7),
                 fn() => $this->activeProducts()
                     ->where("highlights->{$key}", '1')
@@ -95,7 +90,7 @@ class HomeController extends Controller
             );
         }
 
-        $lancamentos = Cache::remember('home_products_updated_at', 600,
+        $lancamentos = Cache::remember('home_products_visible_catalog_v2_updated_at', 600,
             fn() => $this->activeProducts()->orderBy('updated_at', 'desc')->take(12)->get()
         );
 
@@ -106,12 +101,14 @@ class HomeController extends Controller
                 ->where('status', 1)->inRandomOrder()->take(5)->get()
         );
 
-        $brandsSlider = Cache::remember('home_brands_3d_random_15min', 900,
+        $brandsSlider = Cache::remember('home_brands_visible_catalog_v3_banner_priority_15min', 900,
             fn() => Brand::select('id', 'name', 'slug', 'image', 'banner')
                 ->where('status', 1)
-                ->whereNotNull('image')->where('image', '!=', '')
-                ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
-                ->inRandomOrder()->take(10)->get()
+                ->whereIn('id', VisibleCatalogProductsService::builder()->select('products.brand_id'))
+                ->orderByRaw("CASE WHEN NULLIF(TRIM(banner), '') IS NULL THEN 1 ELSE 0 END")
+                ->inRandomOrder()
+                ->take(10)
+                ->get()
         );
 
         $allCategories = Cache::remember('categories_all', 600,
@@ -136,6 +133,8 @@ class HomeController extends Controller
             'brands'          => $brandsSlider,
             'blogs'           => $blogs,
             'cartItems'       => $cartItems,
+            'homeMainBanners' => $homeBannerGroups->get(HomeBanner::GROUP_MAIN, collect()),
+            'homeEditorialBanners' => $homeBannerGroups->get(HomeBanner::GROUP_EDITORIAL, collect()),
             'banner1'         => $weeklyBanners['banner1'] ?? null,
             'banner2'         => $weeklyBanners['banner2'] ?? null,
             'banner3'         => $weeklyBanners['banner3'] ?? null,

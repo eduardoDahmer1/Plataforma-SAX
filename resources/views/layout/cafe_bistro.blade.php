@@ -3,10 +3,10 @@
 <head>
     <x-head-master />
 </head>
-<body class="experience-page experience-page--bistro">
+<body class="experience-page experience-page--bistro{{ ($cafeBistro->slug ?? null) === 'asuncion' ? ' experience-page--bistro-asuncion' : '' }}">
     <x-marketing-body-start />
 
-    <x-header-internas />
+    <x-header-internas :cafe-bistro="$cafeBistro" :cafe-bistro-locations="$cafeBistroLocations" />
 
     <main>
         @yield('content')

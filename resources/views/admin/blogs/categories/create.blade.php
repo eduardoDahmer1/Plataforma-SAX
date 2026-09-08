@@ -35,7 +35,8 @@
                         <div class="p-4">
                             <x-admin.image-upload name="banner" previewId="categoryBannerPreview"
                                 placeholder="https://placehold.co/800x300/1a1a1a/ffffff?text=Banner"
-                                height="200px" maxSize="8MB" />
+                                height="200px" maxSize="8MB" dimensions="1600 × 600 px"
+                                usage="Capa horizontal da categoria do blog." />
                         </div>
                     </div>
                 </div>

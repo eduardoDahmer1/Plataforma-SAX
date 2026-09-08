@@ -323,6 +323,9 @@
                                 <label for="photoInput" class="form-label text-bold">
                                     <i class="fas fa-image me-1"></i>Foto Principal
                                 </label>
+                                <div class="product-media-measure">
+                                    <i class="fas fa-ruler-combined"></i> Recomendado: 1200 × 1500 px · proporção 4:5
+                                </div>
                                 <div class="product-media-panel h-100">
                                     <div class="product-main-preview position-relative" id="photoPreviewBox"
                                         style="{{ $item->photo ? '' : 'display:none;' }}">
@@ -342,7 +345,7 @@
                                         <div class="product-dropzone-icon"><i class="fas fa-cloud-arrow-up"></i></div>
                                         <strong>Arraste a foto principal aqui</strong>
                                         <span>ou clique para selecionar no computador</span>
-                                        <small id="photoSelectionStatus">JPG, PNG ou WEBP · máximo 10 MB</small>
+                                        <small id="photoSelectionStatus">1200 × 1500 px · JPG, PNG ou WEBP · máximo 10 MB</small>
                                     </div>
                                 </div>
                             </div>
@@ -351,13 +354,16 @@
                                 <label class="form-label text-bold">
                                     <i class="fas fa-images me-1"></i>Galeria de Imagens
                                 </label>
+                                <div class="product-media-measure">
+                                    <i class="fas fa-ruler-combined"></i> Recomendado: 1200 × 1500 px por foto · proporção 4:5
+                                </div>
                                 <div class="product-media-panel h-100">
                                     <div class="product-dropzone" id="productGalleryDropzone">
                                         <input type="file" name="gallery[]" id="galleryInput" class="product-dropzone-input" multiple accept="image/jpeg,image/png,image/webp">
                                         <div class="product-dropzone-icon"><i class="fas fa-images"></i></div>
                                         <strong>Arraste várias imagens para a galeria</strong>
                                         <span>ou clique para selecionar no computador</span>
-                                        <small id="gallerySelectionCount">Nenhuma nova imagem selecionada</small>
+                                        <small id="gallerySelectionCount">1200 × 1500 px por foto · nenhuma nova imagem selecionada</small>
                                     </div>
 
                                     <div id="galleryPreview" class="product-gallery-preview mt-3" style="display:none;"></div>

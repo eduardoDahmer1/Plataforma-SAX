@@ -138,7 +138,7 @@
                 <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">{{ __('messages.imagem_capa_label') }}</h6>
                 <x-admin.image-upload name="section_one_image" previewId="preview-section_one_image"
                     :currentImage="$institucional->section_one_image ? asset('storage/'.$institucional->section_one_image) : null"
-                    placeholder="https://placehold.co/600x400" />
+                    placeholder="https://placehold.co/600x400" dimensions="1600 × 1000 px" usage="Imagem editorial de capa." />
             </div>
 
             {{-- MÉTRICAS SAX --}}
@@ -162,6 +162,7 @@
             <div class="sax-premium-card p-4 shadow-sm">
                 <x-admin.gallery-field field="top_sliders" :images="$topSliders"
                     :label="__('messages.banners_top_sec')"
+                    dimensions="1920 × 720 px" hint="Use a mesma proporção em todos os slides."
                     :max="\App\Http\Controllers\Admin\InstitucionalAdminController::MAX_TOP_SLIDERS" />
             </div>
         </div>

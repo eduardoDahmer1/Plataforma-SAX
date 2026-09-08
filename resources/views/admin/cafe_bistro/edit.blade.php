@@ -25,7 +25,7 @@
     @csrf
     @method('PUT')
 
-    <x-admin.sticky-header :title="__('messages.edit_sax_cafe_bistro')" cancelRoute="{{ route('admin.cafe_bistro.index') }}"
+    <x-admin.sticky-header :title="__('messages.edit_sax_cafe_bistro').' — '.$cafeBistro->name" cancelRoute="{{ route('admin.cafe_bistro.index', ['location' => $cafeBistro->slug]) }}"
         divider="sax-divider-bistro" btnClass="btn-dark-bistro" :submitLabel="__('messages.save_changes_btn')"
         :updatedAt="$cafeBistro->updated_at ? __('messages.last_update_label').': '.$cafeBistro->updated_at->format('d/m/Y H:i') : null" />
 
@@ -58,7 +58,8 @@
                 <div class="col-lg-5 p-4 bg-light border-start">
                     <x-admin.image-upload name="hero_imagen" previewId="prev-hero" :label="__('messages.hero_image_label')"
                         :currentImage="$cafeBistro->hero_imagen ? asset('storage/'.$cafeBistro->hero_imagen) : null"
-                        placeholder="https://placehold.co/600x400/0f1d35/ffffff?text=Hero" height="11.25rem" />
+                        placeholder="https://placehold.co/600x400/0f1d35/ffffff?text=Hero" height="11.25rem"
+                        dimensions="1920 × 1080 px" usage="Hero responsivo; mantenha o foco no centro." />
                 </div>
             </div>
         </div>

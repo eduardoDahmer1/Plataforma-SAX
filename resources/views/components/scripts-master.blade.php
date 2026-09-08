@@ -4,6 +4,11 @@
     Mismo patrón que head-master.blade.php
     ============================================ -->
 
+{{-- Widget global: todas as páginas públicas, nunca o painel administrativo. --}}
+@if(!Route::is('admin.*') && !Request::is('admin/*'))
+    @include('components.whatsapp')
+@endif
+
 <!-- 1. jQuery (solo donde se necesita) -->
 @if(Route::is('admin.*') || Route::is('manutencao') || (Request::is('*palace*') && !Route::is('admin.*')))
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Attribute;
+use App\Models\HomeBanner;
 use App\Services\ImageConverterService;
 
 class ImageUploadController extends Controller
@@ -18,6 +19,7 @@ class ImageUploadController extends Controller
         $logoPalace = $attribute?->logo_palace;
         $logoBridal = $attribute?->logo_bridal;
         $logoCafeBistro = $attribute?->logo_cafe_bistro;
+        $logoCafeBistroAsuncion = $attribute?->logo_cafe_bistro_asuncion;
         $bannerHorizontal = $attribute?->banner_horizontal;
         $noimage = $attribute?->noimage;
         $banners = [
@@ -45,9 +47,17 @@ class ImageUploadController extends Controller
             'banner8_link' => $attribute?->banner8_link,
             'banner9_link' => $attribute?->banner9_link,
             'banner10_link' => $attribute?->banner10_link,
+            'banner_horizontal_link' => $attribute?->banner_horizontal_link,
         ];
 
-        return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal', 'logoCafeBistro', 'bannerHorizontal', 'noimage', 'banners', 'bannerLinks', 'attribute'));
+        $homeBannerGroups = HomeBanner::query()
+            ->orderBy('group')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('group');
+
+        return view('admin.admin', compact('webpImage', 'logoPalace', 'logoBridal', 'logoCafeBistro', 'logoCafeBistroAsuncion', 'bannerHorizontal', 'noimage', 'banners', 'bannerLinks', 'attribute', 'homeBannerGroups'));
     }
 
     private function processImageUpload($file, $filename)
@@ -130,10 +140,16 @@ class ImageUploadController extends Controller
 
     public function updateBannerLinks(Request $request)
     {
+        $linkRules = ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) {
+            if (filled($value) && ! preg_match('#^(https?://|/)#i', $value)) {
+                $fail('Use uma URL completa (https://) ou um caminho interno iniciado por /.');
+            }
+        }];
         $rules = [];
         for ($i = 1; $i <= 10; $i++) {
-            $rules["banner{$i}_link"] = 'nullable|url|max:255';
+            $rules["banner{$i}_link"] = $linkRules;
         }
+        $rules['banner_horizontal_link'] = $linkRules;
 
         $validated = $request->validate($rules);
 
@@ -169,6 +185,10 @@ class ImageUploadController extends Controller
     // --- Métodos Logo Café & Bistrô ---
     public function uploadLogoCafeBistro(Request $request) { return $this->uploadImage($request, 'logo_cafe_bistro', 'logo_cafe_bistro.webp'); }
     public function deleteLogoCafeBistro() { return $this->deleteImage('logo_cafe_bistro'); }
+
+    // --- Logo exclusiva Café & Bistrô Asunción ---
+    public function uploadLogoCafeBistroAsuncion(Request $request) { return $this->uploadImage($request, 'logo_cafe_bistro_asuncion', 'logo_cafe_bistro_asuncion.webp'); }
+    public function deleteLogoCafeBistroAsuncion() { return $this->deleteImage('logo_cafe_bistro_asuncion'); }
 
     public function uploadBannerHorizontal(Request $request) { return $this->uploadImage($request, 'banner_horizontal', 'banner_horizontal.webp'); }
     public function deleteBannerHorizontal() { return $this->deleteImage('banner_horizontal'); }

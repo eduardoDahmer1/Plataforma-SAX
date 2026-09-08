@@ -24,6 +24,7 @@ class SystemSetting extends Model
         'header_cafe_enabled',
         'header_blog_enabled',
         'header_contact_enabled',
+        'header_guide_enabled',
         'footer_categories_enabled',
         'footer_institucional_enabled',
         'footer_bridal_enabled',
@@ -31,6 +32,7 @@ class SystemSetting extends Model
         'footer_cafe_enabled',
         'footer_blog_enabled',
         'footer_contact_enabled',
+        'footer_guide_enabled',
     ];
 
     protected $casts = [
@@ -50,6 +52,7 @@ class SystemSetting extends Model
         'header_cafe_enabled' => 'boolean',
         'header_blog_enabled' => 'boolean',
         'header_contact_enabled' => 'boolean',
+        'header_guide_enabled' => 'boolean',
         'footer_categories_enabled' => 'boolean',
         'footer_institucional_enabled' => 'boolean',
         'footer_bridal_enabled' => 'boolean',
@@ -57,5 +60,6 @@ class SystemSetting extends Model
         'footer_cafe_enabled' => 'boolean',
         'footer_blog_enabled' => 'boolean',
         'footer_contact_enabled' => 'boolean',
+        'footer_guide_enabled' => 'boolean',
     ];
 }

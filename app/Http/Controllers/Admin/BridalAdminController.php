@@ -287,6 +287,7 @@ class BridalAdminController extends Controller
         Cache::forget('bridal_data');
         Cache::forget('bridal_active_brands');
         Cache::forget('bridal_active_products');
+        Cache::forget('bridal_visible_catalog_v2_products');
 
         return redirect()->route('admin.bridal.index')->with('success', 'Contenido y traducción (' . strtoupper($locale) . ') de SAX Bridal actualizados con éxito.');
     }

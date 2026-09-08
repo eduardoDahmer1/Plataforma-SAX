@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use App\Services\VisibleCatalogProductsService;
 
 class Product extends Model
 {
@@ -239,7 +240,7 @@ class Product extends Model
         });
 
         static::saved(function (Product $product) {
-            Cache::forget('storefront_product_card_color_variants_v2');
+            Cache::forget('storefront_product_card_color_variants_visible_catalog_v3');
             self::$cardColorVariantMap = null;
 
             if (app()->runningInConsole()
@@ -271,7 +272,7 @@ class Product extends Model
         });
 
         static::deleted(function () {
-            Cache::forget('storefront_product_card_color_variants_v2');
+            Cache::forget('storefront_product_card_color_variants_visible_catalog_v3');
             self::$cardColorVariantMap = null;
         });
     }
@@ -714,19 +715,15 @@ class Product extends Model
 
         if (self::$cardColorVariantMap === null) {
             self::$cardColorVariantMap = Cache::remember(
-                'storefront_product_card_color_variants_v2',
+                'storefront_product_card_color_variants_visible_catalog_v3',
                 now()->addMinutes(10),
                 function () {
                     $map = [];
                     $columns = ['id', 'slug', 'color', 'color_parent_id'];
                     if (self::supportsMultipleColors()) $columns[] = 'colors';
 
-                    $variants = self::query()
+                    $variants = VisibleCatalogProductsService::builder()
                         ->select($columns)
-                        ->where('is_outlet', false)
-                        ->where('status', 1)
-                        ->where('stock', '>', 0)
-                        ->where('product_role', 'P')
                         ->orderBy('id')
                         ->get();
 

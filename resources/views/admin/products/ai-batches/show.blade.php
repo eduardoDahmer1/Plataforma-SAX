@@ -14,6 +14,7 @@
 
     <x-admin.alert />
     @error('batch')<div class="alert alert-danger">{{ $message }}</div>@enderror
+    @error('skus')<div class="alert alert-danger">{{ $message }}</div>@enderror
 
     <div id="aiBatchProgress" data-status-url="{{ route('admin.products.ai-batches.status', $batch) }}" data-batch-status="{{ $batch->status }}">
         <div class="row g-3 mb-4">
@@ -33,14 +34,19 @@
                         {{ $counts['missing'] ?? 0 }} inexistentes · {{ $counts['skipped'] ?? 0 }} omitidos
                     </div>
                 </div>
-                @if($batch->eligible_count > 0)
-                    <form method="POST" action="{{ route('admin.products.ai-batches.dispatch', $batch) }}">
-                        @csrf
-                        <button class="btn btn-primary fw-bold" onclick="this.disabled=true; this.form.submit();">
-                            <i class="fa fa-play me-2"></i> Generar información
-                        </button>
-                    </form>
-                @endif
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-dark fw-bold" data-bs-toggle="modal" data-bs-target="#aiBatchCatalogModal">
+                        <i class="fa fa-plus me-2"></i> Agregar productos
+                    </button>
+                    @if($batch->eligible_count > 0)
+                        <form method="POST" action="{{ route('admin.products.ai-batches.dispatch', $batch) }}">
+                            @csrf
+                            <button class="btn btn-primary fw-bold" onclick="this.disabled=true; this.form.submit();">
+                                <i class="fa fa-play me-2"></i> Generar información
+                            </button>
+                        </form>
+                    @endif
+                </div>
             </div>
         @else
             <div class="progress mb-4" style="height: 22px;">
@@ -78,6 +84,17 @@
         </div>
     </div>
 </x-admin.card>
+
+@if($batch->status === 'draft')
+    <x-admin.ai-catalog-selector
+        mode="append"
+        :batch="$batch"
+        :existing-skus="$batchSkus"
+        :brands="$brands"
+        :categories="$categories"
+        :subcategories="$subcategories"
+    />
+@endif
 
 @if($batch->status !== 'draft')
 <script>

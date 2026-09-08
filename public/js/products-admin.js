@@ -29,13 +29,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const categorySelect = document.getElementById('category_id');
         const subcategorySelect = document.getElementById('subcategory_id');
         const childCategorySelect = document.getElementById('categoriasfilhas_id');
+        const categoryId = taxonomy?.category_id;
         const subcategoryId = taxonomy?.subcategory_id;
         const childCategoryId = taxonomy?.childcategory_id;
 
-        if (!categorySelect || !subcategorySelect || !childCategorySelect || !subcategoryId) return;
+        if (!categorySelect || !subcategorySelect || !childCategorySelect || !categoryId) return;
 
-        // Reutiliza a cascata existente e mantém a categoria principal intacta.
+        const hasCategory = Array.from(categorySelect.options).some(function (option) {
+            return String(option.value) === String(categoryId);
+        });
+        if (!hasCategory) return;
+
+        // Reutiliza la cascada existente para mantener coherentes los tres niveles.
+        categorySelect.value = String(categoryId);
         categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        if (!subcategoryId) return;
+
         const hasSubcategory = Array.from(subcategorySelect.options).some(function (option) {
             return String(option.value) === String(subcategoryId);
         });
@@ -234,6 +243,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const resultsDiv = document.getElementById(resultsId);
         const selectedDiv = document.getElementById(selectedId);
         const resultsLabel = document.getElementById(resultsId + '_label');
+        var activeRequest = null;
+
+        if (!searchInput || !searchBtn || !resultsDiv || !selectedDiv) return;
+
+        function showSearchMessage(message, type) {
+            resultsDiv.innerHTML = '<div class="col-12"><div class="alert alert-' + type + ' m-0">' + message + '</div></div>';
+            resultsDiv.style.display = 'flex';
+            resultsDiv.style.flexWrap = 'wrap';
+            if (resultsLabel) resultsLabel.classList.remove('d-none');
+        }
 
         function updateSelectedCount() {
             const badge = document.querySelector('[data-count-for="' + selectedId + '"]');
@@ -278,12 +297,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function searchProducts(autoSelectMatches = false) {
             const query = searchInput.value.trim();
-            if (query.length < 2) {
+            if (!query.length) {
+                if (activeRequest) activeRequest.abort();
                 resultsDiv.style.display = 'none';
                 resultsDiv.innerHTML = '';
                 if (resultsLabel) resultsLabel.classList.add('d-none');
                 return;
             }
+
+            if (activeRequest) activeRequest.abort();
+            activeRequest = new AbortController();
+            const request = activeRequest;
+            showSearchMessage('Buscando produtos...', 'light');
+            searchBtn.disabled = true;
 
             const excludeId = resultsDiv.dataset.currentProductId || '';
             const params = new URLSearchParams({ q: query });
@@ -298,10 +324,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (context === 'size' && resultsDiv.dataset.currentSize) {
                 params.append('current_size', resultsDiv.dataset.currentSize);
             }
+            if (autoSelectMatches) params.append('strict_family', '1');
 
-            fetch(searchUrl + '?' + params.toString())
-                .then(function (res) { return res.json(); })
+            fetch(searchUrl + '?' + params.toString(), { signal: request.signal })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
                 .then(function (data) {
+                    if (!Array.isArray(data)) throw new Error('Resposta inválida do servidor');
                     var html = '';
                     if (data.length) {
                         data.forEach(function (product) {
@@ -340,7 +371,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         resultsDiv.querySelectorAll('.card[data-id]').forEach(selectResultCard);
                     }
                 })
-                .catch(function (err) { console.error('Falha na busca de produtos:', err); });
+                .catch(function (err) {
+                    if (err.name === 'AbortError') return;
+                    console.error('Falha na busca de produtos:', err);
+                    showSearchMessage('Não foi possível buscar os produtos. Tente novamente.', 'danger');
+                })
+                .finally(function () {
+                    if (activeRequest !== request) return;
+                    activeRequest = null;
+                    searchBtn.disabled = false;
+                });
         }
 
         searchBtn.addEventListener('click', function () { searchProducts(false); });
@@ -351,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        if (searchInput.dataset.autoSearch === '1' && searchInput.value.trim().length >= 2) {
+        if (searchInput.dataset.autoSearch === '1' && searchInput.value.trim().length >= 1) {
             window.setTimeout(function () { searchProducts(true); }, 80);
         }
 

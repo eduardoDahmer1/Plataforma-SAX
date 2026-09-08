@@ -53,6 +53,7 @@ class StoreControlService
             'header_cafe_enabled' => true,
             'header_blog_enabled' => true,
             'header_contact_enabled' => true,
+            'header_guide_enabled' => true,
             'footer_categories_enabled' => true,
             'footer_institucional_enabled' => true,
             'footer_bridal_enabled' => true,
@@ -60,6 +61,7 @@ class StoreControlService
             'footer_cafe_enabled' => true,
             'footer_blog_enabled' => true,
             'footer_contact_enabled' => true,
+            'footer_guide_enabled' => true,
         ];
     }
 

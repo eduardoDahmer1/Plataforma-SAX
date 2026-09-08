@@ -87,6 +87,7 @@
     $sizeOptions = isset($siblings) && $siblings->count() > 0
         ? $siblings->values()
         : collect([$product]);
+    $purchaseProduct = $selectedVariant ?? $product;
     $visibleSizeOptions = $sizeOptions->take(4);
     $hasHiddenSizes = $sizeOptions->count() > 4;
 
@@ -308,11 +309,11 @@
                             @if ($sizeOptions->isNotEmpty())
                                 @foreach ($visibleSizeOptions as $sib)
                                     @php
-                                        $isCurrent = (int) $product->id === (int) $sib->id;
+                                        $isCurrent = (int) $purchaseProduct->id === (int) $sib->id;
                                         $sizeLabel = $sib->size ?: $missingSizeLabel;
-                                        $isOut = ($sib->stock ?? 0) <= 0;
+                                        $isUnavailable = (int) ($sib->status ?? 0) !== 1 || (int) ($sib->stock ?? 0) <= 0;
                                     @endphp
-                                    @if ($isOut)
+                                    @if ($isUnavailable)
                                         <span class="size-box {{ $isCurrent ? 'active' : '' }} disabled">{{ $sizeLabel }}</span>
                                     @else
                                         <a href="{{ route('produto.show', $sib->slug ?? $sib->id) }}"
@@ -343,6 +344,12 @@
                                class="btn btn-outline-dark w-100 text-uppercase fw-bold rounded-0 bridal-btn">
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.agendar_consulta_bridal') }}
                             </a>
+                        @elseif (! ($catalogIntegrationStatus['available'] ?? true))
+                            <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $displayName) }}"
+                               target="_blank" rel="noopener"
+                               class="btn btn-success w-100 text-uppercase fw-bold rounded-1 add-to-cart-btn">
+                                <i class="fab fa-whatsapp me-2"></i>{{ __('messages.store_whatsapp_product_button') }}
+                            </a>
                         @elseif (Auth::check())
                             <div class="d-flex buy-actions">
                                 @if (! (($storeControls['cart_enabled'] ?? true) && ($storeControls['add_to_cart_enabled'] ?? true)) && ($storeControls['whatsapp_enabled'] ?? true))
@@ -356,20 +363,14 @@
                                         data-bs-toggle="modal" data-bs-target="#storeControlPauseModal">
                                         {{ __('messages.store_checkout_paused_button') }}
                                     </button>
-                                @elseif (! ($catalogIntegrationStatus['available'] ?? true))
-                                    <button type="button"
-                                        class="btn btn-dark w-100 text-uppercase fw-bold rounded-0 add-to-cart-btn"
-                                        data-bs-toggle="modal" data-bs-target="#catalogIntegrationPauseModal">
-                                        {{ __('messages.catalog_purchase_paused_button') }}
-                                    </button>
                                 @else
                                     <form action="{{ route('cart.add') }}" method="POST" class="flex-grow-1">
                                         @csrf
-                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                        <input type="hidden" name="product_id" value="{{ $purchaseProduct->id }}">
                                         <button type="submit"
                                                 class="btn btn-dark w-100 text-uppercase fw-bold rounded-0 add-to-cart-btn"
-                                                {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                                            {{ $product->stock > 0 ? __('messages.adicionar_ao_carrinho') : __('messages.esgotado') }}
+                                                {{ $purchaseProduct->stock <= 0 ? 'disabled' : '' }}>
+                                            {{ $purchaseProduct->stock > 0 ? __('messages.adicionar_ao_carrinho') : __('messages.esgotado') }}
                                         </button>
                                     </form>
                                 @endif
@@ -633,11 +634,11 @@
                     <div class="d-flex flex-wrap gap-2">
                         @foreach ($sizeOptions as $sib)
                             @php
-                                $isCurrent = (int) $product->id === (int) $sib->id;
+                                $isCurrent = (int) $purchaseProduct->id === (int) $sib->id;
                                 $sizeLabel = $sib->size ?: $missingSizeLabel;
-                                $isOut = ($sib->stock ?? 0) <= 0;
+                                $isUnavailable = (int) ($sib->status ?? 0) !== 1 || (int) ($sib->stock ?? 0) <= 0;
                             @endphp
-                            @if ($isOut)
+                            @if ($isUnavailable)
                                 <span class="size-box {{ $isCurrent ? 'active' : '' }} disabled">{{ $sizeLabel }}</span>
                             @else
                                 <a href="{{ route('produto.show', $sib->slug ?? $sib->id) }}"

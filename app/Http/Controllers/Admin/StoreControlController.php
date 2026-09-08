@@ -22,8 +22,10 @@ class StoreControlController extends Controller
         'geonames_enabled',
         'header_categories_enabled', 'header_institucional_enabled', 'header_bridal_enabled',
         'header_palace_enabled', 'header_cafe_enabled', 'header_blog_enabled', 'header_contact_enabled',
+        'header_guide_enabled',
         'footer_categories_enabled', 'footer_institucional_enabled', 'footer_bridal_enabled',
         'footer_palace_enabled', 'footer_cafe_enabled', 'footer_blog_enabled', 'footer_contact_enabled',
+        'footer_guide_enabled',
     ];
 
     public function edit(StoreControlService $controls): View

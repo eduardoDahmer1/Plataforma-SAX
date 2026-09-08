@@ -187,6 +187,7 @@
             <div class="col-lg-4">
                 <div class="sax-premium-card p-4 mb-4 shadow-sm">
                     <h6 class="sax-label mb-3 text-dark text-uppercase letter-spacing-1">{{ __('messages.imagem_capa_label') }} (Hero)</h6>
+                    <div class="admin-media-spec mb-3"><i class="fa-solid fa-expand"></i><span><strong>1920 × 1080 px</strong><small>Hero responsivo; mantenha o foco no centro.</small></span></div>
                     <div class="preview-box mb-3 shadow-sm border rounded overflow-hidden">
                         <img id="preview-hero" src="{{ $palace->hero_imagem ? asset('storage/'.$palace->hero_imagem) : 'https://placehold.co/600x400' }}" class="img-fluid w-100">
                     </div>

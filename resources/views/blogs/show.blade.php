@@ -11,6 +11,9 @@
 @endsection
 
 @section('content')
+@php
+    $coverUrl = $blog->image ? Storage::url($blog->image) : asset('storage/uploads/noimage.webp');
+@endphp
 <div class="reading-progress-bar"></div>
 
 <div class="blog-article-page">
@@ -40,12 +43,15 @@
                     </div>
                 </div>
 
-                <div class="blog-article-hero__media">
-                    <img src="{{ $blog->image ? Storage::url($blog->image) : asset('storage/uploads/noimage.webp') }}" alt="{{ $blog->title }}">
+                <figure class="blog-article-hero__media" style="--blog-cover-image: url('{{ $coverUrl }}')">
+                    <span class="blog-article-hero__backdrop" aria-hidden="true"></span>
+                    <span class="blog-article-hero__image-frame">
+                        <img src="{{ $coverUrl }}" alt="{{ $blog->title }}" fetchpriority="high" decoding="async">
+                    </span>
                     @if ($blog->image_caption)
-                        <span class="blog-caption">{{ $blog->image_caption }}</span>
+                        <figcaption class="blog-caption">{{ $blog->image_caption }}</figcaption>
                     @endif
-                </div>
+                </figure>
             </div>
         </div>
     </section>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bridal;
 use App\Models\Brand;
-use App\Models\Product;
+use App\Services\VisibleCatalogProductsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -24,17 +24,11 @@ class BridalController extends Controller
         );
 
         // obtener los productos relacionados con las marcas específicas, asegurando que tengan una foto válida
-        $bridalProducts = Cache::remember('bridal_active_products', now()->addMinutes(10), fn () =>
-            Product::inActiveCategory()
+        $bridalProducts = Cache::remember('bridal_visible_catalog_v2_products', now()->addMinutes(10), fn () =>
+            VisibleCatalogProductsService::builder()
                 ->with(['brand', 'translations'])
-                ->whereIn('brand_id', $idbrands)
-                ->where('is_outlet', false)
-                ->where('status', 1)
-                ->where('product_role', 'P')
-                ->where('stock', '>', 0)
+                ->whereIn('products.brand_id', $idbrands)
                 ->latest()
-                ->whereNotNull('photo')
-                ->where('photo', '!=', '')
                 ->take(10)
                 ->get()
         );

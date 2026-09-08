@@ -42,6 +42,7 @@
                 @if ($storeControls->navigationVisible('header', 'blog'))<li class="list-inline-item"><a href="{{ route('blogs.index') }}">{{ __('messages.sax_news_tag') }}</a></li>@endif
                 @if ($storeControls->navigationVisible('header', 'palace'))<li class="list-inline-item border-start ps-3"><a href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a></li>@endif
                 @if ($storeControls->navigationVisible('header', 'contact'))<li class="list-inline-item border-start ps-3"><a href="{{ route('contact.form') }}">{{ __('messages.contato') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'guide'))<li class="list-inline-item border-start ps-3"><a href="{{ route('contact.guide') }}">{{ mb_strtoupper(__($storeControls->isOtica() ? 'messages.contact_guide_nav_optical' : 'messages.contact_guide_nav_general')) }}</a></li>@endif
 
                 @if ($storeControls->navigationVisible('header', 'categories'))<li class="list-inline-item border-start ps-3 dropdown-mega-parent">
                     <a href="{{ route('categories.index') }}" class="mega-menu-trigger">
@@ -207,8 +208,12 @@
                 </li>@endif
                 @if ($storeControls->navigationVisible('header', 'bridal'))<li class="list-inline-item"><a href="{{ route('bridal.index') }}" class="text-bridal">{{ __('messages.bridal') }}</a></li>@endif
                 @if ($storeControls->navigationVisible('header', 'palace'))<li class="list-inline-item"><a href="{{ route('palace.index') }}" class="text-palace">{{ __('messages.palace') }}</a></li>@endif
-                @if ($storeControls->navigationVisible('header', 'cafe'))<li class="list-inline-item">
-                    <a href="{{ route('cafe_bistro.index') }}" class="text-bistro">{{ __('messages.cafe_bistro') }}</a>
+                @if ($storeControls->navigationVisible('header', 'cafe'))<li class="list-inline-item dropdown">
+                    <a href="#" class="text-bistro dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">{{ __('messages.cafe_bistro') }}</a>
+                    <ul class="dropdown-menu border-0 shadow-sm mt-2">
+                        <li><a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">{{ __('messages.cafe_bistro_pjc') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('cafe_bistro.show', 'asuncion') }}">{{ __('messages.cafe_bistro_asuncion') }}</a></li>
+                    </ul>
                 </li>@endif
                 @if ($storeControls->navigationVisible('header', 'blog'))<li class="list-inline-item"><a href="{{ route('blogs.index') }}" class="text-muted">{{ __('messages.sax_news_tag') }}</a></li>@endif
             </ul>
@@ -267,9 +272,13 @@
                 @if ($storeControls->navigationVisible('header', 'institucional'))<li><a href="{{ route('institucional.index') }}" class="drawer-link"><i class="fa fa-info-circle me-3"></i>{{ __('messages.institucional') }}</a></li>@endif
                 @if ($storeControls->navigationVisible('header', 'bridal'))<li><a href="{{ route('bridal.index') }}" class="drawer-link"><i class="fa fa-ring me-3"></i>{{ __('messages.bridal') }}</a></li>@endif
                 @if ($storeControls->navigationVisible('header', 'palace'))<li><a href="{{ route('palace.index') }}" class="drawer-link"><i class="fa fa-crown me-3"></i>{{ __('messages.sax_palace') }}</a></li>@endif
-                @if ($storeControls->navigationVisible('header', 'cafe'))<li><a href="{{ route('cafe_bistro.index') }}" class="drawer-link"><i class="fa fa-coffee me-3"></i>{{ __('messages.cafe_bistro') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'cafe'))
+                    <li><a href="{{ route('cafe_bistro.index') }}" class="drawer-link"><i class="fa fa-coffee me-3"></i>{{ __('messages.cafe_bistro_pjc') }}</a></li>
+                    <li><a href="{{ route('cafe_bistro.show', 'asuncion') }}" class="drawer-link"><i class="fa fa-coffee me-3"></i>{{ __('messages.cafe_bistro_asuncion') }}</a></li>
+                @endif
                 @if ($storeControls->navigationVisible('header', 'blog'))<li><a href="{{ route('blogs.index') }}" class="drawer-link"><i class="fa fa-newspaper me-3"></i>{{ __('messages.sax_news_tag') }}</a></li>@endif
                 @if ($storeControls->navigationVisible('header', 'contact'))<li><a href="{{ route('contact.form') }}" class="drawer-link"><i class="fa fa-envelope me-3"></i>{{ __('messages.contato') }}</a></li>@endif
+                @if ($storeControls->navigationVisible('header', 'guide'))<li><a href="{{ route('contact.guide') }}" class="drawer-link"><i class="fa-solid fa-map-location-dot me-3"></i>{{ __($storeControls->isOtica() ? 'messages.contact_guide_nav_optical' : 'messages.contact_guide_nav_general') }}</a></li>@endif
                 <li><a href="{{ route('categories.index') }}" class="drawer-link"><i class="fa fa-th me-3"></i>{{ __('messages.categorias') }}</a></li>
                 <li><a href="{{ route('brands.index') }}" class="drawer-link"><i class="fa fa-tag me-3"></i>{{ __('messages.nossas_marcas') }}</a></li>
                 <li><a href="{{ route('search') }}" class="drawer-link"><i class="fa fa-search me-3"></i>{{ __('messages.pesquisar') }}</a></li>

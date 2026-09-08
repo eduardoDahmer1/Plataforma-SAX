@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\VisibleCatalogProductsService;
 
 class SubcategoryController extends Controller
 {
@@ -43,7 +44,7 @@ class SubcategoryController extends Controller
         $page = $request->get('page', 1);
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
-        $cacheKey = "subcategory_show_{$idOrSlug}_page_{$page}_{$sortBy}_{$perPage}";
+        $cacheKey = "subcategory_show_visible_catalog_v2_{$idOrSlug}_page_{$page}_{$sortBy}_{$perPage}";
 
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
@@ -58,15 +59,8 @@ class SubcategoryController extends Controller
                         ->orWhere('id', $idOrSlug))
                     ->firstOrFail();
 
-                $productsQuery = $subcategory
-                    ->products()
-                    ->inActiveCategory()
-                    ->where('status', 1)
-                    ->where('is_outlet', false)
-                    ->where('product_role', 'P')
-                    ->where('stock', '>', 0)
-                    ->whereNotNull('photo')
-                    ->where('photo', '!=', '')
+                $productsQuery = VisibleCatalogProductsService::builder()
+                    ->where('products.subcategory_id', $subcategory->id)
                     ->with(['brand', 'category', 'translations']);
                 $this->applyCatalogSorting($productsQuery, $sortBy);
                 $products = $productsQuery
@@ -85,9 +79,15 @@ class SubcategoryController extends Controller
             throw $e;
         }
 
-        $allCategories = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
+        $allCategories = Cache::remember('filter_full_tree_visible_catalog_v2', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
-        $brands = Cache::remember('filter_brands_list_active', now()->addHours(1), fn() => $this->buildFilterBrandsList());
+        $brands = Cache::remember(
+            "filter_brands_subcategory_visible_catalog_v1_{$data['subcategory']->id}",
+            now()->addHours(1),
+            fn() => $this->buildFilterBrandsList(
+                fn($query) => $query->where('products.subcategory_id', $data['subcategory']->id)
+            )
+        );
 
         return view('catalog.show', [
             'entity' => $data['subcategory'],

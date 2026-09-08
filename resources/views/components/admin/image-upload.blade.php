@@ -9,6 +9,8 @@
     'accept'       => 'image/*',
     'compact'      => false,
     'circular'     => false,
+    'dimensions'   => null,
+    'usage'        => null,
 ])
 @php $src = $currentImage ?? $placeholder; @endphp
 
@@ -31,6 +33,12 @@
     {{-- ── Rectangular: full o compact ── --}}
     @if($label)
         <label class="sax-form-label d-block mb-2">{{ $label }}</label>
+    @endif
+    @if($dimensions)
+        <div class="admin-media-spec mb-2">
+            <i class="fa-solid fa-expand"></i>
+            <span><strong>{{ $dimensions }}</strong>@if($usage)<small>{{ $usage }}</small>@endif</span>
+        </div>
     @endif
     <div class="img-preview-box mb-{{ $compact ? '2' : '3' }} rounded-{{ $compact ? '2' : '3' }} overflow-hidden border"
          style="height:{{ $height }};"><img id="{{ $previewId }}" src="{{ $src }}"

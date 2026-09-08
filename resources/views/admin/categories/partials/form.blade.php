@@ -24,16 +24,16 @@
         <div class="sax-catf__grid">
             <x-admin.media-field field="photo" :label="__('messages.foto')"
                 :current="$category->photo" :uploadUrl="route('admin.categories.uploadPhoto', $category->id)"
-                :showDelete="true" ratio="square" />
+                :showDelete="true" ratio="square" dimensions="800 × 800 px" usage="Imagem de identificação nos atalhos do catálogo." />
 
             <x-admin.media-field field="banner" :label="__('messages.banner')"
                 :current="$category->banner" :uploadUrl="route('admin.categories.uploadBanner', $category->id)"
-                :showDelete="true" ratio="banner" />
+                :showDelete="true" ratio="banner" dimensions="1920 × 560 px" usage="Banner de topo; mantenha textos na área central." />
         </div>
     @else
         <div class="sax-catf__grid">
-            <x-admin.field name="photo" type="file" :label="__('messages.foto')" :hint="__('messages.upload_logo_desc')" />
-            <x-admin.field name="banner" type="file" :label="__('messages.banner')" :hint="__('messages.upload_banner_desc')" />
+            <x-admin.field name="photo" type="file" :label="__('messages.foto')" hint="Recomendado: 800 × 800 px (quadrado)." />
+            <x-admin.field name="banner" type="file" :label="__('messages.banner')" hint="Recomendado: 1920 × 560 px; área segura central." />
         </div>
     @endif
 </x-admin.catalog-form>

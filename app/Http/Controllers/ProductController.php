@@ -7,6 +7,7 @@ use App\Models\Generalsetting;
 use App\Models\Attribute;
 use App\Services\DailyMostViewedProducts;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
+use App\Services\VisibleCatalogProductsService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 
@@ -14,13 +15,7 @@ class ProductController extends Controller
 {
     private function activeBase()
     {
-        return Product::inActiveCategory()
-            ->where('status', 1)
-            ->where('is_outlet', false)
-            ->where('product_role', 'P')
-            ->where('stock', '>', 0)
-            ->whereNotNull('photo')
-            ->where('photo', '!=', '');
+        return VisibleCatalogProductsService::builder();
     } 
 
     private function withCupons($query)
@@ -39,9 +34,26 @@ class ProductController extends Controller
                 ->where('id', $id_or_slug)
                 ->orWhere('slug', $id_or_slug))
             ->where('is_outlet', false)
-            ->where('status', 1)
             ->with(['brand', 'category', 'subcategory', 'categoriasfilhas', 'translations'])
             ->firstOrFail();
+
+        $isProductAvailable = (int) $product->status === 1 && (int) $product->stock > 0;
+        $hasAvailableChild = false;
+
+        if ($product->product_role === 'P' && ! $isProductAvailable) {
+            $hasAvailableChild = Product::inActiveCategory()
+                ->where('parent_id', $product->id)
+                ->where('product_role', 'F')
+                ->where('is_outlet', false)
+                ->where('status', 1)
+                ->where('stock', '>', 0)
+                ->exists();
+
+            abort_unless($hasAvailableChild, 404);
+        } elseif ($product->product_role !== 'P' && (int) $product->status !== 1) {
+            // Mantém a regra anterior para acessos diretos às variantes F.
+            abort(404);
+        }
 
         $masterId = (int) $product->id;
         if ($product->product_role === 'F' && !empty($product->parent_id)) {
@@ -76,13 +88,30 @@ class ProductController extends Controller
         $siblings = Product::inActiveCategory()
             ->where(fn($q) => $q->where('parent_id', $masterId)->orWhere('id', $masterId))
             ->where('is_outlet', false)
-            ->where('status', 1)
             ->get()
             ->each(function (Product $sibling) {
                 if (!filled($sibling->size)) {
                     $sibling->size = $sibling->inferredSize();
                 }
-            })
+            });
+
+        // Quando o ancla P no está disponible, la primera variante F
+        // disponible según el orden actual de tallas queda preseleccionada
+        // para la compra, sin cambiar la URL ni el producto mostrado.
+        $selectedVariant = $product->product_role === 'P' && ! $isProductAvailable
+            ? $siblings
+                ->filter(fn (Product $sibling) => $sibling->product_role === 'F' && (int) $sibling->stock > 0)
+                ->sort(function (Product $left, Product $right) {
+                    $sizeComparison = $this->sizeWeight($left->size) <=> $this->sizeWeight($right->size);
+
+                    return $sizeComparison !== 0
+                        ? $sizeComparison
+                        : $left->id <=> $right->id;
+                })
+                ->first()
+            : null;
+
+        $siblings = $siblings
             ->groupBy(fn (Product $sibling) => mb_strtoupper(trim((string) ($sibling->size ?: 'SEM_TAMANHO_' . $sibling->id))))
             ->map(function ($sameSize) use ($product) {
                 return $sameSize->firstWhere('id', $product->id)
@@ -107,6 +136,7 @@ class ProductController extends Controller
 
         return view('produtos.show', [
             'product'           => $product,
+            'selectedVariant'   => $selectedVariant,
             'isBridal'          => $isBridal,
             'siblings'          => $siblings,
             'coresRelacionadas' => $coresRelacionadas,
@@ -121,7 +151,7 @@ class ProductController extends Controller
 
     private function getSimilares(Product $product)
     {
-        return Cache::remember("pdp_similares_{$product->id}_v11", now()->addMinutes(10), function () use ($product) {
+        return Cache::remember("pdp_similares_{$product->id}_visible_catalog_v12", now()->addMinutes(10), function () use ($product) {
             $limit       = 8;
             $palabraClave = $this->palabraClaveSimilar($product);
 

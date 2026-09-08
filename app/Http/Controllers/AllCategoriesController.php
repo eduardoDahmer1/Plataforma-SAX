@@ -13,7 +13,7 @@ class AllCategoriesController extends Controller
             fn() => DB::table('attributes')->first()
         );
 
-        $categories = Cache::remember('all_categories_tree_active', now()->addMinutes(60),
+        $categories = Cache::remember('all_categories_tree_visible_catalog_v2', now()->addMinutes(60),
             fn() => $this->buildFilterCategoriesTree()
         );
 

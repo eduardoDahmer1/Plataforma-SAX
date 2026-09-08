@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CategoriasFilhas;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Subcategory;
 use Illuminate\Http\Client\RequestException;
@@ -21,17 +22,11 @@ class OpenAICatalogService
             throw new RuntimeException('La API de OpenAI no está configurada.');
         }
 
-        $allowedSubcategories = filled($product->category_id)
-            ? Subcategory::where('category_id', $product->category_id)
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'category_id'])
-            : collect();
-        $allowedSubcategoryIds = $allowedSubcategories->pluck('id')->map(fn ($id) => (int) $id);
-        $allowedChildCategories = $allowedSubcategoryIds->isNotEmpty()
-            ? CategoriasFilhas::whereIn('subcategory_id', $allowedSubcategoryIds)
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'subcategory_id', 'category_id'])
-            : collect();
+        [
+            'categories' => $allowedCategories,
+            'subcategories' => $allowedSubcategories,
+            'child_categories' => $allowedChildCategories,
+        ] = $this->loadActiveTaxonomy();
 
         $manufacturerIdentity = $product->manufacturerSearchIdentity();
         $manufacturerReferences = (array) ($manufacturerIdentity['reference_candidates'] ?? []);
@@ -66,16 +61,23 @@ class OpenAICatalogService
                 ]))),
             ],
             'taxonomy' => [
-                'fixed_category' => [
-                    'id' => $product->category_id,
-                    'name' => $product->category?->name,
+                'current_selection' => [
+                    'category_id' => $product->category_id,
+                    'subcategory_id' => $product->subcategory_id,
+                    'childcategory_id' => $product->childcategory_id,
                 ],
+                'allowed_categories' => $allowedCategories->map(fn (Category $category) => [
+                    'id' => (int) $category->id,
+                    'name' => $category->name ?: $category->slug,
+                ])->values()->all(),
                 'allowed_subcategories' => $allowedSubcategories->map(fn (Subcategory $subcategory) => [
                     'id' => (int) $subcategory->id,
+                    'category_id' => (int) $subcategory->category_id,
                     'name' => $subcategory->name ?: $subcategory->slug,
                 ])->values()->all(),
                 'allowed_child_categories' => $allowedChildCategories->map(fn (CategoriasFilhas $childCategory) => [
                     'id' => (int) $childCategory->id,
+                    'category_id' => (int) $childCategory->category_id,
                     'subcategory_id' => (int) $childCategory->subcategory_id,
                     'name' => $childCategory->name ?: $childCategory->slug,
                 ])->values()->all(),
@@ -116,9 +118,12 @@ como máximo las tres URLs más confiables y específicas que realmente respalde
 Solo después de agotar las búsquedas razonables, devuelve web_research.status como not_found y
 continúa usando únicamente los datos internos.
 
-Los datos externos deben quedar identificados en web_research.findings y nunca pueden reemplazar
-la categoría principal fixed_category ni permitir IDs fuera de allowed_subcategories y
-allowed_child_categories. Una característica solo puede presentarse como un hecho cuando esté
+Los datos externos deben quedar identificados en web_research.findings. Selecciona la categoría,
+subcategoría y categoría hija que mejor correspondan al producto usando exclusivamente los IDs de
+allowed_categories, allowed_subcategories y allowed_child_categories. La subcategoría debe pertenecer
+a la categoría seleccionada y la categoría hija debe pertenecer a ambas. current_selection es solo
+una referencia y puede cambiar. Si no puedes determinar razonablemente un nivel, devuelve null para
+ese nivel y para todos sus niveles inferiores. Una característica solo puede presentarse como un hecho cuando esté
 respaldada por los datos internos o por una fuente web confiable que corresponda inequívocamente al
 producto identificado. No deduzcas características a partir de la marca, la categoría, productos
 similares, otra variante del mismo modelo ni conocimiento general sobre la colección. Si un dato no
@@ -233,6 +238,7 @@ PROMPT;
 
         $proposal = $this->normalizeProposal(
             $proposal,
+            $allowedCategories->keyBy(fn (Category $category) => (int) $category->id),
             $allowedSubcategories->keyBy(fn (Subcategory $subcategory) => (int) $subcategory->id),
             $allowedChildCategories->keyBy(fn (CategoriasFilhas $childCategory) => (int) $childCategory->id),
         );
@@ -366,6 +372,31 @@ PROMPT;
         return false;
     }
 
+    protected function loadActiveTaxonomy(): array
+    {
+        $categories = Category::where('status', 1)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
+        $categoryIds = $categories->pluck('id')->map(fn ($id) => (int) $id);
+        $subcategories = $categoryIds->isNotEmpty()
+            ? Subcategory::whereIn('category_id', $categoryIds)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'category_id'])
+            : collect();
+        $subcategoryIds = $subcategories->pluck('id')->map(fn ($id) => (int) $id);
+        $childCategories = $subcategoryIds->isNotEmpty()
+            ? CategoriasFilhas::whereIn('subcategory_id', $subcategoryIds)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'subcategory_id', 'category_id'])
+            : collect();
+
+        return [
+            'categories' => $categories,
+            'subcategories' => $subcategories,
+            'child_categories' => $childCategories,
+        ];
+    }
+
     private function responseSchema(): array
     {
         $languageText = [
@@ -394,7 +425,7 @@ PROMPT;
                     'additionalProperties' => false,
                 ]],
                 'seo' => ['type' => 'object', 'properties' => ['title_pt_br' => ['type' => 'string'], 'meta_description_pt_br' => ['type' => 'string'], 'search_terms' => ['type' => 'array', 'items' => ['type' => 'string']]], 'required' => ['title_pt_br', 'meta_description_pt_br', 'search_terms'], 'additionalProperties' => false],
-                'taxonomy_selection' => ['type' => 'object', 'properties' => ['subcategory_id' => ['type' => ['integer', 'null']], 'childcategory_id' => ['type' => ['integer', 'null']], 'reason' => ['type' => 'string'], 'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']]], 'required' => ['subcategory_id', 'childcategory_id', 'reason', 'confidence'], 'additionalProperties' => false],
+                'taxonomy_selection' => ['type' => 'object', 'properties' => ['category_id' => ['type' => ['integer', 'null']], 'subcategory_id' => ['type' => ['integer', 'null']], 'childcategory_id' => ['type' => ['integer', 'null']], 'reason' => ['type' => 'string'], 'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']]], 'required' => ['category_id', 'subcategory_id', 'childcategory_id', 'reason', 'confidence'], 'additionalProperties' => false],
                 'missing_data' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'warnings' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
@@ -405,7 +436,7 @@ PROMPT;
         ];
     }
 
-    private function normalizeProposal(array $proposal, $allowedSubcategories, $allowedChildCategories): array
+    private function normalizeProposal(array $proposal, $allowedCategories, $allowedSubcategories, $allowedChildCategories): array
     {
         $verifiedAttributes = data_get($proposal, 'verified_attributes');
         if (is_array($verifiedAttributes) && array_is_list($verifiedAttributes)) {
@@ -425,25 +456,40 @@ PROMPT;
             }
         }
 
+        $requestedCategoryId = (int) data_get($proposal, 'taxonomy_selection.category_id', 0);
         $requestedSubcategoryId = (int) data_get($proposal, 'taxonomy_selection.subcategory_id', 0);
         $requestedChildCategoryId = (int) data_get($proposal, 'taxonomy_selection.childcategory_id', 0);
+        $selectedCategory = $allowedCategories->get($requestedCategoryId);
         $selectedSubcategory = $allowedSubcategories->get($requestedSubcategoryId);
         $selectedChildCategory = $allowedChildCategories->get($requestedChildCategoryId);
 
-        if (! $selectedSubcategory) {
+        if (! $selectedCategory) {
+            data_set($proposal, 'taxonomy_selection.category_id', null);
+            data_set($proposal, 'taxonomy_selection.category_name', null);
             data_set($proposal, 'taxonomy_selection.subcategory_id', null);
             data_set($proposal, 'taxonomy_selection.subcategory_name', null);
             data_set($proposal, 'taxonomy_selection.childcategory_id', null);
             data_set($proposal, 'taxonomy_selection.childcategory_name', null);
         } else {
-            data_set($proposal, 'taxonomy_selection.subcategory_id', (int) $selectedSubcategory->id);
-            data_set($proposal, 'taxonomy_selection.subcategory_name', $selectedSubcategory->name ?: $selectedSubcategory->slug);
-            if (! $selectedChildCategory || (int) $selectedChildCategory->subcategory_id !== (int) $selectedSubcategory->id) {
+            data_set($proposal, 'taxonomy_selection.category_id', (int) $selectedCategory->id);
+            data_set($proposal, 'taxonomy_selection.category_name', $selectedCategory->name ?: $selectedCategory->slug);
+            if (! $selectedSubcategory || (int) $selectedSubcategory->category_id !== (int) $selectedCategory->id) {
+                data_set($proposal, 'taxonomy_selection.subcategory_id', null);
+                data_set($proposal, 'taxonomy_selection.subcategory_name', null);
                 data_set($proposal, 'taxonomy_selection.childcategory_id', null);
                 data_set($proposal, 'taxonomy_selection.childcategory_name', null);
             } else {
-                data_set($proposal, 'taxonomy_selection.childcategory_id', (int) $selectedChildCategory->id);
-                data_set($proposal, 'taxonomy_selection.childcategory_name', $selectedChildCategory->name ?: $selectedChildCategory->slug);
+                data_set($proposal, 'taxonomy_selection.subcategory_id', (int) $selectedSubcategory->id);
+                data_set($proposal, 'taxonomy_selection.subcategory_name', $selectedSubcategory->name ?: $selectedSubcategory->slug);
+                if (! $selectedChildCategory
+                    || (int) $selectedChildCategory->category_id !== (int) $selectedCategory->id
+                    || (int) $selectedChildCategory->subcategory_id !== (int) $selectedSubcategory->id) {
+                    data_set($proposal, 'taxonomy_selection.childcategory_id', null);
+                    data_set($proposal, 'taxonomy_selection.childcategory_name', null);
+                } else {
+                    data_set($proposal, 'taxonomy_selection.childcategory_id', (int) $selectedChildCategory->id);
+                    data_set($proposal, 'taxonomy_selection.childcategory_name', $selectedChildCategory->name ?: $selectedChildCategory->slug);
+                }
             }
         }
 

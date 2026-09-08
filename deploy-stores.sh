@@ -8,6 +8,9 @@ PLATAFORMA_DIR="/var/www/html/sax_plataforma"
 COMMIT_MESSAGE="master"
 ASSUME_YES=false
 PUBLISH_ONLY=false
+SYNC_CONTACT_GUIDE=true
+GUIDE_SNAPSHOT=""
+GUIDE_BACKUPS=()
 
 usage() {
     cat <<'EOF'
@@ -19,6 +22,8 @@ Opções:
   -m, --message TEXTO  Mensagem do commit (padrão: master)
   -y, --yes            Não solicita confirmação
       --publish-only   Faz commit e push do stage, sem atualizar as lojas
+      --skip-guide-sync
+                       Não sincroniza unidades e setores do guia de atendimento
   -h, --help           Exibe esta ajuda
 EOF
 }
@@ -36,6 +41,10 @@ while (($# > 0)); do
             ;;
         --publish-only)
             PUBLISH_ONLY=true
+            shift
+            ;;
+        --skip-guide-sync)
+            SYNC_CONTACT_GUIDE=false
             shift
             ;;
         -h|--help)
@@ -81,18 +90,39 @@ run_migrations() {
     local migrations=("$@")
 
     if ((${#migrations[@]} == 0)); then
-        log "Nenhuma migration nova em $repository_dir"
+        log "Nenhuma migration nova para executar em $repository_dir"
         return
     fi
 
     for migration in "${migrations[@]}"; do
-        log "Executando migration: $migration"
+        log "Verificando migration nova: $migration"
         if [[ "$use_sudo" == "true" ]]; then
             (cd "$repository_dir" && sudo php artisan migrate --path="$migration" --force)
         else
             (cd "$repository_dir" && php artisan migrate --path="$migration" --force)
         fi
     done
+}
+
+export_contact_guide() {
+    GUIDE_SNAPSHOT="$(mktemp /tmp/sax-contact-guide-stage.XXXXXX)"
+    log "Exportando exclusivamente unidades e setores do guia do stage"
+    (cd "$STAGE_DIR" && php artisan contact-guide:transfer export "$GUIDE_SNAPSHOT")
+}
+
+sync_contact_guide() {
+    local repository_dir="$1"
+    local store_name="$2"
+    local backup_file
+
+    backup_file="$(mktemp /tmp/sax-contact-guide-backup.XXXXXX)"
+    GUIDE_BACKUPS+=("$store_name: $backup_file")
+
+    log "Criando backup temporário do guia em $store_name"
+    (cd "$repository_dir" && sudo php artisan contact-guide:transfer export "$backup_file")
+
+    log "Sincronizando somente unidades e setores do guia em $store_name"
+    (cd "$repository_dir" && sudo php artisan contact-guide:transfer import "$GUIDE_SNAPSHOT" --force)
 }
 
 clear_laravel_caches() {
@@ -147,7 +177,12 @@ deploy_target() {
             git -C "$repository_dir" diff --name-only --diff-filter=A \
                 "$before_commit" "$after_commit" -- 'database/migrations/*.php' | sort
         )
-        run_migrations "$repository_dir" true "${migrations[@]}"
+    fi
+
+    run_migrations "$repository_dir" true "${migrations[@]}"
+
+    if [[ "$SYNC_CONTACT_GUIDE" == "true" ]]; then
+        sync_contact_guide "$repository_dir" "$store_name"
     fi
 
     clear_laravel_caches "$repository_dir" true
@@ -192,7 +227,17 @@ if [[ "$PUBLISH_ONLY" == "true" ]]; then
     exit 0
 fi
 
+if [[ "$SYNC_CONTACT_GUIDE" == "true" ]]; then
+    export_contact_guide
+fi
+
 deploy_target "$OTICA_DIR" "SAX Ótica" "$BRANCH"
 deploy_target "$PLATAFORMA_DIR" "SAX Plataforma" "$BRANCH"
+
+if [[ "$SYNC_CONTACT_GUIDE" == "true" ]]; then
+    log "Backups temporários do guia preservados para eventual restauração"
+    printf '  %s\n' "${GUIDE_BACKUPS[@]}"
+    rm -f "$GUIDE_SNAPSHOT"
+fi
 
 log "Deploy concluído em stage, Ótica e Plataforma"

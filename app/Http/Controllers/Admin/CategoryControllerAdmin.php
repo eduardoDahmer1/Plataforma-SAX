@@ -198,7 +198,9 @@ class CategoryControllerAdmin extends Controller
             'header_categories_tree',
             'header_main_categories',
             'all_categories_tree_active',
+            'all_categories_tree_visible_catalog_v2',
             'filter_full_tree_active',
+            'filter_full_tree_visible_catalog_v2',
             'categories_home_strip_random_15min',
             'categories_all',
         ] as $key) {

@@ -1,0 +1,59 @@
+<div class="home-banner-manager"
+    data-home-banner-manager
+    data-group="{{ $managerGroup }}"
+    data-upload-url="{{ route('admin.home-banners.store', $managerGroup) }}"
+    data-reorder-url="{{ route('admin.home-banners.reorder', $managerGroup) }}">
+    <div class="home-banner-manager__intro">
+        <div>
+            <span class="home-banner-manager__label"><i class="fa-solid fa-images"></i> Gestão em lote</span>
+            <h3>{{ $managerTitle }}</h3>
+            <p>{{ $managerDescription }}</p>
+        </div>
+        <div class="home-banner-manager__measure">
+            <small>MEDIDA RECOMENDADA</small>
+            <strong>{{ $managerDimensions }}</strong>
+            <span>Proporção {{ $managerRatio }} · JPG, PNG ou WEBP · até 10 MB</span>
+        </div>
+    </div>
+
+    <label class="home-banner-dropzone" data-banner-dropzone>
+        <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" data-banner-input>
+        <span class="home-banner-dropzone__icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+        <strong>Arraste várias imagens aqui</strong>
+        <span>ou clique para selecionar no computador</span>
+        <small data-upload-status>Nenhuma nova imagem selecionada</small>
+    </label>
+
+    <div class="home-banner-list {{ $managerItems->isEmpty() ? 'is-empty' : '' }}" data-banner-list>
+        @foreach($managerItems as $banner)
+            <article class="home-banner-item" draggable="true" data-banner-id="{{ $banner->id }}"
+                data-update-url="{{ route('admin.home-banners.update', $banner) }}"
+                data-delete-url="{{ route('admin.home-banners.destroy', $banner) }}">
+                <div class="home-banner-item__media">
+                    <img src="{{ $banner->image_url }}" alt="Banner {{ $loop->iteration }}">
+                    <span class="home-banner-item__order"><i class="fa-solid fa-grip-vertical"></i> <b>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</b></span>
+                </div>
+                <div class="home-banner-item__body">
+                    <label>Link deste banner</label>
+                    <div class="home-banner-item__link">
+                        <i class="fa-solid fa-link"></i>
+                        <input type="text" value="{{ $banner->link }}" placeholder="https://... ou /categorias/..." data-banner-link>
+                        <span class="home-banner-save-state" data-save-state></span>
+                    </div>
+                    <div class="home-banner-item__actions">
+                        <label class="home-banner-toggle">
+                            <input type="checkbox" data-banner-active @checked($banner->is_active)>
+                            <span></span> Exibir no site
+                        </label>
+                        <button type="button" data-banner-delete><i class="fa-solid fa-trash"></i> Remover</button>
+                    </div>
+                </div>
+            </article>
+        @endforeach
+        <div class="home-banner-empty" data-banner-empty>
+            <i class="fa-regular fa-images"></i>
+            <strong>Nenhuma imagem neste conjunto</strong>
+            <span>Selecione uma ou várias imagens acima para começar.</span>
+        </div>
+    </div>
+</div>

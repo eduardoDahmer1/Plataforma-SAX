@@ -46,15 +46,22 @@ class ActivateBrandsAndCategoriesController extends Controller
             'header_categories_tree',
             'header_main_categories',
             'all_categories_tree_active',
+            'all_categories_tree_visible_catalog_v2',
             'filter_full_tree_active',
             'filter_brands_list_active',
+            'filter_full_tree_visible_catalog_v2',
+            'filter_brands_list_visible_catalog_v2',
             'categories_home_strip_random_15min',
             'home_brands_3d_random_15min',
+            'home_brands_visible_catalog_v2_3d_random_15min',
+            'home_brands_visible_catalog_v3_banner_priority_15min',
             'categories_all',
             'admin.dashboard.metrics',
             'bridal_active_brands',
             'bridal_active_products',
+            'bridal_visible_catalog_v2_products',
             "brand_{$model->slug}",
+            "brand_visible_catalog_v2_{$model->slug}",
         ] as $key) {
             Cache::forget($key);
         }

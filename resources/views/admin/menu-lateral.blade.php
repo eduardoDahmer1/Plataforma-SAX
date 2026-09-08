@@ -3,7 +3,7 @@
     $isMasterAdmin = auth()->user()?->isMasterAdmin() ?? false;
     $catalogosOpen = request()->routeIs('admin.products.*', 'admin.brands.*', 'admin.categories.*', 'admin.subcategories.*', 'admin.categorias-filhas.*');
     $vendasOpen = request()->routeIs('admin.orders.*', 'admin.clients.*', 'admin.abandoned-carts.*');
-    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*', 'admin.policies.*');
+    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*', 'admin.contact-guide.*', 'admin.policies.*');
     $institucionaisOpen = request()->routeIs(
         'admin.palace.*',
         'admin.bridal.*',
@@ -19,7 +19,9 @@
         'admin.activate.*',
         'admin.languages.*',
         'admin.marketing.*',
+        'admin.theme-settings.*',
         'admin.store-controls.*',
+        'admin.whatsapp.*',
         'admin.dhl.*'
     );
 @endphp
@@ -88,6 +90,7 @@
             <div class="collapse sax-submenu {{ $conteudosOpen ? 'show' : '' }}" id="menuConteudos{{ $menuSuffix }}">
                 <a href="{{ route('admin.blogs.index') }}" class="submenu-link {{ request()->routeIs('admin.blogs.*') ? 'active' : '' }}"><i class="fa-solid fa-blog"></i> {{ __('messages.menu_blog') }}</a>
                 <a href="{{ route('admin.contatos.index') }}" class="submenu-link {{ request()->routeIs('admin.contatos.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> {{ __('messages.menu_contato') }}</a>
+                <a href="{{ route('admin.contact-guide.index') }}" class="submenu-link {{ request()->routeIs('admin.contact-guide.*') ? 'active' : '' }}"><i class="fa-solid fa-map-location-dot"></i> {{ __('messages.admin_guide_menu') }}</a>
                 <a href="{{ route('admin.trabalhe_conosco.index') }}" class="submenu-link {{ request()->routeIs('admin.trabalhe_conosco.*') ? 'active' : '' }}"><i class="fa-solid fa-user-tie"></i> Trabalhe conosco</a>
                 <a href="{{ route('admin.policies.index') }}" class="submenu-link {{ request()->routeIs('admin.policies.*') ? 'active' : '' }}"><i class="fa-solid fa-scale-balanced"></i> {{ __('messages.menu_politicas') }}</a>
             </div>
@@ -126,6 +129,9 @@
                 <a href="{{ route('admin.store-controls.edit') }}" class="submenu-link {{ request()->routeIs('admin.store-controls.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders"></i> {{ __('messages.store_controls_menu') }}
                 </a>
+                <a href="{{ route('admin.whatsapp.edit') }}" class="submenu-link {{ request()->routeIs('admin.whatsapp.*') ? 'active' : '' }}">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp flutuante
+                </a>
                 <a href="{{ route('admin.dhl.edit') }}" class="submenu-link {{ request()->routeIs('admin.dhl.edit') ? 'active' : '' }}">
                     <i class="fa-solid fa-plane-departure"></i> DHL Express
                 </a>
@@ -137,6 +143,7 @@
                 </a>
                 <a href="{{ route('admin.sections_home.index') }}" class="submenu-link {{ request()->routeIs('admin.sections_home.*') ? 'active' : '' }}"><i class="fas fa-sliders-h"></i> {{ __('messages.menu_secoes_home') }}</a>
                 <a href="{{ route('admin.marketing.edit') }}" class="submenu-link {{ request()->routeIs('admin.marketing.*') ? 'active' : '' }}"><i class="fa-solid fa-chart-simple"></i> SEO e Marketing</a>
+                <a href="{{ route('admin.theme-settings.edit') }}" class="submenu-link {{ request()->routeIs('admin.theme-settings.*') ? 'active' : '' }}"><i class="fa-solid fa-palette"></i> Identidade visual</a>
                 <button id="clearCacheBtn" data-url="{{ secure_url('admin/clear-cache') }}" data-csrf="{{ csrf_token() }}" class="submenu-link border-0 bg-transparent w-100 text-start">
                     <i class="fa-solid fa-broom"></i> {{ __('messages.menu_limpar_cache') }}
                 </button>

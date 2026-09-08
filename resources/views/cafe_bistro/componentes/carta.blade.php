@@ -15,11 +15,14 @@
         @if(count($galeria))
             <div class="carta-grid" data-reveal="up">
                 @foreach($galeria as $i => $foto)
-                    <div class="carta-item {{ $i === 0 ? 'carta-item--tall' : '' }}">
+                    <div class="carta-item {{ $i === 0 ? 'carta-item--tall' : '' }}" style="--item-index: {{ $i }}">
                         <img src="{{ asset('storage/' . $foto) }}"
                              alt="{{ __('messages.cafe_menu_image_alt', ['number' => $i + 1]) }}"
                              class="carta-img"
                              loading="lazy">
+                        @if(($cafeBistro->slug ?? null) === 'asuncion')
+                            <span class="carta-item-shine" aria-hidden="true"></span>
+                        @endif
                     </div>
                 @endforeach
             </div>
@@ -28,6 +31,7 @@
         {{-- CTA --}}
         <div class="text-center mt-5" data-reveal="up">
             <button class="btn-cafe-white" data-bs-toggle="modal" data-bs-target="#modalCardapio">
+                @if(($cafeBistro->slug ?? null) === 'asuncion')<i class="bi bi-book me-2" aria-hidden="true"></i>@endif
                 {{ __('messages.cafe_open_menu') }}
             </button>
         </div>

@@ -1,112 +1,101 @@
 @extends('layout.admin')
 
 @section('content')
-<x-admin.card>\n<div id="banner-admin-config" data-confirm-delete="{{ __('messages.confirmar_exclusao_imagem') }}" hidden></div>
-    <x-admin.page-header
-        title="{{ __('messages.gestao_banners_titulo') }}"
-        description="{{ __('messages.gestao_banners_desc') }}">
-    </x-admin.page-header>
-
-    {{-- Alertas --}}
+<x-admin.card>
+    <div id="banner-admin-config" data-confirm-delete="{{ __('messages.confirmar_exclusao_imagem') }}" hidden></div>
+    <x-admin.page-header title="Central de mídia e banners"
+        description="Organize campanhas por posição, confira as medidas do front e atualize imagens e links sem recarregar a página." />
     <x-admin.alert />
 
-    {{-- <div class="card border-0 shadow-sm mb-5">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center mb-3">
-                <div class="icon-shape bg-soft-primary text-primary rounded me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #eef2ff;">
-                    <i class="fas fa-font"></i>
-                </div>
-                <h5 class="mb-0 fw-bold">{{ __('messages.texto_informativo_topo') }}</h5>
-            </div>
-            
-            <form action="{{ route('admin.attributes.update_text') }}" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-9">
-                        <label for="text_topo" class="form-label small text-uppercase fw-bold text-muted">{{ __('messages.conteudo_do_texto') }}</label>
-                        <input type="text" 
-                               name="text_topo" 
-                               id="text_topo" 
-                               class="form-control form-control-lg border-2" 
-                               placeholder="Ex: Frete grátis..." 
-                               value="{{ $attribute->text_topo ?? '' }}">
-                    </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm">
-                            <i class="fas fa-save me-2"></i> {{ __('messages.atualizar') }}
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div> --}}
-
     @php
-        // Definimos as categorias traduzidas para os labels
-        $catIdentidade = __('messages.cat_identidade');
-        $catHome = __('messages.cat_home');
-        $catSistema = __('messages.cat_sistema');
+        $groups = [
+            'home-slider' => ['label' => 'Slider principal', 'icon' => 'fa-panorama', 'description' => 'Campanhas de abertura da home, exibidas em um carrossel editorial de luxo.'],
+            'home-editorial' => ['label' => 'Destaques da home', 'icon' => 'fa-layer-group', 'description' => 'Segundo carrossel para coleções, novidades e campanhas sazonais.'],
+            'catalog' => ['label' => 'Catálogo e páginas internas', 'icon' => 'fa-table-cells-large', 'description' => 'Imagens padrão usadas quando categorias, subcategorias, categorias-filhas ou marcas não possuem banner próprio.'],
+            'identity' => ['label' => 'Logotipos', 'icon' => 'fa-signature', 'description' => 'Arquivos de identidade das experiências SAX.'],
+            'system' => ['label' => 'Sistema', 'icon' => 'fa-sliders', 'description' => 'Imagens auxiliares e estados padrão da plataforma.'],
+        ];
 
         $images = [
-            ['field' => 'header_image', 'title' => 'Logo Header', 'category' => $catIdentidade, 'file' => $webpImage ?? null, 'routeUpload' => 'admin.header.upload', 'routeDelete' => 'admin.header.delete'],
-            ['field' => 'logo_palace', 'title' => 'Logo SAX Palace', 'category' => $catIdentidade, 'file' => $logoPalace ?? null, 'routeUpload' => 'admin.logopalace.upload', 'routeDelete' => 'admin.logopalace.delete'],
-            ['field' => 'logo_bridal', 'title' => 'Logo SAX Bridal', 'category' => $catIdentidade, 'file' => $logoBridal ?? null, 'routeUpload' => 'admin.logobridal.upload', 'routeDelete' => 'admin.logobridal.delete'],
-                ['field' => 'logo_cafe_bistro', 'title' => 'Logo SAX Café & Bistrô', 'category' => $catIdentidade, 'file' => $logoCafeBistro ?? null, 'routeUpload' => 'admin.logocafebistro.upload', 'routeDelete' => 'admin.logocafebistro.delete'],
-                ['field' => 'banner_horizontal', 'title' => 'Banner Horizontal', 'category' => $catIdentidade, 'file' => $bannerHorizontal ?? null, 'routeUpload' => 'admin.bannerhorizontal.upload', 'routeDelete' => 'admin.bannerhorizontal.delete'],
+            ['field'=>'banner9','group'=>'home-editorial','title'=>'Coleção exclusiva','position'=>'Editorial fixo','description'=>'Imagem ao lado do texto de curadoria da home.','dimensions'=>'1400 × 1000 px','ratioLabel'=>'Proporção 7:5','file'=>$banners['banner9']??null,'link'=>$bannerLinks['banner9_link']??null,'linkField'=>'banner9_link','routeUpload'=>'admin.banner9.upload','routeDelete'=>'admin.banner9.delete'],
 
-                ['field' => 'icon_info', 'title' => 'Ícone Info/Relógio', 'category' => $catSistema, 'file' => $attribute->icon_info ?? null, 'routeUpload' => 'admin.icon_info.upload', 'routeDelete' => 'admin.icon_info.delete'],
-                ['field' => 'icon_cabide', 'title' => 'Ícone Cabide', 'category' => $catSistema, 'file' => $attribute->icon_cabide ?? null, 'routeUpload' => 'admin.icon_cabide.upload', 'routeDelete' => 'admin.icon_cabide.delete'],
-                ['field' => 'icon_help', 'title' => 'Ícone Ajuda', 'category' => $catSistema, 'file' => $attribute->icon_help ?? null, 'routeUpload' => 'admin.icon_help.upload', 'routeDelete' => 'admin.icon_help.delete'],
-                ['field' => 'noimage', 'title' => 'Noimage Default', 'category' => $catSistema, 'file' => $noimage ?? null, 'routeUpload' => 'admin.noimage.upload', 'routeDelete' => 'admin.noimage.delete'],
+            ['field'=>'banner10','group'=>'catalog','title'=>'Banner de topo padrão','position'=>'Páginas internas','description'=>'Fallback dos heróis de catálogo e marca.','dimensions'=>'1920 × 560 px','ratioLabel'=>'Área segura central','file'=>$banners['banner10']??null,'link'=>$bannerLinks['banner10_link']??null,'linkField'=>'banner10_link','routeUpload'=>'admin.banner10.upload','routeDelete'=>'admin.banner10.delete'],
+            ['field'=>'banner_horizontal','group'=>'catalog','title'=>'Banner lateral padrão','position'=>'Filtros e listagens','description'=>'Campanha completa ao lado dos produtos no desktop e inserida na grade no mobile.','dimensions'=>'1200 × 675 px','ratioLabel'=>'Proporção 16:9','file'=>$bannerHorizontal??null,'link'=>$bannerLinks['banner_horizontal_link']??null,'linkField'=>'banner_horizontal_link','routeUpload'=>'admin.bannerhorizontal.upload','routeDelete'=>'admin.bannerhorizontal.delete'],
 
-                ['field' => 'banner1', 'title' => 'Slider Home 01', 'category' => $catHome, 'file' => $banners['banner1'] ?? null, 'link' => $bannerLinks['banner1_link'] ?? null, 'linkField' => 'banner1_link', 'routeUpload' => 'admin.banner1.upload', 'routeDelete' => 'admin.banner1.delete'],
-                ['field' => 'banner2', 'title' => 'Slider Home 02', 'category' => $catHome, 'file' => $banners['banner2'] ?? null, 'link' => $bannerLinks['banner2_link'] ?? null, 'linkField' => 'banner2_link', 'routeUpload' => 'admin.banner2.upload', 'routeDelete' => 'admin.banner2.delete'],
-                ['field' => 'banner3', 'title' => 'Slider Home 03', 'category' => $catHome, 'file' => $banners['banner3'] ?? null, 'link' => $bannerLinks['banner3_link'] ?? null, 'linkField' => 'banner3_link', 'routeUpload' => 'admin.banner3.upload', 'routeDelete' => 'admin.banner3.delete'],
-                ['field' => 'banner4', 'title' => 'Slider Home 04', 'category' => $catHome, 'file' => $banners['banner4'] ?? null, 'link' => $bannerLinks['banner4_link'] ?? null, 'linkField' => 'banner4_link', 'routeUpload' => 'admin.banner4.upload', 'routeDelete' => 'admin.banner4.delete'],
-                ['field' => 'banner5', 'title' => 'Slider Home 05', 'category' => $catHome, 'file' => $banners['banner5'] ?? null, 'link' => $bannerLinks['banner5_link'] ?? null, 'linkField' => 'banner5_link', 'routeUpload' => 'admin.banner5.upload', 'routeDelete' => 'admin.banner5.delete'],
-                ['field' => 'banner6', 'title' => 'Banner Principal 06', 'category' => $catHome, 'file' => $banners['banner6'] ?? null, 'link' => $bannerLinks['banner6_link'] ?? null, 'linkField' => 'banner6_link', 'routeUpload' => 'admin.banner6.upload', 'routeDelete' => 'admin.banner6.delete'],
-                ['field' => 'banner7', 'title' => 'Banner Principal 07', 'category' => $catHome, 'file' => $banners['banner7'] ?? null, 'link' => $bannerLinks['banner7_link'] ?? null, 'linkField' => 'banner7_link', 'routeUpload' => 'admin.banner7.upload', 'routeDelete' => 'admin.banner7.delete'],
-                ['field' => 'banner8', 'title' => 'Banner Principal 08', 'category' => $catHome, 'file' => $banners['banner8'] ?? null, 'link' => $bannerLinks['banner8_link'] ?? null, 'linkField' => 'banner8_link', 'routeUpload' => 'admin.banner8.upload', 'routeDelete' => 'admin.banner8.delete'],
-                ['field' => 'banner9', 'title' => 'Banner Principal 09', 'category' => $catHome, 'file' => $banners['banner9'] ?? null, 'link' => $bannerLinks['banner9_link'] ?? null, 'linkField' => 'banner9_link', 'routeUpload' => 'admin.banner9.upload', 'routeDelete' => 'admin.banner9.delete'],
-                ['field' => 'banner10', 'title' => 'Banners Internas', 'category' => $catHome, 'file' => $banners['banner10'] ?? null, 'link' => $bannerLinks['banner10_link'] ?? null, 'linkField' => 'banner10_link', 'routeUpload' => 'admin.banner10.upload', 'routeDelete' => 'admin.banner10.delete'],
-                ['field' => 'whatsapp_banner', 'title' => 'Banner WhatsApp', 'category' => $catSistema, 'file' => $banners['whatsapp_banner'] ?? null, 'routeUpload' => 'admin.whatsapp_banner.upload', 'routeDelete' => 'admin.whatsapp_banner.delete'],
+            ['field'=>'header_image','group'=>'identity','title'=>'Logo Header','dimensions'=>'800 × 320 px','ratioLabel'=>'Fundo transparente','file'=>$webpImage??null,'routeUpload'=>'admin.header.upload','routeDelete'=>'admin.header.delete'],
+            ['field'=>'logo_palace','group'=>'identity','title'=>'Logo SAX Palace','dimensions'=>'800 × 320 px','ratioLabel'=>'Fundo transparente','file'=>$logoPalace??null,'routeUpload'=>'admin.logopalace.upload','routeDelete'=>'admin.logopalace.delete'],
+            ['field'=>'logo_bridal','group'=>'identity','title'=>'Logo SAX Bridal','dimensions'=>'800 × 320 px','ratioLabel'=>'Fundo transparente','file'=>$logoBridal??null,'routeUpload'=>'admin.logobridal.upload','routeDelete'=>'admin.logobridal.delete'],
+            ['field'=>'logo_cafe_bistro','group'=>'identity','title'=>'Logo Café & Bistrô PJC','dimensions'=>'800 × 320 px','ratioLabel'=>'Fundo transparente','file'=>$logoCafeBistro??null,'routeUpload'=>'admin.logocafebistro.upload','routeDelete'=>'admin.logocafebistro.delete'],
+            ['field'=>'logo_cafe_bistro_asuncion','group'=>'identity','title'=>'Logo Café & Bistrô Assunção','dimensions'=>'800 × 320 px','ratioLabel'=>'Fundo transparente','file'=>$logoCafeBistroAsuncion??null,'routeUpload'=>'admin.logocafebistroasuncion.upload','routeDelete'=>'admin.logocafebistroasuncion.delete'],
+
+            ['field'=>'icon_info','group'=>'system','title'=>'Ícone Info/Relógio','dimensions'=>'256 × 256 px','ratioLabel'=>'Quadrado','file'=>$attribute->icon_info??null,'routeUpload'=>'admin.icon_info.upload','routeDelete'=>'admin.icon_info.delete'],
+            ['field'=>'icon_cabide','group'=>'system','title'=>'Ícone Cabide','dimensions'=>'256 × 256 px','ratioLabel'=>'Quadrado','file'=>$attribute->icon_cabide??null,'routeUpload'=>'admin.icon_cabide.upload','routeDelete'=>'admin.icon_cabide.delete'],
+            ['field'=>'icon_help','group'=>'system','title'=>'Ícone Ajuda','dimensions'=>'256 × 256 px','ratioLabel'=>'Quadrado','file'=>$attribute->icon_help??null,'routeUpload'=>'admin.icon_help.upload','routeDelete'=>'admin.icon_help.delete'],
+            ['field'=>'noimage','group'=>'system','title'=>'Imagem indisponível','dimensions'=>'1000 × 1250 px','ratioLabel'=>'Proporção 4:5','file'=>$noimage??null,'routeUpload'=>'admin.noimage.upload','routeDelete'=>'admin.noimage.delete'],
+            ['field'=>'whatsapp_banner','group'=>'system','title'=>'Ícone WhatsApp','dimensions'=>'256 × 256 px','ratioLabel'=>'Quadrado','file'=>$banners['whatsapp_banner']??null,'routeUpload'=>'admin.whatsapp_banner.upload','routeDelete'=>'admin.whatsapp_banner.delete'],
         ];
-        
-        $categories = [$catIdentidade, $catHome, $catSistema];
+
+        $catalogLinks = [
+            ['label'=>'Banners de categorias','route'=>'admin.categories.index','icon'=>'fa-folder'],
+            ['label'=>'Banners de subcategorias','route'=>'admin.subcategories.index','icon'=>'fa-folder-tree'],
+            ['label'=>'Banners de categorias-filhas','route'=>'admin.categorias-filhas.index','icon'=>'fa-sitemap'],
+            ['label'=>'Banners de marcas','route'=>'admin.brands.index','icon'=>'fa-tags'],
+        ];
     @endphp
 
-    <ul class="nav nav-pills-custom mb-4" id="bannerTabs" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#all">{{ __('messages.todos') }}</button>
-        </li>
-        @foreach($categories as $cat)
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#cat-{{ Str::slug($cat) }}">{{ $cat }}</button>
-            </li>
+    <nav class="banner-section-nav" aria-label="Seções da central de mídia">
+        @foreach($groups as $key => $group)
+            <a href="#banner-group-{{ $key }}"><i class="fa-solid {{ $group['icon'] }}"></i>{{ $group['label'] }}</a>
         @endforeach
-    </ul>
+    </nav>
 
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="all">
-            <div class="row g-4">
-                @foreach($images as $img)
-                    @include('admin.partials.banner_card', ['img' => $img])
-                @endforeach
+    @foreach($groups as $key => $group)
+        <section class="banner-admin-section" id="banner-group-{{ $key }}">
+            <div class="banner-admin-section__heading">
+                <div class="banner-admin-section__icon"><i class="fa-solid {{ $group['icon'] }}"></i></div>
+                <div><span>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span><h2>{{ $group['label'] }}</h2><p>{{ $group['description'] }}</p></div>
             </div>
-        </div>
 
-        @foreach($categories as $cat)
-            <div class="tab-pane fade" id="cat-{{ Str::slug($cat) }}">
-                <div class="row g-4">
-                    @foreach($images as $img)
-                        @if($img['category'] == $cat)
-                            @include('admin.partials.banner_card', ['img' => $img])
-                        @endif
+            @if($key === 'catalog')
+                <div class="banner-catalog-links">
+                    @foreach($catalogLinks as $item)
+                        <a href="{{ route($item['route']) }}"><i class="fa-solid {{ $item['icon'] }}"></i><span>{{ $item['label'] }}</span><i class="fa-solid fa-arrow-right"></i></a>
                     @endforeach
                 </div>
+            @endif
+
+            @if($key === 'home-slider')
+                @include('admin.partials.home_banner_manager', [
+                    'managerGroup' => 'main',
+                    'managerItems' => $homeBannerGroups->get('main', collect()),
+                    'managerTitle' => 'Galeria do slider principal',
+                    'managerDescription' => 'Selecione várias campanhas de uma vez. Depois, defina o link de cada slide e arraste os cartões para mudar a ordem.',
+                    'managerDimensions' => '1920 × 720 px',
+                    'managerRatio' => '8:3',
+                ])
+            @elseif($key === 'home-editorial')
+                @include('admin.partials.home_banner_manager', [
+                    'managerGroup' => 'editorial',
+                    'managerItems' => $homeBannerGroups->get('editorial', collect()),
+                    'managerTitle' => 'Galeria de destaques da home',
+                    'managerDescription' => 'Envie vários destaques juntos, associe um destino a cada imagem e organize a sequência do segundo carrossel.',
+                    'managerDimensions' => '1600 × 760 px',
+                    'managerRatio' => '2.1:1',
+                ])
+            @endif
+
+            <div class="row g-4">
+                @foreach($images as $img)
+                    @if($img['group'] === $key)
+                        @include('admin.partials.banner_card', ['img' => $img])
+                    @endif
+                @endforeach
             </div>
-        @endforeach
-    </div>
+        </section>
+    @endforeach
 </x-admin.card>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/home-banner-admin.js') }}?v={{ filemtime(public_path('js/home-banner-admin.js')) }}"></script>
+@endpush

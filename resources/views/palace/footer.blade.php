@@ -14,9 +14,9 @@
                         {{ $t->palace_hero_descricao ?? $palace->hero_descricao }}
                     </p>
                     <div class="d-flex flex-wrap gap-3 palace-footer__socials">
-                        <a href="https://www.instagram.com/saxpalace" target="_blank" class="social-link-minimal">{{ __('messages.instagram') }}</a>
-                        <a href="#" class="social-link-minimal">{{ __('messages.facebook') }}</a>
-                        <a href="https://wa.me/{{ preg_replace('/\D/', '', $palace->contato_whatsapp) }}" class="social-link-minimal">{{ __('messages.whatsapp') }}</a>
+                        <a href="https://www.instagram.com/saxpalace" target="_blank" class="social-link-minimal"><i class="bi bi-instagram" aria-hidden="true"></i>{{ __('messages.instagram') }}</a>
+                        <a href="#" class="social-link-minimal"><i class="bi bi-facebook" aria-hidden="true"></i>{{ __('messages.facebook') }}</a>
+                        <a href="https://wa.me/{{ preg_replace('/\D/', '', $palace->contato_whatsapp) }}" class="social-link-minimal"><i class="bi bi-whatsapp" aria-hidden="true"></i>{{ __('messages.whatsapp') }}</a>
                     </div>
                 </div>
 

@@ -6,6 +6,7 @@
         1 => ['rotulo' => __('messages.contato_tipo_consulta'), 'cor' => '#3b6fd4', 'icone' => 'fa-comment'],
         2 => ['rotulo' => __('messages.contato_tipo_curriculo'), 'cor' => '#1f7a37', 'icone' => 'fa-file-lines'],
         3 => ['rotulo' => __('messages.contato_tipo_newsletter'), 'cor' => '#9a7b1f', 'icone' => 'fa-envelope'],
+        4 => ['rotulo' => 'Atendimento óptico', 'cor' => '#7b5ca8', 'icone' => 'fa-glasses'],
     ];
 @endphp
 
@@ -46,6 +47,7 @@
                     ['Consultas', $stats['consultas'], 'fa-comment', '#12b76a'],
                     ['Currículos', $stats['curriculos'], 'fa-file-lines', '#b7791f'],
                     ['Newsletter', $stats['newsletters'], 'fa-envelope', '#7f56d9'],
+                    ['Ótica', $stats['optical'], 'fa-glasses', '#7b5ca8'],
                 ];
             @endphp
             @foreach ($summaryCards as [$label, $value, $icon, $color])
@@ -177,7 +179,9 @@
                         <div class="sax-msg__text">{{ $contact->message ?: '—' }}</div>
 
                         @if ($anexoUrl)
-                            <span class="sax-msg__label">{{ __('messages.contato_anexo') }}</span>
+                            <span class="sax-msg__label">
+                                {{ (int) $contact->contact_type === 4 ? 'Receita óptica' : __('messages.contato_anexo') }}
+                            </span>
                             <div class="sax-msg__file">
                                 <i class="fa fa-file"></i>
                                 <span>{{ basename($contact->attachment) }}</span>

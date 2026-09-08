@@ -14,11 +14,22 @@ class CafeBistroAdminController extends Controller
     /**
      * Exibe a visão geral dos dados do Café & Bistrô.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $cafeBistro = CafeBistro::with('translations')->first() ?? CafeBistro::create(['hero_titulo' => 'SAX Café & Bistrô']);
+        $cafeBistros = CafeBistro::with('translations')->orderBy('id')->get();
+        $selectedSlug = $request->string('location')->toString();
+        $cafeBistro = $cafeBistros->firstWhere('slug', $selectedSlug) ?? $cafeBistros->first();
 
-        return view('admin.cafe_bistro.index', compact('cafeBistro'));
+        if (! $cafeBistro) {
+            $cafeBistro = CafeBistro::create([
+                'name' => 'Pedro Juan Caballero',
+                'slug' => 'pedro-juan-caballero',
+                'hero_titulo' => 'SAX Café & Bistrô',
+            ]);
+            $cafeBistros = collect([$cafeBistro]);
+        }
+
+        return view('admin.cafe_bistro.index', compact('cafeBistro', 'cafeBistros'));
     }
 
     /**
@@ -66,7 +77,7 @@ class CafeBistroAdminController extends Controller
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
                 if ($cafeBistro->$field) {
-                    Storage::disk('public')->delete($cafeBistro->$field);
+                    $this->deleteFileUnlessShared($cafeBistro, $field, $cafeBistro->$field);
                 }
                 $data[$field] = $this->convertToWebp($request->file($field), 'cafe_bistro');
             }
@@ -75,7 +86,7 @@ class CafeBistroAdminController extends Controller
         // 2. Arquivo PDF do cardápio
         if ($request->hasFile('cardapio_pdf')) {
             if ($cafeBistro->cardapio_pdf) {
-                Storage::disk('public')->delete($cafeBistro->cardapio_pdf);
+                $this->deleteFileUnlessShared($cafeBistro, 'cardapio_pdf', $cafeBistro->cardapio_pdf);
             }
             $data['cardapio_pdf'] = $request->file('cardapio_pdf')->store('cafe_bistro/cardapio', 'public');
         }
@@ -143,8 +154,10 @@ class CafeBistroAdminController extends Controller
         }
 
         Cache::forget('cafe_bistro_data');
+        Cache::forget('cafe_bistro_data_'.$cafeBistro->slug);
+        Cache::forget('cafe_bistro_locations');
 
-        return redirect()->route('admin.cafe_bistro.index')
+        return redirect()->route('admin.cafe_bistro.index', ['location' => $cafeBistro->slug])
             ->with('success', 'Conteúdo e traduções atualizados com sucesso.');
     }
 
@@ -154,5 +167,17 @@ class CafeBistroAdminController extends Controller
     private function convertToWebp($image, $type)
     {
         return app(ImageConverterService::class)->toWebp($image, $type);
+    }
+
+    private function deleteFileUnlessShared(CafeBistro $cafeBistro, string $field, string $path): void
+    {
+        $isShared = CafeBistro::query()
+            ->where('id', '!=', $cafeBistro->getKey())
+            ->where($field, $path)
+            ->exists();
+
+        if (! $isShared) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

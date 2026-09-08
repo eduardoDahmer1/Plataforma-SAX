@@ -1,40 +1,49 @@
 @php
-    $slides = array_filter([
-        ['image' => $banner1 ?? null, 'link' => $banner1_link ?? null],
-        ['image' => $banner2 ?? null, 'link' => $banner2_link ?? null],
-        ['image' => $banner3 ?? null, 'link' => $banner3_link ?? null],
-        ['image' => $banner4 ?? null, 'link' => $banner4_link ?? null],
-        ['image' => $banner5 ?? null, 'link' => $banner5_link ?? null],
-    ], fn ($slide) => filled($slide['image']));
-    $slides = array_slice($slides, 0, $limit ?? 5);
+    $eyebrows = [__('messages.curadoria_sax'), __('messages.novidades_da_temporada'), __('messages.selecao_curada'), __('messages.destaques_da_casa'), __('messages.explorar_colecao')];
+    $slides = collect($homeMainBanners ?? [])->values()->map(fn ($banner, $index) => [
+        'image' => $banner->image,
+        'image_url' => $banner->image_url,
+        'link' => $banner->link,
+        'eyebrow' => $eyebrows[$index % count($eyebrows)],
+    ])->take($limit ?? 20);
 @endphp
 
-@if(count($slides) > 0)
-<section class="sax-main-slider">
-    <div class="swiper-container mainSwiper">
+@if($slides->isNotEmpty())
+<section class="sax-main-slider" aria-label="Campanhas em destaque">
+    <div class="swiper mainSwiper" data-slide-count="{{ $slides->count() }}">
         <div class="swiper-wrapper">
             @foreach($slides as $slide)
+                @php
+                    $isExternal = filled($slide['link']) && !str_starts_with($slide['link'], url('/')) && !str_starts_with($slide['link'], '/');
+                @endphp
                 <div class="swiper-slide">
-                    <div class="slide-inner">
-                        @if(!empty($slide['link']))
-                            <a href="{{ $slide['link'] }}" >
-                                <img src="{{ asset('storage/uploads/' . $slide['image']) }}" alt="Banner SAX">
-                            </a>
-                        @else
-                            <img src="{{ asset('storage/uploads/' . $slide['image']) }}" alt="Banner SAX">
+                    <article class="sax-luxury-slide">
+                        @if(filled($slide['link']))
+                            <a href="{{ $slide['link'] }}" class="sax-luxury-slide__link" @if($isExternal) target="_blank" rel="noopener noreferrer" @endif aria-label="Abrir campanha {{ $loop->iteration }}">
                         @endif
-                        <div class="slide-overlay"></div>
-                    </div>
+                            <img src="{{ $slide['image_url'] }}" alt="Campanha SAX {{ $loop->iteration }}"
+                                width="1920" height="720" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
+                            <span class="sax-luxury-slide__shade" aria-hidden="true"></span>
+                            <span class="sax-luxury-slide__caption">
+                                <small>{{ $slide['eyebrow'] }}</small>
+                                @if(filled($slide['link']))<strong>{{ __('messages.explorar_colecao') }} <i class="fa-solid fa-arrow-right"></i></strong>@endif
+                            </span>
+                        @if(filled($slide['link']))</a>@endif
+                    </article>
                 </div>
             @endforeach
         </div>
-        
-        <div class="swiper-nav-click prev"></div>
-        <div class="swiper-nav-click next"></div>
-        
-        <div class="swiper-pagination"></div>
+
+        @if($slides->count() > 1)
+            <div class="sax-slider-ui">
+                <div class="sax-slider-count"><span data-slider-current>01</span><i></i><span>{{ str_pad($slides->count(), 2, '0', STR_PAD_LEFT) }}</span></div>
+                <div class="swiper-pagination"></div>
+                <div class="sax-slider-controls">
+                    <button type="button" class="swiper-nav-click prev" aria-label="Campanha anterior"><i class="fa-solid fa-arrow-left"></i></button>
+                    <button type="button" class="swiper-nav-click next" aria-label="Próxima campanha"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+        @endif
     </div>
 </section>
-
-{{-- JS migrado a home.js --}}
 @endif

@@ -781,3 +781,575 @@ body.palace-page footer {
         transform: none;
     }
 }
+
+/* ===========================================================================
+   Palace 2026 — vinho, marfim e ouro, inspirado na identidade social da marca.
+   ========================================================================== */
+body.palace-page.experience-page--palace {
+    --bg: #270705;
+    --bg-soft: #3a0b09;
+    --bg-panel: rgba(66, 14, 11, .76);
+    --bg-panel-solid: #48100d;
+    --border-soft: rgba(218, 177, 103, .2);
+    --border-strong: rgba(218, 177, 103, .4);
+    --gold: #dab167;
+    --gold-hover: #f1d18f;
+    --gold-soft: rgba(218, 177, 103, .13);
+    --txt: #fffaf0;
+    --muted: #d6c6b6;
+    --palace-wine: #681711;
+    --palace-wine-dark: #280705;
+    --palace-cream: #f7f0e5;
+    --palace-blush: #eadbd0;
+    --palace-ink: #35100d;
+    --header-scroll-bg: rgba(48, 8, 6, .96);
+    --header-accent: var(--gold);
+    --header-scroll-text: #fffaf0;
+    background:
+        linear-gradient(118deg, transparent 0 62%, rgba(218, 177, 103, .045) 62% 62.12%, transparent 62.12%),
+        linear-gradient(180deg, #320906 0%, #210504 100%);
+}
+
+body.palace-page.experience-page--palace .palace-main { background: var(--palace-wine-dark); }
+
+body.palace-page.experience-page--palace::before {
+    background-image:
+        linear-gradient(rgba(218, 177, 103, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(218, 177, 103, .025) 1px, transparent 1px);
+    background-size: 72px 72px;
+}
+
+body.palace-page.experience-page--palace .exp-header.scrolled {
+    border-bottom-color: rgba(218, 177, 103, .22);
+    box-shadow: 0 12px 36px rgba(31, 3, 2, .24);
+}
+
+body.palace-page.experience-page--palace .palace-section { padding: clamp(5rem, 8vw, 8rem) 0; }
+
+body.palace-page.experience-page--palace :is(.palace-btn, .btn-arabe-gold) {
+    border-radius: 0;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+body.palace-page.experience-page--palace .palace-eyebrow::before { width: 42px; }
+
+body.palace-page.experience-page--palace .palace-eyebrow::after {
+    width: 7px;
+    height: 7px;
+    transform: rotate(45deg);
+}
+
+body.palace-page.experience-page--palace .palace-section > .container.py-5 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+body.palace-page.experience-page--palace .palace-hero {
+    isolation: isolate;
+    min-height: min(930px, 100svh);
+    padding-top: clamp(8rem, 12vw, 11rem);
+    background:
+        linear-gradient(135deg, transparent 0 74%, rgba(218, 177, 103, .055) 74% 74.15%, transparent 74.15%),
+        linear-gradient(145deg, #300805, #5a120d);
+}
+
+body.palace-page.experience-page--palace .palace-hero__image {
+    filter: saturate(.82) contrast(1.08) sepia(.06);
+    animation: palaceHeroDrift 20s ease-in-out infinite alternate;
+    transform-origin: 65% 45%;
+}
+
+body.palace-page.experience-page--palace .palace-hero__overlay {
+    background:
+        linear-gradient(90deg, rgba(38, 5, 4, .96) 0%, rgba(65, 11, 8, .74) 43%, rgba(49, 7, 5, .22) 100%),
+        linear-gradient(0deg, rgba(35, 4, 3, .8) 0%, transparent 56%);
+}
+
+@media (min-width: 992px) {
+    body.palace-page.experience-page--palace .palace-hero__media {
+        left: 43%;
+        overflow: hidden;
+        border-left: 1px solid rgba(218, 177, 103, .25);
+        clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    body.palace-page.experience-page--palace .palace-hero__overlay {
+        background:
+            linear-gradient(90deg, rgba(47, 7, 5, .66), transparent 38%),
+            linear-gradient(0deg, rgba(34, 4, 3, .62), transparent 55%);
+    }
+
+    body.palace-page.experience-page--palace .palace-hero__container { margin-left: max(2rem, calc((100vw - 1320px) / 2)); }
+
+    body.palace-page.experience-page--palace .palace-hero::after {
+        position: absolute;
+        z-index: 2;
+        right: 1.2rem;
+        bottom: 2rem;
+        color: rgba(255, 250, 240, .72);
+        content: 'SAX  ·  PALACE';
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .32em;
+        writing-mode: vertical-rl;
+    }
+}
+
+body.palace-page.experience-page--palace .palace-hero::before {
+    position: absolute;
+    z-index: 1;
+    top: 18%;
+    right: clamp(1.5rem, 5vw, 5rem);
+    bottom: 14%;
+    width: clamp(70px, 8vw, 130px);
+    border-top: 1px solid rgba(218, 177, 103, .32);
+    border-right: 1px solid rgba(218, 177, 103, .32);
+    border-bottom: 1px solid rgba(218, 177, 103, .32);
+    content: '';
+    pointer-events: none;
+}
+
+body.palace-page.experience-page--palace .palace-hero__title {
+    max-width: 10.5ch;
+    font-size: clamp(3.5rem, 7.3vw, 7rem);
+    letter-spacing: -.035em;
+    text-shadow: 0 15px 45px rgba(25, 2, 1, .36);
+    text-wrap: balance;
+}
+
+body.palace-page.experience-page--palace .palace-hero__lead {
+    max-width: 39rem;
+    color: rgba(255, 250, 240, .78);
+}
+
+body.palace-page.experience-page--palace .palace-hero__actions .palace-btn {
+    display: inline-flex;
+    min-height: 56px;
+    align-items: center;
+    justify-content: center;
+    gap: .65rem;
+}
+
+body.palace-page.experience-page--palace .palace-hero__highlights {
+    display: grid;
+    width: min(100%, 580px);
+    margin-top: 2rem;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid rgba(218, 177, 103, .35);
+    border-bottom: 1px solid rgba(218, 177, 103, .18);
+}
+
+body.palace-page.experience-page--palace .palace-hero__highlights span {
+    display: inline-flex;
+    min-height: 48px;
+    padding: .65rem 1rem;
+    align-items: center;
+    gap: .5rem;
+    border-right: 1px solid rgba(218, 177, 103, .2);
+    background: linear-gradient(90deg, rgba(218, 177, 103, .06), transparent);
+    color: var(--gold-hover);
+    font-size: .62rem;
+    font-weight: 650;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    backdrop-filter: blur(10px);
+}
+
+body.palace-page.experience-page--palace .palace-scroll-cue {
+    position: absolute;
+    z-index: 2;
+    right: clamp(1.4rem, 4vw, 4rem);
+    bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    color: var(--gold-hover);
+}
+
+body.palace-page.experience-page--palace .palace-scroll-cue span {
+    width: 9px;
+    height: 9px;
+    border: 1px solid currentColor;
+    background: transparent;
+    transform: rotate(45deg);
+    animation: palaceLinePulse 2.3s ease-in-out infinite;
+}
+
+body.palace-page.experience-page--palace #sobre,
+body.palace-page.experience-page--palace #eventos {
+    background: var(--palace-cream);
+    color: var(--palace-ink);
+}
+
+body.palace-page.experience-page--palace #eventos { background: var(--palace-blush); }
+
+body.palace-page.experience-page--palace :is(#sobre, #eventos)::before {
+    position: absolute;
+    top: 0;
+    right: 7%;
+    width: 1px;
+    height: 100%;
+    background: rgba(104, 23, 17, .07);
+    box-shadow: 72px 0 rgba(104, 23, 17, .04), -72px 0 rgba(104, 23, 17, .04);
+    content: '';
+    pointer-events: none;
+}
+
+body.palace-page.experience-page--palace :is(#sobre, #eventos) :is(.palace-section__title, .palace-section__lead) {
+    color: var(--palace-ink) !important;
+}
+
+body.palace-page.experience-page--palace :is(#sobre, #eventos) .palace-eyebrow { color: var(--palace-wine) !important; }
+
+body.palace-page.experience-page--palace .palace-image-frame {
+    overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.palace-page.experience-page--palace .palace-image-frame::before {
+    position: absolute;
+    z-index: 2;
+    inset: -14px auto auto -14px;
+    width: 34%;
+    height: 34%;
+    border-top: 2px solid var(--palace-wine);
+    border-left: 2px solid var(--palace-wine);
+    content: '';
+}
+
+body.palace-page.experience-page--palace .palace-image-frame__img {
+    position: relative;
+    min-height: 620px;
+    border-radius: 0;
+    clip-path: polygon(0 0, 92% 0, 100% 8%, 100% 100%, 0 100%);
+    box-shadow: 0 28px 65px rgba(53, 16, 13, .2);
+}
+
+body.palace-page.experience-page--palace .palace-stat-card {
+    display: grid;
+    padding: 1.15rem;
+    grid-template-columns: auto 1fr;
+    column-gap: .8rem;
+    border-color: rgba(104, 23, 17, .14);
+    border-width: 0 0 1px 3px;
+    border-radius: 0;
+    background: rgba(255, 255, 255, .48);
+}
+
+body.palace-page.experience-page--palace .palace-stat-card__icon {
+    display: inline-flex;
+    width: 38px;
+    height: 38px;
+    grid-row: span 2;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(104, 23, 17, .18);
+    border-radius: 0;
+    transform: rotate(45deg);
+    color: var(--palace-wine);
+}
+
+body.palace-page.experience-page--palace .palace-stat-card__value { color: var(--palace-wine); }
+body.palace-page.experience-page--palace .palace-stat-card__label { color: rgba(53, 16, 13, .68); }
+body.palace-page.experience-page--palace .palace-stat-card__icon::before { transform: rotate(-45deg); }
+
+body.palace-page.experience-page--palace #gastronomia {
+    background:
+        linear-gradient(125deg, transparent 0 70%, rgba(218, 177, 103, .055) 70% 70.15%, transparent 70.15%),
+        linear-gradient(145deg, #2b0705, #64150f 62%, #3a0a07);
+}
+
+body.palace-page.experience-page--palace #gastronomia .palace-section__header {
+    max-width: 760px;
+    margin-right: auto;
+    text-align: left !important;
+}
+
+body.palace-page.experience-page--palace #gastronomia .palace-section__header .palace-divider {
+    margin-left: 0 !important;
+}
+
+body.palace-page.experience-page--palace .palace-card {
+    border-color: rgba(218, 177, 103, .2);
+    border-radius: 0;
+    background: var(--palace-cream);
+    box-shadow: 0 24px 58px rgba(28, 3, 2, .32);
+}
+
+@media (min-width: 768px) {
+    body.palace-page.experience-page--palace #gastronomia .row.g-4 > div:nth-child(2) .palace-card { transform: translateY(2.25rem); }
+    body.palace-page.experience-page--palace #gastronomia .row.g-4 > div:nth-child(2) .palace-card:hover { transform: translateY(calc(2.25rem - 6px)); }
+
+    body.palace-page.experience-page--palace .palace-events-grid .col-6:nth-child(even) { transform: translateY(2rem); }
+}
+
+body.palace-page.experience-page--palace .palace-card__media { overflow: hidden; }
+
+body.palace-page.experience-page--palace .palace-card__overlay {
+    justify-content: flex-start;
+    background: linear-gradient(180deg, transparent 30%, rgba(44, 5, 3, .88));
+}
+
+body.palace-page.experience-page--palace .palace-card__title { color: #fffaf0; text-align: left; }
+
+body.palace-page.experience-page--palace .palace-card__body {
+    position: relative;
+    min-height: 150px;
+    padding: 1.5rem 4rem 1.5rem 1.5rem;
+    background: var(--palace-cream);
+}
+
+body.palace-page.experience-page--palace .palace-card__number {
+    position: absolute;
+    right: 1.1rem;
+    bottom: .8rem;
+    color: rgba(104, 23, 17, .12);
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+body.palace-page.experience-page--palace .palace-card__text { color: rgba(53, 16, 13, .72); }
+
+body.palace-page.experience-page--palace .palace-event-panel {
+    border-color: rgba(104, 23, 17, .16);
+    border-width: 1px 1px 1px 5px;
+    border-radius: 0;
+    background: var(--palace-wine);
+    box-shadow: 0 24px 58px rgba(53, 16, 13, .18);
+}
+
+body.palace-page.experience-page--palace #eventos .palace-event-panel :is(.palace-section__title, .palace-section__lead) {
+    color: #fffaf0 !important;
+}
+
+body.palace-page.experience-page--palace #eventos .palace-event-panel .palace-eyebrow,
+body.palace-page.experience-page--palace #eventos .palace-inline-link { color: var(--gold-hover) !important; }
+
+body.palace-page.experience-page--palace .palace-gallery-card {
+    border-color: rgba(104, 23, 17, .15);
+    border-radius: 0;
+    background: var(--palace-wine);
+    box-shadow: 0 16px 38px rgba(53, 16, 13, .17);
+}
+
+body.palace-page.experience-page--palace .palace-events-grid .col-6:nth-child(1) .palace-gallery-card,
+body.palace-page.experience-page--palace .palace-events-grid .col-6:nth-child(4) .palace-gallery-card { aspect-ratio: 1 / 1.16; }
+
+body.palace-page.experience-page--palace .palace-events-grid .col-6:nth-child(2) .palace-gallery-card,
+body.palace-page.experience-page--palace .palace-events-grid .col-6:nth-child(3) .palace-gallery-card { aspect-ratio: 1 / .78; }
+
+body.palace-page.experience-page--palace .palace-gallery-card__shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.22) 48%, transparent 66%);
+    transform: translateX(-120%);
+    transition: transform .9s ease;
+    pointer-events: none;
+}
+
+body.palace-page.experience-page--palace .palace-gallery-card:hover .palace-gallery-card__shine { transform: translateX(120%); }
+
+body.palace-page.experience-page--palace .arabe-premium-section {
+    background:
+        linear-gradient(55deg, transparent 0 76%, rgba(218, 177, 103, .045) 76% 76.14%, transparent 76.14%),
+        var(--palace-wine-dark);
+}
+
+body.palace-page.experience-page--palace .arabe-premium-section .image-wrapper {
+    overflow: hidden;
+    border: 1px solid rgba(218, 177, 103, .24);
+    border-radius: 0;
+    clip-path: polygon(0 0, calc(100% - 46px) 0, 100% 46px, 100% 100%, 46px 100%, 0 calc(100% - 46px));
+    box-shadow: 0 28px 65px rgba(22, 2, 1, .35);
+}
+
+body.palace-page.experience-page--palace .arabe-premium-section .img-main {
+    min-height: 580px;
+    object-fit: cover;
+    transition: transform .8s cubic-bezier(.2,.8,.2,1);
+}
+
+body.palace-page.experience-page--palace .arabe-premium-section .image-wrapper:hover .img-main { transform: scale(1.035); }
+
+body.palace-page.experience-page--palace #contato {
+    background: linear-gradient(145deg, #4c100c, #260604);
+}
+
+body.palace-page.experience-page--palace .palace-contact-panel,
+body.palace-page.experience-page--palace .palace-hours-card,
+body.palace-page.experience-page--palace .palace-map-shell {
+    border-color: rgba(218, 177, 103, .22);
+    background: rgba(39, 7, 5, .74);
+}
+
+body.palace-page.experience-page--palace .palace-map-shell {
+    min-height: 560px;
+    border-radius: 0;
+    clip-path: polygon(0 0, calc(100% - 34px) 0, 100% 34px, 100% 100%, 0 100%);
+}
+
+body.palace-page.experience-page--palace .map-container iframe {
+    filter: grayscale(.75) sepia(.22) contrast(1.06);
+    transition: filter .45s ease;
+}
+
+body.palace-page.experience-page--palace .palace-map-shell:hover iframe { filter: none; }
+
+body.palace-page.experience-page--palace .palace-map-link {
+    display: flex;
+    min-height: 48px;
+    margin-top: .75rem;
+    padding: .65rem 1rem;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    border-bottom: 1px solid rgba(218, 177, 103, .35);
+    color: var(--gold-hover);
+    font-size: .67rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: gap .3s ease, color .3s ease;
+}
+
+body.palace-page.experience-page--palace .palace-map-link:hover { gap: .8rem; color: #fff; }
+
+body.palace-page.experience-page--palace .palace-footer {
+    padding-top: 1rem;
+    background: #1b0302;
+}
+
+body.palace-page.experience-page--palace .palace-footer__surface {
+    border-color: rgba(218, 177, 103, .17);
+    background: rgba(46, 7, 5, .78);
+    border-radius: 0;
+}
+
+body.palace-page.experience-page--palace .social-link-minimal i { color: var(--gold); font-size: .9rem; }
+
+@keyframes palaceHeroDrift {
+    from { transform: scale(1.035); }
+    to { transform: scale(1.095) translate3d(-1%, -.5%, 0); }
+}
+
+@keyframes palaceLinePulse {
+    0%, 100% { opacity: .35; transform: rotate(45deg) translateY(0); }
+    50% { opacity: 1; transform: rotate(45deg) translate(4px, 4px); }
+}
+
+@media (max-width: 991.98px) {
+    body.palace-page.experience-page--palace,
+    body.palace-page.experience-page--palace .palace-main { background: var(--palace-wine-dark); }
+
+    body.palace-page.experience-page--palace .palace-section { padding: 4.8rem 0; }
+
+    body.palace-page.experience-page--palace .palace-hero {
+        min-height: calc(100svh - 58px);
+        padding: 3rem 0;
+        align-items: flex-end;
+    }
+
+    body.palace-page.experience-page--palace .palace-hero__container { padding-top: 3rem; padding-bottom: 2.5rem; }
+
+    body.palace-page.experience-page--palace .palace-hero__overlay {
+        background: linear-gradient(0deg, rgba(37, 4, 3, .97) 0%, rgba(66, 10, 7, .66) 55%, rgba(38, 5, 4, .26) 100%);
+    }
+
+    body.palace-page.experience-page--palace .palace-hero::before { top: 15%; right: 1rem; bottom: 12%; width: 44px; }
+    body.palace-page.experience-page--palace .palace-scroll-cue { display: none; }
+    body.palace-page.experience-page--palace .palace-image-frame__img { min-height: 520px; }
+
+    body.palace-page.experience-page--palace .palace-event-panel,
+    body.palace-page.experience-page--palace .palace-contact-panel { text-align: left; }
+
+    body.palace-page.experience-page--palace .palace-map-shell { min-height: 380px; }
+}
+
+@media (max-width: 767.98px) {
+    body.palace-page.experience-page--palace .palace-section { padding: 4rem 0 !important; }
+
+    body.palace-page.experience-page--palace .palace-hero__title {
+        max-width: 11ch;
+        margin-top: .7rem;
+        font-size: clamp(2.75rem, 13.2vw, 4.2rem);
+    }
+
+    body.palace-page.experience-page--palace .palace-hero__lead {
+        display: -webkit-box;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+        font-size: .86rem;
+        line-height: 1.65;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+    }
+
+    body.palace-page.experience-page--palace .palace-hero__actions { display: grid !important; width: 100%; grid-template-columns: 1fr 1fr; gap: .6rem !important; }
+
+    body.palace-page.experience-page--palace .palace-hero__container .col-lg-7 {
+        padding-left: 1.25rem;
+        border-left: 2px solid rgba(218, 177, 103, .68);
+    }
+
+    body.palace-page.experience-page--palace .palace-hero__actions .palace-btn {
+        width: 100%;
+        min-height: 50px;
+        padding: .78rem .65rem !important;
+        font-size: .69rem;
+        letter-spacing: .08em;
+    }
+
+    body.palace-page.experience-page--palace .palace-hero__highlights { margin-top: 1rem; }
+    body.palace-page.experience-page--palace .palace-hero__highlights span { padding: .48rem .65rem; font-size: .55rem; }
+
+    body.palace-page.experience-page--palace .palace-section__title,
+    body.palace-page.experience-page--palace .arabe-title { font-size: clamp(2rem, 10vw, 3rem); }
+
+    body.palace-page.experience-page--palace .palace-eyebrow { gap: .5rem; font-size: .62rem; letter-spacing: .2rem; }
+    body.palace-page.experience-page--palace .palace-eyebrow::before,
+    body.palace-page.experience-page--palace .palace-eyebrow::after { width: 18px; }
+
+    body.palace-page.experience-page--palace .palace-image-frame__img { min-height: 420px !important; }
+    body.palace-page.experience-page--palace .palace-image-frame::before { inset: -8px auto auto -8px; width: 30%; height: 30%; }
+
+    body.palace-page.experience-page--palace .palace-story-grid { --bs-gutter-x: .65rem; }
+    body.palace-page.experience-page--palace .palace-stat-card { padding: .85rem; grid-template-columns: 1fr; }
+    body.palace-page.experience-page--palace .palace-stat-card__icon { width: 32px; height: 32px; margin-bottom: .55rem; grid-row: auto; }
+
+    body.palace-page.experience-page--palace .palace-card__img { min-height: 220px !important; }
+    body.palace-page.experience-page--palace .palace-card__body { min-height: auto; padding: 1.15rem 3.3rem 1.15rem 1.15rem; }
+    body.palace-page.experience-page--palace .palace-card__text { font-size: .86rem; }
+
+    body.palace-page.experience-page--palace .palace-menu-actions .palace-btn { width: 100%; min-height: 50px; }
+    body.palace-page.experience-page--palace .palace-event-panel { padding: 1.4rem !important; border-radius: 0; }
+    body.palace-page.experience-page--palace .palace-events-grid { --bs-gutter-x: .6rem; --bs-gutter-y: .6rem; }
+    body.palace-page.experience-page--palace .palace-gallery-card { border-radius: 0; }
+    body.palace-page.experience-page--palace .palace-events-grid .col-6:nth-child(even) { transform: translateY(.8rem); }
+
+    body.palace-page.experience-page--palace .arabe-premium-section .img-main { min-height: 410px; }
+    body.palace-page.experience-page--palace .arabe-description { margin-bottom: 1.6rem !important; font-size: .9rem; }
+
+    body.palace-page.experience-page--palace .palace-contact-panel { padding: 1.25rem !important; background: rgba(39, 7, 5, .82) !important; }
+    body.palace-page.experience-page--palace .palace-hours-card { padding: .9rem !important; background: rgba(25, 3, 2, .48) !important; }
+    body.palace-page.experience-page--palace .palace-map-shell { min-height: 300px; max-height: 350px; border-radius: 0; }
+
+    body.palace-page.experience-page--palace .palace-footer__surface { padding: 1.25rem; border-radius: 0; text-align: left; }
+    body.palace-page.experience-page--palace .palace-footer__socials { gap: .8rem !important; }
+    body.palace-page.experience-page--palace .social-link-minimal { min-height: 38px; }
+}
+
+@media (max-width: 380px) {
+    body.palace-page.experience-page--palace .palace-hero__actions { grid-template-columns: 1fr; }
+    body.palace-page.experience-page--palace .palace-hero__highlights span:last-child { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.palace-page.experience-page--palace .palace-hero__image,
+    body.palace-page.experience-page--palace .palace-scroll-cue span { animation: none; }
+}

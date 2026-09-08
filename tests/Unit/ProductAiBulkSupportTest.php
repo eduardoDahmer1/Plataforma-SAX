@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\Admin\ProductAiBatchController;
+use App\Services\OpenAICatalogService;
 use App\Services\ProductAiProposalApplier;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -69,5 +70,35 @@ class ProductAiBulkSupportTest extends TestCase
         ]);
 
         $this->assertNull($result);
+    }
+
+    public function test_ai_taxonomy_requires_a_consistent_category_chain(): void
+    {
+        $method = new ReflectionMethod(OpenAICatalogService::class, 'normalizeProposal');
+        $proposal = [
+            'commercial_name' => ['pt_br' => 'Produto', 'es' => 'Producto', 'en' => 'Product'],
+            'verified_attributes' => [],
+            'taxonomy_selection' => [
+                'category_id' => 10,
+                'subcategory_id' => 20,
+                'childcategory_id' => 30,
+            ],
+        ];
+        $categories = collect([(object) ['id' => 10, 'name' => 'Calçados', 'slug' => 'calcados']])->keyBy('id');
+        $subcategories = collect([(object) ['id' => 20, 'category_id' => 10, 'name' => 'Tênis', 'slug' => 'tenis']])->keyBy('id');
+        $childCategories = collect([(object) ['id' => 30, 'category_id' => 10, 'subcategory_id' => 20, 'name' => 'Casuais', 'slug' => 'casuais']])->keyBy('id');
+
+        $normalized = $method->invoke(new OpenAICatalogService, $proposal, $categories, $subcategories, $childCategories);
+
+        $this->assertSame(10, $normalized['taxonomy_selection']['category_id']);
+        $this->assertSame(20, $normalized['taxonomy_selection']['subcategory_id']);
+        $this->assertSame(30, $normalized['taxonomy_selection']['childcategory_id']);
+
+        $proposal['taxonomy_selection']['category_id'] = 999;
+        $normalized = $method->invoke(new OpenAICatalogService, $proposal, $categories, $subcategories, $childCategories);
+
+        $this->assertNull($normalized['taxonomy_selection']['category_id']);
+        $this->assertNull($normalized['taxonomy_selection']['subcategory_id']);
+        $this->assertNull($normalized['taxonomy_selection']['childcategory_id']);
     }
 }

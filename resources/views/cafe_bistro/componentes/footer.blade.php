@@ -7,9 +7,14 @@
             {{-- Col 1: Logo + Descrição + Redes --}}
             <div class="col-lg-4 col-md-12">
                 {{-- Logo --}}
+                @php
+                    $footerBistroLogo = ($cafeBistro->slug ?? null) === 'asuncion'
+                        ? ($attributes->logo_cafe_bistro_asuncion ?? $attributes->logo_cafe_bistro ?? null)
+                        : ($attributes->logo_cafe_bistro ?? null);
+                @endphp
                 <div class="mb-3">
-                    @if(!empty($attributes->logo_cafe_bistro))
-                        <img src="{{ asset('storage/uploads/' . $attributes->logo_cafe_bistro) }}"
+                    @if(!empty($footerBistroLogo))
+                        <img src="{{ asset('storage/uploads/' . $footerBistroLogo) }}"
                              alt="SAX Café & Bistrô" style="height:3.5rem;width:auto;">
                     @else
                         <div class="footer-logo-placeholder">

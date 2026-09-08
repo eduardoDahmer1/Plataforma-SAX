@@ -4,7 +4,7 @@
         <div class="row align-items-center gy-5">
 
             {{-- Foto --}}
-            <div class="col-lg-7" data-reveal="left">
+            <div class="col-lg-7 sobre-media" data-reveal="left">
                 @if($cafeBistro->sobre_imagen)
                     <img src="{{ asset('storage/'.$cafeBistro->sobre_imagen) }}"
                          alt="{{ __('messages.cafe_about_image_alt') }}"
@@ -18,13 +18,20 @@
             </div>
 
             {{-- Texto --}}
-            <div class="col-lg-5" data-reveal="right">
+            <div class="col-lg-5 sobre-copy" data-reveal="right">
                 <span class="eyebrow">{{ __('messages.sobre_nos') }}</span>
                 <div class="divider"></div>
                 <h2 class="section-title mb-4">{{ $t?->cafe_sobre_titulo ?? $cafeBistro->sobre_titulo ?? __('messages.cafe_about_title_fallback') }}</h2>
                 <p class="sobre-texto">
                     {{ $t?->cafe_sobre_texto ?? $cafeBistro->sobre_texto ?? __('messages.cafe_about_text_fallback') }}
                 </p>
+                @if(($cafeBistro->slug ?? null) === 'asuncion')
+                    <div class="asu-amenities" aria-label="SAX Café & Bistrô Asunción">
+                        <span><i class="bi bi-cup-hot" aria-hidden="true"></i>{{ __('messages.cafe_bistro') }}</span>
+                        <span><i class="bi bi-stars" aria-hidden="true"></i>{{ __('messages.eventos_label') }}</span>
+                        <span><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ $cafeBistro->name }}</span>
+                    </div>
+                @endif
             </div>
 
         </div>

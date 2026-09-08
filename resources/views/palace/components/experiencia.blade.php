@@ -10,17 +10,28 @@
             <div class="col-lg-7 col-xl-6 palace-reveal" data-aos="fade-right">
                 <span class="palace-eyebrow text-uppercase">{{ __('messages.seccion_principal_badge') }}</span>
                 <h1 class="palace-hero__title">{{ $t->palace_hero_titulo ?? $palace->hero_titulo }}</h1>
-                <p class="palace-hero__lead d-none d-md-block">{{ $t->palace_hero_descricao ?? $palace->hero_descricao }}</p>
+                <p class="palace-hero__lead">{{ $t->palace_hero_descricao ?? $palace->hero_descricao }}</p>
 
                 <div class="d-flex flex-wrap gap-3 palace-hero__actions">
                     <a href="https://wa.me/{{ preg_replace('/\D/', '', $palace->contato_whatsapp) }}" class="btn palace-btn palace-btn--gold btn-lg px-4 px-md-5 py-3 text-uppercase fw-bold">
+                        <i class="bi bi-calendar2-heart" aria-hidden="true"></i>
                         {{ __('messages.reservar_btn') ?? 'Reservar' }}
                     </a>
                     <a href="#sobre" class="btn palace-btn palace-btn--ghost btn-lg px-4 px-md-5 py-3 text-uppercase fw-bold">
+                        <i class="bi bi-arrow-down-right" aria-hidden="true"></i>
                         {{ __('messages.descobrir_btn') ?? 'Descobrir' }}
                     </a>
+                </div>
+
+                <div class="palace-hero__highlights" aria-label="SAX Palace">
+                    <span><i class="bi bi-stars" aria-hidden="true"></i>{{ __('messages.a_arte_de_servir') }}</span>
+                    <span><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ __('messages.piso_label') }}</span>
                 </div>
             </div>
         </div>
     </div>
+
+    <a href="#sobre" class="palace-scroll-cue" aria-label="{{ __('messages.descobrir_btn') ?? 'Descobrir' }}">
+        <span></span><i class="bi bi-arrow-down" aria-hidden="true"></i>
+    </a>
 </section>

@@ -29,7 +29,7 @@ class OpenAICatalogServiceTest extends TestCase
                             'verified_attributes' => ['brand' => 'Marca'],
                             'suggested_attributes' => [],
                             'seo' => ['title_pt_br' => 'MARCA PRODUTO', 'meta_description_pt_br' => 'Produto', 'search_terms' => ['produto']],
-                            'taxonomy_selection' => ['subcategory_id' => 999, 'childcategory_id' => 999, 'reason' => 'Sem evidência', 'confidence' => 'low'],
+                            'taxonomy_selection' => ['category_id' => 999, 'subcategory_id' => 999, 'childcategory_id' => 999, 'reason' => 'Sem evidência', 'confidence' => 'low'],
                             'missing_data' => [],
                             'warnings' => [],
                             'confidence' => 'medium',
@@ -71,10 +71,11 @@ class OpenAICatalogServiceTest extends TestCase
         $product->setRelation('subcategory', null);
         $product->setRelation('categoriasFilhas', null);
 
-        $result = app(OpenAICatalogService::class)->generateProductProposal($product);
+        $result = $this->serviceWithTaxonomy()->generateProductProposal($product);
 
         $this->assertSame('MARCA PRODUTO', $result['proposal']['commercial_name']['pt_br']);
         $this->assertSame(str_repeat('Descripción factual. ', 8), $result['proposal']['descriptions']['es']);
+        $this->assertNull($result['proposal']['taxonomy_selection']['category_id']);
         $this->assertNull($result['proposal']['taxonomy_selection']['subcategory_id']);
         $this->assertSame('matched', $result['research']['status']);
         $this->assertSame([
@@ -96,6 +97,7 @@ class OpenAICatalogServiceTest extends TestCase
                 && $body['reasoning']['effort'] === 'medium'
                 && $body['text']['format']['type'] === 'json_schema'
                 && $body['text']['format']['schema']['properties']['verified_attributes']['type'] === 'array'
+                && in_array('category_id', $body['text']['format']['schema']['properties']['taxonomy_selection']['required'], true)
                 && ! isset($body['text']['format']['schema']['properties']['short_description'])
                 && $body['store'] === false;
         });
@@ -120,7 +122,10 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertStringContainsString('manufacturer_reference_candidates', $requestBody['instructions']);
         $this->assertStringNotContainsString('GTIN exacto', $requestBody['instructions']);
         $this->assertStringContainsString('No recomiendes con', $requestBody['instructions']);
+        $this->assertStringContainsString('allowed_categories', $requestBody['instructions']);
         $this->assertSame(['REF-123'], $knownData['manufacturer_reference_candidates']);
+        $this->assertSame(10, $knownData['taxonomy']['allowed_categories'][0]['id']);
+        $this->assertSame(10, $knownData['taxonomy']['allowed_subcategories'][0]['category_id']);
         $this->assertArrayNotHasKey('gtin', $knownData);
         $this->assertArrayNotHasKey('mpn', $knownData);
     }
@@ -138,7 +143,7 @@ class OpenAICatalogServiceTest extends TestCase
                         'editorial_summary' => '', 'commercial_name' => ['pt_br' => 'A', 'es' => 'A', 'en' => 'A'],
                         'descriptions' => ['pt_br' => 'A', 'es' => 'A', 'en' => 'A'],
                         'verified_attributes' => [], 'suggested_attributes' => [], 'seo' => ['title_pt_br' => '', 'meta_description_pt_br' => '', 'search_terms' => []],
-                        'taxonomy_selection' => ['subcategory_id' => null, 'childcategory_id' => null, 'reason' => '', 'confidence' => 'low'],
+                        'taxonomy_selection' => ['category_id' => null, 'subcategory_id' => null, 'childcategory_id' => null, 'reason' => '', 'confidence' => 'low'],
                         'missing_data' => [], 'warnings' => [], 'confidence' => 'low', 'web_research' => ['status' => 'not_found', 'findings' => [], 'selected_source_urls' => []],
                     ], JSON_UNESCAPED_UNICODE),
                 ]],
@@ -147,10 +152,40 @@ class OpenAICatalogServiceTest extends TestCase
 
         $product = Product::make(['external_name' => 'Produto', 'category_id' => null]);
         $product->setRelation('brand', null)->setRelation('category', null)->setRelation('subcategory', null)->setRelation('categoriasFilhas', null);
-        $result = app(OpenAICatalogService::class)->generateProductProposal($product);
+        $result = $this->serviceWithTaxonomy()->generateProductProposal($product);
 
         $this->assertSame('not_found', $result['research']['status']);
         $this->assertNotEmpty($result['research']['warning']);
         $this->assertSame([], $result['research']['sources']);
+    }
+
+    private function serviceWithTaxonomy(): OpenAICatalogService
+    {
+        $taxonomy = $this->taxonomy();
+        $service = \Mockery::mock(OpenAICatalogService::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $service->shouldReceive('loadActiveTaxonomy')->andReturn($taxonomy);
+
+        return $service;
+    }
+
+    private function taxonomy(): array
+    {
+        $category = new \App\Models\Category(['name' => 'Calçados', 'slug' => 'calcados']);
+        $category->id = 10;
+        $subcategory = new \App\Models\Subcategory(['name' => 'Tênis', 'slug' => 'tenis', 'category_id' => 10]);
+        $subcategory->id = 20;
+        $childCategory = new \App\Models\CategoriasFilhas([
+            'name' => 'Tênis casuais',
+            'slug' => 'tenis-casuais',
+            'category_id' => 10,
+            'subcategory_id' => 20,
+        ]);
+        $childCategory->id = 30;
+
+        return [
+            'categories' => collect([$category]),
+            'subcategories' => collect([$subcategory]),
+            'child_categories' => collect([$childCategory]),
+        ];
     }
 }

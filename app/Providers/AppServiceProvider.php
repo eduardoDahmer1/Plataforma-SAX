@@ -19,6 +19,7 @@ use App\Models\CategoriasFilhas;
 use App\Services\CatalogIntegrationAvailabilityService;
 use App\Services\IntegrationMonitorService;
 use App\Services\StoreControlService;
+use App\Services\ThemeSettingsService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(CatalogIntegrationAvailabilityService::class);
         $this->app->singleton(StoreControlService::class);
+        $this->app->singleton(ThemeSettingsService::class);
     }
 
     /**
@@ -209,7 +211,9 @@ class AppServiceProvider extends ServiceProvider
                 'logo_palace' => $attribute?->logo_palace ?? null,
                 'logo_bridal' => $attribute?->logo_bridal ?? null,
                 'logo_cafe_bistro' => $attribute?->logo_cafe_bistro ?? null,
+                'logo_cafe_bistro_asuncion' => $attribute?->logo_cafe_bistro_asuncion ?? null,
                 'banner_horizontal' => $attribute?->banner_horizontal ?? null,
+                'banner_horizontal_link' => $attribute?->banner_horizontal_link ?? null,
                 'banner2' => $attribute?->banner2 ?? null,
                 'banner3' => $attribute?->banner3 ?? null,
                 'banner4' => $attribute?->banner4 ?? null,

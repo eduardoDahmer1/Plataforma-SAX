@@ -4,11 +4,15 @@
     'max'    => 20,   // limite total (existentes + novas)
     'label'  => null,
     'hint'   => null,
+    'dimensions' => null,
 ])
 
 <div class="gallery-field-manager" data-gallery-field="{{ $field }}" data-max="{{ $max }}">
     @if($label)
         <label class="sax-form-label d-block mb-2">{{ $label }}</label>
+    @endif
+    @if($dimensions)
+        <div class="admin-media-spec mb-3"><i class="fa-solid fa-expand"></i><span><strong>{{ $dimensions }}</strong>@if($hint)<small>{{ $hint }}</small>@endif</span></div>
     @endif
 
     <div class="gallery-preview-grid mb-3" id="galleryPreview_{{ $field }}">
@@ -25,7 +29,7 @@
         <input type="file" id="galleryInput_{{ $field }}" name="{{ $field }}[]" class="upload-input" multiple accept="image/*">
         <i class="fas fa-cloud-upload-alt mb-2 opacity-25 fa-lg"></i>
         <p class="x-small fw-bold m-0">{{ __('messages.click_or_drag_images') ?? 'Clique ou arraste imagens' }}</p>
-        @if($hint)
+        @if($hint && !$dimensions)
             <p class="x-small text-muted m-0">{{ $hint }}</p>
         @endif
     </div>

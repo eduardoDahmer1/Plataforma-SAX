@@ -48,9 +48,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const mainSwiperEl = document.querySelector('.mainSwiper');
     if (mainSwiperEl) {
-        new Swiper('.mainSwiper', {
-            loop: true,
-            speed: 800,
+        const updateMainCounter = function (swiper) {
+            const counter = mainSwiperEl.querySelector('[data-slider-current]');
+            if (counter) counter.textContent = String(swiper.realIndex + 1).padStart(2, '0');
+        };
+
+        new Swiper(mainSwiperEl, {
+            loop: mainSwiperEl.querySelectorAll('.swiper-slide').length > 1,
+            speed: 1100,
             effect: 'fade',
             fadeEffect: { crossFade: true },
             autoplay: {
@@ -64,6 +69,31 @@ document.addEventListener('DOMContentLoaded', function () {
             navigation: {
                 nextEl: '.swiper-nav-click.next',
                 prevEl: '.swiper-nav-click.prev',
+            },
+            keyboard: { enabled: true },
+            a11y: { enabled: true },
+            on: {
+                init: updateMainCounter,
+                slideChange: updateMainCounter,
+            },
+        });
+    }
+
+    const editorialSwiperEl = document.querySelector('.editorialBannerSwiper');
+    if (editorialSwiperEl) {
+        new Swiper(editorialSwiperEl, {
+            slidesPerView: 1.08,
+            spaceBetween: 12,
+            speed: 850,
+            grabCursor: true,
+            watchOverflow: true,
+            navigation: { nextEl: '.editorial-next', prevEl: '.editorial-prev' },
+            pagination: { el: '.editorial-pagination', clickable: true },
+            breakpoints: {
+                576: { slidesPerView: 1.35, spaceBetween: 16 },
+                768: { slidesPerView: 1.7, spaceBetween: 18 },
+                992: { slidesPerView: 2.15, spaceBetween: 22 },
+                1440: { slidesPerView: 2.35, spaceBetween: 24 },
             },
         });
     }

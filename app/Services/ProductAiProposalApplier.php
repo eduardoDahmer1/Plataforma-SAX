@@ -31,15 +31,16 @@ class ProductAiProposalApplier
                 ],
             ];
 
+            $suggestedCategoryId = data_get($proposal, 'taxonomy_selection.category_id');
             $suggestedSubcategoryId = data_get($proposal, 'taxonomy_selection.subcategory_id');
             $suggestedChildCategoryId = data_get($proposal, 'taxonomy_selection.childcategory_id');
+            $hasSuggestedCategory = filled($suggestedCategoryId);
             $data = [
                 'name' => $translations['pt-br']['name'],
                 'description' => $translations['pt-br']['details'],
-                'subcategory_id' => $suggestedSubcategoryId ?: $product->subcategory_id,
-                'childcategory_id' => $suggestedSubcategoryId
-                    ? ($suggestedChildCategoryId ?: null)
-                    : $product->childcategory_id,
+                'category_id' => $hasSuggestedCategory ? (int) $suggestedCategoryId : $product->category_id,
+                'subcategory_id' => $hasSuggestedCategory ? ($suggestedSubcategoryId ?: null) : $product->subcategory_id,
+                'childcategory_id' => $hasSuggestedCategory ? ($suggestedChildCategoryId ?: null) : $product->childcategory_id,
                 'updated_by' => $userId,
                 'admin_edited_at' => now(),
             ];
@@ -77,7 +78,7 @@ class ProductAiProposalApplier
                     'name' => $data['name'],
                     'description' => $data['description'],
                     'brand_id' => $product->brand_id,
-                    'category_id' => $product->category_id,
+                    'category_id' => $data['category_id'],
                     'subcategory_id' => $data['subcategory_id'],
                     'childcategory_id' => $data['childcategory_id'],
                     'updated_by' => $userId,

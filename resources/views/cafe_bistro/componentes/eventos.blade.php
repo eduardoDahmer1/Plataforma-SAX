@@ -4,7 +4,7 @@
         <div class="row align-items-center gy-5">
 
             {{-- Carrusel de eventos --}}
-            <div class="col-lg-6" data-reveal="left">
+            <div class="col-lg-6 eventos-media" data-reveal="left">
                 @if(!empty($cafeBistro->eventos_galeria))
                     <div class="swiper eventosSwiper rounded" style="aspect-ratio: 4/5;">
                         <div class="swiper-wrapper">
@@ -26,7 +26,7 @@
             </div>
 
             {{-- Texto --}}
-            <div class="col-lg-6" data-reveal="right">
+            <div class="col-lg-6 eventos-copy" data-reveal="right">
                 <span class="eyebrow">{{ $t?->cafe_eventos_subtitulo ?? $cafeBistro->eventos_subtitulo ?? __('messages.cafe_events_subtitle_fallback') }}</span>
                 <div class="divider"></div>
                 <h2 class="section-title mb-4">{{ $t?->cafe_eventos_titulo ?? $cafeBistro->eventos_titulo ?? __('messages.cafe_events_title_fallback') }}</h2>
@@ -37,7 +37,7 @@
                 @if($cafeBistro->eventos_tipos)
                     <ul class="eventos-tipos-list">
                         @foreach($cafeBistro->eventos_tipos as $tipo)
-                            <li>{{ $tipo }}</li>
+                            <li>@if(($cafeBistro->slug ?? null) === 'asuncion')<i class="bi bi-stars" aria-hidden="true"></i>@endif{{ $tipo }}</li>
                         @endforeach
                     </ul>
                 @endif

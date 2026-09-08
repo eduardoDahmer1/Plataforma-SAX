@@ -86,8 +86,8 @@
 
         @php
             $navigationGroups = [
-                'Visibilidade do cabeçalho' => ['header_categories_enabled' => 'Categorias', 'header_institucional_enabled' => 'Institucional', 'header_bridal_enabled' => 'Bridal', 'header_palace_enabled' => 'SAX Palace', 'header_cafe_enabled' => 'Café & Bistrô', 'header_blog_enabled' => '#SAXNEWS / Blog', 'header_contact_enabled' => 'Contato'],
-                'Visibilidade do rodapé' => ['footer_categories_enabled' => 'Categorias', 'footer_institucional_enabled' => 'Institucional', 'footer_bridal_enabled' => 'Bridal', 'footer_palace_enabled' => 'SAX Palace', 'footer_cafe_enabled' => 'Café & Bistrô', 'footer_blog_enabled' => '#SAXNEWS / Blog', 'footer_contact_enabled' => 'Contato'],
+                'Visibilidade do cabeçalho' => ['header_categories_enabled' => 'Categorias', 'header_institucional_enabled' => 'Institucional', 'header_bridal_enabled' => 'Bridal', 'header_palace_enabled' => 'SAX Palace', 'header_cafe_enabled' => 'Café & Bistrô', 'header_blog_enabled' => '#SAXNEWS / Blog', 'header_contact_enabled' => 'Contato', 'header_guide_enabled' => 'Guia de atendimento'],
+                'Visibilidade do rodapé' => ['footer_categories_enabled' => 'Categorias', 'footer_institucional_enabled' => 'Institucional', 'footer_bridal_enabled' => 'Bridal', 'footer_palace_enabled' => 'SAX Palace', 'footer_cafe_enabled' => 'Café & Bistrô', 'footer_blog_enabled' => '#SAXNEWS / Blog', 'footer_contact_enabled' => 'Contato', 'footer_guide_enabled' => 'Guia de atendimento'],
             ];
         @endphp
         @foreach($navigationGroups as $title => $items)

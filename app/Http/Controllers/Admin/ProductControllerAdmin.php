@@ -341,18 +341,39 @@ class ProductControllerAdmin extends Controller
 
     public function search(Request $request)
     {
-        $q = $request->get('q');
+        $q = trim((string) $request->get('q', ''));
         $excludeId = $request->integer('exclude_id');
         $context = $request->get('context');
+        $strictFamily = $request->boolean('strict_family');
         $currentColorKey = (string) $request->get('current_color_key', '');
         $currentReferenceKey = (string) $request->get('current_reference_key', '');
         $currentSizeKey = Str::upper(Str::ascii(trim((string) $request->get('current_size', ''))));
 
-        $products = Product::where(function ($query) use ($q) {
-            $query
-                ->where('name', 'like', "%{$q}%")
-                ->orWhere('external_name', 'like', "%{$q}%")
-                ->orWhere('sku', 'like', "%{$q}%");
+        if ($q === '') {
+            return response()->json([]);
+        }
+
+        $searchTerms = collect(preg_split('/[^\pL\pN._\/-]+/u', $q, -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn ($term) => trim((string) $term))
+            ->filter(fn ($term) => mb_strlen($term) >= 2)
+            ->values();
+
+        // Uma busca de um único caractere continua válida. Para frases, os
+        // termos evitam que pontuação normalizada (por exemplo BRIC S / BRIC'S)
+        // impeça a localização do produto no nome gravado pelo integrador.
+        if ($searchTerms->isEmpty()) {
+            $searchTerms = collect([$q]);
+        }
+
+        $products = Product::where(function ($query) use ($searchTerms) {
+            $searchTerms->each(function ($term) use ($query) {
+                $query->where(function ($termQuery) use ($term) {
+                    $termQuery
+                        ->where('name', 'like', "%{$term}%")
+                        ->orWhere('external_name', 'like', "%{$term}%")
+                        ->orWhere('sku', 'like', "%{$term}%");
+                });
+            });
         })
             ->when($excludeId, fn ($query) => $query->where('id', '!=', $excludeId))
             ->orderBy('external_name')
@@ -361,14 +382,14 @@ class ProductControllerAdmin extends Controller
             ->limit($context === 'color' ? 250 : 80)
             ->get(['id', 'sku', 'name', 'external_name', 'photo', 'color', 'size', 'stock', 'parent_id', 'product_role']);
 
-        if (in_array($context, ['size', 'color'], true)) {
+        if ($strictFamily && in_array($context, ['size', 'color'], true)) {
             $products = $products
                 ->when($currentReferenceKey !== '', fn ($items) => $items->filter(
                     fn (Product $product) => $product->relationshipReferenceKey() === $currentReferenceKey
                 ));
         }
 
-        if ($context === 'size' && $currentColorKey !== '') {
+        if ($strictFamily && $context === 'size' && $currentColorKey !== '') {
             $products = $products
                 ->filter(fn (Product $product) => $product->relationshipColorKey() === $currentColorKey)
                 ->when($currentSizeKey !== '', fn ($items) => $items->reject(
@@ -377,7 +398,7 @@ class ProductControllerAdmin extends Controller
                 ->values();
         }
 
-        if ($context === 'color') {
+        if ($strictFamily && $context === 'color') {
             $products = $products
                 ->filter(fn (Product $product) => $product->relationshipColorKey() !== '')
                 ->when($currentColorKey !== '', fn ($items) => $items->reject(

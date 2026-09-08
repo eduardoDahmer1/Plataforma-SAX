@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Contact;
 use App\Models\JobFlyer;
 use App\Models\Language;
+use App\Models\WhatsappContact;
+use App\Services\StoreControlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 
 class ContactController extends Controller
 {
-    public function showForm()
+    public function showForm(StoreControlService $storeControls)
     {
         $locale = session('locale', config('app.locale'));
 
@@ -21,22 +23,37 @@ class ContactController extends Controller
         $flyers = Cache::remember('contact_active_job_flyers', now()->addMinutes(10), fn () =>
             JobFlyer::active()->orderBy('sort_order')->get()
         );
+        $directoryContacts = WhatsappContact::query()
+            ->where('active', true)
+            ->where('show_on_contact_page', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+        $isOtica = $storeControls->isOtica();
+        $contactGuideEnabled = $storeControls->navigationVisible('header', 'guide')
+            || $storeControls->navigationVisible('footer', 'guide');
 
-        return view('contact.form', compact('lang', 'locale', 'flyers'));
+        return view('contact.form', compact('lang', 'locale', 'flyers', 'directoryContacts', 'isOtica', 'contactGuideEnabled'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, StoreControlService $storeControls)
     {
-        $type = (int) $request->input('contact_type');
+        $isOtica = $storeControls->isOtica();
+        $type = $isOtica ? 4 : (int) $request->input('contact_type');
+        $request->merge(['contact_type' => $type]);
 
         $rules = [
             'name' => 'required|string|max:255',
-            'contact_type' => 'required|in:1,2',
+            'contact_type' => ['required', $isOtica ? 'in:4' : 'in:1,2'],
             'email' => 'required|email',
             'phone' => 'nullable|string|max:20',
             'message' => 'required|string',
             'store_name' => $type === 2 ? 'required|string|max:255' : 'nullable|string|max:255',
-            'attachment' => $type === 2 ? 'required|file|mimes:pdf,jpg,jpeg,png|max:2048' : 'nullable',
+            'attachment' => match ($type) {
+                2 => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                4 => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                default => 'nullable',
+            },
         ];
 
         $validated = $request->validate($rules);

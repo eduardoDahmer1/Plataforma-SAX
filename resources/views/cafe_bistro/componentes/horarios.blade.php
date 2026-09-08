@@ -4,7 +4,10 @@
         <div class="row gy-5">
 
             {{-- Horários --}}
-            <div class="col-lg-6" data-reveal="left">
+            <div class="col-lg-6 horarios-panel horarios-panel--hours" data-reveal="left">
+                @if(($cafeBistro->slug ?? null) === 'asuncion')
+                    <span class="asu-section-icon"><i class="bi bi-clock" aria-hidden="true"></i></span>
+                @endif
                 <span class="eyebrow">{{ __('messages.cafe_opening_label') }}</span>
                 <div class="divider"></div>
                 <h2 class="section-title mb-4">{{ __('messages.horarios') }}</h2>
@@ -37,7 +40,10 @@
             </div>
 
             {{-- Localização --}}
-            <div class="col-lg-6" data-reveal="right">
+            <div class="col-lg-6 horarios-panel horarios-panel--map" data-reveal="right">
+                @if(($cafeBistro->slug ?? null) === 'asuncion')
+                    <span class="asu-section-icon"><i class="bi bi-pin-map" aria-hidden="true"></i></span>
+                @endif
                 <span class="eyebrow">{{ __('messages.localizacao_label') }}</span>
                 <div class="divider"></div>
                 <h2 class="section-title mb-4">{{ __('messages.cafe_where_we_are') }}</h2>
@@ -59,6 +65,11 @@
                     <i class="bi bi-geo-alt me-2"></i>
                     {{ $t?->cafe_direccion ?? $cafeBistro->direccion ?? __('messages.cafe_address_fallback') }}
                 </address>
+                @if(($cafeBistro->slug ?? null) === 'asuncion')
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($t?->cafe_direccion ?? $cafeBistro->direccion ?? 'SAX Café Bistro Asunción') }}" class="asu-map-link" target="_blank" rel="noopener">
+                        {{ __('messages.localizacao_label') }} <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                    </a>
+                @endif
             </div>
 
         </div>

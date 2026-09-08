@@ -12,6 +12,8 @@ class CafeBistro extends Model
 
     protected $fillable = [
         // General
+        'name',
+        'slug',
         'is_active',
         'whatsapp',
         'meta_title',

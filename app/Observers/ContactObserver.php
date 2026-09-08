@@ -19,13 +19,16 @@ class ContactObserver implements ShouldHandleEventsAfterCommit
         }
 
         $isResume = $contactType === 2;
+        $isOptical = $contactType === 4;
 
         $this->notifications->notifyAdmins(
             type: $isResume ? 'new_resume' : 'new_contact',
-            title: $isResume ? 'Novo currículo' : 'Novo contato',
+            title: $isResume ? 'Novo currículo' : ($isOptical ? 'Novo atendimento óptico' : 'Novo contato'),
             message: $isResume
                 ? "{$contact->name} enviou um currículo."
-                : "{$contact->name} enviou uma mensagem pelo formulário.",
+                : ($isOptical
+                    ? "{$contact->name} enviou uma solicitação de atendimento óptico."
+                    : "{$contact->name} enviou uma mensagem pelo formulário."),
             actionUrl: '/admin/contatos',
             data: [
                 'contact_id' => $contact->getKey(),

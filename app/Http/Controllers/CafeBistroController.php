@@ -9,10 +9,25 @@ class CafeBistroController extends Controller
 {
     public function index()
     {
-        $cafeBistro = Cache::remember('cafe_bistro_data', 28800, function () {
-            return CafeBistro::with('translations')->first() ?: new CafeBistro();
+        return $this->show('pedro-juan-caballero');
+    }
+
+    public function show(string $location)
+    {
+        $cafeBistro = Cache::remember("cafe_bistro_data_{$location}", 28800, function () use ($location) {
+            return CafeBistro::with('translations')
+                ->where('slug', $location)
+                ->where('is_active', true)
+                ->firstOrFail();
         });
 
-        return view('cafe_bistro.index', compact('cafeBistro'));
+        $cafeBistroLocations = Cache::remember('cafe_bistro_locations', 28800, fn () =>
+            CafeBistro::query()
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->get(['id', 'name', 'slug'])
+        );
+
+        return view('cafe_bistro.index', compact('cafeBistro', 'cafeBistroLocations'));
     }
 }

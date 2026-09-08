@@ -1560,6 +1560,24 @@ window.saxGalleryManagers = {};
 
 document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.upload-form').forEach(function (form) {
+            const fileInput = form.querySelector('.custom-file-input');
+            const fileFeedback = form.querySelector('.banner-file-feedback');
+
+            fileInput?.addEventListener('change', function () {
+                const file = fileInput.files?.[0];
+                if (!file || !file.type.startsWith('image/') || file.type === 'image/svg+xml') return;
+
+                const probe = new Image();
+                probe.onload = function () {
+                    const expected = (fileInput.dataset.recommendedDimensions || '').match(/(\d+)\s*[×x]\s*(\d+)/i);
+                    const ratioOk = !expected || Math.abs((probe.naturalWidth / probe.naturalHeight) - (Number(expected[1]) / Number(expected[2]))) < .12;
+                    fileFeedback.textContent = probe.naturalWidth + ' × ' + probe.naturalHeight + ' px' + (ratioOk ? ' · proporção adequada' : ' · revise a proporção recomendada');
+                    fileFeedback.className = 'banner-file-feedback d-block mb-2 ' + (ratioOk ? 'is-good' : 'is-warning');
+                    URL.revokeObjectURL(probe.src);
+                };
+                probe.src = URL.createObjectURL(file);
+            });
+
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();
 
@@ -1571,21 +1589,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 btn.disabled = true;
 
-                const res = await fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form)
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json' },
+                        body: new FormData(form)
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) throw new Error(data.message || 'Não foi possível atualizar a imagem.');
                     img.src = data.url;
                     img.style.display = 'block';
                     empty.style.display = 'none';
                     delBtn.style.display = 'block';
+                    if (window.saxToast) saxToast('success', data.message || 'Imagem atualizada.');
+                } catch (error) {
+                    if (window.saxToast) saxToast('error', error.message || 'Erro ao enviar a imagem.');
+                } finally {
+                    btn.disabled = false;
                 }
-
-                btn.disabled = false;
             });
         });
 

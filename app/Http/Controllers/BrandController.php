@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\SlugRedirect;
+use App\Services\VisibleCatalogProductsService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,14 +16,18 @@ class BrandController extends Controller
         $page = $request->get('page', 1);
         $search = $request->get('search', '');
 
-        $cacheKey = "brands_index_{$page}_" . md5($search);
+        $cacheKey = "brands_index_visible_catalog_v2_{$page}_" . md5($search);
 
         $brands = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
+            $visibleBrandIds = VisibleCatalogProductsService::builder()->select('products.brand_id');
+            $visibleProductsCount = VisibleCatalogProductsService::builder()
+                ->selectRaw('count(*)')
+                ->whereColumn('products.brand_id', 'brands.id');
+
             $query = Brand::where('status', 1)
-                ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
-                ->withCount([
-                    'products as active_products_count' => fn($q) => $this->applyActiveProductScope($q),
-                ])
+                ->whereIn('id', $visibleBrandIds)
+                ->select('brands.*')
+                ->selectSub($visibleProductsCount, 'active_products_count')
                 ->orderBy('name');
 
             if (!empty($search)) {
@@ -40,13 +45,15 @@ class BrandController extends Controller
         $page = $request->get('page', 1);
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
-        $cacheKey = "brand_show_{$slug}_page_{$page}_{$sortBy}_{$perPage}";
+        $cacheKey = "brand_show_visible_catalog_v2_{$slug}_page_{$page}_{$sortBy}_{$perPage}";
 
         try {
-            $brand = Cache::remember("brand_{$slug}", now()->addMinutes(30), function () use ($slug) {
+            $brand = Cache::remember("brand_visible_catalog_v2_{$slug}", now()->addMinutes(30), function () use ($slug) {
+                $visibleBrandIds = VisibleCatalogProductsService::builder()->select('products.brand_id');
+
                 return Brand::where('slug', $slug)
                     ->where('status', 1)
-                    ->whereHas('products', fn($q) => $this->applyActiveProductScope($q))
+                    ->whereIn('id', $visibleBrandIds)
                     ->firstOrFail();
             });
         } catch (ModelNotFoundException $e) {
@@ -57,15 +64,8 @@ class BrandController extends Controller
         }
 
         $products = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($brand, $sortBy, $perPage) {
-            $productsQuery = $brand
-                ->products()
-                ->inActiveCategory()
-                ->where('status', 1)
-                ->where('is_outlet', false)
-                ->where('product_role', 'P')
-                ->where('stock', '>', 0)
-                ->whereNotNull('photo')
-                ->where('photo', '!=', '')
+            $productsQuery = VisibleCatalogProductsService::builder()
+                ->where('products.brand_id', $brand->id)
                 ->with(['brand', 'category', 'translations']);
             $this->applyCatalogSorting($productsQuery, $sortBy);
 
@@ -74,9 +74,9 @@ class BrandController extends Controller
                 ->withQueryString();
         });
 
-        $categoriesTree = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
+        $categoriesTree = Cache::remember('filter_full_tree_visible_catalog_v2', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
-        $allBrands = Cache::remember('filter_brands_list_active', now()->addHours(1), fn() => $this->buildFilterBrandsList());
+        $allBrands = Cache::remember('filter_brands_list_visible_catalog_v2', now()->addHours(1), fn() => $this->buildFilterBrandsList());
 
         return view('catalog.show', [
             'entity' => $brand,

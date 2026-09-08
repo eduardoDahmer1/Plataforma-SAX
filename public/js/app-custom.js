@@ -44,7 +44,10 @@ function setFormType(type) {
 
     window.afterFormTypeChange?.(type);
 }
-setFormType(1);
+const initialContactType = Number(document.getElementById('contact_type')?.value);
+if ([1, 2].includes(initialContactType)) {
+    setFormType(initialContactType);
+}
 
 // ── Global: copyToClipboard (blog share) ────────────────────
 function copyToClipboard() {

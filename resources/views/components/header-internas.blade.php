@@ -1,4 +1,8 @@
-@props(['palaceWhatsapp' => null])
+@props([
+    'palaceWhatsapp' => null,
+    'cafeBistro' => null,
+    'cafeBistroLocations' => null,
+])
 
 @php
     // 1. Identificação da rota (necessário para as cores/estilos)
@@ -6,6 +10,7 @@
     $isPalace = Request::is('palace*');
     $isBistro = Request::is('bistro*');
     $isInst   = Request::is('institucional*');
+    $isBistroAsuncion = $isBistro && ($cafeBistro?->slug === 'asuncion');
 
     // 2. Lógica simplificada do WhatsApp (usando o que vem do Controller)
     $whatsapp = match(true) {
@@ -13,7 +18,7 @@
         $isPalace => $palaceWhatsapp
             ? 'https://wa.me/' . preg_replace('/\D/', '', $palaceWhatsapp) . '?text=' . urlencode(__('messages.msg_consultoria_para_grandes_eventos'))
             : '#',
-        $isBistro => $cafeData->whatsapp_link ?? 'https://wa.me/595983000000',
+        $isBistro => ($cafeBistro ?? null)?->whatsapp_link ?? 'https://wa.me/595983000000',
         $isInst   => 'https://wa.me/595983123456',
         default   => '#'
     };
@@ -21,7 +26,7 @@
     // 3. Configuração Visual (Mapeamento limpo)
     $config = [
         'brand_name' => $isBridal ? 'Bridal' : ($isPalace ? 'Palace' : ($isBistro ? 'Café & Bistrô' : ($isInst ? __('messages.institucional_badge') : 'SAX'))),
-        'logo_key'   => $isBridal ? 'logo_bridal' : ($isPalace ? 'logo_palace' : ($isBistro ? 'logo_cafe_bistro' : ($isInst ? 'header_image' : ''))),
+        'logo_key'   => $isBridal ? 'logo_bridal' : ($isPalace ? 'logo_palace' : ($isBistro ? ($isBistroAsuncion ? 'logo_cafe_bistro_asuncion' : 'logo_cafe_bistro') : ($isInst ? 'header_image' : ''))),
         'whatsapp'   => $whatsapp,
         'cta_label'  => ($isPalace || $isBistro) ? __('messages.reservar') : __('messages.fale_conosco'),
         'cta_icon'   => ($isPalace || $isBistro) ? 'bi-calendar-check' : 'bi-whatsapp',
@@ -34,10 +39,14 @@
     ];
 
     $siteAttributes = View::shared('attributes');
-    $hasCustomLogo  = $siteAttributes && !empty($siteAttributes->{$config['logo_key']});
+    $selectedLogo = $siteAttributes?->{$config['logo_key']}
+        ?: ($isBistroAsuncion ? $siteAttributes?->logo_cafe_bistro : null);
+    $hasCustomLogo  = !empty($selectedLogo);
     // No Institucional, `header_image` e uma imagem editorial/hero, nao um
     // logotipo horizontal apropriado para a barra compacta do mobile.
     $hasMobileLogo  = $hasCustomLogo && !$isInst;
+    $bistroLocations = $isBistro ? collect($cafeBistroLocations ?? []) : collect();
+    $currentBistro = $isBistro ? ($cafeBistro ?? null) : null;
 
     // 4. Idioma e moeda são renderizados por <x-locale-currency-selector variant="nav" />
 @endphp
@@ -55,7 +64,7 @@
 
         <a class="exp-mobile-appbar__brand" href="{{ request()->url() }}" aria-label="SAX {{ $config['brand_name'] }}">
             @if($hasMobileLogo)
-                <img src="{{ asset('storage/uploads/' . $siteAttributes->{$config['logo_key']}) }}"
+                <img src="{{ asset('storage/uploads/' . $selectedLogo) }}"
                      alt="SAX {{ $config['brand_name'] }}" decoding="async">
             @else
                 <span class="exp-mobile-appbar__sax">SAX</span>
@@ -76,6 +85,17 @@
             @endif
         </div>
     </div>
+
+    @if($isBistro && $bistroLocations->count() > 1)
+        <nav class="exp-bistro-mobile-locations" aria-label="{{ __('messages.cafe_bistro_choose_location') }}">
+            @foreach($bistroLocations as $location)
+                <a href="{{ $location->slug === 'pedro-juan-caballero' ? route('cafe_bistro.index') : route('cafe_bistro.show', $location->slug) }}"
+                   class="{{ $location->id === $currentBistro?->id ? 'active' : '' }}">
+                    {{ $location->name }}
+                </a>
+            @endforeach
+        </nav>
+    @endif
 
     <div class="collapse exp-mobile-panel" id="expAppMenu">
         <div class="exp-mobile-panel__heading">
@@ -103,9 +123,13 @@
                 <i class="fa-solid fa-crown" aria-hidden="true"></i>
                 <span>{{ __('messages.palace') }}</span>
             </a>
-            <a href="{{ route('cafe_bistro.index') }}" class="{{ $isBistro ? 'active' : '' }}">
+            <a href="{{ route('cafe_bistro.index') }}" class="{{ $isBistro && request()->route('location') !== 'asuncion' ? 'active' : '' }}">
                 <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
-                <span>{{ __('messages.cafe_bistro') }}</span>
+                <span>{{ __('messages.cafe_bistro_pjc') }}</span>
+            </a>
+            <a href="{{ route('cafe_bistro.show', 'asuncion') }}" class="{{ request()->route('location') === 'asuncion' ? 'active' : '' }}">
+                <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+                <span>{{ __('messages.cafe_bistro_asuncion') }}</span>
             </a>
         </nav>
 
@@ -142,7 +166,7 @@
         
         <a class="navbar-brand exp-logo" href="{{ url('/') }}">
             @if($hasCustomLogo)
-                <img src="{{ asset('storage/uploads/' . $siteAttributes->{$config['logo_key']}) }}"
+                <img src="{{ asset('storage/uploads/' . $selectedLogo) }}"
                      alt="SAX {{ $config['brand_name'] }}" class="exp-logo-img" decoding="async">
             @else
                 <span class="sax-text">SAX</span>
@@ -186,7 +210,8 @@
                                     <h6 class="dropdown-header-title">{{ __('messages.experiencias') }}</h6>
                                     <a class="dropdown-item" href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a>
                                     <a class="dropdown-item" href="{{ route('bridal.index') }}">{{ __('messages.sax_bridal') }}</a>
-                                    <a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">{{ __('messages.cafe_bistro') }}</a>
+                                    <a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">{{ __('messages.cafe_bistro_pjc') }}</a>
+                                    <a class="dropdown-item" href="{{ route('cafe_bistro.show', 'asuncion') }}">{{ __('messages.cafe_bistro_asuncion') }}</a>
                                     <a class="dropdown-item" href="{{ route('institucional.index') }}">{{ __('messages.sax_institucional') }}</a>
                                 </div>
                             </div>
@@ -204,6 +229,30 @@
                 {{-- Seletores de idioma e moeda (independentes) --}}
                 <x-locale-currency-selector variant="nav" />
             </ul>
+
+            @if($isBistro && $bistroLocations->count() > 1)
+                <div class="exp-bistro-location dropdown">
+                    <button type="button" class="exp-bistro-location__toggle dropdown-toggle"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                        <span>
+                            <small>{{ __('messages.cafe_bistro_choose_location') }}</small>
+                            <strong>{{ $currentBistro?->name }}</strong>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu exp-bistro-location__menu">
+                        @foreach($bistroLocations as $location)
+                            <li>
+                                <a class="dropdown-item {{ $location->id === $currentBistro?->id ? 'active' : '' }}"
+                                   href="{{ $location->slug === 'pedro-juan-caballero' ? route('cafe_bistro.index') : route('cafe_bistro.show', $location->slug) }}">
+                                    <span>{{ $location->name }}</span>
+                                    @if($location->id === $currentBistro?->id)<i class="fa-solid fa-check" aria-hidden="true"></i>@endif
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <div class="d-flex align-items-center gap-3">
                 <a href="{{ route('home') }}" class="btn-shop-link">{{ __('messages.ir_para_loja') }} <i class="bi bi-arrow-right"></i></a>
@@ -224,7 +273,8 @@
                         <li><a class="dropdown-item" href="{{ route('palace.index') }}">{{ __('messages.sax_palace') }}</a></li>
                         <li><a class="dropdown-item" href="{{ route('bridal.index') }}">{{ __('messages.sax_bridal') }}</a></li>
                         <li><a class="dropdown-item" href="{{ route('institucional.index') }}">{{ __('messages.sax_institucional') }}</a></li>
-                        <li><a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">{{ __('messages.sax_bistro') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('cafe_bistro.index') }}">{{ __('messages.cafe_bistro_pjc') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ route('cafe_bistro.show', 'asuncion') }}">{{ __('messages.cafe_bistro_asuncion') }}</a></li>
                     </ul>
                 </li>
                 <li class="nav-item"><a class="nav-link" href="#sobre">{{ __('messages.sobre_nos') }}</a></li>
@@ -285,6 +335,17 @@
         .exp-header .container-fluid { padding-left: 4rem !important; padding-right: 4rem !important; }
     }
 
+    @media (min-width:992px) and (max-width:1499px) {
+        body.experience-page--bistro .exp-header .container-fluid { padding-left:1.4rem!important; padding-right:1.4rem!important; }
+        body.experience-page--bistro .exp-header .nav-link { padding-right:.62rem!important; padding-left:.62rem!important; }
+        body.experience-page--bistro .exp-bistro-location { margin-right:.55rem; }
+        body.experience-page--bistro .exp-bistro-location__toggle { min-width:108px; }
+        body.experience-page--bistro .exp-bistro-location__toggle small { display:none; }
+        body.experience-page--bistro .exp-bistro-location__toggle strong { max-width:76px; }
+        body.experience-page--bistro .btn-shop-link { padding-right:12px; padding-left:12px; }
+        body.experience-page--bistro .btn-contact-gold { padding-right:14px; padding-left:14px; }
+    }
+
     /* BASE HEADER */
     .exp-header {
         padding: 20px 0;
@@ -313,6 +374,19 @@
     /* LINKS */
     .exp-header .nav-link { color: #fff !important; font-size: 0.75rem; letter-spacing: 2px; font-weight: 500; padding: 0.5rem 1.2rem !important; transition: 0.3s; }
     .exp-header .nav-link:hover, .exp-header .nav-link.active { color: var(--header-accent) !important; }
+
+    .exp-bistro-location { flex:0 0 auto; margin-right:1rem; }
+    .exp-bistro-location__toggle { display:flex; min-width:168px; padding:.48rem .65rem; align-items:center; gap:.55rem; border:1px solid rgba(255,255,255,.18); border-radius:9px; background:rgba(8,20,39,.36); color:#fff; text-align:left; backdrop-filter:blur(10px); }
+    .exp-bistro-location__toggle>i { color:var(--header-accent); font-size:.72rem; }
+    .exp-bistro-location__toggle>span { display:flex; min-width:0; flex-direction:column; line-height:1.15; }
+    .exp-bistro-location__toggle small { color:rgba(255,255,255,.55); font-size:.48rem; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+    .exp-bistro-location__toggle strong { max-width:128px; overflow:hidden; color:#fff; font-size:.64rem; text-overflow:ellipsis; white-space:nowrap; }
+    .exp-bistro-location__menu { min-width:210px!important; padding:.35rem!important; border:1px solid rgba(255,255,255,.12)!important; border-radius:10px!important; background:var(--header-scroll-bg)!important; }
+    .exp-bistro-location__menu .dropdown-item { display:flex; padding:.62rem .7rem!important; align-items:center; justify-content:space-between; border-radius:7px; }
+    .exp-bistro-location__menu .dropdown-item.active { color:#fff!important; background:rgba(255,255,255,.09)!important; }
+    .exp-bistro-location__menu .dropdown-item i { color:var(--header-accent); }
+
+    .exp-bistro-mobile-locations { display:none; }
 
     /* MEGA MENU DESKTOP */
     @media (min-width: 992px) {
@@ -361,6 +435,10 @@
         .exp-header .exp-logo .sax-text { color: var(--header-scroll-text) !important; }
         .exp-header .btn-shop-link { color: var(--header-scroll-text); border-color: var(--header-scroll-text); }
         .exp-header .hamburger-icon span { background: var(--header-accent); }
+
+        .exp-bistro-mobile-locations { display:grid; padding:.38rem .65rem .55rem; grid-template-columns:1fr 1fr; gap:.3rem; border-top:1px solid rgba(255,255,255,.07); }
+        .exp-bistro-mobile-locations a { padding:.48rem .55rem; border:1px solid rgba(255,255,255,.13); border-radius:8px; color:rgba(255,255,255,.7); font-size:.59rem; font-weight:750; text-align:center; text-decoration:none; }
+        .exp-bistro-mobile-locations a.active { border-color:#fff; background:#fff; color:#0f1d35; }
 
         /* Dropdown inline no mobile — evita clipping do overflow-y: auto */
         #expNavbarMobile .dropdown-menu {

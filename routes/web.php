@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CategoriasFilhasControllerAdmin;
 use App\Http\Controllers\Admin\CategoryControllerAdmin;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContactControllerAdmin;
+use App\Http\Controllers\Admin\ContactGuideController as AdminContactGuideController;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
 use App\Http\Controllers\Admin\InstitucionalAdminController;
@@ -25,9 +26,12 @@ use App\Http\Controllers\Admin\ProductAiBatchController;
 use App\Http\Controllers\Admin\SubcategoryControllerAdmin;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\StoreControlController;
+use App\Http\Controllers\Admin\ThemeSettingController;
+use App\Http\Controllers\Admin\WhatsappWidgetController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DhlSettingController;
 use App\Http\Controllers\Admin\DhlMeasurementRuleController;
+use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\AllCategoriesController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\Auth\UserAddressController;
@@ -41,6 +45,7 @@ use App\Http\Controllers\CategoriasFilhasController as PublicCategoriasFilhasCon
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactGuideController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CuponUserController;
 use App\Http\Controllers\HomeController;
@@ -106,6 +111,9 @@ Route::get('/manutencao', fn () => view('manutencao.index'))->name('maintenance.
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
 Route::get('/bridal', [BridalController::class, 'index'])->name('bridal.index');
 Route::get('/bistro', [CafeBistroController::class, 'index'])->name('cafe_bistro.index');
+Route::get('/bistro/{location}', [CafeBistroController::class, 'show'])
+    ->whereIn('location', ['pedro-juan-caballero', 'asuncion'])
+    ->name('cafe_bistro.show');
 Route::post('/newsletter', [HomeController::class, 'storeNewsletter'])->name('newsletter.store');
 Route::get('/categorias-gerais', [AllCategoriesController::class, 'index'])->name('all-categories.index');
 Route::redirect('/produtos', '/search')->name('produtos.index');
@@ -130,6 +138,7 @@ Route::get('/blogs/ajax-search', [BlogController::class, 'ajaxSearch'])->name('b
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
 Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/guia-de-atendimento', [ContactGuideController::class, 'show'])->name('contact.guide');
 Route::get('/politicas', [PolicyController::class, 'index'])->name('policies.index');
 Route::post('/currency/change', [CurrencyController::class, 'change'])->name('currency.change');
 
@@ -219,10 +228,40 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::get('/relatorios/{period?}', [DashboardController::class, 'report'])->whereIn('period', ['today', 'week', 'month'])->name('reports.download');
     Route::get('banners', [ImageUploadController::class, 'index'])->name('banners.index');
+    Route::post('banners/home/{group}', [HomeBannerController::class, 'store'])
+        ->whereIn('group', ['main', 'editorial'])->name('home-banners.store');
+    Route::patch('banners/home/{homeBanner}', [HomeBannerController::class, 'update'])
+        ->whereNumber('homeBanner')->name('home-banners.update');
+    Route::put('banners/home/{group}/ordem', [HomeBannerController::class, 'reorder'])
+        ->whereIn('group', ['main', 'editorial'])->name('home-banners.reorder');
+    Route::delete('banners/home/{homeBanner}', [HomeBannerController::class, 'destroy'])
+        ->whereNumber('homeBanner')->name('home-banners.destroy');
     Route::get('marketing', [MarketingSettingController::class, 'edit'])->name('marketing.edit');
     Route::put('marketing', [MarketingSettingController::class, 'update'])->name('marketing.update');
+    Route::get('identidade-visual', [ThemeSettingController::class, 'edit'])->name('theme-settings.edit');
+    Route::put('identidade-visual/{scope}', [ThemeSettingController::class, 'update'])
+        ->whereIn('scope', array_keys(\App\Services\ThemeSettingsService::SCOPES))
+        ->middleware('throttle:120,1')
+        ->name('theme-settings.update');
+    Route::delete('identidade-visual/{scope}', [ThemeSettingController::class, 'reset'])
+        ->whereIn('scope', array_keys(\App\Services\ThemeSettingsService::SCOPES))
+        ->name('theme-settings.reset');
     Route::get('controle-loja', [StoreControlController::class, 'edit'])->name('store-controls.edit');
     Route::put('controle-loja', [StoreControlController::class, 'update'])->name('store-controls.update');
+    Route::get('whatsapp', [WhatsappWidgetController::class, 'edit'])->name('whatsapp.edit');
+    Route::put('whatsapp/settings', [WhatsappWidgetController::class, 'updateSettings'])->name('whatsapp.settings.update');
+    Route::post('whatsapp/contacts', [WhatsappWidgetController::class, 'storeContact'])->name('whatsapp.contacts.store');
+    Route::put('whatsapp/contacts/{contact}', [WhatsappWidgetController::class, 'updateContact'])
+        ->whereNumber('contact')->name('whatsapp.contacts.update');
+    Route::delete('whatsapp/contacts/{contact}', [WhatsappWidgetController::class, 'destroyContact'])
+        ->whereNumber('contact')->name('whatsapp.contacts.destroy');
+    Route::get('guia-de-atendimento', [AdminContactGuideController::class, 'index'])->name('contact-guide.index');
+    Route::post('guia-de-atendimento/unidades', [AdminContactGuideController::class, 'storeLocation'])->name('contact-guide.locations.store');
+    Route::put('guia-de-atendimento/unidades/{location}', [AdminContactGuideController::class, 'updateLocation'])->whereNumber('location')->name('contact-guide.locations.update');
+    Route::delete('guia-de-atendimento/unidades/{location}', [AdminContactGuideController::class, 'destroyLocation'])->whereNumber('location')->name('contact-guide.locations.destroy');
+    Route::post('guia-de-atendimento/setores', [AdminContactGuideController::class, 'storeEntry'])->name('contact-guide.entries.store');
+    Route::put('guia-de-atendimento/setores/{entry}', [AdminContactGuideController::class, 'updateEntry'])->whereNumber('entry')->name('contact-guide.entries.update');
+    Route::delete('guia-de-atendimento/setores/{entry}', [AdminContactGuideController::class, 'destroyEntry'])->whereNumber('entry')->name('contact-guide.entries.destroy');
     Route::get('dhl', [DhlSettingController::class, 'edit'])->name('dhl.edit');
     Route::get('dhl/medidas', [DhlMeasurementRuleController::class, 'index'])->name('dhl.measurements.index');
     Route::put('dhl/medidas/{measurementRule}', [DhlMeasurementRuleController::class, 'update'])->name('dhl.measurements.update');
@@ -253,6 +292,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('products/ai-batches/preview', [ProductAiBatchController::class, 'preview'])->name('products.ai-batches.preview');
     Route::get('products/ai-batches/catalog-products',[ProductAiBatchController::class, 'catalogProducts'])->name('products.ai-batches.catalog-products');
     Route::get('products/ai-batches/{batch}', [ProductAiBatchController::class, 'show'])->whereNumber('batch')->name('products.ai-batches.show');
+    Route::post('products/ai-batches/{batch}/products', [ProductAiBatchController::class, 'addProducts'])->whereNumber('batch')->name('products.ai-batches.products.add');
     Route::post('products/ai-batches/{batch}/dispatch', [ProductAiBatchController::class, 'dispatch'])->whereNumber('batch')->name('products.ai-batches.dispatch');
     Route::get('products/ai-batches/{batch}/status', [ProductAiBatchController::class, 'status'])->whereNumber('batch')->name('products.ai-batches.status');
     Route::post('products/{product}/complete-with-ai', [ProductControllerAdmin::class, 'completeWithAi'])
@@ -343,6 +383,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('logobridal/delete', [ImageUploadController::class, 'deleteLogoBridal'])->name('logobridal.delete');
     Route::post('/logocafebistro/upload', [ImageUploadController::class, 'uploadLogoCafeBistro'])->name('logocafebistro.upload');
     Route::delete('/logocafebistro/delete', [ImageUploadController::class, 'deleteLogoCafeBistro'])->name('logocafebistro.delete');
+    Route::post('/logocafebistroasuncion/upload', [ImageUploadController::class, 'uploadLogoCafeBistroAsuncion'])->name('logocafebistroasuncion.upload');
+    Route::delete('/logocafebistroasuncion/delete', [ImageUploadController::class, 'deleteLogoCafeBistroAsuncion'])->name('logocafebistroasuncion.delete');
     Route::post('/bannerhorizontal/upload', [ImageUploadController::class, 'uploadBannerHorizontal'])->name('bannerhorizontal.upload');
     Route::delete('/bannerhorizontal/delete', [ImageUploadController::class, 'deleteBannerHorizontal'])->name('bannerhorizontal.delete');
     Route::resource('products', ProductControllerAdmin::class);

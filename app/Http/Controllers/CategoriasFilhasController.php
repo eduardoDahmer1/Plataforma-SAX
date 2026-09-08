@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\VisibleCatalogProductsService;
 
 class CategoriasFilhasController extends Controller
 {
@@ -39,7 +40,7 @@ class CategoriasFilhasController extends Controller
         $page = $request->get('page', 1);
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
-        $cacheKey = "cat_filha_show_{$idOrSlug}_p{$page}_{$sortBy}_{$perPage}";
+        $cacheKey = "cat_filha_show_visible_catalog_v2_{$idOrSlug}_p{$page}_{$sortBy}_{$perPage}";
 
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
@@ -54,15 +55,8 @@ class CategoriasFilhasController extends Controller
                         ->orWhere('id', $idOrSlug))
                     ->firstOrFail();
 
-                $productsQuery = $categoriasfilhas
-                    ->products()
-                    ->inActiveCategory()
-                    ->where('status', 1)
-                    ->where('is_outlet', false)
-                    ->where('product_role', 'P')
-                    ->where('stock', '>', 0)
-                    ->whereNotNull('photo')
-                    ->where('photo', '!=', '')
+                $productsQuery = VisibleCatalogProductsService::builder()
+                    ->where('products.childcategory_id', $categoriasfilhas->id)
                     ->with(['brand', 'category', 'translations']);
                 $this->applyCatalogSorting($productsQuery, $sortBy);
                 $products = $productsQuery
@@ -81,9 +75,15 @@ class CategoriasFilhasController extends Controller
             throw $e;
         }
 
-        $categoriesTree = Cache::remember('filter_full_tree_active', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
+        $categoriesTree = Cache::remember('filter_full_tree_visible_catalog_v2', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
-        $brands = Cache::remember('filter_brands_list_active', now()->addHours(1), fn() => $this->buildFilterBrandsList());
+        $brands = Cache::remember(
+            "filter_brands_child_category_visible_catalog_v1_{$data['categoriasfilhas']->id}",
+            now()->addHours(1),
+            fn() => $this->buildFilterBrandsList(
+                fn($query) => $query->where('products.childcategory_id', $data['categoriasfilhas']->id)
+            )
+        );
 
         return view('catalog.show', [
             'entity' => $data['categoriasfilhas'],

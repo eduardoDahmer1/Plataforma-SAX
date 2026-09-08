@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Product;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -18,19 +17,12 @@ class DailyMostViewedProducts
         $date = now();
 
         return Cache::remember(
-            'daily_most_viewed_products_' . $date->toDateString() . '_' . $limit,
+            'daily_most_viewed_products_visible_catalog_v2_' . $date->toDateString() . '_' . $limit,
             $date->copy()->endOfDay(),
             function () use ($limit, $date) {
                 // Primeiro limita aos produtos realmente mais vistos. A ordem
                 // diária é aplicada apenas dentro desse grupo qualificado.
-                $products = Product::query()
-                    ->inActiveCategory()
-                    ->where('status', 1)
-                    ->where('is_outlet', false)
-                    ->where('product_role', 'P')
-                    ->where('stock', '>', 0)
-                    ->whereNotNull('photo')
-                    ->where('photo', '!=', '')
+                $products = VisibleCatalogProductsService::builder()
                     ->where('views', '>', 0)
                     ->with(['brand', 'translations'])
                     ->orderByDesc('views')

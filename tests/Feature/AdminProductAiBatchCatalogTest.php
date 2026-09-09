@@ -8,13 +8,13 @@ use App\Models\Product;
 use App\Models\ProductAiPreparation;
 use App\Models\Subcategory;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\Support\UsesProductAiDatabase;
 use Tests\TestCase;
 
 class AdminProductAiBatchCatalogTest extends TestCase
 {
-    use RefreshDatabase;
+    use UsesProductAiDatabase;
 
     public function test_non_admin_cannot_access_the_catalog_endpoint(): void
     {
@@ -149,5 +149,72 @@ class AdminProductAiBatchCatalogTest extends TestCase
             ->assertOk()
             ->assertJsonPath('meta.total', 1)
             ->assertJsonPath('data.0.sku', 'SKU-AI-MISSING');
+    }
+
+    public function test_extended_filters_combine_and_preserve_zero_boundaries(): void
+    {
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        Product::create(['sku' => 'MATCH', 'name' => 'Producto elegido', 'price' => 25, 'stock' => 0,
+            'status' => 0, 'is_outlet' => true, 'description' => '', 'ref_code' => 'ABC',
+            'created_at' => '2026-09-09 23:59:59']);
+        Product::create(['sku' => 'OTHER', 'price' => 80, 'stock' => 10, 'status' => 1]);
+        \Illuminate\Support\Facades\DB::table('products')->where('sku', 'MATCH')->update(['created_at' => '2026-09-09 23:59:59']);
+        $this->getJson(route('admin.products.ai-batches.catalog-products', [
+            'publication' => 'inactive', 'stock_filter' => 'out_of_stock', 'stock_min' => 0, 'stock_max' => 0,
+            'price_min' => 20, 'price_max' => 30, 'description_filter' => 'without',
+            'reference_filter' => 'with', 'outlet_filter' => 'outlet', 'product_type' => 'parent',
+            'created_from' => '2026-09-09', 'created_to' => '2026-09-09',
+        ]))->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.sku', 'MATCH');
+    }
+
+    public function test_upper_bounds_work_without_lower_bounds_and_sorting_is_applied(): void
+    {
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        Product::create(['sku' => 'LOW', 'price' => 10, 'stock' => 2, 'created_at' => '2026-09-08']);
+        Product::create(['sku' => 'HIGH', 'price' => 20, 'stock' => 4, 'created_at' => '2026-09-09']);
+        \Illuminate\Support\Facades\DB::table('products')->where('sku', 'LOW')->update(['created_at' => '2026-09-08 00:00:00']);
+        \Illuminate\Support\Facades\DB::table('products')->where('sku', 'HIGH')->update(['created_at' => '2026-09-09 00:00:00']);
+        $this->getJson(route('admin.products.ai-batches.catalog-products', [
+            'stock_max' => 5, 'price_max' => 20, 'created_to' => '2026-09-09', 'sort_by' => 'price_high', 'per_page' => 50,
+        ]))->assertOk()->assertJsonPath('meta.total', 2)->assertJsonPath('meta.per_page', 50)->assertJsonPath('data.0.sku', 'HIGH');
+    }
+
+    public function test_each_additional_filter_excludes_non_matching_products(): void
+    {
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        $parent = Product::create(['sku' => 'PARENT', 'price' => 10, 'stock' => 0, 'status' => 0,
+            'description' => '  ', 'ref_code' => null, 'created_at' => '2026-09-01']);
+        Product::create(['sku' => 'CHILD', 'price' => 50, 'stock' => 8, 'status' => 1, 'is_outlet' => true,
+            'description' => 'Descripción', 'ref_code' => 'REF', 'parent_id' => $parent->id, 'created_at' => '2026-09-09']);
+        \Illuminate\Support\Facades\DB::table('products')->where('sku', 'PARENT')->update(['created_at' => '2026-09-01 00:00:00']);
+        \Illuminate\Support\Facades\DB::table('products')->where('sku', 'CHILD')->update(['created_at' => '2026-09-09 00:00:00']);
+        foreach ([
+            ['publication' => 'active'], ['stock_filter' => 'in_stock'], ['stock_min' => 1],
+            ['price_min' => 30], ['description_filter' => 'with'], ['reference_filter' => 'with'],
+            ['outlet_filter' => 'outlet'], ['product_type' => 'child'], ['created_from' => '2026-09-09'],
+        ] as $filter) {
+            $this->getJson(route('admin.products.ai-batches.catalog-products', $filter))
+                ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.sku', 'CHILD');
+        }
+        foreach ([
+            ['publication' => 'inactive'], ['stock_filter' => 'out_of_stock'], ['stock_max' => 0],
+            ['price_max' => 10], ['description_filter' => 'without'], ['reference_filter' => 'without'],
+            ['outlet_filter' => 'regular'], ['product_type' => 'parent'], ['created_to' => '2026-09-01'],
+        ] as $filter) {
+            $this->getJson(route('admin.products.ai-batches.catalog-products', $filter))
+                ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.sku', 'PARENT');
+        }
+    }
+
+    public function test_invalid_filters_and_reversed_ranges_are_rejected(): void
+    {
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        foreach ([
+            ['price_min' => 30, 'price_max' => 20], ['stock_min' => 10, 'stock_max' => 0],
+            ['created_from' => '2026-09-09', 'created_to' => '2026-09-08'],
+            ['stock_min' => -1], ['sort_by' => 'arbitrary_sql'], ['publication' => 'invalid'],
+        ] as $filters) {
+            $this->getJson(route('admin.products.ai-batches.catalog-products', $filters))->assertUnprocessable();
+        }
     }
 }

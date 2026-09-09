@@ -14,6 +14,7 @@ class Handler extends ExceptionHandler
      * @var array<int, string>
      */
     protected $dontFlash = [
+        'ai_api_key',
         'current_password',
         'password',
         'password_confirmation',

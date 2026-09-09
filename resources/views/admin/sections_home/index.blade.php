@@ -3,71 +3,239 @@
 @section('content')
 <x-admin.card>
     <x-admin.page-header
-        title="{{ __('messages.estrutura_inicial_titulo') }}"
-        description="{{ __('messages.estrutura_inicial_desc') }}">
+        title="Seções da Home"
+        description="Ative, desative e organize todos os blocos exibidos na página inicial.">
         <x-slot:actions>
-            <button type="submit" form="sectionsForm" class="btn btn-dark btn-sm rounded-0 px-4 text-uppercase fw-bold x-small tracking-wider">
-                {{ __('messages.guardar_configuracao_btn') }}
+            <button type="submit" form="sectionsForm" class="btn btn-dark px-4 text-uppercase fw-bold x-small tracking-wider">
+                <i class="fa-solid fa-floppy-disk me-2"></i>{{ __('messages.guardar_configuracao_btn') }}
             </button>
         </x-slot:actions>
     </x-admin.page-header>
 
-    <div class="row">
-        <div class="col-lg-6">
-            <form action="{{ route('admin.sections_home.update') }}" method="POST" id="sectionsForm">
-                @csrf
-                @method('PATCH')
+    <x-admin.alert />
 
-                @php
-                    $sections = [
-                        'lancamentos' => ['label' => __('messages.novos_lancamentos_label'), 'icon' => 'fa-calendar-plus'],
-                        'destaque'    => ['label' => __('messages.produtos_destacados_label'), 'icon' => 'fa-star'],
-                        // Adicionando a nova seção utilizando a coluna 'famosos' que já existe no seu banco
-                        'famosos'     => ['label' => 'PRODUTOS MAIS VISTOS', 'icon' => 'fa-eye'], 
-                        'similares'   => ['label' => 'PRODUTOS SIMILARES', 'icon' => 'fa-layer-group'],
-                        'vistos_recentemente' => ['label' => 'VISTOS RECENTEMENTE', 'icon' => 'fa-history'],
-                    ];
-                @endphp
+    <div class="home-sections-layout">
+        <form action="{{ route('admin.sections_home.update') }}" method="POST" id="sectionsForm">
+            @csrf
+            @method('PATCH')
 
-                <div class="sax-settings-box border">
-                    @foreach($sections as $key => $data)
-                    <div class="sax-setting-item d-flex align-items-center justify-content-between p-3 {{ !$loop->last ? 'border-bottom' : '' }}">
-                        <div class="d-flex align-items-center">
-                            <div class="sax-icon-wrapper me-3">
-                                <i class="fas {{ $data['icon'] }} text-muted small"></i>
-                            </div>
-                            <div>
-                                <label class="d-block fw-bold text-dark text-uppercase x-small tracking-tighter mb-0 cursor-pointer" for="{{ $key }}">
-                                    {{ $data['label'] }}
-                                </label>
-                                <span class="x-small text-muted italic">{{ __('messages.secao_label_hint') }} {{ $key }}</span>
-                            </div>
-                        </div>
-
-                        <div class="form-check form-switch">
-                            {{-- O name="{{ $key }}" enviará 'famosos', 'destaque', etc. --}}
-                            <input class="form-check-input sax-switch" type="checkbox" name="{{ $key }}" id="{{ $key }}"
-                                {{ $settings->{'show_highlight_'.$key} ? 'checked' : '' }}>
-                        </div>
-                    </div>
-                    @endforeach
+            <div class="home-sections-toolbar">
+                <div>
+                    <strong>Estrutura da página inicial</strong>
+                    <span>Arraste os itens ou use as setas para alterar a posição.</span>
                 </div>
-            </form>
-        </div>
-
-        {{-- Coluna de Ajuda --}}
-        <div class="col-lg-4 offset-lg-1 mt-5 mt-lg-0">
-            <div class="border-start ps-4 h-100">
-                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3">{{ __('messages.guia_visualizacao_titulo') }}</h6>
-                <p class="x-small text-secondary lh-base italic mb-4">
-                    {{ __('messages.guia_visualizacao_texto') }}
-                </p>
-                <div class="p-3 bg-light border-dashed">
-                    <span class="x-small fw-bold text-dark d-block mb-1 text-uppercase">{{ __('messages.nota_estilo_label') }}</span>
-                    <span class="x-small text-muted italic">{{ __('messages.nota_estilo_texto') }}</span>
-                </div>
+                <span class="home-sections-count">{{ count($sections) }} seções</span>
             </div>
-        </div>
+
+            <div class="home-sections-list" data-home-sections-list>
+                @foreach($sections as $key => $section)
+                    <article class="home-section-item" draggable="true" data-home-section>
+                        <input type="hidden" name="sections[{{ $key }}][key]" value="{{ $key }}">
+                        <input type="hidden" name="sections[{{ $key }}][position]" value="{{ $section['position'] }}" data-section-position>
+                        <input type="hidden" name="sections[{{ $key }}][enabled]" value="0">
+
+                        <button type="button" class="home-section-drag" aria-label="Arrastar {{ $section['label'] }}" title="Arraste para reorganizar">
+                            <i class="fa-solid fa-grip-vertical"></i>
+                        </button>
+                        <span class="home-section-position" data-section-number>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                        <span class="home-section-icon"><i class="fa-solid {{ $section['icon'] }}"></i></span>
+
+                        <div class="home-section-copy">
+                            <label for="section-{{ $key }}">{{ $section['label'] }}</label>
+                            <span>{{ $section['description'] }}</span>
+                        </div>
+
+                        <div class="home-section-actions">
+                            <button type="button" class="home-section-move" data-move="up" aria-label="Mover {{ $section['label'] }} para cima"><i class="fa-solid fa-arrow-up"></i></button>
+                            <button type="button" class="home-section-move" data-move="down" aria-label="Mover {{ $section['label'] }} para baixo"><i class="fa-solid fa-arrow-down"></i></button>
+                            <label class="home-section-switch" for="section-{{ $key }}">
+                                <span data-switch-label>{{ $section['enabled'] ? 'Ativa' : 'Inativa' }}</span>
+                                <input class="form-check-input" type="checkbox"
+                                       name="sections[{{ $key }}][enabled]" id="section-{{ $key }}" value="1"
+                                       @checked($section['enabled']) data-section-toggle>
+                            </label>
+                        </div>
+
+                        @if($key === 'main_slider')
+                            @foreach(['pt', 'en', 'es'] as $language)
+                                <input type="hidden" name="sections[{{ $key }}][content][{{ $language }}][title]" value="{{ $section['content'][$language]['title'] }}">
+                                <input type="hidden" name="sections[{{ $key }}][content][{{ $language }}][description]" value="{{ $section['content'][$language]['description'] }}">
+                            @endforeach
+                            <div class="home-section-content home-section-content--notice">
+                                <span><i class="fa-solid fa-circle-info me-2"></i>Os textos agora são configurados individualmente em cada imagem.</span>
+                                <a href="{{ route('admin.banners.index') }}">Editar slides <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                            </div>
+                        @else
+                        <details class="home-section-content">
+                            <summary>
+                                <span><i class="fa-solid fa-language me-2"></i>Editar títulos e descrições</span>
+                                <i class="fa-solid fa-chevron-down home-section-content__chevron"></i>
+                            </summary>
+                            <div class="home-section-languages">
+                                @foreach([
+                                    'pt' => ['label' => 'Português', 'flag' => '🇧🇷'],
+                                    'en' => ['label' => 'English', 'flag' => '🇺🇸'],
+                                    'es' => ['label' => 'Español', 'flag' => '🇪🇸'],
+                                ] as $language => $languageData)
+                                    <fieldset class="home-section-language">
+                                        <legend><span>{{ $languageData['flag'] }}</span>{{ $languageData['label'] }}</legend>
+                                        <label for="section-{{ $key }}-{{ $language }}-title">Título</label>
+                                        <input id="section-{{ $key }}-{{ $language }}-title" type="text" class="form-control"
+                                               name="sections[{{ $key }}][content][{{ $language }}][title]"
+                                               value="{{ old("sections.{$key}.content.{$language}.title", $section['content'][$language]['title']) }}"
+                                               maxlength="160">
+
+                                        <label for="section-{{ $key }}-{{ $language }}-description">Descrição</label>
+                                        <textarea id="section-{{ $key }}-{{ $language }}-description" class="form-control"
+                                                  name="sections[{{ $key }}][content][{{ $language }}][description]"
+                                                  rows="3" maxlength="600">{{ old("sections.{$key}.content.{$language}.description", $section['content'][$language]['description']) }}</textarea>
+                                    </fieldset>
+                                @endforeach
+                            </div>
+                        </details>
+                        @endif
+                    </article>
+                @endforeach
+            </div>
+
+            <div class="home-sections-footer">
+                <span><i class="fa-solid fa-circle-info me-2"></i>As alterações aparecem na Home após salvar.</span>
+                <button type="submit" class="btn btn-dark px-4"><i class="fa-solid fa-floppy-disk me-2"></i>Salvar seções</button>
+            </div>
+        </form>
+
+        <aside class="home-sections-guide">
+            <span class="home-sections-kicker">Como funciona</span>
+            <h2>Controle completo da Home</h2>
+            <p>Cada linha representa um bloco visual da página inicial. A primeira seção ativa da lista será exibida primeiro.</p>
+            <div class="home-sections-guide__item">
+                <i class="fa-solid fa-toggle-on"></i>
+                <div><strong>Visibilidade</strong><span>Desative uma seção para ocultá-la sem apagar seu conteúdo.</span></div>
+            </div>
+            <div class="home-sections-guide__item">
+                <i class="fa-solid fa-arrow-down-up-across-line"></i>
+                <div><strong>Posição</strong><span>Arraste ou use as setas; a numeração é atualizada automaticamente.</span></div>
+            </div>
+            <div class="home-sections-guide__note">
+                Banners, produtos, categorias e marcas continuam sendo administrados em seus painéis próprios. Aqui você controla apenas onde e se cada bloco aparece.
+            </div>
+        </aside>
     </div>
 </x-admin.card>
+
+<style>
+    .home-sections-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(260px,.8fr); gap:2rem; align-items:start; }
+    .home-sections-toolbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; padding:.9rem 1rem; border:1px solid #e2e7ef; border-radius:12px; background:#f8fafc; }
+    .home-sections-toolbar strong,.home-sections-toolbar span { display:block; }
+    .home-sections-toolbar strong { color:#172033; font-size:.82rem; }
+    .home-sections-toolbar div > span { margin-top:.2rem; color:#667085; font-size:.72rem; }
+    .home-sections-count { flex:0 0 auto; padding:.35rem .65rem; border-radius:999px; background:#e9eef5; color:#475467; font-size:.68rem; font-weight:800; text-transform:uppercase; }
+    .home-sections-list { display:grid; gap:.65rem; }
+    .home-section-item { display:grid; grid-template-columns:24px 34px 44px minmax(0,1fr) auto; min-height:82px; padding:.85rem 1rem; align-items:center; gap:.8rem; border:1px solid #dfe5ed; border-radius:12px; background:#fff; transition:border-color .2s,box-shadow .2s,opacity .2s,transform .2s; }
+    .home-section-item:hover { border-color:#bac5d3; box-shadow:0 8px 24px rgba(16,24,40,.06); }
+    .home-section-item.is-dragging { opacity:.45; transform:scale(.99); }
+    .home-section-item.is-disabled { background:#f8fafc; opacity:.72; }
+    .home-section-drag,.home-section-move { display:inline-grid; padding:0; place-items:center; border:0; background:transparent; color:#98a2b3; }
+    .home-section-drag { height:34px; cursor:grab; }
+    .home-section-drag:active { cursor:grabbing; }
+    .home-section-position { color:#98a2b3; font-size:.68rem; font-weight:800; letter-spacing:.08em; }
+    .home-section-icon { display:inline-grid; width:44px; height:44px; place-items:center; border-radius:10px; background:#f1f5f9; color:#344054; }
+    .home-section-copy { min-width:0; }
+    .home-section-copy label,.home-section-copy span { display:block; }
+    .home-section-copy label { margin-bottom:.25rem; color:#172033; font-size:.76rem; font-weight:800; text-transform:uppercase; cursor:pointer; }
+    .home-section-copy span { color:#667085; font-size:.7rem; line-height:1.4; }
+    .home-section-actions { display:flex; align-items:center; gap:.45rem; }
+    .home-section-move { width:32px; height:32px; border:1px solid #e1e6ee; border-radius:8px; cursor:pointer; }
+    .home-section-move:hover:not(:disabled) { border-color:#172033; color:#172033; }
+    .home-section-move:disabled { opacity:.3; cursor:not-allowed; }
+    .home-section-switch { display:flex; min-width:105px; margin-left:.35rem; padding:.55rem .7rem; align-items:center; justify-content:space-between; gap:.65rem; border:1px solid #e1e6ee; border-radius:9px; background:#f8fafc; cursor:pointer; }
+    .home-section-switch span { color:#475467; font-size:.65rem; font-weight:800; text-transform:uppercase; }
+    .home-section-content { grid-column:1/-1; overflow:hidden; border:1px solid #e1e6ee; border-radius:10px; background:#f8fafc; }
+    .home-section-content summary { display:flex; padding:.75rem .9rem; align-items:center; justify-content:space-between; color:#344054; font-size:.7rem; font-weight:800; text-transform:uppercase; cursor:pointer; list-style:none; }
+    .home-section-content summary::-webkit-details-marker { display:none; }
+    .home-section-content__chevron { transition:transform .2s ease; }
+    .home-section-content[open] .home-section-content__chevron { transform:rotate(180deg); }
+    .home-section-content--notice { display:flex; padding:.75rem .9rem; align-items:center; justify-content:space-between; gap:1rem; color:#526078; font-size:.7rem; }
+    .home-section-content--notice a { flex:0 0 auto; color:#172033; font-weight:800; text-decoration:none; text-transform:uppercase; }
+    .home-section-languages { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8rem; padding:0 .8rem .8rem; }
+    .home-section-language { min-width:0; margin:0; padding:.85rem; border:1px solid #e3e8ef; border-radius:9px; background:#fff; }
+    .home-section-language legend { float:none; width:auto; margin:0 0 .7rem; padding:0; color:#172033; font-size:.72rem; font-weight:800; }
+    .home-section-language legend span { margin-right:.4rem; }
+    .home-section-language label { display:block; margin:.65rem 0 .35rem; color:#526078; font-size:.62rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+    .home-section-language label:first-of-type { margin-top:0; }
+    .home-section-language .form-control { font-size:.76rem; }
+    .home-section-language textarea.form-control { min-height:82px; resize:vertical; }
+    .home-sections-footer { display:flex; margin-top:1rem; padding-top:1rem; justify-content:space-between; align-items:center; gap:1rem; border-top:1px solid #e9edf2; }
+    .home-sections-footer > span { color:#667085; font-size:.72rem; }
+    .home-sections-kicker { color:#667085; font-size:.65rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .home-sections-guide { position:sticky; top:1rem; padding:1.35rem; border:1px solid #e1e6ee; border-radius:14px; background:#f8fafc; }
+    .home-sections-guide h2 { margin:.25rem 0 .65rem; color:#172033; font-size:1rem; font-weight:800; }
+    .home-sections-guide > p { margin:0 0 1rem; color:#667085; font-size:.75rem; line-height:1.55; }
+    .home-sections-guide__item { display:flex; gap:.75rem; padding:.85rem 0; border-top:1px solid #e1e6ee; }
+    .home-sections-guide__item > i { width:22px; margin-top:.15rem; color:#344054; text-align:center; }
+    .home-sections-guide__item strong,.home-sections-guide__item span { display:block; }
+    .home-sections-guide__item strong { color:#344054; font-size:.74rem; }
+    .home-sections-guide__item span { margin-top:.15rem; color:#667085; font-size:.69rem; line-height:1.45; }
+    .home-sections-guide__note { margin-top:.5rem; padding:.85rem; border-left:3px solid #172033; background:#fff; color:#667085; font-size:.69rem; line-height:1.5; }
+    @media(max-width:1100px){.home-sections-layout{grid-template-columns:1fr}.home-sections-guide{position:static}.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr) auto}.home-section-languages{grid-template-columns:1fr}}
+    @media(max-width:700px){.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr);padding:.8rem;gap:.6rem}.home-section-actions{grid-column:1/-1;justify-content:flex-end;padding-top:.7rem;border-top:1px solid #edf0f4}.home-section-switch{margin-left:auto}.home-sections-footer{align-items:stretch;flex-direction:column}.home-sections-footer .btn{width:100%}}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const list = document.querySelector('[data-home-sections-list]');
+    if (!list) return;
+
+    let dragged = null;
+    const rows = () => Array.from(list.querySelectorAll('[data-home-section]'));
+    const sync = () => {
+        rows().forEach((row, index, allRows) => {
+            row.querySelector('[data-section-position]').value = index + 1;
+            row.querySelector('[data-section-number]').textContent = String(index + 1).padStart(2, '0');
+            row.querySelector('[data-move="up"]').disabled = index === 0;
+            row.querySelector('[data-move="down"]').disabled = index === allRows.length - 1;
+            const toggle = row.querySelector('[data-section-toggle]');
+            row.classList.toggle('is-disabled', !toggle.checked);
+            row.querySelector('[data-switch-label]').textContent = toggle.checked ? 'Ativa' : 'Inativa';
+        });
+    };
+
+    rows().forEach(row => {
+        row.addEventListener('dragstart', event => {
+            if (!event.target.closest('.home-section-drag')) {
+                event.preventDefault();
+                return;
+            }
+            dragged = row;
+            row.classList.add('is-dragging');
+            event.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+            row.classList.remove('is-dragging');
+            dragged = null;
+            sync();
+        });
+        row.querySelectorAll('[data-move]').forEach(button => button.addEventListener('click', () => {
+            const sibling = button.dataset.move === 'up' ? row.previousElementSibling : row.nextElementSibling;
+            if (!sibling) return;
+            if (button.dataset.move === 'up') list.insertBefore(row, sibling);
+            else list.insertBefore(sibling, row);
+            sync();
+        }));
+        row.querySelector('[data-section-toggle]').addEventListener('change', sync);
+    });
+
+    list.addEventListener('dragover', event => {
+        event.preventDefault();
+        if (!dragged) return;
+        const next = rows().filter(row => row !== dragged).find(row => {
+            const rect = row.getBoundingClientRect();
+            return event.clientY < rect.top + rect.height / 2;
+        });
+        list.insertBefore(dragged, next || null);
+    });
+
+    sync();
+});
+</script>
 @endsection

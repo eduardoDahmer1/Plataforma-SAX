@@ -17,7 +17,9 @@ class OpenAICatalogService
      */
     public function generateProductProposal(Product $product): array
     {
-        $apiKey = (string) config('services.openai.api_key');
+        $settings = app(ProductAiSettingsService::class);
+        $settings->ensureAvailable();
+        $apiKey = $settings->apiKey();
         if ($apiKey === '') {
             throw new RuntimeException('La API de OpenAI no está configurada.');
         }

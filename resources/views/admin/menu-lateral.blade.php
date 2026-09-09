@@ -21,6 +21,7 @@
         'admin.marketing.*',
         'admin.theme-settings.*',
         'admin.store-controls.*',
+        'admin.ai-settings.*',
         'admin.whatsapp.*',
         'admin.dhl.*'
     );
@@ -128,6 +129,9 @@
             <div class="collapse sax-submenu {{ $sistemaOpen ? 'show' : '' }}" id="menuSistema{{ $menuSuffix }}">
                 <a href="{{ route('admin.store-controls.edit') }}" class="submenu-link {{ request()->routeIs('admin.store-controls.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders"></i> {{ __('messages.store_controls_menu') }}
+                </a>
+                <a href="{{ route('admin.ai-settings.edit') }}" class="submenu-link {{ request()->routeIs('admin.ai-settings.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Configuración de IA
                 </a>
                 <a href="{{ route('admin.whatsapp.edit') }}" class="submenu-link {{ request()->routeIs('admin.whatsapp.*') ? 'active' : '' }}">
                     <i class="fa-brands fa-whatsapp"></i> WhatsApp flutuante

@@ -38,12 +38,80 @@
                         <div class="col-12 col-md-6 col-xl-3"><select id="{{ $prefix }}Subcategory" class="form-select" aria-label="Subcategoría"><option value="">Todas las subcategorías</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}">{{ $subcategory->name }}</option>@endforeach</select></div>
                         <div class="col-12 col-md-6 col-xl-3"><select id="{{ $prefix }}Status" class="form-select" aria-label="Preparación con IA"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="prepared">Producto preparado</option><option value="missing_photo">Falta fotografía</option><option value="review">Requiere revisión</option></select></div>
                     </div>
+                    <details class="mt-3">
+                        <summary class="fw-semibold">Más filtros <span id="{{ $prefix }}FilterCount" class="badge text-bg-secondary"></span></summary>
+                        <div class="row g-3 mt-1">
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}publication" class="form-label small">Publicación</label>
+                                <select id="{{ $prefix }}publication" data-filter="publication" class="form-select"><option value="">Todos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}stock_filter" class="form-label small">Disponibilidad</label>
+                                <select id="{{ $prefix }}stock_filter" data-filter="stock_filter" class="form-select"><option value="">Todas</option><option value="in_stock">Con stock</option><option value="out_of_stock">Sin stock</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}description_filter" class="form-label small">Descripción</label>
+                                <select id="{{ $prefix }}description_filter" data-filter="description_filter" class="form-select"><option value="">Todas</option><option value="with">Con descripción</option><option value="without">Sin descripción</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}reference_filter" class="form-label small">Referencia del fabricante</label>
+                                <select id="{{ $prefix }}reference_filter" data-filter="reference_filter" class="form-select"><option value="">Todas</option><option value="with">Con referencia</option><option value="without">Sin referencia</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}outlet_filter" class="form-label small">Outlet</label>
+                                <select id="{{ $prefix }}outlet_filter" data-filter="outlet_filter" class="form-select"><option value="">Todos</option><option value="outlet">Solo outlet</option><option value="regular">Fuera de outlet</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}product_type" class="form-label small">Relación de tallas</label>
+                                <select id="{{ $prefix }}product_type" data-filter="product_type" class="form-select"><option value="">Todas</option><option value="parent">Principales / independientes</option><option value="child">Variantes de talla</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}price_min" class="form-label small">Precio mínimo (USD)</label>
+                                <input id="{{ $prefix }}price_min" data-filter="price_min" type="number" class="form-control" min="0" step="0.01">
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}price_max" class="form-label small">Precio máximo (USD)</label>
+                                <input id="{{ $prefix }}price_max" data-filter="price_max" type="number" class="form-control" min="0" step="0.01">
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}stock_min" class="form-label small">Stock mínimo</label>
+                                <input id="{{ $prefix }}stock_min" data-filter="stock_min" type="number" class="form-control" min="0" step="1">
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}stock_max" class="form-label small">Stock máximo</label>
+                                <input id="{{ $prefix }}stock_max" data-filter="stock_max" type="number" class="form-control" min="0" step="1">
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}created_from" class="form-label small">Creado desde</label>
+                                <input id="{{ $prefix }}created_from" data-filter="created_from" type="date" class="form-control">
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}created_to" class="form-label small">Creado hasta</label>
+                                <input id="{{ $prefix }}created_to" data-filter="created_to" type="date" class="form-control">
+                            </div>
+                        </div>
+                    </details>
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-8">
+                            <label for="{{ $prefix }}Sort" class="form-label small">Ordenar por</label>
+                            <select id="{{ $prefix }}Sort" data-filter="sort_by" class="form-select" data-default="latest">
+                                <option value="latest">Más recientes</option><option value="oldest">Más antiguos</option>
+                                <option value="price_low">Precio: menor a mayor</option><option value="price_high">Precio: mayor a menor</option>
+                                <option value="name_az">Nombre: A–Z</option><option value="name_za">Nombre: Z–A</option>
+                                <option value="stock_low">Stock: menor a mayor</option><option value="stock_high">Stock: mayor a menor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ $prefix }}PerPage" class="form-label small">Productos por página</label>
+                            <select id="{{ $prefix }}PerPage" data-filter="per_page" data-default="20" class="form-select"><option>20</option><option>30</option><option>50</option><option>100</option></select>
+                        </div>
+                    </div>
                     <div class="text-end mt-3"><button type="button" id="{{ $prefix }}ClearFilters" class="btn btn-sm btn-link text-dark text-decoration-none">Limpiar filtros</button></div>
                 </div>
 
-                <div class="d-flex justify-content-between mb-2"><span id="{{ $prefix }}Summary" class="small text-muted" aria-live="polite"></span><span class="small text-muted">20 por página</span></div>
+                <div class="d-flex justify-content-between mb-2"><span id="{{ $prefix }}Summary" class="small text-muted" aria-live="polite"></span></div>
                 <div id="{{ $prefix }}Loading" class="text-center py-5 d-none"><div class="spinner-border text-dark" role="status"><span class="visually-hidden">Cargando…</span></div></div>
-                <div id="{{ $prefix }}Error" class="alert alert-danger d-none">No pudimos cargar los productos del catálogo. <button type="button" class="btn btn-sm btn-outline-danger">Reintentar</button></div>
+                <div id="{{ $prefix }}Error" class="alert alert-danger d-none"><span data-error-message>No pudimos cargar los productos del catálogo.</span> <button type="button" class="btn btn-sm btn-outline-danger">Reintentar</button></div>
                 <div id="{{ $prefix }}Empty" class="text-center text-muted py-5 d-none">No encontramos productos.</div>
                 <div id="{{ $prefix }}List" class="ai-catalog-selector__list"></div>
                 <nav class="mt-4"><ul id="{{ $prefix }}Pagination" class="pagination pagination-sm justify-content-center mb-0"></ul></nav>
@@ -93,13 +161,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const existingSkus = new Set(@json($existingSkus).map(function (sku) { return String(sku).toLocaleLowerCase(); }));
     const selected = new Map(), get = function (name) { return document.getElementById(prefix + name); };
     const search = get('Search'), brand = get('Brand'), category = get('Category'), subcategory = get('Subcategory'), status = get('Status');
+    const extraFilters = Array.from(modal.querySelectorAll('[data-filter]'));
     const list = get('List'), loading = get('Loading'), error = get('Error'), empty = get('Empty'), summary = get('Summary'), pagination = get('Pagination');
     const selectionCount = get('SelectionCount'), clearSelection = get('ClearSelection'), feedback = get('SelectionFeedback'), submit = get('Submit');
     const skuInput = isAppend ? get('Skus') : document.getElementById('aiBatchSkus');
     const formFeedback = document.getElementById('aiCatalogFormFeedback');
     const subcategoryOptions = Array.from(subcategory.options).slice(1).map(function (option) { return { value: option.value, label: option.textContent.trim(), categoryId: option.dataset.categoryId || '' }; });
     const statusLabels = { pending: ['Pendiente', 'secondary'], prepared: ['Producto preparado', 'success'], missing_photo: ['Falta fotografía', 'warning'], review: ['Requiere revisión', 'danger'] };
-    let timer = null, controller = null, currentPage = 1, loaded = false;
+    let timer = null, controller = null, currentPage = 1;
 
     function show(element, visible) { element.classList.toggle('d-none', !visible); }
     function updateSelection() {
@@ -121,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
         products.forEach(function (product) {
             const key = String(product.sku).toLocaleLowerCase(), inBatch = existingSkus.has(key), row = document.createElement('div');
             row.className = 'ai-catalog-selector__product' + (inBatch ? ' is-in-batch' : '') + (selected.has(key) ? ' is-selected' : '');
-            const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'form-check-input m-0'; checkbox.disabled = inBatch; checkbox.checked = selected.has(key);
+            const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'form-check-input m-0'; checkbox.disabled = inBatch; checkbox.checked = selected.has(key); checkbox.setAttribute('aria-label', 'Seleccionar ' + (product.name || product.sku));
             const image = document.createElement('img'); image.src = product.image_url; image.alt = ''; image.loading = 'lazy';
             const copy = document.createElement('div'); copy.className = 'min-w-0'; copy.append(text('span', 'badge bg-light text-dark border mb-1', 'SKU: ' + product.sku), text('div', 'fw-bold text-truncate', product.name), text('small', 'text-muted', [product.brand, product.category, product.subcategory].filter(Boolean).join(' · ')));
             const state = statusLabels[product.ai_status] || [product.ai_status || 'Sin estado', 'secondary'];
@@ -137,15 +206,20 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let page = Math.max(1, meta.current_page - 2); page <= Math.min(meta.last_page, meta.current_page + 2); page++) { const item = document.createElement('li'); item.className = 'page-item' + (page === meta.current_page ? ' active' : ''); const button = document.createElement('button'); button.type = 'button'; button.className = 'page-link'; button.textContent = page; button.addEventListener('click', function () { load(page); }); item.appendChild(button); pagination.appendChild(item); }
     }
     async function load(page) {
-        currentPage = page || 1; if (controller) controller.abort(); const requestController = new AbortController(); controller = requestController; show(loading, true); show(error, false); show(empty, false); list.replaceChildren();
+        window.clearTimeout(timer); currentPage = page || 1; if (controller) controller.abort(); const requestController = new AbortController(); controller = requestController; show(loading, true); show(error, false); show(empty, false); list.replaceChildren(); pagination.replaceChildren(); summary.textContent = '';
+        get('FilterCount').textContent = extraFilters.filter(function (el) { return !el.dataset.default && el.value !== ''; }).length || '';
+        const invalid = extraFilters.find(function (el) { return !el.checkValidity(); });
+        if (invalid) { show(loading, false); error.querySelector('[data-error-message]').textContent = 'Revisá los valores de los filtros.'; show(error, true); return; }
         const url = new URL(modal.dataset.catalogUrl, window.location.origin); const filters = { search: search.value.trim(), brand_id: brand.value, category_id: category.value, subcategory_id: subcategory.value, ai_preparation_filter: status.value };
-        Object.entries(filters).forEach(function (entry) { if (entry[1]) url.searchParams.set(entry[0], entry[1]); }); url.searchParams.set('page', currentPage); url.searchParams.set('per_page', '20');
-        try { const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: requestController.signal }); if (!response.ok) throw new Error('Catalog request failed'); const payload = await response.json(); const products = Array.isArray(payload.data) ? payload.data : []; renderProducts(products); renderPagination(payload.meta); show(empty, products.length === 0); summary.textContent = payload.meta ? 'Mostrando ' + products.length + ' de ' + payload.meta.total + ' productos' : ''; loaded = true; } catch (requestError) { if (requestError.name !== 'AbortError') show(error, true); } finally { if (controller === requestController) show(loading, false); }
+        extraFilters.forEach(function (element) { filters[element.dataset.filter] = element.value; });
+        Object.entries(filters).forEach(function (entry) { if (entry[1]) url.searchParams.set(entry[0], entry[1]); }); url.searchParams.set('page', currentPage);
+        try { const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: requestController.signal }); const payload = await response.json(); if (!response.ok) throw new Error(response.status === 422 ? Object.values(payload.errors || {}).flat().join(' ') : 'No pudimos cargar los productos del catálogo.'); if (controller !== requestController) return; const products = Array.isArray(payload.data) ? payload.data : []; renderProducts(products); renderPagination(payload.meta); show(empty, products.length === 0); summary.textContent = payload.meta ? 'Mostrando ' + products.length + ' de ' + payload.meta.total + ' productos' : ''; } catch (requestError) { if (requestError.name !== 'AbortError' && controller === requestController) { error.querySelector('[data-error-message]').textContent = requestError.message; show(error, true); } } finally { if (controller === requestController) show(loading, false); }
     }
+    extraFilters.forEach(function (element) { element.addEventListener(element.tagName === 'SELECT' || element.type === 'date' ? 'change' : 'input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 300); }); });
     [brand, subcategory, status].forEach(function (element) { element.addEventListener('change', function () { load(1); }); });
     category.addEventListener('change', function () { refreshSubcategories(); load(1); });
     search.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 400); });
-    get('ClearFilters').addEventListener('click', function () { search.value = ''; brand.value = ''; category.value = ''; status.value = ''; refreshSubcategories(); load(1); });
+    get('ClearFilters').addEventListener('click', function () { search.value = ''; brand.value = ''; category.value = ''; status.value = ''; extraFilters.forEach(function (element) { element.value = element.dataset.default || ''; }); refreshSubcategories(); load(1); });
     error.querySelector('button').addEventListener('click', function () { load(currentPage); });
     submit.addEventListener('click', function () {
         // TODO: valorar guardado AJAX para actualizar el borrador sin recargar la página.
@@ -160,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selected.clear(); feedback.textContent = ''; list.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) { checkbox.checked = false; });
         list.querySelectorAll('.is-selected').forEach(function (row) { row.classList.remove('is-selected'); }); updateSelection();
     });
-    modal.addEventListener('shown.bs.modal', function () { if (!loaded) load(1); search.focus(); });
+    modal.addEventListener('shown.bs.modal', function () { load(currentPage); search.focus(); });
     modal.addEventListener('hidden.bs.modal', function () { window.clearTimeout(timer); if (controller) controller.abort(); });
     updateSelection();
 });

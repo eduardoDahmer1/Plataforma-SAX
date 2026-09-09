@@ -20,7 +20,7 @@ class HomeController extends Controller
     private function activeProducts()
     {
         return VisibleCatalogProductsService::builder()
-            ->with(['brand', 'translations']);
+            ->with(['brand', 'translations', 'category']);
     }
 
     private function weeklyRotatedHomeBanners(?Attribute $attribute): array
@@ -124,6 +124,7 @@ class HomeController extends Controller
 
         return view('home', [
             'settings'        => $settings,
+            'homeSections'    => $settings?->resolvedHomeSections() ?? Generalsetting::defaultHomeSections(),
             'attribute'       => $attribute,
             'highlights'      => $highlights,
             'lancamentos'     => $lancamentos,

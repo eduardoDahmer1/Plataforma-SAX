@@ -55,6 +55,7 @@
             const link = item.querySelector('[data-banner-link]');
             const active = item.querySelector('[data-banner-active]');
             const saveState = item.querySelector('[data-save-state]');
+            const copyFields = [...item.querySelectorAll('[data-banner-copy-field]')];
             let saveTimer = null;
 
             const save = () => {
@@ -62,10 +63,11 @@
                 saveTimer = setTimeout(async () => {
                     saveState.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                     try {
+                        const copy = Object.fromEntries(copyFields.map(field => [field.dataset.bannerCopyField, field.value.trim()]));
                         await responseJson(await fetch(item.dataset.updateUrl, {
                             method: 'PATCH',
                             headers: jsonHeaders,
-                            body: JSON.stringify({ link: link.value.trim(), is_active: active.checked })
+                            body: JSON.stringify({ link: link.value.trim(), is_active: active.checked, ...copy })
                         }));
                         saveState.innerHTML = '<i class="fa-solid fa-check"></i>';
                         setTimeout(() => { saveState.textContent = ''; }, 1800);
@@ -79,6 +81,10 @@
             link.addEventListener('input', save);
             link.addEventListener('blur', save);
             active.addEventListener('change', save);
+            copyFields.forEach(field => {
+                field.addEventListener('input', save);
+                field.addEventListener('blur', save);
+            });
 
             item.querySelector('[data-banner-delete]').addEventListener('click', async () => {
                 if (!window.confirm('Remover este banner da home?')) return;
@@ -129,7 +135,13 @@
 
             const body = document.createElement('div');
             body.className = 'home-banner-item__body';
-            body.innerHTML = '<label>Link deste banner</label><div class="home-banner-item__link"><i class="fa-solid fa-link"></i><input type="text" placeholder="https://... ou /categorias/..." data-banner-link><span class="home-banner-save-state" data-save-state></span></div><div class="home-banner-item__actions"><label class="home-banner-toggle"><input type="checkbox" data-banner-active checked><span></span> Exibir no site</label><button type="button" data-banner-delete><i class="fa-solid fa-trash"></i> Remover</button></div>';
+            body.innerHTML = '<label>Link deste banner</label><div class="home-banner-item__link"><i class="fa-solid fa-link"></i><input type="text" placeholder="https://... ou /categorias/..." data-banner-link><span class="home-banner-save-state" data-save-state></span></div>';
+            if (manager.dataset.group === 'main') {
+                const languages = [['pt', 'Português'], ['en', 'English'], ['es', 'Español']];
+                const fields = languages.map(([code, label]) => `<fieldset><legend>${label}</legend><label>Título</label><input type="text" maxlength="160" data-banner-copy-field="title_${code}"><label>Descrição</label><textarea rows="3" maxlength="600" data-banner-copy-field="description_${code}"></textarea></fieldset>`).join('');
+                body.insertAdjacentHTML('beforeend', `<details class="home-banner-copy"><summary><span><i class="fa-solid fa-language"></i> Título e descrição deste slide</span><i class="fa-solid fa-chevron-down"></i></summary><div class="home-banner-copy__languages">${fields}</div></details>`);
+            }
+            body.insertAdjacentHTML('beforeend', '<div class="home-banner-item__actions"><label class="home-banner-toggle"><input type="checkbox" data-banner-active checked><span></span> Exibir no site</label><button type="button" data-banner-delete><i class="fa-solid fa-trash"></i> Remover</button></div>');
             item.append(media, body);
             bindItem(item);
             return item;

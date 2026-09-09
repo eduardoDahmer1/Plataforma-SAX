@@ -1,15 +1,18 @@
 @if (isset($brands) && $brands->count() > 0)
     <section class="sax-brands-section">
         <div class="sax-brands-mobile">
-            <div class="sax-brands-mobile__header">
-                <div>
-                    <span>SAX Selection</span>
-                    <h2>{{ __('messages.marcas_recomendadas') }}</h2>
+            @if(filled($sectionContent['title']) || filled($sectionContent['description']))
+                <div class="sax-brands-mobile__header">
+                    <div>
+                        <span>SAX Selection</span>
+                        @if(filled($sectionContent['title']))<h2>{{ $sectionContent['title'] }}</h2>@endif
+                        @if(filled($sectionContent['description']))<p class="sax-brand-description">{{ $sectionContent['description'] }}</p>@endif
+                    </div>
+                    <a href="{{ route('brands.index') }}" aria-label="{{ __('messages.nossas_marcas') }}">
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
                 </div>
-                <a href="{{ route('brands.index') }}" aria-label="{{ __('messages.nossas_marcas') }}">
-                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                </a>
-            </div>
+            @endif
 
             <div class="sax-brands-mobile__rail">
                 @foreach ($brands as $brand)
@@ -38,7 +41,12 @@
         </div>
 
         <div class="sax-carousel-master sax-brands-desktop">
-            <h2 class="sax-main-title">{{ __('messages.marcas_recomendadas') }}</h2>
+            @if(filled($sectionContent['title']) || filled($sectionContent['description']))
+                <header class="sax-brand-heading">
+                    @if(filled($sectionContent['title']))<h2 class="sax-main-title">{{ $sectionContent['title'] }}</h2>@endif
+                    @if(filled($sectionContent['description']))<p class="sax-brand-description">{{ $sectionContent['description'] }}</p>@endif
+                </header>
+            @endif
             <div class="sax-carousel-3d" 
                  id="brandsCarousel" 
                  data-storage-base="{{ asset('storage') }}" 

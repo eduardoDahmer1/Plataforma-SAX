@@ -247,6 +247,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
         ->whereIn('scope', array_keys(\App\Services\ThemeSettingsService::SCOPES))
         ->name('theme-settings.reset');
     Route::get('controle-loja', [StoreControlController::class, 'edit'])->name('store-controls.edit');
+    Route::get('configuracion-ia', [\App\Http\Controllers\Admin\ProductAiSettingsController::class, 'edit'])->name('ai-settings.edit');
+    Route::put('configuracion-ia', [\App\Http\Controllers\Admin\ProductAiSettingsController::class, 'update'])->name('ai-settings.update');
     Route::put('controle-loja', [StoreControlController::class, 'update'])->name('store-controls.update');
     Route::get('whatsapp', [WhatsappWidgetController::class, 'edit'])->name('whatsapp.edit');
     Route::put('whatsapp/settings', [WhatsappWidgetController::class, 'updateSettings'])->name('whatsapp.settings.update');

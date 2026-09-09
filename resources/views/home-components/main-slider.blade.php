@@ -1,10 +1,10 @@
 @php
-    $eyebrows = [__('messages.curadoria_sax'), __('messages.novidades_da_temporada'), __('messages.selecao_curada'), __('messages.destaques_da_casa'), __('messages.explorar_colecao')];
     $slides = collect($homeMainBanners ?? [])->values()->map(fn ($banner, $index) => [
         'image' => $banner->image,
         'image_url' => $banner->image_url,
         'link' => $banner->link,
-        'eyebrow' => $eyebrows[$index % count($eyebrows)],
+        'title' => $banner->translated('title'),
+        'description' => $banner->translated('description'),
     ])->take($limit ?? 20);
 @endphp
 
@@ -24,10 +24,17 @@
                             <img src="{{ $slide['image_url'] }}" alt="Campanha SAX {{ $loop->iteration }}"
                                 width="1920" height="720" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
                             <span class="sax-luxury-slide__shade" aria-hidden="true"></span>
-                            <span class="sax-luxury-slide__caption">
-                                <small>{{ $slide['eyebrow'] }}</small>
-                                @if(filled($slide['link']))<strong>{{ __('messages.explorar_colecao') }} <i class="fa-solid fa-arrow-right"></i></strong>@endif
-                            </span>
+                            @if(filled($slide['title']) || filled($slide['description']) || filled($slide['link']))
+                                <span class="sax-luxury-slide__caption">
+                                    @if(filled($slide['title']) || filled($slide['description']))
+                                        <span class="sax-slider-copy">
+                                            @if(filled($slide['title']))<small>{{ $slide['title'] }}</small>@endif
+                                            @if(filled($slide['description']))<em>{{ $slide['description'] }}</em>@endif
+                                        </span>
+                                    @endif
+                                    @if(filled($slide['link']))<strong>{{ __('messages.explorar_colecao') }} <i class="fa-solid fa-arrow-right"></i></strong>@endif
+                                </span>
+                            @endif
                         @if(filled($slide['link']))</a>@endif
                     </article>
                 </div>

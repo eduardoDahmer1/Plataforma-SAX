@@ -307,18 +307,18 @@
 </x-admin.card>
 
 <style>
-    .whatsapp-admin-section { padding:1.25rem; border:1px solid #e1e6ee; border-radius:14px; background:#fff; }
+    .whatsapp-admin-section { padding:1.5rem; border:1px solid #e1e6ee; border-radius:14px; background:#fff; }
     .whatsapp-admin-section__heading,.whatsapp-admin-list-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
     .whatsapp-admin-section__heading h2,.whatsapp-admin-list-heading h2 { margin:.15rem 0 0; color:#172033; font-size:1rem; font-weight:800; }
     .whatsapp-admin-kicker { color:#667085; font-size:.65rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
     .whatsapp-admin-switch { display:flex; min-height:44px; padding:.6rem .75rem; align-items:center; justify-content:space-between; gap:.5rem; border:1px solid #d9dfe8; border-radius:10px; background:#f8fafc; }
     .whatsapp-admin-switch span { color:#475467; font-size:.69rem; font-weight:800; text-transform:uppercase; }
-    .whatsapp-admin-list-heading { margin:1.5rem 0 .75rem; }
+    .whatsapp-admin-list-heading { margin:1.75rem 0 1rem; }
     .whatsapp-admin-list-heading small { color:#667085; }
-    .whatsapp-admin-list { display:grid; gap:.85rem; }
+    .whatsapp-admin-list { display:grid; gap:1.25rem; }
     .whatsapp-admin-contact { position:relative; overflow:hidden; border:1px solid #dfe5ed; border-radius:14px; background:#fff; }
     .whatsapp-admin-contact.is-inactive { opacity:.72; }
-    .whatsapp-admin-contact__summary { display:flex; padding:1rem 4.5rem 1rem 1rem; align-items:center; gap:.8rem; border-bottom:1px solid #edf0f4; background:#f8fafc; }
+    .whatsapp-admin-contact__summary { display:flex; padding:1.15rem 4.75rem 1.15rem 1.35rem; align-items:center; gap:.9rem; border-bottom:1px solid #edf0f4; background:#f8fafc; }
     .whatsapp-admin-contact__summary > div:nth-child(2) { min-width:0; flex:1; }
     .whatsapp-admin-contact__summary strong,.whatsapp-admin-contact__summary span { display:block; }
     .whatsapp-admin-contact__summary strong { color:#172033; font-size:.86rem; }
@@ -327,9 +327,10 @@
     .whatsapp-admin-contact__meta { display:flex; align-items:center; gap:.35rem; }
     .whatsapp-admin-contact__meta span { padding:.25rem .5rem; border-radius:999px; background:#eef1f5; font-size:.62rem; font-weight:800; }
     .whatsapp-admin-contact__meta span.is-active { background:#dcfce7; color:#15803d; }
-    .whatsapp-admin-contact__form { padding:.9rem 1rem 1rem; }
+    .whatsapp-admin-contact__form { margin:0; padding:1.35rem; row-gap:1.25rem; --bs-gutter-x:1.25rem; --bs-gutter-y:0; }
+    .whatsapp-admin-contact__form > * { margin-top:0; }
     .whatsapp-admin-contact__delete { position:absolute; top:1rem; right:1rem; margin:0; }
-    .whatsapp-admin-balanced-column { display:flex; flex-direction:column; justify-content:space-between; gap:.85rem; }
+    .whatsapp-admin-balanced-column { display:flex; flex-direction:column; justify-content:space-between; gap:1.1rem; }
     .whatsapp-admin-message-field { display:flex; flex-direction:column; }
     .whatsapp-admin-message-field textarea { min-height:124px; flex:1; resize:vertical; }
     .whatsapp-admin-translations { overflow:hidden; border:1px solid #dfe5ed; border-radius:12px; background:#f8fafc; }
@@ -341,20 +342,20 @@
     .whatsapp-admin-language { min-width:0; padding:.85rem; border:1px solid #e5e9ef; border-radius:10px; background:#fff; }
     .whatsapp-admin-language legend { float:none; width:auto; margin:0 0 .65rem; padding:0; color:#172033; font-size:.72rem; font-weight:800; }
     .whatsapp-admin-contact__form .form-label,
-    .whatsapp-admin-section form .form-label { margin-bottom:.35rem; color:#526078; font-size:.65rem; font-weight:800; letter-spacing:.035em; text-transform:uppercase; }
+    .whatsapp-admin-section form .form-label { margin-bottom:.5rem; color:#526078; font-size:.65rem; font-weight:800; letter-spacing:.035em; text-transform:uppercase; }
     .whatsapp-admin-contact__form fieldset,
     .whatsapp-admin-section form fieldset { margin:0; }
     .whatsapp-admin-contact__form legend.form-label,
-    .whatsapp-admin-section form legend.form-label { width:auto; margin-bottom:.55rem; font-size:.7rem; line-height:1.2; }
-    .whatsapp-page-contexts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.45rem; }
-    .whatsapp-page-context { display:flex; min-height:42px; padding:.55rem .7rem; align-items:center; gap:.45rem; border:1px solid #e1e6ee; border-radius:9px; background:#f8fafc; cursor:pointer; }
+    .whatsapp-admin-section form legend.form-label { width:auto; margin-bottom:.7rem; font-size:.7rem; line-height:1.2; }
+    .whatsapp-page-contexts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.65rem; }
+    .whatsapp-page-context { display:flex; min-height:44px; padding:.65rem .8rem; align-items:center; gap:.55rem; border:1px solid #e1e6ee; border-radius:9px; background:#f8fafc; cursor:pointer; }
     .whatsapp-page-context span { color:#475467; font-size:.7rem; font-weight:700; text-transform:none; }
     .whatsapp-admin-empty { display:grid; min-height:200px; place-items:center; align-content:center; gap:.4rem; border:1px dashed #d5dbe5; border-radius:14px; color:#667085; text-align:center; }
     .whatsapp-admin-empty i { color:#22c55e; font-size:2rem; }
     .whatsapp-admin-empty strong { color:#172033; }
     .whatsapp-admin-empty span { font-size:.75rem; }
     @media(max-width:991px){.whatsapp-page-contexts{grid-template-columns:repeat(2,minmax(0,1fr));}.whatsapp-admin-translations__grid{grid-template-columns:1fr;}}
-    @media(max-width:575px){.whatsapp-admin-section{padding:.85rem}.whatsapp-admin-section__heading,.whatsapp-admin-list-heading,.whatsapp-admin-contact__summary{align-items:flex-start;flex-direction:column}.whatsapp-admin-contact__summary{padding-right:4rem}.whatsapp-admin-contact__meta{flex-wrap:wrap}.whatsapp-admin-contact__form{padding:.75rem}.whatsapp-admin-message-field textarea{min-height:105px}.whatsapp-page-contexts{grid-template-columns:1fr}}
+    @media(max-width:575px){.whatsapp-admin-section{padding:1rem}.whatsapp-admin-section__heading,.whatsapp-admin-list-heading,.whatsapp-admin-contact__summary{align-items:flex-start;flex-direction:column}.whatsapp-admin-contact__summary{padding:1rem 4rem 1rem 1rem}.whatsapp-admin-contact__meta{flex-wrap:wrap}.whatsapp-admin-contact__form{padding:1rem;row-gap:1rem}.whatsapp-admin-message-field textarea{min-height:105px}.whatsapp-page-contexts{grid-template-columns:1fr}}
 </style>
 
 <script>

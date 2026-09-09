@@ -20,7 +20,9 @@ class GenerateProductAiPreparation implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 3;
+    public int $tries = 0;
+
+    public int $maxExceptions = 3;
 
     public int $timeout = 150;
 
@@ -41,6 +43,12 @@ class GenerateProductAiPreparation implements ShouldQueue
     {
         $item = ProductAiBatchItem::with('batch')->find($this->itemId);
         if (! $item || ! in_array($item->status, [ProductAiBatchItem::STATUS_QUEUED, ProductAiBatchItem::STATUS_PROCESSING], true)) {
+            return;
+        }
+
+        if (app(\App\Services\ProductAiSettingsService::class)->unavailableReason()) {
+            $this->release(60);
+
             return;
         }
 
@@ -116,6 +124,10 @@ class GenerateProductAiPreparation implements ShouldQueue
                 'finished_at' => now(),
             ]);
             $item->batch?->refreshProgress();
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            // The setting may have changed after the initial worker check.
+            $item->update(['status' => ProductAiBatchItem::STATUS_QUEUED]);
+            $this->release(60);
         } catch (Throwable $exception) {
             report($exception);
             if ($this->isRetryable($exception)) {

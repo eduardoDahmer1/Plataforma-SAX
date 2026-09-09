@@ -54,6 +54,9 @@
         ->values();
 
     $hoverPhotoUrl = $item->card_hover_photo_url;
+    $perfumeSize = mb_strtolower(trim((string) $item->category?->name)) === 'perfumes'
+        ? $item->inferredSize()
+        : null;
 @endphp
 
 <div class="{{ $gridClass }}">
@@ -128,6 +131,9 @@
                     </div>
                 @endif
 
+                @if (filled($perfumeSize))
+                    <span class="product-card-standard__size">{{ $perfumeSize }}</span>
+                @endif
             </div>
         </div>
     </div>

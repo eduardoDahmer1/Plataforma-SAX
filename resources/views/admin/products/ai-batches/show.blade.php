@@ -13,6 +13,8 @@
     </x-admin.page-header>
 
     <x-admin.alert />
+    <x-admin.ai-availability />
+    @error('ai')<div class="alert alert-danger">{{ $message }}</div>@enderror
     @error('batch')<div class="alert alert-danger">{{ $message }}</div>@enderror
     @error('skus')<div class="alert alert-danger">{{ $message }}</div>@enderror
 
@@ -41,7 +43,7 @@
                     @if($batch->eligible_count > 0)
                         <form method="POST" action="{{ route('admin.products.ai-batches.dispatch', $batch) }}">
                             @csrf
-                            <button class="btn btn-primary fw-bold" onclick="this.disabled=true; this.form.submit();">
+                            <button class="btn btn-primary fw-bold" @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason()) onclick="this.disabled=true; this.form.submit();">
                                 <i class="fa fa-play me-2"></i> Generar información
                             </button>
                         </form>

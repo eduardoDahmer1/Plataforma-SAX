@@ -49,7 +49,7 @@ class ProductAiBatchController extends Controller
             'subcategory_id' => ['nullable', 'integer', 'min:1'],
             'ai_preparation_filter' => ['nullable', 'in:pending,prepared,missing_photo,review'],
             'per_page' => ['nullable', 'integer', 'in:20,30,50,100'],
-        ]);
+        ] + \App\Services\ProductAiCatalogFilters::rules($request->all()));
 
         $search = trim((string) ($validated['search'] ?? ''));
         $aiPreparationFilter = $validated['ai_preparation_filter'] ?? null;
@@ -141,9 +141,7 @@ class ProductAiBatchController extends Controller
                     ])
                 )
             )
-            ->orderByRaw('created_at IS NULL ASC')
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
+            ->tap(fn ($query) => app(\App\Services\ProductAiCatalogFilters::class)->apply($query, $validated))
             ->paginate($perPage);
 
         return response()->json([
@@ -320,6 +318,7 @@ class ProductAiBatchController extends Controller
 
     public function dispatch(ProductAiBatch $batch)
     {
+        app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
         $itemsToDispatch = DB::transaction(function () use ($batch) {
             $lockedBatch = ProductAiBatch::lockForUpdate()->findOrFail($batch->id);
             if ($lockedBatch->status !== ProductAiBatch::STATUS_DRAFT) {

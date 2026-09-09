@@ -363,10 +363,7 @@
         }
 
         .catalog-desktop-filter {
-            position: sticky;
-            top: 96px;
-            overflow: hidden;
-            max-height: calc(100vh - 116px);
+            position: relative;
             background: #fff;
             border: 1px solid #dfe3ea;
             border-radius: 8px;
@@ -381,9 +378,9 @@
         }
 
         .catalog-desktop-filter-body {
-            max-height: calc(100vh - 198px);
+            max-height: none;
             padding: 18px;
-            overflow-y: auto;
+            overflow: visible;
             scrollbar-width: thin;
             scrollbar-color: #d5dae3 transparent;
         }
@@ -463,7 +460,30 @@
         }
 
         .catalog-standard-drawer .brand-filter-scroll {
-            max-height: 290px;
+            max-height: none;
+            overflow: visible;
+        }
+
+        .catalog-desktop-filter .brand-filter-scroll {
+            max-height: 380px;
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            scrollbar-width: auto;
+            scrollbar-color: #a5aab2 #f3f4f6;
+            padding-right: 10px;
+        }
+
+        .catalog-desktop-filter .brand-filter-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .catalog-desktop-filter .brand-filter-scroll::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        .catalog-desktop-filter .brand-filter-scroll::-webkit-scrollbar-thumb {
+            background: #a5aab2;
+            border-radius: 8px;
         }
 
         @media (max-width: 575.98px) {

@@ -721,6 +721,8 @@ display: inline-block;
 }
 
 .product-card-standard__size {
+margin-left: auto;
+text-align: right;
 font-size: 0.58rem;
 letter-spacing: 0.06em;
 text-transform: uppercase;

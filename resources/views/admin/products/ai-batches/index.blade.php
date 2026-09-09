@@ -13,6 +13,8 @@
     </x-admin.page-header>
 
     <x-admin.alert />
+    <x-admin.ai-availability />
+    @error('ai')<div class="alert alert-danger">{{ $message }}</div>@enderror
 
     <div class="row g-4">
         <div class="col-xl-7">

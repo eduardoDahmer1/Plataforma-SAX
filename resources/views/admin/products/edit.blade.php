@@ -110,8 +110,9 @@
             @endif
         </div>
 
+        <x-admin.ai-availability />
         <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-3 border rounded-3 bg-light-subtle">
-            <button type="button" id="completeProductWithAiBtn" class="btn btn-outline-primary"
+            <button type="button" id="completeProductWithAiBtn" class="btn btn-outline-primary" @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason())
                     data-ai-url="{{ route('admin.products.completeWithAi', $item->id) }}">
                 <i class="fas fa-wand-magic-sparkles me-2"></i>Completar con IA
             </button>
@@ -618,9 +619,9 @@
                             <button class="btn btn-primary" id="parent_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
-                        <div id="parent_results_label" class="relationship-section-label d-none">Sugestões encontradas</div>
+                        <div id="parent_results_label" class="relationship-section-label d-none">Sugerencias</div>
                         <div id="parent_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}" data-current-size="{{ $item->inferredSize() }}" data-auto-select="{{ empty($item->parent_id) && (($item->product_role ?? 'P') !== 'F') ? '1' : '0' }}"></div>
-                        <div class="relationship-section-label mt-3">Selecionados para relacionar <span class="relationship-count" data-count-for="selected_parents">{{ count($item->selected_size_children ?? []) }}</span></div>
+                        <div class="relationship-section-label mt-3">Seleccionados <span class="relationship-count" data-count-for="selected_parents">{{ count($item->selected_size_children ?? []) }}</span></div>
                         <div id="selected_parents" class="row g-2 mt-2">
                             @if (!empty($item->selected_size_children))
                                 @php
@@ -634,7 +635,7 @@
                                                 <img src="{{ $parentProduct->photo_url }}"
                                                     class="card-img-top" style="height:120px; object-fit:cover;">
                                                 <div class="card-body p-2">
-                                                    <span class="badge bg-success mb-1">Relacionado</span>
+                                                    <span class="badge bg-success mb-1">✓ Seleccionada</span>
                                                     <p class="card-text m-0 fw-bold">
                                                         {{ $parentProduct->external_name ?: $parentProduct->name }}</p>
                                                     <small class="text-muted d-block mt-1">SKU: {{ $parentProduct->sku }}</small>
@@ -663,9 +664,7 @@
                                 @endforeach
                             @endif
                         </div>
-                        <small class="form-text text-muted d-block mt-2">
-                            Variantes com a mesma referência e cor, mas tamanho diferente, são pré-selecionadas. Elas só serão relacionadas ao salvar; SKU, estoque e tamanho continuam próprios de cada filho.
-                        </small>
+
                     </div>
 
                     <div class="col-12 mb-4">
@@ -677,9 +676,9 @@
                             <button class="btn btn-primary" id="color_search_btn" type="button"><i
                                     class="fas fa-search"></i></button>
                         </div>
-                        <div id="color_results_label" class="relationship-section-label d-none">Sugestões de outras cores</div>
+                        <div id="color_results_label" class="relationship-section-label d-none">Sugerencias de otros colores</div>
                         <div id="color_results" class="row g-2 relationship-results" style="display:none; z-index:1000;" data-noimage="{{ asset('storage/uploads/noimage.webp') }}" data-current-product-id="{{ $item->id }}" data-current-color-key="{{ $item->relationshipColorKey() }}" data-current-reference-key="{{ $item->relationshipReferenceKey() }}" data-current-size="{{ $item->inferredSize() }}" data-auto-select="{{ empty($item->parent_id) && (($item->product_role ?? 'P') !== 'F') ? '1' : '0' }}"></div>
-                        <div class="relationship-section-label mt-3">Selecionados para relacionar <span class="relationship-count" data-count-for="selected_colors">{{ count($item->selected_color_family_members ?? []) }}</span></div>
+                        <div class="relationship-section-label mt-3">Seleccionados <span class="relationship-count" data-count-for="selected_colors">{{ count($item->selected_color_family_members ?? []) }}</span></div>
                         <div id="selected_colors" class="row g-2 mt-2">
                             @if (!empty($item->selected_color_family_members))
                                 @php
@@ -693,7 +692,7 @@
                                                 <img src="{{ $colorProduct->photo_url }}"
                                                     class="card-img-top" style="height:120px; object-fit:cover;">
                                                 <div class="card-body p-2">
-                                                    <span class="badge bg-success mb-1">Relacionado</span>
+                                                    <span class="badge bg-success mb-1">✓ Seleccionada</span>
                                                     <p class="card-text m-0 fw-bold">
                                                         {{ $colorProduct->external_name ?: $colorProduct->name }}</p>
                                                     <small class="text-muted d-block mt-1">SKU: {{ $colorProduct->sku }}</small>
@@ -725,9 +724,7 @@
                         @error('color_parent_id')
                             <div class="text-danger small mt-2">{{ $message }}</div>
                         @enderror
-                        <small class="form-text text-muted d-block mt-2">
-                            As sugestões usam a mesma referência e mostram somente um produto-base por cor diferente. Cada cor conserva seus próprios tamanhos e estoque.
-                        </small>
+
                     </div>
                 @endif
             </div>

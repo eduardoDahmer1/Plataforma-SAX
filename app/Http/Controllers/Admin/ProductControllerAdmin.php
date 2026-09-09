@@ -27,6 +27,7 @@ class ProductControllerAdmin extends Controller
 {
     public function completeWithAi(Product $product, OpenAICatalogService $openAi)
     {
+        app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
@@ -351,6 +352,11 @@ class ProductControllerAdmin extends Controller
 
         if ($q === '') {
             return response()->json([]);
+        }
+
+        if (in_array($context, ['size', 'color'], true)) {
+            $current = $excludeId ? Product::with('brand:id,name')->find($excludeId) : null;
+            return response()->json(app(\App\Services\ProductRelationshipSearch::class)->search($q, $current, $context));
         }
 
         $searchTerms = collect(preg_split('/[^\pL\pN._\/-]+/u', $q, -1, PREG_SPLIT_NO_EMPTY))
@@ -749,13 +755,9 @@ class ProductControllerAdmin extends Controller
                 }
 
                 if (! empty($selectedSizeChildIds)) {
-                    $currentReferenceKey = $product->relationshipReferenceKey();
-                    $currentColorKey = $product->relationshipColorKey();
                     $selectedSizeChildIds = Product::whereIn('id', $selectedSizeChildIds)
-                        ->get(['id', 'name', 'external_name', 'color', 'size'])
-                        ->filter(fn (Product $candidate) => $candidate->relationshipReferenceKey() === $currentReferenceKey
-                            && $candidate->relationshipColorKey() === $currentColorKey
-                        )
+                        ->with('brand:id,name')->get(['id', 'brand_id', 'name', 'external_name', 'color', 'size'])
+                        ->filter(fn (Product $candidate) => app(\App\Services\ProductRelationshipSearch::class)->compatibleSize($product, $candidate))
                         ->pluck('id')
                         ->map(fn ($childId) => (int) $childId)
                         ->values()

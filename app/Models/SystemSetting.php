@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class SystemSetting extends Model
 {
     protected $fillable = [
+        'ai_enabled',
+        'ai_key_source',
+        'ai_api_key',
         'maintenance',
         'store_profile',
         'cart_enabled',
@@ -36,6 +39,8 @@ class SystemSetting extends Model
     ];
 
     protected $casts = [
+        'ai_enabled' => 'boolean',
+        'ai_api_key' => 'encrypted',
         'store_profile' => 'string',
         'cart_enabled' => 'boolean',
         'checkout_enabled' => 'boolean',
@@ -62,4 +67,6 @@ class SystemSetting extends Model
         'footer_contact_enabled' => 'boolean',
         'footer_guide_enabled' => 'boolean',
     ];
+
+    protected $hidden = ['ai_api_key'];
 }

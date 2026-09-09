@@ -69,10 +69,22 @@ class HomeBannerController extends Controller
                 }
             }],
             'is_active' => ['sometimes', 'boolean'],
+            'title_pt' => ['nullable', 'string', 'max:160'],
+            'description_pt' => ['nullable', 'string', 'max:600'],
+            'title_en' => ['nullable', 'string', 'max:160'],
+            'description_en' => ['nullable', 'string', 'max:600'],
+            'title_es' => ['nullable', 'string', 'max:160'],
+            'description_es' => ['nullable', 'string', 'max:600'],
         ]);
 
         if (array_key_exists('link', $validated)) {
             $validated['link'] = filled($validated['link']) ? trim($validated['link']) : null;
+        }
+
+        foreach (['title_pt', 'description_pt', 'title_en', 'description_en', 'title_es', 'description_es'] as $field) {
+            if (array_key_exists($field, $validated)) {
+                $validated[$field] = filled($validated[$field]) ? trim($validated[$field]) : null;
+            }
         }
 
         $homeBanner->update($validated);
@@ -126,6 +138,12 @@ class HomeBannerController extends Controller
             'image_url' => $banner->image_url,
             'link' => $banner->link,
             'is_active' => $banner->is_active,
+            'title_pt' => $banner->title_pt,
+            'description_pt' => $banner->description_pt,
+            'title_en' => $banner->title_en,
+            'description_en' => $banner->description_en,
+            'title_es' => $banner->title_es,
+            'description_es' => $banner->description_es,
             'update_url' => route('admin.home-banners.update', $banner),
             'delete_url' => route('admin.home-banners.destroy', $banner),
         ];

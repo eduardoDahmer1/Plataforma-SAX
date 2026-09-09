@@ -257,6 +257,13 @@ document.addEventListener('DOMContentLoaded', function () {
         function updateSelectedCount() {
             const badge = document.querySelector('[data-count-for="' + selectedId + '"]');
             if (badge) badge.textContent = selectedDiv.querySelectorAll(':scope > [data-id]').length;
+            resultsDiv.querySelectorAll('.relationship-suggestion').forEach(function (card) {
+                const selected = !!selectedDiv.querySelector('div[data-id="' + card.dataset.id + '"]');
+                card.classList.toggle('selected', selected);
+                card.classList.toggle('border-success', selected);
+                card.setAttribute('aria-checked', String(selected));
+                card.querySelector('.relationship-choice').textContent = selected ? '✓ Seleccionada' : '+ Seleccionar';
+            });
         }
 
         function selectResultCard(card) {
@@ -278,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
             newCard.innerHTML = '<div class="card border-success h-100 position-relative">' +
                 '<img src="' + imgSrc + '" class="card-img-top" style="height:120px; object-fit:cover;">' +
                 '<div class="card-body p-2">' +
-                '<span class="badge bg-success mb-1">Relacionado</span>' +
+                '<span class="badge bg-success mb-1">✓ Seleccionada</span>' +
                 '<p class="card-text m-0 fw-bold">' + name + '</p>' +
                 (sku ? '<small class="text-muted d-block mt-1">SKU: ' + sku + '</small>' : '') +
                 (color ? '<div class="d-flex align-items-center mt-1">' +
@@ -293,6 +300,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 '</div></div>';
             selectedDiv.appendChild(newCard);
             updateSelectedCount();
+        }
+
+        function escapeRelationshipText(value) {
+            const element = document.createElement('span');
+            element.textContent = value;
+            return element.innerHTML;
         }
 
         function searchProducts(autoSelectMatches = false) {
@@ -341,22 +354,19 @@ document.addEventListener('DOMContentLoaded', function () {
                             ).some(function (input) { return input.value == product.id; });
 
                             html += '<div class="col-6 col-md-4 col-lg-2">' +
-                                '<div class="card h-100 card-hover ' + (alreadySelected ? 'border-success selected' : '') + '" ' +
-                                'style="cursor:pointer;" data-id="' + product.id + '" ' +
-                                'data-sku="' + (product.sku || '') + '" data-color="' + (product.color || '') + '" ' +
+                                '<div class="card h-100 relationship-suggestion ' + (alreadySelected ? 'border-success selected' : '') + '" ' +
+                                'role="checkbox" tabindex="0" aria-checked="' + alreadySelected + '" data-id="' + product.id + '" ' +
+                                'data-auto-select="' + (product.auto_select ? '1' : '0') + '" data-sku="' + (product.sku || '') + '" data-color="' + (product.color || '') + '" ' +
                                 'data-inferred-color="' + (product.color_code || '') + '" data-size="' + (product.size || '') + '">' +
                                 '<img src="' + (product.photo || noImage) + '" ' +
                                 'class="img-fluid object-fit-cover" alt="' + (product.name || product.external_name) + '">' +
                                 '<div class="card-body p-2">' +
-                                '<span class="badge bg-light text-dark border mb-1">Sugestão</span>' +
+                                '<span class="relationship-suggestion-badge">Sugerencia</span>' +
                                 '<p class="card-text m-0 fw-bold">' + (product.external_name || product.name) + '</p>' +
                                 (product.sku ? '<small class="text-muted d-block mt-1">SKU: ' + product.sku + '</small>' : '') +
-                                (product.color ? '<div class="d-flex align-items-center mt-1">' +
-                                    '<span style="display:inline-block;width:16px;height:16px;background:' + product.color + ';border:1px solid #ccc;margin-right:5px;"></span>' +
-                                    '<small>' + product.color + '</small></div>' : '') +
-                                (product.color_code ?
-                                    '<small class="text-muted d-block mt-1">Código original: *' + product.color_code + '</small>' : '') +
-                                (product.size ? '<div class="mt-1"><small class="text-muted">Tamanho: ' + product.size + '</small></div>' : '') +
+                                (product.color_code ? '<small class="text-muted d-block mt-1">' + escapeRelationshipText(product.color_code) + '</small>' : '') +
+                                (product.size ? '<small class="d-block mt-1">Talla: <strong>' + escapeRelationshipText(product.size) + '</strong></small>' : '') +
+                                '<span class="relationship-choice">' + (alreadySelected ? '✓ Seleccionada' : '+ Seleccionar') + '</span>' +
                                 '</div></div></div>';
                         });
                     } else {
@@ -368,8 +378,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (resultsLabel) resultsLabel.classList.remove('d-none');
 
                     if (autoSelectMatches && resultsDiv.dataset.autoSelect === '1') {
-                        resultsDiv.querySelectorAll('.card[data-id]').forEach(selectResultCard);
+                        resultsDiv.querySelectorAll('.card[data-id][data-auto-select="1"]').forEach(selectResultCard);
                     }
+                    updateSelectedCount();
                 })
                 .catch(function (err) {
                     if (err.name === 'AbortError') return;
@@ -395,9 +406,27 @@ document.addEventListener('DOMContentLoaded', function () {
             window.setTimeout(function () { searchProducts(true); }, 80);
         }
 
+        function toggleSuggestion(card) {
+            if (!card) return;
+            const selected = selectedDiv.querySelector('div[data-id="' + card.dataset.id + '"]');
+            if (selected) {
+                selected.remove();
+                updateSelectedCount();
+            } else {
+                selectResultCard(card);
+            }
+        }
+
         resultsDiv.addEventListener('click', function (e) {
-            const card = e.target.closest('.card');
-            selectResultCard(card);
+            toggleSuggestion(e.target.closest('.relationship-suggestion'));
+        });
+        resultsDiv.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const card = e.target.closest('.relationship-suggestion');
+                if (!card) return;
+                e.preventDefault();
+                toggleSuggestion(card);
+            }
         });
 
         selectedDiv.addEventListener('click', function (e) {
@@ -409,12 +438,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         updateSelectedCount();
 
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('#' + inputId + ', #' + resultsId + ', #' + btnId)) {
-                resultsDiv.style.display = 'none';
-                if (resultsLabel) resultsLabel.classList.add('d-none');
-            }
-        });
+
     }
 
     setupSearch('parent_search', 'parent_search_btn', 'parent_results', 'selected_parents', 'parent_id', '/admin/products/search', 'size');

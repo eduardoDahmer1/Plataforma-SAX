@@ -10,6 +10,12 @@
 
 <section class="sax-category-strip sax-category-strip--{{ $categoryLayout }} py-5">
     <div class="container-fluid px-lg-5">
+        @if(filled($sectionContent['title']) || filled($sectionContent['description']))
+            <header class="sax-home-section-heading">
+                @if(filled($sectionContent['title']))<h2>{{ $sectionContent['title'] }}</h2>@endif
+                @if(filled($sectionContent['description']))<p>{{ $sectionContent['description'] }}</p>@endif
+            </header>
+        @endif
         <div class="sax-category-swiper swiper" data-category-count="{{ $categoryCount }}">
             <div class="category-wrapper category-wrapper--{{ $categoryLayout }} category-wrapper--count-{{ $categoryCount }} swiper-wrapper">
                 @foreach($categories as $cat)

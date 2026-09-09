@@ -365,30 +365,36 @@ class Product extends Model
             && $this->category()->where('status', 1)->exists();
     }
 
+    public static function normalizeCatalogText(?string $value): string
+    {
+        $value = html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $value = str_replace(['\\#', '\\*'], ['#', '*'], $value);
+
+        return trim(preg_replace('/[\s\p{Z}]+/u', ' ', $value) ?? $value);
+    }
+
     public static function referenceParts(?string $value): array
     {
-        $value = trim((string) $value);
-        $reference = $value;
+        // Markers delimit whole fields, including compound colors such as
+        // "#9M *KARUN NERO". Neither field belongs to the model reference.
+        $parts = preg_split('/([#*])/u', self::normalizeCatalogText($value), -1, PREG_SPLIT_DELIM_CAPTURE);
+        $reference = trim($parts[0] ?? '');
         $size = null;
         $color = null;
-
-        // No cadastro do integrador, tamanho e cor normalmente chegam no fim:
-        // "MODELO J05999 #12M *401". A cor é sempre o último parâmetro *... .
-        if (preg_match('/\*\s*([^\s*#]+)\s*$/u', $reference, $matches)) {
-            $color = trim($matches[1]);
-            $reference = trim(substr($reference, 0, (int) strrpos($reference, '*')));
-        }
-
-        if (preg_match('/#\s*([^\s*#]+)\s*$/u', $reference, $matches)) {
-            $size = trim($matches[1]);
-            $reference = trim(substr($reference, 0, (int) strrpos($reference, '#')));
+        for ($i = 1; $i + 1 < count($parts); $i += 2) {
+            $field = trim($parts[$i + 1]);
+            if ($parts[$i] === '#' && $size === null) {
+                $size = $field ?: null;
+            } elseif ($parts[$i] === '*' && $color === null) {
+                $color = $field ?: null;
+            }
         }
 
         return [
             'reference' => $reference,
             'reference_key' => self::normalizeReferenceValue($reference),
-            'size' => $size ?: null,
-            'color' => $color ?: null,
+            'size' => $size,
+            'color' => $color,
             'color_key' => self::normalizeColorToken($color),
         ];
     }
@@ -396,7 +402,7 @@ class Product extends Model
     public function inferredSize(): ?string
     {
         return filled($this->size)
-            ? trim((string) $this->size)
+            ? self::normalizeCatalogText($this->size)
             : self::referenceParts($this->referenceSource())['size'];
     }
 
@@ -493,7 +499,7 @@ class Product extends Model
     {
         $candidates = collect([$this->external_name, $this->name])
             ->filter(fn ($value) => filled($value))
-            ->map(fn ($value) => trim((string) $value));
+            ->map(fn ($value) => self::normalizeCatalogText($value));
 
         return (string) $candidates
             ->sortByDesc(function (string $value) {

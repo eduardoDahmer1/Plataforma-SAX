@@ -40,6 +40,24 @@
                         <input type="text" value="{{ $banner->link }}" placeholder="https://... ou /categorias/..." data-banner-link>
                         <span class="home-banner-save-state" data-save-state></span>
                     </div>
+                    @if($managerGroup === \App\Models\HomeBanner::GROUP_MAIN)
+                        <details class="home-banner-copy">
+                            <summary><span><i class="fa-solid fa-language"></i> Título e descrição deste slide</span><i class="fa-solid fa-chevron-down"></i></summary>
+                            <div class="home-banner-copy__languages">
+                                @foreach(['pt' => 'Português', 'en' => 'English', 'es' => 'Español'] as $language => $languageLabel)
+                                    <fieldset>
+                                        <legend>{{ $languageLabel }}</legend>
+                                        <label for="banner-{{ $banner->id }}-title-{{ $language }}">Título</label>
+                                        <input id="banner-{{ $banner->id }}-title-{{ $language }}" type="text" maxlength="160"
+                                               value="{{ $banner->{'title_'.$language} }}" data-banner-copy-field="title_{{ $language }}">
+                                        <label for="banner-{{ $banner->id }}-description-{{ $language }}">Descrição</label>
+                                        <textarea id="banner-{{ $banner->id }}-description-{{ $language }}" rows="3" maxlength="600"
+                                                  data-banner-copy-field="description_{{ $language }}">{{ $banner->{'description_'.$language} }}</textarea>
+                                    </fieldset>
+                                @endforeach
+                            </div>
+                        </details>
+                    @endif
                     <div class="home-banner-item__actions">
                         <label class="home-banner-toggle">
                             <input type="checkbox" data-banner-active @checked($banner->is_active)>

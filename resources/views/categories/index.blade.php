@@ -1,46 +1,34 @@
 @extends('layout.layout')
 
 @section('content')
-    <main class="catalog-directory-page">
-        <div class="container py-4 py-lg-5">
-            <section class="catalog-directory-hero">
-                <div class="catalog-directory-heading">
-                    <span class="catalog-directory-eyebrow">{{ __('messages.explore_catalogo') }}</span>
-                    <h1>{{ __('messages.categorias') }}</h1>
-                    <p>{{ __('messages.explore_colecoes') }}</p>
-                </div>
+    <x-directory-hero eyebrow="SAX Selection"
+        :title="__('messages.categorias')" :description="__('messages.explore_colecoes')" />
 
-                <form method="GET" action="{{ route('categories.index') }}" class="catalog-directory-search" role="search">
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                    <input type="search" name="search" placeholder="{{ __('messages.busca_colecao') }}"
-                        value="{{ request('search') }}" aria-label="{{ __('messages.busca_colecao') }}">
-                    @if (request('search'))
-                        <a href="{{ route('categories.index') }}" aria-label="{{ __('messages.limpar_busca') }}">
-                            <i class="fas fa-times" aria-hidden="true"></i>
-                        </a>
-                    @endif
-                    <button type="submit">{{ __('messages.buscar') }}</button>
-                </form>
+    <main class="catalog-directory-page catalog-directory-page--editorial">
+        <div class="container py-4 py-lg-5">
+            <section class="catalog-directory-tools">
+                <x-directory-search :action="route('categories.index')" :placeholder="__('messages.busca_colecao')"
+                    :value="request('search', '')" :clear-url="route('categories.index')" />
             </section>
 
-            <div class="catalog-category-grid mt-3 mt-lg-4">
+            <div class="sax-directory-grid mt-3 mt-lg-4">
                 @forelse ($categories as $category)
                     @if (($category->products_count ?? 0) > 0)
-                        <a href="{{ route('categories.show', $category->slug) }}" class="catalog-category-card">
-                            <div class="catalog-category-image">
+                        <a href="{{ route('categories.show', $category->slug) }}" class="sax-directory-card">
+                            <div class="sax-directory-card__media">
                                 @if ($category->photo && Storage::disk('public')->exists($category->photo))
                                     <img src="{{ Storage::url($category->photo) }}" alt="{{ $category->name }}" loading="lazy">
                                 @else
                                     <img src="{{ asset('storage/uploads/noimage.webp') }}" alt="{{ __('messages.sem_imagem') }}" loading="lazy">
                                 @endif
                             </div>
-                            <div class="catalog-category-info">
-                                <div>
+                            <div class="sax-directory-card__body">
+                                <div class="sax-directory-card__copy">
                                     <span>{{ __('messages.colecao') }}</span>
                                     <h2>{{ $category->name ?? $category->slug }}</h2>
                                     <small>{{ trans_choice('messages.produtos_disponiveis', $category->products_count, ['count' => $category->products_count]) }}</small>
                                 </div>
-                                <span class="catalog-category-arrow"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                                <span class="sax-directory-card__arrow"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                             </div>
                         </a>
                     @endif

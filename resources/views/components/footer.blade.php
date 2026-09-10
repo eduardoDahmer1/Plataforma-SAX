@@ -1,4 +1,8 @@
-<footer class="sax-footer-refined">
+@php
+    $isEcommerceFooter = !request()->is('admin/*', '*cafe*', '*bistro*', '*bridal*', '*palace*', '*institucional*');
+@endphp
+
+<footer class="sax-footer-refined {{ $isEcommerceFooter ? 'sax-footer-ecommerce' : '' }}">
     <div class="container">
         @php
             $storeControls = app(\App\Services\StoreControlService::class);

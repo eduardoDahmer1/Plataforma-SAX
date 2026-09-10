@@ -1,3 +1,9 @@
+@php
+    $sectionContent = is_array($sectionContent ?? null)
+        ? array_merge(['title' => '', 'description' => ''], $sectionContent)
+        : ['title' => '', 'description' => ''];
+@endphp
+
 <div class="sax-wrapper">
 <section class="help-section">
     @if(filled($sectionContent['title']) || filled($sectionContent['description']))

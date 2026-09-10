@@ -1,27 +1,31 @@
 @extends('layout.layout')
 
 @section('content')
-    <main class="catalog-directory-page">
+    <x-directory-hero eyebrow="SAX Selection"
+        :title="__('messages.nossas_categorias')" :description="__('messages.encontre_por_departamento')" />
+
+    <main class="catalog-directory-page catalog-directory-page--editorial">
         <div class="container py-4 py-lg-5">
-            <section class="catalog-directory-hero catalog-directory-hero--general">
-                <div class="catalog-directory-heading">
-                    <span class="catalog-directory-eyebrow">{{ __('messages.explore_catalogo') }}</span>
-                    <h1>{{ __('messages.nossas_categorias') }}</h1>
-                    <p>{{ __('messages.encontre_por_departamento') }}</p>
-                </div>
+            <section class="catalog-directory-tools">
                 <a href="{{ route('categories.index') }}" class="catalog-directory-action">
                     {{ __('messages.ver_categorias_com_produtos') }}
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
             </section>
 
-            <div class="catalog-tree-grid mt-3 mt-lg-4">
+            <div class="sax-directory-grid sax-directory-grid--tree mt-3 mt-lg-4">
                 @forelse ($categories as $category)
-                    <article class="catalog-tree-card">
-                        <a href="{{ route('categories.show', $category->slug) }}" class="catalog-tree-title">
-                            <span>{{ $category->name }}</span>
-                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                        </a>
+                    <article class="sax-directory-card sax-directory-card--tree">
+                        <header class="sax-directory-card__body">
+                            <a href="{{ route('categories.show', $category->slug) }}" class="sax-directory-card__copy">
+                                <span>{{ __('messages.categoria') }}</span>
+                                <h2>{{ $category->name }}</h2>
+                            </a>
+                            <a href="{{ route('categories.show', $category->slug) }}" class="sax-directory-card__arrow"
+                                aria-label="{{ $category->name }}">
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                        </header>
 
                         <div class="catalog-tree-list">
                             @forelse ($category->subcategories as $subcategory)

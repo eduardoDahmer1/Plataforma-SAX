@@ -43,8 +43,12 @@
         <div class="sax-carousel-master sax-brands-desktop">
             @if(filled($sectionContent['title']) || filled($sectionContent['description']))
                 <header class="sax-brand-heading">
+                    <span class="sax-brand-heading__eyebrow">SAX Selection</span>
                     @if(filled($sectionContent['title']))<h2 class="sax-main-title">{{ $sectionContent['title'] }}</h2>@endif
                     @if(filled($sectionContent['description']))<p class="sax-brand-description">{{ $sectionContent['description'] }}</p>@endif
+                    <a href="{{ route('brands.index') }}" class="sax-brand-heading__link">
+                        {{ __('messages.nossas_marcas') }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
                 </header>
             @endif
             <div class="sax-carousel-3d" 
@@ -58,9 +62,9 @@
                 <div id="saxBrandName" class="sax-brand-label"></div>
 
                 <div class="sax-controls">
-                    <button type="button" id="saxPrev" class="sax-nav-btn">←</button>
+                    <button type="button" id="saxPrev" class="sax-nav-btn" aria-label="Marca anterior"><i class="fa-solid fa-arrow-left"></i></button>
                     <div class="sax-indicators" id="saxDots"></div>
-                    <button type="button" id="saxNext" class="sax-nav-btn">→</button>
+                    <button type="button" id="saxNext" class="sax-nav-btn" aria-label="Próxima marca"><i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
         </div>

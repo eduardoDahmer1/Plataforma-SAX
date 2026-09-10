@@ -1,30 +1,17 @@
 @extends('layout.layout')
 
 @section('content')
-    <div class="brands-page-wrapper py-5">
+    <x-directory-hero eyebrow="SAX Selection"
+        :title="__('messages.nossas_marcas')" :description="__('messages.excelencia_detalhe')" />
+
+    <div class="brands-page-wrapper brands-page-wrapper--editorial py-4 py-lg-5">
         <div class="container">
-            <div class="text-center mb-5">
-                <h1 class="sax-title">{{ __('messages.nossas_marcas') }}</h1>
-                <div class="sax-divider mx-auto"></div>
-                <p class="text-muted small text-uppercase tracking-widest mt-3">
-                    {{ __('messages.excelencia_detalhe') }}
-                </p>
+            <div class="catalog-directory-tools mb-4 mb-lg-5">
+                <x-directory-search :action="route('brands.index')" :placeholder="__('messages.busca_marca')"
+                    :value="request('search', '')" :clear-url="route('brands.index')" />
             </div>
 
-            <div class="search-container mb-5">
-                <form method="GET" class="mx-auto" style="max-width: 600px;">
-                    <div class="sax-search-input">
-                        <input type="text" name="search" 
-                               placeholder="{{ __('messages.busca_marca') }}" 
-                               value="{{ request('search') }}">
-                        <button type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="row g-4">
+            <div class="sax-directory-grid">
                 @forelse ($brands as $brand)
                     @php
                         $brandImage = !empty($brand->image)
@@ -34,19 +21,25 @@
                     @endphp
 
                     @if (($brand->active_products_count ?? 0) > 0)
-                        <div class="col-6 col-md-4 col-lg-3">
-                            <a href="{{ route('brands.show', $brand->slug) }}" class="brand-sax-card">
-                                <div class="brand-img-box">
-                                    <img src="{{ $brandImage }}" alt="{{ $brand->name }}" loading="lazy" onerror="this.src='{{ $fallbackImage }}'">
+                        <a href="{{ route('brands.show', $brand->slug) }}" class="sax-directory-card">
+                            <div class="sax-directory-card__media sax-directory-card__media--logo">
+                                <img src="{{ $brandImage }}" alt="{{ $brand->name }}" loading="lazy"
+                                    onerror="this.src='{{ $fallbackImage }}'">
+                            </div>
+                            <div class="sax-directory-card__body">
+                                <div class="sax-directory-card__copy">
+                                    <span>{{ __('messages.marca') }}</span>
+                                    <h2>{{ $brand->name ?? $brand->slug }}</h2>
+                                    <small>{{ trans_choice('messages.produtos_disponiveis', $brand->active_products_count, ['count' => $brand->active_products_count]) }}</small>
                                 </div>
-                                <div class="brand-info">
-                                    <h5 class="brand-name">{{ $brand->name ?? $brand->slug }}</h5>
-                                </div>
-                            </a>
-                        </div>
+                                <span class="sax-directory-card__arrow">
+                                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                </span>
+                            </div>
+                        </a>
                     @endif
                 @empty
-                    <div class="col-12 py-5 text-center">
+                    <div class="catalog-directory-empty">
                         <div class="no-results">
                             <i class="fas fa-search mb-3"></i>
                             <p>{{ __('messages.marcas_nao_encontradas') }}</p>

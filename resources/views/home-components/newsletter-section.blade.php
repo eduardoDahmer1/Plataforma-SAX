@@ -1,3 +1,9 @@
+@php
+    $sectionContent = is_array($sectionContent ?? null)
+        ? array_merge(['title' => '', 'description' => ''], $sectionContent)
+        : ['title' => '', 'description' => ''];
+@endphp
+
 <div class="sax-wrapper">
 <section class="newsletter-section"
     style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ asset('storage/uploads/' . ($banner1 ?? 'banner1.webp')) }}');">

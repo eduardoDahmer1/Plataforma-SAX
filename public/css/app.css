@@ -5475,6 +5475,481 @@ transform: scale(1.5);
     }
 }
 
+/* ==========================================================================
+   Footer do e-commerce — composição editorial clara
+   ========================================================================== */
+@media (min-width: 992px) {
+    .sax-footer-refined.sax-footer-ecommerce {
+        margin: 0;
+        padding: 0;
+        color: #181818;
+        border-top: 1px solid #deddd9 !important;
+        background: #f7f7f6;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .sax-footer-refined.sax-footer-ecommerce > .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+    }
+
+    .sax-footer-ecommerce .footer-grid {
+        width: min(100%, 1440px);
+        min-height: 390px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        align-items: stretch;
+        margin: 0 auto;
+        padding: 58px 36px 70px;
+    }
+
+    .sax-footer-ecommerce .footer-column,
+    .sax-footer-ecommerce .footer-column:first-child {
+        min-width: 0;
+        padding: 7px clamp(44px, 4.6vw, 74px);
+        border: 0 !important;
+    }
+
+    .sax-footer-ecommerce .footer-column + .footer-column {
+        border-left: 1px solid #d8d7d3 !important;
+    }
+
+    .sax-footer-ecommerce .column-content {
+        padding: 0;
+    }
+
+    .sax-footer-ecommerce .footer-title {
+        margin: 0 0 18px;
+        color: #171717;
+        font-size: .93rem;
+        font-weight: 500;
+        letter-spacing: -.01em;
+        line-height: 1.35;
+        text-transform: none;
+    }
+
+    .sax-footer-ecommerce .footer-links {
+        display: grid;
+        gap: 16px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .sax-footer-ecommerce .footer-links li {
+        margin: 0;
+    }
+
+    .sax-footer-ecommerce .footer-links a {
+        display: inline-block;
+        color: #3f3f3d;
+        font-size: .82rem;
+        font-weight: 400;
+        letter-spacing: 0;
+        line-height: 1.45;
+        white-space: normal;
+        text-decoration: none;
+        transition: color .2s ease, transform .2s ease;
+    }
+
+    .sax-footer-ecommerce .footer-links a:hover {
+        color: #000;
+        transform: translateX(3px);
+    }
+
+    .sax-footer-ecommerce .footer-title.social-title {
+        margin-top: 46px;
+        margin-bottom: 16px;
+    }
+
+    .sax-footer-ecommerce .footer-social-icons {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin: 0;
+    }
+
+    .sax-footer-ecommerce .footer-social-icons a {
+        width: 22px;
+        height: 22px;
+        display: grid;
+        place-items: center;
+        color: #282826;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        font-size: .93rem;
+        text-decoration: none;
+        transition: border-color .2s ease, background .2s ease;
+    }
+
+    .sax-footer-ecommerce .footer-social-icons a:hover {
+        border-color: #bdbcb8;
+        background: #fff;
+    }
+
+    .sax-footer-ecommerce .footer-copyright {
+        width: 100%;
+        margin: 0;
+        padding: 25px 24px 28px;
+        border-top: 1px solid #d8d7d3 !important;
+        text-align: center;
+    }
+
+    .sax-footer-ecommerce .footer-copyright p {
+        margin: 0;
+        color: #454542;
+        font-size: .76rem;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sax-footer-refined.sax-footer-ecommerce {
+        margin: 0;
+        padding: 34px 18px calc(6.8rem + env(safe-area-inset-bottom, 0px));
+        overflow: hidden;
+        color: #171717;
+        border-top: 1px solid #deddd9 !important;
+        border-radius: 0;
+        background: #f7f7f6;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-brand {
+        padding: 0 2px 22px;
+        border-bottom: 1px solid #d8d7d3;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-brand a {
+        color: #171717;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-brand span {
+        color: #777570;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-social {
+        gap: 9px;
+        padding: 18px 0 12px;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-social a {
+        width: 36px;
+        height: 36px;
+        color: #272725;
+        border: 1px solid #d8d7d3;
+        border-radius: 7px;
+        background: transparent;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-accordions {
+        display: block;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-accordions details {
+        border: 0;
+        border-bottom: 1px solid #d8d7d3;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-accordions summary {
+        min-height: 56px;
+        padding: 0 2px;
+        color: #171717;
+        font-size: .8rem;
+        font-weight: 550;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-accordions summary i {
+        color: #777570;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-accordions ul {
+        gap: 13px;
+        padding: 0 2px 20px;
+    }
+
+    .sax-footer-ecommerce .footer-mobile-accordions a {
+        color: #4b4a47;
+        font-size: .76rem;
+        line-height: 1.45;
+    }
+
+    .sax-footer-ecommerce .footer-copyright {
+        margin: 27px -18px 0;
+        padding: 23px 18px 0;
+        border-top: 1px solid #d8d7d3 !important;
+        text-align: center;
+    }
+
+    .sax-footer-ecommerce .footer-copyright p {
+        margin: 0;
+        color: #66645f;
+        font-size: .68rem;
+        line-height: 1.5;
+    }
+}
+
+/* Home — vitrine editorial de marcas */
+.sax-home-wrapper .sax-brands-section {
+    position: relative;
+    isolation: isolate;
+    min-height: 0;
+    padding: clamp(4rem, 5vw, 5rem) 0 clamp(3.75rem, 4.5vw, 4.5rem);
+    background:
+        radial-gradient(circle at 50% 38%, rgba(255, 255, 255, .085), transparent 25rem),
+        linear-gradient(145deg, #080808 0%, #000 52%, #0c0c0c 100%);
+}
+
+.sax-home-wrapper .sax-brands-section::before {
+    position: absolute;
+    inset: 1.25rem;
+    z-index: -1;
+    border: 1px solid rgba(255, 255, 255, .06);
+    pointer-events: none;
+    content: '';
+}
+
+.sax-home-wrapper .sax-carousel-master {
+    width: min(100%, 1500px);
+    margin-inline: auto;
+}
+
+.sax-home-wrapper .sax-brand-heading {
+    display: flex;
+    max-width: 760px;
+    margin-inline: auto;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.sax-home-wrapper .sax-brand-heading__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .8rem;
+    color: #bca679;
+    font-size: .58rem;
+    font-weight: 750;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+}
+
+.sax-home-wrapper .sax-brand-heading__eyebrow::before,
+.sax-home-wrapper .sax-brand-heading__eyebrow::after {
+    width: 32px;
+    height: 1px;
+    background: rgba(188, 166, 121, .5);
+    content: '';
+}
+
+.sax-home-wrapper .sax-brand-heading .sax-main-title {
+    margin: .8rem 0 0;
+    color: #fff;
+    font-size: clamp(1.7rem, 3vw, 2.65rem);
+    font-weight: 350;
+    letter-spacing: .16em;
+    line-height: 1.18;
+}
+
+.sax-home-wrapper .sax-brand-heading .sax-brand-description {
+    max-width: 580px;
+    margin: .8rem auto 0;
+    color: rgba(255, 255, 255, .66);
+    font-size: .88rem;
+    line-height: 1.7;
+}
+
+.sax-home-wrapper .sax-brand-heading__link {
+    display: inline-flex;
+    margin-top: 1.25rem;
+    padding-bottom: .35rem;
+    align-items: center;
+    gap: .65rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .36);
+    color: #fff;
+    font-size: .6rem;
+    font-weight: 750;
+    letter-spacing: .16em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: gap .25s ease, border-color .25s ease;
+}
+
+.sax-home-wrapper .sax-brand-heading__link:hover {
+    gap: .9rem;
+    border-color: #fff;
+}
+
+.sax-home-wrapper .sax-carousel-3d {
+    width: min(76vw, 310px);
+    height: min(106vw, 410px);
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.sax-home-wrapper .sax-brand-heading + .sax-carousel-3d {
+    margin-top: clamp(2.5rem, 3.5vw, 3.25rem);
+}
+
+.sax-home-wrapper .sax-item {
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 12px;
+    box-shadow: 0 26px 70px rgba(0, 0, 0, .48);
+}
+
+.sax-home-wrapper .sax-item.active {
+    transform: translate3d(0, 0, 135px);
+}
+
+.sax-home-wrapper .sax-item.p1 { transform: translate3d(-92%, 0, 0); opacity: .55; }
+.sax-home-wrapper .sax-item.n1 { transform: translate3d(92%, 0, 0); opacity: .55; }
+.sax-home-wrapper .sax-item.p2 { transform: translate3d(-150%, 0, -180px); opacity: .18; }
+.sax-home-wrapper .sax-item.n2 { transform: translate3d(150%, 0, -180px); opacity: .18; }
+
+.sax-home-wrapper .sax-carousel-footer {
+    min-width: min(92vw, 420px);
+    margin-top: 2.1rem;
+}
+
+.sax-home-wrapper .sax-brand-label {
+    min-height: 1.6rem;
+    margin-bottom: 1rem;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 450;
+    letter-spacing: .18em;
+}
+
+.sax-home-wrapper .sax-controls {
+    min-height: 52px;
+    padding: .35rem;
+    gap: .7rem;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .055);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(12px);
+}
+
+.sax-home-wrapper .sax-nav-btn {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    padding: 0;
+    place-items: center;
+    border-color: transparent;
+    border-radius: 50%;
+    font-size: .8rem;
+}
+
+.sax-home-wrapper .sax-nav-btn:hover {
+    border-color: #fff;
+    background: #fff;
+    color: #111;
+}
+
+.sax-home-wrapper .sax-indicators { gap: 8px; }
+.sax-home-wrapper .sax-dot { width: 5px; height: 5px; }
+
+@media (max-width: 991.98px) {
+    .sax-home-wrapper .sax-brands-section {
+        padding: 2.75rem 0 2.25rem;
+        background: linear-gradient(160deg, #f0efeb 0%, #e8e7e2 100%);
+    }
+
+    .sax-home-wrapper .sax-brands-section::before { display: none; }
+
+    .sax-home-wrapper .sax-brands-mobile__header {
+        padding: 0 1rem 1.35rem;
+        align-items: flex-start;
+    }
+
+    .sax-home-wrapper .sax-brands-mobile__header > div { max-width: calc(100% - 3.75rem); }
+
+    .sax-home-wrapper .sax-brands-mobile__header span {
+        color: #8d7446;
+        font-size: .56rem;
+        letter-spacing: .24em;
+    }
+
+    .sax-home-wrapper .sax-brands-mobile__header h2 {
+        margin-top: .45rem;
+        font-size: clamp(1.35rem, 6vw, 1.8rem);
+        line-height: 1.08;
+    }
+
+    .sax-home-wrapper .sax-brands-mobile__header .sax-brand-description {
+        margin: .55rem 0 0;
+        color: #64676d;
+        font-size: .78rem;
+        line-height: 1.55;
+        text-align: left;
+    }
+
+    .sax-home-wrapper .sax-brands-mobile__header > a {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+        border-radius: 50%;
+        box-shadow: 0 8px 20px rgba(17, 17, 17, .18);
+    }
+
+    .sax-home-wrapper .sax-brands-mobile {
+        position: relative;
+    }
+
+    .sax-home-wrapper .sax-brands-mobile__rail {
+        padding: 0 1rem .75rem;
+        gap: .85rem;
+        scroll-padding-inline: 1rem;
+    }
+
+    .sax-home-wrapper .sax-brand-mobile-card {
+        flex-basis: min(78vw, 330px);
+        border-color: rgba(17, 17, 17, .08);
+        border-radius: 18px;
+        box-shadow: 0 14px 34px rgba(25, 28, 33, .1);
+        scroll-snap-align: start;
+    }
+
+    .sax-home-wrapper .sax-brand-mobile-card__image { aspect-ratio: 16 / 10; }
+    .sax-home-wrapper .sax-brand-mobile-card__image img { transition: transform .55s ease; }
+    .sax-home-wrapper .sax-brand-mobile-card:active .sax-brand-mobile-card__image img { transform: scale(1.025); }
+
+    .sax-home-wrapper .sax-brand-mobile-card__meta {
+        min-height: 58px;
+        padding: .85rem 1rem;
+    }
+
+    .sax-home-wrapper .sax-brand-mobile-card__meta strong {
+        font-size: .72rem;
+        letter-spacing: .09em;
+    }
+
+    .sax-home-wrapper .sax-brand-mobile-card__meta i {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+        place-items: center;
+        border-radius: 50%;
+        background: #f1f1ee;
+        color: #333;
+    }
+}
+
+@media (max-width: 420px) {
+    .sax-home-wrapper .sax-brands-section { padding-top: 2.25rem; }
+    .sax-home-wrapper .sax-brands-mobile__header { padding-inline: .85rem; }
+    .sax-home-wrapper .sax-brands-mobile__rail { padding-inline: .85rem; scroll-padding-inline: .85rem; }
+    .sax-home-wrapper .sax-brand-mobile-card { flex-basis: 84vw; border-radius: 16px; }
+}
+
 /* Pausa preventiva das compras quando o catálogo perde comunicação. */
 .sax-catalog-pause {
     position: relative;
@@ -7432,5 +7907,29 @@ body.sax-storefront :where(.btn, .form-control, .form-select, .input-group-text)
     .catalog-standard-drawer.search-filter-drawer {
         width: 100vw !important;
         border-radius: 0;
+    }
+}
+
+/* Divisórias do footer: deve permanecer após os resets globais de borda. */
+@media (min-width: 992px) {
+    body.sax-storefront .sax-footer-refined.sax-footer-ecommerce .footer-column + .footer-column {
+        border-left: 1px solid #d2d1cd !important;
+    }
+
+    body.sax-storefront .sax-footer-refined.sax-footer-ecommerce .footer-copyright {
+        border-top: 1px solid #d2d1cd !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    body.sax-storefront .sax-footer-refined.sax-footer-ecommerce .footer-mobile-brand,
+    body.sax-storefront .sax-footer-refined.sax-footer-ecommerce .footer-mobile-accordions details,
+    body.sax-storefront .sax-footer-refined.sax-footer-ecommerce .footer-copyright {
+        border-bottom-color: #d2d1cd !important;
+        border-top-color: #d2d1cd !important;
+    }
+
+    body.sax-storefront .sax-footer-refined.sax-footer-ecommerce .footer-copyright {
+        border-top: 1px solid #d2d1cd !important;
     }
 }

@@ -91,10 +91,6 @@
         .sax-product-section-heading .sax-section-title { margin-bottom:0; }
         .sax-product-section-heading .sax-section-description { margin:.45rem 0 0; }
         .sax-editorial-description { margin:.35rem 0 0; }
-        .sax-brand-heading { margin-bottom:1.4rem; text-align:center; }
-        .sax-brand-heading .sax-main-title { margin-bottom:0; }
-        .sax-brands-section .sax-brand-description { margin:.4rem 0 0; color:rgba(255,255,255,.72); text-align:center; }
-        .sax-brands-mobile__header .sax-brand-description { margin:.3rem 0 0; text-align:left; }
         .sax-slider-copy { display:flex; max-width:min(680px,70vw); flex-direction:column; align-items:flex-start; gap:.35rem; }
         .sax-luxury-slide__caption .sax-slider-copy em { font-size:clamp(.7rem,1vw,.88rem); font-style:normal; font-weight:400; letter-spacing:.02em; line-height:1.45; text-transform:none; }
         .sax-luxury-slide__caption > strong:only-child { margin-left:auto; }

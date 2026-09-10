@@ -49,6 +49,26 @@ class StorefrontLayoutService
         return $this->current() === 'vista' ? 'storefront.vista.home' : 'home';
     }
 
+    /**
+     * A identidade da instalação tem prioridade no cabeçalho de todas as áreas.
+     * No stage, onde os dois temas são testados, permanece valendo o seletor de layout.
+     */
+    public function headerLayout(): string
+    {
+        return match (app(StoreControlService::class)->storeProfile()) {
+            'otica' => 'vista',
+            'sax' => 'sax',
+            default => $this->current(),
+        };
+    }
+
+    public function headerPartial(): string
+    {
+        $themed = "storefront.{$this->headerLayout()}.header";
+
+        return view()->exists($themed) ? $themed : 'components.header';
+    }
+
     public function partial(string $name): string
     {
         $themed = "storefront.{$this->current()}.{$name}";

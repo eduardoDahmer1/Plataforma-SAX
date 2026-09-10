@@ -5,10 +5,14 @@
     <x-head-master />
 </head>
 
-<body class="sax-storefront sax-checkout-page bg-light">
+@php
+    $headerLayoutService = app(\App\Services\StorefrontLayoutService::class);
+    $checkoutHeaderLayout = $headerLayoutService->headerLayout();
+@endphp
+<body class="sax-storefront sax-checkout-page bg-light storefront-layout-{{ $checkoutHeaderLayout }} header-layout-{{ $checkoutHeaderLayout }}">
     <x-marketing-body-start />
 
-    @include('components.header')
+    @include($headerLayoutService->headerPartial())
     @include('components.catalog-integration-notice')
     @include('components.store-control-notice')
 

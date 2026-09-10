@@ -29,7 +29,9 @@
     @foreach($audiences as $audience)
         @php
             $item = $audience['item'];
-            $image = $item['banner'] ?: $item['photo'];
+            // A foto vem de um produto real daquela categoria. Ela evita que
+            // banners legados de outras áreas apareçam na vitrine óptica.
+            $image = $item['photo'] ?: $item['banner'];
         @endphp
         <a href="{{ $item['url'] }}" class="vista-audience-card" aria-label="{{ $audience['label'] }}: {{ $item['label'] }}">
             @if($image)

@@ -5,10 +5,15 @@
     <x-head-master />
 </head>
 
-<body class="sax-storefront sax-user-area">
+@php
+    $headerLayoutService = app(\App\Services\StorefrontLayoutService::class);
+    $userHeaderLayout = $headerLayoutService->headerLayout();
+    $userBrandName = $userHeaderLayout === 'vista' ? 'VISTA&CO' : 'SAX';
+@endphp
+<body class="sax-storefront sax-user-area storefront-layout-{{ $userHeaderLayout }} header-layout-{{ $userHeaderLayout }}">
     <x-marketing-body-start />
 
-    @include('components.header')
+    @include($headerLayoutService->headerPartial())
     @include('components.catalog-integration-notice')
     @include('components.store-control-notice')
 
@@ -35,7 +40,7 @@
     <div class="offcanvas offcanvas-start sax-user-menu-drawer" tabindex="-1" id="userMenu" aria-labelledby="userMenuLabel">
         <div class="offcanvas-header drawer-header">
             <div class="drawer-header-copy">
-                <span>SAX</span>
+                <span>{{ $userBrandName }}</span>
                 <strong id="userMenuLabel">{{ __('messages.minha_conta') }}</strong>
             </div>
             <button type="button" class="btn-close-drawer" data-bs-dismiss="offcanvas" aria-label="Fechar">

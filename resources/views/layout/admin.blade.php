@@ -5,9 +5,14 @@
     <x-head-master />
 </head>
 
-<body class="sax-admin-body">
+@php
+    $headerLayoutService = app(\App\Services\StorefrontLayoutService::class);
+    $adminHeaderLayout = $headerLayoutService->headerLayout();
+    $adminBrandName = $adminHeaderLayout === 'vista' ? 'VISTA&CO' : 'SAX';
+@endphp
+<body class="sax-admin-body header-layout-{{ $adminHeaderLayout }}">
     {{-- Header --}}
-    @include('components.header')
+    @include($headerLayoutService->headerPartial())
 
 <main class="sax-admin-layout py-3 py-lg-4">
     <div class="container-fluid px-3 px-lg-4 px-xxl-5">
@@ -18,7 +23,7 @@
                     <i class="fa fa-bars"></i>
                 </button>
                 <span class="sax-admin-mobile-entry__copy">
-                    <small>SAX</small>
+                    <small>{{ $adminBrandName }}</small>
                     <strong>Painel administrativo</strong>
                 </span>
                 <i class="fa-solid fa-chevron-right sax-admin-mobile-entry__arrow" aria-hidden="true"></i>
@@ -50,7 +55,7 @@
     <div class="drawer-mobile" id="adminDrawerMobile" role="dialog" aria-modal="true" aria-label="Menu administrativo" aria-hidden="true">
         <div class="admin-drawer-header drawer-header d-flex justify-content-between align-items-center">
             <div class="drawer-header-copy">
-                <span>SAX</span>
+                <span>{{ $adminBrandName }}</span>
                 <strong>Menu</strong>
             </div>
             <button class="btn-close-drawer" id="closeAdminDrawer" type="button" aria-label="Fechar menu">
@@ -75,7 +80,7 @@
 
     <footer class="sax-admin-footer">
         <div class="container-fluid px-3 px-lg-4 px-xxl-5 d-sm-flex justify-content-between align-items-center gap-2">
-            <span>&copy; {{ now()->year }} SAX E-commerce</span>
+            <span>&copy; {{ now()->year }} {{ $adminHeaderLayout === 'vista' ? 'Vista & Co' : 'SAX' }} E-commerce</span>
             <span>Painel administrativo</span>
         </div>
     </footer>

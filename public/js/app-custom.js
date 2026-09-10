@@ -295,6 +295,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const openNotifications = () => {
             cartSidebar?.classList.remove('open');
             cartOverlay?.classList.remove('open');
+            cartSidebar?.setAttribute('aria-hidden', 'true');
+            document.getElementById('cart-button')?.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('sax-cart-drawer-open');
             notificationsDrawer.classList.add('open');
             notificationsOverlay.classList.add('open');
             notificationsDrawer.setAttribute('aria-hidden', 'false');

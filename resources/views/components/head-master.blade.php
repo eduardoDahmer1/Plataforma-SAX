@@ -14,12 +14,14 @@
 
 @php
     $marketingSettings = \App\Models\MarketingSetting::current();
+    $headerLayout = app(\App\Services\StorefrontLayoutService::class)->headerLayout();
+    $isVistaIdentity = $headerLayout === 'vista';
     $isProductionDomain = request()->getHost() === 'saxdepartment.com';
     $robotsContent = !Route::is('admin.*') && $isProductionDomain ? 'index,follow' : 'noindex,nofollow';
     $canonicalPath = request()->path() === '/' ? '' : '/'.ltrim(request()->path(), '/');
     $canonicalUrl = 'https://saxdepartment.com'.$canonicalPath;
     $titleDefault = $marketingSettings->default_meta_title ?: 'SAX - E-commerce de Luxo';
-    if(Route::is('admin.*')) $titleDefault = 'SAX - Painel Administrativo';
+    if(Route::is('admin.*')) $titleDefault = ($isVistaIdentity ? 'VISTA&CO' : 'SAX').' - Painel Administrativo';
     elseif(Request::is('*bridal*')) $titleDefault = 'SAX Bridal';
     elseif(Request::is('*cafe*') || Request::is('*bistro*')) $titleDefault = 'SAX Café & Bistrô';
     elseif(Route::is('checkout.*')) $titleDefault = 'SAX - Checkout Seguro';
@@ -78,7 +80,7 @@
 @if(!Request::is('*cafe*') && !Request::is('*bistro*') && !Request::is('*bridal*') && !Request::is('*palace*') && !Request::is('*institucional*'))
     <link href="{{ asset('css/auth.css') }}?v={{ file_exists(public_path('css/auth.css')) ? filemtime(public_path('css/auth.css')) : time() }}" rel="stylesheet">
 @endif
-@if(($storefrontLayout ?? app(\App\Services\StorefrontLayoutService::class)->current()) === 'vista' && !Route::is('admin.*'))
+@if($isVistaIdentity)
     <link href="{{ asset('css/storefront-vista.css') }}?v={{ file_exists(public_path('css/storefront-vista.css')) ? filemtime(public_path('css/storefront-vista.css')) : time() }}" rel="stylesheet">
 @endif
 

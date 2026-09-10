@@ -5,12 +5,16 @@
     <x-head-master />
 </head>
 
-@php($activeStorefrontLayout = $storefrontLayout ?? app(\App\Services\StorefrontLayoutService::class)->current())
-<body class="sax-storefront storefront-layout-{{ $activeStorefrontLayout }}">
+@php
+    $layoutService = app(\App\Services\StorefrontLayoutService::class);
+    $activeStorefrontLayout = $storefrontLayout ?? $layoutService->current();
+    $activeHeaderLayout = $layoutService->headerLayout();
+@endphp
+<body class="sax-storefront storefront-layout-{{ $activeStorefrontLayout }} header-layout-{{ $activeHeaderLayout }}">
     <x-marketing-body-start />
 
     {{-- Header --}}
-    @include(app(\App\Services\StorefrontLayoutService::class)->partial('header'))
+    @include($layoutService->headerPartial())
     @include('components.catalog-integration-notice')
     @include('components.store-control-notice')
 

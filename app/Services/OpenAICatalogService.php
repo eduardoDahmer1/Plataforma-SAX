@@ -376,18 +376,21 @@ PROMPT;
 
     protected function loadActiveTaxonomy(): array
     {
-        $categories = Category::where('status', 1)
+        $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+            ->where('status', 1)
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
         $categoryIds = $categories->pluck('id')->map(fn ($id) => (int) $id);
         $subcategories = $categoryIds->isNotEmpty()
-            ? Subcategory::whereIn('category_id', $categoryIds)
+            ? app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+                ->whereIn('category_id', $categoryIds)
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug', 'category_id'])
             : collect();
         $subcategoryIds = $subcategories->pluck('id')->map(fn ($id) => (int) $id);
         $childCategories = $subcategoryIds->isNotEmpty()
-            ? CategoriasFilhas::whereIn('subcategory_id', $subcategoryIds)
+            ? app(StoreTaxonomyService::class)->childCategories(CategoriasFilhas::query())
+                ->whereIn('subcategory_id', $subcategoryIds)
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug', 'subcategory_id', 'category_id'])
             : collect();

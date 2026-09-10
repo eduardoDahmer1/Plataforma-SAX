@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PalaceAdminController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductControllerAdmin;
+use App\Http\Controllers\Admin\ProductFeedController as AdminProductFeedController;
 use App\Http\Controllers\Admin\ProductAiBatchController;
 use App\Http\Controllers\Admin\SubcategoryControllerAdmin;
 use App\Http\Controllers\Admin\SystemController;
@@ -53,6 +54,7 @@ use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\InstitucionalController;
 use App\Http\Controllers\PalaceController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductFeedController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\SearchController;
@@ -65,6 +67,9 @@ use Illuminate\Support\Str;
 Route::post('/analytics/event', [SiteAnalyticsController::class, 'store'])
     ->middleware('throttle:120,1')
     ->name('analytics.store');
+
+Route::get('/feeds/products.xml', [ProductFeedController::class, 'show'])
+    ->name('product-feed.show');
 
 Route::get('/testar-email', function () {
     try {
@@ -106,6 +111,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/search/ajax', [SearchController::class, 'ajaxSearch'])->name('search.ajax');
 Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
+Route::get('/colecoes/{collection}', [SearchController::class, 'collection'])
+    ->whereIn('collection', ['new-arrivals', 'trending'])
+    ->name('collections.show');
 Route::get('/institucional', [InstitucionalController::class, 'index'])->name('institucional.index');
 Route::get('/manutencao', fn () => view('manutencao.index'))->name('maintenance.page');
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
@@ -290,6 +298,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('activate-control', [ActivateBrandsAndCategoriesController::class, 'index'])->name('activate.index');
     Route::post('activate-toggle/{type}/{id}', [ActivateBrandsAndCategoriesController::class, 'toggleStatus'])->name('activate.toggle');
     Route::get('products/search', [ProductControllerAdmin::class, 'search'])->name('products.search');
+    Route::post('products/feed/generate', [AdminProductFeedController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('products.feed.generate');
     Route::get('products/ai-batches', [ProductAiBatchController::class, 'index'])->name('products.ai-batches.index');
     Route::post('products/ai-batches/preview', [ProductAiBatchController::class, 'preview'])->name('products.ai-batches.preview');
     Route::get('products/ai-batches/catalog-products',[ProductAiBatchController::class, 'catalogProducts'])->name('products.ai-batches.catalog-products');

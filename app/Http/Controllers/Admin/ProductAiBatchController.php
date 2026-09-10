@@ -13,6 +13,7 @@ use App\Models\ProductAiBatchItem;
 use App\Models\ProductAiPreparation;
 use App\Models\Subcategory;
 use App\Services\ProductAiBatchDraftBuilder;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -27,8 +28,10 @@ class ProductAiBatchController extends Controller
             ->latest()
             ->paginate(15);
         $brands = Brand::where('status', 1)->orderBy('name')->get(['id', 'name']);
-        $categories = Category::where('status', 1)->orderBy('name')->get(['id', 'name']);
-        $subcategories = Subcategory::whereIn('category_id', $categories->pluck('id'))
+        $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+            ->where('status', 1)->orderBy('name')->get(['id', 'name']);
+        $subcategories = app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+            ->whereIn('category_id', $categories->pluck('id'))
             ->orderBy('name')
             ->get(['id', 'category_id', 'name']);
 
@@ -244,8 +247,10 @@ class ProductAiBatchController extends Controller
         $subcategories = collect();
         if ($batch->status === ProductAiBatch::STATUS_DRAFT) {
             $brands = Brand::where('status', 1)->orderBy('name')->get(['id', 'name']);
-            $categories = Category::where('status', 1)->orderBy('name')->get(['id', 'name']);
-            $subcategories = Subcategory::whereIn('category_id', $categories->pluck('id'))
+            $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+                ->where('status', 1)->orderBy('name')->get(['id', 'name']);
+            $subcategories = app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+                ->whereIn('category_id', $categories->pluck('id'))
                 ->orderBy('name')
                 ->get(['id', 'category_id', 'name']);
         }

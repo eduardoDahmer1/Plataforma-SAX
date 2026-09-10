@@ -24,9 +24,231 @@
         </x-slot:actions>
     </x-admin.page-header>
 
+    <div class="product-feed-panel mb-3">
+        <button
+            class="product-feed-panel__toggle collapsed"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#productFeedDetails"
+            aria-expanded="false"
+            aria-controls="productFeedDetails">
+            <span class="product-feed-panel__icon" aria-hidden="true">
+                <i class="fa fa-file-code"></i>
+            </span>
+            <span class="product-feed-panel__summary">
+                <span class="product-feed-panel__title">Feed XML de produtos</span>
+                <span class="product-feed-panel__meta">
+                    <span class="product-feed-panel__status {{ $productFeed['exists'] ? 'is-ready' : '' }}">
+                        <i class="fa fa-circle" aria-hidden="true"></i>
+                        {{ $productFeed['exists'] ? 'Disponível' : 'Não gerado' }}
+                    </span>
+                    @if ($productFeed['exists'] && $productFeed['count'] !== null)
+                        <span>{{ number_format($productFeed['count'], 0, ',', '.') }} produto(s)</span>
+                    @endif
+                </span>
+            </span>
+            <span class="product-feed-panel__action">
+                <span>Gerenciar</span>
+                <i class="fa fa-chevron-down product-feed-panel__chevron" aria-hidden="true"></i>
+            </span>
+        </button>
+
+        <div class="collapse" id="productFeedDetails">
+            <div class="product-feed-panel__body">
+                <div class="d-flex flex-column flex-xl-row align-items-xl-end justify-content-between gap-3">
+                    <div class="flex-grow-1 min-w-0">
+                        <label for="productFeedUrl" class="form-label small fw-bold text-uppercase mb-1">Link público permanente</label>
+                        <p class="small text-muted mb-2">Ao gerar novamente, o conteúdo é atualizado sem alterar esta URL.</p>
+                        <div class="input-group product-feed-panel__link">
+                            <input type="text" id="productFeedUrl" class="form-control bg-white" value="{{ $productFeed['url'] }}" readonly aria-label="Link público do XML de produtos">
+                            <button type="button" class="btn btn-outline-secondary" id="copyProductFeedUrl" title="Copiar link">
+                                <i class="far fa-copy me-1"></i> Copiar
+                            </button>
+                            @if ($productFeed['exists'])
+                                <a href="{{ $productFeed['url'] }}" target="_blank" rel="noopener" class="btn btn-outline-secondary" title="Abrir XML em uma nova guia">
+                                    <i class="fa fa-arrow-up-right-from-square me-1"></i> Abrir
+                                </a>
+                            @endif
+                        </div>
+                        @if ($productFeed['generated_at'])
+                            <div class="product-feed-panel__updated">
+                                <i class="far fa-clock me-1" aria-hidden="true"></i>
+                                Atualizado em {{ \Carbon\Carbon::parse($productFeed['generated_at'])->timezone(config('app.timezone'))->format('d/m/Y \à\s H:i:s') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <form method="POST" action="{{ route('admin.products.feed.generate') }}" class="flex-shrink-0" id="generateProductFeedForm">
+                        @csrf
+                        <button type="submit" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                            <i class="fa fa-rotate me-2"></i>
+                            {{ $productFeed['exists'] ? 'Gerar XML novo' : 'Gerar XML' }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('styles')
+        <style>
+            .product-feed-panel {
+                overflow: hidden;
+                border: 1px solid #e3e8f0;
+                border-radius: 12px;
+                background: #fff;
+                box-shadow: 0 3px 12px rgba(15, 23, 42, .035);
+            }
+            .product-feed-panel__toggle {
+                width: 100%;
+                min-height: 64px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 16px;
+                border: 0;
+                background: #fff;
+                color: #172033;
+                text-align: left;
+                transition: background-color .18s ease;
+            }
+            .product-feed-panel__toggle:hover,
+            .product-feed-panel__toggle:focus-visible {
+                background: #f8fafc;
+            }
+            .product-feed-panel__toggle:focus-visible {
+                outline: 2px solid #2563eb;
+                outline-offset: -2px;
+            }
+            .product-feed-panel__icon {
+                width: 38px;
+                height: 38px;
+                flex: 0 0 38px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 9px;
+                background: #172033;
+                color: #fff;
+            }
+            .product-feed-panel__summary {
+                min-width: 0;
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .product-feed-panel__title {
+                font-size: .94rem;
+                font-weight: 700;
+                line-height: 1.2;
+            }
+            .product-feed-panel__meta {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                color: #7a8497;
+                font-size: .75rem;
+            }
+            .product-feed-panel__status {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .product-feed-panel__status .fa-circle {
+                color: #94a3b8;
+                font-size: 6px;
+            }
+            .product-feed-panel__status.is-ready .fa-circle {
+                color: #16a34a;
+            }
+            .product-feed-panel__action {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                color: #64748b;
+                font-size: .72rem;
+                font-weight: 700;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+            }
+            .product-feed-panel__chevron {
+                transition: transform .2s ease;
+            }
+            .product-feed-panel__toggle:not(.collapsed) .product-feed-panel__chevron {
+                transform: rotate(180deg);
+            }
+            .product-feed-panel__body {
+                padding: 16px;
+                border-top: 1px solid #e8ecf2;
+                background: #f8fafc;
+            }
+            .product-feed-panel__link {
+                max-width: 760px;
+            }
+            .product-feed-panel__link .form-control,
+            .product-feed-panel__link .btn {
+                min-height: 42px;
+            }
+            .product-feed-panel__updated {
+                margin-top: 8px;
+                color: #7a8497;
+                font-size: .75rem;
+            }
+            @media (max-width: 575.98px) {
+                .product-feed-panel__toggle {
+                    min-height: 58px;
+                    padding: 9px 12px;
+                }
+                .product-feed-panel__action span {
+                    display: none;
+                }
+                .product-feed-panel__body {
+                    padding: 14px 12px;
+                }
+                .product-feed-panel__link {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                }
+                .product-feed-panel__link .form-control {
+                    width: 100%;
+                    grid-column: 1 / -1;
+                    border-radius: 6px 6px 0 0 !important;
+                }
+                .product-feed-panel__link .btn {
+                    border-radius: 0 0 6px 6px;
+                }
+            }
+        </style>
+    @endpush
+
     @include('admin.products.index-componentes.form')
 
     <x-admin.alert />
+
+    @push('scripts')
+        <script>
+            document.getElementById('copyProductFeedUrl')?.addEventListener('click', async function () {
+                const input = document.getElementById('productFeedUrl');
+                try {
+                    await navigator.clipboard.writeText(input.value);
+                } catch (error) {
+                    input.select();
+                    document.execCommand('copy');
+                }
+
+                const original = this.innerHTML;
+                this.innerHTML = '<i class="fa fa-check me-1"></i> Copiado';
+                window.setTimeout(() => { this.innerHTML = original; }, 1800);
+            });
+
+            document.getElementById('generateProductFeedForm')?.addEventListener('submit', function () {
+                const button = this.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span> Gerando XML...';
+            });
+        </script>
+    @endpush
 
     <div class="card shadow-sm">
         <div class="card-body">

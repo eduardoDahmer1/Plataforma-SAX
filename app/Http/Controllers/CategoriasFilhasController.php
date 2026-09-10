@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\VisibleCatalogProductsService;
+use App\Services\StoreControlService;
+use App\Services\StoreTaxonomyService;
 
 class CategoriasFilhasController extends Controller
 {
@@ -16,14 +18,17 @@ class CategoriasFilhasController extends Controller
     {
         $page = $request->get('page', 1);
         $search = $request->get('search', '');
-        $cacheKey = "categorias_filhas_index_{$page}_" . md5($search);
+        $profile = app(StoreControlService::class)->storeProfile();
+        $cacheKey = "categorias_filhas_index_v2_{$profile}_{$page}_" . md5($search);
 
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
         });
 
         $categoriasfilhas = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            $query = CategoriasFilhas::with('subcategory.category')
+            $query = app(StoreTaxonomyService::class)->childCategories(
+                CategoriasFilhas::with('subcategory.category')
+            )
                 ->whereHas('subcategory.category', fn ($categoryQuery) => $categoryQuery->where('status', 1))
                 ->orderBy('name');
             if (!empty($search)) {
@@ -40,7 +45,8 @@ class CategoriasFilhasController extends Controller
         $page = $request->get('page', 1);
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
-        $cacheKey = "cat_filha_show_visible_catalog_v2_{$idOrSlug}_p{$page}_{$sortBy}_{$perPage}";
+        $profile = app(StoreControlService::class)->storeProfile();
+        $cacheKey = "cat_filha_show_visible_catalog_v3_{$profile}_{$idOrSlug}_p{$page}_{$sortBy}_{$perPage}";
 
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
@@ -48,7 +54,9 @@ class CategoriasFilhasController extends Controller
 
         try {
             $data = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($idOrSlug, $sortBy, $perPage) {
-                $categoriasfilhas = CategoriasFilhas::with(['subcategory.category'])
+                $categoriasfilhas = app(StoreTaxonomyService::class)->childCategories(
+                    CategoriasFilhas::with(['subcategory.category'])
+                )
                     ->whereHas('subcategory.category', fn ($categoryQuery) => $categoryQuery->where('status', 1))
                     ->where(fn ($query) => $query
                         ->where('slug', $idOrSlug)
@@ -75,7 +83,7 @@ class CategoriasFilhasController extends Controller
             throw $e;
         }
 
-        $categoriesTree = Cache::remember('filter_full_tree_visible_catalog_v2', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
+        $categoriesTree = Cache::remember("filter_full_tree_visible_catalog_v3_{$profile}", now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
         $brands = Cache::remember(
             "filter_brands_child_category_visible_catalog_v1_{$data['categoriasfilhas']->id}",

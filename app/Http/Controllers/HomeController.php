@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Attribute;
+use App\Models\Blog;
 use App\Models\Brand;
+use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Contact;
-use App\Models\Cart;
-use App\Models\Blog;
 use App\Models\Generalsetting;
-use App\Models\Attribute;
 use App\Models\HomeBanner;
 use App\Services\DailyMostViewedProducts;
+use App\Services\StorefrontLayoutService;
 use App\Services\VisibleCatalogProductsService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
@@ -25,7 +26,7 @@ class HomeController extends Controller
 
     private function weeklyRotatedHomeBanners(?Attribute $attribute): array
     {
-        if (!$attribute) {
+        if (! $attribute) {
             return [];
         }
 
@@ -45,7 +46,7 @@ class HomeController extends Controller
                         ];
                     })
                     ->filter(fn ($banner) => filled($banner['image']))
-                    ->sortBy(fn ($banner) => sha1($weekSeed . '|' . $banner['origin'] . '|' . $banner['image']))
+                    ->sortBy(fn ($banner) => sha1($weekSeed.'|'.$banner['origin'].'|'.$banner['image']))
                     ->values();
 
                 $result = [];
@@ -60,10 +61,12 @@ class HomeController extends Controller
         );
     }
 
-    public function index(Request $request, DailyMostViewedProducts $dailyMostViewedProducts)
+    public function index(Request $request, DailyMostViewedProducts $dailyMostViewedProducts, StorefrontLayoutService $layouts)
     {
-        $settings  = Cache::remember('general_settings',  600, fn() => Generalsetting::first());
-        $attribute = Cache::remember('system_attributes', 600, fn() => Attribute::first());
+        $settings = Cache::remember('general_settings', 600, fn () => Generalsetting::first());
+        $homeSections = $settings?->resolvedHomeSections() ?? Generalsetting::defaultHomeSections();
+        $categoryLimit = (string) ($homeSections['categories']['category_limit'] ?? 'all');
+        $attribute = Cache::remember('system_attributes', 600, fn () => Attribute::first());
         $weeklyBanners = $this->weeklyRotatedHomeBanners($attribute);
         $homeBannerGroups = Cache::remember('home_banners_active_v1', 600, fn () => HomeBanner::query()
             ->where('is_active', true)
@@ -80,9 +83,9 @@ class HomeController extends Controller
         $highlights = [];
         foreach ($highlightTypes as $key) {
             $highlights[$key] = Cache::remember(
-                "highlight_products_visible_catalog_v2_{$key}_" . now()->format('Y_W'),
+                "highlight_products_visible_catalog_v2_{$key}_".now()->format('Y_W'),
                 now()->addDays(7),
-                fn() => $this->activeProducts()
+                fn () => $this->activeProducts()
                     ->where("highlights->{$key}", '1')
                     ->inRandomOrder()
                     ->limit(15)
@@ -91,18 +94,21 @@ class HomeController extends Controller
         }
 
         $lancamentos = Cache::remember('home_products_visible_catalog_v2_updated_at', 600,
-            fn() => $this->activeProducts()->orderBy('updated_at', 'desc')->take(12)->get()
+            fn () => $this->activeProducts()->orderBy('updated_at', 'desc')->take(12)->get()
         );
 
         $mostViewed = $dailyMostViewedProducts->get(12);
 
-        $categoriesStrip = Cache::remember('categories_home_strip_random_15min', 900,
-            fn() => Category::select('id', 'name', 'slug', 'photo')
-                ->where('status', 1)->inRandomOrder()->take(5)->get()
+        $categoriesStrip = Cache::remember("categories_home_strip_{$categoryLimit}_v2", 900,
+            fn () => Category::select('id', 'name', 'slug', 'photo')
+                ->where('status', 1)
+                ->orderBy('name')
+                ->when($categoryLimit !== 'all', fn ($query) => $query->limit((int) $categoryLimit))
+                ->get()
         );
 
         $brandsSlider = Cache::remember('home_brands_visible_catalog_v3_banner_priority_15min', 900,
-            fn() => Brand::select('id', 'name', 'slug', 'image', 'banner')
+            fn () => Brand::select('id', 'name', 'slug', 'image', 'banner')
                 ->where('status', 1)
                 ->whereIn('id', VisibleCatalogProductsService::builder()->select('products.brand_id'))
                 ->orderByRaw("CASE WHEN NULLIF(TRIM(banner), '') IS NULL THEN 1 ELSE 0 END")
@@ -112,50 +118,50 @@ class HomeController extends Controller
         );
 
         $allCategories = Cache::remember('categories_all', 600,
-            fn() => Category::selectRaw("id, COALESCE(NULLIF(name,''),slug) as name, slug")
+            fn () => Category::selectRaw("id, COALESCE(NULLIF(name,''),slug) as name, slug")
                 ->where('status', 1)
                 ->orderBy('name')->get()
         );
 
-        $blogs     = Cache::remember('home_blogs', 600, fn() => Blog::latest()->take(9)->get());
+        $blogs = Cache::remember('home_blogs', 600, fn () => Blog::latest()->take(9)->get());
         $cartItems = auth()->check()
             ? Cart::where('user_id', auth()->id())->pluck('quantity', 'product_id')->toArray()
             : [];
 
-        return view('home', [
-            'settings'        => $settings,
-            'homeSections'    => $settings?->resolvedHomeSections() ?? Generalsetting::defaultHomeSections(),
-            'attribute'       => $attribute,
-            'highlights'      => $highlights,
-            'lancamentos'     => $lancamentos,
-            'mostViewed'      => $mostViewed,
-            'categories'      => $categoriesStrip,
-            'allCategories'   => $allCategories,
-            'brands'          => $brandsSlider,
-            'blogs'           => $blogs,
-            'cartItems'       => $cartItems,
+        return view($layouts->homeView(), [
+            'settings' => $settings,
+            'homeSections' => $homeSections,
+            'attribute' => $attribute,
+            'highlights' => $highlights,
+            'lancamentos' => $lancamentos,
+            'mostViewed' => $mostViewed,
+            'categories' => $categoriesStrip,
+            'allCategories' => $allCategories,
+            'brands' => $brandsSlider,
+            'blogs' => $blogs,
+            'cartItems' => $cartItems,
             'homeMainBanners' => $homeBannerGroups->get(HomeBanner::GROUP_MAIN, collect()),
             'homeEditorialBanners' => $homeBannerGroups->get(HomeBanner::GROUP_EDITORIAL, collect()),
-            'banner1'         => $weeklyBanners['banner1'] ?? null,
-            'banner2'         => $weeklyBanners['banner2'] ?? null,
-            'banner3'         => $weeklyBanners['banner3'] ?? null,
-            'banner4'         => $weeklyBanners['banner4'] ?? null,
-            'banner5'         => $weeklyBanners['banner5'] ?? null,
-            'banner6'         => $weeklyBanners['banner6'] ?? null,
-            'banner7'         => $weeklyBanners['banner7'] ?? null,
-            'banner8'         => $weeklyBanners['banner8'] ?? null,
-            'banner9'         => $weeklyBanners['banner9'] ?? null,
-            'banner10'        => $weeklyBanners['banner10'] ?? null,
-            'banner1_link'    => $weeklyBanners['banner1_link'] ?? null,
-            'banner2_link'    => $weeklyBanners['banner2_link'] ?? null,
-            'banner3_link'    => $weeklyBanners['banner3_link'] ?? null,
-            'banner4_link'    => $weeklyBanners['banner4_link'] ?? null,
-            'banner5_link'    => $weeklyBanners['banner5_link'] ?? null,
-            'banner6_link'    => $weeklyBanners['banner6_link'] ?? null,
-            'banner7_link'    => $weeklyBanners['banner7_link'] ?? null,
-            'banner8_link'    => $weeklyBanners['banner8_link'] ?? null,
-            'banner9_link'    => $weeklyBanners['banner9_link'] ?? null,
-            'banner10_link'   => $weeklyBanners['banner10_link'] ?? null,
+            'banner1' => $weeklyBanners['banner1'] ?? null,
+            'banner2' => $weeklyBanners['banner2'] ?? null,
+            'banner3' => $weeklyBanners['banner3'] ?? null,
+            'banner4' => $weeklyBanners['banner4'] ?? null,
+            'banner5' => $weeklyBanners['banner5'] ?? null,
+            'banner6' => $weeklyBanners['banner6'] ?? null,
+            'banner7' => $weeklyBanners['banner7'] ?? null,
+            'banner8' => $weeklyBanners['banner8'] ?? null,
+            'banner9' => $weeklyBanners['banner9'] ?? null,
+            'banner10' => $weeklyBanners['banner10'] ?? null,
+            'banner1_link' => $weeklyBanners['banner1_link'] ?? null,
+            'banner2_link' => $weeklyBanners['banner2_link'] ?? null,
+            'banner3_link' => $weeklyBanners['banner3_link'] ?? null,
+            'banner4_link' => $weeklyBanners['banner4_link'] ?? null,
+            'banner5_link' => $weeklyBanners['banner5_link'] ?? null,
+            'banner6_link' => $weeklyBanners['banner6_link'] ?? null,
+            'banner7_link' => $weeklyBanners['banner7_link'] ?? null,
+            'banner8_link' => $weeklyBanners['banner8_link'] ?? null,
+            'banner9_link' => $weeklyBanners['banner9_link'] ?? null,
+            'banner10_link' => $weeklyBanners['banner10_link'] ?? null,
             'whatsapp_banner' => $attribute->whatsapp_banner ?? null,
         ]);
     }
@@ -163,16 +169,16 @@ class HomeController extends Controller
     public function storeNewsletter(Request $request)
     {
         $request->validate([
-            'email'        => 'required|email|max:255',
+            'email' => 'required|email|max:255',
             'contact_type' => 'required',
-            'name'         => 'required',
+            'name' => 'required',
         ]);
 
         Contact::create([
-            'name'         => $request->name,
-            'email'        => $request->email,
+            'name' => $request->name,
+            'email' => $request->email,
             'contact_type' => $request->contact_type,
-            'message'      => 'Inscrição na Newsletter',
+            'message' => 'Inscrição na Newsletter',
         ]);
 
         return redirect()->back()->with('success', 'Inscrição realizada com sucesso!');

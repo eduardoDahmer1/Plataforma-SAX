@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Services\ImageConverterService;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -14,13 +15,15 @@ class SubcategoryControllerAdmin extends Controller
 {
     public function index(Request $request)
     {
-        $query = Subcategory::with('category');
+        $query = app(StoreTaxonomyService::class)->subcategories(Subcategory::with('category'));
     
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('category', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
         }
     
         $subcategories = $query->paginate(18)->withQueryString();
@@ -30,7 +33,8 @@ class SubcategoryControllerAdmin extends Controller
 
     public function create()
     {
-        $categories = Category::query()->orderBy('name')->get(['id', 'name']);
+        $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+            ->orderBy('name')->get(['id', 'name']);
         return view('admin.subcategories.create', compact('categories'));
     }
 
@@ -64,7 +68,8 @@ class SubcategoryControllerAdmin extends Controller
 
     public function edit(Subcategory $subcategory)
     {
-        $categories = Category::query()->orderBy('name')->get(['id', 'name']);
+        $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+            ->orderBy('name')->get(['id', 'name']);
         return view('admin.subcategories.edit', compact('subcategory', 'categories'));
     }
 

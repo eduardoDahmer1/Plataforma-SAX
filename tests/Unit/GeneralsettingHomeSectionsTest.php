@@ -71,4 +71,34 @@ class GeneralsettingHomeSectionsTest extends TestCase
         $this->assertSame('', $content['title']);
         $this->assertSame('', $content['description']);
     }
+
+    public function test_it_resolves_the_category_display_limit(): void
+    {
+        $settings = new Generalsetting();
+        $settings->home_sections = ['categories' => ['category_limit' => '3']];
+
+        $this->assertSame('3', $settings->resolvedHomeSections()['categories']['category_limit']);
+
+        $settings->home_sections = ['categories' => ['category_limit' => 'invalid']];
+
+        $this->assertSame('all', $settings->resolvedHomeSections()['categories']['category_limit']);
+    }
+
+    public function test_it_resolves_custom_help_labels_in_each_language(): void
+    {
+        $settings = new Generalsetting();
+        $settings->home_sections = [
+            'help' => [
+                'items' => [
+                    ['pt' => 'Originais', 'en' => 'Original', 'es' => 'Originales'],
+                ],
+            ],
+        ];
+
+        $item = $settings->resolvedHomeSections()['help']['items'][0];
+
+        $this->assertSame('Originais', Generalsetting::helpItemLabelForLocale($item, 'pt_BR'));
+        $this->assertSame('Original', Generalsetting::helpItemLabelForLocale($item, 'en'));
+        $this->assertSame('Originales', Generalsetting::helpItemLabelForLocale($item, 'es'));
+    }
 }

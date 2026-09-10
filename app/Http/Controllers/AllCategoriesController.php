@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\StoreControlService;
 
 class AllCategoriesController extends Controller
 {
@@ -13,7 +14,8 @@ class AllCategoriesController extends Controller
             fn() => DB::table('attributes')->first()
         );
 
-        $categories = Cache::remember('all_categories_tree_visible_catalog_v2', now()->addMinutes(60),
+        $profile = app(StoreControlService::class)->storeProfile();
+        $categories = Cache::remember("all_categories_tree_visible_catalog_v3_{$profile}", now()->addMinutes(60),
             fn() => $this->buildFilterCategoriesTree()
         );
 

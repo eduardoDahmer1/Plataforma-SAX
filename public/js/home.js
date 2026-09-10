@@ -16,6 +16,28 @@ document.addEventListener('DOMContentLoaded', function () {
         },
     });
 
+    document.querySelectorAll('[data-vista-product-carousel]').forEach(section => {
+        const slider = section.querySelector('.vista-product-swiper');
+        if (!slider) return;
+
+        new Swiper(slider, {
+            slidesPerView: 1.45,
+            spaceBetween: 8,
+            grabCursor: true,
+            watchOverflow: true,
+            navigation: {
+                nextEl: section.querySelector('.vista-product-arrow--next'),
+                prevEl: section.querySelector('.vista-product-arrow--prev'),
+            },
+            breakpoints: {
+                576: { slidesPerView: 2.2, spaceBetween: 8 },
+                768: { slidesPerView: 3.2, spaceBetween: 10 },
+                1024: { slidesPerView: 4.2, spaceBetween: 10 },
+                1400: { slidesPerView: 5.2, spaceBetween: 6 },
+            },
+        });
+    });
+
     new Swiper('.blogSwiper', {
         slidesPerView: 3,
         spaceBetween: 20,

@@ -19,6 +19,23 @@
             @csrf
             @method('PATCH')
 
+            <section class="storefront-layout-picker" aria-labelledby="storefront-layout-title">
+                <div class="storefront-layout-picker__heading">
+                    <div><strong id="storefront-layout-title">Layout do site</strong><span>Define o cabeçalho, a Home, o rodapé e a linguagem visual do front.</span></div>
+                    <span class="home-sections-count">Por instalação</span>
+                </div>
+                <div class="storefront-layout-options">
+                    @foreach($layouts as $layoutKey => $layout)
+                        <label class="storefront-layout-option">
+                            <input type="radio" name="storefront_layout" value="{{ $layoutKey }}" @checked(old('storefront_layout', $settings->storefront_layout ?? 'sax') === $layoutKey)>
+                            <span class="storefront-layout-option__visual storefront-layout-option__visual--{{ $layoutKey }}"><i class="fa-solid {{ $layout['icon'] }}"></i><b>{{ $layout['label'] }}</b></span>
+                            <span class="storefront-layout-option__copy"><strong>{{ $layout['label'] }}</strong><small>{{ $layout['description'] }}</small></span>
+                            <i class="fa-solid fa-circle-check storefront-layout-option__check"></i>
+                        </label>
+                    @endforeach
+                </div>
+            </section>
+
             <div class="home-sections-toolbar">
                 <div>
                     <strong>Estrutura da página inicial</strong>
@@ -71,6 +88,18 @@
                                 <span><i class="fa-solid fa-language me-2"></i>Editar títulos e descrições</span>
                                 <i class="fa-solid fa-chevron-down home-section-content__chevron"></i>
                             </summary>
+
+                            @if($key === 'categories')
+                                <div class="home-section-option-row">
+                                    <div><strong>Quantidade de categorias</strong><span>Escolha quantos cards serão exibidos nesta seção.</span></div>
+                                    <select class="form-select" name="sections[{{ $key }}][category_limit]" aria-label="Quantidade de categorias">
+                                        @foreach(['1' => '1 categoria', '2' => '2 categorias', '3' => '3 categorias', '4' => '4 categorias', 'all' => 'Todas as categorias'] as $value => $label)
+                                            <option value="{{ $value }}" @selected((string) old("sections.{$key}.category_limit", $section['category_limit'] ?? 'all') === (string) $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
                             <div class="home-section-languages">
                                 @foreach([
                                     'pt' => ['label' => 'Português', 'flag' => '🇧🇷'],
@@ -92,6 +121,25 @@
                                     </fieldset>
                                 @endforeach
                             </div>
+
+                            @if($key === 'help')
+                                <div class="home-benefit-editor">
+                                    <div class="home-benefit-editor__heading"><strong>Textos ao lado dos três ícones</strong><span>Os ícones continuam sendo alterados em Banners e Identidade Visual.</span></div>
+                                    @foreach($section['items'] as $itemIndex => $item)
+                                        <fieldset class="home-benefit-item">
+                                            <legend>Ícone {{ $itemIndex + 1 }}</legend>
+                                            <div>
+                                                @foreach(['pt' => 'Português', 'en' => 'English', 'es' => 'Español'] as $language => $languageLabel)
+                                                    <label for="help-item-{{ $itemIndex }}-{{ $language }}">{{ $languageLabel }}</label>
+                                                    <input id="help-item-{{ $itemIndex }}-{{ $language }}" class="form-control" type="text"
+                                                        name="sections[{{ $key }}][items][{{ $itemIndex }}][{{ $language }}]"
+                                                        value="{{ old("sections.{$key}.items.{$itemIndex}.{$language}", $item[$language]) }}" maxlength="100">
+                                                @endforeach
+                                            </div>
+                                        </fieldset>
+                                    @endforeach
+                                </div>
+                            @endif
                         </details>
                         @endif
                     </article>
@@ -124,6 +172,7 @@
 </x-admin.card>
 
 <style>
+    .storefront-layout-picker{margin-bottom:1.4rem;padding:1rem;border:1px solid #dfe5ed;border-radius:14px;background:#fff}.storefront-layout-picker__heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.85rem}.storefront-layout-picker__heading strong,.storefront-layout-picker__heading span{display:block}.storefront-layout-picker__heading strong{color:#172033;font-size:.82rem}.storefront-layout-picker__heading div>span{margin-top:.2rem;color:#667085;font-size:.72rem}.storefront-layout-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.storefront-layout-option{position:relative;display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:.8rem;padding:.7rem;border:1px solid #dfe5ed;border-radius:11px;cursor:pointer;transition:.2s}.storefront-layout-option:hover{border-color:#98a2b3}.storefront-layout-option:has(input:checked){border-color:#172033;box-shadow:0 0 0 1px #172033}.storefront-layout-option>input{position:absolute;opacity:0;pointer-events:none}.storefront-layout-option__visual{display:grid;height:56px;place-items:center;grid-template-columns:auto auto;gap:.35rem;border-radius:7px;background:#171717;color:#fff;font-size:.7rem;letter-spacing:.04em}.storefront-layout-option__visual--vista{background:#f2f2f2;color:#111}.storefront-layout-option__copy strong,.storefront-layout-option__copy small{display:block}.storefront-layout-option__copy strong{font-size:.76rem;color:#172033}.storefront-layout-option__copy small{margin-top:.2rem;color:#667085;font-size:.68rem;line-height:1.35}.storefront-layout-option__check{color:#172033;opacity:0}.storefront-layout-option:has(input:checked) .storefront-layout-option__check{opacity:1}
     .home-sections-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(260px,.8fr); gap:2rem; align-items:start; }
     .home-sections-toolbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; padding:.9rem 1rem; border:1px solid #e2e7ef; border-radius:12px; background:#f8fafc; }
     .home-sections-toolbar strong,.home-sections-toolbar span { display:block; }
@@ -155,6 +204,11 @@
     .home-section-content summary::-webkit-details-marker { display:none; }
     .home-section-content__chevron { transition:transform .2s ease; }
     .home-section-content[open] .home-section-content__chevron { transform:rotate(180deg); }
+    .home-section-option-row { display:flex; margin:0 .8rem .8rem; padding:.8rem; align-items:center; justify-content:space-between; gap:1rem; border:1px solid #e3e8ef; border-radius:9px; background:#fff; }
+    .home-section-option-row strong,.home-section-option-row span { display:block; }
+    .home-section-option-row strong { color:#344054; font-size:.72rem; }
+    .home-section-option-row span { margin-top:.2rem; color:#667085; font-size:.67rem; }
+    .home-section-option-row .form-select { width:210px; font-size:.74rem; }
     .home-section-content--notice { display:flex; padding:.75rem .9rem; align-items:center; justify-content:space-between; gap:1rem; color:#526078; font-size:.7rem; }
     .home-section-content--notice a { flex:0 0 auto; color:#172033; font-weight:800; text-decoration:none; text-transform:uppercase; }
     .home-section-languages { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8rem; padding:0 .8rem .8rem; }
@@ -165,6 +219,15 @@
     .home-section-language label:first-of-type { margin-top:0; }
     .home-section-language .form-control { font-size:.76rem; }
     .home-section-language textarea.form-control { min-height:82px; resize:vertical; }
+    .home-benefit-editor { margin:0 .8rem .8rem; padding:.9rem; border:1px solid #e3e8ef; border-radius:9px; background:#fff; }
+    .home-benefit-editor__heading strong,.home-benefit-editor__heading span { display:block; }
+    .home-benefit-editor__heading strong { color:#344054; font-size:.74rem; }
+    .home-benefit-editor__heading span { margin-top:.2rem; color:#667085; font-size:.68rem; }
+    .home-benefit-item { margin:1rem 0 0; padding-top:.8rem; border:0; border-top:1px solid #e8ecf1; }
+    .home-benefit-item legend { float:none; width:auto; margin:0 0 .55rem; color:#172033; font-size:.68rem; font-weight:800; text-transform:uppercase; }
+    .home-benefit-item > div { display:grid; grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:.55rem; }
+    .home-benefit-item label { margin:0; color:#667085; font-size:.62rem; font-weight:700; }
+    .home-benefit-item .form-control { font-size:.72rem; }
     .home-sections-footer { display:flex; margin-top:1rem; padding-top:1rem; justify-content:space-between; align-items:center; gap:1rem; border-top:1px solid #e9edf2; }
     .home-sections-footer > span { color:#667085; font-size:.72rem; }
     .home-sections-kicker { color:#667085; font-size:.65rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
@@ -178,7 +241,7 @@
     .home-sections-guide__item span { margin-top:.15rem; color:#667085; font-size:.69rem; line-height:1.45; }
     .home-sections-guide__note { margin-top:.5rem; padding:.85rem; border-left:3px solid #172033; background:#fff; color:#667085; font-size:.69rem; line-height:1.5; }
     @media(max-width:1100px){.home-sections-layout{grid-template-columns:1fr}.home-sections-guide{position:static}.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr) auto}.home-section-languages{grid-template-columns:1fr}}
-    @media(max-width:700px){.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr);padding:.8rem;gap:.6rem}.home-section-actions{grid-column:1/-1;justify-content:flex-end;padding-top:.7rem;border-top:1px solid #edf0f4}.home-section-switch{margin-left:auto}.home-sections-footer{align-items:stretch;flex-direction:column}.home-sections-footer .btn{width:100%}}
+    @media(max-width:700px){.storefront-layout-options{grid-template-columns:1fr}.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr);padding:.8rem;gap:.6rem}.home-section-actions{grid-column:1/-1;justify-content:flex-end;padding-top:.7rem;border-top:1px solid #edf0f4}.home-section-switch{margin-left:auto}.home-section-option-row{align-items:stretch;flex-direction:column}.home-section-option-row .form-select{width:100%}.home-benefit-item>div{grid-template-columns:1fr}.home-sections-footer{align-items:stretch;flex-direction:column}.home-sections-footer .btn{width:100%}}
 </style>
 
 <script>

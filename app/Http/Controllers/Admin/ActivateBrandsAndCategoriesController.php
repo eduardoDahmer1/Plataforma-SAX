@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Brand; 
 use App\Models\Category;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Support\Facades\Cache;
 
 class ActivateBrandsAndCategoriesController extends Controller
@@ -17,7 +18,8 @@ class ActivateBrandsAndCategoriesController extends Controller
     {
         // Só as colunas usadas na tela: são milhares de marcas.
         $brands = Brand::orderBy('name')->get(['id', 'name', 'slug', 'status']);
-        $categories = Category::orderBy('name')->get(['id', 'name', 'slug', 'status']);
+        $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+            ->orderBy('name')->get(['id', 'name', 'slug', 'status']);
 
         return view('admin.activate.index', compact('brands', 'categories'));
     }

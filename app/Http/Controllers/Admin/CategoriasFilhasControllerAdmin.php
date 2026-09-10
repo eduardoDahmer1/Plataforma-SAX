@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CategoriasFilhas;
 use App\Models\Subcategory;
 use App\Services\ImageConverterService;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -15,11 +16,15 @@ class CategoriasFilhasControllerAdmin extends Controller
 {
     public function index(Request $request)
     {
-        $query = CategoriasFilhas::with('subcategory');
+        $query = app(StoreTaxonomyService::class)->childCategories(
+            CategoriasFilhas::with('subcategory.category')
+        );
 
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', "%{$search}%")
-                ->orWhereHas('subcategory', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('subcategory', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+            });
         }
 
         // Ajuste para o nome da rota correto no seu sistema (.index)
@@ -30,7 +35,8 @@ class CategoriasFilhasControllerAdmin extends Controller
 
     public function create()
     {
-        $subcategories = Subcategory::query()->orderBy('name')->get(['id', 'name']);
+        $subcategories = app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+            ->orderBy('name')->get(['id', 'name']);
         return view('admin.categoriasfilhas.create', compact('subcategories'));
     }
 
@@ -75,7 +81,8 @@ class CategoriasFilhasControllerAdmin extends Controller
     {
         // O parâmetro deve bater com o nome na rota {categorias_filha}
         $categoriasfilhas = $categorias_filha;
-        $subcategories = Subcategory::query()->orderBy('name')->get(['id', 'name']);
+        $subcategories = app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+            ->orderBy('name')->get(['id', 'name']);
 
         return view('admin.categoriasfilhas.edit', compact('categoriasfilhas', 'subcategories'));
     }

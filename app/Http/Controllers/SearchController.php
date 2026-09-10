@@ -10,12 +10,42 @@ use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
 use App\Services\ProductSearchService;
 use App\Services\VisibleCatalogProductsService;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
 
 class SearchController extends Controller
 {
+    private const COLLECTIONS = [
+        'new-arrivals' => [
+            'sort_by' => 'latest',
+            'titles' => [
+                'pt-br' => 'Recém-chegados',
+                'es' => 'Recién llegados',
+                'en' => 'New arrivals',
+            ],
+            'descriptions' => [
+                'pt-br' => 'Os últimos produtos adicionados ao catálogo.',
+                'es' => 'Los últimos productos agregados al catálogo.',
+                'en' => 'The latest products added to the catalog.',
+            ],
+        ],
+        'trending' => [
+            'sort_by' => 'trending',
+            'titles' => [
+                'pt-br' => 'Tendências',
+                'es' => 'Tendencias',
+                'en' => 'Trending',
+            ],
+            'descriptions' => [
+                'pt-br' => 'Os produtos mais vistos da loja.',
+                'es' => 'Los productos más vistos de la tienda.',
+                'en' => 'The most viewed products in the store.',
+            ],
+        ],
+    ];
+
     public function __construct(private readonly ProductSearchService $productSearch)
     {
     }
@@ -164,6 +194,7 @@ class SearchController extends Controller
 
         match ($sortBy) {
             'latest'     => $query->orderBy('products.created_at', 'desc'),
+            'trending'   => $query->orderByDesc('products.views')->orderByDesc('products.id'),
             'oldest'     => $query->orderBy('products.created_at', 'asc'),
             'name_az'    => $query->orderBy('products.external_name', 'asc'),
             'name_za'    => $query->orderBy('products.external_name', 'desc'),
@@ -171,6 +202,17 @@ class SearchController extends Controller
             'price_high' => $query->orderBy('products.price', 'desc'),
             default      => $query->orderBy('products.id', 'desc'),
         };
+    }
+
+    private function requestedSort(Request $request): ?string
+    {
+        if ($request->filled('sort_by')) {
+            return $request->string('sort_by')->toString();
+        }
+
+        $collection = self::COLLECTIONS[$request->string('collection')->toString()] ?? null;
+
+        return $collection['sort_by'] ?? null;
     }
 
     private function sidebarData(Builder $matchingProducts): array
@@ -188,24 +230,28 @@ class SearchController extends Controller
                 ->whereHas('products', $hasProducts)
                 ->orderBy('name')->get(['id', 'name']),
 
-            'categories' => Category::where('status', 1)
+            'categories' => app(StoreTaxonomyService::class)->categories(Category::query())
+                ->where('status', 1)
                 ->whereHas('products', $hasProducts)
                 ->orderBy('name')->get(['id', 'name', 'slug']),
 
-            'subcategories' => Subcategory::whereHas('products', $hasProducts)
+            'subcategories' => app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+                ->whereHas('products', $hasProducts)
                 ->orderBy('name')->get(['id', 'name']),
 
-            'categoriasfilhas' => CategoriasFilhas::whereHas('products', $hasProducts)
+            'categoriasfilhas' => app(StoreTaxonomyService::class)->childCategories(CategoriasFilhas::query())
+                ->whereHas('products', $hasProducts)
                 ->orderBy('name')->get(['id', 'name']),
         ];
     }
 
     public function index(Request $request)
     {
+        $collection = self::COLLECTIONS[$request->string('collection')->toString()] ?? null;
         $base      = $this->baseQuery($request);
         $sidebar   = $this->sidebarData(clone $base);
         $query     = $this->applyFilters(clone $base, $request);
-        $this->applySorting($query, $request->sort_by, $request->search);
+        $this->applySorting($query, $this->requestedSort($request), $request->search);
 
         $paginated = $query->paginate($request->get('per_page', 36))->withQueryString();
         $this->attachCardColors($paginated);
@@ -214,13 +260,38 @@ class SearchController extends Controller
             'paginated' => $paginated,
             'request'   => $request,
             'query'     => $request->search,
+            'collectionTitle' => $collection ? $this->localizedCollectionText($collection, 'titles') : null,
+            'collectionDescription' => $collection ? $this->localizedCollectionText($collection, 'descriptions') : null,
         ]));
+    }
+
+    public function collection(Request $request, string $collection)
+    {
+        abort_unless(isset(self::COLLECTIONS[$collection]), 404);
+
+        $request->merge([
+            'collection' => $collection,
+            'sort_by' => $request->filled('sort_by')
+                ? $request->string('sort_by')->toString()
+                : self::COLLECTIONS[$collection]['sort_by'],
+        ]);
+
+        return $this->index($request);
+    }
+
+    private function localizedCollectionText(array $collection, string $field): string
+    {
+        $locale = translation_locale();
+
+        return $collection[$field][$locale]
+            ?? $collection[$field][strtolower(str_replace('-', '_', app()->getLocale()))]
+            ?? $collection[$field]['es'];
     }
 
     public function ajaxSearch(Request $request)
     {
         $query = $this->applyFilters($this->baseQuery($request), $request);
-        $this->applySorting($query, $request->sort_by, $request->search);
+        $this->applySorting($query, $this->requestedSort($request), $request->search);
 
         $paginated = $query->paginate((int) $request->get('per_page', 36))->withQueryString();
         $this->attachCardColors($paginated);

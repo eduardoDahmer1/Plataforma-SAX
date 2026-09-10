@@ -325,7 +325,7 @@
                                     <i class="fas fa-image me-1"></i>Foto Principal
                                 </label>
                                 <div class="product-media-measure">
-                                    <i class="fas fa-ruler-combined"></i> Recomendado: 1200 × 1500 px · proporção 4:5
+                                    <i class="fas fa-image"></i> Envie uma imagem nítida e de boa qualidade. O sistema a adaptará ao espaço disponível sem deformá-la.
                                 </div>
                                 <div class="product-media-panel h-100">
                                     <div class="product-main-preview position-relative" id="photoPreviewBox"
@@ -346,7 +346,7 @@
                                         <div class="product-dropzone-icon"><i class="fas fa-cloud-arrow-up"></i></div>
                                         <strong>Arraste a foto principal aqui</strong>
                                         <span>ou clique para selecionar no computador</span>
-                                        <small id="photoSelectionStatus">1200 × 1500 px · JPG, PNG ou WEBP · máximo 10 MB</small>
+                                        <small id="photoSelectionStatus">JPG, PNG ou WEBP · máximo 10 MB</small>
                                     </div>
                                 </div>
                             </div>
@@ -356,7 +356,7 @@
                                     <i class="fas fa-images me-1"></i>Galeria de Imagens
                                 </label>
                                 <div class="product-media-measure">
-                                    <i class="fas fa-ruler-combined"></i> Recomendado: 1200 × 1500 px por foto · proporção 4:5
+                                    <i class="fas fa-images"></i> Envie imagens nítidas e de boa qualidade. O sistema as adaptará ao espaço disponível sem deformá-las.
                                 </div>
                                 <div class="product-media-panel h-100">
                                     <div class="product-dropzone" id="productGalleryDropzone">
@@ -364,7 +364,7 @@
                                         <div class="product-dropzone-icon"><i class="fas fa-images"></i></div>
                                         <strong>Arraste várias imagens para a galeria</strong>
                                         <span>ou clique para selecionar no computador</span>
-                                        <small id="gallerySelectionCount">1200 × 1500 px por foto · nenhuma nova imagem selecionada</small>
+                                        <small id="gallerySelectionCount">Nenhuma nova imagem selecionada</small>
                                     </div>
 
                                     <div id="galleryPreview" class="product-gallery-preview mt-3" style="display:none;"></div>

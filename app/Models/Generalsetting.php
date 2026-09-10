@@ -11,6 +11,26 @@ class Generalsetting extends Model
 
     protected $table = 'generalsettings';
 
+    public const CATEGORY_LIMIT_OPTIONS = ['1', '2', '3', '4', 'all'];
+
+    public const HOME_HELP_ITEMS = [
+        [
+            'pt' => 'Produtos originais',
+            'en' => 'Original products',
+            'es' => 'Productos originales',
+        ],
+        [
+            'pt' => 'Compra segura',
+            'en' => 'Secure shopping',
+            'es' => 'Compra segura',
+        ],
+        [
+            'pt' => 'Envios para todo o Paraguai',
+            'en' => 'Shipping throughout Paraguay',
+            'es' => 'Envíos a todo Paraguay',
+        ],
+    ];
+
     public const HOME_SECTIONS = [
         'main_slider' => [
             'label' => 'Slider principal',
@@ -130,11 +150,12 @@ class Generalsetting extends Model
     // Adicionada a coluna 'show_highlight_famosos' para controlar os Mais Vistos
     protected $fillable = [
         'site_name',
+        'storefront_layout',
         'home_sections',
         'show_highlight_destaque',
         'show_highlight_lancamentos',
         'show_highlight_famosos', // <--- Nova aqui
-        'show_highlight_ofertas_relampago',  
+        'show_highlight_ofertas_relampago',
     ];
 
     // Garantindo que o Laravel trate o valor como booleano (0 ou 1)
@@ -143,7 +164,7 @@ class Generalsetting extends Model
         'show_highlight_destaque' => 'boolean',
         'show_highlight_lancamentos' => 'boolean',
         'show_highlight_famosos' => 'boolean', // <--- Nova aqui
-        'show_highlight_ofertas_relampago'=> 'boolean',
+        'show_highlight_ofertas_relampago' => 'boolean',
     ];
 
     public static function defaultHomeSections(): array
@@ -156,6 +177,14 @@ class Generalsetting extends Model
                 'content' => self::HOME_SECTION_CONTENT[$key],
                 'position' => count($sections) + 1,
             ];
+
+            if ($key === 'categories') {
+                $sections[$key]['category_limit'] = 'all';
+            }
+
+            if ($key === 'help') {
+                $sections[$key]['items'] = self::HOME_HELP_ITEMS;
+            }
         }
 
         return $sections;
@@ -177,11 +206,19 @@ class Generalsetting extends Model
                 'position' => max(1, (int) ($saved['position'] ?? $default['position'])),
                 'content' => $this->resolveSectionContent($default['content'], $savedContent),
             ];
+
+            if ($key === 'categories') {
+                $limit = (string) ($saved['category_limit'] ?? $default['category_limit']);
+                $sections[$key]['category_limit'] = in_array($limit, self::CATEGORY_LIMIT_OPTIONS, true) ? $limit : 'all';
+            }
+
+            if ($key === 'help') {
+                $sections[$key]['items'] = $this->resolveHelpItems($saved['items'] ?? []);
+            }
         }
 
         $defaultOrder = array_flip(array_keys(self::HOME_SECTIONS));
-        uksort($sections, fn (string $leftKey, string $rightKey) =>
-            [$sections[$leftKey]['position'], $defaultOrder[$leftKey]]
+        uksort($sections, fn (string $leftKey, string $rightKey) => [$sections[$leftKey]['position'], $defaultOrder[$leftKey]]
             <=>
             [$sections[$rightKey]['position'], $defaultOrder[$rightKey]]
         );
@@ -202,6 +239,14 @@ class Generalsetting extends Model
         ];
     }
 
+    public static function helpItemLabelForLocale(array $item, ?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+        $language = str_starts_with($locale, 'en') ? 'en' : (str_starts_with($locale, 'es') ? 'es' : 'pt');
+
+        return (string) ($item[$language] ?? $item['pt'] ?? '');
+    }
+
     private function resolveSectionContent(array $defaults, array $saved): array
     {
         $content = [];
@@ -215,6 +260,17 @@ class Generalsetting extends Model
         }
 
         return $content;
+    }
+
+    private function resolveHelpItems(array $saved): array
+    {
+        return collect(self::HOME_HELP_ITEMS)->map(function (array $defaults, int $index) use ($saved): array {
+            $stored = is_array($saved[$index] ?? null) ? $saved[$index] : [];
+
+            return collect(['pt', 'en', 'es'])->mapWithKeys(fn (string $language): array => [
+                $language => (string) ($stored[$language] ?? $defaults[$language]),
+            ])->all();
+        })->all();
     }
 
     private function legacyHomeSectionVisibility(string $key, bool $default): bool

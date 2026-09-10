@@ -2,24 +2,27 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\App;
 use App\Models\Attribute;
-use App\Models\Language;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Subcategory;
 use App\Models\CategoriasFilhas;
+use App\Models\Language;
+use App\Models\Product;
+use App\Models\Subcategory;
 use App\Services\CatalogIntegrationAvailabilityService;
 use App\Services\IntegrationMonitorService;
+use App\Services\OpticalNavigationService;
 use App\Services\StoreControlService;
+use App\Services\StorefrontLayoutService;
 use App\Services\ThemeSettingsService;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CatalogIntegrationAvailabilityService::class);
         $this->app->singleton(StoreControlService::class);
         $this->app->singleton(ThemeSettingsService::class);
+        $this->app->singleton(StorefrontLayoutService::class);
+        $this->app->singleton(OpticalNavigationService::class);
     }
 
     /**
@@ -92,6 +97,13 @@ class AppServiceProvider extends ServiceProvider
 
         // 5. Paginação com Bootstrap
         Paginator::useBootstrap();
+
+        foreach ([Category::class, Subcategory::class, CategoriasFilhas::class] as $taxonomyModel) {
+            $taxonomyModel::saved(fn () => app(OpticalNavigationService::class)->clear());
+            $taxonomyModel::deleted(fn () => app(OpticalNavigationService::class)->clear());
+        }
+        Product::saved(fn () => app(OpticalNavigationService::class)->clear());
+        Product::deleted(fn () => app(OpticalNavigationService::class)->clear());
 
         /**
          * 6. NAVEGAÇÃO COMPARTILHADA (Header e Footer)
@@ -174,6 +186,7 @@ class AppServiceProvider extends ServiceProvider
                     'customerPersistedUnreadNotificationsCount' => 0,
                     'customerUnreadNotificationsCount' => 0,
                 ]);
+
                 return;
             }
 
@@ -209,37 +222,38 @@ class AppServiceProvider extends ServiceProvider
                     : null;
 
                 $globalViewData = [
-                'catalogIntegrationStatus' => app(CatalogIntegrationAvailabilityService::class)->status(),
-                'storeControls' => app(StoreControlService::class)->settings(),
-                'locale' => App::getLocale(),
-                'webpImage' => $attribute?->header_image ?? null,
-                'banner1' => $attribute?->banner1 ?? null,
-                'logo_palace' => $attribute?->logo_palace ?? null,
-                'logo_bridal' => $attribute?->logo_bridal ?? null,
-                'logo_cafe_bistro' => $attribute?->logo_cafe_bistro ?? null,
-                'logo_cafe_bistro_asuncion' => $attribute?->logo_cafe_bistro_asuncion ?? null,
-                'banner_horizontal' => $attribute?->banner_horizontal ?? null,
-                'banner_horizontal_link' => $attribute?->banner_horizontal_link ?? null,
-                'banner2' => $attribute?->banner2 ?? null,
-                'banner3' => $attribute?->banner3 ?? null,
-                'banner4' => $attribute?->banner4 ?? null,
-                'banner5' => $attribute?->banner5 ?? null,
-                'banner6' => $attribute?->banner6 ?? null,
-                'banner7' => $attribute?->banner7 ?? null,
-                'banner8' => $attribute?->banner8 ?? null,
-                'banner9' => $attribute?->banner9 ?? null,
-                'banner10' => $attribute?->banner10 ?? null,
-                'banner1_link' => $attribute?->banner1_link ?? null,
-                'banner2_link' => $attribute?->banner2_link ?? null,
-                'banner3_link' => $attribute?->banner3_link ?? null,
-                'banner4_link' => $attribute?->banner4_link ?? null,
-                'banner5_link' => $attribute?->banner5_link ?? null,
-                'banner6_link' => $attribute?->banner6_link ?? null,
-                'banner7_link' => $attribute?->banner7_link ?? null,
-                'banner8_link' => $attribute?->banner8_link ?? null,
-                'banner9_link' => $attribute?->banner9_link ?? null,
-                'banner10_link' => $attribute?->banner10_link ?? null,
-                'whatsapp_banner' => $attribute?->whatsapp_banner ?? null,
+                    'catalogIntegrationStatus' => app(CatalogIntegrationAvailabilityService::class)->status(),
+                    'storeControls' => app(StoreControlService::class)->settings(),
+                    'storefrontLayout' => app(StorefrontLayoutService::class)->current(),
+                    'locale' => App::getLocale(),
+                    'webpImage' => $attribute?->header_image ?? null,
+                    'banner1' => $attribute?->banner1 ?? null,
+                    'logo_palace' => $attribute?->logo_palace ?? null,
+                    'logo_bridal' => $attribute?->logo_bridal ?? null,
+                    'logo_cafe_bistro' => $attribute?->logo_cafe_bistro ?? null,
+                    'logo_cafe_bistro_asuncion' => $attribute?->logo_cafe_bistro_asuncion ?? null,
+                    'banner_horizontal' => $attribute?->banner_horizontal ?? null,
+                    'banner_horizontal_link' => $attribute?->banner_horizontal_link ?? null,
+                    'banner2' => $attribute?->banner2 ?? null,
+                    'banner3' => $attribute?->banner3 ?? null,
+                    'banner4' => $attribute?->banner4 ?? null,
+                    'banner5' => $attribute?->banner5 ?? null,
+                    'banner6' => $attribute?->banner6 ?? null,
+                    'banner7' => $attribute?->banner7 ?? null,
+                    'banner8' => $attribute?->banner8 ?? null,
+                    'banner9' => $attribute?->banner9 ?? null,
+                    'banner10' => $attribute?->banner10 ?? null,
+                    'banner1_link' => $attribute?->banner1_link ?? null,
+                    'banner2_link' => $attribute?->banner2_link ?? null,
+                    'banner3_link' => $attribute?->banner3_link ?? null,
+                    'banner4_link' => $attribute?->banner4_link ?? null,
+                    'banner5_link' => $attribute?->banner5_link ?? null,
+                    'banner6_link' => $attribute?->banner6_link ?? null,
+                    'banner7_link' => $attribute?->banner7_link ?? null,
+                    'banner8_link' => $attribute?->banner8_link ?? null,
+                    'banner9_link' => $attribute?->banner9_link ?? null,
+                    'banner10_link' => $attribute?->banner10_link ?? null,
+                    'whatsapp_banner' => $attribute?->whatsapp_banner ?? null,
                 ];
             }
 

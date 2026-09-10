@@ -78,6 +78,9 @@
 @if(!Request::is('*cafe*') && !Request::is('*bistro*') && !Request::is('*bridal*') && !Request::is('*palace*') && !Request::is('*institucional*'))
     <link href="{{ asset('css/auth.css') }}?v={{ file_exists(public_path('css/auth.css')) ? filemtime(public_path('css/auth.css')) : time() }}" rel="stylesheet">
 @endif
+@if(($storefrontLayout ?? app(\App\Services\StorefrontLayoutService::class)->current()) === 'vista' && !Route::is('admin.*'))
+    <link href="{{ asset('css/storefront-vista.css') }}?v={{ file_exists(public_path('css/storefront-vista.css')) ? filemtime(public_path('css/storefront-vista.css')) : time() }}" rel="stylesheet">
+@endif
 
 {{-- Temáticas: Café & Bistrô, Bridal, Palace, Institucional (solo público, nunca en admin) --}}
 @if($isThemedPublicPage)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\ImageConverterService;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +17,8 @@ class CategoryControllerAdmin extends Controller
         $search = $request->get('search');
 
         // BUSCA DIRETA DO BANCO (Sem Cache::remember)
-        $categories = Category::where('status', 1)
+        $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+            ->where('status', 1)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

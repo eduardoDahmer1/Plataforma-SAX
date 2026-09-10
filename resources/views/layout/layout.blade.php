@@ -5,11 +5,12 @@
     <x-head-master />
 </head>
 
-<body class="sax-storefront">
+@php($activeStorefrontLayout = $storefrontLayout ?? app(\App\Services\StorefrontLayoutService::class)->current())
+<body class="sax-storefront storefront-layout-{{ $activeStorefrontLayout }}">
     <x-marketing-body-start />
 
     {{-- Header --}}
-    @include('components.header')
+    @include(app(\App\Services\StorefrontLayoutService::class)->partial('header'))
     @include('components.catalog-integration-notice')
     @include('components.store-control-notice')
 
@@ -23,7 +24,7 @@
     </button>
 
     {{-- Footer --}}
-    @include('components.footer')
+    @include(app(\App\Services\StorefrontLayoutService::class)->partial('footer'))
 
     <x-scripts-master />
 

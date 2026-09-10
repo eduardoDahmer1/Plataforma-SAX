@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Cupon;
 use App\Models\Product;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -159,7 +160,8 @@ class CuponController extends Controller
         // Só entram no formulário categorias/marcas ativas e que tenham ao menos um
         // produto ativo: cupom apontado para escopo vazio nunca daria desconto.
         return [
-            'categorias' => Category::whereNotNull('name')
+            'categorias' => app(StoreTaxonomyService::class)->categories(Category::query())
+                ->whereNotNull('name')
                 ->where('status', 1)
                 ->whereHas('products', fn ($q) => $q->where('status', 1))
                 ->orderBy('name')

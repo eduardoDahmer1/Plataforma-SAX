@@ -31,12 +31,16 @@
         <input type="hidden" name="categoriasfilhas" data-filter value="{{ $request->categoriasfilhas }}">
         <input type="hidden" name="min_price"        data-filter value="{{ $request->min_price }}">
         <input type="hidden" name="max_price"        data-filter value="{{ $request->max_price }}">
+        @if($request->filled('collection'))
+            <input type="hidden" name="collection" data-filter value="{{ $request->collection }}">
+        @endif
 
         <div class="toolbar-control d-flex align-items-center gap-2">
             <label class="toolbar-label d-none d-md-block mb-0">{{ __('messages.ordenar_por') }}</label>
             <select name="sort_by" data-filter class="form-select toolbar-select">
                 <option value="">{{ __('messages.ordenar_padrao') }}</option>
                 <option value="latest"     @selected($request->sort_by == 'latest')>{{ __('messages.ordenar_ultimo') }}</option>
+                <option value="trending"   @selected($request->sort_by == 'trending')>Mais vistos</option>
                 <option value="price_low"  @selected($request->sort_by == 'price_low')>{{ __('messages.ordenar_menor_preco') }}</option>
                 <option value="price_high" @selected($request->sort_by == 'price_high')>{{ __('messages.ordenar_maior_preco') }}</option>
                 <option value="name_az"    @selected($request->sort_by == 'name_az')>A–Z</option>
@@ -68,6 +72,9 @@
             <input type="hidden" name="sort_by"  value="{{ $request->sort_by }}">
             <input type="hidden" name="per_page" value="{{ $request->per_page }}">
             <input type="hidden" name="search"   data-filter value="{{ $request->search }}">
+            @if($request->filled('collection'))
+                <input type="hidden" name="collection" value="{{ $request->collection }}">
+            @endif
 
             @php
                 $filterFields = [
@@ -119,7 +126,9 @@
                 <button type="submit" class="btn btn-dark search-filter-apply">
                     {{ __('messages.aplicar_filtros') }}
                 </button>
-                <a href="{{ route('search', ['search' => $request->search]) }}"
+                <a href="{{ $request->filled('collection')
+                    ? route('collections.show', ['collection' => $request->collection])
+                    : route('search', ['search' => $request->search]) }}"
                    class="search-filter-reset">
                     <i class="fa-solid fa-rotate-left"></i> {{ __('messages.limpar_tudo') }}
                 </a>

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\SlugRedirect;
 use App\Services\VisibleCatalogProductsService;
+use App\Services\StoreControlService;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +18,8 @@ class CategoryController extends Controller
         $page = $request->get('page', 1);
         $search = $request->input('search', '');
 
-        $cacheKey = "categories_index_visible_catalog_v2_{$page}_" . md5($search);
+        $profile = app(StoreControlService::class)->storeProfile();
+        $cacheKey = "categories_index_visible_catalog_v3_{$profile}_{$page}_" . md5($search);
 
         // Buscamos os atributos globais (banners, logos, etc)
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
@@ -24,7 +27,8 @@ class CategoryController extends Controller
         });
 
         $categories = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search) {
-            return Category::where('status', 1)
+            return app(StoreTaxonomyService::class)->categories(Category::query())
+                ->where('status', 1)
                 ->with(['subcategories.categoriasfilhas'])
                 ->withCount([
                     'products' => fn ($q) => $this->applyActiveProductScope($q),
@@ -40,7 +44,9 @@ class CategoryController extends Controller
     public function show(Request $request, $slug)
     {
         try {
-            $category = Category::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+            $category = app(StoreTaxonomyService::class)->categories(Category::query())
+                ->where(fn ($query) => $query->where('slug', $slug)->orWhere('id', $slug))
+                ->firstOrFail();
         } catch (ModelNotFoundException $e) {
             if ($redirectUrl = SlugRedirect::resolveUrl('category', $slug)) {
                 return redirect($redirectUrl, 301);
@@ -55,7 +61,8 @@ class CategoryController extends Controller
         $page = $request->get('page', 1);
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
-        $cacheKey = "category_show_visible_catalog_v2_{$category->id}_{$page}_{$sortBy}_{$perPage}";
+        $profile = app(StoreControlService::class)->storeProfile();
+        $cacheKey = "category_show_visible_catalog_v3_{$profile}_{$category->id}_{$page}_{$sortBy}_{$perPage}";
 
         // 1. Buscamos o atributo global para os banners de fallback
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
@@ -78,7 +85,7 @@ class CategoryController extends Controller
 
         // 3. Dados para o Filtro Completo (Sidebar)
         // Carregamos a árvore inteira para que o componente mostre Cat > Sub > Filhas
-        $categoriesTree = Cache::remember('filter_full_tree_visible_catalog_v2', now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
+        $categoriesTree = Cache::remember("filter_full_tree_visible_catalog_v3_{$profile}", now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
         $brands = Cache::remember(
             "filter_brands_category_visible_catalog_v1_{$category->id}",

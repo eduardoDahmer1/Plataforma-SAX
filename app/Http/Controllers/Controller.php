@@ -7,6 +7,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use App\Services\CategoryDisplayService;
 use App\Services\VisibleCatalogProductsService;
+use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
 
@@ -74,7 +75,8 @@ class Controller extends BaseController
 
     protected function buildFilterCategoriesTree()
     {
-        $categories = \App\Models\Category::where('status', 1)
+        $categories = app(StoreTaxonomyService::class)->categories(\App\Models\Category::query())
+            ->where('status', 1)
             ->withCount([
                 'products as active_products_count' => fn($q) => $this->applyActiveProductScope($q),
             ])

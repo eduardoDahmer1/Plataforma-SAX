@@ -1,12 +1,22 @@
 @extends('layout.layout')
 
+@section('title', $collectionTitle ?? __('messages.buscar'))
+
 @section('content')
 
 <x-alert type="success" :message="session('success')" />
 
 <div class="container-fluid px-3 px-lg-5 py-4 py-lg-5 search-page">
 
-    @if ($query)
+    @if ($collectionTitle)
+        <div class="search-query-heading search-collection-heading">
+            <p>Vista &amp; Co</p>
+            <h1>{{ $collectionTitle }}</h1>
+            @if($collectionDescription)
+                <div>{{ $collectionDescription }}</div>
+            @endif
+        </div>
+    @elseif ($query)
         <div class="search-query-heading">
             <p>{{ __('messages.results_for') }}</p>
             <h1>“{{ $query }}”</h1>

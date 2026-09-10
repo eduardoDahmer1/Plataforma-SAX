@@ -13,6 +13,8 @@ use App\Models\Subcategory;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
 use App\Services\ImageConverterService;
 use App\Services\OpenAICatalogService;
+use App\Services\ProductFeedService;
+use App\Services\StoreTaxonomyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -81,7 +83,7 @@ class ProductControllerAdmin extends Controller
         }
     }
 
-    public function index(Request $request, DhlProductMeasurementEstimator $dhlMeasurements)
+    public function index(Request $request, DhlProductMeasurementEstimator $dhlMeasurements, ProductFeedService $productFeedService)
     {
         $search = $request->get('search');
         $brandId = $request->get('brand_id');
@@ -240,7 +242,10 @@ class ProductControllerAdmin extends Controller
             ->appends($request->query());
 
         $brands = Brand::where('status', 1)->orderBy('name')->get(['id', 'name']);
-        $categories = Category::where('status', 1)->orderBy('name')->get(['id', 'name']);
+        $categories = app(StoreTaxonomyService::class)->categories(Category::query())
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         $highlights = [
             'destaque' => 'Destaques',
@@ -254,7 +259,9 @@ class ProductControllerAdmin extends Controller
             return $product;
         });
 
-        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'dateFilter', 'productType', 'outletFilter', 'perPage', 'highlights'));
+        $productFeed = $productFeedService->status();
+
+        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'dateFilter', 'productType', 'outletFilter', 'perPage', 'highlights', 'productFeed'));
     }
 
     public function outletForm()
@@ -527,10 +534,16 @@ class ProductControllerAdmin extends Controller
 
         $brands = Brand::where('status', 1)->orWhere('id', $item->brand_id)->orderBy('name', 'asc')->get();
 
-        $categories = Category::where('status', 1)->orWhere('id', $item->category_id)->orderBy('name', 'asc')->get();
+        $categories = app(StoreTaxonomyService::class)->categories(
+            Category::where(function ($query) use ($item) {
+                $query->where('status', 1)->orWhere('id', $item->category_id);
+            })
+        )->orderBy('name')->get();
 
-        $subcategories = Subcategory::orderBy('name')->get();
-        $categoriasfilhas = CategoriasFilhas::orderBy('name')->get();
+        $subcategories = app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+            ->orderBy('name')->get();
+        $categoriasfilhas = app(StoreTaxonomyService::class)->childCategories(CategoriasFilhas::query())
+            ->orderBy('name')->get();
 
         $itemReferenceKey = $item->relationshipReferenceKey();
         $itemColorKey = $item->relationshipColorKey();
@@ -1307,7 +1320,8 @@ class ProductControllerAdmin extends Controller
     public function getSubcategories($categoryId)
     {
         return response()->json(
-            Subcategory::where('category_id', $categoryId)
+            app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
+                ->where('category_id', $categoryId)
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug', 'category_id'])
         );
@@ -1316,7 +1330,8 @@ class ProductControllerAdmin extends Controller
     public function getChildcategories($subcategoryId)
     {
         return response()->json(
-            CategoriasFilhas::where('subcategory_id', $subcategoryId)
+            app(StoreTaxonomyService::class)->childCategories(CategoriasFilhas::query())
+                ->where('subcategory_id', $subcategoryId)
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug', 'subcategory_id'])
         );

@@ -59,12 +59,16 @@
     <div class="vista-menu-overlay" data-vista-menu-overlay aria-hidden="true"></div>
     <nav class="vista-nav" data-vista-menu aria-label="Categorías principales">
         <div class="vista-nav__mobile-head d-lg-none">
-            <div>
-                <small>VISTA&amp;CO</small>
-                <strong>Catálogo óptico</strong>
+            <div class="vista-nav__mobile-brand">
+                <span class="vista-nav__mobile-mark"><i class="fa-solid fa-glasses" aria-hidden="true"></i></span>
+                <span>
+                    <small>VISTA&amp;CO</small>
+                    <strong>Catálogo óptico</strong>
+                </span>
             </div>
             <button type="button" data-vista-menu-close aria-label="Cerrar menú"><i class="fa-solid fa-xmark"></i></button>
         </div>
+        <div class="vista-nav__section-label d-lg-none">Explorar catálogo</div>
         @foreach($vistaNav as $item)
             @php
                 $submenuItems = collect($item['children']);
@@ -113,8 +117,10 @@
             @if($currentUser)
                 <section class="vista-nav__account-section">
                     <strong>{{ __('messages.minha_conta') }}</strong>
-                    <a href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}">
-                        <i class="fa-regular fa-user" aria-hidden="true"></i>{{ $currentUser->name }}
+                    <a class="vista-nav__account-link" href="{{ $isAdminUser ? route('admin.index') : route('user.dashboard') }}">
+                        <span class="vista-nav__account-avatar"><i class="fa-regular fa-user" aria-hidden="true"></i></span>
+                        <span><small>{{ __('messages.ola') }}</small><b>{{ $currentUser->name }}</b></span>
+                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                     </a>
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf

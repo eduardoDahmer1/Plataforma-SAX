@@ -25,7 +25,7 @@
                         </a>
 
                         <div class="mobile-price-tag d-md-none">
-                            <span class="price">{{ $palace->tematica_preco }}</span>
+                            <span class="price">{{ $t->palace_tematica_preco ?? $palace->tematica_preco }}</span>
                             <span class="unit">{{ __('messages.por_pessoa_label') }}</span>
                         </div>
                     </div>
@@ -36,14 +36,14 @@
                 <div class="image-reveal-container">
                     <div class="image-border-decoration"></div>
                     <div class="image-wrapper">
-                        <img src="{{ asset('storage/' . $palace->tematica_imagem) }}"
+                        <img src="{{ $palace->tematica_imagem ? asset('storage/' . $palace->tematica_imagem) : 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819' }}"
                             class="img-main img-fluid w-100"
                             alt="{{ $t->palace_tematica_titulo ?? $palace->tematica_titulo }}">
 
                         <div class="floating-price-card d-none d-md-block">
                             <div class="card-inner">
                                 <span class="label">{{ __('messages.investimento_label') }}</span>
-                                <span class="amount">{{ $palace->tematica_preco }}</span>
+                                <span class="amount">{{ $t->palace_tematica_preco ?? $palace->tematica_preco }}</span>
                                 <span class="sub">{{ __('messages.por_pessoa_label') }}</span>
                             </div>
                         </div>

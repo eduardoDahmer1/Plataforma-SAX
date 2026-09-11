@@ -25,15 +25,15 @@
                     <div class="palace-footer__list text-secondary small">
                         <div class="palace-footer__row">
                             <span>{{ __('messages.segunda_label') }}:</span>
-                            <span>{{ $palace->contato_horario_segunda }}</span>
+                            <span>{{ $t->palace_contato_horario_segunda ?? $palace->contato_horario_segunda }}</span>
                         </div>
                         <div class="palace-footer__row">
                             <span>{{ __('messages.terca_sabado_label') }}:</span>
-                            <span>{{ $palace->contato_horario_sabado }}</span>
+                            <span>{{ $t->palace_contato_horario_sabado ?? $palace->contato_horario_sabado }}</span>
                         </div>
                         <div class="palace-footer__row">
                             <span>{{ __('messages.domingo_label') }}:</span>
-                            <span>{{ $palace->contato_horario_domingo }}</span>
+                            <span>{{ $t->palace_contato_horario_domingo ?? $palace->contato_horario_domingo }}</span>
                         </div>
                     </div>
                 </div>

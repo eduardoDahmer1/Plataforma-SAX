@@ -4,8 +4,8 @@
             <div class="col-lg-6 order-2 order-lg-1 palace-reveal" data-aos="fade-up">
                 <div class="palace-copy pe-lg-4">
                     <span class="palace-eyebrow text-uppercase">{{ __('messages.localizacao_label') }}</span>
-                    <h2 class="palace-section__title mb-4">{{ $t->palace_hero_titulo ?? $palace->hero_titulo }}</h2>
-                    <p class="palace-section__lead">{{ $t->palace_hero_descricao ?? $palace->hero_descricao }}</p>
+                    <h2 class="palace-section__title mb-4">{{ $t->palace_bar_titulo ?? $palace->bar_titulo }}</h2>
+                    <p class="palace-section__lead">{{ $t->palace_bar_descricao ?? $palace->bar_descricao }}</p>
 
                     <div class="row g-3 g-xl-4 pt-2 pt-md-4 palace-story-grid">
                         <div class="col-6">

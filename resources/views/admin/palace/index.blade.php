@@ -120,8 +120,8 @@
                     </div>
                     <div class="p-4 d-flex flex-column justify-content-center bg-white">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="badge-gold-soft text-uppercase x-small">{{ $palace->tematica_tag ?: __('messages.sem_etiqueta') }}</span>
-                            <span class="text-gold fw-bold h5 mb-0">{{ $palace->tematica_preco ?: __('messages.a_definir') }}</span>
+                            <span class="badge-gold-soft text-uppercase x-small">{{ $t->palace_tematica_tag ?? $palace->tematica_tag ?: __('messages.sem_etiqueta') }}</span>
+                            <span class="text-gold fw-bold h5 mb-0">{{ $t->palace_tematica_preco ?? $palace->tematica_preco ?: __('messages.a_definir') }}</span>
                         </div>
                         <h4 class="font-weight-bold text-dark mb-2">{{ $t->palace_tematica_titulo ?? $palace->tematica_titulo }}</h4>
                         <p class="small text-muted lh-base mb-0">{{ $t->palace_tematica_descricao ?? $palace->tematica_descricao }}</p>
@@ -148,15 +148,15 @@
                     <div class="small lh-lg">
                         <div class="d-flex justify-content-between border-bottom border-secondary pb-1">
                             <span>{{ __('messages.segunda_label') }}:</span> 
-                            <span>{{ $palace->contato_horario_segunda ?: __('messages.fechado') }}</span>
+                            <span>{{ $t->palace_contato_horario_segunda ?? $palace->contato_horario_segunda ?: __('messages.fechado') }}</span>
                         </div>
                         <div class="d-flex justify-content-between border-bottom border-secondary pb-1 mt-1">
                             <span>{{ __('messages.terca_sabado_label') }}:</span> 
-                            <span>{{ $palace->contato_horario_sabado ?: __('messages.fechado') }}</span>
+                            <span>{{ $t->palace_contato_horario_sabado ?? $palace->contato_horario_sabado ?: __('messages.fechado') }}</span>
                         </div>
                         <div class="d-flex justify-content-between mt-1">
                             <span>{{ __('messages.domingo_label') }}:</span> 
-                            <span>{{ $palace->contato_horario_domingo ?: __('messages.fechado') }}</span>
+                            <span>{{ $t->palace_contato_horario_domingo ?? $palace->contato_horario_domingo ?: __('messages.fechado') }}</span>
                         </div>
                     </div>
                 </div>

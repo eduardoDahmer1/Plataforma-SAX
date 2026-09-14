@@ -12,25 +12,38 @@
                 <div class="divider"></div>
                 <h2 class="section-title mb-4">{{ __('messages.horarios') }}</h2>
 
-                @php $horarios = $cafeBistro->horarios ?? []; @endphp
+                @php
+                    $diasLabels = [
+                        'segunda' => __('messages.cafe_monday'),
+                        'terca'   => __('messages.cafe_tuesday'),
+                        'quarta'  => __('messages.cafe_wednesday'),
+                        'quinta'  => __('messages.cafe_thursday'),
+                        'sexta'   => __('messages.cafe_friday'),
+                        'sabado'  => __('messages.cafe_saturday'),
+                        'domingo' => __('messages.cafe_sunday'),
+                    ];
+                    $grupos = $cafeBistro->horariosAgrupados();
+                @endphp
                 <table class="horarios-table w-100">
                     <tbody>
-                        <tr>
-                            <td class="horarios-dia">{{ __('messages.cafe_monday') }}</td>
-                            <td class="horarios-hora">{{ $horarios['segunda'] ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="horarios-dia">{{ __('messages.cafe_tuesday_thursday') }}</td>
-                            <td class="horarios-hora">{{ $horarios['terca_quinta'] ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="horarios-dia">{{ __('messages.cafe_friday_saturday') }}</td>
-                            <td class="horarios-hora">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="horarios-dia">{{ __('messages.domingo') }}</td>
-                            <td class="horarios-hora">{{ $horarios['domingo'] ?? '—' }}</td>
-                        </tr>
+                        @foreach($grupos as $grupo)
+                            <tr>
+                                <td class="horarios-dia">
+                                    @if($grupo['inicio_dia'] === $grupo['fim_dia'])
+                                        {{ $diasLabels[$grupo['inicio_dia']] }}
+                                    @else
+                                        {{ $diasLabels[$grupo['inicio_dia']] }} — {{ $diasLabels[$grupo['fim_dia']] }}
+                                    @endif
+                                </td>
+                                <td class="horarios-hora">
+                                    @if($grupo['aberto'])
+                                        {{ $grupo['inicio'] }} — {{ $grupo['fim'] }}
+                                    @else
+                                        {{ __('messages.cafe_closed') }}
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
 

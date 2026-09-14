@@ -66,14 +66,20 @@ class CafeBistroAdminController extends Controller
             'eventos_galeria_actual.*' => ['string', \Illuminate\Validation\Rule::in($cafeBistro->eventos_galeria ?? [])],
             'eventos_tipos'           => 'nullable|array',
             'eventos_tipos.*'         => 'nullable|string|max:255',
-            'horario_segunda'         => 'nullable|string|max:255',
-            'horario_terca_quinta'    => 'nullable|string|max:255',
-            'horario_sexta_sabado'    => 'nullable|string|max:255',
-            'horario_domingo'         => 'nullable|string|max:255',
+            'horarios'                => 'nullable|array',
 
             // Traducibles: llegan como translate[locale][cafe_campo]
             'translate'               => 'nullable|array',
         ]);
+
+        // Validación dinámica por día de la semana (horarios.dia.aberto/inicio/fim)
+        $rules = [];
+        foreach (CafeBistro::DIAS as $dia) {
+            $rules["horarios.{$dia}.aberto"] = 'nullable|boolean';
+            $rules["horarios.{$dia}.inicio"] = 'nullable|date_format:H:i';
+            $rules["horarios.{$dia}.fim"]    = 'nullable|date_format:H:i';
+        }
+        $request->validate($rules);
 
         if (count($data['cardapio_galeria_actual'] ?? []) + count($request->file('cardapio_galeria', [])) > 8) {
             throw \Illuminate\Validation\ValidationException::withMessages([
@@ -117,6 +123,22 @@ class CafeBistroAdminController extends Controller
         }
 
         // 5. Campos NO traducibles → tabla principal (comunes a todos los idiomas)
+        $horarios = [];
+        foreach (CafeBistro::DIAS as $dia) {
+            $aberto = $request->boolean("horarios.{$dia}.aberto");
+            $horarios[$dia] = $aberto
+                ? [
+                    'aberto' => true,
+                    'inicio' => $request->input("horarios.{$dia}.inicio"),
+                    'fim'    => $request->input("horarios.{$dia}.fim"),
+                ]
+                : [
+                    'aberto' => false,
+                    'inicio' => null,
+                    'fim'    => null,
+                ];
+        }
+
         $cafeBistro->update([
             'telefono'         => $request->input('telefono'),
             'whatsapp'         => $request->input('whatsapp'),
@@ -129,12 +151,7 @@ class CafeBistroAdminController extends Controller
             'cardapio_galeria' => $cardapioGaleriaFinal,
             'eventos_galeria'  => $galeriaFinal,
             'eventos_tipos'    => $request->input('eventos_tipos', []),
-            'horarios'         => [
-                'segunda'      => $request->input('horario_segunda'),
-                'terca_quinta' => $request->input('horario_terca_quinta'),
-                'sexta_sabado' => $request->input('horario_sexta_sabado'),
-                'domingo'      => $request->input('horario_domingo'),
-            ],
+            'horarios'         => $horarios,
         ]);
 
         // 6. Campos traducibles → una fila de tradução por idioma

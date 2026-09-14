@@ -46,25 +46,38 @@
             <div class="col-lg-4 col-md-6">
                 <h6 class="footer-col-title">{{ __('messages.horarios') }}</h6>
 
-                @php $horarios = $cafeBistro->horarios ?? []; @endphp
+                @php
+                    $footerDiasLabels = [
+                        'segunda' => __('messages.cafe_monday'),
+                        'terca'   => __('messages.cafe_tuesday'),
+                        'quarta'  => __('messages.cafe_wednesday'),
+                        'quinta'  => __('messages.cafe_thursday'),
+                        'sexta'   => __('messages.cafe_friday'),
+                        'sabado'  => __('messages.cafe_saturday'),
+                        'domingo' => __('messages.cafe_sunday'),
+                    ];
+                    $footerGrupos = $cafeBistro->horariosAgrupados();
+                @endphp
                 <table class="footer-horarios w-100">
                     <tbody>
-                        <tr>
-                            <td class="footer-dia">{{ __('messages.cafe_monday') }}</td>
-                            <td class="footer-hora">{{ $horarios['segunda'] ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="footer-dia">{{ __('messages.cafe_tuesday_thursday') }}</td>
-                            <td class="footer-hora">{{ $horarios['terca_quinta'] ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="footer-dia">{{ __('messages.cafe_friday_saturday') }}</td>
-                            <td class="footer-hora">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="footer-dia">{{ __('messages.domingo') }}</td>
-                            <td class="footer-hora">{{ $horarios['domingo'] ?? '—' }}</td>
-                        </tr>
+                        @foreach($footerGrupos as $grupo)
+                            <tr>
+                                <td class="footer-dia">
+                                    @if($grupo['inicio_dia'] === $grupo['fim_dia'])
+                                        {{ $footerDiasLabels[$grupo['inicio_dia']] }}
+                                    @else
+                                        {{ $footerDiasLabels[$grupo['inicio_dia']] }} — {{ $footerDiasLabels[$grupo['fim_dia']] }}
+                                    @endif
+                                </td>
+                                <td class="footer-hora">
+                                    @if($grupo['aberto'])
+                                        {{ $grupo['inicio'] }} — {{ $grupo['fim'] }}
+                                    @else
+                                        {{ __('messages.cafe_closed') }}
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>

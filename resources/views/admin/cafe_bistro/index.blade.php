@@ -2,9 +2,19 @@
 
 @section('content')
 @php
-    $horarios       = $cafeBistro->horarios ?? [];
     $eventosTipos   = $cafeBistro->eventos_tipos ?? [];
     $eventosGaleria = $cafeBistro->eventos_galeria ?? [];
+
+    $diasHorariosAdmin = [
+        'segunda' => 'Segunda-feira',
+        'terca'   => 'Terça-feira',
+        'quarta'  => 'Quarta-feira',
+        'quinta'  => 'Quinta-feira',
+        'sexta'   => 'Sexta-feira',
+        'sabado'  => 'Sábado',
+        'domingo' => 'Domingo',
+    ];
+    $gruposHorariosAdmin = $cafeBistro->horariosAgrupados();
 @endphp
 
 <x-admin.card>
@@ -147,22 +157,20 @@
                 <div class="p-4">
                     <table class="w-100">
                         <tbody>
-                            <tr class="border-bottom">
-                                <td class="py-2 small fw-bold">Segunda-feira</td>
-                                <td class="py-2 small text-end text-muted">{{ $horarios['segunda'] ?? '—' }}</td>
-                            </tr>
-                            <tr class="border-bottom">
-                                <td class="py-2 small fw-bold">Terça-feira — Quinta-feira</td>
-                                <td class="py-2 small text-end text-muted">{{ $horarios['terca_quinta'] ?? '—' }}</td>
-                            </tr>
-                            <tr class="border-bottom">
-                                <td class="py-2 small fw-bold">Sexta-feira — Sábado</td>
-                                <td class="py-2 small text-end text-muted">{{ $horarios['sexta_sabado'] ?? '—' }}</td>
-                            </tr>
-                            <tr class="border-bottom">
-                                <td class="py-2 small fw-bold">Domingo</td>
-                                <td class="py-2 small text-end text-muted">{{ $horarios['domingo'] ?? '—' }}</td>
-                            </tr>
+                            @foreach($gruposHorariosAdmin as $grupo)
+                                <tr class="border-bottom">
+                                    <td class="py-2 small fw-bold">
+                                        @if($grupo['inicio_dia'] === $grupo['fim_dia'])
+                                            {{ $diasHorariosAdmin[$grupo['inicio_dia']] }}
+                                        @else
+                                            {{ $diasHorariosAdmin[$grupo['inicio_dia']] }} — {{ $diasHorariosAdmin[$grupo['fim_dia']] }}
+                                        @endif
+                                    </td>
+                                    <td class="py-2 small text-end text-muted">
+                                        {{ $grupo['aberto'] ? $grupo['inicio'].' — '.$grupo['fim'] : 'Fechado' }}
+                                    </td>
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

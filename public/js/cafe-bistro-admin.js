@@ -87,4 +87,20 @@
             });
         });
     });
+    form.querySelectorAll('.horario-dia-row').forEach(row => {
+        const toggle = row.querySelector('.horario-aberto');
+        if (!toggle) return;
+        const inicio = row.querySelector('.horario-inicio');
+        const fim = row.querySelector('.horario-fim');
+
+        const sync = () => {
+            const aberto = toggle.checked;
+            if (inicio) inicio.disabled = !aberto;
+            if (fim) fim.disabled = !aberto;
+            row.classList.toggle('horario-fechado', !aberto);
+        };
+
+        toggle.addEventListener('change', sync);
+        sync();
+    });
 })();

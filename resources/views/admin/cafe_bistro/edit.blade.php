@@ -6,7 +6,17 @@
         ? $cafeBistro->eventos_tipos
         : (json_decode($cafeBistro->eventos_tipos, true) ?? []);
 
-    $horarios = $cafeBistro->horarios ?? [];
+    $horarios = $cafeBistro->horariosNormalizados();
+
+    $diasHorarios = [
+        'segunda' => 'Segunda-feira',
+        'terca'   => 'Terça-feira',
+        'quarta'  => 'Quarta-feira',
+        'quinta'  => 'Quinta-feira',
+        'sexta'   => 'Sexta-feira',
+        'sabado'  => 'Sábado',
+        'domingo' => 'Domingo',
+    ];
 
     // Traducciones por idioma para precargar los campos traducibles
     $tr  = $cafeBistro->translations->keyBy('locale');
@@ -253,30 +263,48 @@
             <x-admin.block-header icon="fas fa-clock" theme="bistro" number="05" :title="__('messages.opening_hours_title')" :subtitle="__('messages.week_days_opening_hours_desc')" />
             <div class="p-4">
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="sax-form-label">Segunda-feira</label>
-                        <input type="text" name="horario_segunda" class="form-control sax-input"
-                               value="{{ old('horario_segunda', $horarios['segunda'] ?? '') }}"
-                               placeholder="Fechado">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="sax-form-label">Terça-feira — Quinta-feira</label>
-                        <input type="text" name="horario_terca_quinta" class="form-control sax-input"
-                               value="{{ old('horario_terca_quinta', $horarios['terca_quinta'] ?? '') }}"
-                               placeholder="09:00 — 23:00">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="sax-form-label">Sexta-feira — Sábado</label>
-                        <input type="text" name="horario_sexta_sabado" class="form-control sax-input"
-                               value="{{ old('horario_sexta_sabado', $horarios['sexta_sabado'] ?? '') }}"
-                               placeholder="09:00 — 23:30">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="sax-form-label">Domingo</label>
-                        <input type="text" name="horario_domingo" class="form-control sax-input"
-                               value="{{ old('horario_domingo', $horarios['domingo'] ?? '') }}"
-                               placeholder="09:00 — 23:00">
-                    </div>
+                    @foreach($diasHorarios as $dia => $rotulo)
+                        @php
+                            $diaHorario = $horarios[$dia] ?? ['aberto' => false, 'inicio' => null, 'fim' => null];
+                            $aberto = (bool) old("horarios.{$dia}.aberto", $diaHorario['aberto'] ?? false);
+                            $inicio = old("horarios.{$dia}.inicio", $diaHorario['inicio'] ?? '');
+                            $fim    = old("horarios.{$dia}.fim", $diaHorario['fim'] ?? '');
+                        @endphp
+                        <div class="col-12">
+                            <div class="row g-2 align-items-center horario-dia-row">
+                                <div class="col-md-3">
+                                    <label class="sax-form-label mb-0">{{ $rotulo }}</label>
+                                </div>
+                                <div class="col-md-3 col-lg-2">
+                                    <div class="form-check form-switch mb-0">
+                                        <input type="hidden" name="horarios[{{ $dia }}][aberto]" value="0">
+                                        <input class="form-check-input horario-aberto" type="checkbox"
+                                               role="switch"
+                                               id="horario-aberto-{{ $dia }}"
+                                               name="horarios[{{ $dia }}][aberto]"
+                                               value="1"
+                                               @checked($aberto)>
+                                        <label class="form-check-label fw-bold x-small" for="horario-aberto-{{ $dia }}">Aberto</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-lg-3">
+                                    <input type="time" class="form-control sax-input horario-inicio"
+                                           name="horarios[{{ $dia }}][inicio]"
+                                           value="{{ $inicio }}"
+                                           @disabled(! $aberto)>
+                                </div>
+                                <div class="col-auto d-flex align-items-center">
+                                    <span class="x-small text-muted">até</span>
+                                </div>
+                                <div class="col-md-3 col-lg-3">
+                                    <input type="time" class="form-control sax-input horario-fim"
+                                           name="horarios[{{ $dia }}][fim]"
+                                           value="{{ $fim }}"
+                                           @disabled(! $aberto)>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>

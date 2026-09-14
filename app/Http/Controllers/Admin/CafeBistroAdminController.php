@@ -49,6 +49,7 @@ class CafeBistroAdminController extends Controller
         $data = $request->validate([
             // No traducibles (tabla principal)
             'telefono'                => 'nullable|string|max:255',
+            'whatsapp'                => 'nullable|string|max:255',
             'instagram_url'           => 'nullable|string|max:255',
             'facebook_url'            => 'nullable|string|max:255',
             'mapa_embed'              => 'nullable|string',
@@ -57,10 +58,12 @@ class CafeBistroAdminController extends Controller
             'cardapio_pdf'            => 'nullable|mimes:pdf|max:8192',
             'cardapio_galeria'        => 'nullable|array|max:8',
             'cardapio_galeria.*'      => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
-            'cardapio_galeria_actual' => 'nullable|array',
+            'cardapio_galeria_actual' => 'nullable|array|max:8',
+            'cardapio_galeria_actual.*' => ['string', \Illuminate\Validation\Rule::in($cafeBistro->cardapio_galeria ?? [])],
             'eventos_galeria'         => 'nullable|array',
             'eventos_galeria.*'       => 'nullable|image|mimes:jpg,jpeg,png,webp,avif,gif,bmp,tiff,jfif,heic,heif|max:4096',
             'eventos_galeria_actual'  => 'nullable|array',
+            'eventos_galeria_actual.*' => ['string', \Illuminate\Validation\Rule::in($cafeBistro->eventos_galeria ?? [])],
             'eventos_tipos'           => 'nullable|array',
             'eventos_tipos.*'         => 'nullable|string|max:255',
             'horario_segunda'         => 'nullable|string|max:255',
@@ -71,6 +74,12 @@ class CafeBistroAdminController extends Controller
             // Traducibles: llegan como translate[locale][cafe_campo]
             'translate'               => 'nullable|array',
         ]);
+
+        if (count($data['cardapio_galeria_actual'] ?? []) + count($request->file('cardapio_galeria', [])) > 8) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'cardapio_galeria' => 'La galería del menú admite un máximo de 8 imágenes en total.',
+            ]);
+        }
 
         // 1. Imagens individuais (hero, sobre)
         $imageFields = ['hero_imagen', 'sobre_imagen'];
@@ -110,6 +119,7 @@ class CafeBistroAdminController extends Controller
         // 5. Campos NO traducibles → tabla principal (comunes a todos los idiomas)
         $cafeBistro->update([
             'telefono'         => $request->input('telefono'),
+            'whatsapp'         => $request->input('whatsapp'),
             'instagram_url'    => $request->input('instagram_url'),
             'facebook_url'     => $request->input('facebook_url'),
             'mapa_embed'       => $request->input('mapa_embed'),

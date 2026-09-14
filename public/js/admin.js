@@ -1106,9 +1106,17 @@ document.addEventListener('DOMContentLoaded', function () {
         var container = document.getElementById('eventosTiposContainer');
         var tag = document.createElement('span');
         tag.className = 'eventos-tag';
-        tag.innerHTML = val +
-            '<input type="hidden" name="eventos_tipos[]" value="' + val.replace(/"/g, '&quot;') + '">' +
-            '<button type="button" class="eventos-tag-remove" onclick="this.parentElement.remove()">&times;</button>';
+        tag.appendChild(document.createTextNode(val));
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'eventos_tipos[]';
+        hidden.value = val;
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'eventos-tag-remove';
+        remove.textContent = '×';
+        remove.addEventListener('click', function () { tag.remove(); });
+        tag.append(hidden, remove);
         container.appendChild(tag);
         this.value = '';
     });

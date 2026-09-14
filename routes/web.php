@@ -147,6 +147,7 @@ Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show')
 Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
 Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/guia-de-atendimento', [ContactGuideController::class, 'show'])->name('contact.guide');
+Route::get('/guia-de-atendimento-2', [ContactGuideController::class, 'alternative'])->name('contact.guide.alternative');
 Route::get('/politicas', [PolicyController::class, 'index'])->name('policies.index');
 Route::post('/currency/change', [CurrencyController::class, 'change'])->name('currency.change');
 

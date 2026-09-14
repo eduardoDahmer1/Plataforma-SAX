@@ -86,7 +86,7 @@
                 <div class="col-lg-5 p-4 bg-light border-start">
                     <x-admin.image-upload name="sobre_imagen" previewId="prev-sobre" :label="__('messages.about_image_label')"
                         :currentImage="$cafeBistro->sobre_imagen ? asset('storage/'.$cafeBistro->sobre_imagen) : null"
-                        placeholder="https://placehold.co/600x400/0f1d35/ffffff?text=Sobre" height="11.25rem" />
+                        placeholder="https://placehold.co/600x400/0f1d35/ffffff?text=Sobre" height="11.25rem" maxSize="4MB" />
                 </div>
             </div>
         </div>
@@ -304,6 +304,17 @@
                                placeholder="+595 993 011502">
                     </div>
 
+                    {{-- WhatsApp de reservas --}}
+                    <div class="col-md-6">
+                        <label class="sax-form-label">WhatsApp de reservas</label>
+                        <input type="text" name="whatsapp" class="form-control sax-input"
+                               value="{{ old('whatsapp', $cafeBistro->whatsapp) }}"
+                               placeholder="+595 993 011502">
+                        <p class="x-small text-muted mt-2 mb-0">
+                            Usado pelos botões “Reservar” desta unidade.
+                        </p>
+                    </div>
+
                     {{-- Instagram --}}
                     <div class="col-md-6">
                         <label class="sax-form-label">Instagram</label>
@@ -360,3 +371,7 @@
 
 
 @endsection
+
+@push('scripts')
+<script src="{{ asset('js/cafe-bistro-admin.js') }}?v={{ filemtime(public_path('js/cafe-bistro-admin.js')) }}"></script>
+@endpush

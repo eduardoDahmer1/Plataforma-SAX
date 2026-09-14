@@ -11,6 +11,19 @@ class ContactGuideController extends Controller
 {
     public function show(StoreControlService $storeControls): View
     {
+        return view('contact.guide', $this->guideData($storeControls));
+    }
+
+    public function alternative(StoreControlService $storeControls): View
+    {
+        $data = $this->guideData($storeControls);
+        $data['directory'] = app(\App\Services\ContactGuideDirectory::class)->build($data['locations']);
+
+        return view('contact.guide-alternative', $data);
+    }
+
+    private function guideData(StoreControlService $storeControls): array
+    {
         $guideVisible = $storeControls->navigationVisible('header', 'guide')
             || $storeControls->navigationVisible('footer', 'guide');
         abort_unless($guideVisible || auth()->user()?->isAdmin(), 404);
@@ -39,6 +52,6 @@ class ContactGuideController extends Controller
             ->count();
         $sectorCount = $locations->sum(fn (ContactGuideLocation $location) => $location->entries->count());
 
-        return view('contact.guide', compact('locations', 'isOtica', 'brandCount', 'sectorCount'));
+        return compact('locations', 'isOtica', 'brandCount', 'sectorCount');
     }
 }

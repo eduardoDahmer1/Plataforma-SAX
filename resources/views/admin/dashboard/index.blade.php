@@ -3,7 +3,6 @@
 @section('title', __('messages.admin_dashboard_page_title'))
 
 @section('content')
-<div id="dashboard-chart-data" hidden data-traffic-labels="{{ json_encode($trafficLabels) }}" data-traffic-views="{{ json_encode($trafficViews) }}" data-traffic-visitors="{{ json_encode($trafficVisitors) }}" data-traffic-views-label="{{ __('messages.metric_page_views') }}" data-traffic-visitors-label="{{ __('messages.metric_unique_visits') }}" data-payment-labels="{{ json_encode($paymentMethods->keys()->values()) }}" data-payment-values="{{ json_encode($paymentMethods->values()) }}" data-order-labels="{{ json_encode($orderStatuses->keys()->map(fn($key) => ['pending' => __('messages.status_pending'), 'paid' => __('messages.status_paid'), 'processing' => __('messages.status_processing'), 'shipped' => __('messages.status_shipped'), 'completed' => __('messages.status_completed'), 'canceled' => __('messages.status_canceled'), 'failed' => __('messages.status_failed')][$key] ?? ucfirst($key))->values()) }}" data-order-values="{{ json_encode($orderStatuses->values()) }}" data-device-labels="{{ json_encode($devices->keys()->map(fn($key) => ['desktop' => __('messages.device_desktop'), 'tablet' => __('messages.device_tablet'), 'mobile' => __('messages.device_mobile')][$key] ?? ucfirst($key))->values()) }}" data-device-values="{{ json_encode($devices->values()) }}"></div>
 <section class="overview-hero mb-4">
     <div class="d-md-flex justify-content-between align-items-center position-relative" style="z-index:1">
         <div>
@@ -35,7 +34,9 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ route('admin.index') }}" id="dashboard-report-form" class="border rounded-3 p-3 bg-light mb-3">
+    <details class="dashboard-report-filters mb-3">
+        <summary><i class="fa-solid fa-sliders me-2"></i>{{ __('messages.report_filter_title') }}</summary>
+    <form method="GET" action="{{ route('admin.index') }}" id="dashboard-report-form" class="p-3 bg-light">
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-4 col-xl-3">
                 <label class="form-label fw-semibold" for="report-type">{{ __('messages.report_period_type') }}</label>
@@ -78,6 +79,7 @@
             </div>
         </div>
     </form>
+    </details>
 
     <div class="d-flex flex-column flex-md-row justify-content-between gap-2 align-items-md-center mb-3">
         <div>
@@ -123,28 +125,33 @@
         </div>
     @endif
 
-    @if($selectedReport['visitors_by_country']->isNotEmpty())
-        <div class="mt-4">
-            <div class="d-flex flex-column flex-md-row justify-content-between gap-1 mb-2">
-                <strong>{{ __('messages.report_visitors_by_country') }}</strong>
-                <span class="small text-muted">{{ __('messages.report_country_tracking_note') }}</span>
+    <div class="dashboard-secondary-action mt-3">
+        <div>
+            <strong>{{ __('messages.report_visitors_by_country') }}</strong>
+            <span>{{ __('messages.dashboard_countries_on_demand_note') }}</span>
+        </div>
+        <button class="btn btn-outline-dark" type="button" data-bs-toggle="modal" data-bs-target="#dashboardCountriesModal" data-dashboard-countries-url="{{ route('admin.dashboard.countries', request()->query()) }}">
+            <i class="fa-solid fa-earth-americas me-2"></i>{{ __('messages.dashboard_view_countries') }}
+        </button>
+    </div>
+</section>
+
+<div class="modal fade" id="dashboardCountriesModal" tabindex="-1" aria-labelledby="dashboardCountriesTitle" aria-hidden="true" data-loading-label="{{ __('messages.dashboard_loading_data') }}" data-error-label="{{ __('messages.update_error') }}">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content dashboard-modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="card-kicker">{{ __('messages.report_selected_period') }}</div>
+                    <h2 class="modal-title fs-5" id="dashboardCountriesTitle">{{ __('messages.report_visitors_by_country') }}</h2>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('messages.close') }}"></button>
             </div>
-            <div class="table-responsive border rounded-3">
-                <table class="table table-sm align-middle mb-0">
-                    <thead class="table-light"><tr><th>{{ __('messages.report_country') }}</th><th class="text-end">{{ __('messages.report_identified_visitors') }}</th></tr></thead>
-                    <tbody>
-                    @foreach($selectedReport['visitors_by_country'] as $country)
-                        <tr>
-                            <td>{{ $country->country_code !== 'XX' ? $country->country_code.' · ' : '' }}{{ $country->country_name }}</td>
-                            <td class="text-end fw-semibold">{{ number_format($country->visitors, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+            <div class="modal-body" data-dashboard-countries-body>
+                <div class="dashboard-loading" role="status"><span class="spinner-border spinner-border-sm"></span>{{ __('messages.dashboard_loading_data') }}</div>
             </div>
         </div>
-    @endif
-</section>
+    </div>
+</div>
 
 @php
     $integrationStatus = $integrationMonitor?->status ?? 'never_reported';
@@ -157,7 +164,8 @@
     ][$integrationStatus] ?? [__('messages.integration_status_unknown'), 'secondary', 'fa-circle-question'];
 @endphp
 
-<section id="integration-monitor" class="table-card mb-4 border border-{{ $integrationPresentation[1] }}">
+<details id="integration-monitor" class="dashboard-collapsible table-card mb-4 border border-{{ $integrationPresentation[1] }}">
+    <summary>
     <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-start">
         <div>
             <div class="card-kicker">{{ __('messages.integration_automatic_monitoring') }}</div>
@@ -173,7 +181,9 @@
             <div><strong>{{ __('messages.integration_consecutive_failures') }}</strong> {{ (int) ($integrationMonitor?->consecutive_failures ?? 0) }}</div>
         </div>
     </div>
+    </summary>
 
+    <div class="dashboard-collapsible__body">
     @if($integrationMonitor?->error_message)
         <div class="alert alert-{{ in_array($integrationStatus, ['failed', 'stale'], true) ? 'danger' : 'warning' }} mt-3 mb-3">
             <strong>{{ $integrationMonitor->error_code ?: __('messages.integration_error') }}:</strong>
@@ -193,29 +203,11 @@
         </div>
     @endif
 
-    <div class="table-responsive mt-3">
-        <table class="table overview-table mb-0">
-            <thead><tr><th>{{ __('messages.table_start') }}</th><th>{{ __('messages.table_end') }}</th><th>{{ __('messages.table_result') }}</th><th>{{ __('messages.table_duration') }}</th><th>{{ __('messages.table_detail') }}</th></tr></thead>
-            <tbody>
-            @forelse($integrationRuns as $run)
-                @php
-                    $runStyle = ['success' => 'success', 'failed' => 'danger', 'running' => 'warning'][$run->status] ?? 'secondary';
-                    $runLabel = ['success' => __('messages.integration_run_completed'), 'failed' => __('messages.integration_run_failed'), 'running' => __('messages.integration_run_running')][$run->status] ?? ucfirst($run->status);
-                @endphp
-                <tr>
-                    <td>{{ $run->started_at?->format('d/m/Y H:i:s') ?? '—' }}</td>
-                    <td>{{ $run->finished_at?->format('d/m/Y H:i:s') ?? '—' }}</td>
-                    <td><span class="badge text-bg-{{ $runStyle }}">{{ $runLabel }}</span></td>
-                    <td>{{ $run->duration_seconds !== null ? gmdate('H:i:s', $run->duration_seconds) : '—' }}</td>
-                    <td class="text-break">{{ $run->error_message ?: __('messages.integration_no_errors') }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="5" class="text-center text-muted py-3">{{ __('messages.integration_no_runs') }}</td></tr>
-            @endforelse
-            </tbody>
-        </table>
+    <div class="small text-muted mt-3">
+        {{ __('messages.dashboard_integration_compact_note') }}
     </div>
-</section>
+    </div>
+</details>
 
 @if(!$analyticsReady)
     <div class="analytics-empty mb-4"><i class="fa-solid fa-circle-info me-2"></i>{{ __('messages.analytics_not_ready') }}</div>
@@ -236,6 +228,58 @@
     @endforeach
 </div>
 
+<section class="traffic-overview table-card mb-4" aria-labelledby="traffic-overview-title">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 mb-3">
+        <div>
+            <div class="card-kicker">{{ __('messages.period_last_30_days') }}</div>
+            <h2 class="card-heading" id="traffic-overview-title">{{ __('messages.dashboard_device_audience') }}</h2>
+            <p class="text-muted small mb-0 mt-1">{{ __('messages.dashboard_device_audience_note') }}</p>
+        </div>
+        <span class="dashboard-live-badge"><i class="fa-solid fa-signal"></i>{{ __('messages.dashboard_analytics_summary') }}</span>
+    </div>
+    <div class="row g-3">
+        @php
+            $deviceConfig = [
+                'desktop' => [__('messages.device_desktop'), 'fa-desktop'],
+                'mobile' => [__('messages.device_mobile'), 'fa-mobile-screen-button'],
+                'tablet' => [__('messages.device_tablet'), 'fa-tablet-screen-button'],
+            ];
+            $deviceVisitorsTotal = max(1, (int) $devices->sum('visitors'));
+        @endphp
+        @foreach($deviceConfig as $deviceKey => [$deviceLabel, $deviceIcon])
+            @php
+                $device = $devices->get($deviceKey);
+                $deviceVisitors = (int) ($device->visitors ?? 0);
+                $devicePercent = round(($deviceVisitors / $deviceVisitorsTotal) * 100);
+            @endphp
+            <div class="col-12 col-md-4">
+                <article class="device-stat">
+                    <div class="device-stat__icon"><i class="fa-solid {{ $deviceIcon }}"></i></div>
+                    <div class="device-stat__copy">
+                        <span>{{ $deviceLabel }}</span>
+                        <strong>{{ number_format($deviceVisitors, 0, ',', '.') }}</strong>
+                        <small>{{ $devicePercent }}% · {{ number_format((int) ($device->views ?? 0), 0, ',', '.') }} views</small>
+                    </div>
+                    <div class="device-stat__bar"><span style="width: {{ $devicePercent }}%"></span></div>
+                </article>
+            </div>
+        @endforeach
+    </div>
+    <div class="screen-size-strip mt-3">
+        <div>
+            <strong>{{ __('messages.dashboard_screen_sizes') }}</strong>
+            <span>{{ __('messages.dashboard_screen_sizes_note') }}</span>
+        </div>
+        <div class="screen-size-list">
+            @forelse($screenSizes as $screen)
+                <span><i class="fa-regular fa-window-maximize"></i>{{ $screen->viewport_width }} × {{ $screen->viewport_height }} <small>{{ $screen->visitors }}</small></span>
+            @empty
+                <span class="screen-size-empty">{{ __('messages.dashboard_screen_capture_notice') }}</span>
+            @endforelse
+        </div>
+    </div>
+</section>
+
 <h2 class="section-title">{{ __('messages.dashboard_store_operation') }}</h2>
 <div class="row g-3 mb-4">
     @php
@@ -243,15 +287,9 @@
             [__('messages.metric_active_products'), $metrics['active_products'], 'fa-box-open', 'bg-green', __('messages.metric_products_total', ['count' => $metrics['products']])],
             [__('messages.metric_brands'), $metrics['brands'], 'fa-copyright', 'bg-purple', __('messages.metric_brands_note')],
             [__('messages.metric_categories'), $metrics['categories'], 'fa-tags', 'bg-blue', __('messages.metric_categories_note')],
-            [__('messages.metric_subcategories'), $metrics['subcategories'], 'fa-tag', 'bg-cyan', __('messages.metric_subcategories_note')],
-            [__('messages.metric_child_categories'), $metrics['childcategories'], 'fa-sitemap', 'bg-gold', __('messages.metric_child_categories_note')],
-            [__('messages.metric_published_blogs'), $metrics['published_blogs'], 'fa-newspaper', 'bg-purple', __('messages.metric_published_blogs_note')],
             [__('messages.metric_customers'), $metrics['customers'], 'fa-user-group', 'bg-blue', __('messages.metric_customers_note')],
             [__('messages.metric_orders'), $metrics['orders'], 'fa-receipt', 'bg-green', __('messages.metric_orders_note')],
             [__('messages.metric_low_stock'), $metrics['low_stock'], 'fa-triangle-exclamation', 'bg-gold', __('messages.metric_low_stock_note')],
-            [__('messages.metric_out_of_stock'), $metrics['out_of_stock'], 'fa-ban', 'bg-red', __('messages.metric_out_of_stock_note')],
-            [__('messages.metric_abandoned_carts'), $metrics['abandoned_carts'], 'fa-cart-arrow-down', 'bg-red', __('messages.metric_abandoned_carts_note')],
-            [__('messages.metric_contacts'), $metrics['contacts'], 'fa-envelope', 'bg-cyan', __('messages.metric_contacts_note')],
         ];
     @endphp
     @foreach($businessCards as [$label,$value,$icon,$color,$note])
@@ -259,25 +297,20 @@
     @endforeach
 </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-xl-8"><div class="chart-card"><h3 class="card-heading">{{ __('messages.dashboard_traffic_30_days') }}</h3><div class="card-kicker">{{ __('messages.dashboard_traffic_note') }}</div><div class="chart-wrap"><canvas id="trafficChart"></canvas></div></div></div>
-    <div class="col-xl-4"><div class="chart-card"><h3 class="card-heading">{{ __('messages.dashboard_orders_by_payment') }}</h3><div class="card-kicker">{{ __('messages.dashboard_payments_note') }}</div><div class="chart-wrap small"><canvas id="paymentsChart"></canvas></div><div class="d-flex justify-content-around text-center mt-2"><div><b>{{ $metrics['bancard_orders'] }}</b><small class="d-block text-muted">Bancard</small></div><div><b>{{ $metrics['deposit_orders'] }}</b><small class="d-block text-muted">{{ __('messages.payment_deposit') }}</small></div><div><b>{{ $metrics['whatsapp_orders'] }}</b><small class="d-block text-muted">WhatsApp</small></div></div></div></div>
-</div>
-
-<div class="row g-4 mb-4">
-    <div class="col-xl-6"><div class="table-card"><h3 class="card-heading">{{ __('messages.dashboard_top_pages') }}</h3><div class="card-kicker">{{ __('messages.period_last_30_days') }}</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>#</th><th>{{ __('messages.table_page') }}</th><th>Views</th><th>{{ __('messages.table_people') }}</th></tr></thead><tbody>@forelse($topPages as $page)<tr><td><span class="rank">{{ $loop->iteration }}</span></td><td class="path-cell" title="{{ $page->path }}">{{ $page->path }}</td><td><b>{{ number_format($page->total,0,',','.') }}</b></td><td>{{ number_format($page->visitors,0,',','.') }}</td></tr>@empty<tr><td colspan="4" class="text-center text-muted py-4">{{ __('messages.dashboard_no_accesses') }}</td></tr>@endforelse</tbody></table></div></div></div>
-    <div class="col-xl-6"><div class="table-card"><h3 class="card-heading">{{ __('messages.dashboard_top_clicks') }}</h3><div class="card-kicker">{{ __('messages.dashboard_top_clicks_note') }}</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>#</th><th>{{ __('messages.table_element') }}</th><th>{{ __('messages.table_page') }}</th><th>{{ __('messages.metric_clicks') }}</th></tr></thead><tbody>@forelse($topClicks as $click)<tr><td><span class="rank">{{ $loop->iteration }}</span></td><td class="path-cell" title="{{ $click->target }}">{{ $click->element_text ?: $click->target ?: __('messages.element_without_text') }}</td><td class="path-cell" title="{{ $click->path }}">{{ $click->path }}</td><td><b>{{ number_format($click->total,0,',','.') }}</b></td></tr>@empty<tr><td colspan="4" class="text-center text-muted py-4">{{ __('messages.dashboard_no_clicks') }}</td></tr>@endforelse</tbody></table></div></div></div>
-</div>
-
-<div class="row g-4 mb-4">
-    <div class="col-xl-4"><div class="chart-card"><h3 class="card-heading">{{ __('messages.dashboard_order_statuses') }}</h3><div class="card-kicker">{{ __('messages.dashboard_general_distribution') }}</div><div class="chart-wrap small"><canvas id="ordersChart"></canvas></div></div></div>
-    <div class="col-xl-4"><div class="chart-card"><h3 class="card-heading">{{ __('messages.dashboard_devices') }}</h3><div class="card-kicker">{{ __('messages.dashboard_devices_note') }}</div><div class="chart-wrap small"><canvas id="devicesChart"></canvas></div></div></div>
-    <div class="col-xl-4"><div class="table-card"><h3 class="card-heading">{{ __('messages.dashboard_most_viewed_products') }}</h3><div class="card-kicker">{{ __('messages.dashboard_product_ranking_note') }}</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>#</th><th>{{ __('messages.table_product') }}</th><th>Views</th><th>{{ __('messages.table_stock') }}</th></tr></thead><tbody>@forelse($topProducts as $product)<tr><td><span class="rank">{{ $loop->iteration }}</span></td><td class="path-cell">{{ $product->name ?: $product->external_name ?: '#'.$product->id }}</td><td><b>{{ number_format($product->views ?? 0,0,',','.') }}</b></td><td><span class="badge-soft">{{ $product->stock ?? 0 }}</span></td></tr>@empty<tr><td colspan="4" class="text-center text-muted py-4">{{ __('messages.no_products_found') }}</td></tr>@endforelse</tbody></table></div></div></div>
-</div>
-
-<div class="table-card mb-4"><div class="d-flex justify-content-between align-items-center"><div><h3 class="card-heading">{{ __('messages.dashboard_recent_orders') }}</h3><div class="card-kicker">{{ __('messages.dashboard_latest_store_activity') }}</div></div><a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-dark">{{ __('messages.view_all') }}</a></div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>{{ __('messages.table_order') }}</th><th>{{ __('messages.table_customer') }}</th><th>{{ __('messages.table_payment') }}</th><th>{{ __('messages.table_status') }}</th><th>{{ __('messages.total') }}</th><th>{{ __('messages.table_date') }}</th></tr></thead><tbody>@forelse($recentOrders as $order)<tr><td><a href="{{ route('admin.orders.show',$order) }}" class="fw-bold text-dark">#{{ $order->order_number ?: $order->id }}</a></td><td>{{ $order->user?->name ?: $order->name ?: __('messages.guest') }}</td><td>{{ ['bancard_v2'=>'Bancard V2','rendix_pix'=>'Pix Rendix','deposito'=>__('messages.payment_deposit'),'whatsapp'=>'WhatsApp'][$order->payment_method] ?? ucfirst($order->payment_method) }}</td><td><span class="badge-soft">{{ ucfirst($order->status) }}</span></td><td>{{ $order->currency_sign ?: 'US$' }} {{ number_format($order->total,2,',','.') }}</td><td>{{ $order->created_at?->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="6" class="text-center text-muted py-4">{{ __('messages.no_orders_found') }}</td></tr>@endforelse</tbody></table></div></div>
-
-<div class="table-card mb-4"><h3 class="card-heading">{{ __('messages.dashboard_recent_events') }}</h3><div class="card-kicker">{{ __('messages.dashboard_recent_events_note') }}</div><div class="table-responsive"><table class="table overview-table"><thead><tr><th>{{ __('messages.table_when') }}</th><th>{{ __('messages.table_customer') }}</th><th>{{ __('messages.table_event') }}</th><th>{{ __('messages.table_explanation') }}</th><th>{{ __('messages.table_reference') }}</th></tr></thead><tbody>@forelse($businessEvents as $event)<tr><td>{{ $event->created_at->format('d/m H:i') }}</td><td>{{ $event->user?->name ?: __('messages.not_identified') }}</td><td><span class="badge-soft">{{ $event->title }}</span></td><td>{{ $event->message ?: __('messages.no_additional_details') }}</td><td>@if($event->order)<a href="{{ route('admin.orders.show',$event->order) }}">#{{ $event->order->order_number ?: $event->order_id }}</a>@else{{ $event->reference ?: '—' }}@endif</td></tr>@empty<tr><td colspan="5" class="text-center text-muted py-4">{{ __('messages.dashboard_no_events') }}</td></tr>@endforelse</tbody></table></div></div>
+<section class="dashboard-details-gate table-card mb-4" data-dashboard-insights data-url="{{ route('admin.dashboard.insights') }}" data-loading-label="{{ __('messages.dashboard_loading_data') }}" data-error-label="{{ __('messages.update_error') }}">
+    <div class="dashboard-details-gate__intro">
+        <div class="dashboard-details-gate__icon"><i class="fa-solid fa-chart-line"></i></div>
+        <div>
+            <div class="card-kicker">{{ __('messages.dashboard_secondary_information') }}</div>
+            <h2 class="card-heading">{{ __('messages.dashboard_detailed_analysis') }}</h2>
+            <p>{{ __('messages.dashboard_detailed_analysis_note') }}</p>
+        </div>
+        <button class="btn btn-dark dashboard-load-insights" type="button" aria-expanded="false">
+            <i class="fa-solid fa-chart-simple me-2"></i><span>{{ __('messages.dashboard_open_analysis') }}</span>
+        </button>
+    </div>
+    <div class="dashboard-insights-content" hidden></div>
+</section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

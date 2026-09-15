@@ -10,7 +10,7 @@
 @endphp
 
 <x-admin.card>
-    <form action="{{ route('admin.palace.update', $palace->id) }}" method="POST" enctype="multipart/form-data" id="formPalace">
+    <form action="{{ route('admin.palace.update', $palace->id) }}" method="POST" enctype="multipart/form-data" id="formPalace" class="special-page-form">
         @csrf
         @method('PUT')
 
@@ -24,10 +24,7 @@
 
         <x-admin.alert />
 
-        <div class="px-3 mb-3 x-small text-muted">
-            <i class="fas fa-language me-1"></i>
-            Todos os textos da página podem ser editados em PT, ES e EN. Imagens, WhatsApp, mapa e cardápio são comuns aos três idiomas.
-        </div>
+        <x-admin.translation-guide shared="Imagens, WhatsApp, mapa e cardápio são compartilhados entre PT, ES e EN." />
 
         <div class="px-3 d-flex flex-column gap-4">
             <div class="sax-premium-card shadow-sm overflow-hidden">

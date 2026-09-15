@@ -10,7 +10,7 @@
     $galleryImages = is_array($institucional->gallery_images) ? $institucional->gallery_images : (json_decode($institucional->gallery_images, true) ?: []);
 @endphp
 
-<form action="{{ route('admin.institucional.update', $institucional->id) }}" method="POST" enctype="multipart/form-data" id="formInstitucional">
+<form action="{{ route('admin.institucional.update', $institucional->id) }}" method="POST" enctype="multipart/form-data" id="formInstitucional" class="special-page-form">
     @csrf
     @method('PUT')
 
@@ -21,6 +21,8 @@
         :submitLabel="__('messages.guardar_cambios_btn')" />
 
     <x-admin.alert />
+
+    <x-admin.translation-guide shared="Imagens, galerias, métricas, câmeras e tour virtual são compartilhados entre PT, ES e EN." />
 
     <div class="row g-4">
         {{-- Coluna Principal --}}
@@ -41,13 +43,21 @@
                     </div>
 
                     {{-- Conteúdo narrativo (rich text) — mantém o editor TinyMCE já usado no restante do admin --}}
-                    <div class="mb-0">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="sax-form-label mb-0"><i class="fas fa-align-left me-1"></i> {{ __('messages.conteudo_narrativo_label') }}</label>
-                            <div class="d-flex gap-1">
-                                <a href="javascript:void(0)" class="badge bg-primary content-lang-btn text-decoration-none" onclick="switchLanguage('content', 'pt', this)">PT</a>
-                                <a href="javascript:void(0)" class="badge bg-secondary content-lang-btn text-decoration-none" onclick="switchLanguage('content', 'es', this)">ES</a>
-                                <a href="javascript:void(0)" class="badge bg-secondary content-lang-btn text-decoration-none" onclick="switchLanguage('content', 'en', this)">EN</a>
+                    <div class="mb-0 lang-field" data-current-lang="pt">
+                        <div class="lang-field__header">
+                            <div class="lang-field__copy">
+                                <label class="sax-form-label mb-0" for="editor-content"><i class="fas fa-align-left me-1"></i> {{ __('messages.conteudo_narrativo_label') }}</label>
+                                <span class="lang-field__current" data-rich-lang-status>Conteúdo em Português</span>
+                            </div>
+                            <div class="lang-field__tabs" role="tablist" aria-label="Idioma do conteúdo narrativo">
+                                @foreach(['pt' => ['PT', 'Português', $trPt->inst_section_one_content ?? $institucional->section_one_content], 'es' => ['ES', 'Español', $trEs->inst_section_one_content ?? ''], 'en' => ['EN', 'English', $trEn->inst_section_one_content ?? '']] as $locale => [$short, $full, $content])
+                                    <button type="button" class="lang-field__tab content-lang-btn {{ $locale === 'pt' ? 'active' : '' }}"
+                                            role="tab" aria-selected="{{ $locale === 'pt' ? 'true' : 'false' }}"
+                                            data-lang-label="{{ $full }}" onclick="switchLanguage('content', '{{ $locale }}', this)">
+                                        <span>{{ $short }}</span>
+                                        <i class="lang-field__state {{ filled($content) ? 'is-complete' : '' }}" aria-hidden="true"></i>
+                                    </button>
+                                @endforeach
                             </div>
                         </div>
 

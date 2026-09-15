@@ -235,6 +235,8 @@ Route::post('/ajuda-carrinho/{token}', [\App\Http\Controllers\AbandonedCartFeedb
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('/dashboard/insights', [DashboardController::class, 'insights'])->name('dashboard.insights');
+    Route::get('/dashboard/countries', [DashboardController::class, 'countries'])->name('dashboard.countries');
     Route::get('/relatorios/{period?}', [DashboardController::class, 'report'])->whereIn('period', ['today', 'week', 'month'])->name('reports.download');
     Route::get('banners', [ImageUploadController::class, 'index'])->name('banners.index');
     Route::post('banners/home/{group}', [HomeBannerController::class, 'store'])

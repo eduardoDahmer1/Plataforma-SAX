@@ -26,6 +26,10 @@ class SiteAnalyticsController extends Controller
             'target' => ['nullable', 'string', 'max:500'],
             'element_text' => ['nullable', 'string', 'max:160'],
             'device_type' => ['nullable', 'in:desktop,tablet,mobile'],
+            'screen_width' => ['nullable', 'integer', 'between:1,20000'],
+            'screen_height' => ['nullable', 'integer', 'between:1,20000'],
+            'viewport_width' => ['nullable', 'integer', 'between:1,20000'],
+            'viewport_height' => ['nullable', 'integer', 'between:1,20000'],
             'referrer_host' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -46,6 +50,10 @@ class SiteAnalyticsController extends Controller
             'target' => $data['target'] ?? null,
             'element_text' => $data['element_text'] ?? null,
             'device_type' => $data['device_type'] ?? null,
+            'screen_width' => $data['screen_width'] ?? null,
+            'screen_height' => $data['screen_height'] ?? null,
+            'viewport_width' => $data['viewport_width'] ?? null,
+            'viewport_height' => $data['viewport_height'] ?? null,
             'referrer_host' => $data['referrer_host'] ?? null,
             'country_code' => $country['code'] ?? null,
             'country_name' => $country['name'] ?? null,

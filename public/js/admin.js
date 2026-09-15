@@ -610,6 +610,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     const t = document.getElementById('real-content-' + currentLangs.content);
                     if (t) t.value = ed.getContent();
                 });
+                const form = document.getElementById('formInstitucional');
+                if (form) form.addEventListener('submit', () => {
+                    const target = document.getElementById('real-content-' + currentLangs.content);
+                    if (target) target.value = ed.getContent();
+                });
             }
         });
 
@@ -716,12 +721,22 @@ function switchLanguage(type, nextLang, element) {
     }
 
     // Atualiza classes dos botões
-    const container = element.closest('.mb-3') || element.closest('.group-container');
+    const container = element.closest('.lang-field') || element.closest('.mb-3') || element.closest('.group-container');
     if (container) {
         container.querySelectorAll('.' + type + '-lang-btn').forEach(b => {
-            b.classList.remove('bg-primary'); b.classList.add('bg-secondary');
+            b.classList.remove('active');
+            if (!b.classList.contains('lang-field__tab')) {
+                b.classList.remove('bg-primary'); b.classList.add('bg-secondary');
+            }
+            b.setAttribute('aria-selected', 'false');
         });
-        element.classList.remove('bg-secondary'); element.classList.add('bg-primary');
+        element.classList.add('active');
+        if (!element.classList.contains('lang-field__tab')) {
+            element.classList.remove('bg-secondary'); element.classList.add('bg-primary');
+        }
+        element.setAttribute('aria-selected', 'true');
+        const status = container.querySelector('[data-rich-lang-status]');
+        if (status) status.textContent = 'Conteúdo em ' + (element.dataset.langLabel || nextLang.toUpperCase());
     }
 }
 
@@ -958,6 +973,24 @@ document.addEventListener('change', function(e) {
     if (!container || !btnAdd) return;
 
     let locIndex = parseInt(container.dataset.locCount, 10);
+    const languageField = (i, field, label, placeholder = '') => `
+        <div class="lang-field" data-lang-field data-current-lang="pt-br">
+            <div class="lang-field__header">
+                <div class="lang-field__copy">
+                    <label class="sax-form-label mb-0">${label}</label>
+                    <span class="lang-field__current" data-lang-field-status>Conteúdo em Português</span>
+                </div>
+                <div class="lang-field__tabs" role="tablist" aria-label="Idioma do campo ${label}">
+                    <button type="button" class="lang-field__tab active" role="tab" aria-selected="true" data-lang-label="Português" data-lang-field-btn="pt-br"><span>PT</span><i class="lang-field__state" data-lang-state="pt-br"></i></button>
+                    <button type="button" class="lang-field__tab" role="tab" aria-selected="false" data-lang-label="Español" data-lang-field-btn="es"><span>ES</span><i class="lang-field__state" data-lang-state="es"></i></button>
+                    <button type="button" class="lang-field__tab" role="tab" aria-selected="false" data-lang-label="English" data-lang-field-btn="en"><span>EN</span><i class="lang-field__state" data-lang-state="en"></i></button>
+                </div>
+            </div>
+            <input type="hidden" name="translate[pt-br][bridal_locations][${i}][${field}]" data-lang-real="pt-br" value="">
+            <input type="hidden" name="translate[es][bridal_locations][${i}][${field}]" data-lang-real="es" value="">
+            <input type="hidden" name="translate[en][bridal_locations][${i}][${field}]" data-lang-real="en" value="">
+            <input type="text" class="form-control sax-input lang-field__control" data-lang-visual placeholder="${placeholder}">
+        </div>`;
 
     btnAdd.addEventListener('click', function() {
         const empty = document.getElementById('locations-empty');
@@ -981,19 +1014,16 @@ document.addEventListener('change', function(e) {
                 </div>
                 <input type="hidden" name="locations_items[${i}][image_path]" value="">
                 <div class="mb-2">
-                    <label class="sax-form-label">Nombre</label>
-                    <input type="text" name="locations_items[${i}][name]"
-                           class="form-control sax-input" placeholder="Nombre de la sucursal">
+                    ${languageField(i, 'name', 'Nome da unidade', 'Nome da unidade')}
                 </div>
                 <div class="mb-2">
-                    <label class="sax-form-label">Dirección</label>
-                    <input type="text" name="locations_items[${i}][address]"
-                           class="form-control sax-input" placeholder="Dirección completa">
+                    ${languageField(i, 'address', 'Endereço', 'Endereço completo')}
                 </div>
                 <div class="mb-0">
                     <label class="sax-form-label">Teléfono (WhatsApp)</label>
                     <input type="text" name="locations_items[${i}][phone]"
                            class="form-control sax-input" placeholder="+595 XXX XXX XXX">
+                    <small class="text-muted x-small">Compartilhado entre os idiomas.</small>
                 </div>
             </div>`;
         container.appendChild(col);
@@ -1371,7 +1401,11 @@ document.addEventListener('change', function (e) {
     function visualToHidden(field, lang) {
         var visual = field.querySelector('[data-lang-visual]');
         var hidden = field.querySelector('[data-lang-real="' + lang + '"]');
-        if (visual && hidden) hidden.value = visual.value;
+        if (visual && hidden) {
+            hidden.value = visual.value;
+            var state = field.querySelector('[data-lang-state="' + lang + '"]');
+            if (state) state.classList.toggle('is-complete', visual.value.trim() !== '');
+        }
     }
 
     function hiddenToVisual(field, lang) {
@@ -1398,9 +1432,23 @@ document.addEventListener('change', function (e) {
         field.querySelectorAll('[data-lang-field-btn]').forEach(function (b) {
             var isActive = b.getAttribute('data-lang-field-btn') === next;
             b.classList.toggle('active', isActive);
-            b.classList.toggle('bg-primary', isActive);
-            b.classList.toggle('bg-secondary', !isActive);
+            b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            b.setAttribute('tabindex', isActive ? '0' : '-1');
         });
+
+        var status = field.querySelector('[data-lang-field-status]');
+        if (status) status.textContent = 'Conteúdo em ' + (btn.getAttribute('data-lang-label') || next.toUpperCase());
+    });
+
+    document.addEventListener('keydown', function (e) {
+        var btn = e.target.closest('[data-lang-field-btn]');
+        if (!btn || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+        var tabs = Array.from(btn.closest('[data-lang-field]').querySelectorAll('[data-lang-field-btn]'));
+        var index = tabs.indexOf(btn);
+        var next = e.key === 'ArrowRight' ? index + 1 : index - 1;
+        e.preventDefault();
+        tabs[(next + tabs.length) % tabs.length].click();
+        tabs[(next + tabs.length) % tabs.length].focus();
     });
 
     document.addEventListener('submit', function (e) {
@@ -2124,23 +2172,116 @@ document.querySelectorAll('.toggle-active').forEach(checkbox => {
 
 
 document.addEventListener('DOMContentLoaded', function () {
-    const chartData = document.getElementById('dashboard-chart-data');
-    if (!chartData) return;
-    const loadCharts = function () {
-        if (typeof Chart === 'undefined') return;
+    const insights = document.querySelector('[data-dashboard-insights]');
+    const countriesModal = document.getElementById('dashboardCountriesModal');
+
+    const loadChartLibrary = function () {
+        if (typeof Chart !== 'undefined') return Promise.resolve();
+        if (window.saxDashboardChartPromise) return window.saxDashboardChartPromise;
+
+        window.saxDashboardChartPromise = new Promise(function (resolve, reject) {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+
+        return window.saxDashboardChartPromise;
+    };
+
+    const renderInsightsCharts = function (container) {
+        const chartData = container.querySelector('.dashboard-chart-data');
+        if (!chartData || typeof Chart === 'undefined') return;
         const read = name => JSON.parse(chartData.dataset[name] || '[]');
+        const canvas = name => container.querySelector(`[data-chart="${name}"]`);
+        const grid = { color: 'rgba(16,24,40,.06)' };
+
         Chart.defaults.font.family = 'Montserrat, Arial, sans-serif';
         Chart.defaults.color = '#667085';
-        const grid = { color: 'rgba(16,24,40,.06)' };
-        new Chart(document.getElementById('trafficChart'), { type: 'line', data: { labels: read('trafficLabels'), datasets: [{ label: root.dataset.trafficViewsLabel, data: read('trafficViews'), borderColor: '#2970ff', backgroundColor: 'rgba(41,112,255,.1)', fill: true, tension: .35, pointRadius: 2 }, { label: root.dataset.trafficVisitorsLabel, data: read('trafficVisitors'), borderColor: '#b39154', backgroundColor: 'transparent', tension: .35, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid }, x: { grid: { display: false } } } } });
-        const doughnut = (id, labels, data, colors) => new Chart(document.getElementById(id), { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } } });
-        doughnut('paymentsChart', read('paymentLabels'), read('paymentValues'), ['#2970ff','#b39154','#12b76a','#98a2b3']);
-        doughnut('ordersChart', read('orderLabels'), read('orderValues'), ['#12b76a','#f79009','#2970ff','#d92d20','#7f56d9','#98a2b3']);
-        doughnut('devicesChart', read('deviceLabels'), read('deviceValues'), ['#101828','#b39154','#2970ff']);
+
+        new Chart(canvas('traffic'), {
+            type: 'line',
+            data: {
+                labels: read('trafficLabels'),
+                datasets: [
+                    { label: chartData.dataset.trafficViewsLabel, data: read('trafficViews'), borderColor: '#2970ff', backgroundColor: 'rgba(41,112,255,.1)', fill: true, tension: .35, pointRadius: 2 },
+                    { label: chartData.dataset.trafficVisitorsLabel, data: read('trafficVisitors'), borderColor: '#b39154', backgroundColor: 'transparent', tension: .35, pointRadius: 2 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid }, x: { grid: { display: false } } } }
+        });
+
+        const doughnut = function (name, labels, data, colors) {
+            const target = canvas(name);
+            if (!target) return;
+            new Chart(target, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } } });
+        };
+        doughnut('payments', read('paymentLabels'), read('paymentValues'), ['#2970ff','#b39154','#12b76a','#98a2b3']);
+        doughnut('orders', read('orderLabels'), read('orderValues'), ['#12b76a','#f79009','#2970ff','#d92d20','#7f56d9','#98a2b3']);
     };
-    if (typeof Chart !== 'undefined') return loadCharts();
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
-    script.onload = loadCharts;
-    document.head.appendChild(script);
+
+    if (insights) {
+        const button = insights.querySelector('.dashboard-load-insights');
+        const content = insights.querySelector('.dashboard-insights-content');
+
+        button?.addEventListener('click', async function () {
+            if (insights.dataset.loaded === 'true') {
+                content.hidden = false;
+                button.hidden = true;
+                return;
+            }
+
+            button.disabled = true;
+            button.classList.add('is-loading');
+            const originalText = button.querySelector('span')?.textContent;
+            if (button.querySelector('span')) button.querySelector('span').textContent = insights.dataset.loadingLabel;
+
+            try {
+                const response = await fetch(insights.dataset.url, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!response.ok) throw new Error('Unable to load dashboard insights');
+                content.innerHTML = await response.text();
+                content.hidden = false;
+                insights.dataset.loaded = 'true';
+                button.hidden = true;
+                button.setAttribute('aria-expanded', 'true');
+                await loadChartLibrary();
+                renderInsightsCharts(content);
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-danger mt-3">${insights.dataset.errorLabel}</div>`;
+                content.hidden = false;
+                if (button.querySelector('span')) button.querySelector('span').textContent = originalText;
+            } finally {
+                button.disabled = false;
+                button.classList.remove('is-loading');
+            }
+        });
+
+        insights.addEventListener('click', function (event) {
+            if (!event.target.closest('.dashboard-close-insights')) return;
+            content.hidden = true;
+            button.hidden = false;
+            button.setAttribute('aria-expanded', 'false');
+            insights.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
+    if (countriesModal) {
+        countriesModal.addEventListener('show.bs.modal', async function (event) {
+            const trigger = event.relatedTarget;
+            const body = countriesModal.querySelector('[data-dashboard-countries-body]');
+            const url = trigger?.dataset.dashboardCountriesUrl;
+            if (!body || !url || body.dataset.loadedUrl === url) return;
+
+            body.innerHTML = `<div class="dashboard-loading" role="status"><span class="spinner-border spinner-border-sm"></span>${countriesModal.dataset.loadingLabel}</div>`;
+            try {
+                const response = await fetch(url, { headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!response.ok) throw new Error('Unable to load countries');
+                body.innerHTML = await response.text();
+                body.dataset.loadedUrl = url;
+            } catch (error) {
+                body.innerHTML = `<div class="alert alert-danger mb-0">${countriesModal.dataset.errorLabel}</div>`;
+            }
+        });
+    }
 });

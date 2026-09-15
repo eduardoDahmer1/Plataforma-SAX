@@ -4,23 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AbandonedCart;
-use App\Models\Blog;
 use App\Models\Brand;
-use App\Models\CategoriasFilhas;
 use App\Models\Category;
-use App\Models\Contact;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\SiteAnalyticsEvent;
-use App\Models\Subcategory;
 use App\Models\User;
 use App\Models\BusinessEvent;
 use App\Models\IntegrationMonitor;
-use App\Models\IntegrationRun;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
@@ -40,50 +36,19 @@ class DashboardController extends Controller
                 .'SUM(CASE WHEN status = 1 AND stock <= 0 THEN 1 ELSE 0 END) AS out_of_stock'
             )->first();
             $orderMetrics = Order::query()->selectRaw(
-                'COUNT(*) AS total, '
-                ."SUM(CASE WHEN payment_method = 'bancard_v2' THEN 1 ELSE 0 END) AS bancard_total, "
-                ."SUM(CASE WHEN payment_method = 'rendix_pix' THEN 1 ELSE 0 END) AS pix_total, "
-                ."SUM(CASE WHEN payment_method = 'deposito' THEN 1 ELSE 0 END) AS deposit_total, "
-                ."SUM(CASE WHEN payment_method = 'whatsapp' THEN 1 ELSE 0 END) AS whatsapp_total"
+                'COUNT(*) AS total'
             )->first();
 
             return [
                 'brands' => Brand::count(),
                 'categories' => Category::count(),
-                'subcategories' => Subcategory::count(),
-                'childcategories' => CategoriasFilhas::count(),
                 'active_products' => (int) $productMetrics->active_total,
                 'products' => (int) $productMetrics->total,
-                'published_blogs' => Blog::published()->count(),
                 'customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->count(),
                 'orders' => (int) $orderMetrics->total,
-                'bancard_orders' => (int) $orderMetrics->bancard_total,
-                'pix_orders' => (int) $orderMetrics->pix_total,
-                'deposit_orders' => (int) $orderMetrics->deposit_total,
-                'whatsapp_orders' => (int) $orderMetrics->whatsapp_total,
                 'low_stock' => (int) $productMetrics->low_stock,
-                'out_of_stock' => (int) $productMetrics->out_of_stock,
-                'abandoned_carts' => AbandonedCart::where('status', 'abandoned')->count(),
-                'contacts' => Contact::count(),
             ];
         });
-
-        $paymentMethods = Order::query()
-            ->select('payment_method', DB::raw('COUNT(*) AS total'))
-            ->groupBy('payment_method')
-            ->pluck('total', 'payment_method')
-            ->mapWithKeys(fn ($total, $method) => [[
-                'bancard_v2' => 'Bancard V2',
-                'rendix_pix' => 'Pix Rendix',
-                'deposito' => __('messages.payment_deposit'),
-                'whatsapp' => 'WhatsApp',
-            ][$method] ?? __('messages.payment_other') => $total]);
-
-        $orderStatuses = Order::select('status', DB::raw('COUNT(*) AS total'))
-            ->groupBy('status')->pluck('total', 'status');
-
-        $recentOrders = Order::with('user')->latest()->limit(6)->get();
-        $topProducts = Product::orderByDesc('views')->limit(6)->get(['id', 'name', 'external_name', 'views', 'stock']);
 
         $analyticsReady = Cache::remember('schema.site_analytics_events', 3600, fn () => Schema::hasTable('site_analytics_events'));
         $analytics = [
@@ -92,17 +57,8 @@ class DashboardController extends Controller
             'clicks_today' => 0,
             'views_30_days' => 0,
         ];
-        $trafficLabels = [];
-        $trafficViews = [];
-        $trafficVisitors = [];
-        $topPages = collect();
-        $topClicks = collect();
         $devices = collect();
-        $businessEventsReady = Cache::remember('schema.business_events', 3600, fn () => Schema::hasTable('business_events'));
-        $businessEvents = $businessEventsReady
-            ? BusinessEvent::with(['user:id,name,email', 'order:id,order_number'])
-                ->latest()->limit(12)->get()
-            : collect();
+        $screenSizes = collect();
         $integrationMonitoringReady = Cache::remember('schema.integration_monitoring', 3600, fn () =>
             Schema::hasTable('integration_monitors') && Schema::hasTable('integration_runs')
         );
@@ -110,62 +66,124 @@ class DashboardController extends Controller
         $integrationMonitor = $integrationMonitoringReady
             ? IntegrationMonitor::where('source', 'catalog')->first()
             : null;
-        $integrationRuns = $integrationMonitor
-            ? IntegrationRun::where('integration_monitor_id', $integrationMonitor->id)
-                ->latest('started_at')
-                ->limit(5)
-                ->get()
-            : collect();
 
         if ($analyticsReady) {
-            $analytics['views_today'] = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', $today)->count();
-            $analytics['visitors_today'] = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', $today)->distinct('visitor_hash')->count('visitor_hash');
-            $analytics['clicks_today'] = SiteAnalyticsEvent::where('event_type', 'click')->where('event_date', $today)->count();
-            $analytics['views_30_days'] = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', '>=', $start->toDateString())->count();
-
-            $daily = SiteAnalyticsEvent::where('event_type', 'page_view')
+            $summary = SiteAnalyticsEvent::query()
                 ->where('event_date', '>=', $start->toDateString())
-                ->select('event_date', DB::raw('COUNT(*) AS views'), DB::raw('COUNT(DISTINCT visitor_hash) AS visitors'))
-                ->groupBy('event_date')->orderBy('event_date')->get()->keyBy(fn ($row) => Carbon::parse($row->event_date)->toDateString());
+                ->selectRaw('SUM(CASE WHEN event_type = ? AND event_date = ? THEN 1 ELSE 0 END) AS views_today', ['page_view', $today])
+                ->selectRaw('COUNT(DISTINCT CASE WHEN event_type = ? AND event_date = ? THEN visitor_hash END) AS visitors_today', ['page_view', $today])
+                ->selectRaw('SUM(CASE WHEN event_type = ? AND event_date = ? THEN 1 ELSE 0 END) AS clicks_today', ['click', $today])
+                ->selectRaw('SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) AS views_30_days', ['page_view'])
+                ->first();
 
-            for ($date = $start->copy(); $date->lte(now()); $date->addDay()) {
-                $key = $date->toDateString();
-                $trafficLabels[] = $date->format('d/m');
-                $trafficViews[] = (int) ($daily->get($key)->views ?? 0);
-                $trafficVisitors[] = (int) ($daily->get($key)->visitors ?? 0);
-            }
+            $analytics = [
+                'views_today' => (int) $summary->views_today,
+                'visitors_today' => (int) $summary->visitors_today,
+                'clicks_today' => (int) $summary->clicks_today,
+                'views_30_days' => (int) $summary->views_30_days,
+            ];
 
-            $topPages = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', '>=', $start->toDateString())
-                ->select('path', DB::raw('COUNT(*) AS total'), DB::raw('COUNT(DISTINCT visitor_hash) AS visitors'))
-                ->groupBy('path')->orderByDesc('total')->limit(8)->get();
-            $topClicks = SiteAnalyticsEvent::where('event_type', 'click')->where('event_date', '>=', $start->toDateString())
-                ->select('path', 'element_text', 'target', DB::raw('COUNT(*) AS total'))
-                ->groupBy('path', 'element_text', 'target')->orderByDesc('total')->limit(8)->get();
             $devices = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', '>=', $start->toDateString())
-                ->whereNotNull('device_type')->select('device_type', DB::raw('COUNT(*) AS total'))
-                ->groupBy('device_type')->pluck('total', 'device_type');
+                ->whereNotNull('device_type')
+                ->select('device_type', DB::raw('COUNT(*) AS views'), DB::raw('COUNT(DISTINCT visitor_hash) AS visitors'))
+                ->groupBy('device_type')->get()->keyBy('device_type');
+
+            $screenTrackingReady = Cache::remember(
+                'schema.site_analytics_screen_dimensions',
+                3600,
+                fn () => Schema::hasColumn('site_analytics_events', 'viewport_width')
+            );
+            if ($screenTrackingReady) {
+                $screenSizes = SiteAnalyticsEvent::where('event_type', 'page_view')
+                    ->where('event_date', '>=', $start->toDateString())
+                    ->whereNotNull('viewport_width')
+                    ->whereNotNull('viewport_height')
+                    ->select('viewport_width', 'viewport_height', DB::raw('COUNT(DISTINCT visitor_hash) AS visitors'))
+                    ->groupBy('viewport_width', 'viewport_height')
+                    ->orderByDesc('visitors')->limit(6)->get();
+            }
         }
 
         $reportSelection = $this->resolveReportPeriod($request);
         $selectedReport = $this->buildReport(
             $reportSelection['start'],
             $reportSelection['end'],
-            $reportSelection['label']
+            $reportSelection['label'],
+            false
         );
         $reportFilter = $reportSelection['filter'];
 
         return view('admin.dashboard.index', compact(
-            'metrics', 'analytics', 'analyticsReady', 'paymentMethods', 'orderStatuses', 'recentOrders',
-            'topProducts', 'trafficLabels', 'trafficViews', 'trafficVisitors', 'topPages', 'topClicks', 'devices', 'businessEvents',
-            'integrationMonitor', 'integrationRuns', 'integrationMonitoringReady', 'integrationEndpointConfigured',
+            'metrics', 'analytics', 'analyticsReady', 'devices', 'screenSizes',
+            'integrationMonitor', 'integrationMonitoringReady', 'integrationEndpointConfigured',
             'selectedReport', 'reportFilter'
         ));
+    }
+
+    public function insights(): View
+    {
+        $start = now()->subDays(29)->startOfDay();
+        $analyticsReady = Cache::remember('schema.site_analytics_events', 3600, fn () => Schema::hasTable('site_analytics_events'));
+
+        $data = Cache::remember('admin.dashboard.insights', now()->addMinute(), function () use ($analyticsReady, $start): array {
+            $trafficLabels = [];
+            $trafficViews = [];
+            $trafficVisitors = [];
+            $topPages = collect();
+            $topClicks = collect();
+
+            if ($analyticsReady) {
+                $daily = SiteAnalyticsEvent::where('event_type', 'page_view')
+                    ->where('event_date', '>=', $start->toDateString())
+                    ->select('event_date', DB::raw('COUNT(*) AS views'), DB::raw('COUNT(DISTINCT visitor_hash) AS visitors'))
+                    ->groupBy('event_date')->orderBy('event_date')->get()->keyBy(fn ($row) => Carbon::parse($row->event_date)->toDateString());
+
+                for ($date = $start->copy(); $date->lte(now()); $date->addDay()) {
+                    $key = $date->toDateString();
+                    $trafficLabels[] = $date->format('d/m');
+                    $trafficViews[] = (int) ($daily->get($key)->views ?? 0);
+                    $trafficVisitors[] = (int) ($daily->get($key)->visitors ?? 0);
+                }
+
+                $topPages = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', '>=', $start->toDateString())
+                    ->select('path', DB::raw('COUNT(*) AS total'), DB::raw('COUNT(DISTINCT visitor_hash) AS visitors'))
+                    ->groupBy('path')->orderByDesc('total')->limit(8)->get();
+                $topClicks = SiteAnalyticsEvent::where('event_type', 'click')->where('event_date', '>=', $start->toDateString())
+                    ->select('path', 'element_text', 'target', DB::raw('COUNT(*) AS total'))
+                    ->groupBy('path', 'element_text', 'target')->orderByDesc('total')->limit(8)->get();
+            }
+
+            return [
+                'trafficLabels' => $trafficLabels,
+                'trafficViews' => $trafficViews,
+                'trafficVisitors' => $trafficVisitors,
+                'topPages' => $topPages,
+                'topClicks' => $topClicks,
+                'paymentMethods' => Order::select('payment_method', DB::raw('COUNT(*) AS total'))->groupBy('payment_method')->pluck('total', 'payment_method'),
+                'orderStatuses' => Order::select('status', DB::raw('COUNT(*) AS total'))->groupBy('status')->pluck('total', 'status'),
+                'topProducts' => Product::orderByDesc('views')->limit(6)->get(['id', 'name', 'external_name', 'views', 'stock']),
+                'recentOrders' => Order::with('user:id,name')->latest()->limit(6)->get(),
+                'businessEvents' => Schema::hasTable('business_events')
+                    ? BusinessEvent::with(['user:id,name', 'order:id,order_number'])->latest()->limit(8)->get()
+                    : collect(),
+            ];
+        });
+
+        return view('admin.dashboard.partials.insights', $data);
+    }
+
+    public function countries(Request $request): View
+    {
+        $selection = $this->resolveReportPeriod($request);
+        $countries = $this->visitorsByCountry($selection['start'], $selection['end']);
+
+        return view('admin.dashboard.partials.countries', compact('countries', 'selection'));
     }
 
     public function report(Request $request, ?string $period = null): Response
     {
         $selection = $this->resolveReportPeriod($request, $period);
-        $report = $this->buildReport($selection['start'], $selection['end'], $selection['label']);
+        $report = $this->buildReport($selection['start'], $selection['end'], $selection['label'], true);
         $filename = sprintf(
             'relatorio-sax-%s-%s-a-%s.pdf',
             $selection['type'],
@@ -178,40 +196,55 @@ class DashboardController extends Controller
             ->download($filename);
     }
 
-    private function buildReport(Carbon $start, Carbon $end, string $label): array
+    private function buildReport(Carbon $start, Carbon $end, string $label, bool $includeCountries = true): array
     {
         $orders = Order::whereBetween('created_at', [$start, $end]);
-        $paidOrders = Order::whereBetween('created_at', [$start, $end])
-            ->where(fn ($query) => $query->where('payment_status', 'paid')->orWhere('status', 'paid'));
+        $orderSummary = (clone $orders)
+            ->selectRaw('COUNT(*) AS orders')
+            ->selectRaw("SUM(CASE WHEN payment_status = 'paid' OR status = 'paid' THEN 1 ELSE 0 END) AS paid_orders")
+            ->selectRaw("SUM(CASE WHEN payment_status = 'paid' OR status = 'paid' THEN total ELSE 0 END) AS sales_total")
+            ->first();
         $analyticsReady = Schema::hasTable('site_analytics_events');
-        $countryTrackingReady = $analyticsReady && Schema::hasColumn('site_analytics_events', 'country_code');
+        $analyticsSummary = $analyticsReady
+            ? SiteAnalyticsEvent::whereBetween('created_at', [$start, $end])
+                ->selectRaw("SUM(CASE WHEN event_type = 'page_view' THEN 1 ELSE 0 END) AS views")
+                ->selectRaw("COUNT(DISTINCT CASE WHEN event_type = 'page_view' THEN visitor_hash END) AS visitors")
+                ->selectRaw("SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS clicks")
+                ->first()
+            : null;
+        $visitorsByCountry = $includeCountries ? $this->visitorsByCountry($start, $end) : collect();
 
-        $visitorsByCountry = $countryTrackingReady
+        return [
+            'period' => $label,
+            'start' => $start->copy(),
+            'end' => $end->copy(),
+            'orders' => (int) $orderSummary->orders,
+            'paid_orders' => (int) $orderSummary->paid_orders,
+            'sales_total' => (float) $orderSummary->sales_total,
+            'new_customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->whereBetween('created_at', [$start, $end])->count(),
+            'abandoned_carts' => AbandonedCart::whereBetween('abandoned_at', [$start, $end])->count(),
+            'views' => (int) ($analyticsSummary?->views ?? 0),
+            'visitors' => (int) ($analyticsSummary?->visitors ?? 0),
+            'clicks' => (int) ($analyticsSummary?->clicks ?? 0),
+            'visitors_by_country' => $visitorsByCountry,
+            'payment_methods' => (clone $orders)->select('payment_method', DB::raw('COUNT(*) total'))->groupBy('payment_method')->pluck('total', 'payment_method'),
+        ];
+    }
+
+    private function visitorsByCountry(Carbon $start, Carbon $end)
+    {
+        $ready = Schema::hasTable('site_analytics_events')
+            && Schema::hasColumn('site_analytics_events', 'country_code');
+
+        return $ready
             ? SiteAnalyticsEvent::where('event_type', 'page_view')
                 ->whereBetween('created_at', [$start, $end])
                 ->selectRaw("COALESCE(country_code, 'XX') AS country_code")
                 ->selectRaw("COALESCE(country_name, ?) AS country_name", [__('messages.report_country_unknown')])
                 ->selectRaw('COUNT(DISTINCT visitor_hash) AS visitors')
                 ->groupBy('country_code', 'country_name')
-                ->orderByDesc('visitors')
-                ->get()
+                ->orderByDesc('visitors')->get()
             : collect();
-
-        return [
-            'period' => $label,
-            'start' => $start->copy(),
-            'end' => $end->copy(),
-            'orders' => (clone $orders)->count(),
-            'paid_orders' => (clone $paidOrders)->count(),
-            'sales_total' => (float) (clone $paidOrders)->sum('total'),
-            'new_customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->whereBetween('created_at', [$start, $end])->count(),
-            'abandoned_carts' => AbandonedCart::whereBetween('abandoned_at', [$start, $end])->count(),
-            'views' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->count() : 0,
-            'visitors' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'page_view')->whereBetween('created_at', [$start, $end])->distinct('visitor_hash')->count('visitor_hash') : 0,
-            'clicks' => $analyticsReady ? SiteAnalyticsEvent::where('event_type', 'click')->whereBetween('created_at', [$start, $end])->count() : 0,
-            'visitors_by_country' => $visitorsByCountry,
-            'payment_methods' => (clone $orders)->select('payment_method', DB::raw('COUNT(*) total'))->groupBy('payment_method')->pluck('total', 'payment_method'),
-        ];
     }
 
     private function resolveReportPeriod(Request $request, ?string $legacyPeriod = null): array

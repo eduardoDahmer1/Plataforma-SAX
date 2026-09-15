@@ -15,11 +15,11 @@
             <span class="text-muted x-small">{{ $updatedAt }}</span>
         @endif
     </div>
-    <div class="d-flex gap-2 align-items-center">
-        <a href="{{ $cancelRoute }}" class="btn-back-minimal d-none d-md-flex align-items-center">
+    <div class="sticky-header__actions d-flex align-items-center">
+        <a href="{{ $cancelRoute }}" class="sticky-header__cancel d-none d-md-inline-flex align-items-center">
             <i class="fas fa-times me-1"></i> {{ $cancelLabel }}
         </a>
-        <button type="submit" class="btn {{ $btnClass }} rounded-pill px-4 fw-bold shadow-sm">
+        <button type="submit" class="sticky-header__submit btn {{ $btnClass }} px-4 fw-bold">
             <i class="fas fa-check-circle me-2"></i> {{ $submitLabel }}
         </button>
     </div>

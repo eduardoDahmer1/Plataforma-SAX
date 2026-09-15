@@ -28,6 +28,7 @@
 <x-admin.card>
 <form
     id="formCafeBistro"
+    class="special-page-form"
     action="{{ route('admin.cafe_bistro.update', $cafeBistro->id) }}"
     method="POST"
     enctype="multipart/form-data"
@@ -41,9 +42,7 @@
 
     <x-admin.alert />
 
-    <div class="px-3 mb-3 x-small text-muted">
-        <i class="fas fa-language me-1"></i> Cada campo de texto pode ser editado em PT / ES / EN. As imagens e horários são comuns a todos os idiomas.
-    </div>
+    <x-admin.translation-guide shared="Imagens, cardápio, horários, contatos, redes sociais e mapa são compartilhados entre PT, ES e EN." />
 
     <div class="px-3 d-flex flex-column gap-4">
 
@@ -374,15 +373,15 @@
         </div>
 
         {{-- ── FOOTER ACCIONES ────────────────────────────────────── --}}
-        <div class="d-flex justify-content-between align-items-center pt-3 pb-4 border-top">
+        <div class="special-page-form__footer d-flex justify-content-between align-items-center pt-3 pb-4 border-top">
             <a href="{{ route('admin.cafe_bistro.index') }}" class="btn-back-minimal">
                 <i class="fas fa-arrow-left me-1"></i> {{ __('messages.back_to_dashboard_btn') }}
             </a>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.cafe_bistro.index') }}" class="btn btn-light rounded-pill px-4 x-small fw-bold text-muted">
+                <a href="{{ route('admin.cafe_bistro.index') }}" class="btn special-page-form__discard px-4 x-small fw-bold">
                     {{ __('messages.discard_btn') }}
                 </a>
-                <button type="submit" class="btn btn-dark-bistro rounded-pill px-5 fw-bold">
+                <button type="submit" class="btn btn-dark-bistro special-page-form__save px-5 fw-bold">
                     <i class="fas fa-check-circle me-2"></i> {{ __('messages.save_changes_btn') }}
                 </button>
             </div>

@@ -29,6 +29,10 @@
                 path: location.pathname,
                 page_title: clean(document.title, 255),
                 device_type: deviceType(),
+                screen_width: window.screen?.width || null,
+                screen_height: window.screen?.height || null,
+                viewport_width: window.innerWidth || null,
+                viewport_height: window.innerHeight || null,
                 referrer_host: referrerHost()
             }, extra || {}))
         }).catch(function () {});

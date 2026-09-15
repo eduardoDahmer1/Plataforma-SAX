@@ -15,13 +15,13 @@ class SetLocale
     public const LOCALES = ['pt_BR', 'en', 'es'];
 
     /** Idioma exibido para quem chega no site sem escolha na sessão. */
-    public const DEFAULT_LOCALE = 'pt_BR';
+    public const DEFAULT_LOCALE = 'es';
 
     public function handle(Request $request, Closure $next)
     {
         try {
             // Moeda e idioma são independentes: a moeda padrão é a marcada como
-            // is_default (USD) e o idioma padrão é pt_BR, sem um derivar o outro.
+            // is_default (USD) e o idioma padrão é espanhol, sem um derivar do outro.
             if (!Session::has('currency')) {
                 $defaultCurrency = Currency::where('is_default', 1)->first()
                     ?? Currency::first();
@@ -42,7 +42,7 @@ class SetLocale
 
             App::setLocale($locale);
         } catch (\Throwable $e) {
-            Log::warning('Falha ao definir locale, usando fallback pt_BR.', [
+            Log::warning('Falha ao definir locale, usando fallback es.', [
                 'message' => $e->getMessage(),
             ]);
 

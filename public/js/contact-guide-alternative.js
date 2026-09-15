@@ -139,7 +139,7 @@
                 item.hidden = index >= BRAND_LIMIT && !expandedGroups.has(group.id);
                 brands.append(item);
             });
-            section.append(group.brands.length ? brands : node('p', labels.no_brands));
+            if (group.brands.length) section.append(brands);
             if (group.brands.length > BRAND_LIMIT) {
                 section.dataset.hiddenBrands = String(group.brands.length - BRAND_LIMIT);
                 const toggle = node('button', null, 'guide-two__brands-toggle');

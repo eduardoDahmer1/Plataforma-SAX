@@ -17,7 +17,11 @@
                 <span>{{ $cafeBistro->name }}</span>
             </div>
         @endif
-        <span class="eyebrow">{{ __('messages.cafe_hero_eyebrow') }}</span>
+        <span class="eyebrow">
+            {{ ($cafeBistro->slug ?? null) === 'asuncion'
+                ? __('messages.cafe_hero_eyebrow_asuncion')
+                : __('messages.cafe_hero_eyebrow_pjc') }}
+        </span>
 
         <h1 class="hero-title" data-reveal="up">
             {{ $t?->cafe_hero_titulo ?? $cafeBistro->hero_titulo ?? __('messages.cafe_hero_title_fallback') }}

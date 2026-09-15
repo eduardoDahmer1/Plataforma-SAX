@@ -28,6 +28,7 @@ class ContactGuideDirectory
                             $brands = $sectorEntries->flatMap(fn ($item) => $item->brands ?? [])
                                 ->filter(fn ($brand) => is_string($brand) && trim($brand) !== '')
                                 ->map(fn ($brand) => trim($brand))
+                                ->reject(fn ($brand) => Str::lower(Str::ascii($brand)) === 'multimarcas')
                                 ->unique(fn ($brand) => $this->key($brand))
                                 ->values()->all();
 

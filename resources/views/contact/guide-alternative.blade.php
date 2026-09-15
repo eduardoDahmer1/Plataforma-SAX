@@ -65,7 +65,6 @@
     window.saxGuideLabels = {{ Illuminate\Support\Js::from([
         'contact' => __('messages.contact_guide_v2_contact'),
         'contacts' => __('messages.contact_guide_v2_contacts'),
-        'no_brands' => __('messages.contact_guide_v2_no_brands'),
         'see_more' => __('messages.contact_guide_v2_see_more'),
         'see_less' => __('messages.contact_guide_v2_see_less'),
         'results_count' => __('messages.contact_guide_v2_results_count'),

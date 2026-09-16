@@ -52,8 +52,8 @@
                     'managerItems' => $homeBannerGroups->get('main', collect()),
                     'managerTitle' => 'Galeria do slider principal',
                     'managerDescription' => 'Envie as imagens desktop em lote. Em cada cartão, adicione uma versão mobile opcional; quando estiver vazia, o site usa automaticamente a versão desktop.',
-                    'managerDimensions' => 'Desktop 1920 × 720 · Mobile 750 × 1000 px',
-                    'managerRatio' => '8:3',
+                    'managerDimensions' => 'Desktop 1920 × 720 · Mobile 1080 × 1350 px',
+                    'managerRatio' => 'Desktop 8:3 · Mobile 4:5',
                 ])
             @elseif($key === 'home-editorial')
                 @include('admin.partials.home_banner_manager', [
@@ -61,8 +61,8 @@
                     'managerItems' => $homeBannerGroups->get('editorial', collect()),
                     'managerTitle' => 'Galeria de destaques da home',
                     'managerDescription' => 'Envie os destaques desktop em lote e, se desejar, uma versão mobile em cada cartão. Sem versão mobile, a imagem desktop permanece como fallback.',
-                    'managerDimensions' => 'Desktop 1600 × 760 · Mobile 750 × 1000 px',
-                    'managerRatio' => '2.1:1',
+                    'managerDimensions' => 'Desktop 1600 × 760 · Mobile 1080 × 1350 px',
+                    'managerRatio' => 'Desktop 2.1:1 · Mobile 4:5',
                 ])
             @endif
 

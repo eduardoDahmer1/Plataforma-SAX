@@ -12,7 +12,7 @@
         <div class="home-banner-manager__measure">
             <small>MEDIDA RECOMENDADA</small>
             <strong>{{ $managerDimensions }}</strong>
-            <span>Proporção {{ $managerRatio }} · JPG, PNG ou WEBP · até 10 MB</span>
+            <span>{{ $managerRatio }} · JPG, PNG ou WEBP · até 10 MB</span>
         </div>
     </div>
 
@@ -45,7 +45,7 @@
                             <strong>Alterar imagem</strong>
                         </label>
                         <label class="home-banner-image-control">
-                            <span><i class="fa-solid fa-mobile-screen"></i> Mobile <small>750 × 1000 px</small></span>
+                            <span><i class="fa-solid fa-mobile-screen"></i> Mobile <small>1080 × 1350 px</small></span>
                             <img src="{{ $banner->mobile_image_url }}" alt="Prévia mobile" data-banner-mobile-preview>
                             <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-banner-image="mobile_image">
                             <strong>{{ $banner->mobile_image ? 'Alterar imagem' : 'Adicionar imagem' }}</strong>

@@ -28,11 +28,16 @@
                 :current="$brand->image" :uploadUrl="route('admin.brands.uploadLogo', $brand->id)"
                 :showDelete="true" ratio="square" dimensions="800 × 800 px" usage="Logotipo com respiro e fundo transparente." />
 
+            <x-admin.media-field field="home_carousel_image" label="Imagem do carrossel da home"
+                :current="$brand->home_carousel_image" :uploadUrl="route('admin.brands.uploadHomeCarouselImage', $brand->id)"
+                :showDelete="true" ratio="banner" dimensions="1080 × 1350 px" usage="Formato vertical 4:5. A arte será exibida inteira, sem cortes." />
         </div>
     @else
         <div class="sax-catf__grid">
             <x-admin.media-field field="image" :label="__('messages.logotipo_oficial_label')" ratio="square"
                 dimensions="800 × 800 px" usage="Logotipo com respiro e fundo transparente." />
+            <x-admin.media-field field="home_carousel_image" label="Imagem do carrossel da home" ratio="banner"
+                dimensions="1080 × 1350 px" usage="Formato vertical 4:5. A arte será exibida inteira, sem cortes." />
         </div>
     @endif
 </x-admin.catalog-form>
@@ -40,4 +45,5 @@
 @if ($editando)
     {{-- Formulários usados pelos botões de remover imagem do media-field --}}
     <form id="delete-image-form" action="{{ route('admin.brands.deleteLogo', $brand->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
+    <form id="delete-home_carousel_image-form" action="{{ route('admin.brands.deleteHomeCarouselImage', $brand->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
 @endif

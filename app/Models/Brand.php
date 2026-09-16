@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Brand extends Model
 {
-    protected $fillable = ['name', 'slug', 'image', 'status'];
+    protected $fillable = ['name', 'slug', 'image', 'home_carousel_image', 'status'];
 
     public function products()
     {

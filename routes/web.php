@@ -404,6 +404,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('brands', BrandControllerAdmin::class);
     Route::delete('brands/{brand}/delete-logo', [BrandControllerAdmin::class, 'deleteLogo'])->name('brands.deleteLogo');
     Route::post('brands/{brand}/upload-logo', [BrandControllerAdmin::class, 'uploadLogo'])->name('brands.uploadLogo');
+    Route::delete('brands/{brand}/home-carousel-image', [BrandControllerAdmin::class, 'deleteHomeCarouselImage'])->name('brands.deleteHomeCarouselImage');
+    Route::post('brands/{brand}/home-carousel-image', [BrandControllerAdmin::class, 'uploadHomeCarouselImage'])->name('brands.uploadHomeCarouselImage');
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);
     Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
     Route::get('trabalhe-conosco', [JobFlyerControllerAdmin::class, 'index'])->name('trabalhe_conosco.index');

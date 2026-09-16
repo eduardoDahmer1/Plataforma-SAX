@@ -107,10 +107,16 @@ class HomeController extends Controller
                 ->get()
         );
 
-        $brandsSlider = Cache::remember('home_brands_visible_catalog_v4_image_15min', 900,
-            fn () => Brand::select('id', 'name', 'slug', 'image')
+        $brandsSlider = Cache::remember('home_brands_visible_catalog_v5_carousel_15min', 900,
+            fn () => Brand::select('id', 'name', 'slug', 'image', 'home_carousel_image')
                 ->where('status', 1)
                 ->whereIn('id', VisibleCatalogProductsService::builder()->select('products.brand_id'))
+                ->where(function ($query) {
+                    $query->whereNotNull('home_carousel_image')->where('home_carousel_image', '<>', '')
+                        ->orWhere(function ($fallback) {
+                            $fallback->whereNotNull('image')->where('image', '<>', '');
+                        });
+                })
                 ->inRandomOrder()
                 ->take(10)
                 ->get()

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class BrandControllerAdmin extends Controller
@@ -38,6 +39,7 @@ class BrandControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:brands,slug',
             'image' => 'nullable|image|max:10240',
+            'home_carousel_image' => 'nullable|image|dimensions:width=1080,height=1350|max:10240',
         ]);
 
         $data = $request->only('name', 'slug');
@@ -46,7 +48,12 @@ class BrandControllerAdmin extends Controller
             $data['image'] = $this->convertToWebp($request->file('image'));
         }
 
+        if ($request->hasFile('home_carousel_image') && $request->file('home_carousel_image')->isValid()) {
+            $data['home_carousel_image'] = $this->convertHomeCarouselImage($request->file('home_carousel_image'));
+        }
+
         Brand::create($data);
+        $this->clearHomeBrandsCache();
 
         return redirect()->route('admin.brands.index')->with('success', 'Marca criada com sucesso.');
     }
@@ -65,6 +72,7 @@ class BrandControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:brands,slug,'.$brand->id,
             'image' => 'nullable|image|max:10240',
+            'home_carousel_image' => 'nullable|image|dimensions:width=1080,height=1350|max:10240',
         ]);
 
         $data = $request->only('name', 'slug');
@@ -78,13 +86,14 @@ class BrandControllerAdmin extends Controller
         }
 
         $brand->update($data);
+        $this->clearHomeBrandsCache();
 
         return redirect()->route('admin.brands.index')->with('success', 'Marca atualizada com sucesso.');
     }
 
     public function destroy(Brand $brand)
     {
-        $files = [$brand->image];
+        $files = [$brand->image, $brand->home_carousel_image];
         foreach ($files as $file) {
             if ($file && Storage::disk('public')->exists($file)) {
                 Storage::disk('public')->delete($file);
@@ -92,6 +101,7 @@ class BrandControllerAdmin extends Controller
         }
 
         $brand->delete();
+        $this->clearHomeBrandsCache();
 
         return redirect()->route('admin.brands.index')->with('success', 'Marca deletada com sucesso.');
     }
@@ -101,6 +111,14 @@ class BrandControllerAdmin extends Controller
         $directory = 'brands/logo';
 
         return app(ImageConverterService::class)->toWebp($image, $directory);
+    }
+
+    private function convertHomeCarouselImage($image)
+    {
+        return app(ImageConverterService::class)->toWebp($image, 'brands/home-carousel', [
+            'quality' => 90,
+            'strict' => true,
+        ]);
     }
 
     public function show($id)
@@ -117,6 +135,7 @@ class BrandControllerAdmin extends Controller
         }
         $brand->image = null;
         $brand->save();
+        $this->clearHomeBrandsCache();
 
         return redirect()->back()->with('success', 'Logo excluída.');
     }
@@ -131,7 +150,44 @@ class BrandControllerAdmin extends Controller
         $path = $this->convertToWebp($request->file('image'));
         $brand->image = $path;
         $brand->save();
+        $this->clearHomeBrandsCache();
 
         return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
+    }
+
+    public function deleteHomeCarouselImage(Brand $brand)
+    {
+        if ($brand->home_carousel_image && Storage::disk('public')->exists($brand->home_carousel_image)) {
+            Storage::disk('public')->delete($brand->home_carousel_image);
+        }
+
+        $brand->home_carousel_image = null;
+        $brand->save();
+        $this->clearHomeBrandsCache();
+
+        return redirect()->back()->with('success', 'Imagem do carrossel da home excluída.');
+    }
+
+    public function uploadHomeCarouselImage(Request $request, Brand $brand)
+    {
+        $request->validate([
+            'home_carousel_image' => 'required|image|dimensions:width=1080,height=1350|max:10240',
+        ]);
+
+        if ($brand->home_carousel_image && Storage::disk('public')->exists($brand->home_carousel_image)) {
+            Storage::disk('public')->delete($brand->home_carousel_image);
+        }
+
+        $path = $this->convertHomeCarouselImage($request->file('home_carousel_image'));
+        $brand->home_carousel_image = $path;
+        $brand->save();
+        $this->clearHomeBrandsCache();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
+    }
+
+    private function clearHomeBrandsCache(): void
+    {
+        Cache::forget('home_brands_visible_catalog_v5_carousel_15min');
     }
 }

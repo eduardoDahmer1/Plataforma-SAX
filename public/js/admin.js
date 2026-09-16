@@ -1309,7 +1309,17 @@ document.addEventListener('change', function (e) {
         method:  'POST',
         body:    formData,
     })
-        .then(function (res) { return res.json(); })
+        .then(function (res) {
+            return res.json().then(function (data) {
+                if (!res.ok) {
+                    var validationMessage = data.errors
+                        ? Object.values(data.errors).flat()[0]
+                        : null;
+                    throw new Error(validationMessage || data.message || 'Não foi possível enviar esta imagem.');
+                }
+                return data;
+            });
+        })
         .then(function (data) {
             URL.revokeObjectURL(objectUrl);
             if (data.success) {
@@ -1326,6 +1336,8 @@ document.addEventListener('change', function (e) {
             URL.revokeObjectURL(objectUrl);
             restorePreview();
             console.error('Erro ao enviar imagem:', err);
+            if (typeof window.saxToast === 'function') window.saxToast('error', err.message);
+            else window.alert(err.message);
         });
 });
 

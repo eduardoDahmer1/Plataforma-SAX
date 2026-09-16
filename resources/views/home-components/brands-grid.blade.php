@@ -17,7 +17,7 @@
             <div class="sax-brands-mobile__rail">
                 @foreach ($brands as $brand)
                     @php
-                        $rawBrandImage = trim((string) ($brand->image ?? ''));
+                        $rawBrandImage = trim((string) ($brand->home_carousel_image ?: $brand->image));
                         if (preg_match('/^https?:\/\//i', $rawBrandImage)) {
                             $brandImageUrl = $rawBrandImage;
                         } elseif ($rawBrandImage !== '') {

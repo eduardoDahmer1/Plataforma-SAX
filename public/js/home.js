@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         brands.forEach((brand, i) => {
-            const imgPath = normalizeImagePath(brand.image);
+            const imgPath = normalizeImagePath(brand.home_carousel_image || brand.image);
 
             const div = document.createElement('div');
             div.className = 'sax-item hidden';

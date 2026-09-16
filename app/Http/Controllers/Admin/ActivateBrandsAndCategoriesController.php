@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Brand; 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Services\StoreTaxonomyService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class ActivateBrandsAndCategoriesController extends Controller
@@ -57,6 +57,8 @@ class ActivateBrandsAndCategoriesController extends Controller
             'home_brands_3d_random_15min',
             'home_brands_visible_catalog_v2_3d_random_15min',
             'home_brands_visible_catalog_v3_banner_priority_15min',
+            'home_brands_visible_catalog_v4_image_15min',
+            'home_brands_visible_catalog_v5_carousel_15min',
             'categories_all',
             'admin.dashboard.metrics',
             'bridal_active_brands',
@@ -74,13 +76,12 @@ class ActivateBrandsAndCategoriesController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'status'  => $model->status,
-                'ativo'   => $ativo,
-                'message' => $label . ' ' . ($ativo ? __('messages.ativada_sucesso') : __('messages.desativada_sucesso')),
+                'status' => $model->status,
+                'ativo' => $ativo,
+                'message' => $label.' '.($ativo ? __('messages.ativada_sucesso') : __('messages.desativada_sucesso')),
             ]);
         }
 
-        return back()->with('success', $label . ' ' . ($ativo ? __('messages.ativada_sucesso') : __('messages.desativada_sucesso')));
+        return back()->with('success', $label.' '.($ativo ? __('messages.ativada_sucesso') : __('messages.desativada_sucesso')));
     }
-
 }

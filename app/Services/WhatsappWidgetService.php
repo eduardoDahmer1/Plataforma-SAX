@@ -32,7 +32,7 @@ class WhatsappWidgetService
         ];
     }
 
-    public function configuration(Request $request): array
+    public function configuration(Request $request, ?string $context = null): array
     {
         $configuration = Cache::remember(self::CACHE_KEY, now()->addHours(12), function (): array {
             if (! Schema::hasTable('whatsapp_widget_settings') || ! Schema::hasTable('whatsapp_contacts')) {
@@ -52,7 +52,7 @@ class WhatsappWidgetService
             ];
         });
 
-        $context = $this->resolveContext($request);
+        $context ??= $this->resolveContext($request);
         $setting = $configuration['settings'] ?? null;
         $configuration['title'] = $setting?->translated('title') ?: 'Concierge Digital SAX';
         $configuration['subtitle'] = $setting?->translated('subtitle') ?: 'Escolha uma opção e fale com nosso time.';

@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\ProductFeedService;
+use App\Services\ProductFeedRefreshService;
 use Illuminate\Http\RedirectResponse;
 use Throwable;
 
 class ProductFeedController extends Controller
 {
-    public function store(ProductFeedService $feed): RedirectResponse
+    public function store(ProductFeedService $feed, ProductFeedRefreshService $refresh): RedirectResponse
     {
         try {
-            $status = $feed->generate();
+            $refresh->refreshPending(true);
+            $status = $feed->status();
 
             return back()->with(
                 'success',

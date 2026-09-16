@@ -106,13 +106,13 @@
                         @foreach ($orderItems as $item)
                             <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-light">
                                 <div class="sax-cart-img-wrapper" style="width: 60px; height: 75px;">
-                                    <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
-                                        alt="{{ $item->product->external_name }}" class="img-fluid">
+                                    <x-product-link :product="$item->product" :new-tab="true" class="d-block w-100 h-100"><img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
+                                        alt="{{ $item->external_name ?? $item->name ?? 'Produto' }}" class="img-fluid"></x-product-link>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <p class="mb-0 sax-item-name text-truncate" style="max-width: 200px;">
+                                    <p class="mb-0 sax-item-name text-truncate" style="max-width: 200px;"><x-product-link :product="$item->product" :new-tab="true">
                                         {{ $item->product->external_name ?? 'Produto' }}
-                                    </p>
+                                    </x-product-link></p>
                                     <small class="text-muted">{{ __('messages.quantidade') }}:
                                         {{ $item->quantity }}</small>
                                 </div>

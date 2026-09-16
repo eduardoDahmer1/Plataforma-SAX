@@ -4,7 +4,10 @@
         @php($title = $banner['title'] ?: $banner['label'])
         <article class="vista-editorial-card">
             @if(filled($banner['link']))<a href="{{ $banner['link'] }}" aria-label="{{ $title }}">@endif
-                <img src="{{ $banner['image_url'] }}" alt="{{ $title }}" loading="lazy" decoding="async">
+                <picture>
+                    <source media="(max-width: 767px)" srcset="{{ $banner['mobile_image_url'] }}">
+                    <img src="{{ $banner['image_url'] }}" alt="{{ $title }}" loading="lazy" decoding="async">
+                </picture>
                 <span>{{ $title }}</span>
             @if(filled($banner['link']))</a>@endif
         </article>

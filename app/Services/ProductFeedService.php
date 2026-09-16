@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 use Throwable;
 use XMLWriter;
@@ -93,6 +94,7 @@ class ProductFeedService
             'count' => isset($metadata['count']) ? (int) $metadata['count'] : null,
             'profile' => $metadata['profile'] ?? null,
             'size' => $exists ? $disk->size(self::FEED_PATH) : null,
+            'pending' => Cache::has(ProductFeedRefreshService::DIRTY_CACHE_KEY),
         ];
     }
 

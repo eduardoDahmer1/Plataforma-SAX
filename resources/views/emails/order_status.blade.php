@@ -38,7 +38,7 @@
         // Todos os valores são formatados na moeda em que o cliente fechou o pedido.
         $dinheiro = fn ($valorBase) => order_money($order, $valorBase);
 
-        $itens = $order->items;
+        $itens = $order->items->loadMissing('product');
         $subtotal = $itens->sum(fn ($item) => $item->price * $item->quantity);
         $desconto = (float) ($order->discount ?? 0);
         $frete = (float) ($order->shipping_cost ?? 0);
@@ -150,7 +150,7 @@
                 <tr>
                     <td style="padding:0.9rem 1rem;border-bottom:{{ $loop->last ? '0' : '1px solid #eeeae4' }};">
                         <span style="display:block;font-size:0.92rem;font-weight:700;color:#111111;line-height:1.4;">
-                            {{ $item->external_name ?: ($item->name ?: $translate('email_order_product')) }}
+                            <x-product-link :product="$item->product">{{ $item->external_name ?: ($item->name ?: $translate('email_order_product')) }}</x-product-link>
                         </span>
                         <span style="display:block;margin-top:2px;font-size:0.72rem;color:#8a8a8a;">
                             SKU: {{ $item->sku ?: '-' }} &nbsp;·&nbsp; {{ $copy['qty'] }}: {{ $item->quantity }}

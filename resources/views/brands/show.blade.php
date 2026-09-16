@@ -2,39 +2,6 @@
 
 @section('content')
     <div class="brand-detail-wrapper">
-        @php
-            $storagePath = 'uploads/';
-            $bannerUrl = null;
-
-            // Lógica de Banner Principal (Topo) - Identica a Categorias
-            if ($brand->internal_banner) {
-                $bannerUrl = Storage::url($brand->internal_banner);
-            } elseif (isset($banner10) && $banner10) {
-                $bannerUrl = Storage::url($storagePath . $banner10);
-            }
-
-            // Lógica de Banner Lateral
-            $bannerLateralUrl = null;
-            if ($brand->banner) {
-                $bannerLateralUrl = Storage::url($brand->banner);
-            } elseif (!empty($banner_horizontal)) {
-                $bannerLateralUrl = Storage::url($storagePath . $banner_horizontal);
-            }
-
-            $fallbackImg = asset('storage/uploads/banner_horizontal.webp');
-        @endphp
-
-        {{-- Banner de Topo (Hero) --}}
-        @if ($bannerUrl)
-            <div class="brand-hero-fullwidth">
-                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $brand->name }}"
-                    onerror="this.src='{{ $fallbackImg }}'">
-                <div class="hero-overlay-soft"></div>
-            </div>
-        @else
-            <div class="py-3"></div>
-        @endif
-
         {{-- Identidade da Marca (Logo e Título) --}}
         <div class="brand-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
@@ -42,11 +9,7 @@
                     <i class="fas fa-chevron-left me-1"></i> {{ __('messages.voltar_marcas') }}
                 </a>
                 <div class="brand-logo-container mt-3">
-                    @if ($brand->image)
-                        <img src="{{ Storage::url($brand->image) }}" alt="{{ $brand->name }}" class="brand-main-logo">
-                    @else
-                        <h1 class="brand-name-text">{{ $brand->name }}</h1>
-                    @endif
+                    <h1 class="brand-name-text">{{ $brand->name }}</h1>
                 </div>
             </div>
         </div>
@@ -55,7 +18,7 @@
         <div class="container-fluid px-1 px-md-4 py-4 bg-white">
             <div class="row g-1">
 
-                {{-- Coluna Lateral: Filtros + Banner --}}
+                {{-- Coluna Lateral: Filtros --}}
                 <div class="col-12 col-lg-3 d-none d-lg-block">
                     <div class="sticky-sidebar-content" style="position: sticky; top: 100px;">
 
@@ -64,13 +27,6 @@
                             <x-product-filters :categories="$categories" :brands="$brands" :currentCategory="$categoriasfilhas->subcategory->category_id ?? null" />
                         </div>
 
-                        {{-- Banner Lateral --}}
-                        @if ($bannerLateralUrl)
-                            <div class="sticky-banner-lateral">
-                                <img src="{{ $bannerLateralUrl }}" class="img-fluid banner-v-render"
-                                    alt="{{ $brand->name }} Promo" onerror="this.src='{{ $fallbackImg }}'">
-                            </div>
-                        @endif
                     </div>
                 </div>
 

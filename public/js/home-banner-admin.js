@@ -56,7 +56,37 @@
             const active = item.querySelector('[data-banner-active]');
             const saveState = item.querySelector('[data-save-state]');
             const copyFields = [...item.querySelectorAll('[data-banner-copy-field]')];
+            const imageInputs = [...item.querySelectorAll('[data-banner-image]')];
+            const desktopPreview = item.querySelector('[data-banner-preview]');
+            const mobilePreview = item.querySelector('[data-banner-mobile-preview]');
+            const mobileRemove = item.querySelector('[data-banner-mobile-remove]');
             let saveTimer = null;
+
+            const saveImage = async input => {
+                const file = input.files?.[0];
+                if (!file) return;
+
+                const body = new FormData();
+                body.append(input.dataset.bannerImage, file);
+                item.classList.add('is-busy');
+
+                try {
+                    const data = await responseJson(await fetch(item.dataset.imagesUrl, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                        body
+                    }));
+                    if (desktopPreview) desktopPreview.src = data.item.image_url;
+                    if (mobilePreview) mobilePreview.src = data.item.mobile_image_url;
+                    if (mobileRemove) mobileRemove.classList.toggle('d-none', !data.item.has_mobile_image);
+                    message('success', data.message);
+                } catch (error) {
+                    message('error', error.message);
+                } finally {
+                    input.value = '';
+                    item.classList.remove('is-busy');
+                }
+            };
 
             const save = () => {
                 clearTimeout(saveTimer);
@@ -85,6 +115,29 @@
                 field.addEventListener('input', save);
                 field.addEventListener('blur', save);
             });
+            imageInputs.forEach(input => input.addEventListener('change', () => saveImage(input)));
+
+            if (mobileRemove) {
+                mobileRemove.addEventListener('click', async () => {
+                    item.classList.add('is-busy');
+                    const body = new FormData();
+                    body.append('remove_mobile_image', '1');
+                    try {
+                        const data = await responseJson(await fetch(item.dataset.imagesUrl, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                            body
+                        }));
+                        if (mobilePreview) mobilePreview.src = data.item.image_url;
+                        mobileRemove.classList.add('d-none');
+                        message('success', 'Versão mobile removida. O desktop será usado como fallback.');
+                    } catch (error) {
+                        message('error', error.message);
+                    } finally {
+                        item.classList.remove('is-busy');
+                    }
+                });
+            }
 
             item.querySelector('[data-banner-delete]').addEventListener('click', async () => {
                 if (!window.confirm('Remover este banner da home?')) return;
@@ -120,6 +173,7 @@
             item.draggable = true;
             item.dataset.bannerId = data.id;
             item.dataset.updateUrl = data.update_url;
+            item.dataset.imagesUrl = data.images_url;
             item.dataset.deleteUrl = data.delete_url;
 
             const media = document.createElement('div');
@@ -127,6 +181,7 @@
             const image = document.createElement('img');
             image.src = data.image_url;
             image.alt = 'Novo banner';
+            image.dataset.bannerPreview = '';
             media.append(image);
             const order = document.createElement('span');
             order.className = 'home-banner-item__order';
@@ -135,7 +190,7 @@
 
             const body = document.createElement('div');
             body.className = 'home-banner-item__body';
-            body.innerHTML = '<label>Link deste banner</label><div class="home-banner-item__link"><i class="fa-solid fa-link"></i><input type="text" placeholder="https://... ou /categorias/..." data-banner-link><span class="home-banner-save-state" data-save-state></span></div>';
+            body.innerHTML = `<div class="home-banner-item__responsive-media"><label class="home-banner-image-control"><span><i class="fa-solid fa-desktop"></i> Desktop <small>imagem horizontal</small></span><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-banner-image="desktop_image"><strong>Alterar imagem</strong></label><label class="home-banner-image-control"><span><i class="fa-solid fa-mobile-screen"></i> Mobile <small>750 × 1000 px</small></span><img src="${data.mobile_image_url}" alt="Prévia mobile" data-banner-mobile-preview><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-banner-image="mobile_image"><strong>Adicionar imagem</strong></label><button type="button" class="home-banner-mobile-remove d-none" data-banner-mobile-remove><i class="fa-solid fa-rotate-left"></i> Usar desktop no mobile</button></div><label>Link deste banner</label><div class="home-banner-item__link"><i class="fa-solid fa-link"></i><input type="text" placeholder="https://... ou /categorias/..." data-banner-link><span class="home-banner-save-state" data-save-state></span></div>`;
             if (manager.dataset.group === 'main') {
                 const languages = [['pt', 'Português'], ['en', 'English'], ['es', 'Español']];
                 const fields = languages.map(([code, label]) => `<fieldset><legend>${label}</legend><label>Título</label><input type="text" maxlength="160" data-banner-copy-field="title_${code}"><label>Descrição</label><textarea rows="3" maxlength="600" data-banner-copy-field="description_${code}"></textarea></fieldset>`).join('');

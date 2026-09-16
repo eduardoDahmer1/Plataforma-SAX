@@ -133,13 +133,13 @@
                 @endphp
                 <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-light sax-order-item-row">
                     <div class="sax-cart-img-wrapper sax-order-item-image-wrap">
-                        <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}" 
-                             alt="{{ $item->product->external_name ?? __('messages.table_product') }}" class="img-fluid">
+                        <x-product-link :product="$item->product" :new-tab="true" class="d-block w-100 h-100"><img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
+                             alt="{{ $item->product->external_name ?? __('messages.table_product') }}" class="img-fluid"></x-product-link>
                     </div>
                     <div class="flex-grow-1">
-                        <p class="mb-0 sax-item-name text-truncate sax-order-item-name">
+                        <p class="mb-0 sax-item-name text-truncate sax-order-item-name"><x-product-link :product="$item->product" :new-tab="true">
                             {{ $item->product->external_name ?? __('messages.table_product') }}
-                        </p>
+                        </x-product-link></p>
                         <small class="text-muted d-block">{{ __('messages.quantidade') }}: {{ $item->quantity }}</small>
                         <small class="text-muted d-block">SKU: {{ $item->product->sku ?? '-' }}</small>
 

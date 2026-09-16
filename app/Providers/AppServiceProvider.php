@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use App\Models\Attribute;
 use App\Models\Brand;
-use App\Models\Category;
 use App\Models\CategoriasFilhas;
+use App\Models\Category;
 use App\Models\Language;
 use App\Models\Product;
 use App\Models\Subcategory;
@@ -198,7 +198,7 @@ class AppServiceProvider extends ServiceProvider
                     'category' => 'updates',
                     'icon' => 'fa-arrows-rotate',
                     'title' => __('messages.catalog_purchase_paused_title'),
-                    'message' => __('messages.catalog_purchase_paused_message'),
+                    'message' => __('messages.checkout_pause_message'),
                 ]);
             }
 
@@ -232,8 +232,6 @@ class AppServiceProvider extends ServiceProvider
                     'logo_bridal' => $attribute?->logo_bridal ?? null,
                     'logo_cafe_bistro' => $attribute?->logo_cafe_bistro ?? null,
                     'logo_cafe_bistro_asuncion' => $attribute?->logo_cafe_bistro_asuncion ?? null,
-                    'banner_horizontal' => $attribute?->banner_horizontal ?? null,
-                    'banner_horizontal_link' => $attribute?->banner_horizontal_link ?? null,
                     'banner2' => $attribute?->banner2 ?? null,
                     'banner3' => $attribute?->banner3 ?? null,
                     'banner4' => $attribute?->banner4 ?? null,
@@ -242,7 +240,6 @@ class AppServiceProvider extends ServiceProvider
                     'banner7' => $attribute?->banner7 ?? null,
                     'banner8' => $attribute?->banner8 ?? null,
                     'banner9' => $attribute?->banner9 ?? null,
-                    'banner10' => $attribute?->banner10 ?? null,
                     'banner1_link' => $attribute?->banner1_link ?? null,
                     'banner2_link' => $attribute?->banner2_link ?? null,
                     'banner3_link' => $attribute?->banner3_link ?? null,
@@ -252,7 +249,6 @@ class AppServiceProvider extends ServiceProvider
                     'banner7_link' => $attribute?->banner7_link ?? null,
                     'banner8_link' => $attribute?->banner8_link ?? null,
                     'banner9_link' => $attribute?->banner9_link ?? null,
-                    'banner10_link' => $attribute?->banner10_link ?? null,
                     'whatsapp_banner' => $attribute?->whatsapp_banner ?? null,
                 ];
             }

@@ -19,7 +19,7 @@ class EnsureCatalogIntegrationHealthy
             return $next($request);
         }
 
-        $message = __('messages.catalog_purchase_paused_message');
+        $message = __('messages.checkout_pause_message');
         $order = $request->route('order');
         $orderId = is_object($order) ? $order->id : $order;
         $isPaymentRoute = $request->routeIs(
@@ -56,7 +56,7 @@ class EnsureCatalogIntegrationHealthy
         }
 
         return redirect()
-            ->route('home')
+            ->route(auth()->check() ? 'cart.view' : 'home')
             ->with('catalog_purchase_blocked', $message);
     }
 }

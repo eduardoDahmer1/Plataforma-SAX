@@ -95,9 +95,9 @@
                                 ?? ($item->image ? asset('storage/uploads/' . ltrim($item->image, '/')) : asset('storage/uploads/noimage.webp'));
                         @endphp
                         <div class="sax-summary-item">
-                            <div class="sax-item-image"><img src="{{ $image }}" alt="{{ $item->product_name }}"></div>
+                            <div class="sax-item-image"><x-product-link :product="$item->product" :new-tab="true"><img src="{{ $image }}" alt="{{ $item->product_name }}"></x-product-link></div>
                             <div class="sax-item-copy">
-                                <strong>{{ $item->product_name }}</strong>
+                                <strong><x-product-link :product="$item->product" :new-tab="true">{{ $item->product_name }}</x-product-link></strong>
                                 <span>{{ $item->sku ? 'SKU ' . $item->sku . ' · ' : '' }}{{ __('messages.cart_feedback_quantity', ['quantity' => $item->quantity]) }}</span>
                             </div>
                         </div>

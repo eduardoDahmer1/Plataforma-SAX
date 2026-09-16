@@ -3,69 +3,11 @@
 @section('content')
     <div class="category-detail-wrapper">
         @php
-            $storagePath = 'uploads/';
-            $fallbackImg = asset('storage/uploads/banner_horizontal.webp');
-
-            $resolveStorageUrl = function ($rawPath) use ($storagePath) {
-                if (empty($rawPath)) {
-                    return null;
-                }
-
-                $candidates = [$rawPath, $storagePath . ltrim($rawPath, '/')];
-
-                foreach ($candidates as $candidate) {
-                    if (Storage::disk('public')->exists($candidate)) {
-                        return Storage::url($candidate);
-                    }
-                }
-
-                return null;
-            };
-
-            $isBrand = $isBrand ?? false;
-
-            $heroBannerUrl = $resolveStorageUrl($isBrand
-                ? ($entity->internal_banner ?? null)
-                : ($entity->banner ?? null));
-
-            if (!$heroBannerUrl && !empty($banner10 ?? null)) {
-                $heroBannerUrl = $resolveStorageUrl($banner10);
-            }
-
-            if (!$heroBannerUrl && !empty($banner_horizontal ?? null)) {
-                $heroBannerUrl = $resolveStorageUrl($banner_horizontal);
-            }
-
-            $sideBannerUsesDefault = false;
-            $sideBannerUrl = $resolveStorageUrl($isBrand
-                ? ($entity->banner ?? null)
-                : ($entity->internal_banner ?? null));
-
-            if (!$sideBannerUrl) {
-                $sideBannerUrl = $resolveStorageUrl($entity->image ?? null);
-            }
-
-            if (!$sideBannerUrl && !empty($banner_horizontal ?? null)) {
-                $sideBannerUrl = $resolveStorageUrl($banner_horizontal);
-                $sideBannerUsesDefault = filled($sideBannerUrl);
-            }
-
-            $sideBannerLink = $sideBannerUsesDefault ? ($banner_horizontal_link ?? null) : null;
-
             $entityName = $entity->name ?? '';
             $mobileFilterId = 'catalogMobileFilter_' . ($entity->id ?? uniqid());
             
             $isEditionPrivee = (isset($entity->slug) && $entity->slug === 'edition-privee') || (request()->is('*edition-privee*'));
         @endphp
-
-        @if ($heroBannerUrl)
-            <div class="category-hero-fullwidth">
-                <img src="{{ $heroBannerUrl }}" class="hero-img-render" alt="{{ $entityName }}" onerror="this.src='{{ $fallbackImg }}'">
-                <div class="hero-overlay-soft"></div>
-            </div>
-        @else
-            <div class="py-3"></div>
-        @endif
 
         <div class="category-identity-section">
             <div class="container text-center">
@@ -135,13 +77,6 @@
                             </div>
                         </div>
                     </div>
-
-                    @if ($sideBannerUrl)
-                        <div class="mt-3">
-                            <x-catalog-side-banner :image="$sideBannerUrl" :link="$sideBannerLink"
-                                :alt="$entityName.' Promo'" :fallback="$fallbackImg" />
-                        </div>
-                    @endif
                 </aside>
 
                 <div class="col-12 col-lg-9">
@@ -155,8 +90,6 @@
                     @if ($products->count())
                         @php
                             $productLocale = translation_locale();
-                            $mobileBannerAfter = min(4, $products->count());
-                            $tabletBannerAfter = min(6, $products->count());
                             $products->getCollection()->load([
                                 'translations' => fn ($query) => $query->where('locale', $productLocale),
                             ]);
@@ -164,18 +97,6 @@
                         <div class="row g-2 g-md-3">
                             @foreach ($products as $item)
                                 <x-product-card :item="$item" :cartItems="$cartItems ?? []" gridClass="col-6 col-md-4 col-xl-3" />
-                                @if($sideBannerUrl && $loop->iteration === $mobileBannerAfter)
-                                    <div class="col-12 d-md-none catalog-mobile-editorial-slot">
-                                        <x-catalog-side-banner :image="$sideBannerUrl" :link="$sideBannerLink"
-                                            :alt="$entityName.' Promo'" :fallback="$fallbackImg" mobile />
-                                    </div>
-                                @endif
-                                @if($sideBannerUrl && $loop->iteration === $tabletBannerAfter)
-                                    <div class="col-12 d-none d-md-block d-lg-none catalog-mobile-editorial-slot">
-                                        <x-catalog-side-banner :image="$sideBannerUrl" :link="$sideBannerLink"
-                                            :alt="$entityName.' Promo'" :fallback="$fallbackImg" mobile />
-                                    </div>
-                                @endif
                             @endforeach
                         </div>
 

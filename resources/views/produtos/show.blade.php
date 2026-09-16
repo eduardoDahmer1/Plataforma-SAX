@@ -344,12 +344,6 @@
                                class="btn btn-outline-dark w-100 text-uppercase fw-bold rounded-0 bridal-btn">
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.agendar_consulta_bridal') }}
                             </a>
-                        @elseif (! ($catalogIntegrationStatus['available'] ?? true))
-                            <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $displayName) }}"
-                               target="_blank" rel="noopener"
-                               class="btn btn-success w-100 text-uppercase fw-bold rounded-1 add-to-cart-btn">
-                                <i class="fab fa-whatsapp me-2"></i>{{ __('messages.store_whatsapp_product_button') }}
-                            </a>
                         @elseif (Auth::check())
                             <div class="d-flex buy-actions">
                                 @if (! (($storeControls['cart_enabled'] ?? true) && ($storeControls['add_to_cart_enabled'] ?? true)) && ($storeControls['whatsapp_enabled'] ?? true))

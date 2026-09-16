@@ -12,6 +12,7 @@
     $vistaEditorialBanners = collect($homeEditorialBanners ?? [])->values()->map(fn ($banner, $index) => [
         'image' => $banner->image,
         'image_url' => $banner->image_url,
+        'mobile_image_url' => $banner->mobile_image_url,
         'link' => match ($index) {
             0 => route('collections.show', ['collection' => 'new-arrivals']),
             1 => route('collections.show', ['collection' => 'trending']),

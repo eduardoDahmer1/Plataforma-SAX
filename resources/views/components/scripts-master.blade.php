@@ -55,14 +55,15 @@
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        if (window.saxCatalogPurchasingAvailable !== false) return;
-
         const modalElement = document.getElementById('catalogIntegrationPauseModal');
         const showPauseModal = function () {
             if (modalElement && window.bootstrap) {
                 bootstrap.Modal.getOrCreateInstance(modalElement).show();
             }
         };
+
+        if (window.saxCatalogPurchaseWasBlocked) showPauseModal();
+        if (window.saxCatalogPurchasingAvailable !== false) return;
 
         document.addEventListener('submit', function (event) {
             const form = event.target;
@@ -77,11 +78,10 @@
                 return;
             }
 
-            const startsNewPurchase = /\/cart\/add(?:-and-checkout)?$/.test(pathname)
+            const startsNewPurchase = /\/cart\/add-and-checkout$/.test(pathname)
                 || pathname === '/checkout'
                 || pathname === '/checkout/store'
-                || pathname === '/checkout/whatsapp'
-                || /\/carrinhos-abandonados\/[^/]+\/restaurar$/.test(pathname);
+                || pathname === '/checkout/whatsapp';
 
             if (startsNewPurchase) {
                 event.preventDefault();
@@ -89,9 +89,6 @@
             }
         }, true);
 
-        if (window.saxCatalogPurchaseWasBlocked) {
-            showPauseModal();
-        }
     });
 </script>
 <script src="{{ asset('js/world-locations.js') }}?v={{ filemtime(public_path('js/world-locations.js')) }}"></script>

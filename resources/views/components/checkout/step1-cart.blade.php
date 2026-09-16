@@ -24,14 +24,14 @@
 
                 <div class="sax-cart-item">
                     <div class="sax-cart-img-wrapper">
-                        <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
+                        <x-product-link :product="$item->product" :new-tab="true" class="d-block w-100 h-100"><img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
                             alt="{{ $item->product->external_name ?? 'Produto' }}"
-                            class="img-fluid">
+                            class="img-fluid"></x-product-link>
                     </div>
 
                     <div class="sax-cart-item-main">
                         <span class="sax-item-brand">{{ $item->product->brand->name ?? 'SAX EXCLUSIVE' }}</span>
-                        <h5 class="sax-item-name">{{ $item->product->external_name ?? 'Produto' }}</h5>
+                        <h5 class="sax-item-name"><x-product-link :product="$item->product" :new-tab="true">{{ $item->product->external_name ?? 'Produto' }}</x-product-link></h5>
 
                         <div class="sax-item-meta">
                             <span>SKU: <strong>{{ $item->product->sku ?? '-' }}</strong></span>

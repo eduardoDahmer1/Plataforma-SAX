@@ -2,6 +2,7 @@
     $slides = collect($homeMainBanners ?? [])->values()->map(fn ($banner, $index) => [
         'image' => $banner->image,
         'image_url' => $banner->image_url,
+        'mobile_image_url' => $banner->mobile_image_url,
         'link' => $banner->link,
         'title' => $banner->translated('title'),
         'description' => $banner->translated('description'),
@@ -21,8 +22,11 @@
                         @if(filled($slide['link']))
                             <a href="{{ $slide['link'] }}" class="sax-luxury-slide__link" @if($isExternal) target="_blank" rel="noopener noreferrer" @endif aria-label="Abrir campanha {{ $loop->iteration }}">
                         @endif
-                            <img src="{{ $slide['image_url'] }}" alt="Campanha SAX {{ $loop->iteration }}"
-                                width="1920" height="720" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
+                            <picture>
+                                <source media="(max-width: 767px)" srcset="{{ $slide['mobile_image_url'] }}">
+                                <img src="{{ $slide['image_url'] }}" alt="Campanha SAX {{ $loop->iteration }}"
+                                    width="1920" height="720" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
+                            </picture>
                             <span class="sax-luxury-slide__shade" aria-hidden="true"></span>
                             @if(filled($slide['title']) || filled($slide['description']) || filled($slide['link']))
                                 <span class="sax-luxury-slide__caption">

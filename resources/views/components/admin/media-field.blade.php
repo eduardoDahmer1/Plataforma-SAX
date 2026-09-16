@@ -1,5 +1,5 @@
 @props([
-    'field',             // 'photo' | 'banner' | 'image' | 'internal_banner'
+    'field',             // 'photo' | 'image'
     'label'      => null,
     'current'    => null,
     'uploadUrl'  => null,   // presente → modo EDIT (AJAX); ausente → modo CREATE (submit normal)

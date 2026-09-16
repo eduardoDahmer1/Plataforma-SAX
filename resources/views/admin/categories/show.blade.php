@@ -54,7 +54,7 @@
                 <div class="card-sax-body p-4">
                     <div class="row g-4">
                         {{-- Foto Miniatura --}}
-                        <div class="col-md-5">
+                        <div class="col-12">
                             <label class="sax-label d-block mb-3 text-center">FOTO MINIATURA</label>
                             <div class="media-display-sax photo-square">
                                 @if ($category->photo)
@@ -66,18 +66,6 @@
                             </div>
                         </div>
 
-                        {{-- Banner --}}
-                        <div class="col-md-7">
-                            <label class="sax-label d-block mb-3 text-center">BANNER PUBLICITARIO</label>
-                            <div class="media-display-sax banner-rect">
-                                @if ($category->banner)
-                                    <img src="{{ asset('storage/' . $category->banner) }}" class="img-fluid rounded">
-                                    <div class="overlay"><i class="fas fa-search-plus"></i></div>
-                                @else
-                                    <div class="no-media"><i class="fas fa-images mb-2"></i><span>Sin Banner</span></div>
-                                @endif
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Services\CategoryDisplayService;
+use Illuminate\Database\Eloquent\Model;
 
 class CategoriasFilhas extends Model
 {
@@ -11,12 +11,11 @@ class CategoriasFilhas extends Model
     protected $table = 'childcategories';
 
     protected $fillable = [
-        'name', 
-        'slug', 
-        'subcategory_id', 
-        'category_id', 
-        'photo', 
-        'banner'
+        'name',
+        'slug',
+        'subcategory_id',
+        'category_id',
+        'photo',
     ];
 
     public function subcategory()
@@ -27,7 +26,7 @@ class CategoriasFilhas extends Model
     public function getNameAttribute($value)
     {
         $displayService = app(CategoryDisplayService::class);
-        
+
         return $displayService->formatName($value, $this->attributes['slug'] ?? null);
     }
 

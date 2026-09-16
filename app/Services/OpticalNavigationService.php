@@ -10,9 +10,7 @@ class OpticalNavigationService
 {
     public const CACHE_KEY = 'storefront.optical_navigation.v4';
 
-    public function __construct(private readonly StoreTaxonomyService $taxonomy)
-    {
-    }
+    public function __construct(private readonly StoreTaxonomyService $taxonomy) {}
 
     public function tree(): Collection
     {
@@ -62,8 +60,7 @@ class OpticalNavigationService
                                 'label' => $child->name,
                                 'url' => route('categorias-filhas.show', $child->slug),
                                 'photo' => $childCategoryProductImages->get($child->id) ?: $this->imageUrl($child->photo),
-                                'banner' => $this->imageUrl($child->banner)
-                                    ?: $childCategoryProductImages->get($child->id)
+                                'banner' => $childCategoryProductImages->get($child->id)
                                     ?: $this->imageUrl($child->photo),
                                 'children' => collect(),
                             ])
@@ -75,8 +72,7 @@ class OpticalNavigationService
                             'label' => $subcategory->name,
                             'url' => route('subcategories.show', $subcategory->slug),
                             'photo' => $subcategoryProductImages->get($subcategory->id) ?: $this->imageUrl($subcategory->photo),
-                            'banner' => $this->imageUrl($subcategory->banner)
-                                ?: $subcategoryProductImages->get($subcategory->id)
+                            'banner' => $subcategoryProductImages->get($subcategory->id)
                                 ?: $this->imageUrl($subcategory->photo),
                             'children' => $children,
                         ];
@@ -89,8 +85,7 @@ class OpticalNavigationService
                     'label' => $category->name,
                     'url' => route('categories.show', $category->slug ?: $category->id),
                     'photo' => $categoryProductImages->get($category->id) ?: $this->imageUrl($category->photo),
-                    'banner' => $this->imageUrl($category->banner)
-                        ?: $categoryProductImages->get($category->id)
+                    'banner' => $categoryProductImages->get($category->id)
                         ?: $this->imageUrl($category->photo),
                     'children' => $subcategories,
                 ];

@@ -28,22 +28,11 @@
                 :current="$brand->image" :uploadUrl="route('admin.brands.uploadLogo', $brand->id)"
                 :showDelete="true" ratio="square" dimensions="800 × 800 px" usage="Logotipo com respiro e fundo transparente." />
 
-            <x-admin.media-field field="banner" :label="__('messages.banner_promocional_label')"
-                :current="$brand->banner" :uploadUrl="route('admin.brands.uploadBanner', $brand->id)"
-                :showDelete="true" ratio="banner" dimensions="1200 × 675 px" usage="Campanha da marca na home e apoio lateral." />
-
-            <x-admin.media-field field="internal_banner" :label="__('messages.banner_interno_label')"
-                :current="$brand->internal_banner" :uploadUrl="route('admin.brands.uploadInternalBanner', $brand->id)"
-                :showDelete="true" ratio="banner" dimensions="1920 × 560 px" usage="Hero no topo da página da marca." />
         </div>
     @else
         <div class="sax-catf__grid">
             <x-admin.media-field field="image" :label="__('messages.logotipo_oficial_label')" ratio="square"
                 dimensions="800 × 800 px" usage="Logotipo com respiro e fundo transparente." />
-            <x-admin.media-field field="banner" :label="__('messages.banner_promocional_label')" ratio="banner"
-                dimensions="1200 × 675 px" usage="Campanha da marca na home e apoio lateral." />
-            <x-admin.media-field field="internal_banner" :label="__('messages.banner_interno_label')" ratio="banner"
-                dimensions="1920 × 560 px" usage="Hero no topo da página da marca." />
         </div>
     @endif
 </x-admin.catalog-form>
@@ -51,6 +40,4 @@
 @if ($editando)
     {{-- Formulários usados pelos botões de remover imagem do media-field --}}
     <form id="delete-image-form" action="{{ route('admin.brands.deleteLogo', $brand->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
-    <form id="delete-banner-form" action="{{ route('admin.brands.deleteBanner', $brand->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
-    <form id="delete-internal_banner-form" action="{{ route('admin.brands.deleteInternalBanner', $brand->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
 @endif

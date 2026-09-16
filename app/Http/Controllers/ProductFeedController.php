@@ -14,7 +14,7 @@ class ProductFeedController extends Controller
         return response()->file($feed->absolutePath(), [
             'Content-Type' => 'application/xml; charset=UTF-8',
             'Content-Disposition' => 'inline; filename="products.xml"',
-            'Cache-Control' => 'public, max-age=300',
+            'Cache-Control' => 'public, max-age=60, must-revalidate',
         ]);
     }
 }

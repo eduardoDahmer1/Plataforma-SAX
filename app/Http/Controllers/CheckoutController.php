@@ -246,12 +246,13 @@ class CheckoutController extends Controller
         DB::beginTransaction();
         try {
             $cartProductIds = $cart->pluck('product_id')->unique()->values();
-            $sellableProductIds = Product::sellable()
+            $sellableProducts = Product::sellable()
                 ->whereIn('id', $cartProductIds)
                 ->lockForUpdate()
-                ->pluck('id');
+                ->get()
+                ->keyBy('id');
 
-            if ($sellableProductIds->count() !== $cartProductIds->count()) {
+            if ($sellableProducts->count() !== $cartProductIds->count()) {
                 DB::rollBack();
 
                 return redirect()->route('cart.view')->with(
@@ -269,6 +270,12 @@ class CheckoutController extends Controller
                 '3' => 'Retirada na Loja ID: ' . $request->input('store'),
                 default => '',
             };
+
+            if ($cart->contains(fn ($item) => $item->quantity < 1 || $item->quantity > $sellableProducts[$item->product_id]->stock)) {
+                DB::rollBack();
+
+                return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_stock_changed'));
+            }
 
             $order = Order::create([
                 'user_id' => $user->id,
@@ -642,18 +649,25 @@ class CheckoutController extends Controller
         DB::beginTransaction();
         try {
             $cartProductIds = $cart->pluck('product_id')->unique()->values();
-            $sellableProductIds = Product::sellable()
+            $sellableProducts = Product::sellable()
                 ->whereIn('id', $cartProductIds)
                 ->lockForUpdate()
-                ->pluck('id');
+                ->get()
+                ->keyBy('id');
 
-            if ($sellableProductIds->count() !== $cartProductIds->count()) {
+            if ($sellableProducts->count() !== $cartProductIds->count()) {
                 DB::rollBack();
 
                 return redirect()->route('cart.view')->with(
                     'error',
                     'Um ou mais produtos foram enviados para outlet ou deixaram de estar disponíveis. Revise o carrinho antes de continuar.'
                 );
+            }
+
+            if ($cart->contains(fn ($item) => $item->quantity < 1 || $item->quantity > $sellableProducts[$item->product_id]->stock)) {
+                DB::rollBack();
+
+                return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_stock_changed'));
             }
 
             $order = Order::create([

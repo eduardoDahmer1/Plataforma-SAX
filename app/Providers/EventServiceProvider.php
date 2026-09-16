@@ -6,13 +6,16 @@ use App\Models\Contact;
 use App\Models\AbandonedCart;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\CategoriasFilhas;
 use App\Models\Cupon;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Subcategory;
 use App\Models\User;
 use App\Observers\AbandonedCartObserver;
 use App\Observers\BrandObserver;
 use App\Observers\CategoryObserver;
+use App\Observers\CatalogFeedTaxonomyObserver;
 use App\Observers\ContactObserver;
 use App\Observers\CuponObserver;
 use App\Observers\OrderObserver;
@@ -47,6 +50,10 @@ class EventServiceProvider extends ServiceProvider
         AbandonedCart::observe(AbandonedCartObserver::class);
         Category::observe(CategoryObserver::class);
         Brand::observe(BrandObserver::class);
+        Brand::observe(CatalogFeedTaxonomyObserver::class);
+        Category::observe(CatalogFeedTaxonomyObserver::class);
+        Subcategory::observe(CatalogFeedTaxonomyObserver::class);
+        CategoriasFilhas::observe(CatalogFeedTaxonomyObserver::class);
         Cupon::observe(CuponObserver::class);
     }
 

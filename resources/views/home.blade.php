@@ -14,6 +14,7 @@
         $stackedBanners = collect($homeEditorialBanners ?? [])->values()->map(fn ($banner, $index) => [
             'image' => $banner->image,
             'image_url' => $banner->image_url,
+            'mobile_image_url' => $banner->mobile_image_url,
             'link' => $banner->link,
             'label' => [__('messages.selecao_curada'), __('messages.novidades_da_temporada'), __('messages.destaques_da_casa')][$index % 3],
         ]);

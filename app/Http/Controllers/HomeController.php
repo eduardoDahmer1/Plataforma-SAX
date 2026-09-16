@@ -37,7 +37,7 @@ class HomeController extends Controller
             "home_banner_rotation_{$weekSeed}_{$attributeSignature}",
             now()->endOfWeek(),
             function () use ($attribute, $weekSeed) {
-                $available = collect(range(1, 10))
+                $available = collect(range(1, 9))
                     ->map(function ($index) use ($attribute) {
                         return [
                             'origin' => $index,
@@ -50,7 +50,7 @@ class HomeController extends Controller
                     ->values();
 
                 $result = [];
-                foreach (range(1, 10) as $position) {
+                foreach (range(1, 9) as $position) {
                     $entry = $available->get($position - 1);
                     $result["banner{$position}"] = $entry['image'] ?? null;
                     $result["banner{$position}_link"] = $entry['link'] ?? null;
@@ -107,11 +107,10 @@ class HomeController extends Controller
                 ->get()
         );
 
-        $brandsSlider = Cache::remember('home_brands_visible_catalog_v3_banner_priority_15min', 900,
-            fn () => Brand::select('id', 'name', 'slug', 'image', 'banner')
+        $brandsSlider = Cache::remember('home_brands_visible_catalog_v4_image_15min', 900,
+            fn () => Brand::select('id', 'name', 'slug', 'image')
                 ->where('status', 1)
                 ->whereIn('id', VisibleCatalogProductsService::builder()->select('products.brand_id'))
-                ->orderByRaw("CASE WHEN NULLIF(TRIM(banner), '') IS NULL THEN 1 ELSE 0 END")
                 ->inRandomOrder()
                 ->take(10)
                 ->get()
@@ -151,7 +150,6 @@ class HomeController extends Controller
             'banner7' => $weeklyBanners['banner7'] ?? null,
             'banner8' => $weeklyBanners['banner8'] ?? null,
             'banner9' => $weeklyBanners['banner9'] ?? null,
-            'banner10' => $weeklyBanners['banner10'] ?? null,
             'banner1_link' => $weeklyBanners['banner1_link'] ?? null,
             'banner2_link' => $weeklyBanners['banner2_link'] ?? null,
             'banner3_link' => $weeklyBanners['banner3_link'] ?? null,
@@ -161,7 +159,6 @@ class HomeController extends Controller
             'banner7_link' => $weeklyBanners['banner7_link'] ?? null,
             'banner8_link' => $weeklyBanners['banner8_link'] ?? null,
             'banner9_link' => $weeklyBanners['banner9_link'] ?? null,
-            'banner10_link' => $weeklyBanners['banner10_link'] ?? null,
             'whatsapp_banner' => $attribute->whatsapp_banner ?? null,
         ]);
     }

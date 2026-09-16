@@ -14,7 +14,7 @@
 
     <div class="row g-4">
         {{-- Coluna de Informações --}}
-        <div class="col-lg-4">
+        <div class="col-lg-12">
             <div class="sax-premium-card h-100 shadow-sm border-0">
                 <div class="card-sax-header border-bottom p-4">
                     <h6 class="m-0 fw-bold letter-spacing-1 text-muted small">INFORMACIÓN GENERAL</h6>
@@ -48,58 +48,6 @@
                         <a href="{{ route('admin.brands.edit', $brand) }}" class="btn btn-dark w-100 rounded-pill fw-bold x-small py-3">
                             <i class="fas fa-pen-nib me-2"></i> EDITAR IDENTIDAD
                         </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Coluna de Banners --}}
-        <div class="col-lg-8">
-            <div class="sax-premium-card h-100 shadow-sm border-0">
-                <div class="card-sax-header border-bottom p-4">
-                    <h6 class="m-0 fw-bold letter-spacing-1 text-muted small">BANNERS Y RECURSOS VISUALES</h6>
-                </div>
-                
-                <div class="card-sax-body p-4">
-                    
-                    {{-- Banner Principal --}}
-                    <div class="mb-5">
-                        <label class="sax-label mb-3">BANNER PUBLICITARIO (HEADLINE)</label>
-                        @if ($brand->banner)
-                            <div class="brand-banner-preview position-relative overflow-hidden rounded-4 shadow-sm mb-2">
-                                <img src="{{ asset('storage/' . $brand->banner) }}" alt="Banner" class="img-fluid">
-                                <div class="banner-badge">Official Banner</div>
-                            </div>
-                        @else
-                            <div class="empty-banner-state py-4 mb-2">
-                                <i class="fas fa-images fa-2x mb-2 opacity-25"></i>
-                                <p class="x-small fw-bold m-0">SIN BANNER PRINCIPAL</p>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Banner Interno --}}
-                    <div class="mb-4">
-                        <label class="sax-label mb-3">BANNER INTERNO (CAMPAÑAS)</label>
-                        @if ($brand->internal_banner)
-                            <div class="brand-banner-preview position-relative overflow-hidden rounded-4 shadow-sm border mb-2">
-                                <img src="{{ asset('storage/' . $brand->internal_banner) }}" alt="Internal Banner" class="img-fluid">
-                                <div class="banner-badge bg-warning text-dark">Internal Use</div>
-                            </div>
-                        @else
-                            <div class="empty-banner-state py-4 mb-2" style="background: #fdfdfd;">
-                                <i class="fas fa-ad fa-2x mb-2 opacity-25"></i>
-                                <p class="x-small fw-bold m-0">SIN BANNER INTERNO</p>
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="mt-5 bg-light p-4 rounded-4 border">
-                        <h6 class="sax-label mb-3"><i class="fas fa-info-circle me-1"></i> Nota de Visualización</h6>
-                        <p class="text-muted small mb-0">
-                            Los cambios realizados en estos activos se reflejarán inmediatamente en el frontend. 
-                            Asegúrese de subir archivos optimizados para no afectar la velocidad de carga.
-                        </p>
                     </div>
                 </div>
             </div>

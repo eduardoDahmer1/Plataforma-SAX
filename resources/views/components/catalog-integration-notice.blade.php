@@ -3,7 +3,7 @@
     $purchaseWasBlocked = session()->has('catalog_purchase_blocked');
 @endphp
 
-@if (! $catalogAvailable)
+@if (! $catalogAvailable || $purchaseWasBlocked)
     <div class="modal fade sax-catalog-pause-modal" id="catalogIntegrationPauseModal" tabindex="-1"
          aria-labelledby="catalogIntegrationPauseModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -13,7 +13,8 @@
                 <div class="modal-body text-center">
                     <span class="sax-catalog-pause-modal__icon"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i></span>
                     <h2 id="catalogIntegrationPauseModalLabel">{{ __('messages.catalog_purchase_paused_title') }}</h2>
-                    <p>{{ __('messages.catalog_purchase_paused_message') }}</p>
+                    <p>{{ __('messages.checkout_pause_message') }}</p>
+                    @include('components.cart-whatsapp-action')
                     <button type="button" class="btn btn-dark w-100" data-bs-dismiss="modal">
                         {{ __('messages.catalog_purchase_paused_continue') }}
                     </button>
@@ -23,7 +24,7 @@
     </div>
 
     <script>
-        window.saxCatalogPurchasingAvailable = false;
+        window.saxCatalogPurchasingAvailable = @json($catalogAvailable);
         window.saxCatalogPurchaseWasBlocked = @json($purchaseWasBlocked);
     </script>
 @else

@@ -137,8 +137,8 @@ Route::get('/categorias-filhas', [PublicCategoriasFilhasController::class, 'inde
 Route::get('/categorias-filhas/{slug}', [PublicCategoriasFilhasController::class, 'show'])->name('categorias-filhas.show');
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
 Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('brands.show');
-Route::get('/cart', [CartController::class, 'view'])->middleware(['auth', 'store.feature:cart', 'catalog.healthy'])->name('cart.view');
-Route::post('/cart/add', [CartController::class, 'add'])->middleware(['store.feature:add_to_cart', 'catalog.healthy'])->name('cart.add');
+Route::get('/cart', [CartController::class, 'view'])->middleware(['auth', 'store.feature:cart'])->name('cart.view');
+Route::post('/cart/add', [CartController::class, 'add'])->middleware(['store.feature:add_to_cart'])->name('cart.add');
 Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->middleware('store.feature:cart')->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->middleware('store.feature:cart')->name('cart.remove');
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
@@ -181,10 +181,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/abandon', [CartController::class, 'abandon'])->name('cart.abandon');
     Route::get('/carrinhos-abandonados', [\App\Http\Controllers\AbandonedCartController::class, 'index'])->name('user.abandoned-carts.index');
     Route::get('/carrinhos-abandonados/{abandonedCart}', [\App\Http\Controllers\AbandonedCartController::class, 'show'])->name('user.abandoned-carts.show');
-    Route::post('/carrinhos-abandonados/{abandonedCart}/restaurar', [\App\Http\Controllers\AbandonedCartController::class, 'restore'])->middleware(['store.feature:add_to_cart', 'catalog.healthy'])->name('user.abandoned-carts.restore');
+    Route::post('/carrinhos-abandonados/{abandonedCart}/restaurar', [\App\Http\Controllers\AbandonedCartController::class, 'restore'])->middleware(['store.feature:add_to_cart'])->name('user.abandoned-carts.restore');
 
     Route::get('/checkout/bancard-v2/{order}', [\App\Http\Controllers\BancardV2Controller::class, 'checkoutPage'])
-        ->middleware(['store.feature:bancard', 'catalog.healthy'])
+        ->middleware(['store.feature:checkout', 'store.feature:bancard', 'catalog.healthy'])
         ->whereNumber('order')
         ->name('checkout.bancard.v2');
     Route::get('/checkout/bancard-v2/{order}/cancel', [\App\Http\Controllers\BancardV2Controller::class, 'cancelCheckout'])
@@ -192,7 +192,7 @@ Route::middleware('auth')->group(function () {
         ->name('checkout.bancard.v2.cancel');
 
     Route::get('/checkout/pix/{order}', [\App\Http\Controllers\RendixPixController::class, 'checkoutPage'])
-        ->middleware(['store.feature:pix', 'catalog.healthy'])
+        ->middleware(['store.feature:checkout', 'store.feature:pix', 'catalog.healthy'])
         ->whereNumber('order')
         ->name('checkout.rendix.pix');
     Route::get('/checkout/pix/{order}/status', [\App\Http\Controllers\RendixPixController::class, 'status'])
@@ -200,17 +200,18 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('order')
         ->name('checkout.rendix.pix.status');
     Route::post('/checkout/pix/{order}/renovar', [\App\Http\Controllers\RendixPixController::class, 'renew'])
-        ->middleware(['store.feature:pix', 'catalog.healthy', 'throttle:5,1'])
+        ->middleware(['store.feature:checkout', 'store.feature:pix', 'catalog.healthy', 'throttle:5,1'])
         ->whereNumber('order')
         ->name('checkout.rendix.pix.renew');
     Route::get('/checkout/pix/termos/rendix', [\App\Http\Controllers\RendixPixController::class, 'terms'])
         ->middleware('throttle:10,1')
         ->name('checkout.rendix.pix.terms');
 
-    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->middleware(['store.feature:deposit', 'catalog.healthy'])->name('checkout.deposito');
-    Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->middleware(['store.feature:deposit', 'catalog.healthy'])->name('checkout.deposito.submit');
+    Route::get('/checkout/deposito/{order}', [CheckoutController::class, 'deposito'])->middleware(['store.feature:checkout', 'store.feature:deposit', 'catalog.healthy'])->name('checkout.deposito');
+    Route::post('/checkout/deposito/{order}', [CheckoutController::class, 'submitDeposito'])->middleware(['store.feature:checkout', 'store.feature:deposit', 'catalog.healthy'])->name('checkout.deposito.submit');
+    Route::get('/cart/whatsapp', [CartController::class, 'whatsapp'])->middleware('store.feature:whatsapp')->name('cart.whatsapp');
     Route::get('/checkout/whatsapp', [CheckoutController::class, 'whatsapp'])->middleware(['store.feature:checkout', 'catalog.healthy'])->name('checkout.whatsapp');
-    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->middleware(['store.feature:deposit', 'catalog.healthy'])->name('orders.deposit.submit');
+    Route::post('/orders/{order}/deposit', [OrderController::class, 'depositSubmit'])->middleware(['store.feature:checkout', 'store.feature:deposit', 'catalog.healthy'])->name('orders.deposit.submit');
     Route::get('cupons', [CuponUserController::class, 'index'])->name('user.cupons');
     Route::post('notifications/read-all', [\App\Http\Controllers\Auth\UserNotificationController::class, 'markAllAsRead'])->name('user.notifications.read-all');
     Route::post('notifications/{notification}/read', [\App\Http\Controllers\Auth\UserNotificationController::class, 'markAsRead'])->whereNumber('notification')->name('user.notifications.read');
@@ -243,6 +244,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
         ->whereIn('group', ['main', 'editorial'])->name('home-banners.store');
     Route::patch('banners/home/{homeBanner}', [HomeBannerController::class, 'update'])
         ->whereNumber('homeBanner')->name('home-banners.update');
+    Route::post('banners/home/{homeBanner}/images', [HomeBannerController::class, 'updateImages'])
+        ->whereNumber('homeBanner')->name('home-banners.images');
     Route::put('banners/home/{group}/ordem', [HomeBannerController::class, 'reorder'])
         ->whereIn('group', ['main', 'editorial'])->name('home-banners.reorder');
     Route::delete('banners/home/{homeBanner}', [HomeBannerController::class, 'destroy'])
@@ -334,9 +337,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('products/subcategories/{category}', [ProductControllerAdmin::class, 'getSubcategories'])->name('products.getSubcategories');
     Route::get('products/categorias-filhas/{subcategory}', [ProductControllerAdmin::class, 'getChildcategories'])->name('products.getcategorias-filhas');
     Route::delete('categorias-filhas/{categorias_filha}/delete-photo', [CategoriasFilhasControllerAdmin::class, 'deletePhoto'])->name('categorias-filhas.deletePhoto');
-    Route::delete('categorias-filhas/{categorias_filha}/delete-banner', [CategoriasFilhasControllerAdmin::class, 'deleteBanner'])->name('categorias-filhas.deleteBanner');
     Route::post('categorias-filhas/{categorias_filha}/upload-photo', [CategoriasFilhasControllerAdmin::class, 'uploadPhoto'])->name('categorias-filhas.uploadPhoto');
-    Route::post('categorias-filhas/{categorias_filha}/upload-banner', [CategoriasFilhasControllerAdmin::class, 'uploadBanner'])->name('categorias-filhas.uploadBanner');
     Route::delete('products/{product}/gallery/{imageName}', [ProductControllerAdmin::class, 'deleteGalleryImage'])
         ->name('products.gallery.delete');
     Route::delete('products/{product}/gallery-multi', [ProductControllerAdmin::class, 'multiDeleteGalleryImage'])
@@ -346,14 +347,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     ]);
     Route::resource('subcategories', SubcategoryControllerAdmin::class);
     Route::delete('subcategories/{subcategory}/delete-photo', [SubcategoryControllerAdmin::class, 'deletePhoto'])->name('subcategories.deletePhoto');
-    Route::delete('subcategories/{subcategory}/delete-banner', [SubcategoryControllerAdmin::class, 'deleteBanner'])->name('subcategories.deleteBanner');
     Route::post('subcategories/{subcategory}/upload-photo', [SubcategoryControllerAdmin::class, 'uploadPhoto'])->name('subcategories.uploadPhoto');
-    Route::post('subcategories/{subcategory}/upload-banner', [SubcategoryControllerAdmin::class, 'uploadBanner'])->name('subcategories.uploadBanner');
     Route::resource('categories', CategoryControllerAdmin::class);
     Route::delete('categories/{category}/delete-photo', [CategoryControllerAdmin::class, 'deletePhoto'])->name('categories.deletePhoto');
-    Route::delete('categories/{category}/delete-banner', [CategoryControllerAdmin::class, 'deleteBanner'])->name('categories.deleteBanner');
     Route::post('categories/{id}/upload-photo', [CategoryControllerAdmin::class, 'uploadPhoto'])->name('categories.uploadPhoto');
-    Route::post('categories/{id}/upload-banner', [CategoryControllerAdmin::class, 'uploadBanner'])->name('categories.uploadBanner');
     Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
     Route::post('orders/{order}/notes', [OrderController::class, 'storeNote'])->name('orders.notes.store');
@@ -381,7 +378,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('whatsapp_banner/upload', [ImageUploadController::class, 'uploadWhatsappBanner'])->name('whatsapp_banner.upload');
     Route::delete('whatsapp_banner/delete', [ImageUploadController::class, 'deleteWhatsappBanner'])->name('whatsapp_banner.delete');
 
-    foreach (range(1, 10) as $i) {
+    foreach (range(1, 9) as $i) {
         Route::post("banner{$i}/upload", [ImageUploadController::class, "uploadBanner{$i}"])->name("banner{$i}.upload");
         Route::delete("banner{$i}/delete", [ImageUploadController::class, "deleteBanner{$i}"])->name("banner{$i}.delete");
     }
@@ -401,18 +398,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('/logocafebistro/delete', [ImageUploadController::class, 'deleteLogoCafeBistro'])->name('logocafebistro.delete');
     Route::post('/logocafebistroasuncion/upload', [ImageUploadController::class, 'uploadLogoCafeBistroAsuncion'])->name('logocafebistroasuncion.upload');
     Route::delete('/logocafebistroasuncion/delete', [ImageUploadController::class, 'deleteLogoCafeBistroAsuncion'])->name('logocafebistroasuncion.delete');
-    Route::post('/bannerhorizontal/upload', [ImageUploadController::class, 'uploadBannerHorizontal'])->name('bannerhorizontal.upload');
-    Route::delete('/bannerhorizontal/delete', [ImageUploadController::class, 'deleteBannerHorizontal'])->name('bannerhorizontal.delete');
     Route::resource('products', ProductControllerAdmin::class);
     Route::delete('products/{id}/photo', [ProductControllerAdmin::class, 'deletePhoto'])->name('products.deletePhoto');
     Route::delete('products/{id}/gallery/{image}', [ProductControllerAdmin::class, 'deleteGalleryImage'])->name('products.deleteGalleryImage');
     Route::resource('brands', BrandControllerAdmin::class);
     Route::delete('brands/{brand}/delete-logo', [BrandControllerAdmin::class, 'deleteLogo'])->name('brands.deleteLogo');
-    Route::delete('brands/{brand}/delete-banner', [BrandControllerAdmin::class, 'deleteBanner'])->name('brands.deleteBanner');
-    Route::delete('brands/{brand}/delete-internal-banner', [BrandControllerAdmin::class, 'deleteInternalBanner'])->name('brands.deleteInternalBanner');
     Route::post('brands/{brand}/upload-logo', [BrandControllerAdmin::class, 'uploadLogo'])->name('brands.uploadLogo');
-    Route::post('brands/{brand}/upload-banner', [BrandControllerAdmin::class, 'uploadBanner'])->name('brands.uploadBanner');
-    Route::post('brands/{brand}/upload-internal-banner', [BrandControllerAdmin::class, 'uploadInternalBanner'])->name('brands.uploadInternalBanner');
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);
     Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
     Route::get('trabalhe-conosco', [JobFlyerControllerAdmin::class, 'index'])->name('trabalhe_conosco.index');

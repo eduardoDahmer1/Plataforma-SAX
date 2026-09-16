@@ -38,9 +38,9 @@
             <span class="product-feed-panel__summary">
                 <span class="product-feed-panel__title">Feed XML de produtos</span>
                 <span class="product-feed-panel__meta">
-                    <span class="product-feed-panel__status {{ $productFeed['exists'] ? 'is-ready' : '' }}">
+                    <span class="product-feed-panel__status {{ $productFeed['exists'] ? 'is-ready' : '' }} {{ $productFeed['pending'] ? 'is-pending' : '' }}">
                         <i class="fa fa-circle" aria-hidden="true"></i>
-                        {{ $productFeed['exists'] ? 'Disponível' : 'Não gerado' }}
+                        {{ $productFeed['pending'] ? 'Atualizando automaticamente' : ($productFeed['exists'] ? 'Disponível e sincronizado' : 'Não gerado') }}
                     </span>
                     @if ($productFeed['exists'] && $productFeed['count'] !== null)
                         <span>{{ number_format($productFeed['count'], 0, ',', '.') }} produto(s)</span>
@@ -58,7 +58,7 @@
                 <div class="d-flex flex-column flex-xl-row align-items-xl-end justify-content-between gap-3">
                     <div class="flex-grow-1 min-w-0">
                         <label for="productFeedUrl" class="form-label small fw-bold text-uppercase mb-1">Link público permanente</label>
-                        <p class="small text-muted mb-2">Ao gerar novamente, o conteúdo é atualizado sem alterar esta URL.</p>
+                        <p class="small text-muted mb-2">Produtos ativados, desativados ou editados atualizam este XML automaticamente, sem alterar a URL.</p>
                         <div class="input-group product-feed-panel__link">
                             <input type="text" id="productFeedUrl" class="form-control bg-white" value="{{ $productFeed['url'] }}" readonly aria-label="Link público do XML de produtos">
                             <button type="button" class="btn btn-outline-secondary" id="copyProductFeedUrl" title="Copiar link">
@@ -161,6 +161,16 @@
             }
             .product-feed-panel__status.is-ready .fa-circle {
                 color: #16a34a;
+            }
+            .product-feed-panel__status.is-pending {
+                color: #9a6700;
+            }
+            .product-feed-panel__status.is-pending .fa-circle {
+                color: #f59e0b;
+                animation: product-feed-pulse 1.4s ease-in-out infinite;
+            }
+            @keyframes product-feed-pulse {
+                50% { opacity: .35; transform: scale(.8); }
             }
             .product-feed-panel__action {
                 display: inline-flex;

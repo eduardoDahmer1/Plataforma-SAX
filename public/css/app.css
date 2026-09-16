@@ -2108,6 +2108,12 @@ box-shadow: -18px 0 40px rgba(0, 0, 0, 0.12);
 right: 0;
 }
 
+/* Oculta os atalhos flutuantes, inclusive do teclado, enquanto o carrinho está aberto. */
+body.sax-cart-drawer-open .whatsapp-container,
+body.sax-cart-drawer-open #backToTop {
+display: none !important;
+}
+
 @media (max-width: 576px) {
 .cart-sidebar {
 width: 100%;
@@ -6074,9 +6080,7 @@ transform: scale(1.5);
         z-index: 12000;
     }
 
-    body.sax-cart-drawer-open .sax-mobile-dock,
-    body.sax-cart-drawer-open .whatsapp-container,
-    body.sax-cart-drawer-open #backToTop {
+    body.sax-cart-drawer-open .sax-mobile-dock {
         opacity: 0;
         pointer-events: none;
         transform: translateY(18px);

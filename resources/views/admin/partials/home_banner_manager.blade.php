@@ -28,12 +28,32 @@
         @foreach($managerItems as $banner)
             <article class="home-banner-item" draggable="true" data-banner-id="{{ $banner->id }}"
                 data-update-url="{{ route('admin.home-banners.update', $banner) }}"
+                data-images-url="{{ route('admin.home-banners.images', $banner) }}"
                 data-delete-url="{{ route('admin.home-banners.destroy', $banner) }}">
                 <div class="home-banner-item__media">
-                    <img src="{{ $banner->image_url }}" alt="Banner {{ $loop->iteration }}">
+                    <picture>
+                        @if($banner->mobile_image)<source media="(max-width: 767px)" srcset="{{ $banner->mobile_image_url }}">@endif
+                        <img src="{{ $banner->image_url }}" alt="Banner {{ $loop->iteration }}" data-banner-preview>
+                    </picture>
                     <span class="home-banner-item__order"><i class="fa-solid fa-grip-vertical"></i> <b>{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</b></span>
                 </div>
                 <div class="home-banner-item__body">
+                    <div class="home-banner-item__responsive-media">
+                        <label class="home-banner-image-control">
+                            <span><i class="fa-solid fa-desktop"></i> Desktop <small>imagem horizontal</small></span>
+                            <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-banner-image="desktop_image">
+                            <strong>Alterar imagem</strong>
+                        </label>
+                        <label class="home-banner-image-control">
+                            <span><i class="fa-solid fa-mobile-screen"></i> Mobile <small>750 × 1000 px</small></span>
+                            <img src="{{ $banner->mobile_image_url }}" alt="Prévia mobile" data-banner-mobile-preview>
+                            <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-banner-image="mobile_image">
+                            <strong>{{ $banner->mobile_image ? 'Alterar imagem' : 'Adicionar imagem' }}</strong>
+                        </label>
+                        <button type="button" class="home-banner-mobile-remove {{ $banner->mobile_image ? '' : 'd-none' }}" data-banner-mobile-remove>
+                            <i class="fa-solid fa-rotate-left"></i> Usar desktop no mobile
+                        </button>
+                    </div>
                     <label>Link deste banner</label>
                     <div class="home-banner-item__link">
                         <i class="fa-solid fa-link"></i>

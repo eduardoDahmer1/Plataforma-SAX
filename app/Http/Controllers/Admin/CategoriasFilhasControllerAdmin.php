@@ -8,9 +8,9 @@ use App\Models\Subcategory;
 use App\Services\ImageConverterService;
 use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CategoriasFilhasControllerAdmin extends Controller
 {
@@ -37,6 +37,7 @@ class CategoriasFilhasControllerAdmin extends Controller
     {
         $subcategories = app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
             ->orderBy('name')->get(['id', 'name']);
+
         return view('admin.categoriasfilhas.create', compact('subcategories'));
     }
 
@@ -46,23 +47,18 @@ class CategoriasFilhasControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'subcategory_id' => 'required|exists:subcategories,id',
             'photo' => 'nullable|image|max:10240',
-            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only(['name', 'subcategory_id']);
         $data['slug'] = $this->resolveUniqueSlug($request->name);
 
-        if (!empty($request->subcategory_id)) {
+        if (! empty($request->subcategory_id)) {
             $subcategory = Subcategory::find($request->subcategory_id);
             $data['category_id'] = $subcategory->category_id ?? null;
         }
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
-        }
-
-        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
+            $data['photo'] = $this->convertToWebp($request->file('photo'));
         }
 
         CategoriasFilhas::create($data);
@@ -93,25 +89,19 @@ class CategoriasFilhasControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'subcategory_id' => 'required|exists:subcategories,id',
             'photo' => 'nullable|image|max:10240',
-            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only(['name', 'subcategory_id']);
         $data['slug'] = $this->resolveUniqueSlug($request->name, $categorias_filha->id);
 
-        if (!empty($request->subcategory_id)) {
+        if (! empty($request->subcategory_id)) {
             $subcategory = Subcategory::find($request->subcategory_id);
             $data['category_id'] = $subcategory->category_id ?? null;
         }
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $this->deleteFileIfExists($categorias_filha->photo);
-            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
-        }
-
-        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            $this->deleteFileIfExists($categorias_filha->banner);
-            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
+            $data['photo'] = $this->convertToWebp($request->file('photo'));
         }
 
         $categorias_filha->update($data);
@@ -126,7 +116,6 @@ class CategoriasFilhasControllerAdmin extends Controller
     public function destroy(CategoriasFilhas $categorias_filha)
     {
         $this->deleteFileIfExists($categorias_filha->photo);
-        $this->deleteFileIfExists($categorias_filha->banner);
         $categorias_filha->delete();
 
         return back()->with('success', 'Removido com sucesso');
@@ -137,11 +126,11 @@ class CategoriasFilhasControllerAdmin extends Controller
         $request->validate(['photo' => 'required|image|max:10240']);
         $this->deleteFileIfExists($categorias_filha->photo);
 
-        $path = $this->convertToWebp($request->file('photo'), 'photo');
+        $path = $this->convertToWebp($request->file('photo'));
         $categorias_filha->photo = $path;
         $categorias_filha->save();
 
-        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+        return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
     }
 
     public function deletePhoto(CategoriasFilhas $categorias_filha)
@@ -155,29 +144,6 @@ class CategoriasFilhasControllerAdmin extends Controller
         return back()->with('success', 'Foto excluída com sucesso.');
     }
 
-    public function uploadBanner(Request $request, CategoriasFilhas $categorias_filha)
-    {
-        $request->validate(['banner' => 'required|image|max:10240']);
-        $this->deleteFileIfExists($categorias_filha->banner);
-
-        $path = $this->convertToWebp($request->file('banner'), 'banner');
-        $categorias_filha->banner = $path;
-        $categorias_filha->save();
-
-        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
-    }
-
-    public function deleteBanner(CategoriasFilhas $categorias_filha)
-    {
-        if ($categorias_filha->banner) {
-            $this->deleteFileIfExists($categorias_filha->banner);
-            $categorias_filha->banner = null;
-            $categorias_filha->save();
-        }
-
-        return back()->with('success', 'Banner excluído com sucesso.');
-    }
-
     // ... (restante dos métodos auxiliares permanecem iguais)
 
     // Gera um slug único (globalmente, entre todas as categorias filhas) em vez de deixar colidir
@@ -188,7 +154,7 @@ class CategoriasFilhasControllerAdmin extends Controller
         $slug = $base;
         $suffix = 2;
 
-        while (CategoriasFilhas::where('slug', $slug)->when($exceptId, fn($q) => $q->where('id', '!=', $exceptId))->exists()) {
+        while (CategoriasFilhas::where('slug', $slug)->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))->exists()) {
             $slug = "{$base}-{$suffix}";
             $suffix++;
         }
@@ -196,14 +162,13 @@ class CategoriasFilhasControllerAdmin extends Controller
         return $slug;
     }
 
-    private function convertToWebp($file, $prefix)
+    private function convertToWebp($file)
     {
-        // Mapea el prefijo a su carpeta destino; la conversión la hace el service.
-        $directory = ($prefix === 'banner') ? 'categorias-filhas/banner' : 'categorias-filhas/photo';
+        $directory = 'categorias-filhas/photo';
 
         return app(ImageConverterService::class)->toWebp($file, $directory, [
             'quality' => 85,
-            'strict'  => true,
+            'strict' => true,
         ]);
     }
 

@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\HomeBanner;
 use App\Services\ImageConverterService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -55,7 +55,7 @@ class HomeBannerController extends Controller
         Cache::forget('home_banners_active_v1');
 
         return response()->json([
-            'message' => $created->count() . ' banner(es) adicionado(s).',
+            'message' => $created->count().' banner(es) adicionado(s).',
             'items' => $created->map(fn (HomeBanner $banner) => $this->payload($banner))->values(),
         ], 201);
     }
@@ -96,6 +96,60 @@ class HomeBannerController extends Controller
         ]);
     }
 
+    public function updateImages(Request $request, HomeBanner $homeBanner, ImageConverterService $converter)
+    {
+        $validated = $request->validate([
+            'desktop_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp,avif', 'max:10240', 'required_without_all:mobile_image,remove_mobile_image'],
+            'mobile_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp,avif', 'max:10240', 'required_without_all:desktop_image,remove_mobile_image'],
+            'remove_mobile_image' => ['nullable', 'boolean'],
+        ]);
+
+        $oldPaths = [];
+        $newPaths = [];
+
+        try {
+            if ($request->hasFile('desktop_image')) {
+                $newPaths['image'] = $converter->toWebp($request->file('desktop_image'), "home-banners/{$homeBanner->group}/desktop", [
+                    'quality' => 90,
+                    'strict' => true,
+                ]);
+                if (str_starts_with((string) $homeBanner->image, 'home-banners/')) {
+                    $oldPaths[] = $homeBanner->image;
+                }
+            }
+
+            if ($request->hasFile('mobile_image')) {
+                $newPaths['mobile_image'] = $converter->toWebp($request->file('mobile_image'), "home-banners/{$homeBanner->group}/mobile", [
+                    'quality' => 90,
+                    'strict' => true,
+                ]);
+                if (str_starts_with((string) $homeBanner->mobile_image, 'home-banners/')) {
+                    $oldPaths[] = $homeBanner->mobile_image;
+                }
+            } elseif (($validated['remove_mobile_image'] ?? false) && filled($homeBanner->mobile_image)) {
+                if (str_starts_with((string) $homeBanner->mobile_image, 'home-banners/')) {
+                    $oldPaths[] = $homeBanner->mobile_image;
+                }
+                $newPaths['mobile_image'] = null;
+            }
+
+            $homeBanner->update($newPaths);
+            Storage::disk('public')->delete(array_values(array_unique($oldPaths)));
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete(array_filter($newPaths));
+            report($exception);
+
+            return response()->json(['message' => 'Não foi possível atualizar as imagens deste banner.'], 422);
+        }
+
+        Cache::forget('home_banners_active_v1');
+
+        return response()->json([
+            'message' => 'Imagens do banner atualizadas.',
+            'item' => $this->payload($homeBanner->fresh()),
+        ]);
+    }
+
     public function reorder(Request $request, string $group)
     {
         abort_unless(in_array($group, self::GROUPS, true), 404);
@@ -118,12 +172,13 @@ class HomeBannerController extends Controller
 
     public function destroy(HomeBanner $homeBanner)
     {
-        $path = $homeBanner->image;
+        $paths = [$homeBanner->image, $homeBanner->mobile_image];
         $homeBanner->delete();
 
-        if (str_starts_with($path, 'home-banners/')) {
-            Storage::disk('public')->delete($path);
-        }
+        Storage::disk('public')->delete(array_values(array_filter(
+            $paths,
+            fn ($path) => str_starts_with((string) $path, 'home-banners/')
+        )));
 
         Cache::forget('home_banners_active_v1');
 
@@ -136,6 +191,8 @@ class HomeBannerController extends Controller
             'id' => $banner->id,
             'group' => $banner->group,
             'image_url' => $banner->image_url,
+            'mobile_image_url' => $banner->mobile_image_url,
+            'has_mobile_image' => filled($banner->mobile_image),
             'link' => $banner->link,
             'is_active' => $banner->is_active,
             'title_pt' => $banner->title_pt,
@@ -145,6 +202,7 @@ class HomeBannerController extends Controller
             'title_es' => $banner->title_es,
             'description_es' => $banner->description_es,
             'update_url' => route('admin.home-banners.update', $banner),
+            'images_url' => route('admin.home-banners.images', $banner),
             'delete_url' => route('admin.home-banners.destroy', $banner),
         ];
     }

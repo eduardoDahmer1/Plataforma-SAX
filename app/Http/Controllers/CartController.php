@@ -14,14 +14,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Mail\AbandonedCartHelpMail;
 use App\Services\BusinessEventService;
-use App\Services\CatalogIntegrationAvailabilityService;
+use App\Services\CartWhatsappService;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
 
 class CartController extends Controller
 {
     public function __construct(
         private CuponService $cupons,
-        private CatalogIntegrationAvailabilityService $catalogAvailability,
         private DhlProductMeasurementEstimator $dhlMeasurements,
     )
     {
@@ -79,6 +78,21 @@ class CartController extends Controller
         return back()->with('success', 'Produto adicionado ao carrinho!');
     }
 
+
+    public function whatsapp(Request $request, CartWhatsappService $whatsapp)
+    {
+        $cart = Cart::available()->with('product')->where('user_id', $request->user()->id)->get();
+        if ($cart->isEmpty()) {
+            return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_empty_cart'));
+        }
+
+        $url = $whatsapp->url($request, $cart);
+        if ($url === null) {
+            return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_no_contact'));
+        }
+
+        return redirect()->away($url);
+    }
 
     public function view()
     {
@@ -176,21 +190,6 @@ class CartController extends Controller
 
         if (!$cartItem) {
             return back()->with('error', 'Produto não encontrado no carrinho.');
-        }
-
-        // Enquanto o catálogo está sem comunicação, o cliente pode reduzir ou
-        // remover itens, mas não reservar unidades adicionais.
-        if ($quantity > $cartItem->quantity && ! $this->catalogAvailability->isAvailable()) {
-            $message = __('messages.catalog_purchase_paused_message');
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => $message,
-                    'code' => 'catalog_integration_unavailable',
-                ], 503);
-            }
-
-            return back()->with('catalog_purchase_blocked', $message);
         }
 
         if ($quantity > 0) {

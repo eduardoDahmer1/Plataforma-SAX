@@ -2,47 +2,6 @@
 
 @section('content')
     <div class="category-detail-wrapper">
-        @php
-            $storagePath = 'uploads/';
-            $bannerUrl = null;
-
-            // Lógica de Banner Principal (Hero)
-            if ($subcategory->banner && Storage::disk('public')->exists($storagePath . $subcategory->banner)) {
-                $bannerUrl = Storage::url($storagePath . $subcategory->banner);
-            } elseif (isset($banner10) && $banner10 && Storage::disk('public')->exists($storagePath . $banner10)) {
-                $bannerUrl = Storage::url($storagePath . $banner10);
-            }
-
-            if (!$bannerUrl && !empty($banner_horizontal)) {
-                $bannerUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal)
-                    ? Storage::url($storagePath . $banner_horizontal)
-                    : null;
-            }
-
-            // Lógica de Banner Lateral
-            $bannerLateralUrl = null;
-            if (isset($subcategory->image) && Storage::disk('public')->exists($subcategory->image)) {
-                $bannerLateralUrl = Storage::url($subcategory->image);
-            } elseif (!empty($banner_horizontal)) {
-                $bannerLateralUrl = Storage::disk('public')->exists($storagePath . $banner_horizontal)
-                    ? Storage::url($storagePath . $banner_horizontal)
-                    : null;
-            }
-
-            $fallbackImg = asset('storage/uploads/banner_horizontal.webp');
-        @endphp
-
-        {{-- Banner de Topo (Hero) --}}
-        @if ($bannerUrl)
-            <div class="category-hero-fullwidth">
-                <img src="{{ $bannerUrl }}" class="hero-img-render" alt="{{ $subcategory->name }}"
-                    onerror="this.src='{{ $fallbackImg }}'">
-                <div class="hero-overlay-soft"></div>
-            </div>
-        @else
-            <div class="py-3"></div>
-        @endif
-
         {{-- Identidade da Subcategoria --}}
         <div class="category-identity-section py-4 border-bottom bg-white">
             <div class="container text-center">
@@ -50,14 +9,9 @@
                     <i class="fas fa-chevron-left me-1"></i> {{ __('VOLVER A SUBCATEGORIAS') }}
                 </a>
                 <div class="category-logo-container mt-3">
-                    @if ($subcategory->photo && Storage::disk('public')->exists($storagePath . $subcategory->photo))
-                        <img src="{{ Storage::url($storagePath . $subcategory->photo) }}" alt="{{ $subcategory->name }}"
-                            class="category-main-logo">
-                    @else
-                        <h1 class="category-name-text text-uppercase fw-light" style="letter-spacing: 3px;">
-                            {{ $subcategory->name }}
-                        </h1>
-                    @endif
+                    <h1 class="category-name-text text-uppercase fw-light" style="letter-spacing: 3px;">
+                        {{ $subcategory->name }}
+                    </h1>
                 </div>
                 <div class="child-breadcrumb mt-2">
                     <span class="text-muted small text-uppercase" style="letter-spacing: 1px;">
@@ -71,7 +25,7 @@
         <div class="container-fluid px-1 px-md-4 py-4 bg-white">
             <div class="row g-1">
 
-                {{-- Coluna Lateral: Filtros + Banner --}}
+                {{-- Coluna Lateral: Filtros --}}
                 <div class="col-12 col-lg-3 d-none d-lg-block">
                     <div class="sticky-sidebar-content" style="position: sticky; top: 100px;">
 
@@ -80,13 +34,6 @@
                             <x-product-filters :categories="$categories" :brands="$brands" :currentCategory="$categoriasfilhas->subcategory->category_id ?? null" />
                         </div>
 
-                        {{-- Banner Lateral --}}
-                        @if ($bannerLateralUrl)
-                            <div class="sticky-banner-lateral">
-                                <img src="{{ $bannerLateralUrl }}" class="img-fluid banner-v-render"
-                                    alt="{{ $subcategory->name }} Promo" onerror="this.src='{{ $fallbackImg }}'">
-                            </div>
-                        @endif
                     </div>
                 </div>
 

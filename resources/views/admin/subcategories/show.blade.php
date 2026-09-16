@@ -59,7 +59,7 @@
                 <div class="card-sax-body p-4">
                     <div class="row g-4">
                         {{-- Foto Miniatura --}}
-                        <div class="col-md-5">
+                        <div class="col-12">
                             <label class="sax-label d-block mb-3 text-center">FOTO MINIATURA</label>
                             <div class="media-preview-sax square-ratio shadow-sm">
                                 @if ($subcategory->photo)
@@ -74,21 +74,6 @@
                             </div>
                         </div>
 
-                        {{-- Banner --}}
-                        <div class="col-md-7">
-                            <label class="sax-label d-block mb-3 text-center">BANNER DE CABECERA</label>
-                            <div class="media-preview-sax banner-ratio shadow-sm">
-                                @if ($subcategory->banner)
-                                    <img src="{{ asset('storage/' . $subcategory->banner) }}" class="img-fluid">
-                                    <div class="media-overlay"><i class="fas fa-expand"></i></div>
-                                @else
-                                    <div class="empty-media-box">
-                                        <i class="fas fa-images fa-2x mb-2 opacity-25"></i>
-                                        <span>Sin Banner</span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -14,6 +14,7 @@ use App\Services\Dhl\DhlProductMeasurementEstimator;
 use App\Services\ImageConverterService;
 use App\Services\OpenAICatalogService;
 use App\Services\ProductFeedService;
+use App\Services\ProductFeedRefreshService;
 use App\Services\StoreTaxonomyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -271,7 +272,7 @@ class ProductControllerAdmin extends Controller
         return view('admin.products.outlet', compact('outletCount'));
     }
 
-    public function updateOutlet(Request $request)
+    public function updateOutlet(Request $request, ProductFeedRefreshService $feedRefresh)
     {
         $validated = $request->validate([
             'skus' => ['required', 'string', 'max:100000'],
@@ -333,6 +334,9 @@ class ProductControllerAdmin extends Controller
         });
 
         Cache::flush();
+        if ($updated > 0) {
+            $feedRefresh->markDirty();
+        }
 
         $actionLabel = $validated['action'] === 'outlet' ? 'enviados para outlet' : 'restaurados ao estado normal';
 
@@ -1279,7 +1283,7 @@ class ProductControllerAdmin extends Controller
     // Revalida em massa: ativa quem passa nas regras mínimas e desativa quem não passa.
     // Existe porque o status normalmente já é recalculado ao editar um produto (update()),
     // mas atualizações que não passam por lá (ex.: ajuste de estoque direto) podem deixá-lo desatualizado.
-    public function revalidateStatus()
+    public function revalidateStatus(ProductFeedRefreshService $feedRefresh)
     {
         $products = Product::select(['id', 'photo', 'gallery', 'description', 'price', 'stock', 'status', 'is_outlet'])->get();
 
@@ -1307,6 +1311,10 @@ class ProductControllerAdmin extends Controller
 
         if (! empty($toDeactivate)) {
             Product::whereIn('id', $toDeactivate)->update(array_merge(['status' => 0], $auditData));
+        }
+
+        if (! empty($toActivate) || ! empty($toDeactivate)) {
+            $feedRefresh->markDirty();
         }
 
         return response()->json([

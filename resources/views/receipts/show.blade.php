@@ -166,6 +166,7 @@
                     @foreach ($order->items as $item)
                         <tr>
                             <td>
+                                <x-product-link :product="$item->product" :aria-label="$item->external_name ?? $item->name">
                                 @if ($item->product && $item->product->photo_url)
                                     <img src="{{ $item->product->photo_url }}"
                                          alt="{{ $item->external_name ?? $item->name }}"
@@ -174,8 +175,9 @@
                                 @else
                                     <div class="rounded border bg-light" style="width: 3.5rem; height: 3.5rem;"></div>
                                 @endif
+                                </x-product-link>
                             </td>
-                            <td class="fw-semibold">{{ $item->external_name ?? $item->name }}</td>
+                            <td class="fw-semibold"><x-product-link :product="$item->product">{{ $item->external_name ?? $item->name }}</x-product-link></td>
                             <td class="text-muted">{{ $item->sku ?? '-' }}</td>
                             <td class="text-end">{{ currency_format($item->price) }}</td>
                             <td class="text-end">{{ $item->quantity }}</td>

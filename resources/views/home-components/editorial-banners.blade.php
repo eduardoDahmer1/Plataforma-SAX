@@ -27,7 +27,10 @@
                                 @if (!empty($banner['link']))
                                     <a href="{{ $banner['link'] }}" @if($isExternal) target="_blank" rel="noopener noreferrer" @endif aria-label="Abrir {{ $banner['label'] }}">
                                 @endif
-                                    <img src="{{ $banner['image_url'] }}" alt="{{ $banner['label'] }}" width="1600" height="760" loading="lazy" decoding="async">
+                                    <picture>
+                                        <source media="(max-width: 767px)" srcset="{{ $banner['mobile_image_url'] }}">
+                                        <img src="{{ $banner['image_url'] }}" alt="{{ $banner['label'] }}" width="1600" height="760" loading="lazy" decoding="async">
+                                    </picture>
                                     <span class="stacked-banner-card__index">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
                                     <span class="stacked-banner-card__overlay"><small>{{ __('messages.curadoria_sax') }}</small><strong>{{ $banner['label'] }}</strong>@if (!empty($banner['link']))<b>{{ __('messages.descobrir_btn') }} <i class="fa-solid fa-arrow-right"></i></b>@endif</span>
                                 @if (!empty($banner['link']))</a>@endif

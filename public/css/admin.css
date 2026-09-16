@@ -3442,6 +3442,15 @@ font-weight: 500;
 .home-banner-item__media img { width: 100%; height: 100%; object-fit: cover; }
 .home-banner-item__order { position: absolute; top: 9px; left: 9px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 8px; background: rgba(17, 24, 39, .86); color: #fff; font-size: 11px; }
 .home-banner-item__body { padding: 14px; }
+.home-banner-item__responsive-media { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+.home-banner-image-control { position: relative; display: flex; min-width: 0; min-height: 58px; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 10px; overflow: hidden; border: 1px solid #dfe5ed; border-radius: 10px; background: #f8fafc; cursor: pointer; }
+.home-banner-image-control > span { display: flex; min-width: 0; flex-direction: column; color: #344054; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.home-banner-image-control > span i { margin-right: 4px; color: #2767e8; }
+.home-banner-image-control small { color: #8a94a6; font-size: 8px; font-weight: 600; text-transform: none; }
+.home-banner-image-control strong { flex-shrink: 0; color: #2767e8; font-size: 9px; text-transform: uppercase; }
+.home-banner-image-control > img { width: 34px; height: 46px; flex-shrink: 0; border-radius: 4px; object-fit: cover; }
+.home-banner-image-control input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.home-banner-mobile-remove { grid-column: 1 / -1; justify-self: end; border: 0; background: transparent; color: #667085; font-size: 9px; font-weight: 700; text-transform: uppercase; }
 .home-banner-item__body > label { display: block; margin-bottom: 6px; color: #667085; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
 .home-banner-item__link { position: relative; display: flex; align-items: center; }
 .home-banner-item__link > i { position: absolute; left: 11px; color: #64748b; }
@@ -3481,6 +3490,7 @@ font-weight: 500;
     .home-banner-manager__measure { width: 100%; min-width: 0; }
     .home-banner-list { grid-template-columns: 1fr; }
     .home-banner-copy__languages { grid-template-columns: 1fr; }
+    .home-banner-item__responsive-media { grid-template-columns: 1fr; }
     .home-banner-item__actions { align-items: flex-start; }
 }
 

@@ -15,7 +15,8 @@
             $controlledPaymentMethods = ['deposito', 'bancard_v2', 'rendix_pix'];
             $paymentMethodManuallyEnabled = ! in_array((string) $order->payment_method, $controlledPaymentMethods, true)
                 || app(\App\Services\StoreControlService::class)->paymentEnabled((string) $order->payment_method);
-            $paymentMethodEnabled = $catalogAvailable && $paymentMethodManuallyEnabled;
+            $checkoutEnabled = app(\App\Services\StoreControlService::class)->enabled('checkout');
+            $paymentMethodEnabled = $catalogAvailable && $checkoutEnabled && $paymentMethodManuallyEnabled;
             $rendixRefundableTransaction = $order->paymentTransactions
                 ->where('provider', \App\Services\RendixPixService::PROVIDER)
                 ->where('status', 'paid')
@@ -111,12 +112,12 @@
                 <i class="fas fa-circle-exclamation"></i>
                 <div><strong>Este pedido não foi concluído.</strong><span>Confira o status do pagamento abaixo ou fale com nossa equipe para receber ajuda.</span></div>
             </div>
-        @elseif (! $isPaid && ! $catalogAvailable)
+        @elseif (! $isPaid && (! $catalogAvailable || ! $checkoutEnabled))
             <div class="sax-order-message is-warning mb-4">
                 <i class="fas fa-sync-alt"></i>
                 <div>
                     <strong>{{ __('messages.catalog_purchase_paused_title') }}</strong>
-                    <span>{{ __('messages.catalog_purchase_paused_message') }}</span>
+                    <span>{{ __('messages.checkout_pause_message') }}</span>
                 </div>
             </div>
         @elseif (! $isPaid && ! $paymentMethodManuallyEnabled)
@@ -456,15 +457,15 @@
                 @endphp
                 <div class="item-sax-row shadow-sm border-0 rounded-4 bg-white p-3 mb-3">
                     <div class="row align-items-center">
-                        <div class="col-3 col-md-2 text-center"><img
+                        <div class="col-3 col-md-2 text-center"><x-product-link :product="$item->product"><img
                                 src="{{ $item->product?->photo_url ?? asset('storage/uploads/noimage.webp') }}"
-                                class="img-fluid rounded-3 object-fit-contain shadow-sm" style="max-height: 80px;"></div>
+                                class="img-fluid rounded-3 object-fit-contain shadow-sm" style="max-height: 80px;" alt="{{ $item->name ?? $item->product?->external_name }}"></x-product-link></div>
                         <div class="col-9 col-md-4">
                             @if ($itemBrand)
                                 <div class="x-small text-secondary text-uppercase fw-bold mb-1">{{ $itemBrand }}</div>
                             @endif
                             <h6 class="mb-1 text-uppercase fw-bold small text-dark">
-                                {{ $item->name ?? ($item->product?->external_name ?? 'Produto') }}</h6>
+                                <x-product-link :product="$item->product">{{ $item->name ?? ($item->product?->external_name ?? 'Produto') }}</x-product-link></h6>
                             <div class="d-flex flex-wrap gap-1 mb-1">
                                 <span class="badge bg-light text-secondary border x-small fw-normal">SKU: {{ $item->sku ?? '-' }}</span>
                                 @if ($itemSize)<span class="badge bg-light text-secondary border x-small fw-normal">Tamanho: {{ $itemSize }}</span>@endif

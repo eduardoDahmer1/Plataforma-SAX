@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Services\ImageConverterService;
 use App\Services\StoreTaxonomyService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -16,7 +16,7 @@ class SubcategoryControllerAdmin extends Controller
     public function index(Request $request)
     {
         $query = app(StoreTaxonomyService::class)->subcategories(Subcategory::with('category'));
-    
+
         if ($search = $request->input('search')) {
             $query->where(function ($searchQuery) use ($search) {
                 $searchQuery->where('name', 'like', "%{$search}%")
@@ -25,9 +25,9 @@ class SubcategoryControllerAdmin extends Controller
                     });
             });
         }
-    
+
         $subcategories = $query->paginate(18)->withQueryString();
-    
+
         return view('admin.subcategories.index', compact('subcategories'));
     }
 
@@ -35,6 +35,7 @@ class SubcategoryControllerAdmin extends Controller
     {
         $categories = app(StoreTaxonomyService::class)->categories(Category::query())
             ->orderBy('name')->get(['id', 'name']);
+
         return view('admin.subcategories.create', compact('categories'));
     }
 
@@ -44,32 +45,27 @@ class SubcategoryControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'photo' => 'nullable|image|max:10240',
-            'banner' => 'nullable|image|max:10240',
         ]);
-    
+
         $data = $request->only(['name', 'category_id']);
 
         $data['slug'] = $this->resolveUniqueSlug($request->name);
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+            $data['photo'] = $this->convertToWebp($request->file('photo'));
         }
-    
-        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
-        }
-    
+
         Subcategory::create($data);
-    
+
         return redirect()->route('admin.subcategories.index')
-                         ->with('success', 'Subcategoria criada com sucesso.');
+            ->with('success', 'Subcategoria criada com sucesso.');
     }
-     
 
     public function edit(Subcategory $subcategory)
     {
         $categories = app(StoreTaxonomyService::class)->categories(Category::query())
             ->orderBy('name')->get(['id', 'name']);
+
         return view('admin.subcategories.edit', compact('subcategory', 'categories'));
     }
 
@@ -79,7 +75,6 @@ class SubcategoryControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'photo' => 'nullable|image|max:10240',
-            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only(['name', 'category_id']);
@@ -88,14 +83,7 @@ class SubcategoryControllerAdmin extends Controller
             if ($subcategory->photo) {
                 $this->deleteFileIfExists($subcategory->photo);
             }
-            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
-        }
-
-        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            if ($subcategory->banner) {
-                $this->deleteFileIfExists($subcategory->banner);
-            }
-            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
+            $data['photo'] = $this->convertToWebp($request->file('photo'));
         }
 
         $subcategory->update($data);
@@ -115,17 +103,8 @@ class SubcategoryControllerAdmin extends Controller
             $subcategory->photo = null;
             $subcategory->save();
         }
-        return back()->with('success', 'Foto excluída com sucesso.');
-    }
 
-    public function deleteBanner(Subcategory $subcategory)
-    {
-        if ($subcategory->banner) {
-            $this->deleteFileIfExists($subcategory->banner);
-            $subcategory->banner = null;
-            $subcategory->save();
-        }
-        return back()->with('success', 'Banner excluído com sucesso.');
+        return back()->with('success', 'Foto excluída com sucesso.');
     }
 
     public function uploadPhoto(Request $request, Subcategory $subcategory)
@@ -133,32 +112,17 @@ class SubcategoryControllerAdmin extends Controller
         $request->validate(['photo' => 'required|image|max:10240']);
         $this->deleteFileIfExists($subcategory->photo);
 
-        $path = $this->convertToWebp($request->file('photo'), 'photo');
+        $path = $this->convertToWebp($request->file('photo'));
         $subcategory->photo = $path;
         $subcategory->save();
 
-        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
-    }
-
-    public function uploadBanner(Request $request, Subcategory $subcategory)
-    {
-        $request->validate(['banner' => 'required|image|max:10240']);
-        $this->deleteFileIfExists($subcategory->banner);
-
-        $path = $this->convertToWebp($request->file('banner'), 'banner');
-        $subcategory->banner = $path;
-        $subcategory->save();
-
-        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+        return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
     }
 
     public function destroy(Subcategory $subcategory)
     {
         if ($subcategory->photo) {
             $this->deleteFileIfExists($subcategory->photo);
-        }
-        if ($subcategory->banner) {
-            $this->deleteFileIfExists($subcategory->banner);
         }
         $subcategory->delete();
 
@@ -187,15 +151,13 @@ class SubcategoryControllerAdmin extends Controller
         }
     }
 
-    private function convertToWebp($image, $type)
+    private function convertToWebp($image)
     {
-        // Mapea el tipo a su carpeta destino; la conversión la hace el service.
-        $directory = ($type === 'banner') ? 'subcategories/banner' : 'subcategories/photo';
+        $directory = 'subcategories/photo';
 
         return app(ImageConverterService::class)->toWebp($image, $directory, [
             'quality' => 85,
-            'strict'  => true,
+            'strict' => true,
         ]);
     }
-    
 }

@@ -22,7 +22,6 @@
             @php
                 $totalCarrinho = 0;
                 $totalItens = 0;
-                $totalProductWeight = 0;
                 $cupon = $resumo['cupon'] ?? null;
                 $itensComDesconto = $resumo['itens_elegiveis'] ?? [];
             @endphp
@@ -35,42 +34,24 @@
                             $itemTotal = $unitPrice * $item->quantity;
                             $totalCarrinho += $itemTotal;
                             $totalItens += $item->quantity;
-                            $shippingMeasurement = $item->product->dhl_shipping_measurement ?? null;
-                            $totalProductWeight += $shippingMeasurement
-                                ? ((float) $shippingMeasurement['weight'] * (int) $item->quantity)
-                                : 0;
                         @endphp
 
                         <article class="sax-cart-item-row">
                             <div class="sax-cart-item-media">
-                                <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
+                                <x-product-link :product="$item->product" class="d-block w-100"><img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
                                      alt="{{ $item->product->external_name ?? 'Produto' }}"
-                                     class="sax-cart-item-image">
+                                     class="sax-cart-item-image"></x-product-link>
                             </div>
 
                             <div class="sax-cart-item-content">
                                 <p class="sax-cart-item-brand mb-1">{{ $item->product->brand->name ?? 'SAX EXCLUSIVE' }}</p>
-                                <h2 class="sax-cart-item-name mb-2">{{ $item->product->external_name ?? 'Produto' }}</h2>
+                                <h2 class="sax-cart-item-name mb-2"><x-product-link :product="$item->product">{{ $item->product->external_name ?? 'Produto' }}</x-product-link></h2>
 
                                 <div class="sax-cart-item-meta">
                                     <span>SKU: {{ $item->product->sku ?? '-' }}</span>
                                     <span>{{ __('messages.preco') }}: {{ currency_format($unitPrice) }}</span>
                                     <span>{{ __('messages.quantidade_abreviada') }}: {{ $item->quantity }}</span>
                                 </div>
-
-                                @if ($shippingMeasurement)
-                                    <div class="sax-item-logistics" title="{{ $shippingMeasurement['estimated'] ? 'Referência logística estimada pelo tipo do produto' : 'Peso e medidas reais do produto' }}">
-                                        <i class="fa-solid fa-box-open" aria-hidden="true"></i>
-                                        <span>{{ number_format($shippingMeasurement['weight'], 3, ',', '.') }} kg por unidade</span>
-                                        @if ($item->quantity > 1)
-                                            <span class="sax-item-logistics-separator" aria-hidden="true"></span>
-                                            <strong>{{ number_format($shippingMeasurement['weight'] * $item->quantity, 3, ',', '.') }} kg no item</strong>
-                                        @endif
-                                        <span class="sax-item-logistics-separator" aria-hidden="true"></span>
-                                        <span>{{ number_format($shippingMeasurement['length'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['width'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['height'], 1, ',', '.') }} cm</span>
-                                        @if ($shippingMeasurement['estimated'])<span class="sax-item-logistics-kind">média</span>@endif
-                                    </div>
-                                @endif
 
                                 <div class="sax-cart-qty-area mt-3">
                                     <div class="quantity-control-sax">
@@ -139,11 +120,6 @@
                     </div>
 
                     <div class="sax-summary-line">
-                        <span>Peso dos produtos <small class="text-muted">(sem embalagem)</small></span>
-                        <strong>{{ number_format($totalProductWeight, 3, ',', '.') }} kg</strong>
-                    </div>
-
-                    <div class="sax-summary-line">
                         <span>{{ __('messages.subtotal') }}</span>
                         <strong>{{ currency_format($resumo['subtotal']) }}</strong>
                     </div>
@@ -200,22 +176,14 @@
                                 @elseif (! $manualCheckoutEnabled)
                                     data-bs-toggle="modal" data-bs-target="#storeControlPauseModal"
                                 @endif>
-                                <i class="fas fa-lock me-2"></i>{{ $manualCheckoutEnabled ? __('messages.finalizar_compra') : __('messages.store_checkout_paused_button') }}
+                                <i class="fas fa-lock me-2"></i>{{ __('messages.finalizar_compra') }}
                             </button>
                         </form>
 
-                        @if($storeControls['whatsapp_enabled'] ?? true)
-                        <form action="{{ route('checkout.whatsapp') }}" method="GET">
-                            <button type="{{ (($catalogIntegrationStatus['available'] ?? true) && $manualCheckoutEnabled) ? 'submit' : 'button' }}"
-                                class="sax-btn-wa w-100"
-                                @if (! ($catalogIntegrationStatus['available'] ?? true))
-                                    data-bs-toggle="modal" data-bs-target="#catalogIntegrationPauseModal"
-                                @elseif (! $manualCheckoutEnabled)
-                                    data-bs-toggle="modal" data-bs-target="#storeControlPauseModal"
-                                @endif>
-                                <i class="fab fa-whatsapp me-2"></i>{{ __('messages.checkout_whatsapp') }}
-                            </button>
-                        </form>
+                        @if(($storeControls['whatsapp_enabled'] ?? true) && app(\App\Services\CartWhatsappService::class)->contact(request()))
+                        <a href="{{ route('cart.whatsapp') }}" class="sax-btn-wa w-100 text-center text-decoration-none">
+                            <i class="fab fa-whatsapp me-2"></i>{{ __('messages.checkout_pause_send') }}
+                        </a>
                         @endif
 
                         <div>

@@ -17,8 +17,6 @@ class Attribute extends Model
         'logo_bridal',
         'logo_cafe_bistro',
         'logo_cafe_bistro_asuncion',
-        'banner_horizontal',
-        'banner_horizontal_link',
         'banner1',
         'banner2',
         'banner3',
@@ -28,7 +26,6 @@ class Attribute extends Model
         'banner7',
         'banner8',
         'banner9',
-        'banner10',
         'banner1_link',
         'banner2_link',
         'banner3_link',
@@ -38,19 +35,19 @@ class Attribute extends Model
         'banner7_link',
         'banner8_link',
         'banner9_link',
-        'banner10_link',
         'text_topo',
         'icon_info',
         'icon_cabide',
         'icon_help',
-        'whatsapp_banner'
+        'whatsapp_banner',
     ];
 
     public static function logoUrl(): ?string
     {
         $attribute = static::first();
+
         return $attribute?->header_image
-            ? asset('storage/uploads/' . $attribute->header_image)
+            ? asset('storage/uploads/'.$attribute->header_image)
             : null;
     }
 }

@@ -7,8 +7,8 @@ use App\Models\Category;
 use App\Services\ImageConverterService;
 use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryControllerAdmin extends Controller
 {
@@ -42,17 +42,12 @@ class CategoryControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:categories,slug',
             'photo' => 'nullable|image|max:10240',
-            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only('name', 'slug');
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
-        }
-
-        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
+            $data['photo'] = $this->convertToWebp($request->file('photo'));
         }
 
         Category::create($data);
@@ -69,6 +64,7 @@ class CategoryControllerAdmin extends Controller
     public function edit($id)
     {
         $category = Category::findOrFail($id); // pega o category pelo ID
+
         return view('admin.categories.edit', compact('category'));
     }
 
@@ -78,9 +74,8 @@ class CategoryControllerAdmin extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:categories,slug,' . $category->id,
+            'slug' => 'required|string|max:255|unique:categories,slug,'.$category->id,
             'photo' => 'nullable|image|max:10240',
-            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only('name', 'slug');
@@ -89,14 +84,7 @@ class CategoryControllerAdmin extends Controller
             if ($category->photo && Storage::disk('public')->exists($category->photo)) {
                 Storage::disk('public')->delete($category->photo);
             }
-            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
-        }
-
-        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
-            if ($category->banner && Storage::disk('public')->exists($category->banner)) {
-                Storage::disk('public')->delete($category->banner);
-            }
-            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
+            $data['photo'] = $this->convertToWebp($request->file('photo'));
         }
 
         $category->update($data);
@@ -110,10 +98,6 @@ class CategoryControllerAdmin extends Controller
         if ($category->photo && Storage::disk('public')->exists($category->photo)) {
             Storage::disk('public')->delete($category->photo);
         }
-        if ($category->banner && Storage::disk('public')->exists($category->banner)) {
-            Storage::disk('public')->delete($category->banner);
-        }
-
         $category->delete();
         $this->clearNavigationCaches();
 
@@ -129,42 +113,23 @@ class CategoryControllerAdmin extends Controller
             Storage::disk('public')->delete($category->photo);
         }
 
-        $path = $this->convertToWebp($request->file('photo'), 'photo');
+        $path = $this->convertToWebp($request->file('photo'));
         $category->photo = $path;
         $category->save();
         $this->clearNavigationCaches();
 
-        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
+        return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
     }
 
-    public function uploadBanner(Request $request, $id)
+    private function convertToWebp($image)
     {
-        $request->validate(['banner' => 'required|image|max:10240']);
-        $category = Category::findOrFail($id);
-
-        if ($category->banner && Storage::disk('public')->exists($category->banner)) {
-            Storage::disk('public')->delete($category->banner);
-        }
-
-        $path = $this->convertToWebp($request->file('banner'), 'banner');
-        $category->banner = $path;
-        $category->save();
-        $this->clearNavigationCaches();
-
-        return response()->json(['success' => true, 'url' => Storage::url($path) . '?v=' . time()]);
-    }
-
-    private function convertToWebp($image, $type)
-    {
-        // Mapea el tipo a su carpeta destino; la conversión la hace el service.
-        $directory = ($type === 'banner') ? 'categories/banner' : 'categories/photo';
+        $directory = 'categories/photo';
 
         return app(ImageConverterService::class)->toWebp($image, $directory, [
             'quality' => 85,
-            'strict'  => true,
+            'strict' => true,
         ]);
     }
-
 
     public function deletePhoto($id)
     {
@@ -173,20 +138,6 @@ class CategoryControllerAdmin extends Controller
         if ($category->photo && Storage::disk('public')->exists($category->photo)) {
             Storage::disk('public')->delete($category->photo);
             $category->photo = null;
-            $category->save();
-            $this->clearNavigationCaches();
-        }
-
-        return back()->with('success', 'Imagem removida com sucesso.');
-    }
-
-    public function deleteBanner($id)
-    {
-        $category = Category::findOrFail($id);
-
-        if ($category->banner && Storage::disk('public')->exists($category->banner)) {
-            Storage::disk('public')->delete($category->banner);
-            $category->banner = null;
             $category->save();
             $this->clearNavigationCaches();
         }

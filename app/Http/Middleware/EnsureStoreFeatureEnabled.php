@@ -25,7 +25,7 @@ class EnsureStoreFeatureEnabled
             'pix', 'bancard', 'deposit' => 'store_payment_disabled_message',
             default => 'store_cart_disabled_message',
         };
-        $message = __('messages.'.$messageKey);
+        $message = $feature === 'checkout' ? __('messages.checkout_pause_message') : __('messages.'.$messageKey);
         $titleKey = match ($feature) {
             'pix', 'bancard', 'deposit' => 'store_payment_disabled_title',
             'checkout' => 'store_checkout_paused_button',

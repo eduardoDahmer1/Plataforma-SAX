@@ -39,21 +39,15 @@
                 :current="$filha->photo" :uploadUrl="route('admin.categorias-filhas.uploadPhoto', $filha->id)"
                 :showDelete="true" ratio="square" dimensions="800 × 800 px" usage="Imagem de identificação nos atalhos do catálogo." />
 
-            <x-admin.media-field field="banner" :label="__('messages.banner')"
-                :current="$filha->banner" :uploadUrl="route('admin.categorias-filhas.uploadBanner', $filha->id)"
-                :showDelete="true" ratio="banner" dimensions="1920 × 560 px" usage="Banner de topo; mantenha textos na área central." />
         </div>
     @else
         <div class="sax-catf__grid">
             <x-admin.media-field field="photo" :label="__('messages.foto')" ratio="square"
                 dimensions="800 × 800 px" usage="Imagem de identificação nos atalhos do catálogo." />
-            <x-admin.media-field field="banner" :label="__('messages.banner')" ratio="banner"
-                dimensions="1920 × 560 px" usage="Banner de topo; mantenha textos na área central." />
         </div>
     @endif
 </x-admin.catalog-form>
 
 @if ($editando)
     <form id="delete-photo-form" action="{{ route('admin.categorias-filhas.deletePhoto', $filha->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
-    <form id="delete-banner-form" action="{{ route('admin.categorias-filhas.deleteBanner', $filha->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
 @endif

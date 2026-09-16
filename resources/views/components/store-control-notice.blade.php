@@ -3,7 +3,7 @@
     $manualCheckoutAvailable = $manualCartAvailable && (bool) ($storeControls['checkout_enabled'] ?? true);
     $manualAddAvailable = $manualCartAvailable && (bool) ($storeControls['add_to_cart_enabled'] ?? true);
     $manualBlockMessage = session('store_feature_blocked');
-    $manualBlockTitle = session('store_feature_blocked_title', __('messages.store_cart_disabled_title'));
+    $manualBlockTitle = session('store_feature_blocked_title', ! $manualCheckoutAvailable && $manualCartAvailable ? __('messages.store_checkout_paused_button') : __('messages.store_cart_disabled_title'));
 @endphp
 
 @if (! $manualCartAvailable || ! $manualCheckoutAvailable || ! $manualAddAvailable || $manualBlockMessage)
@@ -15,8 +15,11 @@
                     <span class="d-inline-flex align-items-center justify-content-center bg-light mb-3" style="width:60px;height:60px;border-radius:8px"><i class="fa-solid fa-store-slash fs-3"></i></span>
                     <h2 class="h4 fw-bold" id="storeControlPauseModalLabel">{{ $manualBlockTitle }}</h2>
                     <p class="text-muted mb-4">
-                        {{ $manualBlockMessage ?: (! $manualCartAvailable ? __('messages.store_cart_disabled_message') : (! $manualCheckoutAvailable ? __('messages.store_checkout_disabled_message') : __('messages.store_add_to_cart_disabled_message'))) }}
+                        {{ $manualBlockMessage ?: (! $manualCartAvailable ? __('messages.store_cart_disabled_message') : (! $manualCheckoutAvailable ? __('messages.checkout_pause_message') : __('messages.store_add_to_cart_disabled_message'))) }}
                     </p>
+                    @if ($manualCartAvailable && ! $manualCheckoutAvailable)
+                        @include('components.cart-whatsapp-action')
+                    @endif
                     <button type="button" class="btn btn-dark w-100 py-2" data-bs-dismiss="modal">{{ __('messages.catalog_purchase_paused_continue') }}</button>
                 </div>
             </div>

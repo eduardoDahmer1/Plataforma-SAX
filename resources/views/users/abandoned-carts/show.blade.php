@@ -11,8 +11,8 @@
     <div class="border rounded-3 bg-white shadow-sm overflow-hidden">
         @foreach($abandonedCart->items as $item)
             <div class="d-flex align-items-center gap-3 p-3 {{ !$loop->last ? 'border-bottom' : '' }}">
-                <img src="{{ $item->product?->photo_url ?? ($item->image ? asset('storage/uploads/'.$item->image) : asset('storage/uploads/noimage.webp')) }}" alt="" class="rounded border object-fit-cover" style="width:72px;height:72px">
-                <div class="flex-grow-1"><strong class="d-block">{{ $item->product_name }}</strong><small class="text-muted">{{ __('messages.user_sku_quantity', ['sku' => $item->sku ?? '—', 'quantity' => $item->quantity]) }}</small></div>
+                <x-product-link :product="$item->product"><img src="{{ $item->product?->photo_url ?? ($item->image ? asset('storage/uploads/'.$item->image) : asset('storage/uploads/noimage.webp')) }}" alt="{{ $item->product_name }}" class="rounded border object-fit-cover" style="width:72px;height:72px"></x-product-link>
+                <div class="flex-grow-1"><strong class="d-block"><x-product-link :product="$item->product">{{ $item->product_name }}</x-product-link></strong><small class="text-muted">{{ __('messages.user_sku_quantity', ['sku' => $item->sku ?? '—', 'quantity' => $item->quantity]) }}</small></div>
                 <strong>{{ $abandonedCart->currency_sign }} {{ number_format($item->unit_price * $item->quantity * $abandonedCart->currency_value, 2, '.', ',') }}</strong>
             </div>
         @endforeach

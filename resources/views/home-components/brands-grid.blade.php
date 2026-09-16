@@ -17,19 +17,19 @@
             <div class="sax-brands-mobile__rail">
                 @foreach ($brands as $brand)
                     @php
-                        $rawBrandBanner = trim((string) ($brand->banner ?? ''));
-                        if (preg_match('/^https?:\/\//i', $rawBrandBanner)) {
-                            $brandBannerUrl = $rawBrandBanner;
-                        } elseif ($rawBrandBanner !== '') {
-                            $cleanBrandBanner = preg_replace('#^storage/#i', '', ltrim($rawBrandBanner, '/'));
-                            $brandBannerUrl = asset('storage/' . $cleanBrandBanner);
+                        $rawBrandImage = trim((string) ($brand->image ?? ''));
+                        if (preg_match('/^https?:\/\//i', $rawBrandImage)) {
+                            $brandImageUrl = $rawBrandImage;
+                        } elseif ($rawBrandImage !== '') {
+                            $cleanBrandImage = preg_replace('#^storage/#i', '', ltrim($rawBrandImage, '/'));
+                            $brandImageUrl = asset('storage/' . $cleanBrandImage);
                         } else {
-                            $brandBannerUrl = asset('storage/uploads/banner_horizontal.webp');
+                            $brandImageUrl = asset('storage/uploads/noimage.webp');
                         }
                     @endphp
                     <a href="{{ url('marcas/' . ($brand->slug ?: $brand->id)) }}" class="sax-brand-mobile-card">
                         <span class="sax-brand-mobile-card__image">
-                            <img src="{{ $brandBannerUrl }}" alt="{{ $brand->name }}" loading="lazy" decoding="async" onerror="this.src='{{ asset('storage/uploads/banner_horizontal.webp') }}'">
+                            <img src="{{ $brandImageUrl }}" alt="{{ $brand->name }}" loading="lazy" decoding="async" onerror="this.src='{{ asset('storage/uploads/noimage.webp') }}'">
                         </span>
                         <span class="sax-brand-mobile-card__meta">
                             <strong>{{ $brand->name }}</strong>
@@ -55,7 +55,7 @@
                  id="brandsCarousel" 
                  data-storage-base="{{ asset('storage') }}" 
                  data-marcas-url="{{ url('marcas') }}"
-                 data-fallback-banner="{{ asset('storage/uploads/banner_horizontal.webp') }}">
+                 data-fallback-banner="{{ asset('storage/uploads/noimage.webp') }}">
             </div>
 
             <div class="sax-carousel-footer">

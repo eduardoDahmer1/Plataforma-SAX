@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const storageBase    = container.dataset.storageBase   || '/storage';
         const marcasUrl      = container.dataset.marcasUrl     || '/marcas';
-        const fallbackBanner = container.dataset.fallbackBanner || `${storageBase}/uploads/banner_horizontal.webp`;
+        const fallbackBanner = container.dataset.fallbackBanner || `${storageBase}/uploads/noimage.webp`;
 
         const normalizeImagePath = (rawPath) => {
             if (!rawPath || !String(rawPath).trim()) return fallbackBanner;
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         brands.forEach((brand, i) => {
-            const imgPath = normalizeImagePath(brand.banner);
+            const imgPath = normalizeImagePath(brand.image);
 
             const div = document.createElement('div');
             div.className = 'sax-item hidden';

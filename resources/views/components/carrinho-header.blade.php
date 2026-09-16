@@ -1,7 +1,6 @@
 @php
     use App\Models\Cart;
     use App\Models\Currency;
-    use App\Services\Dhl\DhlProductMeasurementEstimator;
 
     $user = auth()->user();
     $cart = $user ? Cart::available()->with([
@@ -10,15 +9,12 @@
         'product.subcategory:id,name',
         'product.categoriasFilhas:id,name',
     ])->where('user_id', $user->id)->get() : collect();
-    $dhlMeasurements = app(DhlProductMeasurementEstimator::class);
     $cartCount = $cart->sum('quantity');
     $hasCartItems = $user && $cartCount > 0;
     $manualCartEnabled = (bool) ($storeControls['cart_enabled'] ?? true);
-    $catalogAvailable = (bool) ($catalogIntegrationStatus['available'] ?? true);
-    $cartPurchasingAvailable = $manualCartEnabled && $catalogAvailable;
+    $cartPurchasingAvailable = $manualCartEnabled;
 
     $totalGeral = 0;
-    $totalProductWeight = 0;
     $currencySession = session('currency');
     $currencyId = null;
 
@@ -48,10 +44,6 @@
             @if (!$user)
                 data-bs-toggle="modal"
                 data-bs-target="#loginModal"
-                aria-haspopup="dialog"
-            @elseif (!$catalogAvailable)
-                data-bs-toggle="modal"
-                data-bs-target="#catalogIntegrationPauseModal"
                 aria-haspopup="dialog"
             @elseif (!$manualCartEnabled)
                 data-bs-toggle="modal"
@@ -94,6 +86,7 @@
                     @foreach ($cart as $item)
                         @php
                             $productName = $item->product->external_name ?? $item->product->name ?? 'Produto';
+                            $productUrl = route('produto.show', $item->product->slug ?: $item->product->id);
                             $productBrand = $item->product->brand->name ?? 'SAX';
                             $productSize = trim((string) ($item->product->size ?? $item->product->product_size ?? ''));
                             $productColor = trim((string) ($item->product->color ?? ''));
@@ -105,17 +98,15 @@
                             $totalGeral += $subtotalItem;
                             $formattedPrice = $symbol . ' ' . number_format($convertedPrice, $decimals, $decimal, $thousand);
                             $formattedSubtotal = $symbol . ' ' . number_format($subtotalItem, $decimals, $decimal, $thousand);
-                            $shippingMeasurement = $dhlMeasurements->forProduct($item->product, true);
-                            $totalProductWeight += (float) $shippingMeasurement['weight'] * (int) $item->quantity;
                         @endphp
                         <div class="cart-item" data-cart-item>
-                            <div class="item-image">
+                            <a href="{{ $productUrl }}" class="item-image">
                                 <img src="{{ $item->product->photo_url ?? asset('storage/uploads/noimage.webp') }}"
                                     alt="{{ $productName }}">
-                            </div>
+                            </a>
                             <div class="item-details">
                                 <p class="item-brand">{{ $productBrand }}</p>
-                                <a href="#" class="item-name text-decoration-none">{{ $productName }}</a>
+                                <a href="{{ $productUrl }}" class="item-name text-decoration-none">{{ $productName }}</a>
 
                                 <div class="item-meta-row">
                                     <span>SKU: {{ $item->product->sku ?? '-' }}</span>
@@ -133,14 +124,6 @@
                                             @endif
                                         </span>
                                     @endif
-                                </div>
-
-                                <div class="item-logistics-row" title="{{ $shippingMeasurement['estimated'] ? 'Referência logística estimada pelo tipo do produto' : 'Peso e medidas reais do produto' }}">
-                                    <i class="fa-solid fa-box-open" aria-hidden="true"></i>
-                                    <span>{{ number_format($shippingMeasurement['weight'], 3, ',', '.') }} kg</span>
-                                    <span aria-hidden="true">·</span>
-                                    <span>{{ number_format($shippingMeasurement['length'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['width'], 1, ',', '.') }} × {{ number_format($shippingMeasurement['height'], 1, ',', '.') }} cm</span>
-                                    @if ($shippingMeasurement['estimated'])<small>média</small>@endif
                                 </div>
 
                                 <div class="item-prices-row">
@@ -194,10 +177,6 @@
         </div>
 
         <div class="cart-footer border-top p-3 bg-white">
-                <div class="d-flex justify-content-between align-items-center mb-2 text-secondary" style="font-size:10px;">
-                    <span>Peso dos produtos <small>(sem embalagem)</small></span>
-                    <strong>{{ number_format($totalProductWeight, 3, ',', '.') }} kg</strong>
-                </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fw-bold">{{ __('messages.subtotal') }}:</span>
                     <span class="fw-bold h5 mb-0 text-dark cart-subtotal-value">

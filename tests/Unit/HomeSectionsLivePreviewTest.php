@@ -31,6 +31,19 @@ class HomeSectionsLivePreviewTest extends TestCase
         $this->assertStringContainsString("scrollIntoView", $script);
     }
 
+    public function test_preview_keeps_sax_and_optical_content_sources_separate(): void
+    {
+        $controller = file_get_contents(__DIR__.'/../../app/Http/Controllers/Admin/AdminHighlightController.php');
+        $view = file_get_contents(__DIR__.'/../../resources/views/admin/sections_home/index.blade.php');
+        $script = file_get_contents(__DIR__.'/../../public/js/home-sections-admin.js');
+
+        $this->assertStringContainsString('$saxCategories = Category::query()', $controller);
+        $this->assertStringContainsString("'saxCategories' => \$saxCategories", $view);
+        $this->assertStringContainsString("layout === 'vista' ? opticalItems : saxCategories", $script);
+        $this->assertStringContainsString("home-preview-exclusive", $script);
+        $this->assertStringContainsString("element.dataset.layoutOnly !== layout", $script);
+    }
+
     public function test_preview_has_desktop_mobile_and_layout_specific_presentations(): void
     {
         $css = file_get_contents(__DIR__.'/../../public/css/home-sections-admin.css');

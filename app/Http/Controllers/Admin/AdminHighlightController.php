@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Generalsetting;
 use App\Services\OpticalNavigationService;
 use App\Services\StorefrontLayoutService;
@@ -19,8 +20,19 @@ class AdminHighlightController extends Controller
 
         $layouts = StorefrontLayoutService::LAYOUTS;
         $opticalItems = app(OpticalNavigationService::class)->items();
+        $saxCategories = Category::query()
+            ->select(['id', 'name', 'slug', 'photo'])
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Category $category): array => [
+                'key' => 'category:'.$category->id,
+                'type' => 'category',
+                'label' => $category->name,
+                'image' => $this->mediaUrl($category->photo),
+            ]);
 
-        return view('admin.sections_home.index', compact('settings', 'sections', 'layouts', 'opticalItems'));
+        return view('admin.sections_home.index', compact('settings', 'sections', 'layouts', 'opticalItems', 'saxCategories'));
     }
 
     public function update(Request $request)
@@ -124,5 +136,18 @@ class AdminHighlightController extends Controller
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function mediaUrl(?string $path): ?string
+    {
+        if (! filled($path)) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $path)) {
+            return $path;
+        }
+
+        return asset('storage/'.preg_replace('#^storage/#i', '', ltrim($path, '/')));
     }
 }

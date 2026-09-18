@@ -173,6 +173,7 @@
 
         @php
             $homePreviewData = [
+                'saxCategories' => $saxCategories,
                 'opticalItems' => $opticalItems->map(fn (array $item): array => [
                     'key' => $item['type'].':'.$item['id'],
                     'type' => $item['type'],

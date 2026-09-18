@@ -6,8 +6,9 @@
     if (!form || !preview) return;
 
     const dataElement = document.getElementById('homePreviewData');
-    const data = dataElement ? JSON.parse(dataElement.textContent) : {opticalItems: []};
+    const data = dataElement ? JSON.parse(dataElement.textContent) : {opticalItems: [], saxCategories: []};
     const opticalItems = Array.isArray(data.opticalItems) ? data.opticalItems : [];
+    const saxCategories = Array.isArray(data.saxCategories) ? data.saxCategories : [];
     const itemsByKey = new Map(opticalItems.map(function (item) { return [item.key, item]; }));
     const list = form.querySelector('[data-home-sections-list]');
     const page = preview.querySelector('[data-preview-page]');
@@ -90,11 +91,12 @@
         ].filter(Boolean);
     }
 
-    function topCategoryItems() {
-        const selected = selectedItems('categories');
+    function topCategoryItems(layout) {
+        const source = layout === 'vista' ? opticalItems : saxCategories;
+        const selected = layout === 'vista' ? selectedItems('categories') : [];
         if (selected.length) return selected;
         const limit = value('sections[categories][category_limit]', 'all');
-        return limit === 'all' ? opticalItems : opticalItems.slice(0, Number(limit) || opticalItems.length);
+        return limit === 'all' ? source : source.slice(0, Number(limit) || source.length);
     }
 
     function countClass(count) {
@@ -118,7 +120,7 @@
         return heading(content) + '<span class="home-preview-products">' + '<i class="home-preview-product"></i>'.repeat(4) + '</span>';
     }
 
-    function sectionMarkup(key) {
+    function sectionMarkup(key, layout) {
         const content = sectionContent(key);
         const label = '<span class="home-preview-block__label">Clique para editar</span>';
         let body = '';
@@ -126,20 +128,27 @@
         if (key === 'main_slider') {
             body = '<span class="home-preview-hero"><i></i><strong>' + escapeHtml(content.title || 'Campanha principal') + '</strong></span>';
         } else if (key === 'categories') {
-            const items = topCategoryItems();
+            const items = topCategoryItems(layout);
             const visible = items.slice(0, 8);
             body = heading(content) + '<span class="home-preview-grid home-preview-grid--' + countClass(items.length) + '">'
                 + visible.map(function (item) { return image(item, true); }).join('')
                 + (items.length > visible.length ? '<span class="home-preview-grid__more">+' + (items.length - visible.length) + '</span>' : '')
                 + '</span>';
         } else if (key === 'exclusive_collection') {
-            const items = selectedItems(key);
-            const audiences = items.length ? items : automaticAudienceItems();
-            body = '<span class="home-preview-audiences home-preview-audiences--' + countClass(audiences.length) + '">'
-                + audiences.slice(0, 8).map(function (item) {
-                    const media = item.image ? '<img src="' + escapeHtml(item.image) + '" alt="">' : '';
-                    return '<span class="home-preview-audience">' + media + '<span>' + escapeHtml(item.label) + '</span></span>';
-                }).join('') + '</span>';
+            if (layout === 'vista') {
+                const items = selectedItems(key);
+                const audiences = items.length ? items : automaticAudienceItems();
+                body = '<span class="home-preview-audiences home-preview-audiences--' + countClass(audiences.length) + '">'
+                    + audiences.slice(0, 8).map(function (item) {
+                        const media = item.image ? '<img src="' + escapeHtml(item.image) + '" alt="">' : '';
+                        return '<span class="home-preview-audience">' + media + '<span>' + escapeHtml(item.label) + '</span></span>';
+                    }).join('') + '</span>';
+            } else {
+                const tags = saxCategories.slice(0, 3).map(function (item) { return '<i>' + escapeHtml(item.label) + '</i>'; }).join('');
+                body = '<span class="home-preview-exclusive"><span><small>Curadoria SAX</small><strong>'
+                    + escapeHtml(content.title) + '</strong><em>' + escapeHtml(content.description) + '</em><span class="home-preview-exclusive__tags">'
+                    + tags + '</span></span><b></b></span>';
+            }
         } else if (['recent_products', 'most_viewed', 'featured_products'].includes(key)) {
             body = productBlock(content);
         } else if (key === 'editorial_banners') {
@@ -161,7 +170,7 @@
         return '<button type="button" class="home-preview-block" data-preview-section="' + escapeHtml(key) + '">' + label + body + '</button>';
     }
 
-    function updateTip(activeKeys, categories) {
+    function updateTip(activeKeys, categories, layout) {
         let mode = '';
         let title = 'Composição equilibrada';
         let message = 'A ordem está clara. Clique nos blocos da prévia para chegar rapidamente à configuração.';
@@ -178,7 +187,7 @@
             mode = 'is-warning';
             title = 'Muitas categorias no topo';
             message = 'Entre 3 e 6 opções costuma facilitar a escolha e reduzir a rolagem.';
-        } else if (selectedItems('categories').length || selectedItems('exclusive_collection').length) {
+        } else if (layout === 'vista' && (selectedItems('categories').length || selectedItems('exclusive_collection').length)) {
             mode = 'is-success';
             title = 'Curadoria personalizada';
             message = 'As categorias escolhidas manualmente serão mantidas exatamente nesta composição.';
@@ -192,14 +201,17 @@
         const layout = form.querySelector('input[name="storefront_layout"]:checked')?.value || 'sax';
         const rows = Array.from(list.querySelectorAll('[data-home-section]'));
         const activeKeys = rows.map(function (row) { return row.dataset.sectionKey; }).filter(isEnabled);
-        const categories = topCategoryItems();
+        const categories = topCategoryItems(layout);
 
         page.classList.toggle('is-vista', layout === 'vista');
         preview.querySelector('[data-preview-brand]').textContent = layout === 'vista' ? 'VISTA & CO' : 'SAX';
-        sectionsCanvas.innerHTML = activeKeys.map(sectionMarkup).join('');
+        sectionsCanvas.innerHTML = activeKeys.map(function (key) { return sectionMarkup(key, layout); }).join('');
         activeCount.textContent = activeKeys.length;
         categoryCount.textContent = categories.length;
-        updateTip(activeKeys, categories);
+        updateTip(activeKeys, categories, layout);
+        form.querySelectorAll('[data-layout-only]').forEach(function (element) {
+            element.hidden = element.dataset.layoutOnly !== layout;
+        });
     }
 
     function scheduleRender() {

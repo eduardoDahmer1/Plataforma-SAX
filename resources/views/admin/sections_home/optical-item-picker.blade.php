@@ -10,7 +10,8 @@
     ];
 @endphp
 
-<section class="home-optical-picker" data-optical-picker>
+<section class="home-optical-picker" data-optical-picker data-layout-only="vista"
+         @if(old('storefront_layout', $settings->storefront_layout ?? 'sax') !== 'vista') hidden @endif>
     <div class="home-optical-picker__heading">
         <div>
             <span class="home-optical-picker__badge"><i class="fa-solid fa-glasses"></i> Somente layout Ótica</span>

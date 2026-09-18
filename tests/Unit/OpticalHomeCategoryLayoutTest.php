@@ -37,4 +37,19 @@ class OpticalHomeCategoryLayoutTest extends TestCase
             $this->assertStringContainsString(".vista-audiences--{$count}", $css);
         }
     }
+
+    public function test_navigation_prefers_the_taxonomy_image_and_keeps_product_as_fallback(): void
+    {
+        $service = file_get_contents(__DIR__.'/../../app/Services/OpticalNavigationService.php');
+
+        $this->assertStringContainsString(
+            'return $this->imageUrl($taxonomyPhoto) ?: $productPhoto;',
+            $service
+        );
+        $this->assertStringContainsString("storefront.optical_navigation.v5", $service);
+        $this->assertStringNotContainsString(
+            '$childCategoryProductImages->get($child->id) ?: $this->imageUrl($child->photo)',
+            $service
+        );
+    }
 }

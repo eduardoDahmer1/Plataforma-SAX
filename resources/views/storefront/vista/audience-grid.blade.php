@@ -36,8 +36,8 @@
 <section class="vista-audiences vista-audiences--{{ $layoutCount }}" aria-label="Categorias em destaque">
     @foreach($audiences as $item)
         @php
-            // A foto vem de um produto real daquela categoria. Ela evita que
-            // banners legados de outras áreas apareçam na vitrine óptica.
+            // Usa a capa cadastrada na categoria; uma foto de produto só entra
+            // como fallback quando a categoria não possui imagem própria.
             $image = $item['photo'] ?: $item['banner'];
         @endphp
         <a href="{{ $item['url'] }}" class="vista-audience-card" aria-label="{{ $item['label'] }}">

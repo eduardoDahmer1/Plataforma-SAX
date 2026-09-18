@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 
 class OpticalNavigationService
 {
-    public const CACHE_KEY = 'storefront.optical_navigation.v4';
+    public const CACHE_KEY = 'storefront.optical_navigation.v5';
 
     public function __construct(private readonly StoreTaxonomyService $taxonomy) {}
 
@@ -54,39 +54,53 @@ class OpticalNavigationService
                     ->map(function ($subcategory) use ($subcategoryProductImages, $childCategoryProductImages): array {
                         $children = $subcategory->categoriasfilhas
                             ->filter(fn ($child): bool => filled($child->name) && filled($child->slug))
-                            ->map(fn ($child): array => [
-                                'type' => 'childcategory',
-                                'id' => $child->id,
-                                'label' => $child->name,
-                                'url' => route('categorias-filhas.show', $child->slug),
-                                'photo' => $childCategoryProductImages->get($child->id) ?: $this->imageUrl($child->photo),
-                                'banner' => $childCategoryProductImages->get($child->id)
-                                    ?: $this->imageUrl($child->photo),
-                                'children' => collect(),
-                            ])
+                            ->map(function ($child) use ($childCategoryProductImages): array {
+                                $image = $this->preferredImage(
+                                    $child->photo,
+                                    $childCategoryProductImages->get($child->id)
+                                );
+
+                                return [
+                                    'type' => 'childcategory',
+                                    'id' => $child->id,
+                                    'label' => $child->name,
+                                    'url' => route('categorias-filhas.show', $child->slug),
+                                    'photo' => $image,
+                                    'banner' => $image,
+                                    'children' => collect(),
+                                ];
+                            })
                             ->values();
+
+                        $image = $this->preferredImage(
+                            $subcategory->photo,
+                            $subcategoryProductImages->get($subcategory->id)
+                        );
 
                         return [
                             'type' => 'subcategory',
                             'id' => $subcategory->id,
                             'label' => $subcategory->name,
                             'url' => route('subcategories.show', $subcategory->slug),
-                            'photo' => $subcategoryProductImages->get($subcategory->id) ?: $this->imageUrl($subcategory->photo),
-                            'banner' => $subcategoryProductImages->get($subcategory->id)
-                                ?: $this->imageUrl($subcategory->photo),
+                            'photo' => $image,
+                            'banner' => $image,
                             'children' => $children,
                         ];
                     })
                     ->values();
+
+                $image = $this->preferredImage(
+                    $category->photo,
+                    $categoryProductImages->get($category->id)
+                );
 
                 return [
                     'type' => 'category',
                     'id' => $category->id,
                     'label' => $category->name,
                     'url' => route('categories.show', $category->slug ?: $category->id),
-                    'photo' => $categoryProductImages->get($category->id) ?: $this->imageUrl($category->photo),
-                    'banner' => $categoryProductImages->get($category->id)
-                        ?: $this->imageUrl($category->photo),
+                    'photo' => $image,
+                    'banner' => $image,
                     'children' => $subcategories,
                 ];
             })->values();
@@ -112,6 +126,11 @@ class OpticalNavigationService
     public function clear(): void
     {
         Cache::forget(self::CACHE_KEY);
+    }
+
+    private function preferredImage(?string $taxonomyPhoto, ?string $productPhoto): ?string
+    {
+        return $this->imageUrl($taxonomyPhoto) ?: $productPhoto;
     }
 
     private function imageUrl(?string $photo): ?string

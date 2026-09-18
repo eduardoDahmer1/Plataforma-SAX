@@ -91,13 +91,25 @@
 
                             @if($key === 'categories')
                                 <div class="home-section-option-row">
-                                    <div><strong>Quantidade de categorias</strong><span>Escolha quantos cards serão exibidos nesta seção.</span></div>
+                                    <div><strong>Quantidade automática</strong><span>Usada somente quando nenhuma categoria específica for selecionada abaixo.</span></div>
                                     <select class="form-select" name="sections[{{ $key }}][category_limit]" aria-label="Quantidade de categorias">
                                         @foreach(['1' => '1 categoria', '2' => '2 categorias', '3' => '3 categorias', '4' => '4 categorias', 'all' => 'Todas as categorias'] as $value => $label)
                                             <option value="{{ $value }}" @selected((string) old("sections.{$key}.category_limit", $section['category_limit'] ?? 'all') === (string) $value)>{{ $label }}</option>
                                         @endforeach
                                     </select>
                                 </div>
+
+                                @include('admin.sections_home.optical-item-picker', [
+                                    'title' => 'Categorias do bloco superior',
+                                    'description' => 'Marque exatamente quais cards devem aparecer no primeiro bloco de categorias da Home.',
+                                ])
+                            @endif
+
+                            @if($key === 'exclusive_collection')
+                                @include('admin.sections_home.optical-item-picker', [
+                                    'title' => 'Categorias dos cards grandes',
+                                    'description' => 'Escolha os cards com imagem que antes apareciam automaticamente como mulher, homem e crianças.',
+                                ])
                             @endif
 
                             <div class="home-section-languages">
@@ -209,6 +221,30 @@
     .home-section-option-row strong { color:#344054; font-size:.72rem; }
     .home-section-option-row span { margin-top:.2rem; color:#667085; font-size:.67rem; }
     .home-section-option-row .form-select { width:210px; font-size:.74rem; }
+    .home-optical-picker { margin:0 .8rem .8rem; padding:.9rem; border:1px solid #dfe5ed; border-radius:10px; background:#fff; }
+    .home-optical-picker__heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+    .home-optical-picker__heading strong,.home-optical-picker__heading small { display:block; }
+    .home-optical-picker__heading strong { margin-top:.35rem; color:#172033; font-size:.78rem; }
+    .home-optical-picker__heading small { margin-top:.2rem; color:#667085; font-size:.68rem; line-height:1.45; }
+    .home-optical-picker__badge { display:inline-flex; align-items:center; gap:.35rem; padding:.25rem .5rem; border-radius:999px; background:#edf2f7; color:#344054; font-size:.58rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+    .home-optical-picker__counter { flex:0 0 auto; padding:.3rem .55rem; border-radius:999px; background:#172033; color:#fff; font-size:.62rem; font-weight:800; }
+    .home-optical-picker__search { position:relative; display:block; margin-top:.8rem; }
+    .home-optical-picker__search i { position:absolute; top:50%; left:.8rem; z-index:1; color:#98a2b3; transform:translateY(-50%); }
+    .home-optical-picker__search input { padding-left:2.25rem; font-size:.72rem; }
+    .home-optical-picker__items { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; max-height:290px; margin-top:.7rem; padding:.15rem; overflow:auto; }
+    .home-optical-option { display:grid; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:.55rem; min-width:0; padding:.65rem; border:1px solid #e3e8ef; border-radius:8px; cursor:pointer; transition:.15s; }
+    .home-optical-option:hover { border-color:#98a2b3; }
+    .home-optical-option:has(input:checked) { border-color:#172033; background:#f8fafc; box-shadow:0 0 0 1px #172033; }
+    .home-optical-option[hidden] { display:none; }
+    .home-optical-option input { position:absolute; opacity:0; pointer-events:none; }
+    .home-optical-option__check { display:grid; width:22px; height:22px; place-items:center; border:1px solid #cfd6df; border-radius:6px; color:transparent; font-size:.65rem; }
+    .home-optical-option:has(input:checked) .home-optical-option__check { border-color:#172033; background:#172033; color:#fff; }
+    .home-optical-option__copy { min-width:0; }
+    .home-optical-option__copy strong,.home-optical-option__copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .home-optical-option__copy strong { color:#344054; font-size:.7rem; }
+    .home-optical-option__copy small { margin-top:.1rem; color:#98a2b3; font-size:.58rem; text-transform:uppercase; }
+    .home-optical-picker__footer { display:flex; margin-top:.7rem; align-items:center; justify-content:space-between; gap:1rem; color:#667085; font-size:.63rem; }
+    .home-optical-picker__footer button { padding:0; border:0; background:transparent; color:#344054; font-size:.63rem; font-weight:800; text-decoration:underline; }
     .home-section-content--notice { display:flex; padding:.75rem .9rem; align-items:center; justify-content:space-between; gap:1rem; color:#526078; font-size:.7rem; }
     .home-section-content--notice a { flex:0 0 auto; color:#172033; font-weight:800; text-decoration:none; text-transform:uppercase; }
     .home-section-languages { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.8rem; padding:0 .8rem .8rem; }
@@ -241,7 +277,7 @@
     .home-sections-guide__item span { margin-top:.15rem; color:#667085; font-size:.69rem; line-height:1.45; }
     .home-sections-guide__note { margin-top:.5rem; padding:.85rem; border-left:3px solid #172033; background:#fff; color:#667085; font-size:.69rem; line-height:1.5; }
     @media(max-width:1100px){.home-sections-layout{grid-template-columns:1fr}.home-sections-guide{position:static}.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr) auto}.home-section-languages{grid-template-columns:1fr}}
-    @media(max-width:700px){.storefront-layout-options{grid-template-columns:1fr}.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr);padding:.8rem;gap:.6rem}.home-section-actions{grid-column:1/-1;justify-content:flex-end;padding-top:.7rem;border-top:1px solid #edf0f4}.home-section-switch{margin-left:auto}.home-section-option-row{align-items:stretch;flex-direction:column}.home-section-option-row .form-select{width:100%}.home-benefit-item>div{grid-template-columns:1fr}.home-sections-footer{align-items:stretch;flex-direction:column}.home-sections-footer .btn{width:100%}}
+    @media(max-width:700px){.storefront-layout-options{grid-template-columns:1fr}.home-section-item{grid-template-columns:20px 30px 40px minmax(0,1fr);padding:.8rem;gap:.6rem}.home-section-actions{grid-column:1/-1;justify-content:flex-end;padding-top:.7rem;border-top:1px solid #edf0f4}.home-section-switch{margin-left:auto}.home-section-option-row{align-items:stretch;flex-direction:column}.home-section-option-row .form-select{width:100%}.home-optical-picker__heading,.home-optical-picker__footer{align-items:stretch;flex-direction:column}.home-optical-picker__counter{align-self:flex-start}.home-optical-picker__items{grid-template-columns:1fr;max-height:360px}.home-benefit-item>div{grid-template-columns:1fr}.home-sections-footer{align-items:stretch;flex-direction:column}.home-sections-footer .btn{width:100%}}
 </style>
 
 <script>
@@ -286,6 +322,27 @@ document.addEventListener('DOMContentLoaded', function () {
             sync();
         }));
         row.querySelector('[data-section-toggle]').addEventListener('change', sync);
+    });
+
+    document.querySelectorAll('[data-optical-picker]').forEach(picker => {
+        const checkboxes = Array.from(picker.querySelectorAll('input[type="checkbox"]'));
+        const counter = picker.querySelector('[data-optical-count]');
+        const search = picker.querySelector('[data-optical-search]');
+        const options = Array.from(picker.querySelectorAll('[data-optical-option]'));
+        const updateCount = () => {
+            const count = checkboxes.filter(checkbox => checkbox.checked).length;
+            counter.textContent = `${count} ${count === 1 ? 'selecionada' : 'selecionadas'}`;
+        };
+        checkboxes.forEach(checkbox => checkbox.addEventListener('change', updateCount));
+        search.addEventListener('input', () => {
+            const term = search.value.trim().toLocaleLowerCase();
+            options.forEach(option => option.hidden = term !== '' && !option.dataset.searchText.includes(term));
+        });
+        picker.querySelector('[data-optical-clear]').addEventListener('click', () => {
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+            updateCount();
+        });
+        updateCount();
     });
 
     list.addEventListener('dragover', event => {

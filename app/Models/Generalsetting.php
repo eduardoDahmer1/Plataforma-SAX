@@ -180,6 +180,11 @@ class Generalsetting extends Model
 
             if ($key === 'categories') {
                 $sections[$key]['category_limit'] = 'all';
+                $sections[$key]['optical_item_keys'] = [];
+            }
+
+            if ($key === 'exclusive_collection') {
+                $sections[$key]['optical_item_keys'] = [];
             }
 
             if ($key === 'help') {
@@ -210,6 +215,11 @@ class Generalsetting extends Model
             if ($key === 'categories') {
                 $limit = (string) ($saved['category_limit'] ?? $default['category_limit']);
                 $sections[$key]['category_limit'] = in_array($limit, self::CATEGORY_LIMIT_OPTIONS, true) ? $limit : 'all';
+                $sections[$key]['optical_item_keys'] = $this->resolveOpticalItemKeys($saved['optical_item_keys'] ?? []);
+            }
+
+            if ($key === 'exclusive_collection') {
+                $sections[$key]['optical_item_keys'] = $this->resolveOpticalItemKeys($saved['optical_item_keys'] ?? []);
             }
 
             if ($key === 'help') {
@@ -271,6 +281,19 @@ class Generalsetting extends Model
                 $language => (string) ($stored[$language] ?? $defaults[$language]),
             ])->all();
         })->all();
+    }
+
+    private function resolveOpticalItemKeys(mixed $saved): array
+    {
+        if (! is_array($saved)) {
+            return [];
+        }
+
+        return collect($saved)
+            ->filter(fn ($key): bool => is_string($key) && preg_match('/^(category|subcategory|childcategory):[1-9][0-9]*$/', $key) === 1)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function legacyHomeSectionVisibility(string $key, bool $default): bool

@@ -84,6 +84,32 @@ class GeneralsettingHomeSectionsTest extends TestCase
         $this->assertSame('all', $settings->resolvedHomeSections()['categories']['category_limit']);
     }
 
+    public function test_it_resolves_safe_optical_selections_for_both_home_blocks(): void
+    {
+        $settings = new Generalsetting();
+        $settings->home_sections = [
+            'categories' => [
+                'optical_item_keys' => ['category:12', 'subcategory:34', 'category:12', 'invalid'],
+            ],
+            'exclusive_collection' => [
+                'optical_item_keys' => ['childcategory:56', 99, 'childcategory:0'],
+            ],
+        ];
+
+        $sections = $settings->resolvedHomeSections();
+
+        $this->assertSame(['category:12', 'subcategory:34'], $sections['categories']['optical_item_keys']);
+        $this->assertSame(['childcategory:56'], $sections['exclusive_collection']['optical_item_keys']);
+    }
+
+    public function test_optical_selections_are_empty_by_default(): void
+    {
+        $sections = Generalsetting::defaultHomeSections();
+
+        $this->assertSame([], $sections['categories']['optical_item_keys']);
+        $this->assertSame([], $sections['exclusive_collection']['optical_item_keys']);
+    }
+
     public function test_it_resolves_custom_help_labels_in_each_language(): void
     {
         $settings = new Generalsetting();

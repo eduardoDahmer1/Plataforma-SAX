@@ -1,10 +1,18 @@
 @php
     $limit = (string) ($section['category_limit'] ?? 'all');
     $opticalItems = app(\App\Services\OpticalNavigationService::class)->items();
-    if ($limit !== 'all') {
+    $selectedKeys = collect($section['optical_item_keys'] ?? [])->filter()->values();
+    if ($selectedKeys->isNotEmpty()) {
+        $itemsByKey = $opticalItems->keyBy(fn (array $item) => $item['type'].':'.$item['id']);
+        $opticalItems = $selectedKeys
+            ->map(fn (string $key) => $itemsByKey->get($key))
+            ->filter()
+            ->values();
+    } elseif ($limit !== 'all') {
         $opticalItems = $opticalItems->take((int) $limit);
     }
     $count = $opticalItems->count();
+    $layoutCount = $count >= 5 ? 'many' : (string) max(1, $count);
 @endphp
 
 @if($opticalItems->isNotEmpty())
@@ -16,7 +24,7 @@
                 @if(filled($sectionContent['description']))<p>{{ $sectionContent['description'] }}</p>@endif
             </header>
         @endif
-        <div class="category-wrapper vista-optical-categories__grid vista-optical-categories__grid--{{ min($count, 4) }}">
+        <div class="category-wrapper vista-optical-categories__grid vista-optical-categories__grid--{{ $layoutCount }}">
             @foreach($opticalItems as $item)
                 <a href="{{ $item['url'] }}" class="category-item">
                     <span class="category-name">{{ $item['label'] }}</span>

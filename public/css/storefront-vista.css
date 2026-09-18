@@ -96,6 +96,38 @@ body.storefront-layout-vista{background:#fff;color:var(--vista-ink);font-family:
     .vista-footer__grid--desktop{display:none}.vista-footer__mobile{display:block;padding:18px 16px 8px}.vista-footer__mobile details{border-bottom:1px solid #e5e5e5}.vista-footer__mobile summary{display:flex;min-height:52px;align-items:center;justify-content:space-between;list-style:none;font-size:.78rem;font-weight:700}.vista-footer__mobile summary::-webkit-details-marker{display:none}.vista-footer__mobile summary i{font-size:.62rem;transition:transform .2s}.vista-footer__mobile details[open] summary i{transform:rotate(180deg)}.vista-footer__mobile details nav,.vista-footer__mobile details>a{margin-left:7px}.vista-footer__mobile a{margin:0 0 11px;font-size:.72rem}.vista-footer__mobile-socials{display:flex;padding:20px 0 12px;align-items:center;justify-content:space-between}.vista-footer__mobile-socials>strong{font-size:.76rem}.vista-footer__socials a{display:grid;width:34px;height:34px;margin:0;place-items:center;border-radius:10px;background:#f3f3f3;font-size:.9rem}.vista-footer__bottom{padding:14px 16px}
 }
 
+/* Grades da Home Ótica: a composição acompanha exatamente a quantidade escolhida. */
+.vista-home .vista-optical-categories__grid{display:grid!important;width:100%;margin-right:auto;margin-left:auto;gap:clamp(12px,2.2vw,34px)}
+.vista-home .vista-optical-categories__grid--1{max-width:520px;grid-template-columns:minmax(0,1fr)}
+.vista-home .vista-optical-categories__grid--2{max-width:980px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.vista-home .vista-optical-categories__grid--3{max-width:1380px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.vista-home .vista-optical-categories__grid--4,.vista-home .vista-optical-categories__grid--many{max-width:1680px;grid-template-columns:repeat(4,minmax(0,1fr))}
+
+.vista-audiences{display:grid;width:100%;margin-right:auto;margin-bottom:46px;margin-left:auto;gap:0;background:#f7f7f7}
+.vista-audiences--1{max-width:1100px;grid-template-columns:minmax(0,1fr);padding:clamp(12px,2vw,28px)}
+.vista-audiences--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.vista-audiences--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.vista-audiences--4,.vista-audiences--many{grid-template-columns:repeat(4,minmax(0,1fr))}
+.vista-audiences--1 .vista-audience-card{aspect-ratio:16/8}
+.vista-audiences--2 .vista-audience-card{aspect-ratio:4/3}
+.vista-audiences--3 .vista-audience-card{aspect-ratio:4/5}
+.vista-audiences--4 .vista-audience-card,.vista-audiences--many .vista-audience-card{aspect-ratio:3/4}
+.vista-audience-card{width:100%;height:auto;min-width:0;max-height:none}
+
+@media(max-width:991.98px){
+    .vista-home .vista-optical-categories__grid--3,.vista-home .vista-optical-categories__grid--4,.vista-home .vista-optical-categories__grid--many{max-width:900px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .vista-audiences--3,.vista-audiences--4,.vista-audiences--many{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .vista-audiences--1 .vista-audience-card{aspect-ratio:16/9}
+    .vista-audiences--3 .vista-audience-card,.vista-audiences--4 .vista-audience-card,.vista-audiences--many .vista-audience-card{aspect-ratio:4/5}
+}
+
+@media(max-width:575.98px){
+    .vista-home .vista-optical-categories__grid,.vista-home .vista-optical-categories__grid--1,.vista-home .vista-optical-categories__grid--2,.vista-home .vista-optical-categories__grid--3,.vista-home .vista-optical-categories__grid--4,.vista-home .vista-optical-categories__grid--many{display:grid!important;max-width:520px;grid-template-columns:minmax(0,1fr);overflow:visible}
+    .vista-home .vista-optical-categories__grid .category-item{width:100%!important;max-width:none;aspect-ratio:1/1}
+    .vista-audiences,.vista-audiences--1,.vista-audiences--2,.vista-audiences--3,.vista-audiences--4,.vista-audiences--many{display:grid;max-width:none;margin-bottom:28px;padding:12px;grid-template-columns:minmax(0,1fr);gap:12px;overflow:visible}
+    .vista-audiences .vista-audience-card{width:100%;max-width:none;aspect-ratio:4/5;border-radius:16px}
+}
+
 @media(max-width:390px){
     .vista-header__main{padding-right:9px;padding-left:9px}.vista-header__actions .cart-toggle-btn,.vista-header__actions .sax-admin-notifications__trigger{width:37px;height:37px}.vista-logo img{max-width:126px}.vista-logo span{font-size:1.55rem}.vista-mobile-dock{right:6px;left:6px}.vista-mobile-dock span{font-size:.49rem}.vista-home .category-item{flex-basis:68vw}.vista-product-swiper .product-card-standard__media{height:175px}
 }

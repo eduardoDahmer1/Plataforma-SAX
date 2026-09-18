@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Generalsetting;
+use App\Services\OpticalNavigationService;
 use App\Services\StorefrontLayoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -17,8 +18,9 @@ class AdminHighlightController extends Controller
         $sections = $settings->resolvedHomeSections();
 
         $layouts = StorefrontLayoutService::LAYOUTS;
+        $opticalItems = app(OpticalNavigationService::class)->items();
 
-        return view('admin.sections_home.index', compact('settings', 'sections', 'layouts'));
+        return view('admin.sections_home.index', compact('settings', 'sections', 'layouts', 'opticalItems'));
     }
 
     public function update(Request $request)
@@ -40,6 +42,8 @@ class AdminHighlightController extends Controller
             'sections.*.content.es.title' => ['nullable', 'string', 'max:160'],
             'sections.*.content.es.description' => ['nullable', 'string', 'max:600'],
             'sections.*.category_limit' => ['nullable', Rule::in(Generalsetting::CATEGORY_LIMIT_OPTIONS)],
+            'sections.*.optical_item_keys' => ['nullable', 'array'],
+            'sections.*.optical_item_keys.*' => ['string', 'max:60', 'distinct'],
             'sections.*.items' => ['nullable', 'array', 'size:3'],
             'sections.*.items.*' => ['array:pt,en,es'],
             'sections.*.items.*.pt' => ['nullable', 'string', 'max:100'],
@@ -50,6 +54,9 @@ class AdminHighlightController extends Controller
         $submitted = collect($validated['sections'])
             ->keyBy('key')
             ->sortBy('position');
+        $allowedOpticalItemKeys = app(OpticalNavigationService::class)->items()
+            ->map(fn (array $item): string => $item['type'].':'.$item['id'])
+            ->flip();
 
         $homeSections = [];
         foreach ($sectionKeys as $key) {
@@ -70,6 +77,17 @@ class AdminHighlightController extends Controller
 
             if ($section['key'] === 'categories') {
                 $configuredSection['category_limit'] = (string) ($section['category_limit'] ?? 'all');
+                $configuredSection['optical_item_keys'] = $this->validOpticalItemKeys(
+                    $section['optical_item_keys'] ?? [],
+                    $allowedOpticalItemKeys
+                );
+            }
+
+            if ($section['key'] === 'exclusive_collection') {
+                $configuredSection['optical_item_keys'] = $this->validOpticalItemKeys(
+                    $section['optical_item_keys'] ?? [],
+                    $allowedOpticalItemKeys
+                );
             }
 
             if ($section['key'] === 'help') {
@@ -97,5 +115,14 @@ class AdminHighlightController extends Controller
         app(StorefrontLayoutService::class)->clear();
 
         return redirect()->back()->with('success', 'Layout, ordem e visibilidade da Home atualizados!');
+    }
+
+    private function validOpticalItemKeys(array $keys, $allowedKeys): array
+    {
+        return collect($keys)
+            ->filter(fn ($key): bool => is_string($key) && $allowedKeys->has($key))
+            ->unique()
+            ->values()
+            ->all();
     }
 }

@@ -38,7 +38,7 @@
                 @include('storefront.vista.categories', ['sectionContent' => $sectionContent, 'section' => $section])
                 @break
             @case('exclusive_collection')
-                @include('storefront.vista.audience-grid')
+                @include('storefront.vista.audience-grid', ['section' => $section])
                 @break
             @case('recent_products')
                 @include('storefront.vista.product-carousel', ['products' => $productsEditados, 'sectionContent' => $sectionContent])

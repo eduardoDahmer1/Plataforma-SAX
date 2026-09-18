@@ -47,6 +47,7 @@ class CategoriasFilhasControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'subcategory_id' => 'required|exists:subcategories,id',
             'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only(['name', 'subcategory_id']);
@@ -58,7 +59,10 @@ class CategoriasFilhasControllerAdmin extends Controller
         }
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $data['photo'] = $this->convertToWebp($request->file('photo'));
+            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+        }
+        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
+            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
         CategoriasFilhas::create($data);
@@ -89,6 +93,7 @@ class CategoriasFilhasControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'subcategory_id' => 'required|exists:subcategories,id',
             'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only(['name', 'subcategory_id']);
@@ -101,7 +106,11 @@ class CategoriasFilhasControllerAdmin extends Controller
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $this->deleteFileIfExists($categorias_filha->photo);
-            $data['photo'] = $this->convertToWebp($request->file('photo'));
+            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+        }
+        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
+            $this->deleteFileIfExists($categorias_filha->banner);
+            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
         $categorias_filha->update($data);
@@ -116,6 +125,7 @@ class CategoriasFilhasControllerAdmin extends Controller
     public function destroy(CategoriasFilhas $categorias_filha)
     {
         $this->deleteFileIfExists($categorias_filha->photo);
+        $this->deleteFileIfExists($categorias_filha->banner);
         $categorias_filha->delete();
 
         return back()->with('success', 'Removido com sucesso');
@@ -126,7 +136,7 @@ class CategoriasFilhasControllerAdmin extends Controller
         $request->validate(['photo' => 'required|image|max:10240']);
         $this->deleteFileIfExists($categorias_filha->photo);
 
-        $path = $this->convertToWebp($request->file('photo'));
+        $path = $this->convertToWebp($request->file('photo'), 'photo');
         $categorias_filha->photo = $path;
         $categorias_filha->save();
 
@@ -142,6 +152,29 @@ class CategoriasFilhasControllerAdmin extends Controller
         }
 
         return back()->with('success', 'Foto excluída com sucesso.');
+    }
+
+    public function uploadBanner(Request $request, CategoriasFilhas $categorias_filha)
+    {
+        $request->validate(['banner' => 'required|image|max:10240']);
+        $this->deleteFileIfExists($categorias_filha->banner);
+
+        $path = $this->convertToWebp($request->file('banner'), 'banner');
+        $categorias_filha->banner = $path;
+        $categorias_filha->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
+    }
+
+    public function deleteBanner(CategoriasFilhas $categorias_filha)
+    {
+        if ($categorias_filha->banner) {
+            $this->deleteFileIfExists($categorias_filha->banner);
+            $categorias_filha->banner = null;
+            $categorias_filha->save();
+        }
+
+        return back()->with('success', 'Capa excluída com sucesso.');
     }
 
     // ... (restante dos métodos auxiliares permanecem iguais)
@@ -162,9 +195,9 @@ class CategoriasFilhasControllerAdmin extends Controller
         return $slug;
     }
 
-    private function convertToWebp($file)
+    private function convertToWebp($file, string $field)
     {
-        $directory = 'categorias-filhas/photo';
+        $directory = 'categorias-filhas/'.$field;
 
         return app(ImageConverterService::class)->toWebp($file, $directory, [
             'quality' => 85,

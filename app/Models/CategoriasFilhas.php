@@ -16,6 +16,7 @@ class CategoriasFilhas extends Model
         'subcategory_id',
         'category_id',
         'photo',
+        'banner',
     ];
 
     public function subcategory()

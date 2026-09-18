@@ -38,7 +38,7 @@
         @php
             // Usa a capa cadastrada na categoria; uma foto de produto só entra
             // como fallback quando a categoria não possui imagem própria.
-            $image = $item['photo'] ?: $item['banner'];
+            $image = $item['banner'] ?: $item['photo'];
         @endphp
         <a href="{{ $item['url'] }}" class="vista-audience-card" aria-label="{{ $item['label'] }}">
             @if($image)

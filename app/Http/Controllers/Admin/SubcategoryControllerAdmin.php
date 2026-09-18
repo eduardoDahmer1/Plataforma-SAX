@@ -45,6 +45,7 @@ class SubcategoryControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only(['name', 'category_id']);
@@ -52,7 +53,10 @@ class SubcategoryControllerAdmin extends Controller
         $data['slug'] = $this->resolveUniqueSlug($request->name);
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $data['photo'] = $this->convertToWebp($request->file('photo'));
+            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+        }
+        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
+            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
         Subcategory::create($data);
@@ -75,6 +79,7 @@ class SubcategoryControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only(['name', 'category_id']);
@@ -83,7 +88,11 @@ class SubcategoryControllerAdmin extends Controller
             if ($subcategory->photo) {
                 $this->deleteFileIfExists($subcategory->photo);
             }
-            $data['photo'] = $this->convertToWebp($request->file('photo'));
+            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+        }
+        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
+            $this->deleteFileIfExists($subcategory->banner);
+            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
         $subcategory->update($data);
@@ -112,7 +121,7 @@ class SubcategoryControllerAdmin extends Controller
         $request->validate(['photo' => 'required|image|max:10240']);
         $this->deleteFileIfExists($subcategory->photo);
 
-        $path = $this->convertToWebp($request->file('photo'));
+        $path = $this->convertToWebp($request->file('photo'), 'photo');
         $subcategory->photo = $path;
         $subcategory->save();
 
@@ -123,6 +132,9 @@ class SubcategoryControllerAdmin extends Controller
     {
         if ($subcategory->photo) {
             $this->deleteFileIfExists($subcategory->photo);
+        }
+        if ($subcategory->banner) {
+            $this->deleteFileIfExists($subcategory->banner);
         }
         $subcategory->delete();
 
@@ -151,9 +163,32 @@ class SubcategoryControllerAdmin extends Controller
         }
     }
 
-    private function convertToWebp($image)
+    public function uploadBanner(Request $request, Subcategory $subcategory)
     {
-        $directory = 'subcategories/photo';
+        $request->validate(['banner' => 'required|image|max:10240']);
+        $this->deleteFileIfExists($subcategory->banner);
+
+        $path = $this->convertToWebp($request->file('banner'), 'banner');
+        $subcategory->banner = $path;
+        $subcategory->save();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
+    }
+
+    public function deleteBanner(Subcategory $subcategory)
+    {
+        if ($subcategory->banner) {
+            $this->deleteFileIfExists($subcategory->banner);
+            $subcategory->banner = null;
+            $subcategory->save();
+        }
+
+        return back()->with('success', 'Capa excluída com sucesso.');
+    }
+
+    private function convertToWebp($image, string $field)
+    {
+        $directory = 'subcategories/'.$field;
 
         return app(ImageConverterService::class)->toWebp($image, $directory, [
             'quality' => 85,

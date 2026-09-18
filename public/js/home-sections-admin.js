@@ -117,10 +117,16 @@
         return count >= 5 ? 'many' : String(Math.max(1, count));
     }
 
+    function itemImage(item, type) {
+        if (type === 'banner') return item.banner || item.photo || item.image || '';
+        return item.photo || item.image || item.banner || '';
+    }
+
     function image(item, contain) {
         const className = contain ? ' home-preview-tile--contain' : '';
-        const media = item.image
-            ? '<img src="' + escapeHtml(item.image) + '" alt="">'
+        const source = itemImage(item, 'photo');
+        const media = source
+            ? '<img src="' + escapeHtml(source) + '" alt="">'
             : '<i class="fa-solid fa-glasses" aria-hidden="true"></i>';
         return '<span class="home-preview-tile' + className + '">' + media + '<span>' + escapeHtml(item.label) + '</span></span>';
     }
@@ -154,7 +160,8 @@
                 const audiences = items.length ? items : automaticAudienceItems();
                 body = '<span class="home-preview-audiences home-preview-audiences--' + countClass(audiences.length) + '">'
                     + audiences.slice(0, 8).map(function (item) {
-                        const media = item.image ? '<img src="' + escapeHtml(item.image) + '" alt="">' : '';
+                        const source = itemImage(item, 'banner');
+                        const media = source ? '<img src="' + escapeHtml(source) + '" alt="">' : '';
                         return '<span class="home-preview-audience">' + media + '<span>' + escapeHtml(item.label) + '</span></span>';
                     }).join('') + '</span>';
             } else {

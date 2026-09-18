@@ -35,19 +35,24 @@
 
     @if ($editando)
         <div class="sax-catf__grid">
-            <x-admin.media-field field="photo" :label="__('messages.foto')"
+            <x-admin.media-field field="photo" label="Logo / imagem do atalho"
                 :current="$filha->photo" :uploadUrl="route('admin.categorias-filhas.uploadPhoto', $filha->id)"
-                :showDelete="true" ratio="square" dimensions="800 × 800 px" usage="Imagem de identificação nos atalhos do catálogo." />
-
+                :showDelete="true" ratio="square" dimensions="800 × 800 px" usage="Usada nos cartões menores da parte superior." />
+            <x-admin.media-field field="banner" label="Capa"
+                :current="$filha->banner" :uploadUrl="route('admin.categorias-filhas.uploadBanner', $filha->id)"
+                :showDelete="true" ratio="banner" dimensions="1200 × 1000 px" usage="Usada nos cards grandes da Home da Ótica." />
         </div>
     @else
         <div class="sax-catf__grid">
-            <x-admin.media-field field="photo" :label="__('messages.foto')" ratio="square"
-                dimensions="800 × 800 px" usage="Imagem de identificação nos atalhos do catálogo." />
+            <x-admin.media-field field="photo" label="Logo / imagem do atalho" ratio="square"
+                dimensions="800 × 800 px" usage="Usada nos cartões menores da parte superior." />
+            <x-admin.media-field field="banner" label="Capa" ratio="banner"
+                dimensions="1200 × 1000 px" usage="Usada nos cards grandes da Home da Ótica." />
         </div>
     @endif
 </x-admin.catalog-form>
 
 @if ($editando)
     <form id="delete-photo-form" action="{{ route('admin.categorias-filhas.deletePhoto', $filha->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
+    <form id="delete-banner-form" action="{{ route('admin.categorias-filhas.deleteBanner', $filha->id) }}" method="POST" class="d-none">@csrf @method('DELETE')</form>
 @endif

@@ -42,12 +42,16 @@ class CategoryControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:categories,slug',
             'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only('name', 'slug');
 
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
-            $data['photo'] = $this->convertToWebp($request->file('photo'));
+            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+        }
+        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
+            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
         Category::create($data);
@@ -76,6 +80,7 @@ class CategoryControllerAdmin extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:categories,slug,'.$category->id,
             'photo' => 'nullable|image|max:10240',
+            'banner' => 'nullable|image|max:10240',
         ]);
 
         $data = $request->only('name', 'slug');
@@ -84,7 +89,11 @@ class CategoryControllerAdmin extends Controller
             if ($category->photo && Storage::disk('public')->exists($category->photo)) {
                 Storage::disk('public')->delete($category->photo);
             }
-            $data['photo'] = $this->convertToWebp($request->file('photo'));
+            $data['photo'] = $this->convertToWebp($request->file('photo'), 'photo');
+        }
+        if ($request->hasFile('banner') && $request->file('banner')->isValid()) {
+            $this->deleteFileIfExists($category->banner);
+            $data['banner'] = $this->convertToWebp($request->file('banner'), 'banner');
         }
 
         $category->update($data);
@@ -95,9 +104,8 @@ class CategoryControllerAdmin extends Controller
 
     public function destroy(Category $category)
     {
-        if ($category->photo && Storage::disk('public')->exists($category->photo)) {
-            Storage::disk('public')->delete($category->photo);
-        }
+        $this->deleteFileIfExists($category->photo);
+        $this->deleteFileIfExists($category->banner);
         $category->delete();
         $this->clearNavigationCaches();
 
@@ -113,7 +121,7 @@ class CategoryControllerAdmin extends Controller
             Storage::disk('public')->delete($category->photo);
         }
 
-        $path = $this->convertToWebp($request->file('photo'));
+        $path = $this->convertToWebp($request->file('photo'), 'photo');
         $category->photo = $path;
         $category->save();
         $this->clearNavigationCaches();
@@ -121,9 +129,22 @@ class CategoryControllerAdmin extends Controller
         return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
     }
 
-    private function convertToWebp($image)
+    public function uploadBanner(Request $request, Category $category)
     {
-        $directory = 'categories/photo';
+        $request->validate(['banner' => 'required|image|max:10240']);
+        $this->deleteFileIfExists($category->banner);
+
+        $path = $this->convertToWebp($request->file('banner'), 'banner');
+        $category->banner = $path;
+        $category->save();
+        $this->clearNavigationCaches();
+
+        return response()->json(['success' => true, 'url' => Storage::url($path).'?v='.time()]);
+    }
+
+    private function convertToWebp($image, string $field)
+    {
+        $directory = 'categories/'.$field;
 
         return app(ImageConverterService::class)->toWebp($image, $directory, [
             'quality' => 85,
@@ -143,6 +164,25 @@ class CategoryControllerAdmin extends Controller
         }
 
         return back()->with('success', 'Imagem removida com sucesso.');
+    }
+
+    public function deleteBanner(Category $category)
+    {
+        if ($category->banner) {
+            $this->deleteFileIfExists($category->banner);
+            $category->banner = null;
+            $category->save();
+            $this->clearNavigationCaches();
+        }
+
+        return back()->with('success', 'Capa removida com sucesso.');
+    }
+
+    private function deleteFileIfExists(?string $path): void
+    {
+        if ($path && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 
     private function clearNavigationCaches(): void

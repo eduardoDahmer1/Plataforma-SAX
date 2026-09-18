@@ -345,6 +345,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('products/categorias-filhas/{subcategory}', [ProductControllerAdmin::class, 'getChildcategories'])->name('products.getcategorias-filhas');
     Route::delete('categorias-filhas/{categorias_filha}/delete-photo', [CategoriasFilhasControllerAdmin::class, 'deletePhoto'])->name('categorias-filhas.deletePhoto');
     Route::post('categorias-filhas/{categorias_filha}/upload-photo', [CategoriasFilhasControllerAdmin::class, 'uploadPhoto'])->name('categorias-filhas.uploadPhoto');
+    Route::delete('categorias-filhas/{categorias_filha}/delete-banner', [CategoriasFilhasControllerAdmin::class, 'deleteBanner'])->name('categorias-filhas.deleteBanner');
+    Route::post('categorias-filhas/{categorias_filha}/upload-banner', [CategoriasFilhasControllerAdmin::class, 'uploadBanner'])->name('categorias-filhas.uploadBanner');
     Route::delete('products/{product}/gallery/{imageName}', [ProductControllerAdmin::class, 'deleteGalleryImage'])
         ->name('products.gallery.delete');
     Route::delete('products/{product}/gallery-multi', [ProductControllerAdmin::class, 'multiDeleteGalleryImage'])
@@ -355,9 +357,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('subcategories', SubcategoryControllerAdmin::class);
     Route::delete('subcategories/{subcategory}/delete-photo', [SubcategoryControllerAdmin::class, 'deletePhoto'])->name('subcategories.deletePhoto');
     Route::post('subcategories/{subcategory}/upload-photo', [SubcategoryControllerAdmin::class, 'uploadPhoto'])->name('subcategories.uploadPhoto');
+    Route::delete('subcategories/{subcategory}/delete-banner', [SubcategoryControllerAdmin::class, 'deleteBanner'])->name('subcategories.deleteBanner');
+    Route::post('subcategories/{subcategory}/upload-banner', [SubcategoryControllerAdmin::class, 'uploadBanner'])->name('subcategories.uploadBanner');
     Route::resource('categories', CategoryControllerAdmin::class);
     Route::delete('categories/{category}/delete-photo', [CategoryControllerAdmin::class, 'deletePhoto'])->name('categories.deletePhoto');
     Route::post('categories/{id}/upload-photo', [CategoryControllerAdmin::class, 'uploadPhoto'])->name('categories.uploadPhoto');
+    Route::delete('categories/{category}/delete-banner', [CategoryControllerAdmin::class, 'deleteBanner'])->name('categories.deleteBanner');
+    Route::post('categories/{category}/upload-banner', [CategoryControllerAdmin::class, 'uploadBanner'])->name('categories.uploadBanner');
     Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
     Route::post('orders/{order}/notes', [OrderController::class, 'storeNote'])->name('orders.notes.store');

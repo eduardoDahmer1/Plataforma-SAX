@@ -179,7 +179,8 @@
                     'key' => $item['type'].':'.$item['id'],
                     'type' => $item['type'],
                     'label' => $item['label'],
-                    'image' => $item['photo'] ?: $item['banner'],
+                    'photo' => $item['photo'],
+                    'banner' => $item['banner'],
                 ])->values(),
             ];
         @endphp

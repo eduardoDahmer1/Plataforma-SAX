@@ -55,52 +55,55 @@ class OpticalNavigationService
                         $children = $subcategory->categoriasfilhas
                             ->filter(fn ($child): bool => filled($child->name) && filled($child->slug))
                             ->map(function ($child) use ($childCategoryProductImages): array {
-                                $image = $this->preferredImage(
+                                $photo = $this->preferredImage(
                                     $child->photo,
                                     $childCategoryProductImages->get($child->id)
                                 );
+                                $banner = $this->preferredImage($child->banner, $photo);
 
                                 return [
                                     'type' => 'childcategory',
                                     'id' => $child->id,
                                     'label' => $child->name,
                                     'url' => route('categorias-filhas.show', $child->slug),
-                                    'photo' => $image,
-                                    'banner' => $image,
+                                    'photo' => $photo,
+                                    'banner' => $banner,
                                     'children' => collect(),
                                 ];
                             })
                             ->values();
 
-                        $image = $this->preferredImage(
+                        $photo = $this->preferredImage(
                             $subcategory->photo,
                             $subcategoryProductImages->get($subcategory->id)
                         );
+                        $banner = $this->preferredImage($subcategory->banner, $photo);
 
                         return [
                             'type' => 'subcategory',
                             'id' => $subcategory->id,
                             'label' => $subcategory->name,
                             'url' => route('subcategories.show', $subcategory->slug),
-                            'photo' => $image,
-                            'banner' => $image,
+                            'photo' => $photo,
+                            'banner' => $banner,
                             'children' => $children,
                         ];
                     })
                     ->values();
 
-                $image = $this->preferredImage(
+                $photo = $this->preferredImage(
                     $category->photo,
                     $categoryProductImages->get($category->id)
                 );
+                $banner = $this->preferredImage($category->banner, $photo);
 
                 return [
                     'type' => 'category',
                     'id' => $category->id,
                     'label' => $category->name,
                     'url' => route('categories.show', $category->slug ?: $category->id),
-                    'photo' => $image,
-                    'banner' => $image,
+                    'photo' => $photo,
+                    'banner' => $banner,
                     'children' => $subcategories,
                 ];
             })->values();

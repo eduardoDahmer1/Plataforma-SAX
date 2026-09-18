@@ -46,7 +46,26 @@ class StorefrontLayoutService
 
     public function homeView(): string
     {
-        return $this->current() === 'vista' ? 'storefront.vista.home' : 'home';
+        return $this->effective() === 'vista' ? 'storefront.vista.home' : 'home';
+    }
+
+    public function effective(): string
+    {
+        return match (app(StoreControlService::class)->storeProfile()) {
+            'otica' => 'vista',
+            'sax' => 'sax',
+            default => $this->current(),
+        };
+    }
+
+    public function availableLayouts(): array
+    {
+        $effective = $this->effective();
+
+        return match (app(StoreControlService::class)->storeProfile()) {
+            'otica', 'sax' => [$effective => self::LAYOUTS[$effective]],
+            default => self::LAYOUTS,
+        };
     }
 
     /**
@@ -55,11 +74,7 @@ class StorefrontLayoutService
      */
     public function headerLayout(): string
     {
-        return match (app(StoreControlService::class)->storeProfile()) {
-            'otica' => 'vista',
-            'sax' => 'sax',
-            default => $this->current(),
-        };
+        return $this->effective();
     }
 
     public function headerPartial(): string
@@ -71,7 +86,7 @@ class StorefrontLayoutService
 
     public function partial(string $name): string
     {
-        $themed = "storefront.{$this->current()}.{$name}";
+        $themed = "storefront.{$this->effective()}.{$name}";
 
         return view()->exists($themed) ? $themed : "components.{$name}";
     }

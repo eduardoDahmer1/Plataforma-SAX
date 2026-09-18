@@ -224,7 +224,7 @@ class AppServiceProvider extends ServiceProvider
                 $globalViewData = [
                     'catalogIntegrationStatus' => app(CatalogIntegrationAvailabilityService::class)->status(),
                     'storeControls' => app(StoreControlService::class)->settings(),
-                    'storefrontLayout' => app(StorefrontLayoutService::class)->current(),
+                    'storefrontLayout' => app(StorefrontLayoutService::class)->effective(),
                     'locale' => App::getLocale(),
                     'webpImage' => $attribute?->header_image ?? null,
                     'banner1' => $attribute?->banner1 ?? null,

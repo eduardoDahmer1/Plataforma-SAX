@@ -2,7 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Http\Controllers\Admin\AdminHighlightController;
+use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
 class HomeSectionsLivePreviewTest extends TestCase
 {
@@ -42,6 +46,39 @@ class HomeSectionsLivePreviewTest extends TestCase
         $this->assertStringContainsString("layout === 'vista' ? opticalItems : saxCategories", $script);
         $this->assertStringContainsString("home-preview-exclusive", $script);
         $this->assertStringContainsString("element.dataset.layoutOnly !== layout", $script);
+    }
+
+    public function test_duplicate_optical_values_are_normalized_instead_of_blocking_the_form(): void
+    {
+        $controller = file_get_contents(__DIR__.'/../../app/Http/Controllers/Admin/AdminHighlightController.php');
+
+        $this->assertStringContainsString("'sections.*.optical_item_keys.*' => ['string', 'max:60']", $controller);
+        $this->assertStringNotContainsString("'sections.*.optical_item_keys.*' => ['string', 'max:60', 'distinct']", $controller);
+        $this->assertStringContainsString('->unique()', $controller);
+    }
+
+    public function test_server_normalization_removes_duplicates_and_unknown_optical_items(): void
+    {
+        $method = new ReflectionMethod(AdminHighlightController::class, 'validOpticalItemKeys');
+        $allowed = new Collection(['category:10', 'subcategory:20']);
+
+        $result = $method->invoke(
+            (new ReflectionClass(AdminHighlightController::class))->newInstanceWithoutConstructor(),
+            ['category:10', 'category:10', 'unknown:30', 'subcategory:20'],
+            $allowed->flip()
+        );
+
+        $this->assertSame(['category:10', 'subcategory:20'], $result);
+    }
+
+    public function test_preview_fails_safely_and_prevents_double_submission(): void
+    {
+        $script = file_get_contents(__DIR__.'/../../public/js/home-sections-admin.js');
+
+        $this->assertStringContainsString('try {', $script);
+        $this->assertStringContainsString('function uniqueItems(items)', $script);
+        $this->assertStringContainsString('button.disabled = true', $script);
+        $this->assertStringContainsString('fa-spinner fa-spin', $script);
     }
 
     public function test_preview_has_desktop_mobile_and_layout_specific_presentations(): void

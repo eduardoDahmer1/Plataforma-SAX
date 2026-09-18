@@ -18,7 +18,9 @@ class AdminHighlightController extends Controller
         $settings = Generalsetting::firstOrCreate([], ['site_name' => 'SAX']);
         $sections = $settings->resolvedHomeSections();
 
-        $layouts = StorefrontLayoutService::LAYOUTS;
+        $layoutService = app(StorefrontLayoutService::class);
+        $layouts = $layoutService->availableLayouts();
+        $selectedLayout = $layoutService->effective();
         $opticalItems = app(OpticalNavigationService::class)->items();
         $saxCategories = Category::query()
             ->select(['id', 'name', 'slug', 'photo'])
@@ -32,18 +34,24 @@ class AdminHighlightController extends Controller
                 'image' => $this->mediaUrl($category->photo),
             ]);
 
-        return view('admin.sections_home.index', compact('settings', 'sections', 'layouts', 'opticalItems', 'saxCategories'));
+        return view('admin.sections_home.index', compact('settings', 'sections', 'layouts', 'selectedLayout', 'opticalItems', 'saxCategories'));
     }
 
     public function update(Request $request)
     {
         $settings = Generalsetting::firstOrCreate([], ['site_name' => 'SAX']);
         $sectionKeys = array_keys(Generalsetting::HOME_SECTIONS);
+        $layoutService = app(StorefrontLayoutService::class);
+        $availableLayoutKeys = array_keys($layoutService->availableLayouts());
+
+        if (count($availableLayoutKeys) === 1) {
+            $request->merge(['storefront_layout' => $availableLayoutKeys[0]]);
+        }
 
         $validated = $request->validate([
-            'storefront_layout' => ['required', Rule::in(array_keys(StorefrontLayoutService::LAYOUTS))],
+            'storefront_layout' => ['required', Rule::in($availableLayoutKeys)],
             'sections' => ['required', 'array'],
-            'sections.*.key' => ['required', 'string', Rule::in($sectionKeys)],
+            'sections.*.key' => ['required', 'string', 'distinct', Rule::in($sectionKeys)],
             'sections.*.enabled' => ['required', 'boolean'],
             'sections.*.position' => ['required', 'integer', 'min:1', 'max:100'],
             'sections.*.content' => ['required', 'array:pt,en,es'],
@@ -55,12 +63,20 @@ class AdminHighlightController extends Controller
             'sections.*.content.es.description' => ['nullable', 'string', 'max:600'],
             'sections.*.category_limit' => ['nullable', Rule::in(Generalsetting::CATEGORY_LIMIT_OPTIONS)],
             'sections.*.optical_item_keys' => ['nullable', 'array'],
-            'sections.*.optical_item_keys.*' => ['string', 'max:60', 'distinct'],
+            'sections.*.optical_item_keys.*' => ['string', 'max:60'],
             'sections.*.items' => ['nullable', 'array', 'size:3'],
             'sections.*.items.*' => ['array:pt,en,es'],
             'sections.*.items.*.pt' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.en' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.es' => ['nullable', 'string', 'max:100'],
+        ], [
+            'storefront_layout.in' => 'O layout escolhido não pertence a esta instalação.',
+            'sections.required' => 'As configurações das seções não foram enviadas. Recarregue a página e tente novamente.',
+            'sections.*.key.distinct' => 'Uma mesma seção foi enviada mais de uma vez. Recarregue a página e tente novamente.',
+            'sections.*.position.integer' => 'A posição de uma das seções é inválida.',
+            'sections.*.content.*.title.max' => 'O título pode ter no máximo 160 caracteres.',
+            'sections.*.content.*.description.max' => 'A descrição pode ter no máximo 600 caracteres.',
+            'sections.*.items.*.*.max' => 'O texto informativo pode ter no máximo 100 caracteres.',
         ]);
 
         $submitted = collect($validated['sections'])
@@ -124,7 +140,7 @@ class AdminHighlightController extends Controller
         $settings->save();
 
         Cache::forget('general_settings');
-        app(StorefrontLayoutService::class)->clear();
+        $layoutService->clear();
 
         return redirect()->back()->with('success', 'Layout, ordem e visibilidade da Home atualizados!');
     }

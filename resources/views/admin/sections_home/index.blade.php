@@ -34,7 +34,8 @@
                 <div class="storefront-layout-options">
                     @foreach($layouts as $layoutKey => $layout)
                         <label class="storefront-layout-option">
-                            <input type="radio" name="storefront_layout" value="{{ $layoutKey }}" @checked(old('storefront_layout', $settings->storefront_layout ?? 'sax') === $layoutKey)>
+                            <input type="radio" name="storefront_layout" value="{{ $layoutKey }}"
+                                   @checked((count($layouts) === 1 ? $selectedLayout : old('storefront_layout', $selectedLayout)) === $layoutKey)>
                             <span class="storefront-layout-option__visual storefront-layout-option__visual--{{ $layoutKey }}"><i class="fa-solid {{ $layout['icon'] }}"></i><b>{{ $layout['label'] }}</b></span>
                             <span class="storefront-layout-option__copy"><strong>{{ $layout['label'] }}</strong><small>{{ $layout['description'] }}</small></span>
                             <i class="fa-solid fa-circle-check storefront-layout-option__check"></i>

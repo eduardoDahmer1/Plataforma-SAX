@@ -6,9 +6,22 @@
     if (!form || !preview) return;
 
     const dataElement = document.getElementById('homePreviewData');
-    const data = dataElement ? JSON.parse(dataElement.textContent) : {opticalItems: [], saxCategories: []};
-    const opticalItems = Array.isArray(data.opticalItems) ? data.opticalItems : [];
-    const saxCategories = Array.isArray(data.saxCategories) ? data.saxCategories : [];
+    let data = {opticalItems: [], saxCategories: []};
+    try {
+        data = dataElement ? JSON.parse(dataElement.textContent) : data;
+    } catch (error) {
+        data = {opticalItems: [], saxCategories: []};
+    }
+    function uniqueItems(items) {
+        const seen = new Set();
+        return (Array.isArray(items) ? items : []).filter(function (item) {
+            if (!item || !item.key || seen.has(item.key)) return false;
+            seen.add(item.key);
+            return true;
+        });
+    }
+    const opticalItems = uniqueItems(data.opticalItems);
+    const saxCategories = uniqueItems(data.saxCategories);
     const itemsByKey = new Map(opticalItems.map(function (item) { return [item.key, item]; }));
     const list = form.querySelector('[data-home-sections-list]');
     const page = preview.querySelector('[data-preview-page]');
@@ -18,6 +31,7 @@
     const activeCount = preview.querySelector('[data-preview-active-count]');
     const categoryCount = preview.querySelector('[data-preview-category-count]');
     const tip = preview.querySelector('[data-preview-tip]');
+    if (!list || !page || !sectionsCanvas || !state || !languageSelect || !activeCount || !categoryCount || !tip) return;
     const initialLocale = (preview.dataset.locale || 'es').slice(0, 2);
     let dirty = false;
     let submitting = false;
@@ -245,7 +259,16 @@
             requestAnimationFrame(scheduleRender);
         }
     });
-    form.addEventListener('submit', function () { submitting = true; });
+    form.addEventListener('submit', function () {
+        submitting = true;
+        state.classList.remove('is-dirty');
+        state.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando';
+        requestAnimationFrame(function () {
+            document.querySelectorAll('button[type="submit"][form="sectionsForm"],#sectionsForm button[type="submit"]').forEach(function (button) {
+                button.disabled = true;
+            });
+        });
+    });
 
     new MutationObserver(function () {
         markDirty();

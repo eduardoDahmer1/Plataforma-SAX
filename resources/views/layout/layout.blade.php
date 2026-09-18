@@ -7,7 +7,7 @@
 
 @php
     $layoutService = app(\App\Services\StorefrontLayoutService::class);
-    $activeStorefrontLayout = $storefrontLayout ?? $layoutService->current();
+    $activeStorefrontLayout = $layoutService->effective();
     $activeHeaderLayout = $layoutService->headerLayout();
 @endphp
 <body class="sax-storefront storefront-layout-{{ $activeStorefrontLayout }} header-layout-{{ $activeHeaderLayout }}">

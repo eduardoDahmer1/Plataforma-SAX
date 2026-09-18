@@ -1,11 +1,18 @@
 @extends('layout.admin')
 
 @section('content')
+@push('styles')
+    <link href="{{ asset('css/home-sections-admin.css') }}?v={{ filemtime(public_path('css/home-sections-admin.css')) }}" rel="stylesheet">
+@endpush
+
 <x-admin.card>
     <x-admin.page-header
         title="Seções da Home"
         description="Ative, desative e organize todos os blocos exibidos na página inicial.">
         <x-slot:actions>
+            <a href="{{ url('/') }}" target="_blank" rel="noopener" class="btn btn-outline-dark px-3 text-uppercase fw-bold x-small tracking-wider">
+                <i class="fa-solid fa-arrow-up-right-from-square me-2"></i>Ver Home
+            </a>
             <button type="submit" form="sectionsForm" class="btn btn-dark px-4 text-uppercase fw-bold x-small tracking-wider">
                 <i class="fa-solid fa-floppy-disk me-2"></i>{{ __('messages.guardar_configuracao_btn') }}
             </button>
@@ -46,7 +53,7 @@
 
             <div class="home-sections-list" data-home-sections-list>
                 @foreach($sections as $key => $section)
-                    <article class="home-section-item" draggable="true" data-home-section>
+                    <article class="home-section-item" draggable="true" data-home-section data-section-key="{{ $key }}">
                         <input type="hidden" name="sections[{{ $key }}][key]" value="{{ $key }}">
                         <input type="hidden" name="sections[{{ $key }}][position]" value="{{ $section['position'] }}" data-section-position>
                         <input type="hidden" name="sections[{{ $key }}][enabled]" value="0">
@@ -164,28 +171,68 @@
             </div>
         </form>
 
-        <aside class="home-sections-guide">
-            <span class="home-sections-kicker">Como funciona</span>
-            <h2>Controle completo da Home</h2>
-            <p>Cada linha representa um bloco visual da página inicial. A primeira seção ativa da lista será exibida primeiro.</p>
-            <div class="home-sections-guide__item">
-                <i class="fa-solid fa-toggle-on"></i>
-                <div><strong>Visibilidade</strong><span>Desative uma seção para ocultá-la sem apagar seu conteúdo.</span></div>
+        @php
+            $homePreviewData = [
+                'opticalItems' => $opticalItems->map(fn (array $item): array => [
+                    'key' => $item['type'].':'.$item['id'],
+                    'type' => $item['type'],
+                    'label' => $item['label'],
+                    'image' => $item['photo'] ?: $item['banner'],
+                ])->values(),
+            ];
+        @endphp
+        <aside class="home-live-preview" id="homeLivePreview" data-locale="{{ app()->getLocale() }}">
+            <script type="application/json" id="homePreviewData">@json($homePreviewData)</script>
+
+            <div class="home-live-preview__bar">
+                <span class="home-live-preview__dots"><i></i><i></i><i></i></span>
+                <strong>Prévia instantânea</strong>
+                <span class="home-preview-state" data-preview-state><i class="fa-solid fa-circle-check"></i> Sincronizada</span>
             </div>
-            <div class="home-sections-guide__item">
-                <i class="fa-solid fa-arrow-down-up-across-line"></i>
-                <div><strong>Posição</strong><span>Arraste ou use as setas; a numeração é atualizada automaticamente.</span></div>
+
+            <div class="home-preview-toolbar">
+                <div class="home-preview-devices" role="group" aria-label="Tamanho da prévia">
+                    <button type="button" class="is-active" data-preview-device="desktop" aria-label="Prévia desktop" title="Desktop"><i class="fa-solid fa-desktop"></i></button>
+                    <button type="button" data-preview-device="mobile" aria-label="Prévia celular" title="Celular"><i class="fa-solid fa-mobile-screen-button"></i></button>
+                </div>
+                <label>
+                    <span>Idioma</span>
+                    <select data-preview-language aria-label="Idioma da prévia">
+                        <option value="pt">PT</option>
+                        <option value="es">ES</option>
+                        <option value="en">EN</option>
+                    </select>
+                </label>
+                <a href="{{ url('/') }}" target="_blank" rel="noopener" title="Abrir Home completa"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
             </div>
-            <div class="home-sections-guide__note">
-                Banners, produtos, categorias e marcas continuam sendo administrados em seus painéis próprios. Aqui você controla apenas onde e se cada bloco aparece.
+
+            <div class="home-preview-stage">
+                <div class="home-preview-page" data-preview-page>
+                    <header class="home-preview-header">
+                        <strong data-preview-brand>SAX</strong>
+                        <span></span><span></span><span></span>
+                    </header>
+                    <div class="home-preview-sections" data-preview-sections></div>
+                    <footer class="home-preview-footer"><strong>SAX</strong><span>Atendimento · Contato · Redes sociais</span></footer>
+                </div>
             </div>
+
+            <div class="home-preview-summary">
+                <span><strong data-preview-active-count>0</strong> seções ativas</span>
+                <span><strong data-preview-category-count>0</strong> categorias no topo</span>
+            </div>
+            <div class="home-preview-tip" data-preview-tip>
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <p><strong>Dica de composição</strong><span>A prévia será atualizada conforme você editar.</span></p>
+            </div>
+            <p class="home-live-preview__note"><i class="fa-solid fa-hand-pointer"></i> Clique em um bloco da prévia para abrir sua configuração.</p>
         </aside>
     </div>
 </x-admin.card>
 
 <style>
     .storefront-layout-picker{margin-bottom:1.4rem;padding:1rem;border:1px solid #dfe5ed;border-radius:14px;background:#fff}.storefront-layout-picker__heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.85rem}.storefront-layout-picker__heading strong,.storefront-layout-picker__heading span{display:block}.storefront-layout-picker__heading strong{color:#172033;font-size:.82rem}.storefront-layout-picker__heading div>span{margin-top:.2rem;color:#667085;font-size:.72rem}.storefront-layout-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.storefront-layout-option{position:relative;display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:.8rem;padding:.7rem;border:1px solid #dfe5ed;border-radius:11px;cursor:pointer;transition:.2s}.storefront-layout-option:hover{border-color:#98a2b3}.storefront-layout-option:has(input:checked){border-color:#172033;box-shadow:0 0 0 1px #172033}.storefront-layout-option>input{position:absolute;opacity:0;pointer-events:none}.storefront-layout-option__visual{display:grid;height:56px;place-items:center;grid-template-columns:auto auto;gap:.35rem;border-radius:7px;background:#171717;color:#fff;font-size:.7rem;letter-spacing:.04em}.storefront-layout-option__visual--vista{background:#f2f2f2;color:#111}.storefront-layout-option__copy strong,.storefront-layout-option__copy small{display:block}.storefront-layout-option__copy strong{font-size:.76rem;color:#172033}.storefront-layout-option__copy small{margin-top:.2rem;color:#667085;font-size:.68rem;line-height:1.35}.storefront-layout-option__check{color:#172033;opacity:0}.storefront-layout-option:has(input:checked) .storefront-layout-option__check{opacity:1}
-    .home-sections-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(260px,.8fr); gap:2rem; align-items:start; }
+    .home-sections-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,360px); gap:1rem; align-items:start; }
     .home-sections-toolbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; padding:.9rem 1rem; border:1px solid #e2e7ef; border-radius:12px; background:#f8fafc; }
     .home-sections-toolbar strong,.home-sections-toolbar span { display:block; }
     .home-sections-toolbar strong { color:#172033; font-size:.82rem; }
@@ -358,4 +405,8 @@ document.addEventListener('DOMContentLoaded', function () {
     sync();
 });
 </script>
+
+@push('scripts')
+    <script src="{{ asset('js/home-sections-admin.js') }}?v={{ filemtime(public_path('js/home-sections-admin.js')) }}"></script>
+@endpush
 @endsection

@@ -11,6 +11,14 @@
         $ptTranslation = $translationsByLocale->get('pt-br');
         $esTranslation = $translationsByLocale->get('es');
         $enTranslation = $translationsByLocale->get('en');
+        $additionalCategoryRows = collect(old(
+            'additional_categories',
+            $item->additionalCategories->map(fn ($assignment) => [
+                'category_id' => $assignment->category_id,
+                'subcategory_id' => $assignment->subcategory_id,
+                'childcategory_id' => $assignment->childcategory_id,
+            ])->all(),
+        ))->values();
     @endphp
     @php
         $type = $type ?? 'product';
@@ -179,6 +187,10 @@
                         </select>
                     </div>
 
+                    <div class="col-12 mt-2">
+                        <h6 class="mb-0"><i class="fas fa-sitemap me-1"></i>Categorização principal</h6>
+                    </div>
+
                     <div class="col-md-4">
                         <label for="category_id" class="form-label"><i class="fas fa-folder me-1"></i>Categoria</label>
                         <select name="category_id" id="category_id" class="form-select">
@@ -211,13 +223,103 @@
                             Filhas</label>
                         <select name="childcategory_id" id="categoriasfilhas_id" class="form-select" data-categoriasfilhas='@json($categoriasfilhas)' data-selected="{{ old('childcategory_id', $item->childcategory_id ?? '') }}">
                             <option value="">Selecione uma categorias filhas</option>
-                            @foreach ($categoriasfilhas as $categoriasfilhas)
-                                <option value="{{ $categoriasfilhas->id }}"
-                                    {{ (int) old('childcategory_id', $item->childcategory_id ?? 0) === (int) $categoriasfilhas->id ? 'selected' : '' }}>
-                                    {{ $categoriasfilhas->name ?: $categoriasfilhas->slug }}
+                            @foreach ($categoriasfilhas as $childCategory)
+                                <option value="{{ $childCategory->id }}"
+                                    {{ (int) old('childcategory_id', $item->childcategory_id ?? 0) === (int) $childCategory->id ? 'selected' : '' }}>
+                                    {{ $childCategory->name ?: $childCategory->slug }}
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="border-top pt-3 mt-2">
+                            <h6 class="mb-1"><i class="fas fa-layer-group me-1"></i>Categorizações adicionais</h6>
+                            <p class="small text-muted mb-3">Associe o produto a outras categorias sem alterar a categorização principal.</p>
+
+                            <div id="additionalCategoriesContainer" data-next-index="{{ $additionalCategoryRows->count() }}">
+                                @foreach ($additionalCategoryRows as $index => $assignment)
+                                    @php
+                                        $selectedCategoryId = $assignment['category_id'] ?? null;
+                                        $selectedSubcategoryId = $assignment['subcategory_id'] ?? null;
+                                        $selectedChildcategoryId = $assignment['childcategory_id'] ?? null;
+                                    @endphp
+                                    <div class="additional-category-row border rounded p-3 mb-3">
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Categoria</label>
+                                                <select name="additional_categories[{{ $index }}][category_id]" class="form-select additional-category-select">
+                                                    <option value="">Selecione uma categoria</option>
+                                                    @foreach ($categories as $category)
+                                                        <option value="{{ $category->id }}" @selected((int) $selectedCategoryId === (int) $category->id)>
+                                                            {{ $category->name ?: $category->slug }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Subcategoria</label>
+                                                <select name="additional_categories[{{ $index }}][subcategory_id]"
+                                                    class="form-select additional-subcategory-select"
+                                                    data-selected="{{ $selectedSubcategoryId }}">
+                                                    <option value="">Selecione uma subcategoria</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Categoria filha</label>
+                                                <select name="additional_categories[{{ $index }}][childcategory_id]"
+                                                    class="form-select additional-childcategory-select"
+                                                    data-selected="{{ $selectedChildcategoryId }}">
+                                                    <option value="">Selecione uma categoria filha</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-outline-danger w-100 remove-additional-category">
+                                                    <i class="fas fa-trash-alt me-1"></i>Remover
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <button type="button" id="addAdditionalCategory" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Adicionar categorização
+                            </button>
+
+                            <template id="additionalCategoryTemplate">
+                                <div class="additional-category-row border rounded p-3 mb-3">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Categoria</label>
+                                            <select name="additional_categories[__INDEX__][category_id]" class="form-select additional-category-select">
+                                                <option value="">Selecione uma categoria</option>
+                                                @foreach ($categories as $category)
+                                                    <option value="{{ $category->id }}">{{ $category->name ?: $category->slug }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Subcategoria</label>
+                                            <select name="additional_categories[__INDEX__][subcategory_id]" class="form-select additional-subcategory-select">
+                                                <option value="">Selecione uma subcategoria</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Categoria filha</label>
+                                            <select name="additional_categories[__INDEX__][childcategory_id]" class="form-select additional-childcategory-select">
+                                                <option value="">Selecione uma categoria filha</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button type="button" class="btn btn-outline-danger w-100 remove-additional-category">
+                                                <i class="fas fa-trash-alt me-1"></i>Remover
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
 
                     <div class="col-md-6">

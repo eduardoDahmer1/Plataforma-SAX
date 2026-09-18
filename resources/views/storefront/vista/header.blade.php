@@ -25,9 +25,9 @@
         </form>
 
         <div class="vista-header__actions">
-            @if($isAdminUser)
+            @if($currentUser?->isMasterAdmin())
                 @include('admin.notifications-menu')
-            @elseif($currentUser)
+            @elseif($currentUser && !$isAdminUser)
                 @include('users.notifications-menu')
                 <a class="vista-favorites" href="{{ route('user.preferences') }}" aria-label="Favoritos"><i class="fa-regular fa-heart"></i></a>
             @else

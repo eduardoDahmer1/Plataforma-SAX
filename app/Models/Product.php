@@ -561,6 +561,11 @@ class Product extends Model
         return $this->belongsTo(CategoriasFilhas::class, 'childcategory_id');
     }
 
+    public function additionalCategories()
+    {
+        return $this->hasMany(ProductCategoryAssignment::class);
+    }
+
     // Ancla vertical de talla: `parent_id` apunta al producto base visible.
     public function parent()
     {

@@ -62,7 +62,8 @@ class CategoryController extends Controller
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
         $profile = app(StoreControlService::class)->storeProfile();
-        $cacheKey = "category_show_visible_catalog_v3_{$profile}_{$category->id}_{$page}_{$sortBy}_{$perPage}";
+        $assignmentsCacheVersion = Cache::get('product_category_assignments_cache_version', 'initial');
+        $cacheKey = "category_show_visible_catalog_v3_{$profile}_{$category->id}_{$page}_{$sortBy}_{$perPage}_{$assignmentsCacheVersion}";
 
         // 1. Buscamos o atributo global para os banners de fallback
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
@@ -73,7 +74,11 @@ class CategoryController extends Controller
         [$category, $products] = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($category, $sortBy, $perPage) {
             $category = $category->load(['subcategories.categoriasfilhas']);
             $productsQuery = VisibleCatalogProductsService::builder()
-                ->where('products.category_id', $category->id)
+                ->where(function ($query) use ($category) {
+                    $query->where('products.category_id', $category->id)
+                        ->orWhereHas('additionalCategories', fn ($assignmentQuery) => $assignmentQuery
+                            ->where('category_id', $category->id));
+                })
                 ->with(['brand', 'category', 'translations']); // Eager loading para evitar N+1 no card
             $this->applyCatalogSorting($productsQuery, $sortBy);
             $products = $productsQuery
@@ -88,10 +93,14 @@ class CategoryController extends Controller
         $categoriesTree = Cache::remember("filter_full_tree_visible_catalog_v3_{$profile}", now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
         $brands = Cache::remember(
-            "filter_brands_category_visible_catalog_v1_{$category->id}",
+            "filter_brands_category_visible_catalog_v1_{$category->id}_{$assignmentsCacheVersion}",
             now()->addHours(1),
             fn() => $this->buildFilterBrandsList(
-                fn($query) => $query->where('products.category_id', $category->id)
+                fn($query) => $query->where(function ($productQuery) use ($category) {
+                    $productQuery->where('products.category_id', $category->id)
+                        ->orWhereHas('additionalCategories', fn ($assignmentQuery) => $assignmentQuery
+                            ->where('category_id', $category->id));
+                })
             )
         );
 

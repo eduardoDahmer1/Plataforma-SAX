@@ -1,5 +1,9 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/email-marketing.css') }}?v={{ filemtime(public_path('css/email-marketing.css')) }}" rel="stylesheet">
+@endpush
+
 @section('content')
 @php
     $tipos = [
@@ -11,7 +15,9 @@
 @endphp
 
 <x-admin.card>
-    <div class="sax-cat sax-msg" id="msg-app" data-delete-url="{{ url('admin/contatos') }}" data-confirm-delete="{{ __('messages.confirmar_exclusao') }}" data-error-message="{{ __('messages.activate_erro') }}">
+    <div class="sax-cat sax-msg" id="msg-app" data-delete-url="{{ url('admin/contatos') }}" data-read-url="{{ route('admin.contacts.read', '__ID__') }}" data-confirm-delete="{{ __('messages.confirmar_exclusao') }}" data-error-message="{{ __('messages.activate_erro') }}">
+
+        <x-admin.alert />
 
         {{-- Cabeçalho --}}
         <div class="sax-cat__top">
@@ -20,10 +26,26 @@
                 <span class="sax-cat__sub">{{ __('messages.gestao_comunicacoes_desc') }}</span>
             </div>
 
-            <a href="{{ route('admin.contacts.export', ['type' => $type, 'period' => $period]) }}" class="sax-cat__new">
-                <i class="fas fa-download"></i> {{ __('messages.exportar_btn') }}
-            </a>
+            @if($panel === 'inbox')
+                <a href="{{ route('admin.emails.create') }}" class="sax-cat__new"><i class="fas fa-paper-plane"></i> Novo e-mail</a>
+            @elseif($panel === 'templates')
+                <a href="{{ route('admin.email-templates.create') }}" class="sax-cat__new"><i class="fas fa-plus"></i> Novo template</a>
+            @else
+                <a href="{{ route('admin.emails.create') }}" class="sax-cat__new"><i class="fas fa-paper-plane"></i> Novo envio</a>
+            @endif
         </div>
+
+        <nav class="email-center-nav" aria-label="Áreas da central de mensagens">
+            <a href="{{ route('admin.contatos.index') }}" class="{{ $panel === 'inbox' ? 'is-active' : '' }}"><i class="fa-solid fa-inbox"></i> Recebidos</a>
+            <a href="{{ route('admin.emails.create') }}"><i class="fa-solid fa-pen-to-square"></i> Criar e-mail</a>
+            <a href="{{ route('admin.contatos.index', ['view' => 'templates']) }}" class="{{ $panel === 'templates' ? 'is-active' : '' }}"><i class="fa-solid fa-layer-group"></i> Templates</a>
+            <a href="{{ route('admin.contatos.index', ['view' => 'history']) }}" class="{{ $panel === 'history' ? 'is-active' : '' }}"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de envios</a>
+            @if($panel === 'inbox')
+                <a href="{{ route('admin.contacts.export', ['type' => $type, 'period' => $period]) }}"><i class="fas fa-download"></i> Exportar</a>
+            @endif
+        </nav>
+
+        @if($panel === 'inbox')
 
         <div class="contacts-period-panel">
             <div>
@@ -32,7 +54,7 @@
             </div>
             <div class="contacts-period-actions">
                 @foreach ($periods as $periodKey => $periodName)
-                    <a href="{{ route('admin.contatos.index', ['period' => $periodKey, 'type' => $type, 'search' => $search, 'per_page' => $perPage]) }}"
+                    <a href="{{ route('admin.contatos.index', ['period' => $periodKey, 'type' => $type, 'status' => $status, 'search' => $search, 'per_page' => $perPage]) }}"
                        class="contacts-period-btn {{ $period === $periodKey ? 'is-active' : '' }}">
                         {{ $periodName }}
                     </a>
@@ -48,6 +70,7 @@
                     ['Currículos', $stats['curriculos'], 'fa-file-lines', '#b7791f'],
                     ['Newsletter', $stats['newsletters'], 'fa-envelope', '#7f56d9'],
                     ['Ótica', $stats['optical'], 'fa-glasses', '#7b5ca8'],
+                    ['Não lidas', $stats['unread'], 'fa-envelope-open-text', '#e5484d'],
                 ];
             @endphp
             @foreach ($summaryCards as [$label, $value, $icon, $color])
@@ -66,6 +89,7 @@
                 <input type="text" name="search" value="{{ $search }}" autocomplete="off"
                        placeholder="{{ __('messages.contato_buscar_placeholder') }}">
                 <input type="hidden" name="period" value="{{ $period }}">
+                @if ($status !== 'all') <input type="hidden" name="status" value="{{ $status }}"> @endif
                 @if ($type)
                     <input type="hidden" name="type" value="{{ $type }}">
                 @endif
@@ -73,32 +97,59 @@
             </form>
 
             <div class="sax-msg__tabs">
-                <a href="{{ route('admin.contatos.index', ['period' => $period, 'search' => $search, 'per_page' => $perPage]) }}"
+                <a href="{{ route('admin.contatos.index', ['period' => $period, 'status' => $status, 'search' => $search, 'per_page' => $perPage]) }}"
                    class="sax-chip {{ !$type ? 'is-on' : '' }}">
                     {{ __('messages.cupon_situacao_todas') }} <span>{{ $totais['all'] }}</span>
                 </a>
 
                 @foreach ($tipos as $id => $info)
-                    <a href="{{ route('admin.contatos.index', ['period' => $period, 'type' => $id, 'search' => $search, 'per_page' => $perPage]) }}"
+                    <a href="{{ route('admin.contatos.index', ['period' => $period, 'type' => $id, 'status' => $status, 'search' => $search, 'per_page' => $perPage]) }}"
                        class="sax-chip {{ (int) $type === $id ? 'is-on' : '' }}">
                         {{ $info['rotulo'] }} <span>{{ $totais[$id] }}</span>
                     </a>
                 @endforeach
+                <a href="{{ route('admin.contatos.index', ['period' => $period, 'type' => $type, 'status' => $status === 'unread' ? 'all' : 'unread', 'search' => $search, 'per_page' => $perPage]) }}"
+                   class="sax-chip {{ $status === 'unread' ? 'is-on' : '' }}">
+                    <i class="fa-regular fa-envelope"></i> NÃO LIDAS <span>{{ $stats['unread'] }}</span>
+                </a>
             </div>
 
             <form method="GET" action="{{ route('admin.contatos.index') }}" class="sax-msg__per">
                 <input type="hidden" name="period" value="{{ $period }}">
+                @if ($status !== 'all') <input type="hidden" name="status" value="{{ $status }}"> @endif
                 @if ($type) <input type="hidden" name="type" value="{{ $type }}"> @endif
                 @if ($search) <input type="hidden" name="search" value="{{ $search }}"> @endif
-                <select name="per_page" onchange="this.form.submit()">
+                <label for="contactsPerPage">Mostrar</label>
+                <select id="contactsPerPage" name="per_page" onchange="this.form.submit()" aria-label="Quantidade de contatos por página">
                     @foreach ([20, 30, 50, 100] as $opt)
                         <option value="{{ $opt }}" @selected($perPage == $opt)>{{ $opt }}</option>
                     @endforeach
                 </select>
+                <span>por página</span>
             </form>
 
             <span class="sax-msg__hint" id="msg-feedback" role="status"></span>
         </div>
+
+        <form method="POST" action="{{ route('admin.contacts.bulk') }}" id="contactsBulkForm" class="contacts-bulk-bar">
+            @csrf
+            <label class="contacts-check-all"><input type="checkbox" id="contactsSelectAll"> <span>Selecionar página</span></label>
+            <strong id="contactsSelectedCount">0 selecionados</strong>
+            <div class="contacts-bulk-actions">
+                <button type="submit" name="action" value="email" disabled data-bulk-action><i class="fa-solid fa-paper-plane"></i> Enviar e-mail</button>
+                <button type="submit" name="action" value="mark_read" disabled data-bulk-action><i class="fa-solid fa-envelope-open"></i> Marcar lidos</button>
+                <button type="submit" name="action" value="mark_unread" disabled data-bulk-action><i class="fa-solid fa-envelope"></i> Marcar não lidos</button>
+                <button type="button" disabled data-bulk-action id="contactsCopyEmails"><i class="fa-solid fa-copy"></i> Copiar e-mails</button>
+                <button type="submit" name="action" value="delete" class="is-danger" disabled data-bulk-action><i class="fa-solid fa-trash"></i> Excluir</button>
+            </div>
+            <div class="contacts-view-actions">
+                <button type="button" id="contactsExpandAll"><i class="fa-solid fa-angles-down"></i> Abrir todas</button>
+            </div>
+        </form>
+        <form method="POST" action="{{ route('admin.contacts.read-all') }}" id="contactsReadAllForm" class="contacts-read-all-form">
+            @csrf
+            <button type="submit" @disabled($stats['unread'] === 0)><i class="fa-solid fa-check-double"></i> Marcar todas como lidas</button>
+        </form>
 
         {{-- Lista --}}
         <div class="sax-msg__list">
@@ -109,16 +160,20 @@
                     $extensao = $contact->attachment ? strtoupper(pathinfo($contact->attachment, PATHINFO_EXTENSION)) : null;
                 @endphp
 
-                <article class="sax-msg__item" data-row data-id="{{ $contact->id }}">
+                <article class="sax-msg__item {{ $contact->read_at ? '' : 'is-unread' }}" data-row data-id="{{ $contact->id }}" data-email="{{ $contact->email }}">
                     <div class="sax-msg__main" data-toggle role="button" tabindex="0"
                          aria-expanded="false" title="{{ __('messages.contato_ver_completo') }}">
+
+                        <label class="contacts-row-check" title="Selecionar contato" data-no-toggle>
+                            <input type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" form="contactsBulkForm" data-contact-check>
+                        </label>
 
                         <span class="sax-msg__type" style="--cor: {{ $info['cor'] }}" title="{{ $info['rotulo'] }}">
                             <i class="fa-solid {{ $info['icone'] }}"></i>
                         </span>
 
                         <div class="sax-msg__who">
-                            <span class="sax-msg__name">{{ $contact->name ?: '—' }}</span>
+                            <span class="sax-msg__name">{{ $contact->name ?: '—' }} @if(!$contact->read_at)<em class="contacts-unread-dot">Nova</em>@endif</span>
                             <span class="sax-msg__contactinfo">
                                 {{ $contact->email }}
                                 @if ($contact->phone) · {{ $contact->phone }} @endif
@@ -196,7 +251,7 @@
 
                         <div class="sax-msg__actions">
                             @if ($contact->email)
-                                <a href="mailto:{{ $contact->email }}" class="sax-cat-act">
+                                <a href="{{ route('admin.emails.create', ['contact' => $contact->id]) }}" class="sax-cat-act">
                                     <i class="fa fa-reply"></i> {{ __('messages.contato_responder') }}
                                 </a>
                             @endif
@@ -212,6 +267,58 @@
         </div>
 
         <div class="sax-cat__pag">{{ $contacts->links() }}</div>
+        @elseif($panel === 'templates')
+            @if($emailTemplates->isEmpty())
+                <div class="sax-cat__empty">
+                    <i class="fa-solid fa-layer-group d-block mb-2"></i>
+                    Nenhum template salvo. Crie seu primeiro modelo reutilizável.
+                </div>
+            @else
+                <div class="email-template-grid">
+                    @foreach($emailTemplates as $template)
+                        <article class="email-template-card">
+                            <h3>{{ $template->name }}</h3>
+                            <p><strong>Assunto:</strong> {{ Str::limit($template->subject, 85) }}</p>
+                            <p>Atualizado em {{ $template->updated_at->format('d/m/Y H:i') }}@if($template->creator) por {{ $template->creator->name }}@endif</p>
+                            <div class="email-template-card__actions">
+                                <a class="email-btn email-btn--ghost" href="{{ route('admin.email-templates.edit', $template) }}"><i class="fa-solid fa-pen"></i> Editar</a>
+                                <a class="email-btn email-btn--primary" href="{{ route('admin.emails.create', ['template' => $template->id]) }}"><i class="fa-solid fa-paper-plane"></i> Usar</a>
+                                <form method="POST" action="{{ route('admin.email-templates.destroy', $template) }}" data-confirm="Remover este template?">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="email-btn email-btn--ghost" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+                <div class="sax-cat__pag">{{ $emailTemplates->appends(['view' => 'templates'])->links() }}</div>
+            @endif
+        @else
+            @if($campaigns->isEmpty())
+                <div class="sax-cat__empty">Nenhum envio realizado ainda.</div>
+            @else
+                <div class="email-history-wrap">
+                    <table class="email-history-table">
+                        <thead><tr><th>Data</th><th>Assunto</th><th>Público</th><th>Status</th><th>Destinatários</th><th>Enviados</th><th>Falhas</th><th>Criado por</th></tr></thead>
+                        <tbody>
+                        @foreach($campaigns as $campaign)
+                            <tr>
+                                <td>{{ $campaign->created_at->format('d/m/Y H:i') }}</td>
+                                <td><strong>{{ Str::limit($campaign->subject, 70) }}</strong>@if($campaign->type === 'reply')<br><small>Resposta individual</small>@endif</td>
+                                <td>{{ \App\Services\EmailAudienceService::AUDIENCES[$campaign->audience] ?? $campaign->audience }}</td>
+                                <td><span class="email-status email-status--{{ $campaign->status }}">{{ ['pending'=>'Aguardando','processing'=>'Enviando','completed'=>'Concluído'][$campaign->status] ?? $campaign->status }}</span></td>
+                                <td>{{ $campaign->recipient_count }}</td>
+                                <td>{{ $campaign->sent_count }}</td>
+                                <td>{{ $campaign->failed_count }}</td>
+                                <td>{{ $campaign->creator?->name ?: 'Usuário removido' }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="sax-cat__pag">{{ $campaigns->appends(['view' => 'history'])->links() }}</div>
+            @endif
+        @endif
     </div>
 </x-admin.card>
 @endsection

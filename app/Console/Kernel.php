@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('rendix:reconcile-pix --limit=50')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('integration:check-health')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('products:refresh-feed')->everyMinute()->withoutOverlapping();
+        $schedule->command('emails:send-pending --limit=3')->everyMinute()->withoutOverlapping();
         // Rede de segurança para alterações externas que não disparam eventos Eloquent.
         $schedule->command('products:refresh-feed --force')->hourly()->withoutOverlapping();
     }

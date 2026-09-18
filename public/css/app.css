@@ -6763,6 +6763,10 @@ transform: scale(1.5);
         background: #c7222a;
     }
 
+    .sax-header .cart-badge {
+        background: #111;
+    }
+
     .sax-mobile-discovery {
         display: block;
         padding: 0 .8rem .55rem;

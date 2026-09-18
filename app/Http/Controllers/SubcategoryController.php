@@ -48,7 +48,8 @@ class SubcategoryController extends Controller
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
         $profile = app(StoreControlService::class)->storeProfile();
-        $cacheKey = "subcategory_show_visible_catalog_v3_{$profile}_{$idOrSlug}_page_{$page}_{$sortBy}_{$perPage}";
+        $assignmentsCacheVersion = Cache::get('product_category_assignments_cache_version', 'initial');
+        $cacheKey = "subcategory_show_visible_catalog_v3_{$profile}_{$idOrSlug}_page_{$page}_{$sortBy}_{$perPage}_{$assignmentsCacheVersion}";
 
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
@@ -66,7 +67,11 @@ class SubcategoryController extends Controller
                     ->firstOrFail();
 
                 $productsQuery = VisibleCatalogProductsService::builder()
-                    ->where('products.subcategory_id', $subcategory->id)
+                    ->where(function ($query) use ($subcategory) {
+                        $query->where('products.subcategory_id', $subcategory->id)
+                            ->orWhereHas('additionalCategories', fn ($assignmentQuery) => $assignmentQuery
+                                ->where('subcategory_id', $subcategory->id));
+                    })
                     ->with(['brand', 'category', 'translations']);
                 $this->applyCatalogSorting($productsQuery, $sortBy);
                 $products = $productsQuery
@@ -88,10 +93,14 @@ class SubcategoryController extends Controller
         $allCategories = Cache::remember("filter_full_tree_visible_catalog_v3_{$profile}", now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
         $brands = Cache::remember(
-            "filter_brands_subcategory_visible_catalog_v1_{$data['subcategory']->id}",
+            "filter_brands_subcategory_visible_catalog_v1_{$data['subcategory']->id}_{$assignmentsCacheVersion}",
             now()->addHours(1),
             fn() => $this->buildFilterBrandsList(
-                fn($query) => $query->where('products.subcategory_id', $data['subcategory']->id)
+                fn($query) => $query->where(function ($productQuery) use ($data) {
+                    $productQuery->where('products.subcategory_id', $data['subcategory']->id)
+                        ->orWhereHas('additionalCategories', fn ($assignmentQuery) => $assignmentQuery
+                            ->where('subcategory_id', $data['subcategory']->id));
+                })
             )
         );
 

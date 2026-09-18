@@ -46,7 +46,8 @@ class CategoriasFilhasController extends Controller
         $sortBy = $this->catalogSortBy($request);
         $perPage = $this->catalogPerPage($request);
         $profile = app(StoreControlService::class)->storeProfile();
-        $cacheKey = "cat_filha_show_visible_catalog_v3_{$profile}_{$idOrSlug}_p{$page}_{$sortBy}_{$perPage}";
+        $assignmentsCacheVersion = Cache::get('product_category_assignments_cache_version', 'initial');
+        $cacheKey = "cat_filha_show_visible_catalog_v3_{$profile}_{$idOrSlug}_p{$page}_{$sortBy}_{$perPage}_{$assignmentsCacheVersion}";
 
         $attribute = Cache::remember('global_attributes', now()->addHours(24), function () {
             return DB::table('attributes')->first();
@@ -64,7 +65,11 @@ class CategoriasFilhasController extends Controller
                     ->firstOrFail();
 
                 $productsQuery = VisibleCatalogProductsService::builder()
-                    ->where('products.childcategory_id', $categoriasfilhas->id)
+                    ->where(function ($query) use ($categoriasfilhas) {
+                        $query->where('products.childcategory_id', $categoriasfilhas->id)
+                            ->orWhereHas('additionalCategories', fn ($assignmentQuery) => $assignmentQuery
+                                ->where('childcategory_id', $categoriasfilhas->id));
+                    })
                     ->with(['brand', 'category', 'translations']);
                 $this->applyCatalogSorting($productsQuery, $sortBy);
                 $products = $productsQuery
@@ -86,10 +91,14 @@ class CategoriasFilhasController extends Controller
         $categoriesTree = Cache::remember("filter_full_tree_visible_catalog_v3_{$profile}", now()->addHours(1), fn() => $this->buildFilterCategoriesTree());
 
         $brands = Cache::remember(
-            "filter_brands_child_category_visible_catalog_v1_{$data['categoriasfilhas']->id}",
+            "filter_brands_child_category_visible_catalog_v1_{$data['categoriasfilhas']->id}_{$assignmentsCacheVersion}",
             now()->addHours(1),
             fn() => $this->buildFilterBrandsList(
-                fn($query) => $query->where('products.childcategory_id', $data['categoriasfilhas']->id)
+                fn($query) => $query->where(function ($productQuery) use ($data) {
+                    $productQuery->where('products.childcategory_id', $data['categoriasfilhas']->id)
+                        ->orWhereHas('additionalCategories', fn ($assignmentQuery) => $assignmentQuery
+                            ->where('childcategory_id', $data['categoriasfilhas']->id));
+                })
             )
         );
 

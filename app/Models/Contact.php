@@ -21,5 +21,10 @@ class Contact extends Model
         'contact_type',
         'attachment',  // TEM QUE TER AQUI
         'store_name',
+        'read_at',
+    ];
+
+    protected $casts = [
+        'read_at' => 'datetime',
     ];
 }

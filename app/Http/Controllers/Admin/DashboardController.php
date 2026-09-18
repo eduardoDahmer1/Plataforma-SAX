@@ -25,6 +25,12 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // O Editor entra diretamente no seu espaço de trabalho e não carrega
+        // indicadores comerciais, clientes ou pedidos do dashboard do Master.
+        if ($request->user()?->isAdminEditor()) {
+            return redirect()->route('admin.products.index');
+        }
+
         $today = now()->toDateString();
         $start = now()->subDays(29)->startOfDay();
 

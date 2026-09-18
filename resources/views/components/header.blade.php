@@ -128,9 +128,9 @@
             </div>
 
             <div class="col-3 col-lg-3 text-end d-flex justify-content-end align-items-center gap-3 sax-header-actions">
-                @if ($isAdminUser)
+                @if ($currentUser?->isMasterAdmin())
                     @include('admin.notifications-menu')
-                @elseif ($currentUser)
+                @elseif ($currentUser && !$isAdminUser)
                     @include('users.notifications-menu')
                 @endif
 

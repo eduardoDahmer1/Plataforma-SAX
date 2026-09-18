@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CategoriasFilhasControllerAdmin;
 use App\Http\Controllers\Admin\CategoryControllerAdmin;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ContactControllerAdmin;
+use App\Http\Controllers\Admin\EmailMarketingController;
 use App\Http\Controllers\Admin\ContactGuideController as AdminContactGuideController;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\CurrencyControllerAdmin;
@@ -47,6 +48,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactGuideController;
+use App\Http\Controllers\EmailUnsubscribeController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CuponUserController;
 use App\Http\Controllers\HomeController;
@@ -67,6 +69,11 @@ use Illuminate\Support\Str;
 Route::post('/analytics/event', [SiteAnalyticsController::class, 'store'])
     ->middleware('throttle:120,1')
     ->name('analytics.store');
+
+Route::get('/email/preferencias/{token}', EmailUnsubscribeController::class)
+    ->where('token', '[A-Za-z0-9]{64}')
+    ->middleware('throttle:30,1')
+    ->name('email.unsubscribe');
 
 Route::get('/feeds/products.xml', [ProductFeedController::class, 'show'])
     ->name('product-feed.show');
@@ -408,6 +415,17 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('brands/{brand}/home-carousel-image', [BrandControllerAdmin::class, 'uploadHomeCarouselImage'])->name('brands.uploadHomeCarouselImage');
     Route::resource('contatos', ContactControllerAdmin::class)->only(['index', 'destroy']);
     Route::get('contatos/export', [ContactControllerAdmin::class, 'export'])->name('contacts.export');
+    Route::patch('contatos/{contact}/lido', [ContactControllerAdmin::class, 'read'])->name('contacts.read');
+    Route::post('contatos/marcar-todos-lidos', [ContactControllerAdmin::class, 'markAllRead'])->name('contacts.read-all');
+    Route::post('contatos/acoes-em-lote', [ContactControllerAdmin::class, 'bulk'])->name('contacts.bulk');
+    Route::get('contatos/email/novo', [EmailMarketingController::class, 'create'])->name('emails.create');
+    Route::post('contatos/email/enviar', [EmailMarketingController::class, 'send'])
+        ->middleware('throttle:10,1')->name('emails.send');
+    Route::get('contatos/templates/novo', [EmailMarketingController::class, 'templateCreate'])->name('email-templates.create');
+    Route::post('contatos/templates', [EmailMarketingController::class, 'templateStore'])->name('email-templates.store');
+    Route::get('contatos/templates/{template}/editar', [EmailMarketingController::class, 'templateEdit'])->name('email-templates.edit');
+    Route::put('contatos/templates/{template}', [EmailMarketingController::class, 'templateUpdate'])->name('email-templates.update');
+    Route::delete('contatos/templates/{template}', [EmailMarketingController::class, 'templateDestroy'])->name('email-templates.destroy');
     Route::get('trabalhe-conosco', [JobFlyerControllerAdmin::class, 'index'])->name('trabalhe_conosco.index');
     Route::post('trabalhe-conosco', [JobFlyerControllerAdmin::class, 'store'])->name('trabalhe_conosco.store');
     Route::post('trabalhe-conosco/{jobFlyer}/toggle', [JobFlyerControllerAdmin::class, 'toggle'])->name('trabalhe_conosco.toggle');

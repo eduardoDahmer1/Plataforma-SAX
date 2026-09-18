@@ -107,11 +107,23 @@
 @endif
 
 <!-- 7. TinyMCE somente nos editores ricos; admin.js em todo o painel -->
-@if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.policies.edit', 'admin.institucional.edit'))
+@if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.policies.edit', 'admin.institucional.edit', 'admin.emails.create', 'admin.email-templates.*'))
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>
 @endif
 @if(Route::is('admin.*') || Route::is('manutencao'))
     <script src="{{ asset('js/admin.js') }}?v={{ filemtime(public_path('js/admin.js')) }}"></script>
+@endif
+@if(Route::is('admin.emails.create', 'admin.email-templates.*'))
+    <script src="{{ asset('js/email-marketing.js') }}?v={{ filemtime(public_path('js/email-marketing.js')) }}"></script>
+@endif
+@if(Route::is('admin.contatos.index'))
+    <script src="{{ asset('js/contacts-inbox.js') }}?v={{ filemtime(public_path('js/contacts-inbox.js')) }}"></script>
+@endif
+@if(Route::is('admin.activate.index'))
+    <script src="{{ asset('js/activate-control.js') }}?v={{ filemtime(public_path('js/activate-control.js')) }}"></script>
+@endif
+@if(Route::is('admin.languages.index'))
+    <script src="{{ asset('js/languages-admin.js') }}?v={{ filemtime(public_path('js/languages-admin.js')) }}"></script>
 @endif
 
 <!-- Products admin (edit, index, review) -->

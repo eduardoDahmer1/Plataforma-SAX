@@ -57,7 +57,6 @@
                     <strong>{{ $alert['title'] }}</strong>
                     <span>{{ $alert['message'] }}</span>
                 </span>
-                <span class="sax-admin-notifications__dot" aria-hidden="true"></span>
             </div>
         </div>
     @endforeach
@@ -65,7 +64,7 @@
     @foreach ($customerNotifications as $notification)
         @php($category = $categories[$notification->type] ?? 'account')
         <form action="{{ route('user.notifications.read', $notification) }}" method="POST"
-              data-notification-item data-notification-category="{{ $category }}">
+              data-notification-item data-notification-category="{{ $category }}" data-notification-archived="0">
             @csrf
             <button type="submit" class="sax-admin-notifications__item {{ is_null($notification->read_at) ? 'is-unread' : '' }}">
                 <span class="sax-admin-notifications__icon is-user"><i class="fa-solid {{ $icons[$category] ?? 'fa-bell' }}"></i></span>

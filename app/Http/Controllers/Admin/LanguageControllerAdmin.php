@@ -13,9 +13,21 @@ class LanguageControllerAdmin extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->query('search'));
-        $filtro = $request->query('filtro'); // 'faltando' = sem tradução em EN ou ES
+        $filtro = in_array($request->query('filtro'), ['faltando', 'completas'], true)
+            ? $request->query('filtro')
+            : null;
+        $idioma = in_array($request->query('idioma'), ['pt', 'en', 'es'], true)
+            ? $request->query('idioma')
+            : null;
+        $letra = strtoupper((string) $request->query('letra', ''));
+        $letra = preg_match('/^[A-Z]$/', $letra) || $letra === '#' ? $letra : null;
+        $ordenar = in_array($request->query('ordenar'), ['az', 'za', 'recentes'], true)
+            ? $request->query('ordenar')
+            : 'az';
+        $porPagina = (int) $request->query('por_pagina', 20);
+        $porPagina = in_array($porPagina, [20, 30, 40, 50, 100], true) ? $porPagina : 20;
 
-        $languages = Language::orderBy('key')
+        $languages = Language::query()
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('key', 'like', "%{$search}%")
@@ -26,19 +38,54 @@ class LanguageControllerAdmin extends Controller
             })
             ->when($filtro === 'faltando', function ($query) {
                 $query->where(function ($q) {
-                    $q->whereNull('en')->orWhere('en', '')
+                    $q->whereNull('pt')->orWhere('pt', '')
+                        ->orWhereNull('en')->orWhere('en', '')
                         ->orWhereNull('es')->orWhere('es', '');
                 });
             })
-            ->paginate(50)
+            ->when($filtro === 'completas', function ($query) {
+                $query->whereNotNull('pt')->where('pt', '<>', '')
+                    ->whereNotNull('en')->where('en', '<>', '')
+                    ->whereNotNull('es')->where('es', '<>', '');
+            })
+            ->when($idioma, function ($query) use ($idioma) {
+                $query->where(function ($q) use ($idioma) {
+                    $q->whereNull($idioma)->orWhere($idioma, '');
+                });
+            })
+            ->when($letra && $letra !== '#', fn ($query) => $query->where('key', 'like', $letra.'%'))
+            ->when($letra === '#', fn ($query) => $query->whereRaw("UPPER(SUBSTRING(`key`, 1, 1)) NOT BETWEEN 'A' AND 'Z'"))
+            ->when($ordenar === 'az', fn ($query) => $query->orderBy('key'))
+            ->when($ordenar === 'za', fn ($query) => $query->orderByDesc('key'))
+            ->when($ordenar === 'recentes', fn ($query) => $query->orderByDesc('updated_at')->orderBy('key'))
+            ->paginate($porPagina)
             ->withQueryString();
 
         $totalFaltando = Language::where(function ($q) {
-            $q->whereNull('en')->orWhere('en', '')
+            $q->whereNull('pt')->orWhere('pt', '')
+                ->orWhereNull('en')->orWhere('en', '')
                 ->orWhereNull('es')->orWhere('es', '');
         })->count();
 
-        return view('admin.languages.index', compact('languages', 'search', 'filtro', 'totalFaltando'));
+        $total = Language::count();
+        $totalCompletas = $total - $totalFaltando;
+        $faltandoPorIdioma = collect(['pt', 'en', 'es'])->mapWithKeys(function ($coluna) {
+            return [$coluna => Language::whereNull($coluna)->orWhere($coluna, '')->count()];
+        });
+
+        return view('admin.languages.index', compact(
+            'languages',
+            'search',
+            'filtro',
+            'idioma',
+            'letra',
+            'ordenar',
+            'porPagina',
+            'total',
+            'totalFaltando',
+            'totalCompletas',
+            'faltandoPorIdioma'
+        ));
     }
 
     public function create()
@@ -79,7 +126,8 @@ class LanguageControllerAdmin extends Controller
             return response()->json([
                 'success' => true,
                 'message' => __('messages.traducao_atualizada'),
-                'falta'   => $language->en === null || $language->en === ''
+                'falta'   => $language->pt === null || $language->pt === ''
+                    || $language->en === null || $language->en === ''
                     || $language->es === null || $language->es === '',
             ]);
         }

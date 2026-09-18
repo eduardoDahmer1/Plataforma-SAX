@@ -102,8 +102,8 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
 
-    // Master e Editor usam o painel administrativo. Apenas o Master possui
-    // acesso às áreas sensíveis (Vendas, Sistema e gestão de usuários).
+    // Master e Editor usam o painel administrativo. O Editor fica limitado
+    // ao catálogo, conteúdo editorial e ferramentas visuais da Home.
     public function isAdmin(): bool
     {
         return in_array((int) $this->user_type, [self::TYPE_ADMIN_MASTER, self::TYPE_ADMIN_EDITOR], true);
@@ -131,24 +131,34 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return Str::is([
             'admin.index',
-            'admin.overview',
-            'admin.reports.download',
             'admin.products.*',
             'admin.produto.*',
             'admin.brands.*',
-            'admin.categories.*',
             'admin.subcategories.*',
             'admin.categorias-filhas.*',
             'admin.blogs.*',
             'admin.blog-categories.*',
-            'admin.contatos.*',
-            'admin.contacts.*',
-            'admin.policies.*',
             'admin.palace.*',
             'admin.bridal.*',
             'admin.cafe_bistro.*',
             'admin.institucional.*',
-            'admin.notifications.*',
+            'admin.banners.*',
+            'admin.home-banners.*',
+            'admin.attributes.*',
+            'admin.sections_home.*',
+            'admin.activate.*',
+            'admin.clear-cache',
+            'admin.header.*',
+            'admin.noimage.*',
+            'admin.whatsapp_banner.*',
+            'admin.banner*.*',
+            'admin.icon_info.*',
+            'admin.icon_cabide.*',
+            'admin.icon_help.*',
+            'admin.logopalace.*',
+            'admin.logobridal.*',
+            'admin.logocafebistro.*',
+            'admin.logocafebistroasuncion.*',
             'admin.image.*',
         ], $routeName);
     }

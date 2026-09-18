@@ -394,8 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const unreadItems = notificationsDrawer.querySelectorAll(
                 '[data-notification-item][data-notification-archived="0"] .sax-admin-notifications__item.is-unread'
             );
-            const operationalAlerts = notificationsDrawer.querySelectorAll('[data-operational-alert]');
-            const unreadCount = unreadItems.length + operationalAlerts.length;
+            const unreadCount = unreadItems.length;
             const unreadLabel = notificationsDrawer.querySelector('[data-notifications-unread-count]');
             const readAllForm = notificationsDrawer.querySelector('[data-notifications-read-all]');
             const badge = notificationMenu?.querySelector('[data-notifications-badge]');

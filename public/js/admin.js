@@ -257,16 +257,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 // ======== Clear Cache ========
-// Usado en menu-lateral.blade.php — botón #clearCacheBtn
+// Usado nos menus desktop e mobile de menu-lateral.blade.php.
 document.addEventListener('DOMContentLoaded', function () {
-    const clearCacheBtn = document.getElementById('clearCacheBtn');
-
-    if (clearCacheBtn) {
+    document.querySelectorAll('[data-clear-cache]').forEach(function (clearCacheBtn) {
         clearCacheBtn.addEventListener('click', function (e) {
             e.preventDefault();
 
             let url = this.dataset.url.replace('http://', 'https://');
-            console.log("Executando limpeza em:", url);
 
             const originalContent = this.innerHTML;
             this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Limpando...';
@@ -298,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.disabled = false;
             });
         });
-    }
+    });
 });
 
 
@@ -1097,6 +1094,99 @@ document.addEventListener('DOMContentLoaded', function () {
         populateSubcategories(categorySelect.value, selectedSubcategoryId);
         if (selectedSubcategoryId) populateCategoriasFilhas(selectedSubcategoryId, selectedChildId);
     }
+
+    const additionalContainer = document.getElementById('additionalCategoriesContainer');
+    const additionalTemplate = document.getElementById('additionalCategoryTemplate');
+    const addAdditionalButton = document.getElementById('addAdditionalCategory');
+
+    if (!additionalContainer || !additionalTemplate || !addAdditionalButton) return;
+
+    function populateAdditionalSelect(select, items, relationKey, relationId, selectedId, placeholder) {
+        select.innerHTML = `<option value="">${placeholder}</option>`;
+        if (!relationId) return;
+
+        items.filter(item => String(item[relationKey]) === String(relationId)).forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.text = item.name || item.slug;
+            option.selected = String(item.id) === String(selectedId);
+            select.appendChild(option);
+        });
+    }
+
+    function initializeAdditionalRow(row) {
+        const rowCategory = row.querySelector('.additional-category-select');
+        const rowSubcategory = row.querySelector('.additional-subcategory-select');
+        const rowChildcategory = row.querySelector('.additional-childcategory-select');
+        if (!rowCategory || !rowSubcategory || !rowChildcategory) return;
+
+        const initialSubcategory = rowSubcategory.dataset.selected || '';
+        const initialChildcategory = rowChildcategory.dataset.selected || '';
+
+        populateAdditionalSelect(
+            rowSubcategory,
+            subcategories,
+            'category_id',
+            rowCategory.value,
+            initialSubcategory,
+            'Selecione uma subcategoria'
+        );
+        populateAdditionalSelect(
+            rowChildcategory,
+            categoriasfilhas,
+            'subcategory_id',
+            rowSubcategory.value,
+            initialChildcategory,
+            'Selecione uma categoria filha'
+        );
+
+        rowCategory.addEventListener('change', function () {
+            populateAdditionalSelect(
+                rowSubcategory,
+                subcategories,
+                'category_id',
+                rowCategory.value,
+                '',
+                'Selecione uma subcategoria'
+            );
+            populateAdditionalSelect(
+                rowChildcategory,
+                categoriasfilhas,
+                'subcategory_id',
+                '',
+                '',
+                'Selecione uma categoria filha'
+            );
+        });
+
+        rowSubcategory.addEventListener('change', function () {
+            populateAdditionalSelect(
+                rowChildcategory,
+                categoriasfilhas,
+                'subcategory_id',
+                rowSubcategory.value,
+                '',
+                'Selecione uma categoria filha'
+            );
+        });
+    }
+
+    additionalContainer.querySelectorAll('.additional-category-row').forEach(initializeAdditionalRow);
+
+    addAdditionalButton.addEventListener('click', function () {
+        const nextIndex = Number(additionalContainer.dataset.nextIndex || 0);
+        additionalContainer.insertAdjacentHTML(
+            'beforeend',
+            additionalTemplate.innerHTML.replaceAll('__INDEX__', String(nextIndex))
+        );
+        additionalContainer.dataset.nextIndex = String(nextIndex + 1);
+        initializeAdditionalRow(additionalContainer.lastElementChild);
+    });
+
+    additionalContainer.addEventListener('click', function (event) {
+        const removeButton = event.target.closest('.remove-additional-category');
+        if (removeButton) removeButton.closest('.additional-category-row')?.remove();
+    });
 });
 
 
@@ -1156,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', function () {
 document.addEventListener('DOMContentLoaded', function () {
     const app = document.getElementById('activate-app');
     if (!app) return;
+    if (app.dataset.advanced === '1') return;
 
     const feedback = document.getElementById('activate-feedback');
     const busca = document.getElementById('activate-search');
@@ -1900,7 +1991,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 document.addEventListener('DOMContentLoaded', function () {
     const app = document.getElementById('tr-app');
-    if (!app) return;
+    if (!app || app.dataset.advanced === '1') return;
 
     const feedback = document.getElementById('tr-feedback');
     const token = document.querySelector('meta[name="csrf-token"]').content;

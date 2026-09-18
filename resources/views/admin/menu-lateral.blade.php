@@ -1,9 +1,10 @@
 @php
     $menuSuffix = isset($menuInstance) ? '-' . $menuInstance : '';
     $isMasterAdmin = auth()->user()?->isMasterAdmin() ?? false;
-    $catalogosOpen = request()->routeIs('admin.products.*', 'admin.brands.*', 'admin.categories.*', 'admin.subcategories.*', 'admin.categorias-filhas.*');
+    $catalogosOpen = request()->routeIs('admin.products.*', 'admin.brands.*', 'admin.subcategories.*', 'admin.categorias-filhas.*')
+        || ($isMasterAdmin && request()->routeIs('admin.categories.*'));
     $vendasOpen = request()->routeIs('admin.orders.*', 'admin.clients.*', 'admin.abandoned-carts.*');
-    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*', 'admin.contact-guide.*', 'admin.policies.*');
+    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*', 'admin.contacts.*', 'admin.emails.*', 'admin.email-templates.*', 'admin.contact-guide.*', 'admin.policies.*');
     $institucionaisOpen = request()->routeIs(
         'admin.palace.*',
         'admin.bridal.*',
@@ -31,6 +32,7 @@
     <nav class="sax-nav-container">
         <p class="sax-sidebar-heading">Gestao</p>
 
+        @if($isMasterAdmin)
         <a href="{{ route('admin.index') }}" class="sax-nav-item {{ request()->routeIs('admin.index') ? 'active' : '' }}">
             <div class="nav-icon-box bg-soft-primary"><i class="fa-solid fa-chart-line"></i></div>
             <span class="nav-text">Visão geral</span>
@@ -40,6 +42,7 @@
             <div class="nav-icon-box bg-soft-info"><i class="fa-regular fa-bell"></i></div>
             <span class="nav-text">{{ __('messages.notifications_menu') }}</span>
         </a>
+        @endif
 
         {{-- Catálogos --}}
         <div class="nav-group">
@@ -55,7 +58,9 @@
                 <a href="{{ route('admin.products.ai-batches.index') }}" class="submenu-link {{ request()->routeIs('admin.products.ai-batches.*') ? 'active' : '' }}"><i class="fa-solid fa-wand-magic-sparkles"></i> IA em lote</a>
                 <a href="{{ route('admin.products.outlet.form') }}" class="submenu-link {{ request()->routeIs('admin.products.outlet.*') ? 'active' : '' }}"><i class="fa-solid fa-box-open"></i> Gestão de outlet</a>
                 <a href="{{ route('admin.brands.index') }}" class="submenu-link {{ request()->routeIs('admin.brands.*') ? 'active' : '' }}"><i class="fa-solid fa-copyright"></i> {{ __('messages.menu_marcas') }}</a>
-                <a href="{{ route('admin.categories.index') }}" class="submenu-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}"><i class="fa-solid fa-tags"></i> {{ __('messages.menu_categorias') }}</a>
+                @if($isMasterAdmin)
+                    <a href="{{ route('admin.categories.index') }}" class="submenu-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}"><i class="fa-solid fa-tags"></i> {{ __('messages.menu_categorias') }}</a>
+                @endif
                 <a href="{{ route('admin.subcategories.index') }}" class="submenu-link {{ request()->routeIs('admin.subcategories.*') ? 'active' : '' }}"><i class="fa-solid fa-tag"></i> {{ __('messages.menu_subcategorias') }}</a>
                 <a href="{{ route('admin.categorias-filhas.index') }}" class="submenu-link {{ request()->routeIs('admin.categorias-filhas.*') ? 'active' : '' }}"><i class="fa-solid fa-sitemap"></i> {{ __('messages.menu_filhas') }}</a>
             </div>
@@ -90,10 +95,12 @@
             </a>
             <div class="collapse sax-submenu {{ $conteudosOpen ? 'show' : '' }}" id="menuConteudos{{ $menuSuffix }}">
                 <a href="{{ route('admin.blogs.index') }}" class="submenu-link {{ request()->routeIs('admin.blogs.*') ? 'active' : '' }}"><i class="fa-solid fa-blog"></i> {{ __('messages.menu_blog') }}</a>
-                <a href="{{ route('admin.contatos.index') }}" class="submenu-link {{ request()->routeIs('admin.contatos.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> {{ __('messages.menu_contato') }}</a>
+                @if($isMasterAdmin)
+                <a href="{{ route('admin.contatos.index') }}" class="submenu-link {{ request()->routeIs('admin.contatos.*', 'admin.contacts.*', 'admin.emails.*', 'admin.email-templates.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> {{ __('messages.menu_contato') }}</a>
                 <a href="{{ route('admin.contact-guide.index') }}" class="submenu-link {{ request()->routeIs('admin.contact-guide.*') ? 'active' : '' }}"><i class="fa-solid fa-map-location-dot"></i> {{ __('messages.admin_guide_menu') }}</a>
                 <a href="{{ route('admin.trabalhe_conosco.index') }}" class="submenu-link {{ request()->routeIs('admin.trabalhe_conosco.*') ? 'active' : '' }}"><i class="fa-solid fa-user-tie"></i> Trabalhe conosco</a>
                 <a href="{{ route('admin.policies.index') }}" class="submenu-link {{ request()->routeIs('admin.policies.*') ? 'active' : '' }}"><i class="fa-solid fa-scale-balanced"></i> {{ __('messages.menu_politicas') }}</a>
+                @endif
             </div>
         </div>
 
@@ -115,7 +122,6 @@
             </div>
         </div>
 
-        @if($isMasterAdmin)
         {{-- Sistema --}}
         <p class="sax-sidebar-heading mt-3">Sistema</p>
         <div class="nav-group">
@@ -127,6 +133,7 @@
                 <i class="fa-solid fa-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="collapse sax-submenu {{ $sistemaOpen ? 'show' : '' }}" id="menuSistema{{ $menuSuffix }}">
+                @if($isMasterAdmin)
                 <a href="{{ route('admin.store-controls.edit') }}" class="submenu-link {{ request()->routeIs('admin.store-controls.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders"></i> {{ __('messages.store_controls_menu') }}
                 </a>
@@ -142,26 +149,30 @@
                 <a href="{{ route('admin.dhl.measurements.index') }}" class="submenu-link {{ request()->routeIs('admin.dhl.measurements.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-ruler-combined"></i> Medidas médias DHL
                 </a>
+                @endif
                 <a href="{{ route('admin.banners.index') }}" class="submenu-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-images"></i> {{ __('messages.menu_banners_home') }}
                 </a>
                 <a href="{{ route('admin.sections_home.index') }}" class="submenu-link {{ request()->routeIs('admin.sections_home.*') ? 'active' : '' }}"><i class="fas fa-sliders-h"></i> {{ __('messages.menu_secoes_home') }}</a>
+                @if($isMasterAdmin)
                 <a href="{{ route('admin.marketing.edit') }}" class="submenu-link {{ request()->routeIs('admin.marketing.*') ? 'active' : '' }}"><i class="fa-solid fa-chart-simple"></i> SEO e Marketing</a>
                 <a href="{{ route('admin.theme-settings.edit') }}" class="submenu-link {{ request()->routeIs('admin.theme-settings.*') ? 'active' : '' }}"><i class="fa-solid fa-palette"></i> Identidade visual</a>
-                <button id="clearCacheBtn" data-url="{{ secure_url('admin/clear-cache') }}" data-csrf="{{ csrf_token() }}" class="submenu-link border-0 bg-transparent w-100 text-start">
+                @endif
+                <button type="button" id="clearCacheBtn{{ $menuSuffix }}" data-clear-cache data-url="{{ secure_url('admin/clear-cache') }}" data-csrf="{{ csrf_token() }}" class="submenu-link border-0 bg-transparent w-100 text-start">
                     <i class="fa-solid fa-broom"></i> {{ __('messages.menu_limpar_cache') }}
                 </button>
+                @if($isMasterAdmin)
                 <a href="{{ route('admin.currencies.index') }}" class="submenu-link {{ request()->routeIs('admin.currencies.*') ? 'active' : '' }}"><i class="fa-solid fa-coins"></i> {{ __('messages.menu_moedas') }}</a>
                 <a href="{{ route('admin.payments.index') }}" class="submenu-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}"><i class="fa-solid fa-plug-circle-bolt"></i> {{ __('messages.menu_gateways') }}</a>
                 <a href="{{ route('admin.cupons.index') }}" class="submenu-link {{ request()->routeIs('admin.cupons.*') ? 'active' : '' }}"><i class="fa-solid fa-ticket"></i> {{ __('messages.menu_cupons') }}</a>
                 <a href="{{ route('admin.languages.index') }}" class="submenu-link {{ request()->routeIs('admin.languages.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-language"></i> {{ __('messages.menu_idiomas') }}
                 </a>
+                @endif
                 <a href="{{ route('admin.activate.index') }}" class="submenu-link {{ request()->routeIs('admin.activate.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-toggle-on"></i> {{ __('messages.menu_ativar_marcas') }}
                 </a>
             </div>
         </div>
-        @endif
     </nav>
 </div>

@@ -456,7 +456,12 @@ class ProductControllerAdmin extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'childcategory_id' => 'nullable|exists:categorias-filhas,id',
+            'childcategory_id' => 'nullable|exists:childcategories,id',
+            'additional_categories' => 'nullable|array',
+            'additional_categories.*' => 'array',
+            'additional_categories.*.category_id' => 'nullable|exists:categories,id',
+            'additional_categories.*.subcategory_id' => 'nullable|exists:subcategories,id',
+            'additional_categories.*.childcategory_id' => 'nullable|exists:childcategories,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
@@ -518,7 +523,8 @@ class ProductControllerAdmin extends Controller
             $data['gallery'] = json_encode($galleryPaths);
         }
 
-        Product::create($data);
+        $product = Product::create($data);
+        $this->syncAdditionalCategories($product, $request->input('additional_categories', []));
 
         return redirect()->route('admin.products.index')->with('success', 'Produto criado com sucesso!');
     }
@@ -530,6 +536,7 @@ class ProductControllerAdmin extends Controller
             'category:id,name,slug',
             'subcategory:id,name,slug,category_id',
             'categoriasfilhas:id,name,slug,subcategory_id',
+            'additionalCategories:id,product_id,category_id,subcategory_id,childcategory_id',
             'translations:id,product_id,locale,name,details',
             'aiPreparation:id,product_id,status,sources,confidence,model,error_message,generated_at,completed_at',
             'parent:id,name,external_name',
@@ -711,6 +718,25 @@ class ProductControllerAdmin extends Controller
         return true;
     }
 
+    private function syncAdditionalCategories(Product $product, array $assignments): void
+    {
+        $product->additionalCategories()->delete();
+
+        foreach ($assignments as $assignment) {
+            $data = [
+                'category_id' => filled($assignment['category_id'] ?? null) ? (int) $assignment['category_id'] : null,
+                'subcategory_id' => filled($assignment['subcategory_id'] ?? null) ? (int) $assignment['subcategory_id'] : null,
+                'childcategory_id' => filled($assignment['childcategory_id'] ?? null) ? (int) $assignment['childcategory_id'] : null,
+            ];
+
+            if (collect($data)->contains(fn ($value) => ! is_null($value))) {
+                $product->additionalCategories()->create($data);
+            }
+        }
+
+        Cache::forever('product_category_assignments_cache_version', (string) Str::uuid());
+    }
+
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
@@ -723,6 +749,11 @@ class ProductControllerAdmin extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
             'childcategory_id' => 'nullable|exists:childcategories,id',
+            'additional_categories' => 'nullable|array',
+            'additional_categories.*' => 'array',
+            'additional_categories.*.category_id' => 'nullable|exists:categories,id',
+            'additional_categories.*.subcategory_id' => 'nullable|exists:subcategories,id',
+            'additional_categories.*.childcategory_id' => 'nullable|exists:childcategories,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
             'highlights' => 'nullable|array',
@@ -938,6 +969,7 @@ class ProductControllerAdmin extends Controller
                 }
 
                 $product->update($data);
+                $this->syncAdditionalCategories($product, $request->input('additional_categories', []));
                 $resolvedParentColor = $data['color'] ?? $product->color;
 
                 if ($request->has('translate')) {

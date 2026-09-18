@@ -208,7 +208,7 @@ class AppServiceProvider extends ServiceProvider
                 'customerNotifications' => $customer->adminNotifications()->latest()->limit(30)->get(),
                 'customerOperationalAlerts' => $operationalAlerts,
                 'customerPersistedUnreadNotificationsCount' => $persistedUnreadCount,
-                'customerUnreadNotificationsCount' => $persistedUnreadCount + $operationalAlerts->count(),
+                'customerUnreadNotificationsCount' => $persistedUnreadCount,
             ]);
         });
 

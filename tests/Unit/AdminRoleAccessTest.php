@@ -25,13 +25,33 @@ class AdminRoleAccessTest extends TestCase
         $this->assertTrue($editor->isAdminEditor());
         $this->assertTrue($editor->canAccessAdminRoute('admin.index'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.products.edit'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.products.ai-batches.index'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.products.outlet.update'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.brands.update'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.subcategories.create'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.categorias-filhas.store'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.blogs.update'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.blog-categories.index'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.palace.edit'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.bridal.update'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.cafe_bistro.edit'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.institucional.update'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.banners.index'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.home-banners.update'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.sections_home.update'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.activate.toggle'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.clear-cache'));
 
         $this->assertFalse($editor->canAccessAdminRoute('admin.orders.index'));
         $this->assertFalse($editor->canAccessAdminRoute('admin.clients.index'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.categories.index'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.contatos.index'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.emails.create'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.notifications.index'));
         $this->assertFalse($editor->canAccessAdminRoute('admin.payments.index'));
         $this->assertFalse($editor->canAccessAdminRoute('admin.languages.index'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.marketing.edit'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.theme-settings.edit'));
         $this->assertFalse($editor->canAccessAdminRoute('admin.users.updateType'));
     }
 

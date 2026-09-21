@@ -44,3 +44,27 @@
 @media(max-width:1399.98px){.theme-admin__layout{grid-template-columns:220px minmax(420px,1fr)}.theme-live-preview{position:relative;top:auto;grid-column:1/-1}.theme-preview-canvas{display:grid;min-height:0;grid-template-columns:1fr 1fr}.theme-preview-nav{display:none}.theme-preview-hero{min-height:250px}.theme-preview-surface{padding:2rem}}
 @media(max-width:991.98px){.theme-admin__hero{align-items:flex-start;flex-direction:column}.theme-admin__layout{grid-template-columns:1fr}.theme-scope-list{position:relative;top:auto;display:flex;overflow-x:auto}.theme-scope-list__heading{display:none}.theme-scope{min-width:210px;border-right:1px solid #edf0f4;border-bottom:0}.theme-live-preview{grid-column:auto}.theme-preview-canvas{grid-template-columns:1fr 1fr}}
 @media(max-width:767.98px){.theme-admin__hero{padding:1rem;border-radius:12px}.theme-admin__hero-actions{width:100%;justify-content:space-between}.theme-editor__heading{align-items:flex-start;flex-direction:column}.theme-color-grid,.theme-type-grid{grid-template-columns:1fr}.theme-preview-canvas{display:block}.theme-preview-hero{min-height:0}.theme-color-field{grid-template-columns:36px minmax(0,1fr) 62px}.theme-editor__footer{align-items:flex-start;flex-direction:column}.theme-save-button{width:100%}}
+.theme-favicons{margin:16px 0 20px;padding:20px;background:#fff;border:1px solid #dfe5ef;border-radius:16px}
+.theme-favicons__intro h2{font-size:16px;font-weight:800;margin:0 0 5px}
+.theme-favicons__intro p{font-size:13px;color:#667085;margin:0 0 16px}
+.theme-favicons__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px}
+.theme-favicon-card{display:flex;align-items:flex-start;gap:16px;padding:16px;border:1px solid #dfe5ef;border-radius:12px;min-width:0}
+.theme-favicon-card>img{flex:none;object-fit:contain;border:1px solid #e4e7ec;border-radius:10px;padding:5px;background:#fff}
+.theme-favicon-card__content{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1}
+.theme-favicon-card__content strong{font-size:14px}
+.theme-favicon-card__content small{font-size:11px;color:#667085}
+.theme-favicon-card__form{display:flex;flex-wrap:wrap;gap:8px}
+.theme-favicon-card__form input{font-size:12px;max-width:100%}
+.theme-favicon-card__form button{border:0;border-radius:8px;padding:8px 12px;background:#182233;color:#fff;font-size:12px;font-weight:700}
+.theme-favicon-card__reset{border:0;background:none;padding:0;color:#58657a;font-size:11px;text-decoration:underline}
+.theme-favicon-card [data-favicon-upload]{display:flex;flex-direction:column;gap:7px}
+.theme-favicon-dropzone{display:flex;min-height:70px;padding:12px;align-items:center;justify-content:center;gap:10px;border:2px dashed #b8c9e1;border-radius:10px;background:#f8fbff;color:#344763;font-size:12px;font-weight:700;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.theme-favicon-dropzone:hover,.theme-favicon-dropzone.is-dragover{border-color:#315784;background:#eaf3ff}
+.theme-favicon-dropzone i{font-size:17px;color:#315784}
+.theme-favicon-dropzone input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.theme-favicon-dropzone:focus-within{outline:2px solid #315784;outline-offset:2px}
+.theme-favicon-submit{align-self:flex-start;border:0;border-radius:8px;padding:8px 12px;background:#182233;color:#fff;font-size:12px;font-weight:700}
+.theme-favicon-card [data-favicon-upload].has-js .theme-favicon-submit{display:none}
+.theme-favicon-card.is-uploading{opacity:.65;pointer-events:none}
+.theme-favicon-status{min-height:15px;font-size:11px;color:#346147}
+.theme-favicon-status.is-error{color:#b42318}

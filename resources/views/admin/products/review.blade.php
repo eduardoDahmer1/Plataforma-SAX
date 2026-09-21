@@ -66,6 +66,10 @@
         </form>
     </div>
 
+    @unless($opticalAvailable)
+        <div class="alert alert-warning" role="alert">Não foi possível consultar as edições da Ótica. Os resultados abaixo mostram apenas esta loja.</div>
+    @endunless
+
     <div class="sax-stats-wrapper" id="product-review-data" data-products="{{ json_encode($detalhesProdutos) }}">
         <div class="row g-4">
             @forelse ($edicoesPorDia as $linha)

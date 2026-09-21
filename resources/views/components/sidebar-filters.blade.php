@@ -4,8 +4,9 @@
     use App\Models\Currency;
     $currentCurrencyId = session('currency', Currency::where('is_default', 1)->first()?->id);
     $currencySign      = Currency::find($currentCurrencyId)?->sign ?? '$';
+    $isOpticalLayout = app(\App\Services\StorefrontLayoutService::class)->effective() === 'vista';
     $activeFilterCount = collect([
-        $request->brand, $request->category, $request->subcategory,
+        $request->brand, $isOpticalLayout ? null : $request->category, $request->subcategory,
         $request->categoriasfilhas, $request->min_price, $request->max_price,
     ])->filter(fn ($value) => filled($value))->count();
 @endphp
@@ -26,7 +27,9 @@
     <div class="d-flex align-items-center gap-3" id="sortForm">
         <input type="hidden" name="search"           data-filter value="{{ $request->search }}">
         <input type="hidden" name="brand"            data-filter value="{{ $request->brand }}">
-        <input type="hidden" name="category"         data-filter value="{{ $request->category }}">
+        @unless($isOpticalLayout)
+            <input type="hidden" name="category" data-filter value="{{ $request->category }}">
+        @endunless
         <input type="hidden" name="subcategory"      data-filter value="{{ $request->subcategory }}">
         <input type="hidden" name="categoriasfilhas" data-filter value="{{ $request->categoriasfilhas }}">
         <input type="hidden" name="min_price"        data-filter value="{{ $request->min_price }}">
@@ -79,10 +82,19 @@
             @php
                 $filterFields = [
                     ['label' => __('messages.marca'),           'input' => 'brand-input',         'hidden' => 'brand-id',         'name' => 'brand',           'listId' => 'list-brands',           'items' => $brands],
-                    ['label' => __('messages.categoria'),       'input' => 'category-input',      'hidden' => 'category-id',      'name' => 'category',        'listId' => 'list-categories',       'items' => $categories],
                     ['label' => __('messages.subcategoria'),    'input' => 'subcategory-input',   'hidden' => 'subcategory-id',   'name' => 'subcategory',     'listId' => 'list-subcategories',    'items' => $subcategories],
                     ['label' => __('messages.categoria_filha'), 'input' => 'child-category-input','hidden' => 'child-category-id','name' => 'categoriasfilhas','listId' => 'list-child-categories', 'items' => $categoriasfilhas],
                 ];
+                if (! $isOpticalLayout) {
+                    array_splice($filterFields, 1, 0, [[
+                        'label' => __('messages.categoria'),
+                        'input' => 'category-input',
+                        'hidden' => 'category-id',
+                        'name' => 'category',
+                        'listId' => 'list-categories',
+                        'items' => $categories,
+                    ]]);
+                }
             @endphp
 
             @foreach ($filterFields as $f)
@@ -201,7 +213,9 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     setupCombobox('brand-input',         'brand-id',         'list-brands');
+    @unless($isOpticalLayout)
     setupCombobox('category-input',      'category-id',      'list-categories');
+    @endunless
     setupCombobox('subcategory-input',   'subcategory-id',   'list-subcategories');
     setupCombobox('child-category-input','child-category-id','list-child-categories');
 });

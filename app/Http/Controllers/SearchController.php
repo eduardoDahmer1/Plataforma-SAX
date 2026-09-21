@@ -11,6 +11,7 @@ use App\Models\CategoriasFilhas;
 use App\Services\ProductSearchService;
 use App\Services\VisibleCatalogProductsService;
 use App\Services\StoreTaxonomyService;
+use App\Services\StorefrontLayoutService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
@@ -230,10 +231,12 @@ class SearchController extends Controller
                 ->whereHas('products', $hasProducts)
                 ->orderBy('name')->get(['id', 'name']),
 
-            'categories' => app(StoreTaxonomyService::class)->categories(Category::query())
-                ->where('status', 1)
-                ->whereHas('products', $hasProducts)
-                ->orderBy('name')->get(['id', 'name', 'slug']),
+            'categories' => app(StorefrontLayoutService::class)->effective() === 'vista'
+                ? collect()
+                : app(StoreTaxonomyService::class)->categories(Category::query())
+                    ->where('status', 1)
+                    ->whereHas('products', $hasProducts)
+                    ->orderBy('name')->get(['id', 'name', 'slug']),
 
             'subcategories' => app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
                 ->whereHas('products', $hasProducts)
@@ -247,6 +250,7 @@ class SearchController extends Controller
 
     public function index(Request $request)
     {
+        $this->removeOpticalCategoryFilter($request);
         $collection = self::COLLECTIONS[$request->string('collection')->toString()] ?? null;
         $base      = $this->baseQuery($request);
         $sidebar   = $this->sidebarData(clone $base);
@@ -290,6 +294,7 @@ class SearchController extends Controller
 
     public function ajaxSearch(Request $request)
     {
+        $this->removeOpticalCategoryFilter($request);
         $query = $this->applyFilters($this->baseQuery($request), $request);
         $this->applySorting($query, $this->requestedSort($request), $request->search);
 
@@ -301,6 +306,13 @@ class SearchController extends Controller
             'pagination' => view('search.partials.pagination', compact('paginated'))->render(),
             'total'      => $paginated->total(),
         ]);
+    }
+
+    private function removeOpticalCategoryFilter(Request $request): void
+    {
+        if (app(StorefrontLayoutService::class)->effective() === 'vista') {
+            $request->query->remove('category');
+        }
     }
 
     public function autocomplete(Request $request)

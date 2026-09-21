@@ -594,7 +594,7 @@ function abrirModalLocal(data) {
                 '<tr>' +
                 '<td class="ps-4"><b>' + escapeHtml(p.name || 'Produto') + '</b></td>' +
                 '<td class="text-center"><code class="small">' + escapeHtml(p.sku || '-') + '</code></td>' +
-                '<td class="text-center"><span class="badge bg-dark text-white">' + escapeHtml(p.editor && p.editor.name ? p.editor.name : 'Usuário removido') + '</span></td>' +
+                '<td class="text-center"><span class="badge bg-dark text-white">' + escapeHtml(p.editor_label || 'Usuário removido') + '</span></td>' +
                 '<td class="pe-4 text-end"><span class="badge bg-light text-dark border">' + escapeHtml(p.ref_code || '-') + '</span></td>' +
                 '</tr>';
         });

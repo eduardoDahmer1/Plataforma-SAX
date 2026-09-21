@@ -260,6 +260,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('marketing', [MarketingSettingController::class, 'edit'])->name('marketing.edit');
     Route::put('marketing', [MarketingSettingController::class, 'update'])->name('marketing.update');
     Route::get('identidade-visual', [ThemeSettingController::class, 'edit'])->name('theme-settings.edit');
+    Route::post('identidade-visual/favicon/{layout}', [\App\Http\Controllers\Admin\StorefrontFaviconController::class, 'update'])
+        ->whereIn('layout', array_keys(\App\Services\StorefrontLayoutService::LAYOUTS))
+        ->name('theme-settings.favicon.update');
+    Route::delete('identidade-visual/favicon/{layout}', [\App\Http\Controllers\Admin\StorefrontFaviconController::class, 'destroy'])
+        ->whereIn('layout', array_keys(\App\Services\StorefrontLayoutService::LAYOUTS))
+        ->name('theme-settings.favicon.destroy');
     Route::put('identidade-visual/{scope}', [ThemeSettingController::class, 'update'])
         ->whereIn('scope', array_keys(\App\Services\ThemeSettingsService::SCOPES))
         ->middleware('throttle:120,1')

@@ -114,9 +114,10 @@ class OpticalProductSyncService
     private function syncProduct(ConnectionInterface $peer, Product $product): void
     {
         $attributes = $this->sharedAttributes('products', $product->getAttributes());
-        // User ids are local to each storefront; copying this FK can invalidate
-        // an otherwise valid product edit.
-        unset($attributes['updated_by']);
+        // Administrative edit metadata belongs to the storefront where the
+        // edit happened. Mirroring the timestamp would credit peer edits to
+        // that storefront's previous local editor.
+        unset($attributes['updated_by'], $attributes['admin_edited_at']);
 
         $peer->table('products')->updateOrInsert(['id' => $product->id], $attributes);
         $this->replaceDependentRows($peer, 'product_translations', 'product_id', $product->id);

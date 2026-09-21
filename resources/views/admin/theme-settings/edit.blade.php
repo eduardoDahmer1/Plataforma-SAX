@@ -66,6 +66,46 @@
         </div>
     </header>
 
+    @if(session('success'))
+        <div class="alert alert-success mt-3 mb-0" role="status">{{ session('success') }}</div>
+    @endif
+    @if($errors->has('favicon'))
+        <div class="alert alert-danger mt-3 mb-0" role="alert">{{ $errors->first('favicon') }}</div>
+    @endif
+
+    <section class="theme-favicons" aria-labelledby="theme-favicons-title"
+             data-active-layout="{{ app(\App\Services\StorefrontLayoutService::class)->effective() }}">
+        <div class="theme-favicons__intro">
+            <h2 id="theme-favicons-title">Ícone da aba do navegador</h2>
+            <p>Arraste uma imagem ou clique para escolher. PNG, JPG/JPEG, WebP, GIF, ICO e AVIF são convertidos automaticamente em um ícone PNG de 128 × 128 px. No stage, cada layout mantém o seu.</p>
+        </div>
+        <div class="theme-favicons__grid">
+            @foreach($faviconLayouts as $layout => $meta)
+                <div class="theme-favicon-card" data-favicon-card data-layout="{{ $layout }}">
+                    <img src="{{ $faviconUrls[$layout] }}" alt="Ícone atual de {{ $meta['label'] }}" width="48" height="48" data-favicon-preview>
+                    <div class="theme-favicon-card__content">
+                        <strong>{{ $meta['label'] }}</strong>
+                        <small>Até 5 MB · a imagem é ajustada sem distorcer</small>
+                        <form action="{{ route('admin.theme-settings.favicon.update', $layout) }}" method="POST" enctype="multipart/form-data" data-favicon-upload>
+                            @csrf
+                            <label class="theme-favicon-dropzone" data-favicon-dropzone>
+                                <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+                                <span>Arraste aqui ou escolha um arquivo</span>
+                                <input type="file" name="favicon" accept=".png,.jpg,.jpeg,.webp,.gif,.ico,.avif,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon,image/avif" required aria-label="Novo favicon de {{ $meta['label'] }}" data-favicon-input>
+                            </label>
+                            <button type="submit" class="theme-favicon-submit">Enviar ícone</button>
+                        </form>
+                        <span class="theme-favicon-status" data-favicon-status role="status" aria-live="polite"></span>
+                        <form action="{{ route('admin.theme-settings.favicon.destroy', $layout) }}" method="POST" data-favicon-reset>
+                            @csrf @method('DELETE')
+                            <button type="submit" class="theme-favicon-card__reset">Usar ícone padrão</button>
+                        </form>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
     <div class="theme-admin__layout">
         <aside class="theme-scope-list" aria-label="Áreas do site">
             <div class="theme-scope-list__heading">
@@ -239,5 +279,6 @@
 
 @push('scripts')
     <script src="{{ asset('js/theme-admin.js') }}?v={{ filemtime(public_path('js/theme-admin.js')) }}"></script>
+    <script src="{{ asset('js/favicon-admin.js') }}?v={{ filemtime(public_path('js/favicon-admin.js')) }}"></script>
 @endpush
 @endsection

@@ -36,7 +36,11 @@
 @endphp
 
 <title>@yield('title', $titleDefault)</title>
-<link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+@php
+    $faviconUrl = app(\App\Services\StorefrontFaviconService::class)->url($headerLayout);
+    $faviconType = str_ends_with(parse_url($faviconUrl, PHP_URL_PATH) ?: '', '.svg') ? 'image/svg+xml' : 'image/png';
+@endphp
+<link rel="icon" href="{{ $faviconUrl }}" type="{{ $faviconType }}">
 
 <meta name="description" content="@yield('meta_description', $marketingSettings->default_meta_description ?: __('messages.seo_default_description'))">
 @if($marketingSettings->default_meta_keywords)<meta name="keywords" content="{{ $marketingSettings->default_meta_keywords }}">@endif

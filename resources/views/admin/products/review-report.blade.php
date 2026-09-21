@@ -10,6 +10,10 @@
         <p>{{ $periodLabel }} · {{ $start->format('d/m/Y') }} a {{ $end->format('d/m/Y') }}</p>
     </div>
 
+    @unless($opticalAvailable)
+        <p class="note">Não foi possível consultar as edições da Ótica. Este relatório mostra apenas esta loja.</p>
+    @endunless
+
     <table class="grid">
         <tr>
             <td class="metric">
@@ -65,7 +69,7 @@
                     <td>{{ $product->external_name ?: $product->name ?: 'Produto sem nome' }}</td>
                     <td>{{ $product->sku ?: '-' }}</td>
                     <td>{{ $product->ref_code ?: '-' }}</td>
-                    <td>{{ $product->editor?->name ?: 'Usuário removido' }}</td>
+                    <td>{{ $product->editor_label }}</td>
                 </tr>
             @empty
                 <tr><td colspan="5">Nenhum produto editado no período selecionado.</td></tr>

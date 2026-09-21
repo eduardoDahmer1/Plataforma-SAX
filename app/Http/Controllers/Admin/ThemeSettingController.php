@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ThemeSetting;
 use App\Services\ThemeSettingsService;
+use App\Services\StorefrontFaviconService;
+use App\Services\StorefrontLayoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,11 +14,14 @@ use Illuminate\View\View;
 
 class ThemeSettingController extends Controller
 {
-    public function edit(ThemeSettingsService $themes): View
+    public function edit(ThemeSettingsService $themes, StorefrontFaviconService $favicons, StorefrontLayoutService $layouts): View
     {
         return view('admin.theme-settings.edit', [
             'themes' => $themes->allForAdmin(),
             'fontOptions' => ThemeSettingsService::FONT_OPTIONS,
+            'faviconLayouts' => $layouts->availableLayouts(),
+            'faviconUrls' => collect(array_keys($layouts->availableLayouts()))
+                ->mapWithKeys(fn (string $layout): array => [$layout => $favicons->url($layout)])->all(),
         ]);
     }
 

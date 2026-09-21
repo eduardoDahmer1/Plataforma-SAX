@@ -16,15 +16,19 @@ use App\Services\OpenAICatalogService;
 use App\Services\ProductFeedService;
 use App\Services\ProductFeedRefreshService;
 use App\Services\StoreTaxonomyService;
+use App\Services\StoreControlService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class ProductControllerAdmin extends Controller
 {
@@ -1439,22 +1443,24 @@ class ProductControllerAdmin extends Controller
             ];
         }
 
-        $edicoesPorDia = Product::selectRaw('DATE(admin_edited_at) as dia, COUNT(*) as total')
-            ->whereBetween('admin_edited_at', [$dataInicio, $dataFim])
-            ->whereNotNull('updated_by')
-            ->groupBy('dia')
-            ->orderBy('dia', 'desc')
-            ->get();
-
-        $detalhesProdutos = Product::with('editor:id,name')
-            ->whereBetween('admin_edited_at', [$dataInicio, $dataFim])
-            ->selectRaw('id, DATE(admin_edited_at) as dia, COALESCE(external_name, name) as name, sku, ref_code, updated_by, admin_edited_at')
-            ->whereNotNull('updated_by')
-            ->orderByDesc('admin_edited_at')
-            ->get()
+        [$products, $opticalAvailable] = $this->reviewProducts($dataInicio, $dataFim);
+        $edicoesPorDia = $products
+            ->groupBy(fn ($product) => $product->admin_edited_at->format('Y-m-d'))
+            ->map(fn ($group, $dia) => (object) ['dia' => $dia, 'total' => $group->count()])
+            ->sortKeysDesc()
+            ->values();
+        $detalhesProdutos = $products
+            ->map(fn ($product) => (object) [
+                'id' => $product->id,
+                'dia' => $product->admin_edited_at->format('Y-m-d'),
+                'name' => $product->external_name ?: $product->name,
+                'sku' => $product->sku,
+                'ref_code' => $product->ref_code,
+                'editor_label' => $product->editor_label,
+            ])
             ->groupBy('dia');
 
-        return view('admin.products.review', compact('edicoesPorDia', 'detalhesProdutos', 'mesesDisponiveis', 'mesSelecionado'));
+        return view('admin.products.review', compact('edicoesPorDia', 'detalhesProdutos', 'mesesDisponiveis', 'mesSelecionado', 'opticalAvailable'));
     }
 
     public function reviewPdf(Request $request): Response
@@ -1494,23 +1500,10 @@ class ProductControllerAdmin extends Controller
             ],
         };
 
-        $products = Product::with('editor:id,name')
-            ->whereBetween('admin_edited_at', [$start, $end])
-            ->whereNotNull('updated_by')
-            ->select([
-                'id',
-                'name',
-                'external_name',
-                'sku',
-                'ref_code',
-                'updated_by',
-                'admin_edited_at',
-            ])
-            ->orderBy('admin_edited_at')
-            ->get();
+        [$products, $opticalAvailable] = $this->reviewProducts($start, $end);
 
         $dailyTotals = $products
-            ->groupBy(fn (Product $product) => $product->admin_edited_at->format('Y-m-d'))
+            ->groupBy(fn ($product) => $product->admin_edited_at->format('Y-m-d'))
             ->map->count()
             ->sortKeysDesc();
 
@@ -1519,10 +1512,82 @@ class ProductControllerAdmin extends Controller
             'dailyTotals',
             'start',
             'end',
-            'periodLabel'
+            'periodLabel',
+            'opticalAvailable'
         ))
             ->setPaper('a4', 'landscape')
             ->download('relatorio-produtos-editados-'.$filePeriod.'.pdf');
+    }
+
+    private function reviewProducts(Carbon $start, Carbon $end): array
+    {
+        $products = Product::with('editor:id,name')
+            ->whereBetween('admin_edited_at', [$start, $end])
+            ->whereNotNull('updated_by')
+            ->get(['id', 'name', 'external_name', 'sku', 'ref_code', 'updated_by', 'admin_edited_at'])
+            ->map(fn (Product $product) => (object) [
+                'id' => $product->id,
+                'name' => $product->name,
+                'external_name' => $product->external_name,
+                'sku' => $product->sku,
+                'ref_code' => $product->ref_code,
+                'admin_edited_at' => $product->admin_edited_at,
+                'editor_label' => $product->editor?->name ?: 'Usuário removido',
+                'source' => 'plataforma',
+            ]);
+
+        if (app(StoreControlService::class)->isOtica()) {
+            return [$products->sortByDesc('admin_edited_at')->values(), true];
+        }
+
+        $connection = (string) config('catalog-sync.connection');
+        if (! filled(config("database.connections.{$connection}.database"))) {
+            return [$products->sortByDesc('admin_edited_at')->values(), false];
+        }
+
+        try {
+            $opticalProducts = DB::connection($connection)
+                ->table('products as p')
+                ->leftJoin('users as u', 'u.id', '=', 'p.updated_by')
+                ->whereBetween('p.admin_edited_at', [$start, $end])
+                ->whereNotNull('p.updated_by')
+                ->where('p.price', '>=', Product::MINIMUM_VISIBLE_PRICE)
+                ->get(['p.id', 'p.name', 'p.external_name', 'p.sku', 'p.ref_code', 'p.admin_edited_at', 'u.name as editor_name'])
+                ->map(fn ($product) => (object) [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'external_name' => $product->external_name,
+                    'sku' => $product->sku,
+                    'ref_code' => $product->ref_code,
+                    'admin_edited_at' => Carbon::parse($product->admin_edited_at),
+                    'editor_label' => 'Ótica · '.($product->editor_name ?: 'Usuário removido'),
+                    'source' => 'otica',
+                ]);
+        } catch (Throwable $exception) {
+            Log::warning('Optical product edit report could not read peer database.', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [$products->sortByDesc('admin_edited_at')->values(), false];
+        }
+
+        return [$this->latestProductEdits($products->concat($opticalProducts)), true];
+    }
+
+    private function latestProductEdits(Collection $products): Collection
+    {
+        return $products
+            ->sort(function ($a, $b): int {
+                $byDate = $b->admin_edited_at->getTimestamp() <=> $a->admin_edited_at->getTimestamp();
+
+                return $byDate ?: (($b->source === 'otica') <=> ($a->source === 'otica'));
+            })
+            ->unique(function ($product): string {
+                $sku = mb_strtolower(trim((string) $product->sku));
+
+                return $sku !== '' ? 'sku:'.$sku : $product->source.':'.$product->id;
+            })
+            ->values();
     }
 
     private function productReviewWeekRange(string $weekValue): array

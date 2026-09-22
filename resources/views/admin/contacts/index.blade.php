@@ -4,6 +4,10 @@
 <link href="{{ asset('css/email-marketing.css') }}?v={{ filemtime(public_path('css/email-marketing.css')) }}" rel="stylesheet">
 @endpush
 
+@push('scripts')
+<script src="{{ asset('js/resume-progress.js') }}?v={{ filemtime(public_path('js/resume-progress.js')) }}" defer></script>
+@endpush
+
 @section('content')
 @php
     $tipos = [
@@ -18,6 +22,19 @@
     <div class="sax-cat sax-msg" id="msg-app" data-delete-url="{{ url('admin/contatos') }}" data-read-url="{{ route('admin.contacts.read', '__ID__') }}" data-confirm-delete="{{ __('messages.confirmar_exclusao') }}" data-error-message="{{ __('messages.activate_erro') }}">
 
         <x-admin.alert />
+
+        @if($panel === 'inbox' && count(session('hr_progress_ids', [])) > 0)
+            <section class="resume-progress" id="resumeProgress" data-url="{{ route('admin.contacts.hr-progress') }}" data-ids="{{ implode(',', session('hr_progress_ids', [])) }}" aria-label="Progresso do envio de currículos ao RH">
+                <div class="resume-progress__heading">
+                    <strong>Enviando currículos ao RH</strong>
+                    <span id="resumeProgressCount" role="status" aria-live="polite">0 de {{ count(session('hr_progress_ids', [])) }} enviados</span>
+                </div>
+                <div class="resume-progress__track" role="progressbar" aria-label="Currículos enviados" aria-valuemin="0" aria-valuemax="{{ count(session('hr_progress_ids', [])) }}" aria-valuenow="0">
+                    <div class="resume-progress__fill" id="resumeProgressFill"></div>
+                </div>
+                <p class="resume-progress__detail" id="resumeProgressDetail">Aguardando a atualização dos envios…</p>
+            </section>
+        @endif
 
         {{-- Cabeçalho --}}
         <div class="sax-cat__top">
@@ -176,11 +193,13 @@
                         <div class="sax-msg__who">
                             <span class="sax-msg__name">{{ $contact->name ?: '—' }} @if(!$contact->read_at)<em class="contacts-unread-dot">Nova</em>@endif</span>
                             @if ((int) $contact->contact_type === 2)
-                                <span class="sax-msg__contactinfo">
+                                <span class="sax-msg__contactinfo" data-hr-status>
                                     @if ($contact->hr_sent_at)
                                         <strong>Enviado pro RH</strong> · {{ $contact->hr_sent_to }} · {{ $contact->hr_sent_at->format('d/m/Y H:i') }}
-                                    @elseif ($contact->hr_attempted_at)
+                                    @elseif ($contact->hr_last_error)
                                         <strong>Falha no envio ao RH</strong>
+                                    @elseif ($contact->hr_attempted_at)
+                                        <strong>Aguardando envio ao RH</strong>
                                     @else
                                         <strong>Pendente de envio ao RH</strong>
                                     @endif
@@ -237,8 +256,10 @@
                                     <span class="sax-msg__value">
                                         @if ($contact->hr_sent_at)
                                             Enviado pro RH em {{ $contact->hr_sent_at->format('d/m/Y H:i') }} para {{ $contact->hr_sent_to }}
-                                        @elseif ($contact->hr_attempted_at)
+                                        @elseif ($contact->hr_last_error)
                                             Falha: {{ $contact->hr_last_error ?: 'Verifique o envio.' }}
+                                        @elseif ($contact->hr_attempted_at)
+                                            Aguardando processamento desde {{ $contact->hr_attempted_at->format('d/m/Y H:i') }}
                                         @else
                                             Ainda não enviado
                                         @endif
@@ -286,7 +307,7 @@
                         @endif
 
                         <div class="sax-msg__actions">
-                            @if ((int) $contact->contact_type === 2 && ! $contact->hr_sent_at)
+                            @if ((int) $contact->contact_type === 2 && ! $contact->hr_sent_at && (! $contact->hr_attempted_at || $contact->hr_last_error || $contact->hr_attempted_at->lt(now()->subMinutes(30))))
                                 <form method="POST" action="{{ route('admin.contacts.send-hr', $contact) }}" data-no-toggle>
                                     @csrf
                                     @if (! $contact->store_name)

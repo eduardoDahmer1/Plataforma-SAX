@@ -145,9 +145,42 @@ class ContactControllerAdmin extends Controller
             $contact->update(['store_name' => $data['store_name']]);
         }
 
-        return $resumes->send($contact)
-            ? back()->with('success', 'Currículo enviado ao RH de '.$contact->store_name.'.')
-            : back()->with('error', 'Não foi possível enviar o currículo. Verifique o arquivo e o registro de falha.');
+        return $resumes->queue($contact)
+            ? back()->with('success', 'Currículo colocado na fila de envio ao RH de '.$contact->store_name.'.')
+                ->with('hr_progress_ids', [$contact->id])
+            : back()->with('error', 'Não foi possível colocar o currículo na fila ou ele já está aguardando envio.');
+    }
+
+    public function hrProgress(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'string', 'regex:/^[1-9][0-9]*(,[1-9][0-9]*){0,99}$/', 'max:2100'],
+        ]);
+        $ids = array_values(array_unique(array_map('intval', explode(',', $data['ids']))));
+        $contacts = Contact::query()
+            ->whereKey($ids)
+            ->where('contact_type', 2)
+            ->get(['id', 'hr_sent_at', 'hr_sent_to', 'hr_last_error'])
+            ->keyBy('id');
+
+        $statuses = [];
+        $sent = 0;
+        $failed = 0;
+        foreach ($ids as $id) {
+            $contact = $contacts->get($id);
+            $status = $contact?->hr_sent_at ? 'sent' : (($contact?->hr_last_error || ! $contact) ? 'failed' : 'pending');
+            $statuses[$id] = $status;
+            $sent += (int) ($status === 'sent');
+            $failed += (int) ($status === 'failed');
+        }
+
+        return response()->json([
+            'total' => count($ids),
+            'sent' => $sent,
+            'failed' => $failed,
+            'pending' => count($ids) - $sent - $failed,
+            'statuses' => $statuses,
+        ]);
     }
 
     public function bulk(Request $request): RedirectResponse
@@ -167,8 +200,9 @@ class ContactControllerAdmin extends Controller
 
         if ($data['action'] === 'send_hr') {
             $resumes = app(ResumeForwardService::class);
-            $sent = 0;
+            $queued = 0;
             $failed = 0;
+            $queuedIds = [];
             foreach (Contact::query()->whereKey($ids)->where('contact_type', 2)->whereNull('hr_sent_at')->get() as $contact) {
                 if (! $contact->store_name) {
                     $storeName = $data['store_names'][$contact->id] ?? null;
@@ -178,10 +212,16 @@ class ContactControllerAdmin extends Controller
                     }
                     $contact->update(['store_name' => $storeName]);
                 }
-                $resumes->send($contact) ? $sent++ : $failed++;
+                if ($resumes->queue($contact)) {
+                    $queued++;
+                    $queuedIds[] = $contact->id;
+                } else {
+                    $failed++;
+                }
             }
 
-            return back()->with($failed ? 'error' : 'success', "{$sent} currículo(s) enviado(s) ao RH; {$failed} falha(s).");
+            return back()->with($failed ? 'error' : 'success', "{$queued} currículo(s) colocado(s) na fila do RH; {$failed} não processado(s).")
+                ->with('hr_progress_ids', $queuedIds);
         }
 
         if ($data['action'] === 'delete') {

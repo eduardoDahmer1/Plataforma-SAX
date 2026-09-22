@@ -69,7 +69,7 @@ class ContactController extends Controller
 
         $contact = Contact::create($validated);
         if ($type === 2) {
-            $resumes->send($contact);
+            $resumes->queue($contact);
         }
 
         $successMsg = __('messages.mensagem_sucesso') ?? 'Mensagem enviada com sucesso!';

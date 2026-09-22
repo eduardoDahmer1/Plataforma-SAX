@@ -3,13 +3,16 @@
 namespace Tests\Feature;
 
 use App\Mail\ResumeForwardMail;
+use App\Jobs\SendResumeToHr;
 use App\Models\Contact;
 use App\Models\User;
 use App\Services\StoreControlService;
+use App\Services\ResumeForwardService;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -38,6 +41,7 @@ class ResumeForwardingTest extends TestCase
         (require database_path('migrations/2026_09_22_120000_add_hr_forwarding_to_contacts_table.php'))->up();
         Storage::fake('public');
         Mail::fake();
+        Queue::fake();
         $this->mock(StoreControlService::class, function ($mock) {
             $mock->shouldReceive('isOtica')->andReturn(false);
             $mock->shouldReceive('settings')->andReturn((new StoreControlService())->defaults());
@@ -57,6 +61,14 @@ class ResumeForwardingTest extends TestCase
                 'attachment' => UploadedFile::fake()->create('curriculo.pdf', 50, 'application/pdf'),
             ])->assertRedirect();
 
+            $contact = Contact::query()->where('email', $key.'@example.com')->firstOrFail();
+            $this->assertNull($contact->hr_sent_at);
+            $this->assertNotNull($contact->hr_attempted_at);
+        }
+        Queue::assertPushed(SendResumeToHr::class, 3);
+        $this->runQueuedResumes();
+
+        foreach (Contact::STORES as $key => $store) {
             $contact = Contact::query()->where('email', $key.'@example.com')->firstOrFail();
             $this->assertSame(Contact::HR_EMAILS[$key], $contact->hr_sent_to);
             $this->assertNotNull($contact->hr_sent_at);
@@ -81,8 +93,18 @@ class ResumeForwardingTest extends TestCase
         $this->actingAs($admin)->post(route('admin.contacts.bulk'), [
             'action' => 'send_hr',
             'contact_ids' => [$cde->id, $asu->id, $pjc->id, $other->id],
-        ])->assertRedirect();
+        ])->assertRedirect()->assertSessionHas('hr_progress_ids', [$asu->id, $pjc->id]);
 
+        Queue::assertPushed(SendResumeToHr::class, 3);
+        $progressUrl = route('admin.contacts.hr-progress', ['ids' => implode(',', [$cde->id, $asu->id, $pjc->id])]);
+        $this->actingAs($admin)->getJson($progressUrl)
+            ->assertOk()->assertJson(['total' => 3, 'sent' => 0, 'failed' => 0, 'pending' => 3]);
+        Queue::pushed(SendResumeToHr::class)->first()->handle(app(ResumeForwardService::class));
+        $this->actingAs($admin)->getJson($progressUrl)
+            ->assertOk()->assertJson(['total' => 3, 'sent' => 1, 'failed' => 0, 'pending' => 2]);
+        $this->runQueuedResumes();
+        $this->actingAs($admin)->getJson($progressUrl)
+            ->assertOk()->assertJson(['total' => 3, 'sent' => 3, 'failed' => 0, 'pending' => 0]);
         $this->assertSame('cv.cde@sax.com.py', $cde->fresh()->hr_sent_to);
         $this->assertSame('cv.asu@sax.com.py', $asu->fresh()->hr_sent_to);
         $this->assertSame('cv.pjc@sax.com.py', $pjc->fresh()->hr_sent_to);
@@ -103,7 +125,9 @@ class ResumeForwardingTest extends TestCase
         ]);
 
         $this->actingAs($admin)->post(route('admin.contacts.send-hr', $contact))
-            ->assertRedirect()->assertSessionHas('error');
+            ->assertRedirect()->assertSessionHas('success');
+
+        $this->runQueuedResumes();
 
         $this->assertNull($contact->fresh()->hr_sent_at);
         $this->assertNotNull($contact->fresh()->hr_attempted_at);
@@ -125,6 +149,7 @@ class ResumeForwardingTest extends TestCase
             'store_names' => [$contact->id => 'Pedro Juan Caballero'],
         ])->assertRedirect();
 
+        $this->runQueuedResumes();
         $this->assertSame('cv.pjc@sax.com.py', $contact->fresh()->hr_sent_to);
         Mail::assertSentCount(1);
     }
@@ -141,5 +166,12 @@ class ResumeForwardingTest extends TestCase
             'store_name' => $store,
             'attachment' => $path,
         ]);
+    }
+
+    private function runQueuedResumes(): void
+    {
+        Queue::pushed(SendResumeToHr::class)->each(
+            fn ($job) => $job->handle(app(ResumeForwardService::class))
+        );
     }
 }

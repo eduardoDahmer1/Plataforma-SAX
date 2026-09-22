@@ -75,3 +75,12 @@
     .tox-tinymce{border-radius:12px!important}
     .tox .tox-toolbar__primary{overflow-x:auto!important;flex-wrap:nowrap!important}
 }
+
+.resume-progress{margin:0 0 1rem;padding:1rem 1.1rem;border:1px solid #bdd7ff;border-radius:14px;background:#f5f9ff;color:#14213d}
+.resume-progress__heading{display:flex;justify-content:space-between;gap:.75rem;align-items:center;flex-wrap:wrap;font-size:.82rem}
+.resume-progress__heading span{font-weight:800;color:#175cd3}
+.resume-progress__track{height:10px;margin:.8rem 0 .55rem;border-radius:999px;background:#dce8fb;overflow:hidden}
+.resume-progress__fill{height:100%;width:0;background:#16a34a;border-radius:inherit;transition:width .4s ease}
+.resume-progress__detail{margin:0;color:#475467;font-size:.72rem}
+.resume-progress.has-failures{border-color:#f5c2c7;background:#fff8f8}
+@media(max-width:600px){.resume-progress{padding:.85rem}.resume-progress__heading{align-items:flex-start;flex-direction:column}}

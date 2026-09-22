@@ -436,7 +436,7 @@ class CheckoutController extends Controller
             }
 
             if ($paymentMethod === 'whatsapp') {
-                return $this->whatsapp($request);
+                return $this->redirectWhatsappOrder($order, $user, $subtotal, $desconto, $cupon, $total);
             }
 
             return redirect()->route('checkout.success')->with('success', 'Pedido concluído!');
@@ -709,14 +709,21 @@ class CheckoutController extends Controller
             return back()->with('error', 'Erro ao criar pedido: ' . $e->getMessage());
         }
 
+        Cart::where('user_id', $user->id)->delete();
+        $this->cupons->remover();
+
+        return $this->redirectWhatsappOrder($order, $user, $subtotal, $desconto, $cupon, $total);
+    }
+
+    private function redirectWhatsappOrder(Order $order, $user, $subtotal, $desconto, $cupon, $total)
+    {
         $message = "Olá! Quero finalizar minha compra:\n\n";
-        foreach ($cart as $cartItem) {
-            $p = $cartItem->product;
-            $message .= 'Produto: ' . ($p->external_name ?? ($p->name ?? 'Produto não encontrado')) . "\n";
-            $message .= 'SKU: ' . ($p->sku ?? 'N/A') . "\n";
-            $message .= 'Link: ' . route('produto.show', $p->id) . "\n";
-            $message .= 'Preço: ' . currency($cartItem->product->price) . "\n";
-            $message .= "Qtd: {$cartItem->quantity}\n------------------------\n";
+        foreach ($order->items as $item) {
+            $message .= 'Produto: ' . ($item->external_name ?: ($item->name ?: 'Produto não encontrado')) . "\n";
+            $message .= 'SKU: ' . ($item->sku ?: 'N/A') . "\n";
+            $message .= 'Link: ' . route('produto.show', $item->slug ?: $item->product_id) . "\n";
+            $message .= 'Preço: ' . currency($item->price) . "\n";
+            $message .= "Qtd: {$item->quantity}\n------------------------\n";
         }
 
         $message .= 'Subtotal: ' . currency($subtotal) . "\n";
@@ -726,9 +733,7 @@ class CheckoutController extends Controller
         }
 
         $message .= 'Total: ' . currency($total) . "\nCliente: {$user->name}\nTelefone: +{$user->phone_country}{$user->phone_number}\n";
-
-        Cart::where('user_id', $user->id)->delete();
-        $this->cupons->remover();
+        $message .= 'Pedido no painel: ' . route('admin.orders.show', $order->id) . "\n";
 
         return redirect('https://wa.me/595984167575?text=' . urlencode($message));
     }

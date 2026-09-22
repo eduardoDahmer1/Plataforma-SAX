@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Cart;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Currency;
 use App\Services\CuponService;
 use App\Models\AbandonedCart;
@@ -86,12 +88,39 @@ class CartController extends Controller
             return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_empty_cart'));
         }
 
-        $url = $whatsapp->url($request, $cart);
-        if ($url === null) {
+        $contact = $whatsapp->contact($request);
+        if (! $contact) {
             return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_no_contact'));
         }
 
-        return redirect()->away($url);
+        $order = DB::transaction(function () use ($request, $cart) {
+            $order = Order::create([
+                'user_id' => $request->user()->id,
+                'status' => 'pending',
+                'payment_method' => 'whatsapp',
+                'total' => $cart->sum(fn ($item) => $item->product->price * $item->quantity),
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+                'phone' => $request->user()->phone_number,
+            ]);
+
+            foreach ($cart as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->product->price,
+                    'name' => $item->product->name,
+                    'external_name' => $item->product->external_name,
+                    'slug' => $item->product->slug,
+                    'sku' => $item->product->sku,
+                ]);
+            }
+
+            return $order;
+        });
+
+        return redirect()->away($whatsapp->url($cart, $order, $contact));
     }
 
     public function view()

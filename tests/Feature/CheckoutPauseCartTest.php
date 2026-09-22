@@ -45,6 +45,7 @@ class CheckoutPauseCartTest extends TestCase
             $table->decimal('price', 12, 2);
             $table->string('name');
             $table->string('external_name')->nullable();
+            $table->string('slug')->nullable();
             $table->string('sku');
         });
         Schema::create('carts', function (Blueprint $table) {
@@ -52,6 +53,29 @@ class CheckoutPauseCartTest extends TestCase
             $table->integer('user_id');
             $table->integer('product_id');
             $table->integer('quantity');
+            $table->timestamps();
+        });
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->integer('user_id');
+            $table->string('status');
+            $table->string('payment_method');
+            $table->decimal('total', 12, 2);
+            $table->string('name')->nullable();
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('order_items', function (Blueprint $table) {
+            $table->id();
+            $table->integer('order_id');
+            $table->integer('product_id');
+            $table->integer('quantity');
+            $table->decimal('price', 12, 2);
+            $table->string('name')->nullable();
+            $table->string('external_name')->nullable();
+            $table->string('slug')->nullable();
+            $table->string('sku')->nullable();
             $table->timestamps();
         });
         Schema::create('currencies', function (Blueprint $table) {
@@ -63,7 +87,7 @@ class CheckoutPauseCartTest extends TestCase
         DB::table('categories')->insert(['id' => 1, 'status' => 1]);
         DB::table('products')->insert([
             'id' => 10, 'category_id' => 1, 'status' => 1, 'is_outlet' => 0,
-            'stock' => 5, 'price' => 12.5, 'name' => 'Producto & prueba', 'sku' => 'SKU-10',
+            'stock' => 5, 'price' => 12.5, 'name' => 'Producto & prueba', 'slug' => 'producto-prueba', 'sku' => 'SKU-10',
         ]);
         DB::table('currencies')->insert(['id' => 1, 'is_default' => 1, 'sign' => 'US$', 'value' => 1]);
         $user = new User();
@@ -120,7 +144,7 @@ class CheckoutPauseCartTest extends TestCase
             ->assertJson(['code' => 'catalog_integration_unavailable']);
     }
 
-    public function test_whatsapp_uses_configured_phone_and_cart_snapshot_without_mutations(): void
+    public function test_whatsapp_creates_pending_order_with_product_and_admin_links(): void
     {
         DB::table('carts')->insert(['user_id' => 7, 'product_id' => 10, 'quantity' => 2]);
         DB::table('carts')->insert(['user_id' => 8, 'product_id' => 10, 'quantity' => 4]);
@@ -135,19 +159,23 @@ class CheckoutPauseCartTest extends TestCase
         $this->assertStringContainsString('Precio unitario: US$ 12,50', $query['text']);
         $this->assertStringContainsString('Subtotal de productos: US$ 25,00', $query['text']);
         $this->assertStringContainsString('sujetos a confirmación', $query['text']);
-        $this->assertStringNotContainsString('http', $query['text']);
+        $this->assertStringContainsString(route('produto.show', 'producto-prueba'), $query['text']);
+        $this->assertStringContainsString(route('admin.orders.show', 1), $query['text']);
         $this->assertSame($before, DB::table('carts')->get()->toJson());
         $this->assertDatabaseHas('products', ['id' => 10, 'stock' => 5]);
-        // No orders table exists: creating an order would fail this request.
+        $this->assertDatabaseHas('orders', ['id' => 1, 'user_id' => 7, 'status' => 'pending', 'payment_method' => 'whatsapp', 'total' => 25]);
+        $this->assertDatabaseHas('order_items', ['order_id' => 1, 'product_id' => 10, 'quantity' => 2, 'price' => 12.5]);
     }
 
     public function test_empty_cart_and_missing_contact_do_not_open_whatsapp(): void
     {
         $this->get(route('cart.whatsapp'))->assertRedirect(route('cart.view'))->assertSessionHas('error');
+        $this->assertDatabaseCount('orders', 0);
         DB::table('carts')->insert(['user_id' => 7, 'product_id' => 10, 'quantity' => 2]);
         $this->mock(WhatsappWidgetService::class, fn ($mock) => $mock->shouldReceive('configuration')->andReturn(['contacts' => collect()]));
         $this->get(route('cart.whatsapp'))->assertRedirect(route('cart.view'))->assertSessionHas('error');
         $this->assertDatabaseCount('carts', 1);
+        $this->assertDatabaseCount('orders', 0);
     }
 
     public function test_whatsapp_still_requires_login(): void

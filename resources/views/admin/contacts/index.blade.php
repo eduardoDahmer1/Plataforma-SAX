@@ -136,6 +136,7 @@
             <label class="contacts-check-all"><input type="checkbox" id="contactsSelectAll"> <span>Selecionar página</span></label>
             <strong id="contactsSelectedCount">0 selecionados</strong>
             <div class="contacts-bulk-actions">
+                <button type="submit" name="action" value="send_hr" disabled data-bulk-action><i class="fa-solid fa-file-arrow-up"></i> Enviar currículos ao RH</button>
                 <button type="submit" name="action" value="email" disabled data-bulk-action><i class="fa-solid fa-paper-plane"></i> Enviar e-mail</button>
                 <button type="submit" name="action" value="mark_read" disabled data-bulk-action><i class="fa-solid fa-envelope-open"></i> Marcar lidos</button>
                 <button type="submit" name="action" value="mark_unread" disabled data-bulk-action><i class="fa-solid fa-envelope"></i> Marcar não lidos</button>
@@ -174,6 +175,17 @@
 
                         <div class="sax-msg__who">
                             <span class="sax-msg__name">{{ $contact->name ?: '—' }} @if(!$contact->read_at)<em class="contacts-unread-dot">Nova</em>@endif</span>
+                            @if ((int) $contact->contact_type === 2)
+                                <span class="sax-msg__contactinfo">
+                                    @if ($contact->hr_sent_at)
+                                        <strong>Enviado pro RH</strong> · {{ $contact->hr_sent_to }} · {{ $contact->hr_sent_at->format('d/m/Y H:i') }}
+                                    @elseif ($contact->hr_attempted_at)
+                                        <strong>Falha no envio ao RH</strong>
+                                    @else
+                                        <strong>Pendente de envio ao RH</strong>
+                                    @endif
+                                </span>
+                            @endif
                             <span class="sax-msg__contactinfo">
                                 {{ $contact->email }}
                                 @if ($contact->phone) · {{ $contact->phone }} @endif
@@ -207,6 +219,30 @@
                                 <div>
                                     <span class="sax-msg__label">Loja</span>
                                     <span class="sax-msg__value">{{ $contact->store_name }}</span>
+                                </div>
+                            @elseif ((int) $contact->contact_type === 2)
+                                <div>
+                                    <span class="sax-msg__label">Loja não registrada · escolha para envio em lote</span>
+                                    <select name="store_names[{{ $contact->id }}]" form="contactsBulkForm" class="form-select form-select-sm" data-no-toggle>
+                                        <option value="">Escolher loja</option>
+                                        @foreach (\App\Models\Contact::STORES as $storeName)
+                                            <option value="{{ $storeName }}">{{ $storeName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+                            @if ((int) $contact->contact_type === 2)
+                                <div>
+                                    <span class="sax-msg__label">Encaminhamento ao RH</span>
+                                    <span class="sax-msg__value">
+                                        @if ($contact->hr_sent_at)
+                                            Enviado pro RH em {{ $contact->hr_sent_at->format('d/m/Y H:i') }} para {{ $contact->hr_sent_to }}
+                                        @elseif ($contact->hr_attempted_at)
+                                            Falha: {{ $contact->hr_last_error ?: 'Verifique o envio.' }}
+                                        @else
+                                            Ainda não enviado
+                                        @endif
+                                    </span>
                                 </div>
                             @endif
                             <div>
@@ -250,6 +286,20 @@
                         @endif
 
                         <div class="sax-msg__actions">
+                            @if ((int) $contact->contact_type === 2 && ! $contact->hr_sent_at)
+                                <form method="POST" action="{{ route('admin.contacts.send-hr', $contact) }}" data-no-toggle>
+                                    @csrf
+                                    @if (! $contact->store_name)
+                                        <select name="store_name" class="form-select form-select-sm" required aria-label="Loja para encaminhar currículo">
+                                            <option value="">Escolher loja</option>
+                                            @foreach (\App\Models\Contact::STORES as $storeName)
+                                                <option value="{{ $storeName }}">{{ $storeName }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                    <button type="submit" class="sax-cat-act"><i class="fa-solid fa-file-arrow-up"></i> Enviar pro RH</button>
+                                </form>
+                            @endif
                             @if ($contact->email)
                                 <a href="{{ route('admin.emails.create', ['contact' => $contact->id]) }}" class="sax-cat-act">
                                     <i class="fa fa-reply"></i> {{ __('messages.contato_responder') }}

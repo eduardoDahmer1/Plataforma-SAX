@@ -430,6 +430,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::patch('contatos/{contact}/lido', [ContactControllerAdmin::class, 'read'])->name('contacts.read');
     Route::post('contatos/marcar-todos-lidos', [ContactControllerAdmin::class, 'markAllRead'])->name('contacts.read-all');
     Route::post('contatos/acoes-em-lote', [ContactControllerAdmin::class, 'bulk'])->name('contacts.bulk');
+    Route::post('contatos/{contact}/enviar-rh', [ContactControllerAdmin::class, 'sendToHr'])
+        ->whereNumber('contact')->name('contacts.send-hr');
     Route::get('contatos/email/novo', [EmailMarketingController::class, 'create'])->name('emails.create');
     Route::post('contatos/email/enviar', [EmailMarketingController::class, 'send'])
         ->middleware('throttle:10,1')->name('emails.send');

@@ -7,9 +7,11 @@ use App\Models\JobFlyer;
 use App\Models\Language;
 use App\Models\WhatsappContact;
 use App\Services\StoreControlService;
+use App\Services\ResumeForwardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 
 class ContactController extends Controller
 {
@@ -36,7 +38,7 @@ class ContactController extends Controller
         return view('contact.form', compact('lang', 'locale', 'flyers', 'directoryContacts', 'isOtica', 'contactGuideEnabled'));
     }
 
-    public function store(Request $request, StoreControlService $storeControls)
+    public function store(Request $request, StoreControlService $storeControls, ResumeForwardService $resumes)
     {
         $isOtica = $storeControls->isOtica();
         $type = $isOtica ? 4 : (int) $request->input('contact_type');
@@ -48,7 +50,9 @@ class ContactController extends Controller
             'email' => 'required|email',
             'phone' => 'nullable|string|max:20',
             'message' => 'required|string',
-            'store_name' => $type === 2 ? 'required|string|max:255' : 'nullable|string|max:255',
+            'store_name' => $type === 2
+                ? ['required', Rule::in(array_values(Contact::STORES))]
+                : ['nullable', 'string', 'max:255'],
             'attachment' => match ($type) {
                 2 => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
                 4 => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -63,7 +67,10 @@ class ContactController extends Controller
                 ->store('attachments', 'public');
         }
 
-        Contact::create($validated);
+        $contact = Contact::create($validated);
+        if ($type === 2) {
+            $resumes->send($contact);
+        }
 
         $successMsg = __('messages.mensagem_sucesso') ?? 'Mensagem enviada com sucesso!';
 

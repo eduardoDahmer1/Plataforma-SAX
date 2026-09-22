@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\EmailCampaign;
 use App\Models\EmailTemplate;
+use App\Services\ResumeForwardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -131,17 +132,56 @@ class ContactControllerAdmin extends Controller
         return back()->with('success', "{$updated} mensagem(ns) marcada(s) como lida(s).");
     }
 
+    public function sendToHr(Request $request, Contact $contact, ResumeForwardService $resumes): RedirectResponse
+    {
+        abort_unless((int) $contact->contact_type === 2, 404);
+
+        if ($contact->hr_sent_at) {
+            return back()->with('success', 'Este currículo já foi enviado ao RH.');
+        }
+
+        if (! $contact->store_name) {
+            $data = $request->validate(['store_name' => ['required', Rule::in(array_values(Contact::STORES))]]);
+            $contact->update(['store_name' => $data['store_name']]);
+        }
+
+        return $resumes->send($contact)
+            ? back()->with('success', 'Currículo enviado ao RH de '.$contact->store_name.'.')
+            : back()->with('error', 'Não foi possível enviar o currículo. Verifique o arquivo e o registro de falha.');
+    }
+
     public function bulk(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'action' => ['required', Rule::in(['mark_read', 'mark_unread', 'delete', 'email'])],
+            'action' => ['required', Rule::in(['mark_read', 'mark_unread', 'delete', 'email', 'send_hr'])],
             'contact_ids' => ['required', 'array', 'min:1', 'max:100'],
             'contact_ids.*' => ['integer', 'distinct', 'exists:contacts,id'],
+            'store_names' => ['sometimes', 'array'],
+            'store_names.*' => ['nullable', Rule::in(array_values(Contact::STORES))],
         ]);
         $ids = array_values(array_unique(array_map('intval', $data['contact_ids'])));
 
         if ($data['action'] === 'email') {
             return redirect()->route('admin.emails.create', ['contacts' => implode(',', $ids)]);
+        }
+
+        if ($data['action'] === 'send_hr') {
+            $resumes = app(ResumeForwardService::class);
+            $sent = 0;
+            $failed = 0;
+            foreach (Contact::query()->whereKey($ids)->where('contact_type', 2)->whereNull('hr_sent_at')->get() as $contact) {
+                if (! $contact->store_name) {
+                    $storeName = $data['store_names'][$contact->id] ?? null;
+                    if (! $storeName) {
+                        $failed++;
+                        continue;
+                    }
+                    $contact->update(['store_name' => $storeName]);
+                }
+                $resumes->send($contact) ? $sent++ : $failed++;
+            }
+
+            return back()->with($failed ? 'error' : 'success', "{$sent} currículo(s) enviado(s) ao RH; {$failed} falha(s).");
         }
 
         if ($data['action'] === 'delete') {

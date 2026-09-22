@@ -84,3 +84,17 @@
 .resume-progress__detail{margin:0;color:#475467;font-size:.72rem}
 .resume-progress.has-failures{border-color:#f5c2c7;background:#fff8f8}
 @media(max-width:600px){.resume-progress{padding:.85rem}.resume-progress__heading{align-items:flex-start;flex-direction:column}}
+
+.hr-attempts-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:1rem 0}
+.hr-attempts-head h2{margin:0 0 .25rem;font-size:1.08rem;font-weight:800}
+.hr-attempts-head p{margin:0;color:#667085;font-size:.74rem}
+.hr-attempts-table td{vertical-align:top;line-height:1.5}
+.hr-attempts-table small{color:#667085;overflow-wrap:anywhere}
+.hr-attempt-status{display:inline-block;padding:.2rem .5rem;border-radius:999px;background:#eef2f6;color:#344054;font-size:.68rem;font-weight:800}
+.hr-attempt-status--queued{background:#eff8ff;color:#175cd3}
+.hr-attempt-status--processing{background:#fff4d8;color:#92400e}
+.hr-attempt-status--sent{background:#e9f9ef;color:#166534}
+.hr-attempt-status--failed{background:#fff0f0;color:#b42318}
+.hr-attempt-status--canceled{background:#f2f4f7;color:#475467}
+.hr-attempt-error{display:block;max-width:17rem;white-space:normal}
+@media(max-width:700px){.hr-attempts-head{align-items:flex-start;flex-direction:column}.hr-attempts-table{min-width:850px}}

@@ -47,6 +47,8 @@
                 <a href="{{ route('admin.emails.create') }}" class="sax-cat__new"><i class="fas fa-paper-plane"></i> Novo e-mail</a>
             @elseif($panel === 'templates')
                 <a href="{{ route('admin.email-templates.create') }}" class="sax-cat__new"><i class="fas fa-plus"></i> Novo template</a>
+            @elseif(in_array($panel, ['hr-queue', 'hr-history']))
+                <a href="{{ route('admin.contatos.index', ['type' => 2]) }}" class="sax-cat__new"><i class="fas fa-file-lines"></i> Ver currículos</a>
             @else
                 <a href="{{ route('admin.emails.create') }}" class="sax-cat__new"><i class="fas fa-paper-plane"></i> Novo envio</a>
             @endif
@@ -56,7 +58,9 @@
             <a href="{{ route('admin.contatos.index') }}" class="{{ $panel === 'inbox' ? 'is-active' : '' }}"><i class="fa-solid fa-inbox"></i> Recebidos</a>
             <a href="{{ route('admin.emails.create') }}"><i class="fa-solid fa-pen-to-square"></i> Criar e-mail</a>
             <a href="{{ route('admin.contatos.index', ['view' => 'templates']) }}" class="{{ $panel === 'templates' ? 'is-active' : '' }}"><i class="fa-solid fa-layer-group"></i> Templates</a>
-            <a href="{{ route('admin.contatos.index', ['view' => 'history']) }}" class="{{ $panel === 'history' ? 'is-active' : '' }}"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de envios</a>
+            <a href="{{ route('admin.contatos.index', ['view' => 'history']) }}" class="{{ $panel === 'history' ? 'is-active' : '' }}"><i class="fa-solid fa-clock-rotate-left"></i> Histórico e-mail</a>
+            <a href="{{ route('admin.contatos.index', ['view' => 'hr-queue']) }}" class="{{ $panel === 'hr-queue' ? 'is-active' : '' }}"><i class="fa-solid fa-list-check"></i> Fila RH</a>
+            <a href="{{ route('admin.contatos.index', ['view' => 'hr-history']) }}" class="{{ $panel === 'hr-history' ? 'is-active' : '' }}"><i class="fa-solid fa-clock-rotate-left"></i> Histórico RH</a>
             @if($panel === 'inbox')
                 <a href="{{ route('admin.contacts.export', ['type' => $type, 'period' => $period]) }}"><i class="fas fa-download"></i> Exportar</a>
             @endif
@@ -338,6 +342,58 @@
         </div>
 
         <div class="sax-cat__pag">{{ $contacts->links() }}</div>
+        @elseif(in_array($panel, ['hr-queue', 'hr-history']))
+            <div class="hr-attempts-head">
+                <div>
+                    <h2>{{ $panel === 'hr-queue' ? 'Fila de currículos do RH' : 'Histórico de envios ao RH' }}</h2>
+                    <p>{{ $panel === 'hr-queue' ? 'Você pode cancelar um envio enquanto ele ainda aguarda na fila.' : 'Cada tentativa de envio fica registrada, inclusive falhas e cancelamentos.' }}</p>
+                </div>
+                @if($panel === 'hr-queue')
+                    <a href="{{ route('admin.contatos.index', ['view' => 'hr-queue']) }}" class="email-btn email-btn--ghost"><i class="fa-solid fa-rotate"></i> Atualizar fila</a>
+                @endif
+            </div>
+            @if($hrAttempts->isEmpty())
+                <div class="sax-cat__empty">{{ $panel === 'hr-queue' ? 'Nenhum currículo aguardando ou em processamento.' : 'Nenhum envio de currículo registrado ainda.' }}</div>
+            @else
+                <div class="email-history-wrap">
+                    <table class="email-history-table hr-attempts-table">
+                        <thead><tr><th>Currículo</th><th>Loja / destino</th><th>Status</th><th>Entrada na fila</th><th>Início / fim</th><th>Origem</th><th>Ação</th></tr></thead>
+                        <tbody>
+                        @foreach($hrAttempts as $attempt)
+                            <tr>
+                                <td><strong>{{ $attempt->candidate_name }}</strong><br><small>{{ $attempt->candidate_email }}</small><br><small>Registro #{{ $attempt->contact_id }}</small></td>
+                                <td>{{ $attempt->store_name ?: 'Não informada' }}<br><small>{{ $attempt->destination ?: 'Destino indisponível' }}</small></td>
+                                <td>
+                                    <span class="hr-attempt-status hr-attempt-status--{{ $attempt->status }}">{{ ['queued' => 'Aguardando', 'processing' => 'Processando', 'sent' => 'Enviado', 'failed' => 'Falha', 'canceled' => 'Cancelado'][$attempt->status] ?? $attempt->status }}</span>
+                                    @if($attempt->error)<br><small class="hr-attempt-error">{{ $attempt->error }}</small>@endif
+                                </td>
+                                <td>{{ $attempt->created_at->format('d/m/Y H:i:s') }}</td>
+                                <td>
+                                    @if($attempt->started_at)Início: {{ $attempt->started_at->format('d/m/Y H:i:s') }}<br>@endif
+                                    @if($attempt->finished_at)Fim: {{ $attempt->finished_at->format('d/m/Y H:i:s') }}@else—@endif
+                                </td>
+                                <td>{{ ['automatic' => 'Automático', 'manual' => 'Manual', 'legacy' => 'Registro anterior'][$attempt->source] ?? $attempt->source }}@if($attempt->initiated_by)<br><small>{{ $attempt->initiator?->name ?: 'Usuário #'.$attempt->initiated_by }}</small>@endif
+                                    @if($attempt->canceled_by)<br><small>Cancelado por {{ $attempt->canceler?->name ?: 'usuário #'.$attempt->canceled_by }}</small>@endif
+                                </td>
+                                <td>
+                                    @if($attempt->status === 'queued')
+                                        <form method="POST" action="{{ route('admin.contacts.hr-cancel', $attempt) }}" data-confirm="Retirar este currículo da fila de envio ao RH?">
+                                            @csrf
+                                            <button type="submit" class="email-btn email-btn--ghost">Parar envio</button>
+                                        </form>
+                                    @elseif($attempt->status === 'processing')
+                                        <small>Envio já iniciado</small>
+                                    @else
+                                        <small>—</small>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="sax-cat__pag">{{ $hrAttempts->appends(['view' => $panel])->links() }}</div>
+            @endif
         @elseif($panel === 'templates')
             @if($emailTemplates->isEmpty())
                 <div class="sax-cat__empty">

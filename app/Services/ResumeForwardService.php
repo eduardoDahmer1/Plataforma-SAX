@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Mail\ResumeForwardMail;
 use App\Jobs\SendResumeToHr;
 use App\Models\Contact;
+use App\Models\ResumeForwardAttempt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -14,31 +16,45 @@ use Throwable;
 
 class ResumeForwardService
 {
-    public function queue(Contact $contact): bool
+    public function queue(Contact $contact, ?int $adminId = null): bool
     {
         if ((int) $contact->contact_type !== 2) {
             return false;
         }
 
-        $claimed = Contact::query()
-            ->whereKey($contact->id)
-            ->whereNull('hr_sent_at')
-            ->where(function ($query) {
-                $query->whereNull('hr_attempted_at')
-                    ->orWhereNotNull('hr_last_error')
-                    ->orWhere('hr_attempted_at', '<', now()->subMinutes(30));
-            })
-            ->update(['hr_attempted_at' => now(), 'hr_last_error' => null]);
+        $attempt = DB::transaction(function () use ($contact, $adminId) {
+            $current = Contact::query()->lockForUpdate()->find($contact->id);
+            if (! $current || $current->hr_sent_at || ResumeForwardAttempt::query()
+                ->where('contact_id', $current->id)->whereIn('status', ['queued', 'processing'])->exists()) {
+                return null;
+            }
 
-        if (! $claimed) {
+            $attempt = ResumeForwardAttempt::create([
+                'contact_id' => $current->id,
+                'candidate_name' => $current->name,
+                'candidate_email' => $current->email,
+                'store_name' => $current->store_name,
+                'destination' => $this->destinationFor($current->store_name),
+                'source' => $adminId ? 'manual' : 'automatic',
+                'initiated_by' => $adminId,
+                'status' => 'queued',
+            ]);
+            $current->update(['hr_attempted_at' => now(), 'hr_last_error' => null]);
+
+            return $attempt;
+        });
+
+        if (! $attempt) {
             return false;
         }
 
         try {
-            SendResumeToHr::dispatch($contact->id);
+            SendResumeToHr::dispatch($contact->id, $attempt->id);
             return true;
         } catch (Throwable $exception) {
-            $contact->update(['hr_last_error' => Str::limit($exception->getMessage(), 500, '')]);
+            $error = Str::limit($exception->getMessage(), 500, '');
+            $attempt->update(['status' => 'failed', 'finished_at' => now(), 'error' => $error]);
+            $contact->update(['hr_last_error' => $error]);
             Log::error('Falha ao colocar currículo na fila do RH', [
                 'contact_id' => $contact->id,
                 'error' => $exception->getMessage(),

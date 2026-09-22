@@ -5,12 +5,15 @@ namespace Tests\Feature;
 use App\Mail\ResumeForwardMail;
 use App\Jobs\SendResumeToHr;
 use App\Models\Contact;
+use App\Models\ResumeForwardAttempt;
 use App\Models\User;
 use App\Services\StoreControlService;
 use App\Services\ResumeForwardService;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
+use App\Http\Controllers\Admin\ContactControllerAdmin;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
@@ -39,6 +42,7 @@ class ResumeForwardingTest extends TestCase
             $table->timestamps();
         });
         (require database_path('migrations/2026_09_22_120000_add_hr_forwarding_to_contacts_table.php'))->up();
+        (require database_path('migrations/2026_09_22_130000_create_resume_forward_attempts_table.php'))->up();
         Storage::fake('public');
         Mail::fake();
         Queue::fake();
@@ -64,6 +68,7 @@ class ResumeForwardingTest extends TestCase
             $contact = Contact::query()->where('email', $key.'@example.com')->firstOrFail();
             $this->assertNull($contact->hr_sent_at);
             $this->assertNotNull($contact->hr_attempted_at);
+            $this->assertDatabaseHas('resume_forward_attempts', ['contact_id' => $contact->id, 'status' => 'queued', 'destination' => Contact::HR_EMAILS[$key]]);
         }
         Queue::assertPushed(SendResumeToHr::class, 3);
         $this->runQueuedResumes();
@@ -72,6 +77,7 @@ class ResumeForwardingTest extends TestCase
             $contact = Contact::query()->where('email', $key.'@example.com')->firstOrFail();
             $this->assertSame(Contact::HR_EMAILS[$key], $contact->hr_sent_to);
             $this->assertNotNull($contact->hr_sent_at);
+            $this->assertDatabaseHas('resume_forward_attempts', ['contact_id' => $contact->id, 'status' => 'sent']);
             Mail::assertSent(ResumeForwardMail::class, fn ($mail) =>
                 $mail->contact->is($contact)
                 && $mail->hasTo(Contact::HR_EMAILS[$key])
@@ -132,7 +138,32 @@ class ResumeForwardingTest extends TestCase
         $this->assertNull($contact->fresh()->hr_sent_at);
         $this->assertNotNull($contact->fresh()->hr_attempted_at);
         $this->assertNotNull($contact->fresh()->hr_last_error);
+        $this->assertDatabaseHas('resume_forward_attempts', ['contact_id' => $contact->id, 'status' => 'failed']);
         Mail::assertNothingSent();
+    }
+
+    public function test_admin_can_cancel_a_queued_resume_but_not_one_already_processing(): void
+    {
+        $admin = User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]);
+        $contact = $this->oldResume('Ciudad del Este');
+        $this->actingAs($admin)->post(route('admin.contacts.send-hr', $contact))->assertRedirect();
+        $attempt = ResumeForwardAttempt::query()->firstOrFail();
+
+        $this->actingAs($admin)->post(route('admin.contacts.hr-cancel', $attempt))
+            ->assertRedirect()->assertSessionHas('success');
+        $this->assertSame('canceled', $attempt->fresh()->status);
+        $this->assertNull($contact->fresh()->hr_attempted_at);
+        $this->actingAs($admin)->getJson(route('admin.contacts.hr-progress', ['ids' => (string) $contact->id]))
+            ->assertOk()->assertJson(['total' => 1, 'sent' => 0, 'failed' => 0, 'canceled' => 1, 'pending' => 0]);
+        $this->runQueuedResumes();
+        Mail::assertNothingSent();
+
+        $this->actingAs($admin)->post(route('admin.contacts.send-hr', $contact))->assertRedirect();
+        $processing = ResumeForwardAttempt::query()->latest('id')->firstOrFail();
+        $processing->update(['status' => 'processing', 'started_at' => now()]);
+        $this->actingAs($admin)->post(route('admin.contacts.hr-cancel', $processing))
+            ->assertRedirect()->assertSessionHas('error');
+        $this->assertSame('processing', $processing->fresh()->status);
     }
 
     public function test_old_resumes_without_a_store_require_an_explicit_destination(): void
@@ -152,6 +183,39 @@ class ResumeForwardingTest extends TestCase
         $this->runQueuedResumes();
         $this->assertSame('cv.pjc@sax.com.py', $contact->fresh()->hr_sent_to);
         Mail::assertSentCount(1);
+    }
+
+    public function test_previous_results_are_included_in_the_hr_history(): void
+    {
+        $sent = $this->oldResume('Asunción');
+        $sent->update([
+            'hr_attempted_at' => now()->subMinute(),
+            'hr_sent_at' => now(),
+            'hr_sent_to' => 'cv.asu@sax.com.py',
+        ]);
+        $failed = $this->oldResume('Ciudad del Este');
+        $failed->update(['hr_attempted_at' => now(), 'hr_last_error' => 'Falha no SMTP']);
+
+        (require database_path('migrations/2026_09_22_131000_backfill_resume_forward_attempts.php'))->up();
+
+        $this->assertDatabaseHas('resume_forward_attempts', ['contact_id' => $sent->id, 'status' => 'sent', 'source' => 'legacy']);
+        $this->assertDatabaseHas('resume_forward_attempts', ['contact_id' => $failed->id, 'status' => 'failed', 'source' => 'legacy']);
+    }
+
+    public function test_admin_can_open_the_hr_queue_and_history_pages(): void
+    {
+        $admin = User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]);
+        $contact = $this->oldResume('Ciudad del Este');
+        $this->actingAs($admin)->post(route('admin.contacts.send-hr', $contact))->assertRedirect();
+        $controller = app(ContactControllerAdmin::class);
+        $queue = $controller->index(new Request(['view' => 'hr-queue']));
+        $history = $controller->index(new Request(['view' => 'hr-history']));
+
+        $this->assertSame('admin.contacts.index', $queue->getName());
+        $this->assertSame('hr-queue', $queue->getData()['panel']);
+        $this->assertCount(1, $queue->getData()['hrAttempts']);
+        $this->assertSame('hr-history', $history->getData()['panel']);
+        $this->assertCount(1, $history->getData()['hrAttempts']);
     }
 
     private function oldResume(string $store): Contact

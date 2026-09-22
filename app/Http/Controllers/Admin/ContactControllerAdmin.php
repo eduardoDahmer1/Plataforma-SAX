@@ -7,11 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\EmailCampaign;
 use App\Models\EmailTemplate;
+use App\Models\ResumeForwardAttempt;
 use App\Services\ResumeForwardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -19,7 +21,7 @@ class ContactControllerAdmin extends Controller
 {
     public function index(Request $request)
     {
-        $panel = in_array($request->get('view'), ['inbox', 'templates', 'history'], true)
+        $panel = in_array($request->get('view'), ['inbox', 'templates', 'history', 'hr-queue', 'hr-history'], true)
             ? $request->get('view')
             : 'inbox';
         $type = $request->get('type');
@@ -85,10 +87,17 @@ class ContactControllerAdmin extends Controller
         $campaigns = $panel === 'history'
             ? EmailCampaign::query()->with(['creator', 'template'])->latest()->paginate(20, ['*'], 'campaigns_page')
             : collect();
+        $hrAttempts = match ($panel) {
+            'hr-queue' => ResumeForwardAttempt::query()->with('initiator:id,name')->whereIn('status', ['queued', 'processing'])
+                ->orderBy('created_at')->paginate(20, ['*'], 'hr_page'),
+            'hr-history' => ResumeForwardAttempt::query()->with(['initiator:id,name', 'canceler:id,name'])
+                ->latest()->paginate(20, ['*'], 'hr_page'),
+            default => collect(),
+        };
 
         return view('admin.contacts.index', compact(
             'contacts', 'type', 'status', 'perPage', 'search', 'period', 'periodLabel', 'periods', 'totais', 'stats',
-            'panel', 'emailTemplates', 'campaigns'
+            'panel', 'emailTemplates', 'campaigns', 'hrAttempts'
         ));
     }
 
@@ -145,7 +154,7 @@ class ContactControllerAdmin extends Controller
             $contact->update(['store_name' => $data['store_name']]);
         }
 
-        return $resumes->queue($contact)
+        return $resumes->queue($contact, $request->user()?->id)
             ? back()->with('success', 'Currículo colocado na fila de envio ao RH de '.$contact->store_name.'.')
                 ->with('hr_progress_ids', [$contact->id])
             : back()->with('error', 'Não foi possível colocar o currículo na fila ou ele já está aguardando envio.');
@@ -162,25 +171,57 @@ class ContactControllerAdmin extends Controller
             ->where('contact_type', 2)
             ->get(['id', 'hr_sent_at', 'hr_sent_to', 'hr_last_error'])
             ->keyBy('id');
+        $latestAttempts = ResumeForwardAttempt::query()->whereIn('contact_id', $ids)
+            ->orderByDesc('id')->get(['contact_id', 'status'])
+            ->unique('contact_id')->keyBy('contact_id');
 
         $statuses = [];
         $sent = 0;
         $failed = 0;
+        $canceled = 0;
         foreach ($ids as $id) {
             $contact = $contacts->get($id);
-            $status = $contact?->hr_sent_at ? 'sent' : (($contact?->hr_last_error || ! $contact) ? 'failed' : 'pending');
+            $status = $contact?->hr_sent_at ? 'sent'
+                : (($contact?->hr_last_error || ! $contact) ? 'failed'
+                    : ($latestAttempts->get($id)?->status === 'canceled' ? 'canceled' : 'pending'));
             $statuses[$id] = $status;
             $sent += (int) ($status === 'sent');
             $failed += (int) ($status === 'failed');
+            $canceled += (int) ($status === 'canceled');
         }
 
         return response()->json([
             'total' => count($ids),
             'sent' => $sent,
             'failed' => $failed,
-            'pending' => count($ids) - $sent - $failed,
+            'canceled' => $canceled,
+            'pending' => count($ids) - $sent - $failed - $canceled,
             'statuses' => $statuses,
         ]);
+    }
+
+    public function cancelHrAttempt(Request $request, ResumeForwardAttempt $attempt): RedirectResponse
+    {
+        $canceled = DB::transaction(function () use ($request, $attempt) {
+            $contact = Contact::query()->whereKey($attempt->contact_id)->lockForUpdate()->first();
+            $updated = ResumeForwardAttempt::query()->whereKey($attempt->id)
+                ->where('status', 'queued')
+                ->update([
+                    'status' => 'canceled',
+                    'canceled_by' => $request->user()->id,
+                    'finished_at' => now(),
+                ]);
+
+            if ($updated && $contact && ! $contact->hr_sent_at) {
+                $contact->update(['hr_attempted_at' => null, 'hr_last_error' => null]);
+            }
+
+            return (bool) $updated;
+        });
+
+        return $canceled
+            ? back()->with('success', 'Envio retirado da fila. O currículo pode ser enviado novamente.')
+            : back()->with('error', 'Este envio já começou ou saiu da fila. Atualize a lista para ver o estado.');
     }
 
     public function bulk(Request $request): RedirectResponse
@@ -212,7 +253,7 @@ class ContactControllerAdmin extends Controller
                     }
                     $contact->update(['store_name' => $storeName]);
                 }
-                if ($resumes->queue($contact)) {
+                if ($resumes->queue($contact, $request->user()?->id)) {
                     $queued++;
                     $queuedIds[] = $contact->id;
                 } else {

@@ -30,6 +30,7 @@
                 if (!label) return;
                 label.textContent = status === 'sent' ? 'Enviado pro RH'
                     : status === 'failed' ? 'Falha no envio ao RH'
+                    : status === 'canceled' ? 'Envio cancelado · pode reenviar'
                     : 'Aguardando envio ao RH';
             });
         }
@@ -54,8 +55,10 @@
                 bar.setAttribute('aria-valuenow', String(progress.sent));
                 detail.textContent = progress.pending > 0
                     ? progress.pending + ' aguardando · ' + progress.failed + ' falha' + (progress.failed === 1 ? '' : 's')
+                        + ' · ' + progress.canceled + ' cancelado' + (progress.canceled === 1 ? '' : 's')
                     : 'Concluído · ' + progress.sent + ' enviado' + (progress.sent === 1 ? '' : 's')
-                        + ' · ' + progress.failed + ' falha' + (progress.failed === 1 ? '' : 's');
+                        + ' · ' + progress.failed + ' falha' + (progress.failed === 1 ? '' : 's')
+                        + ' · ' + progress.canceled + ' cancelado' + (progress.canceled === 1 ? '' : 's');
                 panel.classList.toggle('has-failures', progress.failed > 0);
                 updateRows(progress.statuses || {});
 

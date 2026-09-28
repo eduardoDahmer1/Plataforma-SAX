@@ -1444,20 +1444,50 @@ class ProductControllerAdmin extends Controller
         }
 
         [$products, $opticalAvailable] = $this->reviewProducts($dataInicio, $dataFim);
+        $localProducts = $this->productReviewLocalProducts($products);
+        $localProductsById = $localProducts->keyBy('id');
+        $localProductsBySku = $localProducts->keyBy(fn (Product $product) => mb_strtolower(trim((string) $product->sku)));
+        $parentsWithAvailableChild = $this->productReviewParentsWithAvailableChild($localProducts);
+        $reviewUrl = route('admin.products.review', ['mes' => $mesSelecionado]);
         $edicoesPorDia = $products
             ->groupBy(fn ($product) => $product->admin_edited_at->format('Y-m-d'))
             ->map(fn ($group, $dia) => (object) ['dia' => $dia, 'total' => $group->count()])
             ->sortKeysDesc()
             ->values();
         $detalhesProdutos = $products
-            ->map(fn ($product) => (object) [
-                'id' => $product->id,
-                'dia' => $product->admin_edited_at->format('Y-m-d'),
-                'name' => $product->external_name ?: $product->name,
-                'sku' => $product->sku,
-                'ref_code' => $product->ref_code,
-                'editor_label' => $product->editor_label,
-            ])
+            ->map(function ($product) use ($localProductsById, $localProductsBySku, $parentsWithAvailableChild, $reviewUrl) {
+                $skuKey = mb_strtolower(trim((string) $product->sku));
+                $localProduct = $product->source === 'plataforma'
+                    ? $localProductsById->get($product->id)
+                    : $localProductsBySku->get($skuKey);
+                $imageUrl = $localProduct ? $this->productReviewImageUrl($localProduct) : null;
+                $frontAvailable = $localProduct
+                    ? $this->productReviewHasPublicPage($localProduct, $parentsWithAvailableChild)
+                    : false;
+
+                return (object) [
+                    'id' => $product->id,
+                    'dia' => $product->admin_edited_at->format('Y-m-d'),
+                    'edited_at' => $product->admin_edited_at->format('H:i'),
+                    'name' => $product->external_name ?: $product->name,
+                    'sku' => $product->sku,
+                    'ref_code' => $product->ref_code,
+                    'editor_label' => $product->editor_label,
+                    'source' => $product->source,
+                    'source_label' => $product->source === 'otica' ? 'Ótica' : 'SAX',
+                    'status' => $localProduct ? (int) $localProduct->status : null,
+                    'image_url' => $imageUrl,
+                    'has_image' => $imageUrl !== null,
+                    'admin_url' => $localProduct ? route('admin.products.edit', [
+                        'product' => $localProduct->id,
+                        'return_to' => $reviewUrl,
+                    ]) : null,
+                    'front_url' => $frontAvailable
+                        ? route('produto.show', $localProduct->slug ?: $localProduct->id)
+                        : null,
+                    'front_available' => $frontAvailable,
+                ];
+            })
             ->groupBy('dia');
 
         return view('admin.products.review', compact('edicoesPorDia', 'detalhesProdutos', 'mesesDisponiveis', 'mesSelecionado', 'opticalAvailable'));
@@ -1472,6 +1502,12 @@ class ProductControllerAdmin extends Controller
             'month' => ['nullable', 'required_if:period,month', 'date_format:Y-m'],
             'start_date' => ['nullable', 'required_if:period,custom', 'date_format:Y-m-d'],
             'end_date' => ['nullable', 'required_if:period,custom', 'date_format:Y-m-d', 'after_or_equal:start_date'],
+            'filter_search' => ['nullable', 'string', 'max:150'],
+            'filter_editor' => ['nullable', 'string', 'max:150'],
+            'filter_source' => ['nullable', 'in:plataforma,otica'],
+            'filter_status' => ['nullable', 'in:0,1,unknown'],
+            'filter_image' => ['nullable', 'in:with,without'],
+            'filter_front' => ['nullable', 'in:available,unavailable'],
         ], [
             'week.regex' => 'Selecione uma semana válida.',
             'end_date.after_or_equal' => 'A data final deve ser igual ou posterior à data inicial.',
@@ -1502,6 +1538,103 @@ class ProductControllerAdmin extends Controller
 
         [$products, $opticalAvailable] = $this->reviewProducts($start, $end);
 
+        $filters = [
+            'search' => trim((string) ($data['filter_search'] ?? '')),
+            'editor' => (string) ($data['filter_editor'] ?? ''),
+            'source' => (string) ($data['filter_source'] ?? ''),
+            'status' => (string) ($data['filter_status'] ?? ''),
+            'image' => (string) ($data['filter_image'] ?? ''),
+            'front' => (string) ($data['filter_front'] ?? ''),
+        ];
+        $localProducts = $this->productReviewLocalProducts($products);
+        $localProductsById = $localProducts->keyBy('id');
+        $localProductsBySku = $localProducts->keyBy(fn (Product $product) => mb_strtolower(trim((string) $product->sku)));
+        $parentsWithAvailableChild = $this->productReviewParentsWithAvailableChild($localProducts);
+        $searchNeedle = mb_strtolower(Str::ascii($filters['search']));
+
+        $products = $products
+            ->map(function ($product) use ($localProductsById, $localProductsBySku, $parentsWithAvailableChild) {
+                $localProduct = $this->productReviewLocalProduct($product, $localProductsById, $localProductsBySku);
+                $product->review_status = $localProduct ? (int) $localProduct->status : null;
+                $product->review_has_image = $localProduct
+                    ? $this->productReviewImageUrl($localProduct) !== null
+                    : false;
+                $product->review_front_available = $localProduct
+                    ? $this->productReviewHasPublicPage($localProduct, $parentsWithAvailableChild)
+                    : false;
+                $product->source_label = $product->source === 'otica' ? 'Ótica' : 'SAX';
+
+                return $product;
+            })
+            ->filter(function ($product) use ($filters, $searchNeedle): bool {
+                if ($searchNeedle !== '') {
+                    $haystack = mb_strtolower(Str::ascii(implode(' ', [
+                        $product->external_name ?: $product->name,
+                        $product->sku,
+                        $product->ref_code,
+                    ])));
+
+                    if (! str_contains($haystack, $searchNeedle)) {
+                        return false;
+                    }
+                }
+
+                if ($filters['editor'] !== '' && $product->editor_label !== $filters['editor']) {
+                    return false;
+                }
+
+                if ($filters['source'] !== '' && $product->source !== $filters['source']) {
+                    return false;
+                }
+
+                if ($filters['status'] === 'unknown' && $product->review_status !== null) {
+                    return false;
+                }
+
+                if (in_array($filters['status'], ['0', '1'], true)
+                    && (string) $product->review_status !== $filters['status']) {
+                    return false;
+                }
+
+                if ($filters['image'] === 'with' && ! $product->review_has_image) {
+                    return false;
+                }
+
+                if ($filters['image'] === 'without' && $product->review_has_image) {
+                    return false;
+                }
+
+                if ($filters['front'] === 'available' && ! $product->review_front_available) {
+                    return false;
+                }
+
+                if ($filters['front'] === 'unavailable' && $product->review_front_available) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->values();
+
+        $filterLabels = collect([
+            $filters['search'] !== '' ? 'Busca: “'.$filters['search'].'”' : null,
+            $filters['editor'] !== '' ? 'Editor: '.$filters['editor'] : null,
+            $filters['source'] !== '' ? 'Origem: '.($filters['source'] === 'otica' ? 'Ótica' : 'SAX') : null,
+            $filters['status'] !== '' ? 'Status: '.([
+                '0' => 'Inativos',
+                '1' => 'Ativos',
+                'unknown' => 'Sem correspondente',
+            ][$filters['status']]) : null,
+            $filters['image'] !== '' ? 'Imagem: '.($filters['image'] === 'with' ? 'Com imagem' : 'Sem imagem') : null,
+            $filters['front'] !== '' ? 'Front: '.($filters['front'] === 'available' ? 'Disponíveis' : 'Sem página pública') : null,
+        ])->filter()->values();
+
+        $reportMetrics = [
+            'editors' => $products->pluck('editor_label')->filter()->unique()->count(),
+            'without_image' => $products->where('review_has_image', false)->count(),
+            'without_front' => $products->where('review_front_available', false)->count(),
+        ];
+
         $dailyTotals = $products
             ->groupBy(fn ($product) => $product->admin_edited_at->format('Y-m-d'))
             ->map->count()
@@ -1513,7 +1646,9 @@ class ProductControllerAdmin extends Controller
             'start',
             'end',
             'periodLabel',
-            'opticalAvailable'
+            'opticalAvailable',
+            'filterLabels',
+            'reportMetrics'
         ))
             ->setPaper('a4', 'landscape')
             ->download('relatorio-produtos-editados-'.$filePeriod.'.pdf');
@@ -1572,6 +1707,101 @@ class ProductControllerAdmin extends Controller
         }
 
         return [$this->latestProductEdits($products->concat($opticalProducts)), true];
+    }
+
+    private function productReviewLocalProducts(Collection $products): Collection
+    {
+        if ($products->isEmpty()) {
+            return collect();
+        }
+
+        return Product::query()
+            ->with('category:id,status')
+            ->where(function ($query) use ($products): void {
+                $ids = $products->where('source', 'plataforma')->pluck('id')->filter()->values();
+                $skus = $products->pluck('sku')->filter(fn ($sku) => filled(trim((string) $sku)))->unique()->values();
+
+                if ($ids->isNotEmpty()) {
+                    $query->whereIn('id', $ids);
+                }
+
+                if ($skus->isNotEmpty()) {
+                    $ids->isNotEmpty()
+                        ? $query->orWhereIn('sku', $skus)
+                        : $query->whereIn('sku', $skus);
+                }
+            })
+            ->get([
+                'id', 'sku', 'slug', 'photo', 'thumbnail', 'gallery', 'status',
+                'stock', 'product_role', 'category_id', 'is_outlet',
+            ]);
+    }
+
+    private function productReviewParentsWithAvailableChild(Collection $localProducts): Collection
+    {
+        $parentIds = $localProducts
+            ->filter(fn (Product $product) => $product->product_role === 'P'
+                && ((int) $product->status !== 1 || (int) $product->stock <= 0))
+            ->pluck('id');
+
+        if ($parentIds->isEmpty()) {
+            return collect();
+        }
+
+        return Product::inActiveCategory()
+            ->whereIn('parent_id', $parentIds)
+            ->where('product_role', 'F')
+            ->where('is_outlet', false)
+            ->where('status', 1)
+            ->where('stock', '>', 0)
+            ->pluck('parent_id')
+            ->map(fn ($parentId) => (int) $parentId)
+            ->flip();
+    }
+
+    private function productReviewLocalProduct(
+        object $product,
+        Collection $localProductsById,
+        Collection $localProductsBySku
+    ): ?Product {
+        if ($product->source === 'plataforma') {
+            return $localProductsById->get($product->id);
+        }
+
+        return $localProductsBySku->get(mb_strtolower(trim((string) $product->sku)));
+    }
+
+    private function productReviewHasPublicPage(Product $product, Collection $parentsWithAvailableChild): bool
+    {
+        if ($product->is_outlet || (int) $product->category?->status !== 1) {
+            return false;
+        }
+
+        if ($product->product_role === 'P') {
+            return ((int) $product->status === 1 && (int) $product->stock > 0)
+                || $parentsWithAvailableChild->has($product->id);
+        }
+
+        return (int) $product->status === 1;
+    }
+
+    private function productReviewImageUrl(Product $product): ?string
+    {
+        $images = collect([$product->photo, $product->thumbnail])->merge((array) $product->gallery);
+
+        foreach ($images->filter() as $image) {
+            $image = trim((string) $image);
+
+            if (filter_var($image, FILTER_VALIDATE_URL)) {
+                return $image;
+            }
+
+            if (Storage::disk('public')->exists($image)) {
+                return Storage::url($image);
+            }
+        }
+
+        return null;
     }
 
     private function latestProductEdits(Collection $products): Collection

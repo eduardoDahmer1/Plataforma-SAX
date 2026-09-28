@@ -2,6 +2,7 @@
 <script>document.documentElement.dataset.analyticsEndpoint = @json(route('analytics.store'));</script>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="format-detection" content="telephone=no">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="currency-sign" content="{{ session('currency_sign', 'US$') }}">
 <meta name="currency-code" content="PYG">
@@ -22,6 +23,11 @@
     $canonicalUrl = 'https://saxdepartment.com'.$canonicalPath;
     $titleDefault = $marketingSettings->default_meta_title ?: 'SAX - E-commerce de Luxo';
     if(Route::is('admin.*')) $titleDefault = ($isVistaIdentity ? 'VISTA&CO' : 'SAX').' - Painel Administrativo';
+    elseif($isVistaIdentity) {
+        $pageTitle = trim($__env->yieldContent('page_title'));
+        $titleDefault = $pageTitle !== '' ? e($pageTitle).' | Vista & Co' : 'Vista & Co — Óptica';
+        if (Route::is('checkout.*')) $titleDefault = 'Vista & Co - Checkout';
+    }
     elseif(Request::is('*bridal*')) $titleDefault = 'SAX Bridal';
     elseif(Request::is('*cafe*') || Request::is('*bistro*')) $titleDefault = 'SAX Café & Bistrô';
     elseif(Route::is('checkout.*')) $titleDefault = 'SAX - Checkout Seguro';
@@ -47,14 +53,14 @@
 <meta name="robots" content="{{ $robotsContent }}">
 <link rel="canonical" href="{{ $canonicalUrl }}">
 <meta name="author" content="{{ $marketingSettings->organization_name ?: 'SAX Full Service' }}">
-<meta property="og:site_name" content="{{ $marketingSettings->site_name ?: 'SAX Department' }}">
-<meta property="og:title" content="@yield('title', $marketingSettings->og_title ?: $titleDefault)">
+<meta property="og:site_name" content="{{ $isVistaIdentity ? 'Vista & Co' : ($marketingSettings->site_name ?: 'SAX Department') }}">
+<meta property="og:title" content="@yield('title', $isVistaIdentity ? $titleDefault : ($marketingSettings->og_title ?: $titleDefault))">
 <meta property="og:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: __('messages.seo_default_description'))">
 <meta property="og:url" content="{{ $canonicalUrl }}">
 <meta property="og:type" content="website">
 <meta property="og:image" content="{{ $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="@yield('title', $marketingSettings->og_title ?: $titleDefault)">
+<meta name="twitter:title" content="@yield('title', $isVistaIdentity ? $titleDefault : ($marketingSettings->og_title ?: $titleDefault))">
 <meta name="twitter:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: __('messages.seo_twitter_description'))">
 <meta name="twitter:image" content="{{ $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg') }}">
 @if($marketingSettings->twitter_site)<meta name="twitter:site" content="{{ str_starts_with($marketingSettings->twitter_site, '@') ? $marketingSettings->twitter_site : '@'.$marketingSettings->twitter_site }}">@endif

@@ -14,19 +14,32 @@
         <p class="note">Não foi possível consultar as edições da Ótica. Este relatório mostra apenas esta loja.</p>
     @endunless
 
+    <div class="filters">
+        <strong>Filtros aplicados</strong>
+        @forelse($filterLabels as $filterLabel)
+            <span class="tag">{{ $filterLabel }}</span>
+        @empty
+            <span class="note">Nenhum filtro adicional; somente o período selecionado.</span>
+        @endforelse
+    </div>
+
     <table class="grid">
         <tr>
             <td class="metric">
-                <div class="label">Produtos editados</div>
+                <div class="label">Produtos filtrados</div>
                 <div class="value">{{ $products->count() }}</div>
             </td>
             <td class="metric">
-                <div class="label">Primeira data do período</div>
-                <div class="value">{{ $start->format('d/m/Y') }}</div>
+                <div class="label">Editores envolvidos</div>
+                <div class="value">{{ $reportMetrics['editors'] }}</div>
             </td>
             <td class="metric">
-                <div class="label">Última data do período</div>
-                <div class="value">{{ $end->format('d/m/Y') }}</div>
+                <div class="label">Sem imagem</div>
+                <div class="value">{{ $reportMetrics['without_image'] }}</div>
+            </td>
+            <td class="metric">
+                <div class="label">Sem página pública</div>
+                <div class="value">{{ $reportMetrics['without_front'] }}</div>
             </td>
         </tr>
     </table>
@@ -59,6 +72,10 @@
                 <th>Produto</th>
                 <th>SKU</th>
                 <th>Referência</th>
+                <th>Origem</th>
+                <th>Status</th>
+                <th>Imagem</th>
+                <th>Front</th>
                 <th>Editado por</th>
             </tr>
         </thead>
@@ -69,16 +86,25 @@
                     <td>{{ $product->external_name ?: $product->name ?: 'Produto sem nome' }}</td>
                     <td>{{ $product->sku ?: '-' }}</td>
                     <td>{{ $product->ref_code ?: '-' }}</td>
+                    <td>{{ $product->source_label }}</td>
+                    <td>
+                        {{ $product->review_status === null
+                            ? 'Sem correspondente'
+                            : ($product->review_status === 1 ? 'Ativo' : 'Inativo') }}
+                    </td>
+                    <td>{{ $product->review_has_image ? 'Sim' : 'Não' }}</td>
+                    <td>{{ $product->review_front_available ? 'Disponível' : 'Indisponível' }}</td>
                     <td>{{ $product->editor_label }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5">Nenhum produto editado no período selecionado.</td></tr>
+                <tr><td colspan="9">Nenhum produto corresponde ao período e aos filtros selecionados.</td></tr>
             @endforelse
         </tbody>
     </table>
 
     <div class="foot">
-        Gerado em {{ now()->format('d/m/Y H:i') }}. O relatório considera a última edição administrativa registrada em cada produto.
+        Gerado em {{ now()->format('d/m/Y H:i') }}. O relatório considera a última edição administrativa registrada por SKU.
+        “Sem página pública” indica que o produto não atende atualmente às regras de exibição do front.
     </div>
 </body>
 </html>

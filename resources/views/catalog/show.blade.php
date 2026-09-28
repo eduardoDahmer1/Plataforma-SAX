@@ -1,5 +1,7 @@
 @extends('layout.layout')
 
+@section('page_title', $entity->name)
+
 @section('content')
     <div class="category-detail-wrapper">
         @php

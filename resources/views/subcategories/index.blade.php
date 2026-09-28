@@ -1,5 +1,7 @@
 @extends('layout.layout')
 
+@section('page_title', __('messages.subcategorias_refinar_secoes'))
+
 @section('content')
 <div class="container py-4">
 

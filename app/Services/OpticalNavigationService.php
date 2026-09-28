@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Category;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class OpticalNavigationService
 {
@@ -18,9 +19,19 @@ class OpticalNavigationService
             $categories = $this->taxonomy->applyOpticalCategoryConstraint(Category::query())
                 ->where('status', 1)
                 ->with([
-                    'subcategories' => fn ($query) => $query
-                        ->orderBy('name')
-                        ->with(['categoriasfilhas' => fn ($childQuery) => $childQuery->orderBy('name')]),
+                    'subcategories' => function ($query): void {
+                        if (Schema::hasColumn('subcategories', 'status')) {
+                            $query->where('status', 1);
+                        }
+
+                        $query
+                            ->orderBy('name')
+                            ->with([
+                                'categoriasfilhas' => fn ($childQuery) => $childQuery
+                                    ->where('status', 1)
+                                    ->orderBy('name'),
+                            ]);
+                    },
                 ])
                 ->orderBy('name')
                 ->get();

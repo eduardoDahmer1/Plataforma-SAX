@@ -1,5 +1,7 @@
 @extends('layout.layout')
 
+@section('page_title', 'Tipos y Modelos')
+
 @section('content')
     <div class="child-categories-wrapper py-5">
         <div class="container">

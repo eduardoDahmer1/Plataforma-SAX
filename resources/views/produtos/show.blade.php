@@ -1,5 +1,7 @@
 @extends('layout.layout')
 
+@section('page_title', $product->name)
+
 @section('content')
 
 @php
@@ -173,25 +175,27 @@
                         @foreach ($gallery as $img)
                             <div class="swiper-slide">
                                 <div class="swiper-zoom-container">
-                                    <img src="{{ Storage::url($img) }}" alt="{{ $displayName }}" loading="{{ $loop->first ? 'eager' : 'lazy' }}" data-product-image>
+                                    <img src="{{ Storage::url($img) }}" alt="{{ $displayName }}" loading="{{ $loop->first ? 'eager' : 'lazy' }}" fetchpriority="{{ $loop->first ? 'high' : 'auto' }}" draggable="false" data-product-image>
                                 </div>
                             </div>
                         @endforeach
                     </div>
-                    <div class="swiper-button-next"></div>
-                    <div class="swiper-button-prev"></div>
-                    <div class="product-gallery-counter"><span data-gallery-current>1</span> / {{ count($gallery) }}</div>
+                    @if (count($gallery) > 1)
+                        <button type="button" class="product-gallery-next" aria-label="Próxima imagem"></button>
+                        <button type="button" class="product-gallery-prev" aria-label="Imagem anterior"></button>
+                        <div class="product-gallery-counter" aria-live="polite" aria-atomic="true"><span data-gallery-current>1</span> / {{ count($gallery) }}</div>
+                    @endif
                     <button type="button" class="product-gallery-expand" data-open-product-zoom aria-label="Ampliar imagem">
                         <i class="fa-solid fa-expand"></i><span>Ampliar</span>
                     </button>
                 </div>
 
-                @php $thumbs = array_slice($gallery, 0, 6); @endphp
+                @php $thumbs = $gallery; @endphp
                 @if (count($thumbs) > 1)
-                    <div class="product-thumbnails" role="tablist" aria-label="Imagens do produto">
+                    <div class="product-thumbnails" role="group" aria-label="Imagens do produto">
                         @foreach ($thumbs as $i => $img)
-                                <button type="button" class="thumb-item {{ $i === 0 ? 'active' : '' }}" data-gallery-index="{{ $i }}" aria-label="{{ __('messages.thumb_prefix') }} {{ $i + 1 }}">
-                                    <img src="{{ Storage::url($img) }}" alt="{{ __('messages.thumb_prefix') }} {{ $i + 1 }}">
+                                <button type="button" class="thumb-item {{ $i === 0 ? 'active' : '' }}" data-gallery-index="{{ $i }}" aria-pressed="{{ $i === 0 ? 'true' : 'false' }}" aria-label="{{ __('messages.thumb_prefix') }} {{ $i + 1 }}">
+                                    <img src="{{ Storage::url($img) }}" alt="" loading="lazy" decoding="async" width="88" height="88">
                                 </button>
                         @endforeach
                     </div>
@@ -650,9 +654,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const galleryImages = Array.from(document.querySelectorAll('[data-product-image]'));
-    const thumbnails = Array.from(document.querySelectorAll('[data-gallery-index]'));
-    const galleryCurrent = document.querySelector('[data-gallery-current]');
+    const gallery = document.querySelector('.product-gallery-shell');
+    const main = gallery?.querySelector('.productMainSwiper');
+    if (!main || main.swiper) return;
+    const galleryImages = Array.from(main.querySelectorAll('[data-product-image]'));
+    const thumbnails = Array.from(gallery.querySelectorAll('[data-gallery-index]'));
+    const galleryCurrent = gallery.querySelector('[data-gallery-current]');
+    let viewerTrigger = null;
     const viewer = document.querySelector('[data-product-zoom-viewer]');
     const zoomStage = document.querySelector('[data-product-zoom-stage]');
     const zoomImage = document.querySelector('[data-product-zoom-image]');
@@ -690,7 +698,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function openViewer() {
         if (!viewer || !zoomImage) return;
+        viewerTrigger = document.activeElement;
         zoomImage.src = activeImageSource();
+        window.mySwiper?.keyboard.disable();
         resetZoom();
         viewer.classList.add('is-open');
         document.body.classList.add('product-zoom-open');
@@ -703,29 +713,51 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.classList.remove('product-zoom-open');
         pointers.clear();
         resetZoom();
+        window.mySwiper?.keyboard.enable();
+        if (viewerTrigger instanceof HTMLElement && viewerTrigger !== document.body) {
+            viewerTrigger.focus({ preventScroll: true });
+        } else {
+            gallery.querySelector('[data-open-product-zoom]')?.focus({ preventScroll: true });
+        }
     }
 
-    window.mySwiper = new Swiper('.productMainSwiper', {
+    window.mySwiper = new Swiper(main, {
         loop: galleryImages.length > 1,
-        zoom: { maxRatio: 3, toggle: false },
+        watchOverflow: true,
+        allowTouchMove: galleryImages.length > 1,
         navigation: {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
+            nextEl: main.querySelector('.product-gallery-next'),
+            prevEl: main.querySelector('.product-gallery-prev'),
         },
-        keyboard: { enabled: true },
+        keyboard: { enabled: true, onlyInViewport: true },
+        a11y: { prevSlideMessage: 'Imagem anterior', nextSlideMessage: 'Próxima imagem' },
         on: {
             realIndexChange(swiper) {
                 const index = swiper.realIndex || 0;
                 if (galleryCurrent) galleryCurrent.textContent = index + 1;
-                thumbnails.forEach((thumb, thumbIndex) => thumb.classList.toggle('active', thumbIndex === index));
+                thumbnails.forEach((thumb, thumbIndex) => {
+                    thumb.classList.toggle('active', thumbIndex === index);
+                    thumb.setAttribute('aria-pressed', String(thumbIndex === index));
+                });
+                const activeThumb = thumbnails[index];
+                if (activeThumb) {
+                    const strip = activeThumb.parentElement;
+                    const left = activeThumb.offsetLeft;
+                    if (left < strip.scrollLeft) strip.scrollLeft = left;
+                    else if (left + activeThumb.offsetWidth > strip.scrollLeft + strip.clientWidth) {
+                        strip.scrollLeft = left + activeThumb.offsetWidth - strip.clientWidth;
+                    }
+                }
             }
         }
     });
 
     thumbnails.forEach((thumb, index) => thumb.addEventListener('click', function () {
-        window.mySwiper?.slideToLoop(index);
+        window.mySwiper?.slideToLoop(index, 0);
     }));
-    galleryImages.forEach(image => image.addEventListener('click', openViewer));
+    main.addEventListener('click', event => {
+        if (event.target.closest('[data-product-image]') && window.mySwiper.allowClick) openViewer();
+    });
     document.querySelector('[data-open-product-zoom]')?.addEventListener('click', openViewer);
     document.querySelector('[data-close-product-zoom]')?.addEventListener('click', closeViewer);
     document.querySelector('[data-zoom-in]')?.addEventListener('click', () => setZoom(zoomScale + .5));
@@ -738,6 +770,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, { passive: false });
     zoomStage?.addEventListener('dblclick', () => setZoom(zoomScale > 1 ? 1 : 2.5));
     zoomStage?.addEventListener('pointerdown', function (event) {
+        if (event.target.closest('.product-zoom-toolbar')) return;
         pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
         zoomStage.setPointerCapture(event.pointerId);
         dragging = zoomScale > 1 && pointers.size === 1;
@@ -771,7 +804,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target === zoomStage && zoomScale === 1) closeViewer();
     });
     document.addEventListener('keydown', event => {
-        if (event.key === 'Escape' && viewer?.classList.contains('is-open')) closeViewer();
+        if (!viewer?.classList.contains('is-open')) return;
+        if (event.key === 'Escape') closeViewer();
+        if (event.key === 'Tab') {
+            const controls = Array.from(viewer.querySelectorAll('button'));
+            const first = controls[0];
+            const last = controls[controls.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first?.focus();
+            }
+        }
     });
 });
 </script>

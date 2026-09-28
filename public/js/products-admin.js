@@ -566,41 +566,299 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// ======== Review: Modal de detalhes ========
+// ======== Review: filtros e modal de detalhes ========
 // Archivo: resources/views/admin/products/review.blade.php
-function abrirModalLocal(data) {
+var productReviewState = {
+    products: {},
+    filtered: {},
+    activeDay: null
+};
+
+function productReviewEscape(value) {
+    return String(value == null ? '' : value).replace(/[&<>'"]/g, function (char) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char];
+    });
+}
+
+function productReviewNormalize(value) {
+    return String(value == null ? '' : value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+function productReviewMatches(product) {
+    var search = productReviewNormalize(document.getElementById('product-review-search')?.value);
+    var editor = document.getElementById('product-review-editor')?.value || '';
+    var source = document.getElementById('product-review-source')?.value || '';
+    var status = document.getElementById('product-review-status')?.value || '';
+    var image = document.getElementById('product-review-image')?.value || '';
+    var front = document.getElementById('product-review-front')?.value || '';
+    var haystack = productReviewNormalize([product.name, product.sku, product.ref_code].join(' '));
+
+    if (search && !haystack.includes(search)) return false;
+    if (editor && product.editor_label !== editor) return false;
+    if (source && product.source !== source) return false;
+    if (status === 'unknown' && product.status !== null) return false;
+    if ((status === '0' || status === '1') && String(product.status) !== status) return false;
+    if (image === 'with' && !product.has_image) return false;
+    if (image === 'without' && product.has_image) return false;
+    if (front === 'available' && !product.front_available) return false;
+    if (front === 'unavailable' && product.front_available) return false;
+
+    return true;
+}
+
+function productReviewSyncPdfFilters() {
+    var fields = [
+        ['product-review-search', 'report-filter-search'],
+        ['product-review-editor', 'report-filter-editor'],
+        ['product-review-source', 'report-filter-source'],
+        ['product-review-status', 'report-filter-status'],
+        ['product-review-image', 'report-filter-image'],
+        ['product-review-front', 'report-filter-front']
+    ];
+    var activeLabels = [];
+
+    fields.forEach(function (ids) {
+        var source = document.getElementById(ids[0]);
+        var target = document.getElementById(ids[1]);
+        if (!source || !target) return;
+
+        target.value = source.value;
+        if (!source.value) return;
+
+        activeLabels.push(source.tagName === 'SELECT'
+            ? source.options[source.selectedIndex].text
+            : 'Busca: ' + source.value);
+    });
+
+    var summary = document.getElementById('product-review-pdf-filter-summary');
+    if (summary) {
+        summary.textContent = activeLabels.length
+            ? activeLabels.length + (activeLabels.length === 1 ? ' filtro aplicado' : ' filtros aplicados')
+            : 'Sem filtros adicionais';
+        summary.title = activeLabels.join(' · ');
+    }
+}
+
+function productReviewApplyFilters() {
+    var visibleTotal = 0;
+    var visibleDays = 0;
+    productReviewState.filtered = {};
+
+    Object.keys(productReviewState.products).forEach(function (day) {
+        productReviewState.filtered[day] = (productReviewState.products[day] || []).filter(productReviewMatches);
+    });
+
+    document.querySelectorAll('[data-review-day]').forEach(function (dayCard) {
+        var day = dayCard.dataset.reviewDay;
+        var count = (productReviewState.filtered[day] || []).length;
+        var countElement = dayCard.querySelector('.product-review-day-count');
+
+        if (countElement) countElement.textContent = count;
+        dayCard.classList.toggle('d-none', count === 0);
+        visibleTotal += count;
+        if (count > 0) visibleDays += 1;
+    });
+
+    var countLabel = document.getElementById('product-review-result-count');
+    if (countLabel) {
+        countLabel.textContent = visibleTotal + (visibleTotal === 1 ? ' produto em ' : ' produtos em ') +
+            visibleDays + (visibleDays === 1 ? ' dia' : ' dias');
+    }
+
+    document.getElementById('product-review-empty')?.classList.toggle('d-none', visibleTotal !== 0);
+
+    var visibleProducts = Object.values(productReviewState.filtered).flat();
+    var quickCounts = {
+        'product-review-inactive-count': visibleProducts.filter(function (product) {
+            return Number(product.status) === 0;
+        }).length,
+        'product-review-without-image-count': visibleProducts.filter(function (product) {
+            return !product.has_image;
+        }).length,
+        'product-review-without-front-count': visibleProducts.filter(function (product) {
+            return !product.front_available;
+        }).length
+    };
+    Object.keys(quickCounts).forEach(function (id) {
+        var element = document.getElementById(id);
+        if (element) element.textContent = quickCounts[id];
+    });
+
+    document.querySelectorAll('[data-review-quick-filter]').forEach(function (button) {
+        var isActive = (button.dataset.reviewQuickFilter === 'inactive'
+                && document.getElementById('product-review-status')?.value === '0')
+            || (button.dataset.reviewQuickFilter === 'without-image'
+                && document.getElementById('product-review-image')?.value === 'without')
+            || (button.dataset.reviewQuickFilter === 'without-front'
+                && document.getElementById('product-review-front')?.value === 'unavailable');
+        button.classList.toggle('active', isActive);
+    });
+
+    productReviewSyncPdfFilters();
+
+    if (productReviewState.activeDay) {
+        productReviewRenderDay(productReviewState.activeDay);
+    }
+}
+
+function productReviewAction(url, icon, label, styleClass, unavailableTitle) {
+    if (!url) {
+        return '<span class="btn btn-sm btn-light disabled" aria-disabled="true" title="' +
+            productReviewEscape(unavailableTitle || 'Ação indisponível') + '">' +
+            '<i class="' + icon + '"></i><span class="d-none d-sm-inline ms-1">' + label + '</span></span>';
+    }
+
+    return '<a class="btn btn-sm ' + styleClass + '" href="' + productReviewEscape(url) +
+        '" target="_blank" rel="noopener"><i class="' + icon + '"></i>' +
+        '<span class="d-none d-sm-inline ms-1">' + label + '</span></a>';
+}
+
+function productReviewRenderDay(data) {
     var corpo = document.getElementById('corpoTabelaLocal');
     var titulo = document.getElementById('tituloModal');
+    var modalCount = document.getElementById('product-review-modal-count');
     if (!corpo || !titulo) return;
 
-    var reviewData = document.getElementById('product-review-data');
-    var dadosProdutos = reviewData ? JSON.parse(reviewData.dataset.products || '{}') : {};
-    var produtosDoDia = dadosProdutos[data] || [];
-    var escapeHtml = function (value) {
-        return String(value).replace(/[&<>'"]/g, function (char) {
-            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char];
-        });
-    };
+    var produtosDoDia = productReviewState.filtered[data] || [];
+    var dateParts = data.split('-');
+    var displayDate = dateParts.length === 3 ? dateParts.reverse().join('/') : data;
 
-    titulo.innerText = 'Editados em ' + data;
+    titulo.innerText = 'Editados em ' + displayDate;
+    if (modalCount) {
+        modalCount.textContent = produtosDoDia.length +
+            (produtosDoDia.length === 1 ? ' produto com os filtros atuais' : ' produtos com os filtros atuais');
+    }
     corpo.innerHTML = '';
 
     if (produtosDoDia.length === 0) {
-        corpo.innerHTML = '<tr><td colspan="4" class="text-center py-4">Nenhum detalhe encontrado.</td></tr>';
-    } else {
-        produtosDoDia.forEach(function (p) {
-            // Adicionamos a coluna do usuário
-            corpo.innerHTML +=
-                '<tr>' +
-                '<td class="ps-4"><b>' + escapeHtml(p.name || 'Produto') + '</b></td>' +
-                '<td class="text-center"><code class="small">' + escapeHtml(p.sku || '-') + '</code></td>' +
-                '<td class="text-center"><span class="badge bg-dark text-white">' + escapeHtml(p.editor_label || 'Usuário removido') + '</span></td>' +
-                '<td class="pe-4 text-end"><span class="badge bg-light text-dark border">' + escapeHtml(p.ref_code || '-') + '</span></td>' +
-                '</tr>';
-        });
+        corpo.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">Nenhum produto corresponde aos filtros atuais.</td></tr>';
+        return;
     }
 
-    new bootstrap.Modal(document.getElementById('modalDetalhesLocal')).show();
+    produtosDoDia.forEach(function (product) {
+        var status = product.status === null
+            ? '<span class="badge text-bg-secondary">Sem correspondente</span>'
+            : (Number(product.status) === 1
+                ? '<span class="badge text-bg-success">Ativo</span>'
+                : '<span class="badge text-bg-light border text-dark">Inativo</span>');
+
+        var image = product.image_url
+            ? '<img class="product-review-thumb" src="' + productReviewEscape(product.image_url) +
+                '" alt="" loading="lazy">'
+            : '<div class="product-review-thumb product-review-thumb-empty" title="Este produto não possui imagem cadastrada">' +
+                '<i class="fa-regular fa-image"></i><span>Sem imagem</span></div>';
+
+        corpo.insertAdjacentHTML('beforeend',
+            '<tr class="product-review-row">' +
+                '<td class="ps-lg-4" data-label="Produto">' +
+                    '<div class="product-review-product">' +
+                        image +
+                        '<div class="min-w-0"><strong class="product-review-name">' +
+                            productReviewEscape(product.name || 'Produto sem nome') + '</strong>' +
+                            '<div class="d-flex flex-wrap gap-1 mt-1">' + status +
+                            '<span class="badge bg-light text-dark border">' + productReviewEscape(product.source_label || 'SAX') +
+                            '</span></div></div>' +
+                    '</div>' +
+                '</td>' +
+                '<td data-label="Identificação">' +
+                    '<div><span class="text-muted small">SKU</span> <code>' + productReviewEscape(product.sku || '-') + '</code></div>' +
+                    '<div><span class="text-muted small">Ref.</span> <span class="small fw-semibold">' +
+                        productReviewEscape(product.ref_code || '-') + '</span></div>' +
+                '</td>' +
+                '<td data-label="Edição">' +
+                    '<div class="fw-semibold small">' + productReviewEscape(product.editor_label || 'Usuário removido') + '</div>' +
+                    '<div class="text-muted small"><i class="fa-regular fa-clock me-1"></i>' +
+                        productReviewEscape(product.edited_at || '-') + '</div>' +
+                '</td>' +
+                '<td class="pe-lg-4" data-label="Ações"><div class="product-review-actions">' +
+                    productReviewAction(
+                        product.admin_url,
+                        'fa-regular fa-pen-to-square',
+                        'Admin',
+                        'btn-dark',
+                        'Produto sem correspondente nesta loja'
+                    ) +
+                    productReviewAction(
+                        product.front_url,
+                        'fa-solid fa-arrow-up-right-from-square',
+                        'Loja',
+                        'btn-outline-dark',
+                        'Produto indisponível no front; você permanece nesta revisão'
+                    ) +
+                '</div></td>' +
+            '</tr>'
+        );
+    });
+}
+
+function abrirModalLocal(data) {
+    productReviewState.activeDay = data;
+    productReviewRenderDay(data);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalhesLocal')).show();
+}
+
+function inicializarFiltrosRevisaoProdutos() {
+    var jsonElement = document.getElementById('product-review-json');
+    if (!jsonElement) return;
+
+    try {
+        productReviewState.products = JSON.parse(jsonElement.textContent || '{}');
+    } catch (error) {
+        productReviewState.products = {};
+    }
+
+    var editorSelect = document.getElementById('product-review-editor');
+    var editors = [];
+    Object.keys(productReviewState.products).forEach(function (day) {
+        (productReviewState.products[day] || []).forEach(function (product) {
+            if (product.editor_label && !editors.includes(product.editor_label)) editors.push(product.editor_label);
+        });
+    });
+    editors.sort(function (left, right) {
+        return left.localeCompare(right, 'pt', { sensitivity: 'base' });
+    }).forEach(function (editor) {
+        var option = document.createElement('option');
+        option.value = editor;
+        option.textContent = editor;
+        editorSelect?.appendChild(option);
+    });
+
+    ['product-review-search', 'product-review-editor', 'product-review-source', 'product-review-status', 'product-review-image', 'product-review-front'].forEach(function (id) {
+        var element = document.getElementById(id);
+        element?.addEventListener(element.tagName === 'INPUT' ? 'input' : 'change', productReviewApplyFilters);
+    });
+
+    document.querySelectorAll('[data-review-quick-filter]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            if (button.dataset.reviewQuickFilter === 'inactive') {
+                document.getElementById('product-review-status').value = '0';
+            } else if (button.dataset.reviewQuickFilter === 'without-image') {
+                document.getElementById('product-review-image').value = 'without';
+            } else if (button.dataset.reviewQuickFilter === 'without-front') {
+                document.getElementById('product-review-front').value = 'unavailable';
+            }
+            productReviewApplyFilters();
+        });
+    });
+
+    document.getElementById('product-review-clear')?.addEventListener('click', function () {
+        ['product-review-search', 'product-review-editor', 'product-review-source', 'product-review-status', 'product-review-image', 'product-review-front'].forEach(function (id) {
+            var element = document.getElementById(id);
+            if (element) element.value = '';
+        });
+        productReviewApplyFilters();
+        document.getElementById('product-review-search')?.focus();
+    });
+
+    document.getElementById('modalDetalhesLocal')?.addEventListener('hidden.bs.modal', function () {
+        productReviewState.activeDay = null;
+    });
+
+    productReviewApplyFilters();
 }
 
 function inicializarFiltroRelatorioProdutos() {
@@ -630,6 +888,7 @@ function inicializarFiltroRelatorioProdutos() {
 
 document.addEventListener('DOMContentLoaded', function () {
     inicializarFiltroRelatorioProdutos();
+    inicializarFiltrosRevisaoProdutos();
 
     var input = document.getElementById('photoInput');
     if (!input) return;

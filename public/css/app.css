@@ -7956,3 +7956,51 @@ body.sax-storefront :where(.btn, .form-control, .form-select, .input-group-text)
         border-top: 1px solid #d2d1cd !important;
     }
 }
+
+/* Shared mobile dock behavior (classic and Vista headers). */
+@media (max-width: 991.98px) {
+    body:has(nav.sax-mobile-dock, nav.vista-mobile-dock) {
+        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .product-purchase {
+        scroll-margin-bottom: calc(102px + env(safe-area-inset-bottom, 0px));
+    }
+
+    body .sax-mobile-dock,
+    body .vista-mobile-dock {
+        transition: transform 200ms ease-out, visibility 0s;
+    }
+
+    body .is-dock-hidden {
+        transform: translateY(calc(100% + 1rem + env(safe-area-inset-bottom, 0px)));
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform 200ms ease-out, visibility 0s 200ms;
+    }
+
+    body .is-dock-obstructed,
+    body:is(.modal-open, .product-zoom-open, .sax-cart-drawer-open, .vista-menu-open) :is(.sax-mobile-dock, .vista-mobile-dock) {
+        visibility: hidden;
+        pointer-events: none;
+        transition: none;
+    }
+}
+
+@media (max-width: 991.98px) and (prefers-reduced-motion: reduce) {
+    body .sax-mobile-dock,
+    body .vista-mobile-dock {
+        transition: none;
+    }
+}
+
+/* WhatsApp switches to desktop at 769px, while the dock remains mobile. */
+@media (min-width: 769px) and (max-width: 991.98px) {
+    body:has(.sax-mobile-dock) .whatsapp-container {
+        bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    }
+
+    body:has(.sax-mobile-dock) #backToTop {
+        bottom: calc(152px + env(safe-area-inset-bottom, 0px));
+    }
+}

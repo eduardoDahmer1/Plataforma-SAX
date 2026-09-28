@@ -84,6 +84,90 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.style.removeProperty('padding-top');
     }
 
+    // Contextual mobile navigation; keep scroll intent separate from overlay/CTA safety.
+    const mobileDock = document.querySelector('.sax-mobile-dock, .vista-mobile-dock');
+    if (mobileDock) {
+        const mobile = window.matchMedia('(max-width: 991.98px)');
+        const purchase = document.querySelector('.product-purchase');
+        const threshold = 24;
+        const topZone = 32;
+        const scrollPosition = () => Math.max(0, Math.min(window.scrollY,
+            document.documentElement.scrollHeight - window.innerHeight));
+        let previousY = scrollPosition();
+        let travel = 0;
+        let direction = 0;
+        let scrollHidden = false;
+        let suspended = false;
+        let frame = 0;
+        let hidden = false;
+
+        const updateDock = () => {
+            frame = 0;
+            const y = scrollPosition();
+            const blocked = document.body.matches('.modal-open, .product-zoom-open, .sax-cart-drawer-open, .vista-menu-open')
+                || document.body.style.overflow === 'hidden'
+                || !!document.querySelector('dialog[open], .offcanvas.show, .offcanvas.showing, .fancybox__container');
+            if (!mobile.matches) {
+                scrollHidden = false;
+                travel = direction = 0;
+            } else if (!blocked && !suspended) {
+                const delta = y - previousY;
+                if (y <= topZone) {
+                    scrollHidden = false;
+                    travel = direction = 0;
+                } else if (delta) {
+                    const nextDirection = Math.sign(delta);
+                    travel = nextDirection === direction ? travel + Math.abs(delta) : Math.abs(delta);
+                    direction = nextDirection;
+                    if (travel >= threshold) {
+                        scrollHidden = direction > 0;
+                        travel = 0;
+                    }
+                }
+            } else {
+                // Scroll locking/restoring a modal must not manufacture a direction change.
+                travel = direction = 0;
+            }
+            previousY = y;
+            suspended = blocked;
+
+            let purchaseCollision = false;
+            if (mobile.matches && purchase) {
+                const rect = purchase.getBoundingClientRect();
+                const bottom = parseFloat(getComputedStyle(mobileDock).bottom) || 0;
+                const dockTop = window.innerHeight - bottom - mobileDock.offsetHeight;
+                purchaseCollision = rect.bottom > dockTop - 12 && rect.top < window.innerHeight;
+            }
+            const nextHidden = mobile.matches && (scrollHidden || blocked || purchaseCollision);
+            // Safety hides immediately; normal navigation slides out over 200 ms.
+            mobileDock.classList.toggle('is-dock-obstructed', mobile.matches && (blocked || purchaseCollision));
+            if (nextHidden !== hidden) {
+                hidden = nextHidden;
+                mobileDock.inert = hidden;
+                mobileDock.setAttribute('aria-hidden', String(hidden));
+                mobileDock.classList.toggle('is-dock-hidden', hidden);
+            }
+        };
+        const scheduleDock = () => {
+            if (!frame) frame = window.requestAnimationFrame(updateDock);
+        };
+        window.addEventListener('scroll', scheduleDock, { passive: true });
+        window.addEventListener('resize', scheduleDock, { passive: true });
+        window.addEventListener('pageshow', scheduleDock);
+        mobile.addEventListener('change', scheduleDock);
+        new MutationObserver(scheduleDock).observe(document.body, {
+            attributes: true, attributeFilter: ['class', 'style'],
+        });
+        document.querySelectorAll('dialog, .offcanvas').forEach(overlay => {
+            new MutationObserver(scheduleDock).observe(overlay, {
+                attributes: true, attributeFilter: ['class', 'open'],
+            });
+        });
+        if (purchase) new ResizeObserver(scheduleDock).observe(purchase);
+        new ResizeObserver(scheduleDock).observe(mobileDock);
+        updateDock();
+    }
+
     // Back to Top
     const backToTop = document.getElementById('backToTop');
     if (backToTop) {

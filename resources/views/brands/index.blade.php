@@ -1,5 +1,7 @@
 @extends('layout.layout')
 
+@section('page_title', __('messages.nossas_marcas'))
+
 @section('content')
     <x-directory-hero eyebrow="SAX Selection"
         :title="__('messages.nossas_marcas')" :description="__('messages.excelencia_detalhe')" />

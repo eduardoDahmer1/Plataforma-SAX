@@ -1,5 +1,7 @@
 @extends('layout.layout')
 
+@section('page_title', __('messages.categorias'))
+
 @section('content')
     <x-directory-hero eyebrow="SAX Selection"
         :title="__('messages.categorias')" :description="__('messages.explore_colecoes')" />

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Currency;
+use App\Models\Cupon;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Subcategory;
@@ -54,7 +56,7 @@ class SearchController extends Controller
     private const BASE_PRODUCT_COLS = [
         'id', 'name', 'external_name', 'sku', 'price', 'stock',
         'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id',
-        'childcategory_id', 'slug', 'status',
+        'childcategory_id', 'slug', 'status', 'rating_average', 'rating_count',
     ];
 
     private static ?array $resolvedProductCols = null;
@@ -66,7 +68,7 @@ class SearchController extends Controller
         }
 
         $table = (new Product())->getTable();
-        $optional = ['size', 'color', 'colors', 'color_parent_id'];
+        $optional = ['size', 'color', 'colors', 'color_parent_id', 'stores', 'views'];
 
         $existingOptional = Cache::remember('schema.search_product_optional_columns', now()->addHours(24), function () use ($optional, $table) {
             return array_values(array_filter($optional, fn($column) => Schema::hasColumn($table, $column)));
@@ -88,6 +90,7 @@ class SearchController extends Controller
             ->select($this->qualifiedProductCols())
             ->with([
                 'brand:id,name',
+                'category:id,name',
                 'translations' => fn($query) => $query->where('locale', translation_locale()),
             ]);
 
@@ -173,17 +176,274 @@ class SearchController extends Controller
         $paginated->setCollection($items);
     }
 
-    private function applyFilters($query, Request $request)
+    private function currencyContext(): array
     {
-        return $query
-            ->when($request->brand,           fn($q) => $q->where('products.brand_id',       $request->brand))
-            ->when($request->category,        fn($q) => $q->where('products.category_id',    $request->category))
-            ->when($request->subcategory,     fn($q) => $q->where('products.subcategory_id', $request->subcategory))
-            ->when($request->categoriasfilhas,fn($q) => $q->where('products.childcategory_id',$request->categoriasfilhas))
-            ->when($request->min_price,       fn($q) => $q->where('products.price', '>=',    $request->min_price))
-            ->when($request->max_price,       fn($q) => $q->where('products.price', '<=',    $request->max_price));
+        $sessionCurrency = session('currency');
+        $currencyId = is_object($sessionCurrency)
+            ? ($sessionCurrency->id ?? null)
+            : (is_array($sessionCurrency) ? ($sessionCurrency['id'] ?? $sessionCurrency[0] ?? null) : $sessionCurrency);
+
+        $currency = $currencyId ? Currency::find($currencyId) : null;
+        $currency ??= Currency::where('is_default', 1)->first() ?? Currency::first();
+        $decimals = max(0, min(2, (int) ($currency?->decimal_digits ?? 2)));
+
+        return [
+            'sign' => trim((string) ($currency?->sign ?? 'US$')) ?: 'US$',
+            'rate' => max(0.000001, (float) ($currency?->value ?? 1)),
+            'decimals' => $decimals,
+            'step' => $decimals === 0 ? 1 : (10 ** -$decimals),
+        ];
     }
 
+    private function requestedArray(Request $request, string $key): array
+    {
+        $value = $request->input($key, []);
+        $value = is_array($value) ? $value : [$value];
+
+        return collect($value)
+            ->map(fn ($item) => trim((string) $item))
+            ->filter()
+            ->unique()
+            ->take(30)
+            ->values()
+            ->all();
+    }
+
+    private function activeCoupons()
+    {
+        return Cupon::vigentes()->get();
+    }
+
+    private function applyCouponScope(Builder $query, $coupons): void
+    {
+        if ($coupons->isEmpty()) {
+            $query->whereRaw('1 = 0');
+            return;
+        }
+
+        $query->where(function (Builder $couponQuery) use ($coupons) {
+            foreach ($coupons as $coupon) {
+                $couponQuery->orWhere(function (Builder $candidate) use ($coupon) {
+                    if ($coupon->preco_maximo_produto) {
+                        $candidate->where('products.price', '<=', $coupon->preco_maximo_produto);
+                    }
+
+                    match ($coupon->modelo) {
+                        'categoria' => $candidate->where('products.category_id', $coupon->categoria_id),
+                        'marca' => $candidate->where('products.brand_id', $coupon->marca_id),
+                        'produto' => $candidate->where('products.id', $coupon->produto_id),
+                        'nome' => $candidate->whereRaw(
+                            'LOWER(COALESCE(products.external_name, products.name)) LIKE ?',
+                            ['%' . mb_strtolower((string) $coupon->nome_termo) . '%']
+                        ),
+                        default => $candidate->whereRaw('1 = 1'),
+                    };
+                });
+            }
+        });
+    }
+
+    private function applyFilters($query, Request $request, ?array $currency = null, bool $facetsOnly = false)
+    {
+        $currency ??= $this->currencyContext();
+        $sizes = $this->requestedArray($request, 'sizes');
+        $colors = collect($this->requestedArray($request, 'colors'))
+            ->map(fn ($color) => strtoupper(ltrim((string) $color, '#')))
+            ->filter(fn ($color) => preg_match('/^[0-9A-F]{6}$/', $color))
+            ->values()->all();
+        $hasMultipleColors = Product::supportsMultipleColors();
+
+        $query
+            ->when($request->brand, fn ($q) => $q->where('products.brand_id', $request->brand))
+            ->when($request->category, fn ($q) => $q->where(function ($scope) use ($request) {
+                $scope->where('products.category_id', $request->category)
+                    ->orWhereHas('additionalCategories', fn ($assignment) => $assignment->where('category_id', $request->category));
+            }))
+            ->when($request->subcategory, fn ($q) => $q->where(function ($scope) use ($request) {
+                $scope->where('products.subcategory_id', $request->subcategory)
+                    ->orWhereHas('additionalCategories', fn ($assignment) => $assignment->where('subcategory_id', $request->subcategory));
+            }))
+            ->when($request->categoriasfilhas, fn ($q) => $q->where(function ($scope) use ($request) {
+                $scope->where('products.childcategory_id', $request->categoriasfilhas)
+                    ->orWhereHas('additionalCategories', fn ($assignment) => $assignment->where('childcategory_id', $request->categoriasfilhas));
+            }));
+
+        if ($facetsOnly) {
+            return $query;
+        }
+
+        $query
+            ->when($request->filled('min_price') && is_numeric($request->min_price), fn ($q) =>
+                $q->where('products.price', '>=', max(0, (float) $request->min_price) / $currency['rate']))
+            ->when($request->filled('max_price') && is_numeric($request->max_price), fn ($q) =>
+                $q->where('products.price', '<=', max(0, (float) $request->max_price) / $currency['rate']))
+            ->when($sizes, function ($q) use ($sizes) {
+                $normalized = collect($sizes)->map(fn ($size) => strtoupper(str_replace(' ', '', (string) $size)))->all();
+                $q->whereIn(\DB::raw("UPPER(REPLACE(TRIM(products.size), ' ', ''))"), $normalized);
+            })
+            ->when($colors, function ($q) use ($colors, $hasMultipleColors) {
+                $q->where(function ($colorQuery) use ($colors, $hasMultipleColors) {
+                    $colorQuery->whereIn(\DB::raw("UPPER(REPLACE(products.color, '#', ''))"), $colors);
+                    if ($hasMultipleColors) {
+                        foreach ($colors as $color) {
+                            $colorQuery->orWhereJsonContains('products.colors', '#'.$color)
+                                ->orWhereJsonContains('products.colors', $color);
+                        }
+                    }
+                });
+            });
+
+        if ($request->boolean('coupon')) {
+            $this->applyCouponScope($query, $this->activeCoupons());
+        }
+
+        return $query;
+    }
+    private function catalogFilterData(Builder $matchingProducts, Request $request, array $currency): array
+    {
+        $priceQuery = (clone $matchingProducts)->setEagerLoads([])->reorder();
+        $baseMinimum = (float) ((clone $priceQuery)->min('products.price') ?? 0);
+        $baseMaximum = (float) ((clone $priceQuery)->max('products.price') ?? 0);
+        $minimum = floor(($baseMinimum * $currency['rate']) / $currency['step']) * $currency['step'];
+        $maximum = ceil(($baseMaximum * $currency['rate']) / $currency['step']) * $currency['step'];
+
+        $sizeOptions = (clone $matchingProducts)->setEagerLoads([])->reorder()
+            ->select([])->selectRaw("UPPER(REPLACE(TRIM(products.size), ' ', '')) AS filter_key, COUNT(*) AS total")
+            ->whereNotNull('products.size')->where('products.size', '<>', '')
+            ->groupBy('filter_key')->orderByDesc('total')->limit(120)->get()
+            ->filter(fn ($item) => $this->validSizeKey((string) $item->filter_key))
+            ->map(fn ($item) => (object) [
+                'key' => (string) $item->filter_key,
+                'label' => $this->sizeLabel((string) $item->filter_key),
+                'group' => $this->sizeGroup((string) $item->filter_key),
+                'total' => (int) $item->total,
+            ]);
+
+        if ($this->contextSuggestsVolume($request)) {
+            $sizeOptions = $sizeOptions->where('group', 'volume');
+        } elseif ($this->contextSuggestsFootwear($request)) {
+            $sizeOptions = $sizeOptions->whereIn('group', ['number', 'alphanumeric']);
+        }
+
+        $groupOrder = ['volume', 'letter', 'number', 'kids', 'alphanumeric', 'other'];
+        $groupLabels = [
+            'volume' => 'Volume',
+            'letter' => 'Tamanho de roupa',
+            'number' => 'Numeração',
+            'kids' => 'Tamanho infantil',
+            'alphanumeric' => 'Tamanho alfanumérico',
+            'other' => 'Outros tamanhos',
+        ];
+        $sizeGroups = collect($groupOrder)->map(function ($group) use ($sizeOptions, $groupLabels) {
+            $options = $sizeOptions->where('group', $group)->sortBy(function ($option) {
+                return str_pad((string) preg_replace('/\D+/', '', $option->key), 5, '0', STR_PAD_LEFT).$option->key;
+            })->values();
+
+            return (object) ['key' => $group, 'label' => $groupLabels[$group], 'options' => $options];
+        })->filter(fn ($group) => $group->options->isNotEmpty())->values();
+
+        $colorCounts = [];
+        $primaryColors = (clone $matchingProducts)->setEagerLoads([])->reorder()
+            ->select([])->selectRaw("UPPER(REPLACE(products.color, '#', '')) AS filter_color, COUNT(*) AS total")
+            ->whereNotNull('products.color')->where('products.color', '<>', '')
+            ->groupBy('filter_color')->orderByDesc('total')->limit(80)->get();
+        foreach ($primaryColors as $color) {
+            $hex = strtoupper(ltrim((string) $color->filter_color, '#'));
+            if (preg_match('/^[0-9A-F]{6}$/', $hex)) {
+                $colorCounts[$hex] = ($colorCounts[$hex] ?? 0) + (int) $color->total;
+            }
+        }
+        if (Schema::hasColumn((new Product())->getTable(), 'colors')) {
+            $compositions = (clone $matchingProducts)->setEagerLoads([])->reorder()
+                ->whereNotNull('products.colors')->where('products.colors', '<>', '')
+                ->distinct()->limit(500)->pluck('products.colors');
+            foreach ($compositions as $composition) {
+                $values = is_array($composition) ? $composition : json_decode((string) $composition, true);
+                foreach (is_array($values) ? $values : [] as $value) {
+                    $hex = strtoupper(ltrim(trim((string) $value), '#'));
+                    if (preg_match('/^[0-9A-F]{6}$/', $hex)) {
+                        $colorCounts[$hex] = ($colorCounts[$hex] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+        arsort($colorCounts);
+        $colors = collect($colorCounts)->take(32)->map(fn ($total, $hex) => (object) [
+            'color' => '#'.$hex,
+            'total' => $total,
+        ])->values();
+
+        $coupons = $this->activeCoupons();
+        $couponProductCount = 0;
+        if ($coupons->isNotEmpty()) {
+            $couponQuery = (clone $matchingProducts)->setEagerLoads([])->reorder();
+            $this->applyCouponScope($couponQuery, $coupons);
+            $couponProductCount = $couponQuery->count();
+        }
+
+        $suggestedProducts = (clone $matchingProducts)->reorder()
+            ->orderByDesc('products.views')->orderByDesc('products.id')->limit(6)->get();
+
+        return [
+            'currencyContext' => $currency,
+            'priceBounds' => [
+                'min' => $minimum,
+                'max' => max($minimum, $maximum),
+                'selected_min' => $request->filled('min_price') ? (float) $request->min_price : $minimum,
+                'selected_max' => $request->filled('max_price') ? (float) $request->max_price : max($minimum, $maximum),
+            ],
+            'sizes' => $sizeOptions,
+            'sizeGroups' => $sizeGroups,
+            'colors' => $colors,
+            'stores' => collect(),
+            'couponProductCount' => $couponProductCount,
+            'suggestedProducts' => $suggestedProducts,
+        ];
+    }
+
+    private function validSizeKey(string $key): bool
+    {
+        return $key !== '' && $key !== '__MANUAL__' && mb_strlen($key) <= 20
+            && preg_match('/^[0-9A-ZÀ-Ü.,+\/-]+$/u', $key);
+    }
+
+    private function sizeGroup(string $key): string
+    {
+        if (preg_match('/^\d+(?:[.,]\d+)?(?:ML|CL|L|OZ)$/', $key)) return 'volume';
+        if (preg_match('/^(?:XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|[2-6]XL|U|UNICO|UNICA)$/', $key)) return 'letter';
+        if (preg_match('/^\d+(?:M|Y|A)$/', $key)) return 'kids';
+        if (preg_match('/^\d+(?:[.,]\d+)?$/', $key)) return 'number';
+        if (preg_match('/^[0-9]+[A-Z]+$/', $key)) return 'alphanumeric';
+        return 'other';
+    }
+
+    private function sizeLabel(string $key): string
+    {
+        if (preg_match('/^(\d+(?:[.,]\d+)?)(ML|CL|L|OZ)$/', $key, $parts)) {
+            return str_replace('.', ',', $parts[1]).' '.mb_strtolower($parts[2]);
+        }
+        return $key;
+    }
+
+    private function filterContextText(Request $request): string
+    {
+        $parts = collect([$request->search]);
+        if ($request->category) $parts->push(Category::whereKey($request->category)->value('name'));
+        if ($request->subcategory) $parts->push(Subcategory::whereKey($request->subcategory)->value('name'));
+        if ($request->categoriasfilhas) $parts->push(CategoriasFilhas::whereKey($request->categoriasfilhas)->value('name'));
+
+        return mb_strtolower($parts->filter()->implode(' '));
+    }
+
+    private function contextSuggestsVolume(Request $request): bool
+    {
+        return preg_match('/perfume|perfumer|fragr|bebida|vinho|vino|whisky|licor|cafe|café/', $this->filterContextText($request)) === 1;
+    }
+
+    private function contextSuggestsFootwear(Request $request): bool
+    {
+        return preg_match('/calçad|calcad|sapato|zapato|tenis|tênis|sandalia|sandália/', $this->filterContextText($request)) === 1;
+    }
     private function applySorting($query, ?string $sortBy, ?string $search = null)
     {
         if (!$sortBy && filled($search)) {
@@ -229,14 +489,16 @@ class SearchController extends Controller
         return [
             'brands' => Brand::where('status', 1)
                 ->whereHas('products', $hasProducts)
-                ->orderBy('name')->get(['id', 'name']),
+                ->withCount(['products as matching_products_count' => $hasProducts])
+                ->orderByDesc('matching_products_count')->orderBy('name')->get(['id', 'name']),
 
             'categories' => app(StorefrontLayoutService::class)->effective() === 'vista'
                 ? collect()
                 : app(StoreTaxonomyService::class)->categories(Category::query())
                     ->where('status', 1)
                     ->whereHas('products', $hasProducts)
-                    ->orderBy('name')->get(['id', 'name', 'slug']),
+                    ->withCount(['products as matching_products_count' => $hasProducts])
+                    ->orderByDesc('matching_products_count')->orderBy('name')->get(['id', 'name', 'slug']),
 
             'subcategories' => app(StoreTaxonomyService::class)->subcategories(Subcategory::query())
                 ->whereHas('products', $hasProducts)
@@ -248,27 +510,40 @@ class SearchController extends Controller
         ];
     }
 
-    public function index(Request $request)
+    public function catalogResults(Request $request): array
     {
         $this->removeOpticalCategoryFilter($request);
-        $collection = self::COLLECTIONS[$request->string('collection')->toString()] ?? null;
-        $base      = $this->baseQuery($request);
-        $sidebar   = $this->sidebarData(clone $base);
-        $query     = $this->applyFilters(clone $base, $request);
+        $currency = $this->currencyContext();
+        $base = $this->baseQuery($request);
+        $facetBase = $this->applyFilters(clone $base, $request, $currency, true);
+        $sidebar = array_merge(
+            $this->sidebarData(clone $facetBase),
+            $this->catalogFilterData(clone $facetBase, $request, $currency)
+        );
+        $query = $this->applyFilters(clone $base, $request, $currency);
         $this->applySorting($query, $this->requestedSort($request), $request->search);
 
-        $paginated = $query->paginate($request->get('per_page', 36))->withQueryString();
+        $perPage = min(100, max(12, (int) $request->get('per_page', 36)));
+        $paginated = $query->paginate($perPage)->withQueryString();
         $this->attachCardColors($paginated);
 
-        return view('search.search', array_merge($sidebar, [
+        return array_merge($sidebar, [
             'paginated' => $paginated,
-            'request'   => $request,
-            'query'     => $request->search,
+            'request' => $request,
+        ]);
+    }
+
+    public function index(Request $request)
+    {
+        $collection = self::COLLECTIONS[$request->string('collection')->toString()] ?? null;
+        $results = $this->catalogResults($request);
+
+        return view('search.search', array_merge($results, [
+            'query' => $request->search,
             'collectionTitle' => $collection ? $this->localizedCollectionText($collection, 'titles') : null,
             'collectionDescription' => $collection ? $this->localizedCollectionText($collection, 'descriptions') : null,
         ]));
     }
-
     public function collection(Request $request, string $collection)
     {
         abort_unless(isset(self::COLLECTIONS[$collection]), 404);
@@ -295,19 +570,25 @@ class SearchController extends Controller
     public function ajaxSearch(Request $request)
     {
         $this->removeOpticalCategoryFilter($request);
-        $query = $this->applyFilters($this->baseQuery($request), $request);
+        $currency = $this->currencyContext();
+        $base = $this->baseQuery($request);
+        $facetBase = $this->applyFilters(clone $base, $request, $currency, true);
+        $facetData = $this->catalogFilterData(clone $facetBase, $request, $currency);
+
+        $query = $this->applyFilters(clone $base, $request, $currency);
         $this->applySorting($query, $this->requestedSort($request), $request->search);
 
-        $paginated = $query->paginate((int) $request->get('per_page', 36))->withQueryString();
+        $perPage = min(100, max(12, (int) $request->get('per_page', 36)));
+        $paginated = $query->paginate($perPage)->withQueryString();
         $this->attachCardColors($paginated);
 
         return response()->json([
-            'html'       => view('search.partials.grid',       compact('paginated'))->render(),
+            'html' => view('search.partials.grid', compact('paginated'))->render(),
             'pagination' => view('search.partials.pagination', compact('paginated'))->render(),
-            'total'      => $paginated->total(),
+            'facets' => view('search.partials.dynamic-facets', array_merge($facetData, ['request' => $request]))->render(),
+            'total' => $paginated->total(),
         ]);
     }
-
     private function removeOpticalCategoryFilter(Request $request): void
     {
         if (app(StorefrontLayoutService::class)->effective() === 'vista') {

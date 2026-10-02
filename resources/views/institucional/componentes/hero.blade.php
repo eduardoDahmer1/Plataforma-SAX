@@ -1,70 +1,40 @@
 @php
-    // O index centralizou as traduções. Aqui resolvemos apenas o título e o array de sliders.
-    $heroTitle = $translation->section_one_title ?? $institucional->section_one_title;
-    
-    // Garante que o slider superior seja interpretado como array para o loop de forma segura
-    $sliders = is_array($institucional->top_sliders)
-        ? $institucional->top_sliders
-        : json_decode($institucional->top_sliders, true);
-
-    // Rotaciona a ordem dos banners automaticamente a cada 2 dias, sem intervenção manual
-    $sliders = sax_rotate_images($sliders, 2);
+    $sliders = sax_rotate_images($institucional->top_sliders ?: [], 1);
+    $heroTitle = $translation->inst_section_one_title ?? $institucional->section_one_title ?? 'SAX Department Store';
 @endphp
 
-<section class="hero-slider">
-    <div class="swiper mainSwiper">
+<section class="inst-hero" aria-label="SAX Department Store">
+    <div class="swiper mainSwiper" data-autoplay="{{ ($institucional->hero_autoplay_seconds ?? 6) * 1000 }}">
         <div class="swiper-wrapper">
-            @if(!empty($sliders))
-                @foreach($sliders as $slide)
-                    {{-- Tornamos o slide clicável envolvendo o conteúdo em um link --}}
-                    <a href="{{ route('categories.index') }}" class="swiper-slide">
-                        <div class="hero-overlay"></div>
-                        <img src="{{ asset('storage/' . $slide) }}" alt="{{ __('messages.institutional_hero_image_alt') }}">
-                        
-                        <div class="hero-content text-center">
-                            <div class="container">
-                                <span class="hero-subtitle" data-aos="fade-up">
-                                    {{ __('messages.exclusive_experience_subtitle') ?? 'Exclusive Experience' }}
-                                </span>
-                                
-                                <h1 class="hero-title" data-aos="fade-up" data-aos-delay="200">
-                                    {{ $heroTitle ?? 'SAX Department' }}
-                                </h1>
-                                
-                                <div class="hero-line" data-aos="zoom-in" data-aos-delay="400"></div>
-                                
-                                <p class="hero-text" data-aos="fade-up" data-aos-delay="600">
-                                    {{ __('messages.hero_luxury_text') ?? 'Onde o luxo encontra a exclusividade e o design define o estilo.' }}
-                                </p>
-                                
-                                <div class="hero-btn-wrapper" data-aos="fade-up" data-aos-delay="800">
-                                    <span class="btn-discover">
-                                        {{ __('messages.descobrir_colecao_btn') ?? 'Descobrir Coleção' }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                @endforeach
-            @else
-                {{-- Fallback elegante caso não existam imagens cadastradas no slider --}}
-                <div class="swiper-slide">
-                    <div class="hero-overlay"></div>
-                    <img src="https://placehold.co/1920x1080" alt="{{ __('messages.institutional_hero_image_alt') }}">
-                    <div class="hero-content text-center">
-                        <div class="container">
-                            <h1 class="hero-title">SAX Department</h1>
-                        </div>
+            @forelse($sliders as $slide)
+                <article class="swiper-slide inst-hero__slide">
+                    <img src="{{ asset('storage/' . $slide) }}" alt="Experiência SAX Department Store" fetchpriority="{{ $loop->first ? 'high' : 'auto' }}">
+                    <div class="inst-hero__veil"></div>
+                    <div class="container inst-hero__content">
+                        <p class="inst-kicker" data-aos="fade-up">{{ $copy('inst_hero_eyebrow', 'Experiência exclusiva') }}</p>
+                        <h1 data-aos="fade-up" data-aos-delay="120">{{ $heroTitle }}</h1>
+                        <p class="inst-hero__lead" data-aos="fade-up" data-aos-delay="220">{{ $copy('inst_hero_description', 'Moda, gastronomia, celebrações e hospitalidade reunidas em um destino singular no Paraguai.') }}</p>
+                        <a href="#sobre" class="inst-button inst-button--outline" data-aos="fade-up" data-aos-delay="320">
+                            {{ $copy('inst_hero_cta', 'Descobrir a SAX') }} <i class="fa-solid fa-arrow-down"></i>
+                        </a>
                     </div>
-                </div>
-            @endif
+                </article>
+            @empty
+                <article class="swiper-slide inst-hero__slide inst-hero__slide--fallback">
+                    <div class="inst-hero__veil"></div>
+                    <div class="container inst-hero__content">
+                        <p class="inst-kicker">{{ $copy('inst_hero_eyebrow', 'Experiência exclusiva') }}</p>
+                        <h1>{{ $heroTitle }}</h1>
+                        <p class="inst-hero__lead">{{ $copy('inst_hero_description', 'O destino onde a curadoria encontra a experiência.') }}</p>
+                    </div>
+                </article>
+            @endforelse
         </div>
-
-        {{-- Controles elegantes --}}
-        <div class="swiper-nav-wrapper d-none d-md-flex">
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-button-next"></div>
+        <div class="inst-hero__nav">
+            <button class="inst-hero__arrow swiper-button-prev" type="button" aria-label="Slide anterior"></button>
+            <div class="swiper-pagination"></div>
+            <button class="inst-hero__arrow swiper-button-next" type="button" aria-label="Próximo slide"></button>
         </div>
-        <div class="swiper-pagination"></div>
     </div>
+    <a class="inst-hero__scroll" href="#sobre"><span>Explore</span><i class="fa-solid fa-arrow-down"></i></a>
 </section>

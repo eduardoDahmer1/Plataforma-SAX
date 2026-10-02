@@ -63,25 +63,30 @@
 
     @foreach ($customerNotifications as $notification)
         @php($category = $categories[$notification->type] ?? 'account')
-        <form action="{{ route('user.notifications.read', $notification) }}" method="POST"
-              data-notification-item data-notification-category="{{ $category }}" data-notification-archived="0">
-            @csrf
-            <button type="submit" class="sax-admin-notifications__item {{ is_null($notification->read_at) ? 'is-unread' : '' }}">
-                <span class="sax-admin-notifications__icon is-user"><i class="fa-solid {{ $icons[$category] ?? 'fa-bell' }}"></i></span>
-                <span class="sax-admin-notifications__content">
-                    <strong>{{ $notification->translatedTitle() }}</strong><span>{{ $notification->translatedMessage() }}</span>
-                    <time datetime="{{ $notification->created_at?->toIso8601String() }}">{{ $notification->created_at?->locale(app()->getLocale())->diffForHumans() }}</time>
-                </span>
-                @if (is_null($notification->read_at))<span class="sax-admin-notifications__dot" aria-label="{{ __('messages.notifications_unread_singular') }}"></span>@endif
-            </button>
-            @if (is_null($notification->read_at))
-                <button type="button" class="sax-admin-notifications__mark-read"
-                        data-notification-mark-read title="{{ __('messages.notifications_mark_read') }}">
-                    <i class="fa-solid fa-check" aria-hidden="true"></i>
-                    <span>{{ __('messages.notifications_mark_read') }}</span>
+        <div class="sax-admin-notifications__row"
+             data-notification-item data-notification-category="{{ $category }}" data-notification-archived="0">
+            <form action="{{ route('user.notifications.read', $notification) }}" method="POST"
+                  data-notification-read-form>
+                @csrf
+                <button type="submit" class="sax-admin-notifications__item {{ is_null($notification->read_at) ? 'is-unread' : '' }}">
+                    <span class="sax-admin-notifications__icon is-user"><i class="fa-solid {{ $icons[$category] ?? 'fa-bell' }}"></i></span>
+                    <span class="sax-admin-notifications__content">
+                        <strong>{{ $notification->translatedTitle() }}</strong><span>{{ $notification->translatedMessage() }}</span>
+                        <time datetime="{{ $notification->created_at?->toIso8601String() }}">{{ $notification->created_at?->locale(app()->getLocale())->diffForHumans() }}</time>
+                    </span>
+                    @if (is_null($notification->read_at))<span class="sax-admin-notifications__dot" aria-label="{{ __('messages.notifications_unread_singular') }}"></span>@endif
                 </button>
+            </form>
+            @if (is_null($notification->read_at))
+                <div class="sax-admin-notifications__item-actions">
+                    <button type="button" class="sax-admin-notifications__mark-read"
+                            data-notification-mark-read title="{{ __('messages.notifications_mark_read') }}">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        <span>{{ __('messages.notifications_mark_read') }}</span>
+                    </button>
+                </div>
             @endif
-        </form>
+        </div>
     @endforeach
 
     @if ($customerOperationalAlerts->isEmpty() && $customerNotifications->isEmpty())

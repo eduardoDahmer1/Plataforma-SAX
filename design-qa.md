@@ -36,3 +36,61 @@ No actionable P0, P1, or P2 differences remain.
 - The original `/guia-de-atendimento` still returned successfully and retained its original guide markup.
 
 final result: passed
+# Design QA — Avaliações de produtos
+
+- Escopo: cards do catálogo, página do produto e administração de avaliações.
+- Referência: capturas fornecidas pelo usuário, adaptadas ao sistema visual neutro do SAX.
+- Rotas verificadas: `produto/{product}/avaliacoes`, `avaliacoes/{review}` e `admin/products/ratings`.
+- Validação estrutural: Blade compilado com sucesso; rotas registradas; CSS responsivo para desktop, tablet e mobile.
+- Validação funcional: criação, média, contagem e ocultação verificadas em transação real no banco do stage, revertida ao final.
+- Testes automatizados: 8 testes, 54 asserções, todos aprovados.
+- Verificação visual em navegador: bloqueada neste ambiente porque não há navegador local, Playwright, Puppeteer nem Laravel Dusk disponível.
+
+Final result: blocked (apenas a comparação visual em navegador; implementação e verificações de código concluídas).
+
+## Filtros contextuais — 30/09/2026
+
+- Referência: busca avançada existente e capturas de categoria/filtro fornecidas pelo usuário.
+- Implementado: mesmo filtro em busca, categoria, subcategoria, categoria-filha e marca; filtros persistentes; atualização AJAX; preço com faixa dupla; cupom; cores existentes; tamanhos agrupados semanticamente.
+- Regra verificada: busca e categoria de Perfumes exibem somente o grupo Volume (`9 ml` a `250 ml` nos dados atuais), sem tamanhos de roupa ou numeração.
+- Removido: disponibilidade por loja e respectivos controles/chips.
+- Renderização interna: categoria, subcategoria, categoria-filha e marca retornaram HTTP 200 com filtro e runtime em tempo real.
+- Verificação visual em navegador: bloqueada porque este ambiente não dispõe de cloud browser, navegador local, Playwright, Puppeteer ou Dusk.
+
+Final result: blocked (somente comparação visual em navegador; implementação, dados e regressões automatizadas validados).
+
+## Institucional SAX — 02/10/2026
+
+- Source visual truth: captura de referência anexada pelo usuário (1918 × 998 px; Chrome desktop).
+- Implementation route: `/institucional`.
+- Implementation screenshot path: indisponível; este ambiente não possui cloud browser, Chrome/Chromium, Firefox, Playwright, Puppeteer ou Dusk.
+- Intended viewport: desktop 1440 × 900 CSS px e mobile 390 × 844 CSS px, device scale factor 1.
+- State: página pública, primeiro slide, idioma ativo do stage.
+- Render evidence: resposta HTTP 200, HTML final com 126.231 bytes, assets reais do storage e todas as seções renderizadas.
+- Full-view comparison evidence: bloqueada pela ausência de navegador renderizador.
+- Focused region comparison evidence: bloqueada pelo mesmo motivo.
+
+### Findings
+
+- P0/P1 funcionais: nenhum encontrado na renderização HTTP, compilação Blade, rotas ou testes focados.
+- P2 visual: não classificável sem uma captura real do navegador no mesmo viewport da referência.
+- Fonts and typography: Playfair Display + Montserrat seguem a linguagem editorial da referência; confirmação pixel a pixel bloqueada.
+- Spacing and layout rhythm: definidos breakpoints para desktop, tablet e mobile; inspeção renderizada bloqueada.
+- Colors and visual tokens: paleta preto, marfim e dourado centralizada em tokens CSS; contraste visual final não aferido em navegador.
+- Image quality and asset fidelity: reutilizados banners, galeria, capa e logos reais; o runtime evita repetição imediata entre cenários.
+- Copy and content: hero, sobre, experiências, números, galeria, história, vídeos e CTA presentes; os novos textos de seção são editáveis em PT/ES/EN.
+
+### Interaction verification
+
+- Slider com autoplay configurável, navegação e paginação implementados.
+- Imagens de cenário são sorteadas por visita sem repetição enquanto houver opções.
+- Contadores usam IntersectionObserver e respeitam redução de movimento.
+- Galeria, links para experiências, Guia de Setores, vídeos e âncoras estão conectados.
+- JavaScript passou em `node --check`; Blade compilou; 8 testes focados passaram com 61 asserções.
+
+### Comparison history
+
+- Primeira verificação estrutural: página retornou HTTP 200 e todas as áreas principais estavam presentes no HTML.
+- Não houve iteração visual porque nenhum navegador renderizador está instalado no ambiente.
+
+final result: blocked

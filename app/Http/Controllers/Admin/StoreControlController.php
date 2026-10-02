@@ -32,7 +32,10 @@ class StoreControlController extends Controller
     {
         $this->ensureMasterAdmin();
 
-        return view('admin.store-controls.edit', ['controls' => $controls->settings()]);
+        return view('admin.store-controls.edit', [
+            'controls' => $controls->manualSettings(),
+            'temporaryTest' => $controls->temporaryPurchaseTestStatus(),
+        ]);
     }
 
     public function update(Request $request, StoreControlService $controls): RedirectResponse
@@ -53,6 +56,27 @@ class StoreControlController extends Controller
         $controls->clearCache();
 
         return back()->with('success', __('messages.store_controls_saved'));
+    }
+
+    public function activateTemporaryTest(StoreControlService $controls): RedirectResponse
+    {
+        $this->ensureMasterAdmin();
+
+        $status = $controls->activateTemporaryPurchaseTest(auth()->id());
+
+        return back()->with('success', sprintf(
+            'Janela de testes ativada por %d minutos, até %s.',
+            StoreControlService::TEMPORARY_TEST_MINUTES,
+            $status['expires_at']->format('H:i:s')
+        ));
+    }
+
+    public function deactivateTemporaryTest(StoreControlService $controls): RedirectResponse
+    {
+        $this->ensureMasterAdmin();
+        $controls->deactivateTemporaryPurchaseTest();
+
+        return back()->with('success', 'Janela temporária encerrada. Os bloqueios normais voltaram a valer.');
     }
 
     private function ensureMasterAdmin(): void

@@ -32,6 +32,23 @@ use Throwable;
 
 class ProductControllerAdmin extends Controller
 {
+    public function generateDescriptionWithAi(Product $product, OpenAICatalogService $openAi)
+    {
+        app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
+        $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
+
+        try {
+            return response()->json($openAi->generateDescriptionOnly($product));
+        } catch (\Throwable $exception) {
+            report($exception);
+            return response()->json([
+                'message' => $exception instanceof \RuntimeException
+                    ? ($exception->getMessage() ?: 'No fue posible generar la descripción.')
+                    : 'No fue posible generar la descripción.',
+            ], 502);
+        }
+    }
+
     public function completeWithAi(Product $product, OpenAICatalogService $openAi)
     {
         app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();

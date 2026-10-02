@@ -1,4 +1,4 @@
-@extends('layout.layout')
+@extends('layout.checkout')
 
 @section('content')
 <div class="container mt-5 mb-5 sax-cart-page">

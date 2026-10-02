@@ -28,6 +28,10 @@ class Institucional extends Model
         'stat_brands_count',
         'stat_sqm_count',
         'stat_employees_count',
+        'stat_categories_count',
+        'founded_year',
+        'history_milestones',
+        'hero_autoplay_seconds',
         'iframe_tour_360',
         'iframe_ponte_amizade',
         'iframe_centro_cde',
@@ -37,6 +41,7 @@ class Institucional extends Model
         'top_sliders'    => 'array',
         'brand_logos'    => 'array',
         'gallery_images' => 'array',
+        'history_milestones' => 'array',
         'created_at'     => 'datetime',
         'updated_at'     => 'datetime',
     ];

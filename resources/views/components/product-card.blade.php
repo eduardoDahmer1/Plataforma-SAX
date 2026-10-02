@@ -100,6 +100,15 @@
                     {{ $displayName }}
                 </div>
 
+
+                @if((int) ($item->rating_count ?? 0) > 0)
+                    <div class="product-card-standard__rating"
+                         aria-label="{{ number_format((float) $item->rating_average, 1, ',', '.') }} de 5, {{ $item->rating_count }} {{ __('messages.product_reviews_plural') }}">
+                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        <strong>{{ number_format((float) $item->rating_average, 1, ',', '.') }}</strong>
+                        <span>({{ number_format((int) $item->rating_count, 0, ',', '.') }})</span>
+                    </div>
+                @endif
                 <div class="product-card-standard__meta mt-auto">
                     <div class="product-card-standard__price">
                         {{ isset($item->price) ? currency_format($item->price, 2, ',', '.') : '0,00' }}

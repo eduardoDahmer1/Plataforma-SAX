@@ -26,10 +26,10 @@
     $paymentStatus = strtolower((string) ($order->payment_status ?: 'pending'));
     $paymentStatusLabel = $copy[$paymentStatus] ?? ucfirst($paymentStatus);
     $paymentStatusColor = match ($paymentStatus) {
-        'paid' => '#1f7a37',
-        'failed' => '#b42318',
-        'refunded' => '#365899',
-        default => '#9a6b00',
+        'paid' => '#3f4348',
+        'failed' => '#25282c',
+        'refunded' => '#55595e',
+        default => '#62666b',
     };
     $storeKey = match ((int) $order->store) {
         1 => 'email_order_store_ciudad_del_este',
@@ -42,14 +42,14 @@
 @endphp
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0"
-       style="margin:0 0 1.8rem 0;border:1px solid #e6e2dc;">
+       style="margin:0 0 1.8rem 0;border:1px solid #d7d8da;">
     <tr>
-        <td style="padding:1rem 1.3rem;background:#f8f6f2;">
+        <td style="padding:1rem 1.3rem;background:#f5f5f4;">
             <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.12rem;color:#777777;">
                 {{ $copy['payment_status'] }}
             </span>
         </td>
-        <td style="padding:1rem 1.3rem;background:#f8f6f2;text-align:right;">
+        <td style="padding:1rem 1.3rem;background:#f5f5f4;text-align:right;">
             <strong style="font-size:0.82rem;text-transform:uppercase;color:{{ $paymentStatusColor }};">
                 {{ $paymentStatusLabel }}
             </strong>
@@ -57,7 +57,7 @@
     </tr>
 
     <tr>
-        <td colspan="2" style="padding:1.2rem 1.3rem;border-top:1px solid #e6e2dc;">
+        <td colspan="2" style="padding:1.2rem 1.3rem;border-top:1px solid #d7d8da;">
             <div style="margin-bottom:0.8rem;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12rem;color:#777777;">
                 {{ $copy['delivery'] }}
             </div>
@@ -92,13 +92,13 @@
 
     @if ($order->terms_accepted_at)
         <tr>
-            <td colspan="2" style="padding:1.2rem 1.3rem;border-top:1px solid #e6e2dc;background:#fbfaf8;">
+            <td colspan="2" style="padding:1.2rem 1.3rem;border-top:1px solid #d7d8da;background:#fafaf9;">
                 <div style="margin-bottom:0.5rem;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12rem;color:#777777;">
                     {{ $copy['policies'] }}
                 </div>
                 <p style="margin:0;font-size:0.82rem;line-height:1.6;color:#444444;">
                     {{ str_replace(':date', $order->terms_accepted_at->format('d/m/Y H:i'), $copy['accepted']) }}
-                    <a href="{{ route('policies.index') }}" style="color:#111111;font-weight:700;">
+                    <a href="{{ route('policies.index') }}" style="color:#25282c;font-weight:700;">
                         {{ $copy['view_policies'] }}
                     </a>
                 </p>

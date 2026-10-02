@@ -7,6 +7,74 @@
         description="Ative ou pause recursos da loja imediatamente, sem alterar código ou credenciais." />
     <x-admin.alert />
 
+    @php
+        $temporaryTestActive = (bool) ($temporaryTest['active'] ?? false);
+        $temporaryTestExpiresAt = $temporaryTest['expires_at'] ?? null;
+        $catalogActuallyAvailable = (bool) ($catalogIntegrationStatus['actual_available'] ?? $catalogIntegrationStatus['available'] ?? true);
+    @endphp
+
+    <section class="temporary-test-card {{ $temporaryTestActive ? 'is-active' : '' }} mb-4"
+             @if($temporaryTestActive && $temporaryTestExpiresAt) data-temporary-test-expires="{{ $temporaryTestExpiresAt->toIso8601String() }}" @endif>
+        <div class="temporary-test-card__icon"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></div>
+        <div class="temporary-test-card__content">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <h2 class="temporary-test-card__title mb-0">Teste temporário do fluxo de compra</h2>
+                <span class="temporary-test-card__status">{{ $temporaryTestActive ? 'ATIVO AGORA' : 'DESATIVADO' }}</span>
+            </div>
+            @if($temporaryTestActive)
+                <p class="mb-1">Carrinho, checkout, DHL/localizações e formas de pagamento estão liberados temporariamente, mesmo com a integração indisponível.</p>
+                <small>Expira automaticamente às <strong>{{ $temporaryTestExpiresAt?->format('H:i:s') }}</strong> · tempo restante: <strong data-temporary-test-countdown>calculando…</strong></small>
+            @else
+                <p class="mb-1">Libera todo o fluxo de compra por exatamente cinco minutos para testes controlados.</p>
+                <small>A integração está <strong>{{ $catalogActuallyAvailable ? 'disponível' : 'indisponível' }}</strong>. Durante o teste, clientes comuns verão um aviso de atualização.</small>
+            @endif
+        </div>
+        <div class="temporary-test-card__action">
+            @if($temporaryTestActive)
+                <form method="POST" action="{{ route('admin.store-controls.temporary-test.deactivate') }}" class="m-0">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-outline-dark">Encerrar agora</button>
+                </form>
+            @else
+                <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#temporaryPurchaseTestModal">
+                    <i class="fa-solid fa-play me-2"></i>Ativar por 5 minutos
+                </button>
+            @endif
+        </div>
+    </section>
+
+    <div class="modal fade" id="temporaryPurchaseTestModal" tabindex="-1" aria-labelledby="temporaryPurchaseTestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content temporary-test-modal">
+                <div class="modal-header">
+                    <div>
+                        <span class="temporary-test-modal__eyebrow">Confirmação obrigatória</span>
+                        <h2 class="modal-title h5 mb-0" id="temporaryPurchaseTestModalLabel">Ativar o fluxo de compra por 5 minutos?</h2>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Durante esse período, usuários comuns poderão usar normalmente:</p>
+                    <ul class="temporary-test-modal__list">
+                        <li>Carrinho e inclusão de produtos</li>
+                        <li>Checkout e cálculo de frete/DHL</li>
+                        <li>Depósito, Bancard, PIX e WhatsApp</li>
+                        <li>Países e localizações usados na entrega</li>
+                    </ul>
+                    <div class="temporary-test-modal__notice">A liberação termina automaticamente após cinco minutos. Um aviso de atualização ficará visível para o cliente durante toda a janela.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Não, cancelar</button>
+                    <form method="POST" action="{{ route('admin.store-controls.temporary-test.activate') }}" class="m-0">
+                        @csrf
+                        <button type="submit" class="btn btn-dark">Sim, ativar agora</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form method="POST" action="{{ route('admin.store-controls.update') }}" class="mt-4">
         @csrf
         @method('PUT')
@@ -122,6 +190,20 @@
 </x-admin.card>
 
 <style>
+    .temporary-test-card { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:16px; padding:18px; background:#f5f5f4; border:1px solid #cfd1d4; border-left:4px solid #55595e; border-radius:5px; }
+    .temporary-test-card.is-active { background:#ececeb; border-left-color:#25282c; }
+    .temporary-test-card__icon { width:42px; height:42px; display:grid; place-items:center; background:#34373b; border-radius:4px; color:#fff; }
+    .temporary-test-card__title { color:#202226; font-size:.82rem; font-weight:800; }
+    .temporary-test-card__content p { color:#464a4f; font-size:.72rem; }
+    .temporary-test-card__content small { color:#6d7176; font-size:.63rem; }
+    .temporary-test-card__status { padding:4px 7px; background:#fff; border:1px solid #c7c9cc; border-radius:2px; color:#4b4f54; font-size:.52rem; font-weight:800; letter-spacing:.06em; }
+    .temporary-test-card.is-active .temporary-test-card__status { background:#34373b; border-color:#34373b; color:#fff; }
+    .temporary-test-card__action .btn { min-height:40px; border-radius:3px; font-size:.64rem; font-weight:750; }
+    .temporary-test-modal { border:1px solid #cfd1d4; border-radius:5px; }
+    .temporary-test-modal__eyebrow { display:block; margin-bottom:3px; color:#73777d; font-size:.56rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .temporary-test-modal__list { display:grid; gap:7px; margin:0 0 16px; padding-left:20px; color:#45494e; font-size:.72rem; }
+    .temporary-test-modal__notice { padding:12px; background:#f1f1f0; border:1px solid #d5d6d8; border-left:4px solid #55595e; border-radius:3px; color:#4b4f54; font-size:.68rem; }
+    @media (max-width: 767px) { .temporary-test-card { grid-template-columns:auto minmax(0,1fr); } .temporary-test-card__action { grid-column:1 / -1; } .temporary-test-card__action .btn, .temporary-test-card__action form { width:100%; } }
     .store-control-card { border: 1px solid #e4e8ef; border-radius: 8px; padding: 1.15rem; background: #fff; }
     .store-control-icon { width: 42px; height: 42px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 42px; }
     .store-control-card .form-check-input { width: 2.8rem; height: 1.45rem; cursor: pointer; }
@@ -130,4 +212,26 @@
     .store-nav-toggle { border:1px solid #e4e8ef; border-radius:8px; padding:1rem 1.1rem; background:#fff; min-height:64px; }
     @media (max-width: 575px) { .store-profile-card { align-items:stretch; flex-direction:column; } .store-profile-select { max-width:none; } }
 </style>
+@if($temporaryTestActive && $temporaryTestExpiresAt)
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const card = document.querySelector('[data-temporary-test-expires]');
+    const countdown = card?.querySelector('[data-temporary-test-countdown]');
+    if (!card || !countdown) return;
+
+    const expiresAt = new Date(card.dataset.temporaryTestExpires).getTime();
+    const update = function () {
+        const seconds = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+        const minutes = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const remainder = String(seconds % 60).padStart(2, '0');
+        countdown.textContent = `${minutes}:${remainder}`;
+        if (seconds === 0) window.location.reload();
+    };
+
+    update();
+    window.setInterval(update, 1000);
+});
+</script>
+@endif
+
 @endsection

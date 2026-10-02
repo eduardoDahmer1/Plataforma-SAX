@@ -42,13 +42,13 @@
 <x-email-button :url="$primaryUrl">{{ $primaryLabel }}</x-email-button>
 
 @if ($primaryUrl !== $orderUrl)
-    <x-email-button :url="$orderUrl" background="#f0ece6" color="#111111">
+    <x-email-button :url="$orderUrl" background="#ececeb" color="#25282c">
         {{ $copy['view_order'] }}
     </x-email-button>
 @endif
 
 @if ($whatsappNumber !== '')
-    <x-email-button :url="$whatsappUrl" background="#198754">
+    <x-email-button :url="$whatsappUrl" background="#55595e">
         {{ $copy['whatsapp'] }}
     </x-email-button>
 @endif

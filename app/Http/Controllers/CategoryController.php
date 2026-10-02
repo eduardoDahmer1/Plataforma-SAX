@@ -105,8 +105,9 @@ class CategoryController extends Controller
         );
 
         $cartItems = auth()->check() ? auth()->user()->cart()->pluck('quantity', 'product_id')->toArray() : [];
+        $catalogData = $this->advancedCatalogData($request, ['category' => $category->id]);
 
-        return view('catalog.show', [
+        return view('catalog.show', array_merge([
             'entity' => $category,
             'products' => $products,
             'cartItems' => $cartItems,
@@ -120,6 +121,6 @@ class CategoryController extends Controller
             'backLabel' => __('messages.voltar_categorias'),
             'breadcrumb' => [],
             'emptyMessage' => 'No se encontraron productos en esta categoría.',
-        ]);
+        ], $catalogData));
     }
 }

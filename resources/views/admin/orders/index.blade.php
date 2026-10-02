@@ -58,43 +58,48 @@
     <div class="row g-3">
         @forelse($orders as $order)
             @php
-                $corStatus = match ($order->status) {
-                    'completed' => 'bg-success',
-                    'shipped'   => 'bg-primary',
-                    'processing'=> 'bg-info text-dark',
-                    'canceled'  => 'bg-danger',
-                    default     => 'bg-warning text-dark',
+                $classeStatus = match ($order->status) {
+                    'completed' => 'is-completed',
+                    'shipped'   => 'is-shipped',
+                    'processing'=> 'is-processing',
+                    'canceled'  => 'is-canceled',
+                    default     => 'is-pending',
                 };
-                $corPagamento = match ($order->payment_status) {
-                    'paid'     => 'text-success',
-                    'failed'   => 'text-danger',
-                    'refunded' => 'text-secondary',
-                    default    => 'text-warning',
+                $classePagamento = match ($order->payment_status) {
+                    'paid'     => 'is-paid',
+                    'failed'   => 'is-failed',
+                    'refunded' => 'is-refunded',
+                    default    => 'is-pending',
                 };
                 $subtotalCard = $order->items->sum(fn ($i) => $i->price * $i->quantity);
                 $totalItens = $order->items->sum('quantity');
             @endphp
 
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100 rounded-0 shadow-sm">
+                <article class="card admin-order-card h-100">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="admin-order-card__head">
                             <div>
-                                <span class="fw-bold d-block">#{{ $order->order_number ?? $order->id }}</span>
+                                <span class="admin-order-card__number">#{{ $order->order_number ?? $order->id }}</span>
                                 <span class="x-small text-muted">{{ $order->created_at->format('d/m/Y H:i') }}</span>
                             </div>
-                            <span class="badge {{ $corStatus }} rounded-0 x-small">{{ __('messages.status_' . $order->status) }}</span>
+                            <span class="admin-order-status {{ $classeStatus }}">{{ __('messages.status_' . $order->status) }}</span>
                         </div>
 
-                        <p class="mb-1 fw-bold">{{ $order->user->name ?? $order->name ?? '—' }}</p>
-                        <p class="small text-muted mb-3">{{ $order->user->email ?? $order->email }}</p>
+                        <div class="admin-order-card__customer">
+                            <span class="admin-order-card__avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($order->user->name ?? $order->name ?? 'C', 0, 1)) }}</span>
+                            <div>
+                                <p>{{ $order->user->name ?? $order->name ?? '—' }}</p>
+                                <span>{{ $order->user->email ?? $order->email }}</span>
+                            </div>
+                        </div>
 
-                        <div class="small border-top pt-2">
-                            <div class="d-flex justify-content-between mb-1">
+                        <div class="admin-order-card__facts">
+                            <div class="admin-order-card__row">
                                 <span class="text-muted">{{ __('messages.metodo') }}</span>
                                 <span>
                                     {{ ucfirst($order->payment_method) }}
-                                    <i class="fa fa-circle x-small ms-1 {{ $corPagamento }}"
+                                    <i class="fa fa-circle admin-order-payment {{ $classePagamento }}"
                                        title="{{ __('messages.payment_status_' . $order->payment_status) }}"></i>
                                 </span>
                             </div>
@@ -106,7 +111,7 @@
                                 </div>
                             @endif
 
-                            <div class="d-flex justify-content-between mb-1">
+                            <div class="admin-order-card__row">
                                 <span class="text-muted">{{ __('messages.quantidade_col') }}</span>
                                 <span>{{ $totalItens }}</span>
                             </div>
@@ -123,7 +128,7 @@
                                 </div>
                             @endif
 
-                            <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                            <div class="admin-order-card__total">
                                 <span>{{ __('messages.total') }}</span>
                                 {{-- Na moeda em que o cliente fechou o pedido --}}
                                 <span>{{ order_money($order, $order->total) }}</span>
@@ -131,19 +136,19 @@
                         </div>
                     </div>
 
-                    <div class="card-footer bg-white border-0 p-3 d-flex gap-2">
-                        <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-dark rounded-0 flex-grow-1 x-small text-uppercase fw-bold">
+                    <div class="card-footer admin-order-card__footer">
+                        <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-dark flex-grow-1 text-uppercase fw-bold">
                             {{ __('messages.ver_detalhes_btn') }}
                         </a>
                         <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST"
                               onsubmit="return confirm('{{ __('messages.eliminar_btn') }}?');" class="m-0">
                             @csrf @method('DELETE')
-                            <button class="btn btn-outline-danger rounded-0 x-small" title="{{ __('messages.eliminar_registro') }}">
+                            <button class="btn btn-outline-dark" title="{{ __('messages.eliminar_registro') }}" aria-label="{{ __('messages.eliminar_registro') }}">
                                 <i class="fa fa-trash"></i>
                             </button>
                         </form>
                     </div>
-                </div>
+                </article>
             </div>
         @empty
             <div class="col-12 text-center py-5 text-muted">{{ __('messages.nenhum_pedido_encontrado') }}</div>

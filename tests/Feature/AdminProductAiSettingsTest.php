@@ -74,6 +74,27 @@ class AdminProductAiSettingsTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('ai_key_source');
     }
 
+    public function test_description_only_returns_a_reviewable_proposal_without_saving_product_or_preparation(): void
+    {
+        config(['services.openai.api_key' => 'test-key']);
+        $product = Product::create(['sku' => 'DESCRIPTION-ONLY', 'name' => 'Nome existente', 'price' => 10]);
+        $provider = \Mockery::mock(OpenAICatalogService::class);
+        $provider->shouldReceive('generateDescriptionOnly')->once()->andReturn([
+            'descriptions' => ['pt_br' => 'Descrição.', 'es' => 'Descripción.', 'en' => 'Description.'],
+            'research' => ['sources' => []],
+        ]);
+        $this->app->instance(OpenAICatalogService::class, $provider);
+
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]))
+            ->postJson(route('admin.products.generateDescriptionWithAi', $product))
+            ->assertOk()
+            ->assertJsonPath('descriptions.es', 'Descripción.');
+
+        $this->assertSame('Nome existente', $product->fresh()->name);
+        $this->assertNull($product->fresh()->description);
+        $this->assertDatabaseCount('product_ai_preparations', 0);
+    }
+
     public function test_disabled_ai_blocks_individual_and_batch_generation_without_changing_preparations(): void
     {
         Http::fake();

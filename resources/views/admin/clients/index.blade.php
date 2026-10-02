@@ -43,10 +43,10 @@
     <div class="row g-3">
         @forelse($users as $user)
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card h-100 rounded-0 shadow-sm border-0 border-start border-4" style="border-left-color: #212529 !important;">
+            <article class="card admin-client-card h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="me-3 bg-light d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border-radius: 50%; font-weight: bold; background: #eee;">
+                        <div class="admin-client-card__avatar me-3">
                             {{ substr($user->name, 0, 1) }}
                         </div>
                         <div>
@@ -85,16 +85,16 @@
                         </form>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-0 p-3">
+                <div class="card-footer admin-client-card__footer">
                     <div class="d-flex align-items-stretch gap-3">
-                        <a href="{{ route('admin.clients.show', $user->id) }}" class="btn btn-dark btn-sm flex-grow-1 rounded-2 d-flex align-items-center justify-content-center">Detalhes</a>
+                        <a href="{{ route('admin.clients.show', $user->id) }}" class="btn btn-dark btn-sm flex-grow-1 d-flex align-items-center justify-content-center">Detalhes</a>
                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Confirma exclusão?')" class="m-0">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-2 h-100 px-3" title="Excluir usuário" aria-label="Excluir usuário" {{ auth()->id() === $user->id ? 'disabled' : '' }}><i class="fa fa-trash"></i></button>
+                            <button type="submit" class="btn btn-outline-dark btn-sm h-100 px-3" title="Excluir usuário" aria-label="Excluir usuário" {{ auth()->id() === $user->id ? 'disabled' : '' }}><i class="fa fa-trash"></i></button>
                         </form>
                     </div>
                 </div>
-            </div>
+            </article>
         </div>
         @empty
         <div class="col-12 text-center py-5 text-muted">Nenhum usuário encontrado.</div>

@@ -1,25 +1,25 @@
 @extends('layout.checkout')
 
 @section('content')
-<div class="container mt-5 mb-5">
-    <div class="text-center">
-        <h2 class="fw-bold text-success"><i class="fa fa-check-circle"></i> Pagamento concluído!</h2>
-        <p class="lead">Seu pagamento foi processado com sucesso.</p>
-
-        @if(session('success'))
-            <div class="alert alert-success mt-3">
-                {{ session('success') }}
+<section class="payment-result-shell">
+    <div class="container">
+        <div class="payment-result-card mx-auto">
+            <div class="text-center mb-4">
+                <div class="result-icon success mx-auto mb-3"><i class="fa-solid fa-check"></i></div>
+                <span class="result-label">Pedido confirmado</span>
+                <h1 class="result-title mb-2">Pagamento concluído</h1>
+                <p class="result-subtitle mb-0">Seu pagamento foi processado. Você pode acompanhar cada atualização na área de pedidos.</p>
             </div>
-        @endif
 
-        <div class="mt-4">
-            <a href="{{ route('user.orders') }}" class="btn btn-primary">
-                Ver meus pedidos
-            </a>
-            <a href="{{ route('home') }}" class="btn btn-outline-secondary">
-                Continuar comprando
-            </a>
+            @if(session('success'))
+                <div class="alert alert-success mb-4" role="alert">{{ session('success') }}</div>
+            @endif
+
+            <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
+                <a href="{{ route('user.orders') }}" class="btn btn-dark px-4"><i class="fa-solid fa-list me-2"></i>Ver meus pedidos</a>
+                <a href="{{ route('home') }}" class="btn btn-outline-secondary px-4"><i class="fa-solid fa-store me-2"></i>Continuar comprando</a>
+            </div>
         </div>
     </div>
-</div>
+</section>
 @endsection

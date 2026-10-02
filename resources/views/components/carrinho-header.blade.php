@@ -35,6 +35,8 @@
     $rate = $currency->value ?? 1;
 @endphp
 
+@if(! $user || $user->canShop())
+
 <div class="cart-wrapper">
     {{-- Botão do Carrinho (Badge) --}}
     <button id="cart-button"
@@ -198,4 +200,5 @@
 
 @if ($hasCartItems && $cartPurchasingAvailable)
     @include('components.abandon-cart-modal')
+@endif
 @endif

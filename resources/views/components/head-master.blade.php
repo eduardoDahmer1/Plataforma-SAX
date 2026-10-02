@@ -117,9 +117,9 @@
 @endif
 
 {{-- 3. Checkout + Carrinho --}}
-@if(Route::is('checkout.*') || Route::is('cart.*'))
+@if(Route::is('checkout.*') || Route::is('cart.*') || Route::is('bancard.v2.*'))
     <link href="{{ asset('css/checkout.css') }}?v={{ file_exists(public_path('css/checkout.css')) ? filemtime(public_path('css/checkout.css')) : time() }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 @endif
 
 {{-- 4. Detalhes do Produto --}}
@@ -141,6 +141,7 @@
 
 {{-- 7. User / Dashboard (Adicionado aqui) --}}
 @if(Route::is('user.*') || Route::is('dashboard') || (Route::is('receipts.*') && !(auth()->user()?->isMasterAdmin() ?? false)))
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/user.css') }}?v={{ file_exists(public_path('css/user.css')) ? filemtime(public_path('css/user.css')) : time() }}" rel="stylesheet">
 @endif
 

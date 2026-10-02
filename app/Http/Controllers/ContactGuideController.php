@@ -11,11 +11,6 @@ class ContactGuideController extends Controller
 {
     public function show(StoreControlService $storeControls): View
     {
-        return view('contact.guide', $this->guideData($storeControls));
-    }
-
-    public function alternative(StoreControlService $storeControls): View
-    {
         $data = $this->guideData($storeControls);
         $data['directory'] = app(\App\Services\ContactGuideDirectory::class)->build($data['locations']);
 

@@ -5,12 +5,51 @@ namespace App\Services;
 use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 
 class StoreControlService
 {
     public const CACHE_KEY = 'store_manual_controls';
+    public const TEMPORARY_TEST_MINUTES = 5;
 
+    private const TEMPORARY_TEST_FIELDS = [
+        'cart_enabled',
+        'checkout_enabled',
+        'add_to_cart_enabled',
+        'deposit_enabled',
+        'bancard_enabled',
+        'pix_enabled',
+        'whatsapp_enabled',
+        'geonames_enabled',
+    ];
+
+    private ?array $memoizedTemporaryTestStatus = null;
+
+    /**
+     * Controles efetivos usados pela loja. Durante a janela de teste, somente
+     * recursos do fluxo de compra são sobrepostos; a configuração persistida
+     * continua intacta e volta a valer automaticamente após a expiração.
+     */
     public function settings(): array
+    {
+        $settings = $this->manualSettings();
+        $temporaryTest = $this->temporaryPurchaseTestStatus();
+
+        if ($temporaryTest['active']) {
+            foreach (self::TEMPORARY_TEST_FIELDS as $field) {
+                $settings[$field] = true;
+            }
+        }
+
+        return array_merge($settings, [
+            'purchase_test_active' => $temporaryTest['active'],
+            'purchase_test_until' => $temporaryTest['expires_at'],
+            'purchase_test_remaining_seconds' => $temporaryTest['remaining_seconds'],
+        ]);
+    }
+
+    /** Configuração manual sem a sobreposição temporária, usada no painel. */
+    public function manualSettings(): array
     {
         return Cache::remember(self::CACHE_KEY, now()->addMinutes(10), function (): array {
             $defaults = $this->defaults();
@@ -93,6 +132,70 @@ class StoreControlService
         };
     }
 
+    public function temporaryPurchaseTestStatus(): array
+    {
+        if ($this->memoizedTemporaryTestStatus !== null) {
+            return $this->memoizedTemporaryTestStatus;
+        }
+
+        $inactive = [
+            'active' => false,
+            'expires_at' => null,
+            'remaining_seconds' => 0,
+            'activated_by' => null,
+        ];
+
+        if (! Schema::hasTable('system_settings') || ! Schema::hasColumn('system_settings', 'purchase_test_until')) {
+            return $this->memoizedTemporaryTestStatus = $inactive;
+        }
+
+        $settings = SystemSetting::query()->first();
+        $expiresAt = $settings?->purchase_test_until;
+
+        if (! $expiresAt || ! now()->lt($expiresAt)) {
+            return $this->memoizedTemporaryTestStatus = $inactive;
+        }
+
+        return $this->memoizedTemporaryTestStatus = [
+            'active' => true,
+            'expires_at' => $expiresAt,
+            'remaining_seconds' => max(0, (int) now()->diffInSeconds($expiresAt)),
+            'activated_by' => $settings->purchase_test_activated_by,
+        ];
+    }
+
+    public function temporaryPurchaseTestActive(): bool
+    {
+        return (bool) $this->temporaryPurchaseTestStatus()['active'];
+    }
+
+    public function activateTemporaryPurchaseTest(?int $userId): array
+    {
+        $this->ensureTemporaryTestColumnsExist();
+
+        $settings = SystemSetting::query()->firstOrCreate([], ['maintenance' => false]);
+        $settings->forceFill([
+            'purchase_test_until' => now()->addMinutes(self::TEMPORARY_TEST_MINUTES),
+            'purchase_test_activated_by' => $userId,
+        ])->save();
+
+        $this->memoizedTemporaryTestStatus = null;
+
+        return $this->temporaryPurchaseTestStatus();
+    }
+
+    public function deactivateTemporaryPurchaseTest(): void
+    {
+        $this->ensureTemporaryTestColumnsExist();
+
+        SystemSetting::query()->update([
+            'purchase_test_until' => null,
+            'purchase_test_activated_by' => null,
+        ]);
+
+        $this->memoizedTemporaryTestStatus = null;
+    }
+
     public function storeProfile(): string
     {
         return (string) ($this->settings()['store_profile'] ?? 'stage');
@@ -111,5 +214,13 @@ class StoreControlService
     public function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
+        $this->memoizedTemporaryTestStatus = null;
+    }
+
+    private function ensureTemporaryTestColumnsExist(): void
+    {
+        if (! Schema::hasTable('system_settings') || ! Schema::hasColumn('system_settings', 'purchase_test_until')) {
+            throw new RuntimeException('Execute as migrações antes de ativar a janela temporária de testes.');
+        }
     }
 }

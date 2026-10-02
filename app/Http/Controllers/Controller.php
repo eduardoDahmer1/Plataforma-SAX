@@ -73,6 +73,23 @@ class Controller extends BaseController
             : '';
     }
 
+    protected function advancedCatalogData(Request $request, array $contextFilters): array
+    {
+        $filterRequest = clone $request;
+        $filterRequest->query = clone $request->query;
+        $filterRequest->request = clone $request->request;
+        $filterRequest->query->add($contextFilters);
+
+        $results = app(SearchController::class)->catalogResults($filterRequest);
+
+        return array_merge($results, [
+            'products' => $results['paginated'],
+            'filterRequest' => $filterRequest,
+            'contextFilters' => $contextFilters,
+            'filterClearUrl' => $request->url(),
+        ]);
+    }
+
     protected function buildFilterCategoriesTree()
     {
         $categories = app(StoreTaxonomyService::class)->categories(\App\Models\Category::query())

@@ -1,82 +1,33 @@
 @php
-    // Garante que a galeria de imagens seja interpretada como um array válido de forma segura
-    $gallery = is_array($institucional->gallery_images)
-        ? $institucional->gallery_images
-        : json_decode($institucional->gallery_images, true);
-
-    // Rotaciona a ordem da galeria e das marcas automaticamente a cada 2 dias
-    $gallery = sax_rotate_images($gallery, 2);
-    $brands = isset($brands) ? collect(sax_rotate_images($brands->all(), 2)) : $brands;
+    $gallery = sax_rotate_images($institucional->gallery_images ?: [], 1);
+    $rotatedBrands = isset($brands) ? collect(sax_rotate_images($brands->all(), 1)) : collect();
 @endphp
-
-<section class="py-5 bg-white overflow-hidden">
-    <div class="container py-5">
-        
-        {{-- CAROUSEL DE MARCAS --}}
-        <div class="brands-header mb-5" data-aos="fade-up">
-            <h2 class="section-title-elegant text-center">
-                {{ __('messages.brands_title') ?? 'Grandes Marcas' }}
-            </h2>
-            <div class="title-divider mx-auto"></div>
-        </div>
-        
-        <div class="swiper brandsSwiper mb-5" data-aos="fade-in">
-            <div class="swiper-wrapper align-items-center">
-                @if(isset($brands) && count($brands) > 0)
-                    @foreach($brands as $brand)
-                        <div class="swiper-slide text-center">
-                            <img src="{{ asset('storage/' . $brand->image) }}" 
-                                 class="brand-logo-img" 
-                                 alt="{{ $brand->name }}" 
-                                 title="{{ $brand->name }}">
-                        </div>
-                    @endforeach
-                @else
-                    {{-- Fallback conceitual em caso de ausência de marcas no banco --}}
-                    <div class="swiper-slide text-center opacity-50">
-                        <span class="x-small fw-bold tracking-wider text-muted">{{ __('messages.institutional_premium_brand') }}</span>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        {{-- GALERIA INSTITUCIONAL --}}
-        <div class="gallery-header mt-5 pt-5 mb-4" data-aos="fade-up">
-            <h2 class="section-title-elegant text-center">
-                {{ __('messages.gallery_title') ?? 'Nossa Galeria' }}
-            </h2>
-            <div class="title-divider mx-auto"></div>
-        </div>
-
-        <div class="row g-3" id="institucionalGalleryGrid">
-            @if(!empty($gallery))
+<section class="inst-gallery">
+    <div class="container">
+        <header class="inst-section-head inst-section-head--center" data-aos="fade-up">
+            <div><p class="inst-kicker">{{ $copy('inst_gallery_eyebrow', 'Por dentro da SAX') }}</p><h2>{{ $copy('inst_gallery_title', 'Espaços que contam histórias') }}</h2></div>
+        </header>
+        @if($gallery)
+            <div class="inst-gallery__grid" id="institucionalGalleryGrid">
                 @foreach($gallery as $image)
-                    <div class="col-6 col-md-3" data-aos="fade-up">
-                        <a href="{{ asset('storage/' . $image) }}" 
-                           data-fancybox="gallery" 
-                           data-caption="{{ __('messages.gallery_caption_text') ?? 'SAX Department Store - Detalhes Exclusivos' }}"
-                           class="gallery-card">
-                            <div class="gallery-overlay">
-                                <i class="bi bi-fullscreen"></i>
-                                <span class="overlay-text">
-                                    {{ __('messages.gallery_view_details') ?? 'Ver Detalhes' }}
-                                </span>
-                            </div>
-                            <img src="{{ asset('storage/' . $image) }}" class="img-fluid" alt="{{ __('messages.institutional_gallery_image_alt') }}">
-                        </a>
-                    </div>
+                    <a href="{{ asset('storage/' . $image) }}" data-fancybox="gallery" class="inst-gallery__item inst-gallery__item--{{ ($loop->index % 5) + 1 }}" data-aos="fade-up">
+                        <img src="{{ asset('storage/' . $image) }}" alt="Galeria SAX Department Store" loading="lazy">
+                        <span><i class="fa-solid fa-expand"></i> Ver imagem</span>
+                    </a>
                 @endforeach
-            @else
-                {{-- Fallback elegante para manter o design caso não existam imagens cadastradas --}}
-                @for($i = 1; $i <= 4; $i++)
-                    <div class="col-6 col-md-3" data-aos="fade-up">
-                        <div class="gallery-card border bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                            <span class="text-muted x-small italic">{{ __('messages.institutional_space_placeholder', ['number' => $i]) }}</span>
-                        </div>
+            </div>
+        @endif
+        @if($rotatedBrands->isNotEmpty())
+            <div class="inst-brands" data-aos="fade-up">
+                <span class="inst-brands__label">Marcas que fazem parte da nossa curadoria</span>
+                <div class="swiper brandsSwiper">
+                    <div class="swiper-wrapper">
+                        @foreach($rotatedBrands as $brand)
+                            <div class="swiper-slide"><img src="{{ asset('storage/' . $brand->image) }}" alt="{{ $brand->name }}" title="{{ $brand->name }}" loading="lazy"></div>
+                        @endforeach
                     </div>
-                @endfor
-            @endif
-        </div>
-        
+                </div>
+            </div>
+        @endif
     </div>
 </section>

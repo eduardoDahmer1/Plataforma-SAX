@@ -4,7 +4,7 @@
 
 @section('content')
     <p style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#777">Atendimento SAX</p>
-    <h1 style="font-size:28px;color:#111">Ficou alguma dúvida?</h1>
+    <h1 class="sax-email-title" style="font-size:24px;color:#111">Ficou alguma dúvida?</h1>
     <p style="font-size:16px;line-height:1.7;color:#333">Olá, {{ $cart->user?->name }}. Vimos que você decidiu não continuar com seu carrinho agora. Queremos entender se podemos ajudar, sem compromisso.</p>
     <p style="font-size:15px;color:#444">Selecione a opção que melhor explica:</p>
     @php

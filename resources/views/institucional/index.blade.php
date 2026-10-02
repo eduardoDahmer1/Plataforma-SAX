@@ -2,28 +2,21 @@
 
 @section('content')
 @php
-    // 1. Resgata o idioma atual do front-end de forma centralizada
     $dbLocale = translation_locale();
-
-    // 2. Filtra a tradução do idioma ativo uma única vez
-    $translation = $institucional->translations->firstWhere('locale', $dbLocale);
-
-    // 3. Monta o objeto de fallbacks globais para a página se preferir, 
-    // ou passa a própria model e a tradução para os sub-componentes resolverem.
+    $translation = $institucional->translations->firstWhere('locale', $dbLocale)
+        ?: $institucional->translations->firstWhere('locale', 'pt-br');
+    $copy = fn (string $field, string $fallback) => filled(data_get($translation, $field)) ? data_get($translation, $field) : $fallback;
+    $sceneryUrls = collect($sceneryPool ?? [])->map(fn ($path) => asset('storage/' . $path))->values();
 @endphp
 
-    {{-- Passamos o $translation e o $locale explicitamente para cada bloco --}}
-    @include('institucional.componentes.hero', ['institucional' => $institucional, 'translation' => $translation, 'locale' => $locale])
-    
-    @include('institucional.componentes.sobre', ['institucional' => $institucional, 'translation' => $translation, 'sceneryPool' => $sceneryPool ?? []])
-
-    @include('institucional.componentes.features', ['institucional' => $institucional, 'translation' => $translation])
-
-    @include('institucional.componentes.stats', ['institucional' => $institucional, 'translation' => $translation, 'sceneryPool' => $sceneryPool ?? []])
-
-    @include('institucional.componentes.brands-gallery', ['institucional' => $institucional])
-
-    @include('institucional.componentes.cta', ['institucional' => $institucional, 'translation' => $translation, 'sceneryPool' => $sceneryPool ?? []])
-    
-    @include('institucional.componentes.video', ['institucional' => $institucional, 'translation' => $translation])
+@include('institucional.componentes.hero')
+@include('institucional.componentes.sobre')
+@include('institucional.componentes.features')
+@include('institucional.componentes.experiences')
+@include('institucional.componentes.banner')
+@include('institucional.componentes.stats')
+@include('institucional.componentes.brands-gallery')
+@include('institucional.componentes.history')
+@include('institucional.componentes.video')
+@include('institucional.componentes.cta')
 @endsection

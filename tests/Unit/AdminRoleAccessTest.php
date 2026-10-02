@@ -12,9 +12,11 @@ class AdminRoleAccessTest extends TestCase
         $master = new User(['user_type' => User::TYPE_ADMIN_MASTER]);
 
         $this->assertTrue($master->isAdmin());
+        $this->assertFalse($master->canShop());
         $this->assertTrue($master->isMasterAdmin());
         $this->assertTrue($master->canAccessAdminRoute('admin.orders.index'));
         $this->assertTrue($master->canAccessAdminRoute('admin.payments.index'));
+        $this->assertTrue($master->canAccessAdminRoute('admin.store-controls.temporary-test.activate'));
     }
 
     public function test_editor_can_access_only_editorial_admin_areas(): void
@@ -22,6 +24,7 @@ class AdminRoleAccessTest extends TestCase
         $editor = new User(['user_type' => User::TYPE_ADMIN_EDITOR]);
 
         $this->assertTrue($editor->isAdmin());
+        $this->assertFalse($editor->canShop());
         $this->assertTrue($editor->isAdminEditor());
         $this->assertTrue($editor->canAccessAdminRoute('admin.index'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.products.edit'));
@@ -52,6 +55,8 @@ class AdminRoleAccessTest extends TestCase
         $this->assertFalse($editor->canAccessAdminRoute('admin.languages.index'));
         $this->assertFalse($editor->canAccessAdminRoute('admin.marketing.edit'));
         $this->assertFalse($editor->canAccessAdminRoute('admin.theme-settings.edit'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.store-controls.temporary-test.activate'));
+        $this->assertFalse($editor->canAccessAdminRoute('admin.store-controls.temporary-test.deactivate'));
         $this->assertFalse($editor->canAccessAdminRoute('admin.users.updateType'));
     }
 
@@ -61,5 +66,14 @@ class AdminRoleAccessTest extends TestCase
 
         $this->assertFalse($customer->isAdmin());
         $this->assertFalse($customer->canAccessAdminRoute('admin.index'));
+        $this->assertTrue($customer->canShop());
+    }
+
+    public function test_course_user_cannot_shop(): void
+    {
+        $courseUser = new User(['user_type' => User::TYPE_COURSE]);
+
+        $this->assertFalse($courseUser->isAdmin());
+        $this->assertFalse($courseUser->canShop());
     }
 }

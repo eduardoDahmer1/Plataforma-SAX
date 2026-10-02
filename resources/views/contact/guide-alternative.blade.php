@@ -49,7 +49,7 @@
                 </div>
                 <div id="guideTwoContent"></div>
             </div>
-            <noscript><p>{{ __('messages.contact_guide_v2_javascript') }} <a href="{{ route('contact.guide') }}">{{ __('messages.contact_guide_v2_title') }}</a></p></noscript>
+            <noscript><p>{{ __('messages.contact_guide_v2_javascript') }}</p></noscript>
         @endif
     </div>
 </div>

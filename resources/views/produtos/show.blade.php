@@ -247,6 +247,13 @@
                         @endif
                     </div>
                     <p class="product-reference mb-3">{{ __('messages.ref_prefix') }} {{ $product->sku }}</p>
+                    @if((int) ($reviewProduct->rating_count ?? 0) > 0)
+                        <a href="#avaliacoes" class="product-rating-inline">
+                            <x-rating-stars :rating="$reviewProduct->rating_average" compact />
+                            <strong>{{ number_format((float) $reviewProduct->rating_average, 1, ',', '.') }}</strong>
+                            <span>({{ number_format((int) $reviewProduct->rating_count, 0, ',', '.') }})</span>
+                        </a>
+                    @endif
 
                     @if (isset($dhlMeasurement) && min(
                         (float) $dhlMeasurement['weight'],
@@ -348,7 +355,7 @@
                                class="btn btn-outline-dark w-100 text-uppercase fw-bold rounded-0 bridal-btn">
                                 <i class="fab fa-whatsapp me-2"></i>{{ __('messages.agendar_consulta_bridal') }}
                             </a>
-                        @elseif (Auth::check())
+                        @elseif (Auth::check() && Auth::user()->canShop())
                             <div class="d-flex buy-actions">
                                 @if (! (($storeControls['cart_enabled'] ?? true) && ($storeControls['add_to_cart_enabled'] ?? true)) && ($storeControls['whatsapp_enabled'] ?? true))
                                     <a href="https://wa.me/595984167575?text={{ urlencode(__('messages.whatsapp_schedule_product_prefix') . $displayName) }}"
@@ -440,6 +447,8 @@
         <span class="product-zoom-caption">Use a roda do mouse ou os botões para aproximar</span>
     </div>
 </div>
+
+@include('produtos.partials.reviews')
 
 @if (isset($similares) && $similares->isNotEmpty())
     <section class="py-5 border-top">

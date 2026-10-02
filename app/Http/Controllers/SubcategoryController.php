@@ -104,7 +104,9 @@ class SubcategoryController extends Controller
             )
         );
 
-        return view('catalog.show', [
+        $catalogData = $this->advancedCatalogData($request, ['subcategory' => $data['subcategory']->id]);
+
+        return view('catalog.show', array_merge([
             'entity' => $data['subcategory'],
             'products' => $data['products'],
             'attribute' => $attribute,
@@ -119,6 +121,6 @@ class SubcategoryController extends Controller
                 ['label' => $data['subcategory']->category->name, 'url' => route('categories.show', $data['subcategory']->category->slug)],
             ] : [],
             'emptyMessage' => 'No se encontraron productos en esta subcategoría.',
-        ]);
+        ], $catalogData));
     }
 }

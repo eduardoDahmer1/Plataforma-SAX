@@ -1,11 +1,14 @@
-<div class="sax-sidebar-menu mb-4">
+@props(['showNavigation' => true, 'showModal' => true, 'recentAbandonedCarts' => null])
+
+@if($showNavigation)
+<nav class="sax-sidebar-menu" aria-label="Navegação da conta">
 
     {{-- 🔑 Informações Pessoais --}}
     <div class="sax-menu-group">
         <span class="sax-menu-label text-uppercase letter-spacing-1">{{ __('messages.menu_minha_conta') }}</span>
         <div class="sax-menu-items">
             <a href="{{ route('user.dashboard') }}" class="sax-menu-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">
-                <i class="fa fa-user-edit"></i> {{ __('messages.inicio_menu') }}
+                <i class="fa fa-house"></i> {{ __('messages.inicio_menu') }}
             </a>
             <a href="{{ route('user.profile.edit') }}" class="sax-menu-link {{ request()->routeIs('user.profile.*') ? 'active' : '' }}">
                 <i class="fa fa-user-edit"></i> {{ __('messages.menu_editar_dados') }}
@@ -29,13 +32,13 @@
             <a href="{{ route('user.cupons') }}" class="sax-menu-link {{ request()->routeIs('user.cupons') ? 'active' : '' }}">
                 <i class="fa fa-ticket-alt"></i> {{ __('messages.cupon_meus_cupons_titulo') }}
             </a>
-            <a href="{{ route('user.abandoned-carts.index') }}" class="sax-menu-link">
+            <a href="{{ route('user.abandoned-carts.index') }}" class="sax-menu-link {{ request()->routeIs('user.abandoned-carts.*') ? 'active' : '' }}">
                 <i class="fa fa-cart-arrow-down"></i> {{ __('messages.user_abandoned_carts') }}
             </a>
 
-            @php($recentAbandonedCarts = auth()->user()->abandonedCarts()->latest('abandoned_at')->limit(3)->get())
+            @php($recentAbandonedCarts ??= auth()->user()->abandonedCarts()->latest('abandoned_at')->limit(3)->get())
             @foreach($recentAbandonedCarts as $recentCart)
-                <a href="{{ route('user.abandoned-carts.show', $recentCart) }}" class="sax-menu-link ps-4 small text-muted">
+                <a href="{{ route('user.abandoned-carts.show', $recentCart) }}" class="sax-menu-link sax-menu-link--recent">
                     <i class="fa fa-history"></i>
                     {{ $recentCart->abandoned_at->format('d/m/Y') }} · {{ trans_choice('messages.user_item_count', $recentCart->items_count, ['count' => $recentCart->items_count]) }}
                 </a>
@@ -58,20 +61,22 @@
         <div class="sax-menu-items">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="sax-menu-link text-dark fw-bold border-0 bg-transparent w-100 text-start">
+                <button type="submit" class="sax-menu-link sax-menu-link--button">
                     <i class="fa fa-sign-out-alt"></i> {{ __('messages.menu_sair') }}
                 </button>
             </form>
             
-            <button type="button" class="sax-menu-link border-0 bg-transparent text-danger w-100 text-start" 
+            <button type="button" class="sax-menu-link sax-menu-link--button sax-menu-link--danger"
                     data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
                 <i class="fa fa-trash-alt"></i> {{ __('messages.menu_excluir_conta') }}
             </button>
         </div>
     </div>
-</div>
+</nav>
+@endif
 
 {{-- Modal de Confirmação Minimalista --}}
+@if($showModal)
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-0">
@@ -98,3 +103,4 @@
         </div>
     </div>
 </div>
+@endif

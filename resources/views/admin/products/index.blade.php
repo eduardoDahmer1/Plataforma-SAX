@@ -18,6 +18,9 @@
                 data-label-inactive="{{ __('messages.status_inativo') }}">
                 <i class="fa fa-sync me-2"></i> Verificar produtos
             </button>
+            <a href="{{ route('admin.products.ratings.index') }}" class="btn btn-outline-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
+                <i class="fa-solid fa-star me-2"></i> Avaliações
+            </a>
             <a href="{{ route('admin.products.review') }}" class="btn btn-dark btn-sax-lg px-4 text-uppercase fw-bold letter-spacing-1">
                 <i class="fa fa-file-alt me-2"></i> Ver relatório de edições
             </a>

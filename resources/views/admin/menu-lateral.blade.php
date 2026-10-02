@@ -29,8 +29,8 @@
 @endphp
 
 <div class="sax-admin-sidebar">
-    <nav class="sax-nav-container">
-        <p class="sax-sidebar-heading">Gestao</p>
+    <nav class="sax-nav-container" aria-label="Navegação administrativa">
+        <p class="sax-sidebar-heading">Gestão</p>
 
         @if($isMasterAdmin)
         <a href="{{ route('admin.index') }}" class="sax-nav-item {{ request()->routeIs('admin.index') ? 'active' : '' }}">

@@ -11,51 +11,58 @@
     $adminBrandName = $adminHeaderLayout === 'vista' ? 'VISTA&CO' : 'SAX';
 @endphp
 <body class="sax-admin-body header-layout-{{ $adminHeaderLayout }}">
-    {{-- Header --}}
-    @include($headerLayoutService->headerPartial())
-
-<main class="sax-admin-layout py-3 py-lg-4">
-    <div class="container-fluid px-3 px-lg-4 px-xxl-5">
-        {{-- Cabeçalho do Painel --}}
-        <div class="sax-admin-header d-lg-none d-flex justify-content-between align-items-center mb-3">
-            <div class="sax-admin-mobile-entry d-flex align-items-center gap-2 w-100">
-                <button class="sax-btn-mobile" id="openAdminDrawer" type="button" aria-label="Abrir menu administrativo" aria-controls="adminDrawerMobile" aria-expanded="false">
-                    <i class="fa fa-bars"></i>
-                </button>
-                <span class="sax-admin-mobile-entry__copy">
-                    <small>{{ $adminBrandName }}</small>
-                    <strong>Painel administrativo</strong>
+    <div class="sax-admin-shell">
+        <aside class="sax-admin-rail d-none d-lg-flex">
+            <a href="{{ route('admin.index') }}" class="sax-admin-rail__brand" aria-label="Página inicial do painel">
+                <span>
+                    <strong>Painel</strong>
+                    <small>Administração</small>
                 </span>
-                <i class="fa-solid fa-chevron-right sax-admin-mobile-entry__arrow" aria-hidden="true"></i>
+            </a>
+
+            <div class="sax-admin-rail__navigation">
+                @include('admin.menu-lateral', ['menuInstance' => 'desktop'])
             </div>
-        </div>
 
-        <div class="row g-4">
-            {{-- Menu Lateral (Desktop) --}}
-            <aside class="col-lg-3 col-xxl-2 d-none d-lg-block">
-                <div class="sax-sidebar-card shadow-sm">
-                    @include('admin.menu-lateral', ['menuInstance' => 'desktop'])
+            <div class="sax-admin-rail__account">
+                <span class="sax-admin-rail__avatar"><i class="fa-solid fa-user-shield" aria-hidden="true"></i></span>
+                <span>
+                    <strong>{{ auth()->user()?->name }}</strong>
+                    <small>{{ auth()->user()?->isMasterAdmin() ? 'Admin Master' : 'Admin / Editor' }}</small>
+                </span>
+            </div>
+        </aside>
+
+        <div class="sax-admin-workspace">
+            <x-header-admin />
+
+            <main class="sax-admin-layout">
+                <div class="container-fluid sax-admin-main-container">
+                    <section class="sax-admin-content">
+                        @yield('content')
+                    </section>
                 </div>
-            </aside>
+            </main>
 
-            {{-- Área de Conteúdo --}}
-            <section class="col-12 col-lg-9 col-xxl-10 sax-admin-content">
-                @yield('content')
-            </section>
+            <footer class="sax-admin-footer">
+                <div class="container-fluid sax-admin-main-container d-sm-flex justify-content-between align-items-center gap-2">
+                    <span>&copy; {{ now()->year }} {{ $adminHeaderLayout === 'vista' ? 'Vista & Co' : 'SAX' }} E-commerce</span>
+                    <span>Painel administrativo</span>
+                </div>
+            </footer>
         </div>
     </div>
-</main>
 
-<button id="backToTop" class="sax-back-to-top shadow-lg border-0" title="Voltar ao topo">
-    <i class="fa fa-chevron-up"></i>
-</button>
+    <button id="backToTop" class="sax-back-to-top shadow-lg border-0" title="Voltar ao topo">
+        <i class="fa fa-chevron-up"></i>
+    </button>
 
     {{-- Drawer Mobile --}}
     <div class="drawer-overlay" id="adminDrawerOverlay"></div>
     <div class="drawer-mobile" id="adminDrawerMobile" role="dialog" aria-modal="true" aria-label="Menu administrativo" aria-hidden="true">
         <div class="admin-drawer-header drawer-header d-flex justify-content-between align-items-center">
             <div class="drawer-header-copy">
-                <span>{{ $adminBrandName }}</span>
+                <span>Administração</span>
                 <strong>Menu</strong>
             </div>
             <button class="btn-close-drawer" id="closeAdminDrawer" type="button" aria-label="Fechar menu">
@@ -78,12 +85,6 @@
         </div>
     </div>
 
-    <footer class="sax-admin-footer">
-        <div class="container-fluid px-3 px-lg-4 px-xxl-5 d-sm-flex justify-content-between align-items-center gap-2">
-            <span>&copy; {{ now()->year }} {{ $adminHeaderLayout === 'vista' ? 'Vista & Co' : 'SAX' }} E-commerce</span>
-            <span>Painel administrativo</span>
-        </div>
-    </footer>
 
     {{-- Modal global de confirmación (forms con data-confirm) --}}
     <x-admin.confirm-modal />

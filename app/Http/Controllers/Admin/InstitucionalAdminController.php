@@ -13,6 +13,15 @@ class InstitucionalAdminController extends Controller
 {
     const MAX_TOP_SLIDERS = 8;
     const MAX_GALLERY_IMAGES = 16;
+    const STORY_FIELDS = [
+        'inst_hero_eyebrow', 'inst_hero_description', 'inst_hero_cta',
+        'inst_experiences_eyebrow', 'inst_experiences_title', 'inst_experiences_description',
+        'inst_banner_title', 'inst_stats_eyebrow', 'inst_stats_title',
+        'inst_gallery_eyebrow', 'inst_gallery_title', 'inst_history_eyebrow',
+        'inst_history_title', 'inst_history_intro', 'inst_videos_eyebrow',
+        'inst_videos_title', 'inst_videos_description', 'inst_cta_eyebrow',
+        'inst_cta_title', 'inst_cta_description', 'inst_cta_button',
+    ];
 
     /**
      * Exibe a visão geral dos dados institucionais.
@@ -41,6 +50,18 @@ class InstitucionalAdminController extends Controller
             'stat_brands_count'         => 'nullable|integer',
             'stat_sqm_count'            => 'nullable|integer',
             'stat_employees_count'      => 'nullable|integer',
+            'stat_categories_count'     => 'nullable|integer|min:0',
+            'founded_year'              => 'nullable|integer|min:1800|max:'.date('Y'),
+            'hero_autoplay_seconds'     => 'nullable|integer|min:3|max:20',
+            'history_milestones'        => 'nullable|array|max:8',
+            'history_milestones.*.year' => 'nullable|string|max:10',
+            'history_milestones.*.label'=> 'nullable|string|max:80',
+            'history_milestones.*.pt-br.title' => 'nullable|string|max:180',
+            'history_milestones.*.pt-br.text'  => 'nullable|string|max:1500',
+            'history_milestones.*.es.title'    => 'nullable|string|max:180',
+            'history_milestones.*.es.text'     => 'nullable|string|max:1500',
+            'history_milestones.*.en.title'    => 'nullable|string|max:180',
+            'history_milestones.*.en.text'     => 'nullable|string|max:1500',
             'iframe_tour_360'           => 'nullable|string',
             'iframe_ponte_amizade'      => 'nullable|string',
             'iframe_centro_cde'         => 'nullable|string',
@@ -62,6 +83,19 @@ class InstitucionalAdminController extends Controller
             'translate.es'              => 'nullable|array',
             'translate.en'              => 'nullable|array',
         ]);
+
+        $data['history_milestones'] = collect($request->input('history_milestones', []))
+            ->filter(fn ($item) => filled($item['year'] ?? null))
+            ->take(8)
+            ->map(function ($item) {
+                return [
+                    'year' => trim((string) ($item['year'] ?? '')),
+                    'label' => trim((string) ($item['label'] ?? 'SAX')),
+                    'pt-br' => ['title' => trim((string) data_get($item, 'pt-br.title')), 'text' => trim((string) data_get($item, 'pt-br.text'))],
+                    'es' => ['title' => trim((string) data_get($item, 'es.title')), 'text' => trim((string) data_get($item, 'es.text'))],
+                    'en' => ['title' => trim((string) data_get($item, 'en.title')), 'text' => trim((string) data_get($item, 'en.text'))],
+                ];
+            })->values()->all();
 
         if ($request->hasFile('section_one_image')) {
             if ($institucional->section_one_image) {
@@ -89,6 +123,10 @@ class InstitucionalAdminController extends Controller
 
         foreach ($localesMapeados as $formLocale => $dbLocale) {
             $localeFields = $translationsInput[$formLocale] ?? [];
+            $storyData = [];
+            foreach (self::STORY_FIELDS as $field) {
+                $storyData[$field] = $localeFields[$field] ?? null;
+            }
 
             $institucional->translations()->updateOrCreate(
                 [
@@ -104,7 +142,7 @@ class InstitucionalAdminController extends Controller
                     'inst_text_section_two_body'   => $localeFields['inst_text_section_two_body'] ?? null,
                     'inst_text_section_three_title'=> $localeFields['inst_text_section_three_title'] ?? null,
                     'inst_text_section_three_body' => $localeFields['inst_text_section_three_body'] ?? null,
-                ]
+                ] + $storyData
             );
         }
 

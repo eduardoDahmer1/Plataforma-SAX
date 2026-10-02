@@ -39,103 +39,42 @@
             </div>
         </div>
 
-        <div class="container-fluid px-3 px-lg-5 py-4 bg-white catalog-products-section">
-            <div class="toolbar-container search-toolbar catalog-toolbar d-flex d-lg-none justify-content-between align-items-center mb-4">
-                <button
-                    class="btn-filter-trigger search-filter-button d-flex align-items-center gap-2"
-                    type="button"
-                    data-bs-toggle="offcanvas"
-                    data-bs-target="#{{ $mobileFilterId }}"
-                    aria-controls="{{ $mobileFilterId }}">
-                    <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true">
-                        <path d="M0 1H18M0 6H12M0 11H18" stroke="currentColor" stroke-width="1.5"/>
-                    </svg>
-                    <span class="x-small fw-bold text-uppercase tracking-widest">{{ __('messages.todos_filtros') }}</span>
-                </button>
+        <div class="container-fluid px-3 px-lg-5 py-4 py-lg-5 bg-white catalog-products-section search-page catalog-advanced-page">
+            <x-sidebar-filters
+                :request="$filterRequest"
+                :brands="$brands"
+                :categories="$categories"
+                :subcategories="$subcategories"
+                :categoriasfilhas="$categoriasfilhas"
+                :sizes="$sizes"
+                :size-groups="$sizeGroups"
+                :colors="$colors"
+                :coupon-product-count="$couponProductCount"
+                :price-bounds="$priceBounds"
+                :currency-context="$currencyContext"
+                :context-filters="$contextFilters"
+                :clear-url="$filterClearUrl"
+                :form-action="url()->current()"
+            />
 
-                <div class="catalog-result-summary">
-                    <strong>{{ number_format($products->total(), 0, ',', '.') }}</strong>
+            <div id="search-status" class="search-results-status catalog-result-summary" role="status" aria-live="polite">
+                <div>
+                    <span id="search-total">{{ number_format($products->total(), 0, ',', '.') }}</span>
                     <span>produtos encontrados</span>
                 </div>
+                <div id="search-spinner" class="spinner-border spinner-border-sm d-none" aria-hidden="true"></div>
             </div>
 
-            <div class="row g-3 g-xl-4 align-items-start">
-                <aside class="col-lg-3 d-none d-lg-block">
-                    <div class="catalog-desktop-filter catalog-standard-drawer">
-                        <div class="search-filter-header catalog-desktop-filter-header">
-                            <div>
-                                <span class="search-filter-eyebrow">Catálogo</span>
-                                <h2 class="offcanvas-title mb-0">{{ __('messages.filtrar_por') }}</h2>
-                            </div>
-                        </div>
-                        <div class="search-filter-body catalog-desktop-filter-body">
-                            <div class="catalog-drawer-filter-shell">
-                                <x-product-filters
-                                    :categories="$categories"
-                                    :brands="$brands"
-                                    :currentCategory="$currentCategory ?? null"
-                                    :currentSub="$currentSub ?? null"
-                                    :currentChild="$currentChild ?? null" />
-                            </div>
-                        </div>
-                    </div>
-                </aside>
+            <div id="search-grid" class="row g-2 g-md-3">
+                @include('search.partials.grid', ['paginated' => $products])
+            </div>
 
-                <div class="col-12 col-lg-9">
-                    <x-catalog-sort-toolbar />
-
-                    <div class="catalog-result-summary catalog-result-summary-desktop d-none d-lg-flex">
-                        <strong>{{ number_format($products->total(), 0, ',', '.') }}</strong>
-                        <span>produtos encontrados</span>
-                    </div>
-
-                    @if ($products->count())
-                        @php
-                            $productLocale = translation_locale();
-                            $products->getCollection()->load([
-                                'translations' => fn ($query) => $query->where('locale', $productLocale),
-                            ]);
-                        @endphp
-                        <div class="row g-2 g-md-3">
-                            @foreach ($products as $item)
-                                <x-product-card :item="$item" :cartItems="$cartItems ?? []" gridClass="col-6 col-md-4 col-xl-3" />
-                            @endforeach
-                        </div>
-
-                        <div class="d-flex justify-content-center mt-5 pagination-sax">
-                            {{ $products->links() }}
-                        </div>
-                    @else
-                        <div class="text-center py-5">
-                            <p class="text-muted text-uppercase tracking-widest small">
-                                {{ $emptyMessage }}
-                            </p>
-                        </div>
-                    @endif
-                </div>
+            <div id="search-pagination" class="d-flex justify-content-center mt-5 pagination-sax">
+                @include('search.partials.pagination', ['paginated' => $products])
             </div>
         </div>
 
-        <div class="offcanvas offcanvas-end search-filter-drawer catalog-standard-drawer" tabindex="-1" id="{{ $mobileFilterId }}" aria-labelledby="{{ $mobileFilterId }}Label">
-            <div class="offcanvas-header search-filter-header">
-                <div>
-                    <span class="search-filter-eyebrow">Catálogo</span>
-                    <h5 class="offcanvas-title mb-0" id="{{ $mobileFilterId }}Label">{{ __('messages.filtrar_por') }}</h5>
-                </div>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="{{ __('messages.fechar') }}"></button>
-            </div>
-            <div class="offcanvas-body search-filter-body">
-                <div class="catalog-drawer-filter-shell">
-                    <x-product-filters
-                        :categories="$categories"
-                        :brands="$brands"
-                        :currentCategory="$currentCategory ?? null"
-                        :currentSub="$currentSub ?? null"
-                        :currentChild="$currentChild ?? null" />
-                </div>
-
-            </div>
-        </div>
+        @include('search.partials.filter-runtime', ['ajaxUrl' => route('search.ajax')])
     </div>
 @endsection
 

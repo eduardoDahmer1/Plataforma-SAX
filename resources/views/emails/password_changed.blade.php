@@ -7,7 +7,7 @@
         Segurança da conta
     </p>
 
-    <h1 style="margin:0 0 1.5rem;font-size:1.8rem;font-weight:900;text-transform:uppercase;letter-spacing:0.05rem;color:#111;line-height:1.2;">
+    <h1 class="sax-email-title" style="margin:0 0 1.5rem;font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:0.05rem;color:#111;line-height:1.2;">
         Sua senha foi alterada
     </h1>
 

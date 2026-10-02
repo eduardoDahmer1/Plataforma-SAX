@@ -1,4 +1,4 @@
-@extends('layout.layout')
+@extends('layout.checkout')
 
 @section('content')
 <section class="payment-result-shell py-4 py-lg-5">

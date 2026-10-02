@@ -642,9 +642,12 @@
                             <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" data-lang="es" onclick="switchLanguage('desc', 'es', this)">ES</a>
                             <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" data-lang="en" onclick="switchLanguage('desc', 'en', this)">EN</a>
                             <button type="button" id="translate-desc-btn" class="btn btn-outline-primary btn-sm ms-2"
+                                    data-ai-url="{{ route('admin.products.generateDescriptionWithAi', $item->id) }}"
+                                    @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason())
                                     onclick="generateSaxDescriptionTranslations()">
                                 <i class="fas fa-wand-magic-sparkles me-1"></i>Gerar descrição SAX
                             </button>
+                            <div id="description-ai-sources" class="small mt-2 d-none"></div>
                         </div>
                     </div>
 

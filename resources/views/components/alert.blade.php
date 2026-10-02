@@ -2,6 +2,6 @@
 
 @if($message)
     <div class="alert alert-{{ $type }} d-flex align-items-center">
-        <i class="fas fa-check-circle me-2"></i> {{ $message }}
+        <i class="fas {{ $type === 'warning' ? 'fa-triangle-exclamation' : ($type === 'danger' ? 'fa-circle-exclamation' : 'fa-check-circle') }} me-2"></i> {{ $message }}
     </div>
 @endif

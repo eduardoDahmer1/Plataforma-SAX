@@ -1407,7 +1407,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     const currentSize = sizeContainer.dataset.currentSize;
                     const detectedSize = sizeContainer.dataset.detectedSize;
-                    const activeGroup = sizeContainer.dataset.activeGroup;
 
                     const response = await fetch('/data/tamanho.json');
                     const sizeGroups = await response.json();
@@ -1415,7 +1414,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     Object.keys(sizeGroups).forEach(key => {
                         const opt = document.createElement('option');
                         opt.value = key; opt.text = key.charAt(0).toUpperCase() + key.slice(1);
-                        if(key === activeGroup) opt.selected = true;
                         typeSelector.appendChild(opt);
                     });
 
@@ -1437,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else if (group === 'manual') {
                             sizeSelect.classList.add('d-none');
                             sizeSelect.removeAttribute('name');
-                            inputManual.value = valToSet;
+                            inputManual.value = currentSize;
                             inputManual.classList.remove('d-none');
                             inputManual.setAttribute('name', 'size');
                         } else {
@@ -1451,7 +1449,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         populateSizes(e.target.value);
                     });
 
-                    if(activeGroup) populateSizes(activeGroup);
+                    typeSelector.value = 'manual';
+                    populateSizes('manual');
                 })();
 
 document.addEventListener('DOMContentLoaded', function () {

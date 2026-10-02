@@ -7,7 +7,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showStep(step) {
         steps.forEach((s, i) => s.classList.toggle('active', i === step - 1));
-        progressSteps.forEach((item, i) => item.classList.toggle('is-current', i <= step - 1));
+        progressSteps.forEach((item, i) => {
+            item.classList.toggle('is-complete', i < step - 1);
+            item.classList.toggle('is-current', i === step - 1);
+            if (i === step - 1) item.setAttribute('aria-current', 'step');
+            else item.removeAttribute('aria-current');
+        });
         if (currentStepInput) currentStepInput.value = step;
         window.scrollTo(0, 0);
     }

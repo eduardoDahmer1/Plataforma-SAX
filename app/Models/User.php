@@ -119,6 +119,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return (int) $this->user_type === self::TYPE_ADMIN_EDITOR;
     }
 
+    /** Only regular customer accounts can create carts and place orders. */
+    public function canShop(): bool
+    {
+        return (int) $this->user_type === self::TYPE_CUSTOMER;
+    }
+
     public function canAccessAdminRoute(?string $routeName): bool
     {
         if ($this->isMasterAdmin()) {
@@ -207,6 +213,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function favoriteProducts()
     {
         return $this->belongsToMany(Product::class, 'user_product_preferences')->withTimestamps();
+    }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
     }
 
     public function cupons()

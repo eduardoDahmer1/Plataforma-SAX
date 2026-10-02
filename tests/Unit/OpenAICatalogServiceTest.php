@@ -159,6 +159,57 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertSame([], $result['research']['sources']);
     }
 
+    public function test_description_only_uses_one_reduced_responses_request(): void
+    {
+        config()->set('services.openai.api_key', 'test-key');
+        config()->set('services.openai.base_url', 'https://api.openai.com/v1');
+        Http::fake(['api.openai.com/*' => Http::response([
+            'status' => 'completed',
+            'output' => [[
+                'type' => 'message',
+                'content' => [[
+                    'type' => 'output_text',
+                    'text' => json_encode(['descriptions' => [
+                        'pt_br' => 'Descrição factual.',
+                        'es' => 'Descripción factual.',
+                        'en' => 'Factual description.',
+                    ], 'source_urls' => []]),
+                ]],
+            ]],
+        ])]);
+
+        $product = Product::make([
+            'external_name' => 'Marca REF-123 *AZUL #58',
+            'name' => 'Nome existente',
+            'material' => 'Acetato',
+        ]);
+        $product->setRelation('brand', new \App\Models\Brand(['name' => 'Marca']));
+        $product->setRelation('category', new \App\Models\Category(['name' => 'Óculos']));
+        $product->setRelation('subcategory', null);
+        $product->setRelation('categoriasFilhas', null);
+
+        $result = app(OpenAICatalogService::class)->generateDescriptionOnly($product);
+
+        $this->assertSame('Descrição factual.', $result['descriptions']['pt_br']);
+        $this->assertSame('Nome existente', $product->name);
+        Http::assertSentCount(1);
+        $request = Http::recorded()[0][0];
+        $body = $request->data();
+        $knownData = json_decode(str($body['input'])->after("\n")->toString(), true);
+
+        $this->assertSame('https://api.openai.com/v1/responses', $request->url());
+        $this->assertSame('required', $body['tool_choice']);
+        $this->assertSame('web_search', $body['tools'][0]['type']);
+        $this->assertSame(['descriptions', 'source_urls'], $body['text']['format']['schema']['required']);
+        $this->assertSame(['pt_br', 'es', 'en'], $body['text']['format']['schema']['properties']['descriptions']['required']);
+        $this->assertSame('Marca', $knownData['brand']);
+        $this->assertSame(['REF-123'], $knownData['manufacturer_reference_candidates']);
+        $this->assertArrayNotHasKey('taxonomy', $knownData);
+        $this->assertArrayNotHasKey('current_description', $knownData);
+        $this->assertArrayNotHasKey('size', $knownData);
+        $this->assertArrayNotHasKey('color', $knownData);
+    }
+
     private function serviceWithTaxonomy(): OpenAICatalogService
     {
         $taxonomy = $this->taxonomy();

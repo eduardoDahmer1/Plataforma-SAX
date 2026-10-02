@@ -1,6 +1,7 @@
 @php
     $currentUser = auth()->user();
     $isAdminUser = $currentUser?->isAdmin() ?? false;
+    $canShop = ! $currentUser || $currentUser->canShop();
     $vistaTree = app(\App\Services\OpticalNavigationService::class)->tree();
     $vistaNav = $vistaTree
         ->concat($vistaTree->flatMap(fn (array $category) => $category['children']))
@@ -25,6 +26,9 @@
         </form>
 
         <div class="vista-header__actions">
+            <div class="vista-header__locale d-none d-lg-flex">
+                <x-locale-currency-selector variant="vista" />
+            </div>
             @if($currentUser?->isMasterAdmin())
                 @include('admin.notifications-menu')
             @elseif($currentUser && !$isAdminUser)
@@ -33,7 +37,9 @@
             @else
                 <button class="vista-favorites" type="button" data-bs-toggle="modal" data-bs-target="#loginModal" aria-label="Favoritos"><i class="fa-regular fa-heart"></i></button>
             @endif
-            <x-carrinho-header />
+            @if($canShop)
+                <x-carrinho-header />
+            @endif
             @if($currentUser)
                 <div class="vista-account-menu dropdown">
                     <button class="vista-account dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -114,6 +120,10 @@
         @endforeach
 
         <div class="vista-nav__footer-links d-lg-none">
+            <section class="vista-nav__locale-section">
+                <strong>Idioma e moeda</strong>
+                <x-locale-currency-selector variant="vista-mobile" />
+            </section>
             @if($currentUser)
                 <section class="vista-nav__account-section">
                     <strong>{{ __('messages.minha_conta') }}</strong>
@@ -152,7 +162,7 @@
     </nav>
 </header>
 
-<nav class="vista-mobile-dock d-lg-none" aria-label="Navegación principal">
+<nav class="vista-mobile-dock {{ $canShop ? '' : 'vista-mobile-dock--no-cart' }} d-lg-none" aria-label="Navegación principal">
     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'is-active' : '' }}">
         <i class="fa-solid fa-house" aria-hidden="true"></i><span>{{ __('messages.inicio') }}</span>
     </a>
@@ -171,9 +181,11 @@
             <i class="fa-regular fa-user" aria-hidden="true"></i><span>{{ __('messages.entrar') }}</span>
         </button>
     @endif
-    <button type="button" data-vista-dock-cart>
-        <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span>{{ __('messages.carrinho') }}</span>
-    </button>
+    @if($canShop)
+        <button type="button" data-vista-dock-cart>
+            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span>{{ __('messages.carrinho') }}</span>
+        </button>
+    @endif
 </nav>
 
 @guest

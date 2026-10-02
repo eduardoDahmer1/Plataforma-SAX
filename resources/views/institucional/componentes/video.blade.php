@@ -1,45 +1,19 @@
-<section class="tour-virtual-section" style="padding: 80px 0; background-color: #fcfcfc; border-top: 1px solid #eee;">
-    <div class="container text-center">
-        <div style="max-width: 1100px; margin: 0 auto;">
-            
-            <h6 class="sax-subtitle">
-                {{ __('messages.video_subtitle') ?? 'Uma Imersão no Luxo' }}
-            </h6>
-            
-            <h2 class="sax-title">
-                {{ __('messages.video_title') ?? 'Visite a SAX sem fronteiras' }}
-            </h2>
-            
-            <p class="sax-text">
-                {{ __('messages.video_description') ?? 'Explore cada detalhe de nossa loja através de uma experiência 360° imersiva e acompanhe em tempo real o movimento das principais vias de acesso à Ciudad del Este.' }}
-            </p>
-
-            <div class="live-videos-grid">
-                {{-- Vídeo Ponte da Amizade --}}
-                @if(!empty($institucional->iframe_ponte_amizade))
-                    <div class="video-card">
-                        <h5 class="video-label">
-                            <i class="fa fa-video-camera"></i> {{ __('messages.video_label_ponte') ?? 'Ponte da Amizade' }}
-                        </h5>
-                        <div class="video-responsive-container">
-                            {!! $institucional->iframe_ponte_amizade !!}
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Vídeo Centro CDE --}}
-                @if(!empty($institucional->iframe_centro_cde))
-                    <div class="video-card">
-                        <h5 class="video-label">
-                            <i class="fa fa-eye"></i> {{ __('messages.video_label_centro') ?? 'Centro de CDE' }}
-                        </h5>
-                        <div class="video-responsive-container">
-                            {!! $institucional->iframe_centro_cde !!}
-                        </div>
-                    </div>
-                @endif
-            </div>
-            
+<section class="inst-videos">
+    <div class="container">
+        <header class="inst-section-head" data-aos="fade-up">
+            <div><p class="inst-kicker">{{ $copy('inst_videos_eyebrow', 'Paraguai ao vivo') }}</p><h2>{{ $copy('inst_videos_title', 'Conectados com Ciudad del Este') }}</h2></div>
+            <p>{{ $copy('inst_videos_description', 'Acompanhe as principais vias de acesso e explore nossos espaços antes mesmo de chegar.') }}</p>
+        </header>
+        <div class="inst-videos__grid">
+            @if(!empty($institucional->iframe_ponte_amizade))
+                <article class="inst-video-card" data-aos="fade-up"><div class="inst-video-card__head"><span><i class="fa-solid fa-video"></i> Ao vivo</span><h3>Ponte da Amizade</h3></div><div class="inst-video-card__frame">{!! $institucional->iframe_ponte_amizade !!}</div></article>
+            @endif
+            @if(!empty($institucional->iframe_centro_cde))
+                <article class="inst-video-card" data-aos="fade-up" data-aos-delay="100"><div class="inst-video-card__head"><span><i class="fa-solid fa-video"></i> Ao vivo</span><h3>Centro de Ciudad del Este</h3></div><div class="inst-video-card__frame">{!! $institucional->iframe_centro_cde !!}</div></article>
+            @endif
+            @if(!empty($institucional->iframe_tour_360))
+                <article class="inst-video-card inst-video-card--wide" data-aos="fade-up"><div class="inst-video-card__head"><span><i class="fa-solid fa-street-view"></i> Experiência imersiva</span><h3>Tour virtual SAX</h3></div><div class="inst-video-card__frame">{!! $institucional->iframe_tour_360 !!}</div></article>
+            @endif
         </div>
     </div>
 </section>

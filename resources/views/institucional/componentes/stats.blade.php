@@ -1,53 +1,24 @@
 @php
-    // Pool de imagens disponíveis (banners + galeria + capa); pega uma diferente da usada no parallax da seção "Sobre"
-    $sceneryUrls = collect($sceneryPool ?? [])->map(fn($path) => asset('storage/' . $path))->values();
-    $statsImage = $sceneryUrls[1 % max($sceneryUrls->count(), 1)] ?? ($institucional->section_one_image ? asset('storage/' . $institucional->section_one_image) : 'https://placehold.co/1920x600');
+    $statsImage = $sceneryUrls->get(1) ?: ($sceneryUrls->first() ?: asset('images/sax-og-image.jpg'));
+    $stats = [
+        ['value' => $institucional->stat_brands_count ?? 200, 'suffix' => '+', 'label' => 'marcas internacionais'],
+        ['value' => $institucional->stat_categories_count ?? 30, 'suffix' => '+', 'label' => 'categorias e setores'],
+        ['value' => $institucional->stat_sqm_count ?? 17, 'suffix' => 'k m²', 'label' => 'de experiências'],
+        ['value' => $institucional->stat_employees_count ?? 500, 'suffix' => '+', 'label' => 'especialistas SAX'],
+    ];
 @endphp
-
-<section class="counter-section parallax-window" style="background-image: url('{{ $statsImage }}')" data-scenery-pool="{{ $sceneryUrls->toJson() }}">
-    <div class="luxury-overlay"></div>
-    <div class="container position-relative z-index-2">
-        <div class="row text-center align-items-center">
-            
-            {{-- Item 01 - Marcas --}}
-            <div class="col-md-4 mb-5 mb-md-0" data-aos="fade-up">
-                <div class="counter-item">
-                    <h2 class="counter-number text-gold">
-                        <span class="counter" data-target="{{ $institucional->stat_brands_count ?? 0 }}">0</span>
-                    </h2>
-                    <div class="counter-line mx-auto"></div>
-                    <p class="counter-label">
-                        {!! __('messages.stats_marcas_label') ?? 'Marcas Internacionais' !!}
-                    </p>
+<section class="inst-stats">
+    <img class="inst-stats__image" src="{{ $statsImage }}" alt="" loading="lazy" data-random-scenery data-scenery-pool="{{ $sceneryUrls->toJson() }}">
+    <div class="inst-stats__shade"></div>
+    <div class="container inst-stats__content">
+        <header data-aos="fade-up"><p class="inst-kicker">{{ $copy('inst_stats_eyebrow', 'SAX em números') }}</p><h2>{{ $copy('inst_stats_title', 'Uma referência construída em escala humana') }}</h2></header>
+        <div class="inst-stats__grid">
+            @foreach($stats as $stat)
+                <div class="inst-stat" data-aos="fade-up" data-aos-delay="{{ $loop->index * 80 }}">
+                    <strong><span class="counter" data-target="{{ $stat['value'] }}">0</span><sup>{{ $stat['suffix'] }}</sup></strong>
+                    <span>{{ $stat['label'] }}</span>
                 </div>
-            </div>
-
-            {{-- Item 02 - Estrutura / M² --}}
-            <div class="col-md-4 mb-5 mb-md-0" data-aos="fade-up" data-aos-delay="200">
-                <div class="counter-item">
-                    <h2 class="counter-number text-gold">
-                        <span class="counter" data-target="{{ $institucional->stat_sqm_count ?? 0 }}">0</span><small class="unit">k</small>
-                    </h2>
-                    <div class="counter-line mx-auto"></div>
-                    <p class="counter-label">
-                        {!! __('messages.stats_area_label') ?? 'Mil M²<br>de Experiência' !!}
-                    </p>
-                </div>
-            </div>
-
-            {{-- Item 03 - Colaboradores --}}
-            <div class="col-md-4" data-aos="fade-up" data-aos-delay="400">
-                <div class="counter-item">
-                    <h2 class="counter-number text-gold">
-                        <span class="counter" data-target="{{ $institucional->stat_employees_count ?? 0 }}">0</span><small class="unit">+</small>
-                    </h2>
-                    <div class="counter-line mx-auto"></div>
-                    <p class="counter-label">
-                        {!! __('messages.stats_colaboradores_label') ?? 'Colaboradores<br>Especializados' !!}
-                    </p>
-                </div>
-            </div>
-
+            @endforeach
         </div>
     </div>
 </section>

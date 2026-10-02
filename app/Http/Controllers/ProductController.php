@@ -3,16 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\Generalsetting;
 use App\Models\Attribute;
 use App\Services\DailyMostViewedProducts;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
 use App\Services\VisibleCatalogProductsService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {
+    public function reviewsRedirect($id_or_slug): RedirectResponse
+    {
+        $product = Product::inActiveCategory()
+            ->where(fn ($query) => $query
+                ->where('id', $id_or_slug)
+                ->orWhere('slug', $id_or_slug))
+            ->where('is_outlet', false)
+            ->first();
+
+        if (! $product) {
+            return redirect()->route('search');
+        }
+
+        $anchor = Product::withoutGlobalScopes()->find($product->reviewAnchorId()) ?? $product;
+
+        return redirect()->to(route('produto.show', $anchor->slug ?: $anchor->id), 301);
+    }
+
     private function activeBase()
     {
         return VisibleCatalogProductsService::builder();
@@ -128,24 +148,47 @@ class ProductController extends Controller
             ->where('product_role', 'P')
             ->get();
 
-        $attribute  = Cache::remember('system_attributes', 600, fn() => Attribute::first());
-        $settings   = Cache::remember('general_settings',  600, fn() => Generalsetting::first());
-        $similares  = $this->getSimilares($product);
+        $attribute = Cache::remember('system_attributes', 600, fn () => Attribute::first());
+        $settings = Cache::remember('general_settings', 600, fn () => Generalsetting::first());
+        $similares = $this->getSimilares($product);
         $mostViewed = $dailyMostViewedProducts->get(12);
         $dhlMeasurement = $dhlMeasurements->forProduct($product, true);
+        $reviewProduct = Product::withoutGlobalScopes()->find($masterId) ?? $product;
+        $reviews = ProductReview::query()
+            ->approved()
+            ->where('product_id', $reviewProduct->id)
+            ->latest()
+            ->paginate(8, ['*'], 'reviews_page')
+            ->withQueryString();
+        $ratingBreakdown = ProductReview::query()
+            ->approved()
+            ->where('product_id', $reviewProduct->id)
+            ->selectRaw('rating, COUNT(*) AS total')
+            ->groupBy('rating')
+            ->pluck('total', 'rating');
+        $userReview = auth()->check()
+            ? ProductReview::query()
+                ->where('product_id', $reviewProduct->id)
+                ->where('user_id', auth()->id())
+                ->first()
+            : null;
 
         return view('produtos.show', [
-            'product'           => $product,
-            'selectedVariant'   => $selectedVariant,
-            'isBridal'          => $isBridal,
-            'siblings'          => $siblings,
+            'product' => $product,
+            'selectedVariant' => $selectedVariant,
+            'isBridal' => $isBridal,
+            'siblings' => $siblings,
             'coresRelacionadas' => $coresRelacionadas,
-            'colorSiblings'     => $coresRelacionadas,
-            'similares'         => $similares,
-            'mostViewed'        => $mostViewed,
-            'settings'          => $settings,
-            'attribute'         => $attribute,
-            'dhlMeasurement'    => $dhlMeasurement,
+            'colorSiblings' => $coresRelacionadas,
+            'similares' => $similares,
+            'mostViewed' => $mostViewed,
+            'settings' => $settings,
+            'attribute' => $attribute,
+            'dhlMeasurement' => $dhlMeasurement,
+            'reviewProduct' => $reviewProduct,
+            'reviews' => $reviews,
+            'ratingBreakdown' => $ratingBreakdown,
+            'userReview' => $userReview,
         ]);
     }
 

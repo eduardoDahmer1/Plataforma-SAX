@@ -779,6 +779,27 @@ async function googleTranslateHtml(html, targetLanguage, sourceLanguage = 'auto'
     return container.innerHTML;
 }
 
+// TODO: Extract product-name normalization rules to a dedicated module
+// if normalization expands beyond the current Optical admin workflow.
+function normalizeOpticalProductName(brandName, externalName) {
+    const brand = String(brandName || '').trim();
+    const tokens = String(externalName || '').trim().split(/\s+/)
+        .filter(token => token && !token.startsWith('*') && !token.startsWith('#'));
+    if (!tokens.length) return '';
+
+    const brandTokens = brand.split(/\s+/).filter(Boolean);
+    const sameToken = (left, right) => left.toLocaleUpperCase() === right.toLocaleUpperCase();
+    while (brandTokens.length && tokens.length) {
+        const matchingSuffixLength = Array.from({ length: brandTokens.length }, (_, index) => brandTokens.length - index)
+            .find(length => tokens.length >= length && brandTokens.slice(-length)
+                .every((token, index) => sameToken(token, tokens[index])));
+        if (!matchingSuffixLength) break;
+        tokens.splice(0, matchingSuffixLength);
+    }
+
+    return [brand.toLocaleUpperCase(), ...tokens].filter(Boolean).join(' ');
+}
+
 async function translateProductField(type, options = {}) {
     const button = document.getElementById(`translate-${type}-btn`);
     if (!button) return;
@@ -787,6 +808,23 @@ async function translateProductField(type, options = {}) {
     const fields = Object.fromEntries(languages.map(language => [language, document.getElementById(`real-${type}-${language}`)]));
     const currentField = fields[currentLangs[type]];
     const externalName = type === 'name' ? document.getElementById('external_name') : null;
+
+    const categoryId = document.getElementById('category_id')?.value;
+    if (type === 'name' && String(categoryId) === '149') {
+        const brandSelect = document.getElementById('brand_id');
+        const brandName = brandSelect?.value ? brandSelect.selectedOptions?.[0]?.textContent?.trim() : '';
+        const normalizedName = normalizeOpticalProductName(brandName, externalName?.value);
+        if (!normalizedName) return false;
+
+        languages.forEach(language => {
+            if (fields[language]) fields[language].value = normalizedName;
+        });
+        const visibleName = document.getElementById('visual-name-input');
+        if (visibleName) visibleName.value = normalizedName;
+
+        return true;
+    }
+
     const sourceValue = options.sourceValue || [currentField?.value, fields.pt?.value, fields.es?.value, fields.en?.value, externalName?.value]
         .find(value => String(value || '').trim());
 
@@ -839,74 +877,73 @@ async function translateProductField(type, options = {}) {
     }
 }
 
-let saxDescriptionProfilesPromise;
-
-async function loadSaxDescriptionProfiles() {
-    if (!saxDescriptionProfilesPromise) {
-        saxDescriptionProfilesPromise = fetch('/data/product_description_profiles.json', {
-            headers: { Accept: 'application/json' },
-            cache: 'no-cache'
-        }).then(response => {
-            if (!response.ok) throw new Error(`Não foi possível carregar os perfis editoriais (${response.status}).`);
-            return response.json();
-        }).catch(error => {
-            saxDescriptionProfilesPromise = null;
-            throw error;
-        });
-    }
-
-    return saxDescriptionProfilesPromise;
-}
-
-async function buildSaxProductDescription() {
-    const productName = document.getElementById('real-name-pt')?.value?.trim()
-        || document.getElementById('external_name')?.value?.trim()
-        || 'este produto';
-    const brandSelect = document.getElementById('brand_id');
-    const categorySelect = document.getElementById('category_id');
-    const sizeField = document.querySelector('[name="size"]');
-    const brand = brandSelect?.selectedOptions?.[0]?.textContent?.trim();
-    const category = categorySelect?.selectedOptions?.[0]?.textContent?.trim();
-    const size = sizeField?.value?.trim();
-
-    const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    const safe = value => String(value || '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' })[char]);
-    const pick = values => values[Math.floor(Math.random() * values.length)];
-    const categoryKey = normalize(category);
-    const name = safe(productName);
-    const brandName = brand && !/selecione/i.test(brand) ? safe(brand) : '';
-    const sizeText = size ? ` Consulte a disponibilidade no tamanho ${safe(size)}.` : '';
-
-    const content = await loadSaxDescriptionProfiles();
-    const matchingAlias = Object.keys(content.aliases)
-        .sort((a, b) => b.length - a.length)
-        .find(alias => categoryKey === alias || categoryKey.includes(alias));
-    const profileKey = content.aliases[matchingAlias] || 'default';
-    const profile = content.profiles[profileKey] || content.profiles.default;
-    const interpolate = template => template
-        .replaceAll('{{name}}', name)
-        .replaceAll('{{brand}}', brandName)
-        .replaceAll('{{size}}', sizeText);
-    const brandTemplates = brandName ? content.brand.with_brand : content.brand.without_brand;
-
-    return [pick(profile.opening), pick(profile.body), pick(brandTemplates), pick(profile.closing)]
-        .map(template => `<p>${interpolate(template)}</p>`)
-        .join('');
-}
-
 async function generateSaxDescriptionTranslations() {
-    const fields = ['pt', 'es', 'en'].map(language => document.getElementById(`real-desc-${language}`));
-    if (fields.some(field => !field)) return;
-    if (fields.some(field => field.value.trim()) && !confirm('As descrições atuais em PT, ES e EN serão substituídas por uma nova descrição SAX. Deseja continuar?')) return;
+    const fields = Object.fromEntries(['pt', 'es', 'en'].map(language => [language, document.getElementById(`real-desc-${language}`)]));
+    const button = document.getElementById('translate-desc-btn');
+    if (!button?.dataset.aiUrl || Object.values(fields).some(field => !field)) return;
+    if (Object.values(fields).some(field => field.value.trim()) && !confirm('As descrições atuais em PT, ES e EN serão substituídas por uma nova descrição SAX. Deseja continuar?')) return;
+
+    const originalButton = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Gerando...';
 
     try {
-        await translateProductField('desc', {
-            automatic: true,
-            sourceValue: await buildSaxProductDescription()
+        const response = await fetch(button.dataset.aiUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            }
         });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Não foi possível gerar a descrição.');
+
+        const descriptions = data.descriptions;
+        if (['pt_br', 'es', 'en'].some(language => !String(descriptions?.[language] || '').trim())) {
+            throw new Error('A IA não devolveu as três descrições esperadas.');
+        }
+
+        const descriptionToHtml = value => String(value).trim().split(/\n{2,}/).filter(Boolean).map(paragraph => {
+            const escaped = document.createElement('div');
+            escaped.textContent = paragraph.trim();
+            return `<p>${escaped.innerHTML.replaceAll('\n', '<br>')}</p>`;
+        }).join('');
+        fields.pt.value = descriptionToHtml(descriptions.pt_br);
+        fields.es.value = descriptionToHtml(descriptions.es);
+        fields.en.value = descriptionToHtml(descriptions.en);
+
+        const editor = typeof tinymce !== 'undefined' ? tinymce.get('editor-product') : null;
+        if (editor) editor.setContent(fields[currentLangs.desc]?.value || '');
+
+        const sourcesContainer = document.getElementById('description-ai-sources');
+        if (sourcesContainer) {
+            sourcesContainer.replaceChildren();
+            const sources = Array.isArray(data.research?.sources) ? data.research.sources : [];
+            sourcesContainer.classList.toggle('d-none', sources.length === 0);
+            if (sources.length) {
+                const label = document.createElement('span');
+                label.textContent = 'Fontes consultadas: ';
+                sourcesContainer.appendChild(label);
+                sources.forEach((source, index) => {
+                    if (!/^https?:\/\//i.test(source.url || '')) return;
+                    if (index) sourcesContainer.appendChild(document.createTextNode(' · '));
+                    const link = document.createElement('a');
+                    link.href = source.url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = source.title || source.url;
+                    sourcesContainer.appendChild(link);
+                });
+            }
+        }
+        window.saxToast ? saxToast('success', 'Descrições PT, ES e EN geradas. Revise antes de salvar.') : alert('Descrições PT, ES e EN geradas. Revise antes de salvar.');
     } catch (error) {
-        console.error('Falha ao gerar descrição SAX:', error);
-        window.saxToast ? saxToast('error', 'Não foi possível carregar a curadoria editorial. Tente novamente.') : alert('Não foi possível carregar a curadoria editorial.');
+        console.error('Falha ao gerar descrição com IA:', error);
+        window.saxToast ? saxToast('error', error.message || 'Não foi possível gerar a descrição.') : alert(error.message || 'Não foi possível gerar a descrição.');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalButton;
     }
 }
 
@@ -914,8 +951,7 @@ async function autoPopulateProductTranslations() {
     if (!document.getElementById('productEditForm')) return;
 
     const nameFields = ['pt', 'es', 'en'].map(language => document.getElementById(`real-name-${language}`));
-    const descriptionFields = ['pt', 'es', 'en'].map(language => document.getElementById(`real-desc-${language}`));
-    if (nameFields.some(field => !field) || descriptionFields.some(field => !field)) return;
+    if (nameFields.some(field => !field)) return;
 
     const namesIncomplete = nameFields.some(field => !field.value.trim());
     let nameFilled = false;
@@ -930,20 +966,8 @@ async function autoPopulateProductTranslations() {
         });
     }
 
-    const descriptionsIncomplete = descriptionFields.some(field => !field.value.trim());
-    let descriptionFilled = false;
-    if (descriptionsIncomplete) {
-        const existingDescription = descriptionFields.find(field => field.value.trim())?.value;
-        descriptionFilled = await translateProductField('desc', {
-            automatic: true,
-            silent: true,
-            onlyWhenIncomplete: true,
-            sourceValue: existingDescription || await buildSaxProductDescription()
-        });
-    }
-
-    if (nameFilled || descriptionFilled) {
-        window.saxToast && saxToast('info', 'Traduções automáticas preenchidas. Revise os três idiomas antes de salvar.');
+    if (nameFilled) {
+        window.saxToast && saxToast('info', 'Nome preenchido automaticamente. Revise antes de salvar.');
     }
 }
 

@@ -122,6 +122,8 @@ class Product extends Model
         'gallery' => 'array',
         'colors' => 'array',
         'price' => 'float',
+        'rating_average' => 'float',
+        'rating_count' => 'integer',
         'stores' => 'array',
         'stock' => 'integer',
         'admin_edited_at' => 'datetime',
@@ -578,7 +580,33 @@ class Product extends Model
         return $this->hasMany(Product::class, 'parent_id');
     }
 
-    // Relação com cupons aplicáveis a este produto
+    // Avaliações públicas vinculadas ao produto-pai exibido.
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function approvedReviews()
+    {
+        return $this->reviews()->approved();
+    }
+
+    public function reviewAnchorId(): int
+    {
+        if ($this->product_role !== 'F' || blank($this->parent_id)) {
+            return (int) $this->getKey();
+        }
+
+        if (str_contains((string) $this->parent_id, ',')) {
+            return (int) (collect(explode(',', (string) $this->parent_id))
+                ->map(fn ($id) => (int) trim($id))
+                ->first(fn ($id) => $id > 0) ?: $this->getKey());
+        }
+
+        return (int) $this->parent_id;
+    }
+
+    // Relação com cupons aplicáveis a este produto.
     public function cupons()
     {
         return $this->hasMany(Cupon::class, 'produto_id');

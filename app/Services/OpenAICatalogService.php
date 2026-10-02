@@ -272,6 +272,162 @@ PROMPT;
         ];
     }
 
+    /** Generate a reviewable description without changing the product or its AI preparation status. */
+    public function generateDescriptionOnly(Product $product): array
+    {
+        $settings = app(ProductAiSettingsService::class);
+        $settings->ensureAvailable();
+        $apiKey = $settings->apiKey();
+        if ($apiKey === '') {
+            throw new RuntimeException('La API de OpenAI no está configurada.');
+        }
+
+        $identity = $product->manufacturerSearchIdentity();
+        $references = (array) ($identity['reference_candidates'] ?? []);
+        $knownData = [
+            'brand' => $product->brand?->name,
+            'external_name' => $product->external_name,
+            'current_name' => $product->name,
+            'manufacturer_reference_candidates' => $references,
+            'normalized_product_identity' => $this->normalizeSearchText($identity['name'] ?? null),
+            'category' => $product->category?->name,
+            'subcategory' => $product->subcategory?->name,
+            'child_category' => $product->categoriasFilhas?->name,
+            'existing_material' => $product->material,
+        ];
+
+        $instructions = <<<'PROMPT'
+Escribe únicamente descripciones finales para la ficha de este producto en portugués de Brasil,
+español e inglés. Investiga primero la marca con el modelo o las referencias candidatas mediante
+web_search. Prioriza el fabricante y sus fuentes oficiales; si no bastan, usa distribuidores
+autorizados o comercios confiables. Comprueba que la fuente corresponda al modelo exacto; una
+variante del mismo modelo puede servir para identificarlo e investigarlo, pero no un modelo
+similar. No uses el SKU interno como referencia del fabricante.
+
+Usa solo datos confiables del catálogo y hechos específicos respaldados por fuentes pertinentes.
+No deduzcas materiales, colores, género, tecnologías, composición, polarización, concentración,
+notas, prestaciones ni otros detalles a partir de la marca o de conocimientos generales. Si la
+investigación no aporta hechos suficientes, redacta una descripción breve y conservadora con
+marca, modelo o referencia y categoría conocidos, sin rellenar con afirmaciones inventadas.
+
+La descripción debe centrarse en el modelo y ser válida para todas sus variantes. Incluye solo
+características generales y verificables del modelo. Aunque la investigación corresponda a una
+variante concreta, no menciones colores, combinaciones cromáticas, códigos de color, acabados
+exclusivos de esa variante ni otros rasgos que puedan cambiar entre variantes. Si no puedes
+determinar con seguridad si un rasgo pertenece al modelo completo o solo a la variante
+investigada, omítelo.
+
+Redacta una descripción de ecommerce desarrollada, informativa y comercial en uno o dos párrafos.
+Cuando haya suficientes datos verificables, apunta normalmente a unas 80–140 palabras por idioma.
+Aprovecha los hechos pertinentes encontrados: qué producto es, marca y modelo, características
+principales, diseño, construcción, materiales y funciones, siempre que estén documentados para
+el modelo completo.
+Integra los datos en una explicación coherente; no los reduzcas a una o dos frases ni repitas
+información para alcanzar una extensión determinada. Ajusta la longitud a los hechos disponibles:
+si son pocos, escribe una descripción más corta.
+
+No menciones tallas, tamaños ni medidas de variantes, ni secuencias de cifras técnicas como
+57-57-57 o medidas de montura, puente y varillas. Evita también otros números técnicos en la
+descripción; si una especificación intrínseca es relevante y está verificada, exprésala de forma
+natural sin enumerar cifras. Ante la duda, omítela. No menciones disponibilidad, precio ni stock.
+No incluyas fuentes, URLs, citas ni el proceso de investigación en las descripciones. Evita
+elogios genéricos, frases vacías sobre lujo, exclusividad, personalidad o sofisticación,
+afirmaciones subjetivas sin respaldo, curaduría SAX y publicidad de la tienda. No copies
+literalmente las fuentes. Redacta texto natural, comercial y factual apropiado para ecommerce.
+Las tres versiones deben conservar los
+mismos hechos, con expresión idiomática en cada idioma. Devuelve texto plano; separa párrafos con
+una línea en blanco. No generes nombres comerciales, SEO, clasificación ni atributos.
+Selecciona en source_urls hasta tres URLs de páginas realmente consultadas que respalden los
+hechos escritos. Si no hay una coincidencia confiable, devuelve una lista vacía.
+PROMPT;
+
+        $response = Http::withToken($apiKey)
+            ->acceptJson()
+            ->asJson()
+            ->timeout((int) config('services.openai.timeout', 90))
+            ->post(rtrim((string) config('services.openai.base_url'), '/').'/responses', [
+                'model' => (string) config('services.openai.model', 'gpt-5.6-luna'),
+                'instructions' => $instructions,
+                'input' => "Write descriptions from this known JSON data:\n".
+                    json_encode($knownData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'reasoning' => ['effort' => (string) config('services.openai.catalog_reasoning_effort', 'medium')],
+                'tools' => [[
+                    'type' => 'web_search',
+                    'search_context_size' => (string) config('services.openai.catalog_search_context_size', 'high'),
+                ]],
+                'tool_choice' => 'required',
+                'include' => ['web_search_call.action.sources'],
+                'store' => false,
+                'max_output_tokens' => (int) config('services.openai.max_output_tokens', 3000),
+                'text' => [
+                    'format' => [
+                        'type' => 'json_schema',
+                        'name' => 'product_descriptions',
+                        'strict' => true,
+                        'schema' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'descriptions' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'pt_br' => ['type' => 'string'],
+                                        'es' => ['type' => 'string'],
+                                        'en' => ['type' => 'string'],
+                                    ],
+                                    'required' => ['pt_br', 'es', 'en'],
+                                    'additionalProperties' => false,
+                                ],
+                                'source_urls' => [
+                                    'type' => 'array',
+                                    'items' => ['type' => 'string'],
+                                    'maxItems' => 3,
+                                ],
+                            ],
+                            'required' => ['descriptions', 'source_urls'],
+                            'additionalProperties' => false,
+                        ],
+                    ],
+                ],
+            ]);
+
+        try {
+            $response->throw();
+        } catch (RequestException $exception) {
+            $status = $exception->response?->status();
+            $message = match ($status) {
+                401, 403 => 'La clave de OpenAI no es válida o no tiene permisos.',
+                429 => 'OpenAI rechazó la solicitud por límite de uso o cuota agotada.',
+                default => 'OpenAI no pudo generar la descripción (HTTP '.($status ?: 'desconocido').').',
+            };
+            throw new RuntimeException($message, previous: $exception);
+        }
+
+        $payload = $response->json();
+        if (data_get($payload, 'status') === 'incomplete') {
+            throw new RuntimeException('OpenAI devolvió una respuesta incompleta.');
+        }
+
+        $output = json_decode($this->extractOutputText($payload), true);
+        $descriptions = data_get($output, 'descriptions');
+        if (! is_array($descriptions) || collect(['pt_br', 'es', 'en'])->contains(
+            fn (string $locale) => ! is_string($descriptions[$locale] ?? null) || trim($descriptions[$locale]) === ''
+        )) {
+            throw new RuntimeException('OpenAI no devolvió las tres descripciones esperadas.');
+        }
+
+        $selectedUrls = data_get($output, 'source_urls', []);
+        $selectedUrls = is_array($selectedUrls) ? $selectedUrls : [];
+        $sources = array_values(array_filter(
+            $this->extractSources($payload, $references, $selectedUrls),
+            fn (array $source) => in_array($source['url'], $selectedUrls, true),
+        ));
+
+        return [
+            'descriptions' => $descriptions,
+            'research' => ['sources' => $sources],
+        ];
+    }
+
     private function extractOutputText(array $payload): string
     {
         $texts = [];

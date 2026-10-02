@@ -78,7 +78,9 @@ class BrandController extends Controller
 
         $allBrands = Cache::remember('filter_brands_list_visible_catalog_v2', now()->addHours(1), fn() => $this->buildFilterBrandsList());
 
-        return view('catalog.show', [
+        $catalogData = $this->advancedCatalogData($request, ['brand' => $brand->id]);
+
+        return view('catalog.show', array_merge([
             'entity' => $brand,
             'isBrand' => true,
             'products' => $products,
@@ -91,6 +93,6 @@ class BrandController extends Controller
             'backLabel' => __('messages.nossas_marcas'),
             'breadcrumb' => [],
             'emptyMessage' => 'No se encontraron productos en esta marca.',
-        ]);
+        ], $catalogData));
     }
 }

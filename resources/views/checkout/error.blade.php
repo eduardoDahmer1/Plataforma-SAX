@@ -1,25 +1,25 @@
 @extends('layout.checkout')
 
 @section('content')
-<div class="container mt-5 mb-5">
-    <div class="text-center">
-        <h2 class="fw-bold text-danger"><i class="fa fa-times-circle"></i> Ocorreu um erro no pagamento</h2>
-        <p class="lead">Infelizmente, seu pagamento não pôde ser processado.</p>
-
-        @if(session('error'))
-            <div class="alert alert-danger mt-3">
-                {{ session('error') }}
+<section class="payment-result-shell">
+    <div class="container">
+        <div class="payment-result-card mx-auto">
+            <div class="text-center mb-4">
+                <div class="result-icon error mx-auto mb-3"><i class="fa-solid fa-xmark"></i></div>
+                <span class="result-label">Pagamento não concluído</span>
+                <h1 class="result-title mb-2">Não foi possível processar</h1>
+                <p class="result-subtitle mb-0">Revise os dados ou escolha outra forma de pagamento para tentar novamente.</p>
             </div>
-        @endif
 
-        <div class="mt-4">
-            <a href="{{ route('checkout.index') }}" class="btn btn-primary">
-                Tentar novamente
-            </a>
-            <a href="{{ route('home') }}" class="btn btn-outline-secondary">
-                Voltar à loja
-            </a>
+            @if(session('error'))
+                <div class="alert alert-danger mb-4" role="alert">{{ session('error') }}</div>
+            @endif
+
+            <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
+                <a href="{{ route('checkout.index') }}" class="btn btn-dark px-4"><i class="fa-solid fa-rotate-right me-2"></i>Tentar novamente</a>
+                <a href="{{ route('cart.view') }}" class="btn btn-outline-secondary px-4"><i class="fa-solid fa-bag-shopping me-2"></i>Revisar carrinho</a>
+            </div>
         </div>
     </div>
-</div>
+</section>
 @endsection

@@ -92,6 +92,7 @@ class CheckoutPauseCartTest extends TestCase
         DB::table('currencies')->insert(['id' => 1, 'is_default' => 1, 'sign' => 'US$', 'value' => 1]);
         $user = new User();
         $user->id = 7;
+        $user->user_type = User::TYPE_CUSTOMER;
         $this->actingAs($user);
         $this->setAvailability(false, false);
         $this->mock(WhatsappWidgetService::class, function ($mock) {
@@ -124,6 +125,26 @@ class CheckoutPauseCartTest extends TestCase
         $this->assertDatabaseHas('carts', ['user_id' => 7, 'product_id' => 10, 'quantity' => 3]);
         $this->put(route('cart.update', 10), ['quantity' => 99])->assertRedirect();
         $this->assertDatabaseHas('carts', ['quantity' => 5]);
+    }
+
+    public function test_admin_profiles_cannot_access_cart_or_checkout(): void
+    {
+        foreach ([User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR] as $type) {
+            $admin = new User();
+            $admin->id = 100 + $type;
+            $admin->user_type = $type;
+            $this->actingAs($admin);
+
+            $this->get(route('cart.view'))
+                ->assertRedirect(route('admin.index'))
+                ->assertSessionHas('error');
+
+            $this->postJson(route('checkout.store'), [])
+                ->assertForbidden()
+                ->assertJson([
+                    'message' => 'Carrinho e checkout estão disponíveis somente para clientes.',
+                ]);
+        }
     }
 
     public function test_manual_pause_blocks_checkout_get_and_post_on_server(): void

@@ -102,7 +102,9 @@ class CategoriasFilhasController extends Controller
             )
         );
 
-        return view('catalog.show', [
+        $catalogData = $this->advancedCatalogData($request, ['categoriasfilhas' => $data['categoriasfilhas']->id]);
+
+        return view('catalog.show', array_merge([
             'entity' => $data['categoriasfilhas'],
             'products' => $data['products'],
             'attribute' => $attribute,
@@ -122,6 +124,6 @@ class CategoriasFilhasController extends Controller
                     : null,
             ]),
             'emptyMessage' => 'No se encontraron productos en esta categoría.',
-        ]);
+        ], $catalogData));
     }
 }

@@ -58,10 +58,13 @@
         <ul class="{{ $navMenuClass }}" aria-labelledby="{{ $uid }}_lang">
             @foreach ($langMap as $localeKey => $lang)
                 <li>
-                    <a href="{{ route('lang.switch', $localeKey) }}"
-                       class="dropdown-item {{ $currentLocale === $localeKey ? 'active' : '' }}">
-                        {{ $lang['label'] }}
-                    </a>
+                    <form action="{{ route('lang.switch', $localeKey) }}" method="POST" class="m-0">
+                        @csrf
+                        <button type="submit"
+                            class="dropdown-item {{ $currentLocale === $localeKey ? 'active' : '' }}">
+                            {{ $lang['label'] }}
+                        </button>
+                    </form>
                 </li>
             @endforeach
         </ul>
@@ -108,11 +111,14 @@
                 aria-labelledby="{{ $uid }}_lang_btn">
                 @foreach ($langMap as $localeKey => $lang)
                     <li>
-                        <a href="{{ route('lang.switch', $localeKey) }}"
-                           class="sax-lc-option {{ $currentLocale === $localeKey ? 'active' : '' }}">
-                            <span class="sax-twemoji">{{ $lang['flag'] }}</span>
-                            {{ $lang['label'] }}
-                        </a>
+                        <form action="{{ route('lang.switch', $localeKey) }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit"
+                                class="sax-lc-option {{ $currentLocale === $localeKey ? 'active' : '' }}">
+                                <span class="sax-twemoji">{{ $lang['flag'] }}</span>
+                                {{ $lang['label'] }}
+                            </button>
+                        </form>
                     </li>
                 @endforeach
             </ul>

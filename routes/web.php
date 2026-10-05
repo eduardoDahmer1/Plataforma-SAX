@@ -498,7 +498,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 });
 
 // Troca apenas o idioma. A cotação é independente (currency.change).
-Route::get('lang/{locale}', function ($locale) {
+Route::post('lang/{locale}', function ($locale) {
     if (in_array($locale, \App\Http\Middleware\SetLocale::LOCALES, true)) {
         session()->put('locale', $locale);
         session()->save();

@@ -7824,3 +7824,33 @@ a.sax-msg__value:hover { color: #111; text-decoration: underline; }
     .admin-review-quick-filters > span { margin-bottom: 2px; }
     .admin-review-quick-filters a { justify-content: space-between; border-radius: 7px; }
 }
+
+/* Ações da edição de produtos, disponíveis durante a rolagem. */
+.product-edit-savebar {
+    position: sticky;
+    top: calc(var(--product-savebar-header-height, var(--admin-topbar-height, 60px)) + 8px);
+    z-index: 1025;
+    min-height: 60px;
+    padding: 10px 14px;
+    background: #f4f5f6;
+    border: 1px solid #b5b8bd;
+    border-top: 3px solid #555a60;
+    box-shadow: 0 5px 16px rgba(29, 36, 45, .16);
+}
+.product-edit-savebar #productUnsavedStatus {
+    font-weight: 600;
+}
+.product-edit-savebar.has-unsaved-changes #productUnsavedStatus::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+.product-edit-savebar .btn {
+    min-height: 38px;
+}
+.product-edit-savebar .btn { flex-shrink: 0; }
+#productDhlDetails > summary { cursor: pointer; }

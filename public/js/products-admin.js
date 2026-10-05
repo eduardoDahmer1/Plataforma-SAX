@@ -1408,8 +1408,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     const currentSize = sizeContainer.dataset.currentSize;
                     const detectedSize = sizeContainer.dataset.detectedSize;
 
+                    // Reutiliza inferredSize() recebido pela vista, sem substituir edição manual.
+                    if (!inputManual.value.trim() && detectedSize) {
+                        inputManual.value = detectedSize;
+                    }
+
+                    let sizeGroups = {};
+                    typeSelector.value = 'manual';
+                    populateSizes('manual');
+
                     const response = await fetch('/data/tamanho.json');
-                    const sizeGroups = await response.json();
+                    sizeGroups = await response.json();
 
                     Object.keys(sizeGroups).forEach(key => {
                         const opt = document.createElement('option');
@@ -1435,7 +1444,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else if (group === 'manual') {
                             sizeSelect.classList.add('d-none');
                             sizeSelect.removeAttribute('name');
-                            inputManual.value = currentSize;
                             inputManual.classList.remove('d-none');
                             inputManual.setAttribute('name', 'size');
                         } else {
@@ -1453,56 +1461,47 @@ document.addEventListener('DOMContentLoaded', function () {
                     populateSizes('manual');
                 })();
 
+// A barra usa o submit nativo do mesmo formulário, inclusive a sincronização existente do editor.
 document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('productEditForm');
-        const saveBtn = document.getElementById('saveProductBtn');
-        const feedback = document.getElementById('productEditFeedback');
+    const form = document.getElementById('productEditForm');
+    const status = document.getElementById('productUnsavedStatus');
+    if (!form || !status) return;
 
-        if (!form || !saveBtn || !feedback) {
-            return;
+    const savebar = form.querySelector('.product-edit-savebar');
+    const topbar = document.querySelector('.sax-admin-topbar');
+    if (savebar && topbar) {
+        const updateOffset = () => savebar.style.setProperty(
+            '--product-savebar-header-height', `${topbar.getBoundingClientRect().height}px`
+        );
+        updateOffset();
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(updateOffset).observe(topbar);
         }
+    }
 
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
+    // Observa os valores enviados, incluindo alterações programáticas (IA e variantes),
+    // sem interferir na troca de idiomas nem na sincronização dos campos.
+    function snapshot() {
+        return JSON.stringify(Array.from(new FormData(form), ([name, value]) => [
+            name, value instanceof File ? [value.name, value.size, value.size ? value.lastModified : 0] : value
+        ]));
+    }
+    const initial = snapshot();
+    function updateStatus() {
+        const dirty = snapshot() !== initial;
+        status.textContent = dirty ? 'Alterações não salvas' : 'Sem alterações pendentes';
+        savebar?.classList.toggle('has-unsaved-changes', dirty);
+        status.classList.toggle('text-warning', dirty);
+        status.classList.toggle('text-muted', !dirty);
+    }
+    form.addEventListener('input', () => queueMicrotask(updateStatus));
+    form.addEventListener('change', () => queueMicrotask(updateStatus));
+    const timer = window.setInterval(updateStatus, 750);
+    window.addEventListener('pagehide', () => window.clearInterval(timer), { once: true });
 
-            const originalHtml = saveBtn.innerHTML;
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
-
-            feedback.className = 'd-none';
-            feedback.innerHTML = '';
-
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: new FormData(form)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    const firstError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
-                    throw new Error(firstError || data?.message || 'Erro ao salvar produto.');
-                }
-
-                feedback.className = 'alert alert-success';
-                feedback.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + (data.message || 'Produto atualizado com sucesso!');
-
-                if (data.redirect) {
-                    setTimeout(function () {
-                        window.location.href = data.redirect;
-                    }, 650);
-                }
-            } catch (error) {
-                feedback.className = 'alert alert-danger';
-                feedback.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + (error.message || 'Erro ao salvar.');
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = originalHtml;
-            }
-        });
-    });
+    // Permite focar um campo DHL inválido mesmo com o bloco recolhido.
+    form.addEventListener('invalid', function (event) {
+        const details = event.target.closest('details');
+        if (details) details.open = true;
+    }, true);
+});

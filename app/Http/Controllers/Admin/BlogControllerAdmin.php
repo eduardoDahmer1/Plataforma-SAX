@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
 use App\Services\ImageConverterService;
+use App\Services\BlogProductCarouselService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -130,7 +132,10 @@ class BlogControllerAdmin extends Controller
         }
         $data['gallery'] = array_merge($keptGallery, $this->processGalleryUploads($request));
 
+        $oldSlug = $blog->slug;
         $blog->update($data);
+        Cache::forget("blog_show_{$oldSlug}");
+        Cache::forget("blog_show_{$blog->slug}");
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -187,7 +192,7 @@ class BlogControllerAdmin extends Controller
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:2000',
             'slug' => 'nullable|string|max:255',
-            'image' => 'nullable|image|max:10240',
+            'image' => ($id === null ? 'required' : 'nullable') . '|image|max:10240',
             'image_caption' => 'nullable|string|max:255',
             'content' => 'required|string',
             'meta_description' => 'nullable|string|max:160',
@@ -199,9 +204,16 @@ class BlogControllerAdmin extends Controller
             'gallery' => 'nullable|array|max:' . self::MAX_GALLERY_IMAGES,
             'gallery.*' => 'nullable|image|max:10240',
         ], [
+            'image.required' => 'La imagen de portada es obligatoria para crear un artículo.',
             'gallery.max' => 'A galeria pode ter no máximo ' . self::MAX_GALLERY_IMAGES . ' imagens.',
             'gallery.*.image' => 'Um dos arquivos da galeria não é uma imagem válida.',
         ]);
+
+        if ($id !== null && !$request->hasFile('image')) {
+            unset($data['image']);
+        }
+
+        app(BlogProductCarouselService::class)->validate($data['content']);
 
         $data['is_active'] = $request->has('is_active') ? 1 : 0;
         $data['featured'] = $request->has('featured') ? 1 : 0;

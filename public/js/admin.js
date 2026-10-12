@@ -306,6 +306,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const uploadUrl = editorEl.dataset.uploadUrl;
 
+    function uploadBlogImage(file, filename) {
+        const formData = new FormData();
+        formData.append('file', file, filename || file.name || 'imagem.png');
+        return fetch(uploadUrl, { method: 'POST', headers: headers, body: formData })
+            .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok || !data.location) throw new Error(data.message || 'Falha ao enviar imagem.');
+                return data.location;
+            });
+    }
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[character]);
+    }
+
+    function safeUrl(value) {
+        const url = String(value || '').trim();
+        if (!url || !/^(https?:\/\/|\/[^/])/i.test(url)) return '';
+        try {
+            return ['http:', 'https:'].includes(new URL(url, window.location.origin).protocol) ? url : '';
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function editorialSplitHtml(data) {
+        const image = safeUrl(data.image && data.image.value !== undefined ? data.image.value : data.image);
+        const ctaUrl = safeUrl(data.ctaUrl && data.ctaUrl.value !== undefined ? data.ctaUrl.value : data.ctaUrl);
+        const title = String(data.title || '').trim();
+        const paragraphs = String(data.text || '').trim().split(/\n\s*\n/).filter(Boolean)
+            .map((paragraph) => '<p>' + escapeHtml(paragraph.trim()).replace(/\n/g, '<br>') + '</p>').join('');
+        const cta = String(data.ctaText || '').trim() && ctaUrl
+            ? '<a class="editorial-split__cta" href="' + escapeHtml(ctaUrl) + '">' + escapeHtml(data.ctaText.trim()) + '</a>'
+            : '';
+        return '<div class="editorial-split' + (data.position === 'right' ? ' editorial-split--image-right' : '') + '">' +
+            '<div class="editorial-split__media"><img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '"></div>' +
+            '<div class="editorial-split__content"><h2>' + escapeHtml(title) + '</h2>' + paragraphs + cta + '</div></div>';
+    }
+
     tinymce.init({
         selector: '#editor-blog',
         height: 550,
@@ -314,11 +355,12 @@ document.addEventListener('DOMContentLoaded', function () {
         statusbar: true,
         plugins: ['advlist autolink lists link image charmap print preview anchor',
                   'searchreplace visualblocks code fullscreen',
-                  'insertdatetime media table paste code help wordcount', 'quickbars'],
-        toolbar: 'formatselect | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist | blockquote hr | table | link image media | removeformat | code fullscreen',
+                  'insertdatetime media table paste code help wordcount', 'quickbars', 'noneditable'],
+        toolbar: 'formatselect | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist | blockquote hr | table | link image media editorialsplit blogproducts | removeformat | code fullscreen',
         quickbars_selection_toolbar: 'bold italic | quicklink blockquote',
         quickbars_insert_toolbar: false,
         content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 14px; } img { max-width: 100%; height: auto; }',
+        content_css: document.querySelector('link[href*="/css/blog.css"]')?.href || '/css/blog.css',
         image_caption: true,
         image_title: true,
         automatic_uploads: true,
@@ -327,7 +369,95 @@ document.addEventListener('DOMContentLoaded', function () {
         convert_urls: true,
         relative_urls: false,
         remove_script_host: false,
+        file_picker_types: 'image',
+        file_picker_callback: function (callback, value, meta) {
+            if (meta.filetype !== 'image') return;
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.addEventListener('change', function () {
+                const file = input.files && input.files[0];
+                if (!file) return;
+                uploadBlogImage(file).then((url) => callback(url)).catch((error) => {
+                    if (window.saxToast) saxToast('error', error.message);
+                });
+            });
+            input.click();
+        },
+        extended_valid_elements: 'div[class|contenteditable|data-blog-products|data-title]',
         setup: function (editor) {
+            if (window.saxBlogProductsEditor) window.saxBlogProductsEditor(editor);
+            editor.ui.registry.addButton('editorialsplit', {
+                text: 'Imagen + texto',
+                tooltip: 'Insertar o editar bloque de imagen y texto',
+                onAction: function () {
+                    const existing = editor.dom.getParent(editor.selection.getNode(), 'div.editorial-split');
+                    const bookmark = editor.selection.getBookmark(2, true);
+                    const image = existing && existing.querySelector('.editorial-split__media img');
+                    const content = existing && existing.querySelector('.editorial-split__content');
+                    const link = content && content.querySelector('.editorial-split__cta');
+                    editor.windowManager.open({
+                        title: 'Imagen + texto',
+                        body: { type: 'panel', items: [
+                            { type: 'urlinput', name: 'image', label: 'Imagen', filetype: 'image' },
+                            { type: 'selectbox', name: 'position', label: 'Posición de la imagen', items: [
+                                { value: 'left', text: 'Izquierda' }, { value: 'right', text: 'Derecha' }
+                            ] },
+                            { type: 'input', name: 'title', label: 'Título' },
+                            { type: 'textarea', name: 'text', label: 'Texto' },
+                            { type: 'input', name: 'ctaText', label: 'Texto del CTA (opcional)' },
+                            { type: 'input', name: 'ctaUrl', label: 'URL del CTA (opcional)' }
+                        ] },
+                        initialData: {
+                            image: { value: image ? image.getAttribute('src') : '', meta: {} },
+                            position: existing && existing.classList.contains('editorial-split--image-right') ? 'right' : 'left',
+                            title: content?.querySelector('h2')?.textContent || '',
+                            text: content ? Array.from(content.querySelectorAll('p')).map((p) => p.innerText || p.textContent).join('\n\n') : '',
+                            ctaText: link?.textContent || '',
+                            ctaUrl: link?.getAttribute('href') || ''
+                        },
+                        buttons: [
+                            { type: 'cancel', text: 'Cancelar' },
+                            { type: 'submit', text: existing ? 'Actualizar' : 'Insertar', primary: true }
+                        ],
+                        onSubmit: function (api) {
+                            const data = api.getData();
+                            const imageUrl = safeUrl(data.image && data.image.value !== undefined ? data.image.value : data.image);
+                            const ctaUrl = data.ctaUrl && data.ctaUrl.value !== undefined ? data.ctaUrl.value : data.ctaUrl;
+                            if (!imageUrl || !String(data.title || '').trim() || !String(data.text || '').trim()) {
+                                window.alert('Completa la imagen, el título y el texto.');
+                                return;
+                            }
+                            if ((String(data.ctaText || '').trim() && !safeUrl(ctaUrl)) ||
+                                (String(ctaUrl || '').trim() && !String(data.ctaText || '').trim())) {
+                                window.alert('Completa el texto y la URL del CTA, o deja ambos vacíos.');
+                                return;
+                            }
+                            const html = editorialSplitHtml(data);
+                            let cursorAfterInsert = null;
+                            editor.undoManager.transact(function () {
+                                if (existing && existing.isConnected) {
+                                    const container = editor.getDoc().createElement('div');
+                                    container.innerHTML = html;
+                                    existing.replaceWith(container.firstElementChild);
+                                    editor.nodeChanged();
+                                } else {
+                                    editor.selection.moveToBookmark(bookmark);
+                                    editor.insertContent(html + '<p class="editorial-split-cursor"><br></p>');
+                                    cursorAfterInsert = editor.getBody().querySelector('.editorial-split-cursor');
+                                    if (cursorAfterInsert) cursorAfterInsert.removeAttribute('class');
+                                }
+                                editor.save();
+                            });
+                            api.close();
+                            if (cursorAfterInsert) {
+                                editor.focus();
+                                editor.selection.setCursorLocation(cursorAfterInsert, 0);
+                            }
+                        }
+                    });
+                }
+            });
             editor.on('change keyup', function () { editor.save(); });
             editor.on('init', function () {
                 const form = editorEl.closest('form');
@@ -337,24 +467,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         },
         images_upload_handler: uploadUrl ? function (blobInfo, success, failure) {
-            const formData = new FormData();
-            formData.append('file', blobInfo.blob(), blobInfo.filename());
-
-            fetch(uploadUrl, { method: 'POST', headers: headers, body: formData })
-                .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-                .then(({ ok, data }) => {
-                    if (ok && data.location) {
-                        success(data.location);
-                    } else {
-                        const message = data.message || 'Falha ao enviar imagem.';
-                        failure(message);
-                        if (window.saxToast) saxToast('error', message);
-                    }
-                })
-                .catch(() => {
-                    failure('Erro de rede ao enviar imagem.');
-                    if (window.saxToast) saxToast('error', 'Erro ao enviar imagem.');
-                });
+            uploadBlogImage(blobInfo.blob(), blobInfo.filename()).then(success).catch((error) => {
+                failure(error.message);
+                if (window.saxToast) saxToast('error', error.message);
+            });
         } : undefined,
     });
 })();

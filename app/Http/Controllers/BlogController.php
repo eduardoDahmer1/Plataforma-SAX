@@ -14,6 +14,11 @@ class BlogController extends Controller
         return now()->startOfWeek()->format('oW');
     }
 
+    private function cacheVersion(): int
+    {
+        return (int) Cache::get('blogs_cache_version', 1);
+    }
+
     private function blogsIndexQuery(string $search, $category)
     {
         $weekSeed = $this->weekSeed();
@@ -62,7 +67,7 @@ class BlogController extends Controller
                 ->get();
         });
 
-        $cacheKey = 'blogs_index_' . md5(($request->getQueryString() ?? '') . '|' . $page . '|' . $this->weekSeed());
+        $cacheKey = 'blogs_index_' . $this->cacheVersion() . '_' . md5(($request->getQueryString() ?? '') . '|' . $page . '|' . $this->weekSeed());
 
         $blogs = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $category, $page) {
             return $this->blogsIndexQuery($search, $category)
@@ -87,7 +92,7 @@ class BlogController extends Controller
         $category = $request->input('category');
         $page = max(1, (int) $request->input('page', 1));
 
-        $cacheKey = 'blogs_ajax_' . md5(($request->getQueryString() ?? '') . '|' . $page . '|' . $this->weekSeed());
+        $cacheKey = 'blogs_ajax_' . $this->cacheVersion() . '_' . md5(($request->getQueryString() ?? '') . '|' . $page . '|' . $this->weekSeed());
 
         $blogs = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($search, $category, $page) {
             return $this->blogsIndexQuery($search, $category)
@@ -118,13 +123,6 @@ class BlogController extends Controller
                 ->firstOrFail();
         });
 
-        $categories = Cache::remember('blog_sidebar_categories', now()->addHours(6), function () {
-            return BlogCategory::query()
-                ->select('id', 'name', 'slug', 'banner')
-                ->orderBy('name')
-                ->get();
-        });
-
         $relatedPosts = Cache::remember("blog_related_{$blog->id}", now()->addMinutes(20), function () use ($blog) {
             $related = Blog::query()
                 ->select('id', 'title', 'subtitle', 'slug', 'image', 'read_time', 'published_at', 'category_id')
@@ -153,9 +151,9 @@ class BlogController extends Controller
             return $related;
         });
 
-        $latestPosts = Cache::remember('blog_latest_posts_sidebar', now()->addMinutes(15), function () use ($blog) {
+        $latestPosts = Cache::remember("blog_latest_posts_article_{$blog->id}", now()->addMinutes(15), function () use ($blog) {
             return Blog::query()
-                ->select('id', 'title', 'slug', 'image', 'published_at', 'category_id')
+                ->select('id', 'title', 'subtitle', 'slug', 'image', 'read_time', 'published_at', 'category_id')
                 ->with('category:id,name,slug')
                 ->published()
                 ->whereKeyNot($blog->id)
@@ -164,6 +162,8 @@ class BlogController extends Controller
                 ->get();
         });
 
-        return view('blogs.show', compact('blog', 'categories', 'relatedPosts', 'latestPosts'));
+        $articleContent = app(\App\Services\BlogProductCarouselService::class)->render($blog->content);
+
+        return view('blogs.show', compact('blog', 'relatedPosts', 'latestPosts', 'articleContent'));
     }
 }

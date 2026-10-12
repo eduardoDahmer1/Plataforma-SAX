@@ -10,6 +10,9 @@
 @endif
 
 <!-- 1. jQuery (solo donde se necesita) -->
+@if(Route::is('admin.blogs.create', 'admin.blogs.edit'))
+    <script src="{{ asset('js/blog-products-editor.js') }}?v={{ filemtime(public_path('js/blog-products-editor.js')) }}"></script>
+@endif
 @if(Route::is('admin.*') || Route::is('manutencao') || (Request::is('*palace*') && !Route::is('admin.*')))
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 @endif
@@ -110,8 +113,14 @@
 @if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.policies.edit', 'admin.institucional.edit', 'admin.emails.create', 'admin.email-templates.*'))
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>
 @endif
+@if(Route::is('admin.blogs.create', 'admin.blogs.edit'))
+    <script src="{{ asset('js/blog-products-editor.js') }}?v={{ filemtime(public_path('js/blog-products-editor.js')) }}"></script>
+@endif
 @if(Route::is('admin.*') || Route::is('manutencao'))
     <script src="{{ asset('js/admin.js') }}?v={{ filemtime(public_path('js/admin.js')) }}"></script>
+@endif
+@if(Route::is('admin.blogs.create', 'admin.blogs.edit') && app()->environment(['local', 'staging']) && config('services.openai.blog_experiment_enabled'))
+    <script src="{{ asset('js/blog-ai-experiment.js') }}?v={{ filemtime(public_path('js/blog-ai-experiment.js')) }}"></script>
 @endif
 @if(Route::is('admin.emails.create', 'admin.email-templates.*'))
     <script src="{{ asset('js/email-marketing.js') }}?v={{ filemtime(public_path('js/email-marketing.js')) }}"></script>

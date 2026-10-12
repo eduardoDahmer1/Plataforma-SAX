@@ -17,6 +17,8 @@ class OpticalProductSyncService
 {
     private array $columnCache = [];
 
+    private array $syncedReferences = [];
+
     public function enabled(): bool
     {
         return (bool) config('catalog-sync.enabled')
@@ -55,6 +57,16 @@ class OpticalProductSyncService
         ]);
 
         return $products->count();
+    }
+
+    public function familyProductIds(int $productId): array
+    {
+        $seed = Product::withoutGlobalScopes()->find($productId);
+        if (! $seed) {
+            return [];
+        }
+
+        return $this->familyProducts($seed)->pluck('id')->map(fn ($id) => (int) $id)->all();
     }
 
     public function isOptical(Product $product): bool
@@ -133,12 +145,18 @@ class OpticalProductSyncService
             return;
         }
 
+        $cacheKey = "{$table}:{$id}";
+        if (isset($this->syncedReferences[$cacheKey])) {
+            return;
+        }
+
         $row = DB::table($table)->where('id', $id)->first();
         if (! $row) {
             return;
         }
 
         $peer->table($table)->updateOrInsert(['id' => $id], $this->sharedAttributes($table, (array) $row));
+        $this->syncedReferences[$cacheKey] = true;
     }
 
     private function replaceDependentRows(ConnectionInterface $peer, string $table, string $foreignKey, int $ownerId): void
@@ -229,6 +247,11 @@ class OpticalProductSyncService
             }
 
             $destination = rtrim($peerRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$relativePath;
+            if (is_file($destination)
+                && filesize($destination) === filesize($source)
+                && filemtime($destination) >= filemtime($source)) {
+                continue;
+            }
             $directory = dirname($destination);
             if (! is_dir($directory) && ! mkdir($directory, 0775, true) && ! is_dir($directory)) {
                 throw new RuntimeException("Could not create peer media directory: {$directory}");

@@ -8,8 +8,10 @@ use App\Models\CategoriasFilhas;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductAiPreparation;
+use App\Models\ProductOutletEvent;
 use App\Models\ProductTranslation;
 use App\Models\Subcategory;
+use App\Models\User;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
 use App\Services\ImageConverterService;
 use App\Services\OpenAICatalogService;
@@ -118,13 +120,23 @@ class ProductControllerAdmin extends Controller
         $productType = $request->get('product_type');
         $aiPreparationFilter = $request->get('ai_preparation_filter');
         $outletFilter = $request->get('outlet_filter');
+        $outletFrom = $request->get('outlet_from');
+        $outletTo = $request->get('outlet_to');
+        $outletUserId = $request->integer('outlet_user_id') ?: null;
+        $outletStock = $request->get('outlet_stock');
+        $outletOrder = $request->get('outlet_order');
+        $outletPriceMin = is_numeric($request->get('outlet_price_min')) ? (float) $request->get('outlet_price_min') : null;
+        $outletPriceMax = is_numeric($request->get('outlet_price_max')) ? (float) $request->get('outlet_price_max') : null;
         $perPage = (int) $request->get('per_page', 20);
         $perPage = in_array($perPage, [20, 30, 50, 100], true) ? $perPage : 20;
 
-        $allowedSorts = ['latest', 'oldest', 'last_edit', 'old_edit', 'price_low', 'price_high', 'name_az', 'name_za'];
+        $allowedSorts = ['latest', 'oldest', 'last_edit', 'old_edit', 'price_low', 'price_high', 'name_az', 'name_za', 'outlet_recent', 'outlet_oldest'];
+        if ($outletFilter === 'outlet' && in_array($outletOrder, ['outlet_recent', 'outlet_oldest'], true)) {
+            $sortBy = $outletOrder;
+        }
         $sortBy = in_array($sortBy, $allowedSorts, true) ? $sortBy : 'latest';
 
-        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'product_role', 'highlights', 'parent_id', 'shipping_profile', 'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm', 'shipping_height_cm', 'shipping_is_dangerous_goods', 'created_at', 'updated_at', 'updated_by', 'admin_edited_at'];
+        $productColumns = ['id', 'sku', 'name', 'external_name', 'slug', 'price', 'stock', 'photo', 'gallery', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'status', 'is_outlet', 'status_before_outlet', 'outlet_at', 'outlet_by', 'product_role', 'highlights', 'parent_id', 'shipping_profile', 'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm', 'shipping_height_cm', 'shipping_is_dangerous_goods', 'created_at', 'updated_at', 'updated_by', 'admin_edited_at'];
 
         $productsWithUsableImages = null;
         if (in_array($aiPreparationFilter, ['prepared', 'missing_photo'], true)) {
@@ -140,6 +152,7 @@ class ProductControllerAdmin extends Controller
             ->with([
                 'brand:id,name',
                 'editor:id,name,email',
+                'outletOperator:id,name,email',
                 'aiPreparation:id,product_id,status,sources,confidence,model,error_message,generated_at,completed_at',
             ])
             ->when($search, fn ($q) => $q->where(function ($q2) use ($search) {
@@ -175,6 +188,12 @@ class ProductControllerAdmin extends Controller
                 }
             })
             ->when($outletFilter !== null && $outletFilter !== '', fn ($q) => $q->where('is_outlet', $outletFilter === 'outlet'))
+            ->when($outletFilter === 'outlet' && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $outletFrom), fn ($q) => $q->whereDate('outlet_at', '>=', $outletFrom))
+            ->when($outletFilter === 'outlet' && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $outletTo), fn ($q) => $q->whereDate('outlet_at', '<=', $outletTo))
+            ->when($outletFilter === 'outlet' && $outletUserId, fn ($q) => $q->where('outlet_by', $outletUserId))
+            ->when($outletFilter === 'outlet' && $outletStock, fn ($q) => $outletStock === 'in_stock' ? $q->where('stock', '>', 0) : ($outletStock === 'out_of_stock' ? $q->where('stock', '<=', 0) : null))
+            ->when($outletFilter === 'outlet' && $outletPriceMin !== null, fn ($q) => $q->where('price', '>=', $outletPriceMin))
+            ->when($outletFilter === 'outlet' && $outletPriceMax !== null, fn ($q) => $q->where('price', '<=', $outletPriceMax))
             ->when($aiPreparationFilter, function ($query) use ($aiPreparationFilter, $productsWithUsableImages) {
                 match ($aiPreparationFilter) {
                     'pending' => $query->where(function ($pending) {
@@ -254,6 +273,12 @@ class ProductControllerAdmin extends Controller
                         case 'name_za':
                             $q->orderByRaw("COALESCE(NULLIF(name, ''), external_name) desc");
                             break;
+                        case 'outlet_recent':
+                            $q->orderByRaw('outlet_at IS NULL ASC')->orderByDesc('outlet_at')->orderByDesc('id');
+                            break;
+                        case 'outlet_oldest':
+                            $q->orderByRaw('outlet_at IS NULL ASC')->orderBy('outlet_at')->orderBy('id');
+                            break;
                         default:
                             $q->orderByRaw('created_at IS NULL ASC')->orderByDesc('created_at')->orderByDesc('id');
                             break;
@@ -266,6 +291,10 @@ class ProductControllerAdmin extends Controller
         $brands = Brand::where('status', 1)->orderBy('name')->get(['id', 'name']);
         $categories = app(StoreTaxonomyService::class)->categories(Category::query())
             ->where('status', 1)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $outletUsers = User::query()
+            ->whereIn('id', Product::query()->whereNotNull('outlet_by')->select('outlet_by'))
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -283,14 +312,44 @@ class ProductControllerAdmin extends Controller
 
         $productFeed = $productFeedService->status();
 
-        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'dateFilter', 'productType', 'outletFilter', 'perPage', 'highlights', 'productFeed'));
+        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'dateFilter', 'productType', 'outletFilter', 'outletUsers', 'perPage', 'highlights', 'productFeed'));
     }
 
-    public function outletForm()
+    public function outletForm(Request $request)
     {
-        $outletCount = DB::table('products')->where('is_outlet', true)->count();
+        $outletQuery = Product::query()
+            ->select(['id', 'sku', 'name', 'external_name', 'price', 'stock', 'photo', 'brand_id', 'outlet_at', 'outlet_by'])
+            ->with(['brand:id,name', 'outletOperator:id,name,email'])
+            ->where('is_outlet', true)
+            ->when($request->filled('outlet_search'), function ($query) use ($request) {
+                $search = trim((string) $request->get('outlet_search'));
+                $query->where(fn ($match) => $match->where('sku', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('external_name', 'like', "%{$search}%"));
+            })
+            ->when($request->integer('outlet_user_id'), fn ($query, $userId) => $query->where('outlet_by', $userId))
+            ->when(preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $request->get('outlet_from')), fn ($query) => $query->whereDate('outlet_at', '>=', $request->get('outlet_from')))
+            ->when(preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $request->get('outlet_to')), fn ($query) => $query->whereDate('outlet_at', '<=', $request->get('outlet_to')))
+            ->when($request->get('outlet_stock'), fn ($query, $stock) => $stock === 'in_stock' ? $query->where('stock', '>', 0) : ($stock === 'out_of_stock' ? $query->where('stock', '<=', 0) : null));
 
-        return view('admin.products.outlet', compact('outletCount'));
+        $outletProducts = $outletQuery->orderByRaw('outlet_at IS NULL ASC')
+            ->orderByDesc('outlet_at')->orderByDesc('id')
+            ->paginate(15, ['*'], 'outlet_page')->appends($request->query());
+        $outletCount = Product::query()->where('is_outlet', true)->count();
+        $outletWithStock = Product::query()->where('is_outlet', true)->where('stock', '>', 0)->count();
+        $outletLast30Days = Product::query()->where('is_outlet', true)->where('outlet_at', '>=', now()->subDays(30))->count();
+        $restoredLast30Days = ProductOutletEvent::query()->where('action', 'restore')->where('created_at', '>=', now()->subDays(30))->count();
+        $outletUsers = User::query()
+            ->whereIn('id', Product::query()->whereNotNull('outlet_by')->select('outlet_by'))
+            ->orderBy('name')->get(['id', 'name']);
+        $recentOutletEvents = ProductOutletEvent::query()
+            ->with(['product:id,sku,name,external_name', 'operator:id,name'])
+            ->latest('created_at')->limit(12)->get();
+
+        return view('admin.products.outlet', compact(
+            'outletCount', 'outletWithStock', 'outletLast30Days', 'restoredLast30Days',
+            'outletProducts', 'outletUsers', 'recentOutletEvents'
+        ));
     }
 
     public function updateOutlet(Request $request, ProductFeedRefreshService $feedRefresh)
@@ -322,37 +381,7 @@ class ProductControllerAdmin extends Controller
         $missingSkus = $skus
             ->reject(fn ($sku) => isset($foundLookup[mb_strtolower($sku)]))
             ->values();
-        $updated = 0;
-
-        DB::transaction(function () use ($foundSkus, $foundProductIds, $validated, &$updated) {
-            foreach ($foundSkus->chunk(500) as $chunk) {
-                $query = DB::table('products')->whereIn('sku', $chunk)->lockForUpdate();
-
-                if ($validated['action'] === 'outlet') {
-                    $updated += $query->update([
-                        'status_before_outlet' => DB::raw('CASE WHEN is_outlet = 0 THEN status ELSE status_before_outlet END'),
-                        'is_outlet' => true,
-                        'status' => 0,
-                        'updated_by' => auth()->id(),
-                        'admin_edited_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    $updated += $query->update([
-                        'status' => DB::raw('COALESCE(status_before_outlet, 1)'),
-                        'is_outlet' => false,
-                        'status_before_outlet' => null,
-                        'updated_by' => auth()->id(),
-                        'admin_edited_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-
-            if ($validated['action'] === 'outlet' && $foundProductIds->isNotEmpty()) {
-                DB::table('carts')->whereIn('product_id', $foundProductIds)->delete();
-            }
-        });
+        $updated = $this->transitionOutletProducts($foundProductIds, $validated['action']);
 
         Cache::flush();
         if ($updated > 0) {
@@ -365,6 +394,145 @@ class ProductControllerAdmin extends Controller
             ->route('admin.products.outlet.form')
             ->with('success', "{$updated} produto(s) {$actionLabel}.")
             ->with('missing_skus', $missingSkus->all());
+    }
+
+    public function bulkAction(Request $request, ProductFeedRefreshService $feedRefresh)
+    {
+        $validated = $request->validate([
+            'product_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'product_ids.*' => ['required', 'integer', 'distinct', 'exists:products,id'],
+            'action' => ['required', 'in:activate,deactivate,feature,unfeature,outlet,restore,delete'],
+        ], [
+            'product_ids.required' => 'Selecione pelo menos um produto.',
+            'product_ids.max' => 'Selecione no máximo 100 produtos por operação.',
+        ]);
+
+        $ids = collect($validated['product_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+        $action = $validated['action'];
+        $products = Product::query()->whereIn('id', $ids)->get();
+        $updated = 0;
+        $skipped = 0;
+
+        if (in_array($action, ['outlet', 'restore'], true)) {
+            $updated = $this->transitionOutletProducts($ids, $action);
+            $skipped = $ids->count() - $updated;
+        } elseif ($action === 'delete') {
+            foreach ($products as $product) {
+                $this->deleteProductImages($product);
+                $product->delete();
+                $updated++;
+            }
+        } elseif (in_array($action, ['feature', 'unfeature'], true)) {
+            DB::transaction(function () use ($products, $action, &$updated) {
+                foreach ($products as $product) {
+                    $highlights = is_array($product->highlights)
+                        ? $product->highlights
+                        : (json_decode((string) $product->highlights, true) ?: []);
+                    if ($action === 'feature') {
+                        $highlights['destaque'] = '1';
+                    } else {
+                        unset($highlights['destaque']);
+                    }
+                    $product->forceFill([
+                        'highlights' => json_encode($highlights),
+                        'updated_by' => auth()->id(),
+                        'admin_edited_at' => now(),
+                    ])->save();
+                    $updated++;
+                }
+            });
+        } else {
+            $targetStatus = $action === 'activate';
+            $eligible = $products->filter(function (Product $product) use ($targetStatus) {
+                return ! $targetStatus || (! $product->is_outlet && $product->meetsActiveRequirements());
+            });
+            $skipped = $products->count() - $eligible->count();
+            if ($eligible->isNotEmpty()) {
+                Product::query()->whereIn('id', $eligible->pluck('id'))->update([
+                    'status' => $targetStatus,
+                    'updated_by' => auth()->id(),
+                    'admin_edited_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $updated = $eligible->count();
+            }
+        }
+
+        Cache::flush();
+        if ($updated > 0) {
+            $feedRefresh->markDirty();
+        }
+
+        $labels = [
+            'activate' => 'ativado(s)',
+            'deactivate' => 'desativado(s)',
+            'feature' => 'adicionado(s) aos destaques',
+            'unfeature' => 'removido(s) dos destaques',
+            'outlet' => 'enviado(s) para o outlet',
+            'restore' => 'restaurado(s) ao e-commerce normal',
+            'delete' => 'apagado(s)',
+        ];
+        $message = "{$updated} produto(s) {$labels[$action]}.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} ignorado(s) por já estarem nesse estado ou não cumprirem os requisitos de ativação.";
+        }
+
+        return back()->with($updated > 0 ? 'success' : 'warning', $message);
+    }
+
+    private function transitionOutletProducts(Collection $productIds, string $action): int
+    {
+        if ($productIds->isEmpty()) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($productIds, $action) {
+            $products = DB::table('products')->whereIn('id', $productIds)->lockForUpdate()
+                ->get(['id', 'sku', 'name', 'external_name', 'status', 'is_outlet']);
+            $transitioning = $products->filter(fn ($product) => $action === 'outlet' ? ! $product->is_outlet : (bool) $product->is_outlet);
+            if ($transitioning->isEmpty()) {
+                return 0;
+            }
+
+            $ids = $transitioning->pluck('id');
+            $timestamp = now();
+            if ($action === 'outlet') {
+                DB::table('products')->whereIn('id', $ids)->update([
+                    'status_before_outlet' => DB::raw('status'),
+                    'is_outlet' => true,
+                    'status' => false,
+                    'outlet_at' => $timestamp,
+                    'outlet_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                    'admin_edited_at' => $timestamp,
+                    'updated_at' => $timestamp,
+                ]);
+                DB::table('carts')->whereIn('product_id', $ids)->delete();
+            } else {
+                DB::table('products')->whereIn('id', $ids)->update([
+                    'status' => DB::raw('COALESCE(status_before_outlet, 1)'),
+                    'is_outlet' => false,
+                    'status_before_outlet' => null,
+                    'outlet_at' => null,
+                    'outlet_by' => null,
+                    'updated_by' => auth()->id(),
+                    'admin_edited_at' => $timestamp,
+                    'updated_at' => $timestamp,
+                ]);
+            }
+
+            ProductOutletEvent::query()->insert($transitioning->map(fn ($product) => [
+                'product_id' => $product->id,
+                'user_id' => auth()->id(),
+                'sku' => $product->sku,
+                'product_name' => $product->name ?: $product->external_name,
+                'action' => $action,
+                'previous_status' => (bool) $product->status,
+                'created_at' => $timestamp,
+            ])->all());
+
+            return $transitioning->count();
+        });
     }
 
     public function create()

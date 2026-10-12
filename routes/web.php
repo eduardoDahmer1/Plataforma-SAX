@@ -364,6 +364,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('products/review', [ProductControllerAdmin::class, 'review'])->name('products.review');
     Route::get('products/outlet/lote', [ProductControllerAdmin::class, 'outletForm'])->name('products.outlet.form');
     Route::put('products/outlet/lote', [ProductControllerAdmin::class, 'updateOutlet'])->name('products.outlet.update');
+    Route::post('products/bulk-action', [ProductControllerAdmin::class, 'bulkAction'])->name('products.bulkAction');
     Route::put('currencies/{id}', [CurrencyControllerAdmin::class, 'update'])->name('currencies.update');
     Route::get('currencies/{id}/default', [CurrencyControllerAdmin::class, 'setDefault'])->name('currencies.default');
     Route::patch('products/{product}/update-highlights', [ProductControllerAdmin::class, 'updateHighlights'])->name('products.updateHighlights');
@@ -404,7 +405,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('payments', PaymentMethodController::class);
     Route::post('payments/{id}/toggle-active', [PaymentMethodController::class, 'toggleActive'])->name('payments.toggleActive');
     Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+    Route::get('blogs/products/search', \App\Http\Controllers\Admin\BlogProductSearchController::class)
+        ->name('blogs.products.search');
     Route::resource('blogs', BlogControllerAdmin::class);
+    Route::post('blogs/ai-experiment/generate', [\App\Http\Controllers\Admin\BlogAiGenerationController::class, 'store'])
+        ->middleware('throttle:3,10')
+        ->name('blogs.ai-experiment.generate');
     Route::resource('policies', \App\Http\Controllers\Admin\PolicyControllerAdmin::class)->only(['index', 'edit', 'update']);
     Route::post('blogs/upload-image', [BlogControllerAdmin::class, 'uploadImage'])->name('blogs.upload-image');
     Route::resource('blog-categories', BlogCategoryController::class)->parameter('blog-categories', 'category');

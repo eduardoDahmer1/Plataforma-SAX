@@ -265,6 +265,32 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
+            @if ($products->isNotEmpty())
+                <form method="POST" action="{{ route('admin.products.bulkAction') }}" id="productsBulkForm" class="products-bulk-bar mb-3">
+                    @csrf
+                    <label class="products-select-all" for="productsSelectAll">
+                        <input type="checkbox" id="productsSelectAll">
+                        <span>Selecionar esta página</span>
+                    </label>
+                    <strong id="productsSelectedCount" aria-live="polite">0 selecionados</strong>
+                    <div class="products-bulk-controls">
+                        <label class="visually-hidden" for="productsBulkAction">Ação em massa</label>
+                        <select name="action" id="productsBulkAction" class="form-select form-select-sm" required>
+                            <option value="">Escolha uma ação…</option>
+                            <option value="activate">Ativar no e-commerce</option>
+                            <option value="deactivate">Desativar no e-commerce</option>
+                            <option value="feature">Adicionar aos destaques</option>
+                            <option value="unfeature">Remover dos destaques</option>
+                            <option value="outlet">Enviar para o Outlet</option>
+                            <option value="restore">Restaurar do Outlet</option>
+                            <option value="delete">Apagar permanentemente</option>
+                        </select>
+                        <button type="submit" class="btn btn-dark btn-sm" id="productsBulkSubmit" disabled>
+                            <i class="fa fa-bolt me-1"></i> Aplicar
+                        </button>
+                    </div>
+                </form>
+            @endif
             @if ($products->isEmpty())
                 <div class="text-center py-5">
                     <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
@@ -311,6 +337,13 @@
 
                         <div class="sax-product-card mb-2" id="product-card-{{ $product->id }}">
                             <div class="row align-items-center g-2 g-md-0">
+                                <div class="col-auto">
+                                    <label class="product-row-selector" for="productSelect{{ $product->id }}" title="Selecionar {{ $product->name ?: $product->external_name }}">
+                                        <input type="checkbox" id="productSelect{{ $product->id }}" name="product_ids[]" value="{{ $product->id }}"
+                                            form="productsBulkForm" data-product-checkbox>
+                                        <span class="visually-hidden">Selecionar {{ $product->name ?: $product->external_name }}</span>
+                                    </label>
+                                </div>
                                 <!-- Imagem -->
                                 <div class="col-auto">
                                     <div class="sax-product-img-box">
@@ -366,6 +399,14 @@
                                         @endif
                                     </div>
                                     <div class="d-flex flex-wrap align-items-center gap-2 x-small text-muted mt-1">
+                                        @if ($product->is_outlet)
+                                            <span class="product-outlet-audit" title="Entrada registrada no histórico do Outlet">
+                                                <i class="fa fa-box-open me-1"></i>
+                                                Outlet em {{ $product->outlet_at?->format('d/m/Y \à\s H:i') ?? 'data não registrada' }}
+                                                por {{ $product->outletOperator?->name ?? 'sistema/legado' }}
+                                            </span>
+                                            <span class="d-none d-sm-inline">•</span>
+                                        @endif
                                         <span title="{{ __('messages.product_audit_created_title') }}">
                                             <i class="far fa-calendar-plus me-1"></i>
                                             {{ __('messages.product_audit_created_at', ['date' => $createdAt?->format('d/m/Y \à\s H:i') ?? __('messages.product_audit_date_not_registered')]) }}

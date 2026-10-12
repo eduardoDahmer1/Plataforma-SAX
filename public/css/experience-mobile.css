@@ -1118,9 +1118,9 @@
         border-radius: 7px !important;
     }
 
-    /* Café & Bistrô: os templates usam nomes de variáveis que não existiam no
-       tema original. Defini-las devolve o fundo escuro e o contraste correto. */
-    body.experience-page--bistro {
+    /* Café & Bistrô PJC: preservar o tema azul sem sobrescrever a identidade
+       vinho e os estilos próprios da unidade de Assunção. */
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) {
         --azul-navy: #172741;
         --azul-profundo: #0f1d35;
         --deep: #0f1d35;
@@ -1131,68 +1131,68 @@
         color: #e8edf5;
     }
 
-    body.experience-page--bistro main {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) main {
         background: #0f1d35;
         color: #e8edf5;
     }
 
-    body.experience-page--bistro main section {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) main section {
         color: #e8edf5;
     }
 
-    body.experience-page--bistro main :is(h1, h2, h3, h4, h5, h6, .section-title, .eyebrow) {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) main :is(h1, h2, h3, h4, h5, h6, .section-title, .eyebrow) {
         color: #fff !important;
     }
 
-    body.experience-page--bistro main :is(.sobre-texto, .horarios-endereco, .horarios-dia, .horarios-hora, .eventos-tipos-list, p, li, address) {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) main :is(.sobre-texto, .horarios-endereco, .horarios-dia, .horarios-hora, .eventos-tipos-list, p, li, address) {
         color: #c5cfdd !important;
     }
 
-    body.experience-page--bistro .hero-cafe {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .hero-cafe {
         min-height: clamp(440px, 72svh, 620px);
     }
 
-    body.experience-page--bistro .section-padding {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .section-padding {
         padding-top: 3rem;
         padding-bottom: 3rem;
     }
 
-    body.experience-page--bistro #sobre img,
-    body.experience-page--bistro #sobre .img-placeholder {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) #sobre img,
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) #sobre .img-placeholder {
         height: clamp(260px, 78vw, 390px) !important;
         border-radius: 8px !important;
     }
 
-    body.experience-page--bistro .carta-grid {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .carta-grid {
         gap: .65rem;
     }
 
-    body.experience-page--bistro .carta-item {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .carta-item {
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, .1);
     }
 
-    body.experience-page--bistro .eventosSwiper {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .eventosSwiper {
         max-height: 480px;
     }
 
-    body.experience-page--bistro .horarios-table {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .horarios-table {
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, .12);
         border-radius: 7px;
         background: rgba(255, 255, 255, .035);
     }
 
-    body.experience-page--bistro .horarios-table tr {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .horarios-table tr {
         border-bottom-color: rgba(255, 255, 255, .11);
     }
 
-    body.experience-page--bistro .horarios-table td {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) .horarios-table td {
         padding: .72rem .65rem;
     }
 
-    body.experience-page--bistro #horarios iframe,
-    body.experience-page--bistro #horarios .rounded {
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) #horarios iframe,
+    body.experience-page--bistro:not(.experience-page--bistro-asuncion) #horarios .rounded {
         border-radius: 8px !important;
     }
 }

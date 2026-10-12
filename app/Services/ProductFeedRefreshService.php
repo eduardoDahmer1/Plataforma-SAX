@@ -11,8 +11,6 @@ class ProductFeedRefreshService
 
     private const LOCK_CACHE_KEY = 'product_feed_refresh_lock_v1';
 
-    private static bool $terminationCallbackRegistered = false;
-
     public function __construct(private readonly ProductFeedService $feed)
     {
     }
@@ -22,19 +20,8 @@ class ProductFeedRefreshService
     {
         Cache::put(self::DIRTY_CACHE_KEY, (string) Str::uuid(), now()->addDays(2));
 
-        if (app()->runningInConsole() || self::$terminationCallbackRegistered) {
-            return;
-        }
-
-        self::$terminationCallbackRegistered = true;
-        app()->terminating(function (): void {
-            try {
-                $this->refreshPending();
-            } catch (\Throwable $exception) {
-                // The marker remains pending, so the scheduler can safely retry.
-                report($exception);
-            }
-        });
+        // A geração pode percorrer todo o catálogo. O scheduler consolida as
+        // alterações e a executa fora dos processos que atendem o site.
     }
 
     /** Rebuild once even when many products were changed in the same interval. */

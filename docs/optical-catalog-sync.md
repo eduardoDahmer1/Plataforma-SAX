@@ -6,8 +6,11 @@
 - Depois de uma rodada bem-sucedida, ele espelha em `plataforma_otica` somente
   produtos da categoria ERP `13` (`optico`).
 - O mesmo heartbeat é enviado para stage, produção e Ótica.
-- Uma edição administrativa de produto óptico sincroniza a família completa
-  (cores e tamanhos), traduções, vínculos e mídias com a outra loja.
+- Uma edição administrativa registra uma pendência rápida. O scheduler
+  sincroniza depois, fora do PHP-FPM, uma família por vez (cores e tamanhos),
+  traduções, vínculos e mídias com a outra loja.
+- Edições repetidas da mesma família são consolidadas. Falhas usam espera
+  progressiva e permanecem pendentes para nova tentativa automática.
 - Produtos não ópticos nunca são enviados pelo espelho do integrador.
 
 ## Ordem de publicação
@@ -37,6 +40,8 @@ CATALOG_PEER_DB_DATABASE=plataforma_otica
 CATALOG_PEER_DB_USERNAME=plataforma
 CATALOG_PEER_DB_PASSWORD=
 CATALOG_PEER_STORAGE_PATH=/var/www/html/sax_otica/storage/app/public
+CATALOG_PEER_CONNECT_TIMEOUT=5
+CATALOG_PEER_DEBOUNCE_SECONDS=20
 ```
 
 Senha vazia reutiliza `DB_PASSWORD` da própria aplicação.
@@ -51,6 +56,8 @@ CATALOG_PEER_DB_DATABASE=plataforma
 CATALOG_PEER_DB_USERNAME=plataforma
 CATALOG_PEER_DB_PASSWORD=
 CATALOG_PEER_STORAGE_PATH=/var/www/html/sax_plataforma/storage/app/public
+CATALOG_PEER_CONNECT_TIMEOUT=5
+CATALOG_PEER_DEBOUNCE_SECONDS=20
 ```
 
 ## `.env` do integrador
@@ -73,3 +80,10 @@ INTEGRATION_MONITOR_OTICA_TOKEN=
 O sincronizador é desativado por padrão e não conecta ao peer no stage sem o
 opt-in explícito. O comando de limpeza também recusa qualquer banco cujo nome
 não esteja em `CATALOG_OPTICAL_DATABASE_NAMES`.
+
+O cron do Laravel (`php artisan schedule:run`) deve executar a cada minuto. A
+sincronização pendente pode ser conferida manualmente, sem paralelismo, com:
+
+```bash
+php artisan catalog:sync-pending --max-families=1 --max-seconds=45
+```

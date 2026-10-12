@@ -34,6 +34,7 @@ return [
         'catalog_search_context_size' => env('OPENAI_CATALOG_SEARCH_CONTEXT_SIZE', 'high'),
         'timeout' => (int) env('OPENAI_TIMEOUT', 90),
         'max_output_tokens' => (int) env('OPENAI_MAX_OUTPUT_TOKENS', 3000),
+        'blog_experiment_enabled' => env('BLOG_AI_EXPERIMENT_ENABLED', false),
     ],
 
     'geonames' => [

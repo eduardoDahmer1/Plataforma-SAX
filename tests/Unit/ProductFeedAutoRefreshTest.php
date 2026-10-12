@@ -34,14 +34,19 @@ class ProductFeedAutoRefreshTest extends TestCase
         $controller = file_get_contents($root.'/app/Http/Controllers/Admin/ProductControllerAdmin.php');
         $kernel = file_get_contents($root.'/app/Console/Kernel.php');
         $refresh = file_get_contents($root.'/app/Services/ProductFeedRefreshService.php');
+        $product = file_get_contents($root.'/app/Models/Product.php');
         $provider = file_get_contents($root.'/app/Providers/EventServiceProvider.php');
 
         $this->assertStringContainsString('updateOutlet(Request $request, ProductFeedRefreshService $feedRefresh)', $controller);
         $this->assertStringContainsString('revalidateStatus(ProductFeedRefreshService $feedRefresh)', $controller);
         $this->assertStringContainsString("command('products:refresh-feed')->everyMinute()", $kernel);
         $this->assertStringContainsString("command('products:refresh-feed --force')->hourly()", $kernel);
+        $this->assertStringContainsString("command('catalog:sync-pending --max-families=1 --max-seconds=45')", $kernel);
         $this->assertStringContainsString('Cache::lock(', $refresh);
-        $this->assertStringContainsString('app()->terminating(', $refresh);
+        $this->assertStringNotContainsString('app()->terminating(', $refresh);
+        $this->assertStringContainsString('OpticalProductSyncQueueService::class', $product);
+        $this->assertStringContainsString('->enqueue(', $product);
+        $this->assertStringNotContainsString('app()->terminating(', $product);
         $this->assertStringContainsString('Subcategory::observe(CatalogFeedTaxonomyObserver::class)', $provider);
         $this->assertStringContainsString('CategoriasFilhas::observe(CatalogFeedTaxonomyObserver::class)', $provider);
     }

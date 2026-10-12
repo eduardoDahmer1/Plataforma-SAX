@@ -24,7 +24,7 @@
     <div class="sax-filter-bar">
         <div class="sax-filter-item">
             <label class="sax-filter-label">Canal</label>
-            <select name="outlet_filter" class="form-select sax-filter-select">
+            <select name="outlet_filter" id="outletChannelFilter" class="form-select sax-filter-select">
                 <option value="">Todos</option>
                 <option value="normal" @selected(request('outlet_filter') === 'normal')>E-commerce normal</option>
                 <option value="outlet" @selected(request('outlet_filter') === 'outlet')>Outlet</option>
@@ -41,6 +41,50 @@
                     </option>
                 @endforeach
             </select>
+        </div>
+
+        <div class="outlet-advanced-filters" id="outletAdvancedFilters" @if(request('outlet_filter') !== 'outlet') hidden @endif>
+            <div class="sax-filter-item">
+                <label class="sax-filter-label" for="outlet_from">No outlet desde</label>
+                <input type="date" id="outlet_from" name="outlet_from" class="form-control sax-filter-input" value="{{ request('outlet_from') }}">
+            </div>
+            <div class="sax-filter-item">
+                <label class="sax-filter-label" for="outlet_to">No outlet até</label>
+                <input type="date" id="outlet_to" name="outlet_to" class="form-control sax-filter-input" value="{{ request('outlet_to') }}">
+            </div>
+            <div class="sax-filter-item">
+                <label class="sax-filter-label" for="outlet_user_id">Enviado por</label>
+                <select id="outlet_user_id" name="outlet_user_id" class="form-select sax-filter-select">
+                    <option value="">Todos os usuários</option>
+                    @foreach($outletUsers as $outletUser)
+                        <option value="{{ $outletUser->id }}" @selected(request('outlet_user_id') == $outletUser->id)>{{ $outletUser->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="sax-filter-item">
+                <label class="sax-filter-label" for="outlet_stock">Estoque no Outlet</label>
+                <select id="outlet_stock" name="outlet_stock" class="form-select sax-filter-select">
+                    <option value="">Qualquer estoque</option>
+                    <option value="in_stock" @selected(request('outlet_stock') === 'in_stock')>Com estoque</option>
+                    <option value="out_of_stock" @selected(request('outlet_stock') === 'out_of_stock')>Sem estoque</option>
+                </select>
+            </div>
+            <div class="sax-filter-item outlet-price-range">
+                <label class="sax-filter-label" for="outlet_price_min">Preço mínimo</label>
+                <input type="number" min="0" step="0.01" id="outlet_price_min" name="outlet_price_min" class="form-control sax-filter-input" value="{{ request('outlet_price_min') }}" placeholder="0,00">
+            </div>
+            <div class="sax-filter-item outlet-price-range">
+                <label class="sax-filter-label" for="outlet_price_max">Preço máximo</label>
+                <input type="number" min="0" step="0.01" id="outlet_price_max" name="outlet_price_max" class="form-control sax-filter-input" value="{{ request('outlet_price_max') }}" placeholder="0,00">
+            </div>
+            <div class="sax-filter-item">
+                <label class="sax-filter-label" for="outlet_order">Entrada no Outlet</label>
+                <select id="outlet_order" name="outlet_order" class="form-select sax-filter-select">
+                    <option value="">Ordenação geral</option>
+                    <option value="outlet_recent" @selected(request('outlet_order') === 'outlet_recent')>Mais recentes primeiro</option>
+                    <option value="outlet_oldest" @selected(request('outlet_order') === 'outlet_oldest')>Mais antigos primeiro</option>
+                </select>
+            </div>
         </div>
 
         <div class="sax-filter-item">
@@ -141,7 +185,7 @@
     </div>
 
     {{-- Link limpar (solo si hay filtros activos) --}}
-    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'date_filter', 'highlight_filter', 'outlet_filter', 'product_type', 'stock_filter', 'ai_preparation_filter']))
+    @if(request()->hasAny(['search', 'brand_id', 'category_id', 'status_filter', 'sort_by', 'date_filter', 'highlight_filter', 'outlet_filter', 'product_type', 'stock_filter', 'ai_preparation_filter', 'outlet_from', 'outlet_to', 'outlet_user_id', 'outlet_stock', 'outlet_price_min', 'outlet_price_max', 'outlet_order']))
         <div class="mt-2 text-end">
             <a href="{{ route('admin.products.index') }}" class="sax-clear-filters">
                 <i class="fa fa-times me-1"></i> Limpar filtros

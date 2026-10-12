@@ -32,8 +32,8 @@
         'cta_icon'   => ($isPalace || $isBistro) ? 'bi-calendar-check' : 'bi-whatsapp',
         'logo_filter'=> $isInst ? 'brightness(0) invert(1)' : 'none',
         'color' => [
-            'scrollBg'   => $isBridal ? 'rgba(250,248,245,0.98)' : ($isBistro ? 'rgba(15,29,53,0.98)' : 'rgba(0,0,0,0.95)'),
-            'accent'     => $isBridal ? '#C9A76E' : ($isBistro ? '#4a6fa5' : '#C5A059'),
+            'scrollBg'   => $isBridal ? 'rgba(250,248,245,0.98)' : ($isBistroAsuncion ? 'rgba(53,9,27,0.96)' : ($isBistro ? 'rgba(15,29,53,0.98)' : 'rgba(0,0,0,0.95)')),
+            'accent'     => $isBridal ? '#C9A76E' : ($isBistroAsuncion ? '#d5ad70' : ($isBistro ? '#4a6fa5' : '#C5A059')),
             'scrollText' => $isBridal ? '#2C2C2C' : '#fff',
         ],
     ];

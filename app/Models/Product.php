@@ -40,6 +40,8 @@ class Product extends Model
         'status',
         'is_outlet',
         'status_before_outlet',
+        'outlet_at',
+        'outlet_by',
         'views',
         'colors',
         'product_condition',
@@ -129,6 +131,7 @@ class Product extends Model
         'admin_edited_at' => 'datetime',
         'is_outlet' => 'boolean',
         'status_before_outlet' => 'boolean',
+        'outlet_at' => 'datetime',
         'shipping_weight_kg' => 'float',
         'shipping_length_cm' => 'float',
         'shipping_width_cm' => 'float',
@@ -251,26 +254,17 @@ class Product extends Model
                 return;
             }
 
-            $productId = (int) $product->getKey();
-            // Executa no término da requisição: assim todas as alterações de
-            // traduções e variantes feitas na mesma transação já estão visíveis.
-            app()->terminating(function () use ($productId): void {
-                try {
-                    app(\App\Services\OpticalProductSyncService::class)->syncFamily($productId);
-                } catch (\Throwable $exception) {
-                    report($exception);
-
-                    if (Cache::add("catalog_peer_sync_failure:{$productId}", true, now()->addMinutes(15))) {
-                        app(\App\Services\AdminNotificationService::class)->notifyAdmins(
-                            'catalog_peer_sync_failed',
-                            'Falha ao sincronizar produto óptico',
-                            "O produto #{$productId} foi salvo nesta loja, mas não pôde ser enviado à outra vitrine. Verifique a conexão antes de uma nova edição.",
-                            '/admin/produtos',
-                            ['product_id' => $productId, 'error' => mb_substr($exception->getMessage(), 0, 500)],
-                        );
-                    }
-                }
-            });
+            // A cópia da família completa pode envolver dezenas de queries e
+            // arquivos. Registre apenas a pendência na requisição web; o
+            // scheduler a consolida e processa fora do PHP-FPM.
+            try {
+                app(\App\Services\OpticalProductSyncQueueService::class)
+                    ->enqueue((int) $product->getKey());
+            } catch (\Throwable $exception) {
+                // Uma migração ainda não aplicada ou uma falha momentânea não
+                // pode impedir o editor de salvar o produto.
+                report($exception);
+            }
         });
 
         static::deleted(function () {
@@ -639,6 +633,16 @@ class Product extends Model
     public function editor()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function outletOperator()
+    {
+        return $this->belongsTo(User::class, 'outlet_by');
+    }
+
+    public function outletEvents()
+    {
+        return $this->hasMany(ProductOutletEvent::class);
     }
 
     public function getResolvedCardColorsAttribute(): array

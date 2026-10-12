@@ -17,6 +17,7 @@
         </x-slot:actions>
     </x-admin.page-header>
 
+
     <form action="{{ route('admin.blogs.index') }}" method="GET" id="filterForm">
         <div class="sax-search-wrapper mb-3">
             <div class="row g-2 align-items-center">

@@ -190,6 +190,72 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
+// ======== Index: filtros condicionais do Outlet e ações em massa ========
+document.addEventListener('DOMContentLoaded', function () {
+    const outletChannel = document.getElementById('outletChannelFilter');
+    const outletFilters = document.getElementById('outletAdvancedFilters');
+    if (outletChannel && outletFilters) {
+        const updateOutletFilters = function () {
+            const visible = outletChannel.value === 'outlet';
+            outletFilters.hidden = !visible;
+            outletFilters.querySelectorAll('input, select').forEach(function (control) {
+                control.disabled = !visible;
+            });
+        };
+        outletChannel.addEventListener('change', updateOutletFilters);
+        updateOutletFilters();
+    }
+
+    const form = document.getElementById('productsBulkForm');
+    if (!form) return;
+    const selectAll = document.getElementById('productsSelectAll');
+    const checkboxes = Array.from(document.querySelectorAll('[data-product-checkbox]'));
+    const count = document.getElementById('productsSelectedCount');
+    const action = document.getElementById('productsBulkAction');
+    const submit = document.getElementById('productsBulkSubmit');
+
+    function updateSelection() {
+        const selected = checkboxes.filter(function (checkbox) { return checkbox.checked; });
+        count.textContent = selected.length + (selected.length === 1 ? ' selecionado' : ' selecionados');
+        submit.disabled = selected.length === 0 || !action.value;
+        selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
+        selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
+        checkboxes.forEach(function (checkbox) {
+            checkbox.closest('.sax-product-card')?.classList.toggle('is-selected', checkbox.checked);
+        });
+    }
+
+    selectAll.addEventListener('change', function () {
+        checkboxes.forEach(function (checkbox) { checkbox.checked = selectAll.checked; });
+        updateSelection();
+    });
+    checkboxes.forEach(function (checkbox) { checkbox.addEventListener('change', updateSelection); });
+    action.addEventListener('change', updateSelection);
+    form.addEventListener('submit', function (event) {
+        const total = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
+        const labels = {
+            activate: 'ativar', deactivate: 'desativar', feature: 'adicionar aos destaques',
+            unfeature: 'remover dos destaques', outlet: 'enviar para o Outlet',
+            restore: 'restaurar do Outlet', delete: 'APAGAR PERMANENTEMENTE'
+        };
+        if (!total || !action.value) {
+            event.preventDefault();
+            return;
+        }
+        const destructive = action.value === 'delete';
+        const message = destructive
+            ? 'Tem certeza que deseja APAGAR PERMANENTEMENTE ' + total + ' produto(s)? Esta ação não pode ser desfeita.'
+            : 'Confirma ' + labels[action.value] + ' em ' + total + ' produto(s)?';
+        if (!window.confirm(message)) {
+            event.preventDefault();
+            return;
+        }
+        submit.disabled = true;
+        submit.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Aplicando…';
+    });
+    updateSelection();
+});
+
 // ======== Edit: Buscador de productos hijo (tamaño/color) ========
 // Archivo: resources/views/admin/products/edit.blade.php
 document.addEventListener('DOMContentLoaded', function () {

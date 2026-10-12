@@ -14,6 +14,8 @@
 
 <div class="d-flex flex-column gap-4">
 
+    @include('admin.blogs._ai-experiment')
+
     {{-- 01. IDENTIFICAÇÃO --}}
     <div class="sax-premium-card shadow-sm overflow-hidden">
         <x-admin.block-header icon="fas fa-heading" number="01"
@@ -68,6 +70,9 @@
             :subtitle="__('messages.imagem_capa_desc')" />
 
         <div class="p-4">
+            @if (!$isEdit)
+                <p class="small fw-bold mb-3">Imagen de portada obligatoria para crear el artículo.</p>
+            @endif
             <x-admin.image-upload name="image" previewId="blogCoverPreview"
                 :currentImage="$blog?->image ? Storage::url($blog->image) : null"
                 placeholder="https://placehold.co/1600x1000/1a1a1a/ffffff?text=Imagem+de+Capa"
@@ -92,9 +97,11 @@
                 <i class="fa-solid fa-expand"></i>
                 <span><strong>1400 px de largura recomendada</strong><small>Imagens inseridas no texto mantêm a altura proporcional.</small></span>
             </div>
+            <p class="small text-muted">Usá el botón <strong>Productos</strong> del editor para insertar un carrusel donde esté el cursor. Seleccioná un carrusel para editarlo o quitarlo.</p>
             <div class="editor-rich-wrapper">
                 <textarea id="editor-blog" name="content"
-                          data-upload-url="{{ route('admin.blogs.upload-image') }}">{{ old('content', $blog?->content ?? '') }}</textarea>
+                          data-upload-url="{{ route('admin.blogs.upload-image') }}"
+                          data-products-url="{{ route('admin.blogs.products.search') }}">{{ old('content', $blog?->content ?? '') }}</textarea>
             </div>
         </div>
     </div>

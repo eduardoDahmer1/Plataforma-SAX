@@ -43,11 +43,8 @@
                     </div>
                 </div>
 
-                <figure class="blog-article-hero__media" style="--blog-cover-image: url('{{ $coverUrl }}')">
-                    <span class="blog-article-hero__backdrop" aria-hidden="true"></span>
-                    <span class="blog-article-hero__image-frame">
-                        <img src="{{ $coverUrl }}" alt="{{ $blog->title }}" fetchpriority="high" decoding="async">
-                    </span>
+                <figure class="blog-article-hero__media">
+                    <img src="{{ $coverUrl }}" alt="{{ $blog->title }}" fetchpriority="high" decoding="async">
                     @if ($blog->image_caption)
                         <figcaption class="blog-caption">{{ $blog->image_caption }}</figcaption>
                     @endif
@@ -58,10 +55,9 @@
 
     <section class="blog-article-content">
         <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-8">
+            <div class="blog-article-main">
                     <article class="blog-article-body">
-                        {!! $blog->content !!}
+                        {!! $articleContent !!}
                     </article>
 
                     @if (!empty($blog->gallery))
@@ -89,83 +85,49 @@
                             </button>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <aside class="blog-sidebar">
-                        <div class="blog-sidebar__box">
-                            <h3 class="blog-sidebar__title">Categorias</h3>
-                            <div class="blog-sidebar__links">
-                                <a href="{{ route('blogs.index') }}" class="blog-sidebar__link">
-                                    <span>Todos</span>
-                                </a>
-                                @foreach ($categories as $category)
-                                    <a href="{{ route('blogs.index', ['category' => $category->id]) }}" class="blog-sidebar__link">
-                                        <span class="d-flex align-items-center gap-2">
-                                            @if ($category->banner)
-                                                <img src="{{ Storage::url($category->banner) }}" alt="" class="blog-filter-chip__avatar">
-                                            @endif
-                                            {{ $category->name }}
-                                        </span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div class="blog-sidebar__box">
-                            <h3 class="blog-sidebar__title">Leituras recentes</h3>
-                            <div class="blog-mini-list">
-                                @foreach ($latestPosts as $latestPost)
-                                    <a href="{{ route('blogs.show', $latestPost->slug) }}" class="blog-mini-item">
-                                        <img src="{{ $latestPost->image ? Storage::url($latestPost->image) : asset('storage/uploads/noimage.webp') }}" alt="{{ $latestPost->title }}">
-                                        <div>
-                                            <div class="blog-mini-item__meta">{{ optional($latestPost->published_at)->format('d.m.Y') }}</div>
-                                            <strong>{{ Str::limit($latestPost->title, 60) }}</strong>
-                                        </div>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    </aside>
-                </div>
             </div>
 
-            @if ($relatedPosts->isNotEmpty())
-                <section class="blog-related">
-                    <div class="blog-related__heading">
-                        <div>
-                            <span class="blog-kicker">Continue lendo</span>
-                            <h2>Mais histórias do blog</h2>
+            @php
+                $recentPosts = $latestPosts->reject(fn ($post) => $post->id === $blog->id || $relatedPosts->contains('id', $post->id))->take(3);
+                $readingSections = [
+                    ['title' => 'Mais histórias do blog', 'posts' => $relatedPosts],
+                    ['title' => 'Leituras recentes', 'posts' => $recentPosts],
+                ];
+            @endphp
+            @foreach ($readingSections as $readingSection)
+                @if ($readingSection['posts']->isNotEmpty())
+                    <section class="blog-article-reading" aria-labelledby="blog-reading-{{ $loop->index }}">
+                        <div class="blog-related__heading">
+                            <h2 id="blog-reading-{{ $loop->index }}">{{ $readingSection['title'] }}</h2>
+                            <a href="{{ route('blogs.index') }}" class="blog-cta-link">Ver blog completo</a>
                         </div>
-                        <a href="{{ route('blogs.index') }}" class="blog-cta-link">Ver blog completo</a>
-                    </div>
-
-                    <div class="row g-4">
-                        @foreach ($relatedPosts as $relatedPost)
-                            <div class="col-md-4">
-                                <article class="blog-card-clean">
-                                    <a href="{{ route('blogs.show', $relatedPost->slug) }}" class="blog-card-clean__link">
-                                        <div class="blog-card-clean__media">
-                                            <img src="{{ $relatedPost->image ? Storage::url($relatedPost->image) : asset('storage/uploads/noimage.webp') }}" alt="{{ $relatedPost->title }}">
-                                            <span class="blog-card-clean__tag">{{ $relatedPost->category->name ?? 'Blog' }}</span>
+                        <div class="blog-article-reading__grid">
+                            @foreach ($readingSection['posts'] as $post)
+                                <article class="blog-story-card">
+                                    <a href="{{ route('blogs.show', $post->slug) }}" class="blog-story-card__link">
+                                        <div class="blog-story-card__media">
+                                            <img src="{{ $post->image ? Storage::url($post->image) : asset('storage/uploads/noimage.webp') }}" alt="{{ $post->title }}" loading="lazy" decoding="async">
                                         </div>
-                                        <div class="blog-card-clean__body">
+                                        <div class="blog-story-card__body">
+                                            <span class="blog-kicker">{{ $post->category->name ?? 'Blog' }}</span>
+                                            <h3>{{ $post->title }}</h3>
+                                            @if ($post->subtitle)
+                                                <p>{{ Str::limit($post->subtitle, 100) }}</p>
+                                            @endif
                                             <div class="blog-meta">
-                                                <span>{{ optional($relatedPost->published_at)->format('d.m.Y') }}</span>
-                                                @if ($relatedPost->read_time)
-                                                    <span>{{ $relatedPost->read_time }} min</span>
+                                                <span>{{ optional($post->published_at)->format('d.m.Y') }}</span>
+                                                @if ($post->read_time)
+                                                    <span>{{ $post->read_time }} min</span>
                                                 @endif
                                             </div>
-                                            <h3>{{ $relatedPost->title }}</h3>
-                                            <p>{{ Str::limit($relatedPost->subtitle, 90) }}</p>
                                         </div>
                                     </a>
                                 </article>
-                            </div>
-                        @endforeach
-                    </div>
-                </section>
-            @endif
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+            @endforeach
         </div>
     </section>
 </div>
@@ -177,6 +139,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/blog-product-carousel.js') }}?v={{ filemtime(public_path('js/blog-product-carousel.js')) }}" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const lightbox = document.getElementById('blogLightbox');

@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('catalog_peer_sync_requests', function (Blueprint $table): void {
-            $table->id();
-            $table->unsignedBigInteger('product_id')->unique();
-            $table->uuid('marker');
-            $table->unsignedSmallInteger('attempts')->default(0);
-            $table->timestamp('available_at')->index();
-            $table->text('last_error')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('catalog_peer_sync_requests')) {
+            Schema::create('catalog_peer_sync_requests', function (Blueprint $table): void {
+                $table->id();
+                $table->unsignedBigInteger('product_id')->unique();
+                $table->uuid('marker');
+                $table->unsignedSmallInteger('attempts')->default(0);
+                $table->timestamp('available_at')->index();
+                $table->text('last_error')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

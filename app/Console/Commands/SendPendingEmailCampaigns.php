@@ -28,10 +28,10 @@ class SendPendingEmailCampaigns extends Command
             ->pluck('id');
 
         foreach ($campaigns as $campaignId) {
-            (new SendEmailCampaign($campaignId))->handle();
+            SendEmailCampaign::dispatch((int) $campaignId);
         }
 
-        $this->info("Campanhas processadas: {$campaigns->count()}");
+        $this->info("Campanhas enfileiradas: {$campaigns->count()}");
 
         return self::SUCCESS;
     }

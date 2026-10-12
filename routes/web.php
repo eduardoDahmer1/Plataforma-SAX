@@ -80,17 +80,30 @@ Route::get('/email/preferencias/{token}', EmailUnsubscribeController::class)
 Route::get('/feeds/products.xml', [ProductFeedController::class, 'show'])
     ->name('product-feed.show');
 
-Route::get('/testar-email', function () {
-    try {
-        Mail::raw('Opa! Se você recebeu isso, o SMTP da Umbler está funcionando no Laravel.', function ($message) {
-            $message->to('eduustcc@gmail.com')
-                ->subject('Teste de SMTP - Sax Department');
-        });
+Route::middleware(['auth', 'throttle:2,1'])->group(function (): void {
+    Route::get('/testar-email', function (\Illuminate\Http\Request $request) {
+        abort_unless($request->user()?->isMasterAdmin(), 403);
 
-        return 'Sucesso! O e-mail foi enviado.';
-    } catch (\Exception $e) {
-        return 'Erro ao enviar: ' . $e->getMessage();
-    }
+        try {
+            Mail::raw('Teste controlado de SMTP da SAX Department.', function ($message) use ($request) {
+                $message->to($request->user()->email)
+                    ->subject('Teste de SMTP - SAX Department');
+            });
+
+            return 'Sucesso! O e-mail foi enviado.';
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return response('Não foi possível enviar o teste de SMTP.', 502);
+        }
+    });
+
+    Route::get('/mail-preview/order-paid', function (\Illuminate\Http\Request $request) {
+        abort_unless($request->user()?->isMasterAdmin(), 403);
+        $order = \App\Models\Order::latest()->firstOrFail();
+
+        return new \App\Mail\OrderPaidMail($order);
+    });
 });
 
 Route::fallback(function () {
@@ -110,12 +123,6 @@ Route::fallback(function () {
     return response()->view('error.404', [], 404);
 });
 
-Route::get('/mail-preview/order-paid', function () {
-    $order = \App\Models\Order::latest()->first();
-
-    return new \App\Mail\OrderPaidMail($order);
-});
-
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [SearchController::class, 'index'])->middleware('throttle:catalog')->name('search');
 Route::get('/search/ajax', [SearchController::class, 'ajaxSearch'])->middleware('throttle:catalog')->name('search.ajax');
@@ -127,34 +134,34 @@ Route::get('/colecoes/{collection}', [SearchController::class, 'collection'])
 Route::get('/institucional', [InstitucionalController::class, 'index'])->name('institucional.index');
 Route::get('/manutencao', fn () => view('manutencao.index'))->name('maintenance.page');
 Route::get('/palace', [PalaceController::class, 'index'])->name('palace.index');
-Route::get('/bridal', [BridalController::class, 'index'])->name('bridal.index');
+Route::get('/bridal', [BridalController::class, 'index'])->middleware('throttle:catalog')->name('bridal.index');
 Route::get('/bistro', [CafeBistroController::class, 'index'])->name('cafe_bistro.index');
 Route::get('/bistro/{location}', [CafeBistroController::class, 'show'])
     ->whereIn('location', ['pedro-juan-caballero', 'asuncion'])
     ->name('cafe_bistro.show');
-Route::post('/newsletter', [HomeController::class, 'storeNewsletter'])->name('newsletter.store');
-Route::get('/categorias-gerais', [AllCategoriesController::class, 'index'])->name('all-categories.index');
+Route::post('/newsletter', [HomeController::class, 'storeNewsletter'])->middleware('throttle:10,1')->name('newsletter.store');
+Route::get('/categorias-gerais', [AllCategoriesController::class, 'index'])->middleware('throttle:catalog')->name('all-categories.index');
 Route::redirect('/produtos', '/search')->name('produtos.index');
 Route::get('/produto/{id_or_slug}', [ProductController::class, 'show'])->name('produto.show');
-Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->name('products.byCategory');
-Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
-Route::get('/categorias-filhas/{categoriasfilhas}/produtos', [ProductController::class, 'byCategoriasFilhas'])->name('products.byCategoriasFilhas');
-Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCategory'])->middleware('throttle:catalog')->name('products.byCategory');
+Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->middleware('throttle:catalog')->name('products.bySubcategory');
+Route::get('/categorias-filhas/{categoriasfilhas}/produtos', [ProductController::class, 'byCategoriasFilhas'])->middleware('throttle:catalog')->name('products.byCategoriasFilhas');
+Route::get('/categorias', [CategoryController::class, 'index'])->middleware('throttle:catalog')->name('categories.index');
 Route::get('/categorias/{slug}', [CategoryController::class, 'show'])->middleware('throttle:catalog')->name('categories.show');
-Route::get('/subcategorias', [SubcategoryController::class, 'index'])->name('subcategories.index');
+Route::get('/subcategorias', [SubcategoryController::class, 'index'])->middleware('throttle:catalog')->name('subcategories.index');
 Route::get('/produto/{id_or_slug}/avaliacoes', [ProductController::class, 'reviewsRedirect'])
     ->name('produto.reviews.redirect');
 Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->middleware('throttle:catalog')->name('subcategories.show');
-Route::get('/categorias-filhas', [PublicCategoriasFilhasController::class, 'index'])->name('categorias-filhas.index');
+Route::get('/categorias-filhas', [PublicCategoriasFilhasController::class, 'index'])->middleware('throttle:catalog')->name('categorias-filhas.index');
 Route::get('/categorias-filhas/{slug}', [PublicCategoriasFilhasController::class, 'show'])->middleware('throttle:catalog')->name('categorias-filhas.show');
-Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
+Route::get('/marcas', [BrandController::class, 'publicIndex'])->middleware('throttle:catalog')->name('brands.index');
 Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->middleware('throttle:catalog')->name('brands.show');
 Route::get('/cart', [CartController::class, 'view'])->middleware(['auth', 'cliente', 'store.feature:cart'])->name('cart.view');
 Route::post('/cart/add', [CartController::class, 'add'])->middleware(['store.feature:add_to_cart', 'auth', 'cliente'])->name('cart.add');
 Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->middleware(['auth', 'cliente', 'store.feature:cart'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->middleware(['auth', 'cliente', 'store.feature:cart'])->name('cart.remove');
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
-Route::get('/blogs/ajax-search', [BlogController::class, 'ajaxSearch'])->name('blogs.ajax-search');
+Route::get('/blogs/ajax-search', [BlogController::class, 'ajaxSearch'])->middleware('throttle:content-search')->name('blogs.ajax-search');
 Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 Route::get('/contato', [ContactController::class, 'showForm'])->name('contact.form');
 Route::post('/contato', [ContactController::class, 'store'])->name('contact.store');
@@ -331,7 +338,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('currencies', [CurrencyControllerAdmin::class, 'index'])->name('currencies.index');
     Route::get('activate-control', [ActivateBrandsAndCategoriesController::class, 'index'])->name('activate.index');
     Route::post('activate-toggle/{type}/{id}', [ActivateBrandsAndCategoriesController::class, 'toggleStatus'])->name('activate.toggle');
-    Route::get('products/search', [ProductControllerAdmin::class, 'search'])->name('products.search');
+    Route::get('products/search', [ProductControllerAdmin::class, 'search'])->middleware('throttle:60,1')->name('products.search');
     Route::get('products/ratings', [AdminProductReviewController::class, 'index'])->name('products.ratings.index');
     Route::patch('products/ratings/{review}', [AdminProductReviewController::class, 'update'])
         ->whereNumber('review')->name('products.ratings.update');

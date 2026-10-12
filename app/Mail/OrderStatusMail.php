@@ -3,13 +3,14 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
 
-class OrderStatusMail extends Mailable
+class OrderStatusMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -24,6 +25,8 @@ class OrderStatusMail extends Mailable
      */
     public function __construct(Order $order, $messageCustom)
     {
+        $this->onConnection('product-ai');
+        $this->onQueue('product-ai');
         $this->order = $order;
         $this->messageCustom = $messageCustom;
         $this->logoUrl = \App\Models\Attribute::logoUrl();

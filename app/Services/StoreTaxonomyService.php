@@ -71,4 +71,31 @@ class StoreTaxonomyService
             }
         });
     }
+
+    /**
+     * Produtos ópticos são definidos pela mesma regra exata usada pelo
+     * integrador. Evita dezenas de LIKE/EXISTS em toda consulta de produto da
+     * Ótica e impede que palavras soltas no nome liberem itens de outra área.
+     */
+    public function applyOpticalProductConstraint(Builder $query): Builder
+    {
+        $reference = trim((string) config('catalog-sync.optical_category_ref_code'));
+        $slugs = array_values(array_filter(array_map(
+            static fn ($slug): string => mb_strtolower(trim((string) $slug)),
+            (array) config('catalog-sync.optical_category_slugs', []),
+        )));
+
+        return $query->whereHas('category', function (Builder $category) use ($reference, $slugs): void {
+            $category->where(function (Builder $identity) use ($reference, $slugs): void {
+                if ($reference !== '') {
+                    $identity->where('ref_code', $reference);
+                }
+
+                if ($slugs !== []) {
+                    $method = $reference !== '' ? 'orWhereIn' : 'whereIn';
+                    $identity->{$method}(\DB::raw('LOWER(slug)'), $slugs);
+                }
+            });
+        });
+    }
 }

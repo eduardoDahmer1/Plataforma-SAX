@@ -2,11 +2,22 @@
 
 namespace App\Notifications;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordBase;
 
-class ResetPasswordNotification extends ResetPasswordBase
+class ResetPasswordNotification extends ResetPasswordBase implements ShouldQueue
 {
+    use Queueable;
+
+    public function __construct(string $token)
+    {
+        parent::__construct($token);
+        $this->onConnection('product-ai');
+        $this->onQueue('product-ai');
+    }
+
     public function toMail($notifiable): MailMessage
     {
         $resetUrl = url(config('app.url') . route('password.reset', [

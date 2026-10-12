@@ -56,9 +56,11 @@ class BlogController extends Controller
 
     public function index(Request $request)
     {
-        $search = trim((string) $request->input('search', ''));
-        $category = $request->input('category');
-        $page = (int) $request->input('page', 1);
+        $search = mb_substr(trim((string) $request->input('search', '')), 0, 120);
+        $category = ctype_digit((string) $request->input('category'))
+            ? (int) $request->input('category')
+            : null;
+        $page = max(1, min(500, (int) $request->input('page', 1)));
 
         $categories = Cache::remember('blog_categories_list', now()->addHours(6), function () {
             return BlogCategory::query()
@@ -67,7 +69,9 @@ class BlogController extends Controller
                 ->get();
         });
 
-        $cacheKey = 'blogs_index_' . $this->cacheVersion() . '_' . md5(($request->getQueryString() ?? '') . '|' . $page . '|' . $this->weekSeed());
+        $cacheKey = 'blogs_index_'.$this->cacheVersion().'_'.sha1((string) json_encode([
+            $search, $category, $page, $this->weekSeed(),
+        ]));
 
         $blogs = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $category, $page) {
             return $this->blogsIndexQuery($search, $category)
@@ -88,11 +92,15 @@ class BlogController extends Controller
 
     public function ajaxSearch(Request $request)
     {
-        $search = trim((string) $request->input('search', ''));
-        $category = $request->input('category');
-        $page = max(1, (int) $request->input('page', 1));
+        $search = mb_substr(trim((string) $request->input('search', '')), 0, 120);
+        $category = ctype_digit((string) $request->input('category'))
+            ? (int) $request->input('category')
+            : null;
+        $page = max(1, min(500, (int) $request->input('page', 1)));
 
-        $cacheKey = 'blogs_ajax_' . $this->cacheVersion() . '_' . md5(($request->getQueryString() ?? '') . '|' . $page . '|' . $this->weekSeed());
+        $cacheKey = 'blogs_ajax_'.$this->cacheVersion().'_'.sha1((string) json_encode([
+            $search, $category, $page, $this->weekSeed(),
+        ]));
 
         $blogs = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($search, $category, $page) {
             return $this->blogsIndexQuery($search, $category)

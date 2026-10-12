@@ -10,6 +10,8 @@ class ProductSearchService
 {
     private const MAX_DESCRIPTORS = 18;
 
+    private const MAX_SEARCH_LENGTH = 120;
+
     private const IGNORED_TERMS = [
         'a', 'as', 'com', 'cor', 'da', 'das', 'de', 'do', 'dos', 'e', 'em',
         'marca', 'modelo', 'na', 'nas', 'no', 'nos', 'o', 'os', 'para', 'por',
@@ -156,7 +158,7 @@ class ProductSearchService
 
     public function applyRelevance(Builder $query, ?string $search): Builder
     {
-        $search = trim((string) $search);
+        $search = $this->normalizedInput($search);
         if ($search === '') {
             return $query;
         }
@@ -178,7 +180,7 @@ class ProductSearchService
 
     public function descriptors(?string $search): array
     {
-        $normalized = Str::upper(Str::ascii(trim((string) $search)));
+        $normalized = Str::upper(Str::ascii($this->normalizedInput($search)));
         $normalized = preg_replace('/(\d+(?:[.,]\d+)?)\s*(ML|MM|CM|L)\b/u', '$1$2', $normalized) ?? $normalized;
         $normalized = $this->protectCompoundTerms($normalized);
         $parts = preg_split('/[^A-Z0-9#.+_-]+/u', $normalized, -1, PREG_SPLIT_NO_EMPTY) ?: [];
@@ -192,6 +194,11 @@ class ProductSearchService
             ->unique(fn (array $descriptor) => $descriptor['type'] . ':' . implode('|', $descriptor['terms'] ?? $descriptor['sizes']))
             ->values()
             ->all();
+    }
+
+    private function normalizedInput(?string $search): string
+    {
+        return mb_substr(trim((string) $search), 0, self::MAX_SEARCH_LENGTH);
     }
 
     private function descriptorFor(string $token): array

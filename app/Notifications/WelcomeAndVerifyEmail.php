@@ -3,14 +3,21 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 use Carbon\Carbon;
 
-class WelcomeAndVerifyEmail extends Notification
+class WelcomeAndVerifyEmail extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    public function __construct()
+    {
+        $this->onConnection('product-ai');
+        $this->onQueue('product-ai');
+    }
 
     public function via($notifiable): array
     {

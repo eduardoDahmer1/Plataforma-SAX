@@ -22,6 +22,10 @@ use Illuminate\Support\Arr;
 
 class SearchController extends Controller
 {
+    private const MAX_SEARCH_LENGTH = 120;
+
+    private const MAX_CATALOG_PAGE = 500;
+
     private const COLLECTIONS = [
         'new-arrivals' => [
             'sort_by' => 'latest',
@@ -602,6 +606,7 @@ class SearchController extends Controller
 
     public function catalogResults(Request $request): array
     {
+        $this->normalizeCatalogRequest($request);
         $this->removeOpticalCategoryFilter($request);
         $currency = $this->currencyContext();
         $base = $this->baseQuery($request);
@@ -677,6 +682,7 @@ class SearchController extends Controller
 
     public function ajaxSearch(Request $request)
     {
+        $this->normalizeCatalogRequest($request);
         $this->removeOpticalCategoryFilter($request);
         $currency = $this->currencyContext();
         $base = $this->baseQuery($request);
@@ -711,35 +717,83 @@ class SearchController extends Controller
         }
     }
 
+    private function normalizeCatalogRequest(Request $request): void
+    {
+        $request->query->set(
+            'search',
+            mb_substr(trim((string) $request->query('search', '')), 0, self::MAX_SEARCH_LENGTH),
+        );
+        $request->query->set(
+            'page',
+            max(1, min(self::MAX_CATALOG_PAGE, $request->integer('page', 1))),
+        );
+
+        foreach (['brand', 'category', 'subcategory', 'categoriasfilhas'] as $filter) {
+            $value = $request->query($filter);
+            if ($value !== null && $value !== '' && ! ctype_digit((string) $value)) {
+                $request->query->remove($filter);
+            }
+        }
+    }
+
     public function autocomplete(Request $request)
     {
-        $search = $request->get('q', '');
+        $search = mb_substr(trim((string) $request->get('q', '')), 0, self::MAX_SEARCH_LENGTH);
 
-        if (strlen($search) < 2) {
+        if (mb_strlen($search) < 2) {
             return response()->json([]);
         }
 
-        $products = VisibleCatalogProductsService::builder()
-            ->select([
-                'products.id', 'products.name', 'products.external_name', 'products.sku',
-                'products.price', 'products.photo', 'products.slug', 'products.brand_id',
-                'products.category_id',
-            ])
-            ->with(['brand:id,name', 'category:id,name'])
-            ->tap(fn (Builder $query) => $this->productSearch->apply($query, $search))
-            ->tap(fn (Builder $query) => $this->productSearch->applyRelevance($query, $search))
-            ->orderBy('products.name')
-            ->limit(60)
-            ->get();
-
-        return response()->json($products->map(fn($p) => [
-            'name'     => $p->name ?? $p->external_name,
-            'sku'      => $p->sku,
-            'price'    => number_format($p->price, 2, '.', ','),
-            'photo'    => str_contains($p->photo, 'http') ? $p->photo : asset('storage/' . $p->photo),
-            'brand'    => $p->brand->name    ?? 'SAX',
-            'category' => $p->category->name ?? '',
-            'url'      => route('produto.show', $p->slug),
+        $key = 'catalog_autocomplete_v2:'.sha1((string) json_encode([
+            'search' => mb_strtolower($search),
+            'locale' => translation_locale(),
+            'layout' => app(StorefrontLayoutService::class)->effective(),
         ]));
+        $resolver = function () use ($search): array {
+            return VisibleCatalogProductsService::builder()
+                ->select([
+                    'products.id', 'products.name', 'products.external_name', 'products.sku',
+                    'products.price', 'products.photo', 'products.slug', 'products.brand_id',
+                    'products.category_id',
+                ])
+                ->with(['brand:id,name', 'category:id,name'])
+                ->tap(fn (Builder $query) => $this->productSearch->apply($query, $search))
+                ->tap(fn (Builder $query) => $this->productSearch->applyRelevance($query, $search))
+                ->orderBy('products.name')
+                ->limit(20)
+                ->get()
+                ->map(fn($product) => [
+                    'name' => $product->name ?? $product->external_name,
+                    'sku' => $product->sku,
+                    'price' => number_format($product->price, 2, '.', ','),
+                    'photo' => str_contains($product->photo, 'http')
+                        ? $product->photo
+                        : asset('storage/'.$product->photo),
+                    'brand' => $product->brand->name ?? 'SAX',
+                    'category' => $product->category->name ?? '',
+                    'url' => route('produto.show', $product->slug),
+                ])->all();
+        };
+
+        $results = Cache::get($key);
+        if (! is_array($results)) {
+            try {
+                $results = Cache::lock($key.':lock', 15)->block(3, function () use ($key, $resolver): array {
+                    $cached = Cache::get($key);
+                    if (is_array($cached)) {
+                        return $cached;
+                    }
+
+                    $resolved = $resolver();
+                    Cache::put($key, $resolved, now()->addMinutes(5));
+
+                    return $resolved;
+                });
+            } catch (LockTimeoutException) {
+                $results = Cache::get($key, []);
+            }
+        }
+
+        return response()->json($results);
     }
 }

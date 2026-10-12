@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -16,11 +17,35 @@ class SendEmailCampaign implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 900;
+    private const RECIPIENTS_PER_JOB = 5;
 
-    public function __construct(public int $campaignId) {}
+    public int $timeout = 130;
+
+    public int $tries = 2;
+
+    public array $backoff = [30, 120];
+
+    public function __construct(public int $campaignId)
+    {
+        $this->onConnection('product-ai');
+        $this->onQueue('product-ai');
+    }
 
     public function handle(): void
+    {
+        $lock = Cache::lock("email_campaign:{$this->campaignId}:sending", $this->timeout + 30);
+        if (! $lock->get()) {
+            return;
+        }
+
+        try {
+            $this->processBatch();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function processBatch(): void
     {
         $campaign = EmailCampaign::query()->find($this->campaignId);
         if (! $campaign || $campaign->status === 'completed') {
@@ -37,28 +62,36 @@ class SendEmailCampaign implements ShouldQueue
             }
             $campaign->refresh();
         } elseif ($campaign->status === 'processing') {
-            if ($campaign->started_at?->isAfter(now()->subMinutes(10))) {
-                return;
-            }
             $campaign->update(['started_at' => now()]);
         }
 
-        $campaign->recipients()->where('status', 'pending')->orderBy('id')->chunkById(50, function ($recipients) use ($campaign) {
-            foreach ($recipients as $recipient) {
-                try {
-                    Mail::to($recipient->email, $recipient->name)->send(new MarketingCampaignMail($campaign, $recipient));
-                    $recipient->update(['status' => 'sent', 'sent_at' => now(), 'error' => null]);
-                    $campaign->increment('sent_count');
-                } catch (Throwable $exception) {
-                    report($exception);
-                    $recipient->update([
-                        'status' => 'failed',
-                        'error' => mb_substr($exception->getMessage(), 0, 1000),
-                    ]);
-                    $campaign->increment('failed_count');
-                }
+        $recipients = $campaign->recipients()
+            ->where('status', 'pending')
+            ->orderBy('id')
+            ->limit(self::RECIPIENTS_PER_JOB)
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::to($recipient->email, $recipient->name)->send(new MarketingCampaignMail($campaign, $recipient));
+                $recipient->update(['status' => 'sent', 'sent_at' => now(), 'error' => null]);
+                $campaign->increment('sent_count');
+            } catch (Throwable $exception) {
+                report($exception);
+                $recipient->update([
+                    'status' => 'failed',
+                    'error' => mb_substr($exception->getMessage(), 0, 1000),
+                ]);
+                $campaign->increment('failed_count');
             }
-        });
+        }
+
+        if ($campaign->recipients()->where('status', 'pending')->exists()) {
+            $campaign->update(['started_at' => now()]);
+            self::dispatch($campaign->id)->delay(now()->addSeconds(10));
+
+            return;
+        }
 
         $campaign->update(['status' => 'completed', 'finished_at' => now()]);
     }

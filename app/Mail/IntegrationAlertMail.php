@@ -3,12 +3,13 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class IntegrationAlertMail extends Mailable
+class IntegrationAlertMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -18,7 +19,10 @@ class IntegrationAlertMail extends Mailable
         public string $alertMessage,
         public ?string $actionUrl = null,
         public array $details = [],
-    ) {}
+    ) {
+        $this->onConnection('product-ai');
+        $this->onQueue('product-ai');
+    }
 
     public function envelope(): Envelope
     {

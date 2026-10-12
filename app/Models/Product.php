@@ -231,17 +231,8 @@ class Product extends Model
                 return;
             }
 
-            $terms = ['ocul', 'otica', 'optic', 'lente', 'eyewear', 'armac', 'vision'];
-            $query->where(function (Builder $scope) use ($terms): void {
-                foreach ($terms as $term) {
-                    $like = '%' . $term . '%';
-                    $scope->orWhereRaw('LOWER(products.name) LIKE ?', [$like])
-                        ->orWhereRaw('LOWER(products.external_name) LIKE ?', [$like])
-                        ->orWhereHas('category', fn (Builder $q) => $q->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(slug) LIKE ?', [$like]))
-                        ->orWhereHas('subcategory', fn (Builder $q) => $q->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(slug) LIKE ?', [$like]))
-                        ->orWhereHas('categoriasFilhas', fn (Builder $q) => $q->whereRaw('LOWER(name) LIKE ?', [$like])->orWhereRaw('LOWER(slug) LIKE ?', [$like]));
-                }
-            });
+            app(\App\Services\StoreTaxonomyService::class)
+                ->applyOpticalProductConstraint($query);
         });
 
         static::saved(function (Product $product) {

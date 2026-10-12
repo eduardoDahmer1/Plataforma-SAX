@@ -125,7 +125,9 @@ class EmailMarketingController extends Controller
             return $campaign;
         });
 
-        SendEmailCampaign::dispatchAfterResponse($campaign->id);
+        // A fila de banco evita que um worker do site fique preso enviando uma
+        // campanha inteira depois de devolver a resposta ao navegador.
+        SendEmailCampaign::dispatch($campaign->id);
 
         return redirect()->route('admin.contatos.index', ['view' => 'history'])
             ->with('success', "Envio #{$campaign->id} preparado para {$campaign->recipient_count} destinatário(s).");

@@ -36,7 +36,10 @@ class RouteServiceProvider extends ServiceProvider
                 ? $cloudflareIp
                 : $request->ip();
 
-            return Limit::perMinute(30)->by('catalog:'.$visitor);
+            return [
+                Limit::perMinute(30)->by('catalog:visitor:'.$visitor),
+                Limit::perMinute(120)->by('catalog:global'),
+            ];
         });
 
         RateLimiter::for('catalog-autocomplete', function (Request $request) {
@@ -45,7 +48,22 @@ class RouteServiceProvider extends ServiceProvider
                 ? $cloudflareIp
                 : $request->ip();
 
-            return Limit::perMinute(60)->by('catalog-autocomplete:'.$visitor);
+            return [
+                Limit::perMinute(60)->by('catalog-autocomplete:visitor:'.$visitor),
+                Limit::perMinute(300)->by('catalog-autocomplete:global'),
+            ];
+        });
+
+        RateLimiter::for('content-search', function (Request $request) {
+            $cloudflareIp = trim((string) $request->header('CF-Connecting-IP'));
+            $visitor = filter_var($cloudflareIp, FILTER_VALIDATE_IP)
+                ? $cloudflareIp
+                : $request->ip();
+
+            return [
+                Limit::perMinute(30)->by('content-search:visitor:'.$visitor),
+                Limit::perMinute(180)->by('content-search:global'),
+            ];
         });
 
         RateLimiter::for('product-reviews', function (Request $request) {

@@ -4,11 +4,10 @@ namespace App\Http\Middleware;
 use Closure;
 use App\Models\SystemSetting;
 use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance as FrameworkMaintenanceMiddleware;
-use Illuminate\Http\Request;
 
 class PreventRequestsDuringMaintenance extends FrameworkMaintenanceMiddleware
 {
-    public function handle(Request $request, Closure $next)
+    public function handle($request, Closure $next)
     {
         // Respeita primeiro o modo nativo acionado por `php artisan down`.
         // Esta verificação usa o arquivo local de manutenção e não consulta o

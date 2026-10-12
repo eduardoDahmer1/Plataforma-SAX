@@ -2,12 +2,17 @@
 
 namespace Tests\Unit;
 
+use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use PHPUnit\Framework\TestCase;
 
 class MaintenanceMiddlewareSafetyTest extends TestCase
 {
     public function test_custom_middleware_preserves_laravel_native_maintenance_mode(): void
     {
+        // Carrega de fato a classe contra a versão instalada do framework.
+        // Isso detecta imediatamente assinaturas incompatíveis com a classe-pai.
+        $this->assertTrue(class_exists(PreventRequestsDuringMaintenance::class));
+
         $middleware = file_get_contents(
             __DIR__.'/../../app/Http/Middleware/PreventRequestsDuringMaintenance.php'
         );

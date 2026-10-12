@@ -517,10 +517,13 @@ class SearchController extends Controller
         Request $request,
         array $currency,
         callable $resolver,
+        array $timeoutFallback,
     ): array {
+        // Estes são os únicos parâmetros usados pelo facetBase. Preço, cor,
+        // tamanho, cupom, coleção e ordenação não devem multiplicar as chaves
+        // de cache dos mesmos dados de navegação/facetas.
         $parameters = Arr::sortRecursive($request->only([
             'search', 'brand', 'category', 'subcategory', 'categoriasfilhas',
-            'sizes', 'colors', 'min_price', 'max_price', 'coupon', 'collection',
         ]));
         $context = [
             'parameters' => $parameters,
@@ -529,7 +532,8 @@ class SearchController extends Controller
             'currency_rate' => $currency['rate'],
             'currency_decimals' => $currency['decimals'],
         ];
-        $key = 'catalog_query_data_v1:'.$group.':'.sha1((string) json_encode($context));
+        $key = 'catalog_query_data_v2:'.$group.':'.sha1((string) json_encode($context));
+        $staleKey = $key.':stale';
 
         $cached = Cache::get($key);
         if (is_array($cached)) {
@@ -537,7 +541,7 @@ class SearchController extends Controller
         }
 
         try {
-            return Cache::lock($key.':lock', 45)->block(15, function () use ($key, $resolver): array {
+            return Cache::lock($key.':lock', 45)->block(20, function () use ($key, $staleKey, $resolver): array {
                 $cached = Cache::get($key);
                 if (is_array($cached)) {
                     return $cached;
@@ -545,17 +549,55 @@ class SearchController extends Controller
 
                 $resolved = $resolver();
                 Cache::put($key, $resolved, now()->addMinutes(5));
+                Cache::put($staleKey, $resolved, now()->addHour());
 
                 return $resolved;
             });
         } catch (LockTimeoutException) {
-            // Se outra requisição ainda estiver calculando, prefira o valor
-            // que ela acabou de publicar. O fallback preserva a página caso o
-            // backend de cache não ofereça locks.
-            $cached = Cache::get($key);
+            // Nunca recalcule em paralelo depois do timeout: isso recriava a
+            // avalanche de queries que ocupava todos os workers do PHP-FPM.
+            $cached = Cache::get($key) ?? Cache::get($staleKey);
 
-            return is_array($cached) ? $cached : $resolver();
+            return is_array($cached) ? $cached : $timeoutFallback;
         }
+    }
+
+    private function emptyCatalogFilterData(Request $request, array $currency): array
+    {
+        $selectedMinimum = $request->filled('min_price') ? (float) $request->min_price : 0;
+        $selectedMaximum = $request->filled('max_price') ? (float) $request->max_price : 0;
+
+        return [
+            'currencyContext' => $currency,
+            'priceBounds' => [
+                'min' => 0,
+                'max' => 0,
+                'selected_min' => $selectedMinimum,
+                'selected_max' => $selectedMaximum,
+            ],
+            'sizes' => collect(),
+            'sizeGroups' => collect(),
+            'colors' => collect(),
+            'stores' => collect(),
+            'couponProductCount' => 0,
+            'suggestedProducts' => collect(),
+        ];
+    }
+
+    private function applySelectedPriceBounds(array $data, Request $request): array
+    {
+        if (!isset($data['priceBounds'])) {
+            return $data;
+        }
+
+        $data['priceBounds']['selected_min'] = $request->filled('min_price')
+            ? (float) $request->min_price
+            : $data['priceBounds']['min'];
+        $data['priceBounds']['selected_max'] = $request->filled('max_price')
+            ? (float) $request->max_price
+            : $data['priceBounds']['max'];
+
+        return $data;
     }
 
     public function catalogResults(Request $request): array
@@ -570,14 +612,22 @@ class SearchController extends Controller
                 $request,
                 $currency,
                 fn (): array => $this->sidebarData(clone $facetBase),
+                [
+                    'brands' => collect(),
+                    'categories' => collect(),
+                    'subcategories' => collect(),
+                    'categoriasfilhas' => collect(),
+                ],
             ),
             $this->cachedCatalogData(
                 'facets',
                 $request,
                 $currency,
                 fn (): array => $this->catalogFilterData(clone $facetBase, $request, $currency),
+                $this->emptyCatalogFilterData($request, $currency),
             ),
         );
+        $sidebar = $this->applySelectedPriceBounds($sidebar, $request);
         $query = $this->applyFilters(clone $base, $request, $currency);
         $this->applySorting($query, $this->requestedSort($request), $request->search);
 
@@ -636,7 +686,9 @@ class SearchController extends Controller
             $request,
             $currency,
             fn (): array => $this->catalogFilterData(clone $facetBase, $request, $currency),
+            $this->emptyCatalogFilterData($request, $currency),
         );
+        $facetData = $this->applySelectedPriceBounds($facetData, $request);
 
         $query = $this->applyFilters(clone $base, $request, $currency);
         $this->applySorting($query, $this->requestedSort($request), $request->search);

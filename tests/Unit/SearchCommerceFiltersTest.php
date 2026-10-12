@@ -54,7 +54,9 @@ class SearchCommerceFiltersTest extends TestCase
         $this->assertStringContainsString('contextSuggestsVolume', $controller);
         $this->assertStringContainsString('applyCouponScope', $controller);
         $this->assertStringContainsString("Cache::lock(\$key.':lock'", $controller);
-        $this->assertStringContainsString("'catalog_query_data_v1:'", $controller);
+        $this->assertStringContainsString("'catalog_query_data_v2:'", $controller);
+        $this->assertStringContainsString("Cache::get(\$staleKey)", $controller);
+        $this->assertStringNotContainsString("is_array(\$cached) ? \$cached : \$resolver()", $controller);
         $this->assertStringContainsString("RateLimiter::for('catalog'", $routeProvider);
         $this->assertStringContainsString("middleware('throttle:catalog')", $routes);
     }

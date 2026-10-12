@@ -9,7 +9,7 @@ use App\Services\VisibleCatalogProductsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class VisibleCatalogProductsServiceTest extends TestCase
+class VisibleCatalogProductsQueryTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -33,6 +33,14 @@ class VisibleCatalogProductsServiceTest extends TestCase
         $parent = $this->parent(['stock' => 0]);
         $this->child($parent, ['stock' => 0]);
         $this->child($parent, ['stock' => 4, 'status' => 0]);
+
+        $this->assertSame([], $this->visibleIds());
+    }
+
+    public function test_parent_without_stock_is_hidden_when_child_price_is_below_catalog_minimum(): void
+    {
+        $parent = $this->parent(['stock' => 0]);
+        $this->child($parent, ['stock' => 4, 'status' => 1, 'price' => 2]);
 
         $this->assertSame([], $this->visibleIds());
     }

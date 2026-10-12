@@ -3,15 +3,22 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Models\SystemSetting;
+use Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance as FrameworkMaintenanceMiddleware;
 use Illuminate\Http\Request;
 
-class PreventRequestsDuringMaintenance
+class PreventRequestsDuringMaintenance extends FrameworkMaintenanceMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
+        // Respeita primeiro o modo nativo acionado por `php artisan down`.
+        // Esta verificação usa o arquivo local de manutenção e não consulta o
+        // banco, portanto continua funcionando mesmo sob sobrecarga do MySQL.
+        if ($this->app->isDownForMaintenance()) {
+            return parent::handle($request, $next);
+        }
+
         $user = auth()->user();
-        $setting = SystemSetting::first();
-    
+
         // Admin sempre vê tudo
         if ($user && $user->isAdmin()) {
             return $next($request);
@@ -30,7 +37,9 @@ class PreventRequestsDuringMaintenance
         if ($request->is('/') && $request->query('open') === 'login') {
             return $next($request);
         }
-    
+
+        $setting = SystemSetting::first();
+
         // Redireciona pra manutenção apenas se maintenance = 1
         if ((int) ($setting?->getRawOriginal('maintenance') ?? 0) === 1) {
             return redirect()->route('maintenance.page');

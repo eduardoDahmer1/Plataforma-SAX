@@ -117,11 +117,12 @@ Route::get('/mail-preview/order-paid', function () {
 });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/search', [SearchController::class, 'index'])->name('search');
-Route::get('/search/ajax', [SearchController::class, 'ajaxSearch'])->name('search.ajax');
-Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
+Route::get('/search', [SearchController::class, 'index'])->middleware('throttle:catalog')->name('search');
+Route::get('/search/ajax', [SearchController::class, 'ajaxSearch'])->middleware('throttle:catalog')->name('search.ajax');
+Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->middleware('throttle:catalog-autocomplete')->name('search.autocomplete');
 Route::get('/colecoes/{collection}', [SearchController::class, 'collection'])
     ->whereIn('collection', ['new-arrivals', 'trending'])
+    ->middleware('throttle:catalog')
     ->name('collections.show');
 Route::get('/institucional', [InstitucionalController::class, 'index'])->name('institucional.index');
 Route::get('/manutencao', fn () => view('manutencao.index'))->name('maintenance.page');
@@ -139,15 +140,15 @@ Route::get('/categorias/{category}/produtos', [ProductController::class, 'byCate
 Route::get('/subcategorias/{subcategory}/produtos', [ProductController::class, 'bySubcategory'])->name('products.bySubcategory');
 Route::get('/categorias-filhas/{categoriasfilhas}/produtos', [ProductController::class, 'byCategoriasFilhas'])->name('products.byCategoriasFilhas');
 Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
-Route::get('/categorias/{slug}', [CategoryController::class, 'show'])->name('categories.show');
+Route::get('/categorias/{slug}', [CategoryController::class, 'show'])->middleware('throttle:catalog')->name('categories.show');
 Route::get('/subcategorias', [SubcategoryController::class, 'index'])->name('subcategories.index');
 Route::get('/produto/{id_or_slug}/avaliacoes', [ProductController::class, 'reviewsRedirect'])
     ->name('produto.reviews.redirect');
-Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->name('subcategories.show');
+Route::get('/subcategorias/{slug}', [SubcategoryController::class, 'show'])->middleware('throttle:catalog')->name('subcategories.show');
 Route::get('/categorias-filhas', [PublicCategoriasFilhasController::class, 'index'])->name('categorias-filhas.index');
-Route::get('/categorias-filhas/{slug}', [PublicCategoriasFilhasController::class, 'show'])->name('categorias-filhas.show');
+Route::get('/categorias-filhas/{slug}', [PublicCategoriasFilhasController::class, 'show'])->middleware('throttle:catalog')->name('categorias-filhas.show');
 Route::get('/marcas', [BrandController::class, 'publicIndex'])->name('brands.index');
-Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->name('brands.show');
+Route::get('/marcas/{slug}', [BrandController::class, 'publicShow'])->middleware('throttle:catalog')->name('brands.show');
 Route::get('/cart', [CartController::class, 'view'])->middleware(['auth', 'cliente', 'store.feature:cart'])->name('cart.view');
 Route::post('/cart/add', [CartController::class, 'add'])->middleware(['store.feature:add_to_cart', 'auth', 'cliente'])->name('cart.add');
 Route::match(['post', 'put'], '/cart/update/{productId}', [CartController::class, 'update'])->middleware(['auth', 'cliente', 'store.feature:cart'])->name('cart.update');

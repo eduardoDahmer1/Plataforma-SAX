@@ -32,6 +32,8 @@ class SearchCommerceFiltersTest extends TestCase
         $runtime = file_get_contents(__DIR__.'/../../resources/views/search/partials/filter-runtime.blade.php');
         $catalog = file_get_contents(__DIR__.'/../../resources/views/catalog/show.blade.php');
         $controller = file_get_contents(__DIR__.'/../../app/Http/Controllers/SearchController.php');
+        $routes = file_get_contents(__DIR__.'/../../routes/web.php');
+        $routeProvider = file_get_contents(__DIR__.'/../../app/Providers/RouteServiceProvider.php');
 
         $this->assertStringContainsString('id="search-dynamic-facets"', $sidebar);
         $this->assertStringContainsString('id="price-range-min"', $facets);
@@ -51,5 +53,9 @@ class SearchCommerceFiltersTest extends TestCase
         $this->assertStringContainsString("currency['rate']", $controller);
         $this->assertStringContainsString('contextSuggestsVolume', $controller);
         $this->assertStringContainsString('applyCouponScope', $controller);
+        $this->assertStringContainsString("Cache::lock(\$key.':lock'", $controller);
+        $this->assertStringContainsString("'catalog_query_data_v1:'", $controller);
+        $this->assertStringContainsString("RateLimiter::for('catalog'", $routeProvider);
+        $this->assertStringContainsString("middleware('throttle:catalog')", $routes);
     }
 }

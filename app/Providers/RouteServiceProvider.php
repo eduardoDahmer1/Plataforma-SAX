@@ -30,6 +30,24 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('catalog', function (Request $request) {
+            $cloudflareIp = trim((string) $request->header('CF-Connecting-IP'));
+            $visitor = filter_var($cloudflareIp, FILTER_VALIDATE_IP)
+                ? $cloudflareIp
+                : $request->ip();
+
+            return Limit::perMinute(30)->by('catalog:'.$visitor);
+        });
+
+        RateLimiter::for('catalog-autocomplete', function (Request $request) {
+            $cloudflareIp = trim((string) $request->header('CF-Connecting-IP'));
+            $visitor = filter_var($cloudflareIp, FILTER_VALIDATE_IP)
+                ? $cloudflareIp
+                : $request->ip();
+
+            return Limit::perMinute(60)->by('catalog-autocomplete:'.$visitor);
+        });
+
         RateLimiter::for('product-reviews', function (Request $request) {
             return Limit::perMinute(10)
                 ->by('product-reviews:'.($request->user()?->id ?: $request->ip()))

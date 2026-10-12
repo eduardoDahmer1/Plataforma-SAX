@@ -15,8 +15,10 @@ use App\Services\VisibleCatalogProductsService;
 use App\Services\StoreTaxonomyService;
 use App\Services\StorefrontLayoutService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Arr;
 
 class SearchController extends Controller
 {
@@ -510,6 +512,52 @@ class SearchController extends Controller
         ];
     }
 
+    private function cachedCatalogData(
+        string $group,
+        Request $request,
+        array $currency,
+        callable $resolver,
+    ): array {
+        $parameters = Arr::sortRecursive($request->only([
+            'search', 'brand', 'category', 'subcategory', 'categoriasfilhas',
+            'sizes', 'colors', 'min_price', 'max_price', 'coupon', 'collection',
+        ]));
+        $context = [
+            'parameters' => $parameters,
+            'locale' => translation_locale(),
+            'layout' => app(StorefrontLayoutService::class)->effective(),
+            'currency_rate' => $currency['rate'],
+            'currency_decimals' => $currency['decimals'],
+        ];
+        $key = 'catalog_query_data_v1:'.$group.':'.sha1((string) json_encode($context));
+
+        $cached = Cache::get($key);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        try {
+            return Cache::lock($key.':lock', 45)->block(15, function () use ($key, $resolver): array {
+                $cached = Cache::get($key);
+                if (is_array($cached)) {
+                    return $cached;
+                }
+
+                $resolved = $resolver();
+                Cache::put($key, $resolved, now()->addMinutes(5));
+
+                return $resolved;
+            });
+        } catch (LockTimeoutException) {
+            // Se outra requisição ainda estiver calculando, prefira o valor
+            // que ela acabou de publicar. O fallback preserva a página caso o
+            // backend de cache não ofereça locks.
+            $cached = Cache::get($key);
+
+            return is_array($cached) ? $cached : $resolver();
+        }
+    }
+
     public function catalogResults(Request $request): array
     {
         $this->removeOpticalCategoryFilter($request);
@@ -517,8 +565,18 @@ class SearchController extends Controller
         $base = $this->baseQuery($request);
         $facetBase = $this->applyFilters(clone $base, $request, $currency, true);
         $sidebar = array_merge(
-            $this->sidebarData(clone $facetBase),
-            $this->catalogFilterData(clone $facetBase, $request, $currency)
+            $this->cachedCatalogData(
+                'navigation',
+                $request,
+                $currency,
+                fn (): array => $this->sidebarData(clone $facetBase),
+            ),
+            $this->cachedCatalogData(
+                'facets',
+                $request,
+                $currency,
+                fn (): array => $this->catalogFilterData(clone $facetBase, $request, $currency),
+            ),
         );
         $query = $this->applyFilters(clone $base, $request, $currency);
         $this->applySorting($query, $this->requestedSort($request), $request->search);
@@ -573,7 +631,12 @@ class SearchController extends Controller
         $currency = $this->currencyContext();
         $base = $this->baseQuery($request);
         $facetBase = $this->applyFilters(clone $base, $request, $currency, true);
-        $facetData = $this->catalogFilterData(clone $facetBase, $request, $currency);
+        $facetData = $this->cachedCatalogData(
+            'facets',
+            $request,
+            $currency,
+            fn (): array => $this->catalogFilterData(clone $facetBase, $request, $currency),
+        );
 
         $query = $this->applyFilters(clone $base, $request, $currency);
         $this->applySorting($query, $this->requestedSort($request), $request->search);

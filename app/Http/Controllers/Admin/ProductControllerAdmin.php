@@ -934,7 +934,6 @@ class ProductControllerAdmin extends Controller
             'sku' => 'required|string|max:255|unique:products,sku,'.$product->id,
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'status' => 'sometimes|required|boolean',
             'brand_id' => 'nullable|exists:brands,id',
             'category_id' => 'nullable|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
@@ -1139,17 +1138,12 @@ class ProductControllerAdmin extends Controller
                 $photoForStatus = $data['photo'] ?? $product->photo;
                 $galleryForStatus = $data['gallery'] ?? $product->gallery;
                 $descriptionForStatus = $data['description'] ?? $product->description;
-                $data['status'] = Product::hasUsableImage($photoForStatus, $galleryForStatus)
-                    && (float) $data['price'] > 0
+                $data['status'] = ! $product->is_outlet
+                    && Product::hasUsableImage($photoForStatus, $galleryForStatus)
+                    && (float) $data['price'] >= Product::MINIMUM_VISIBLE_PRICE
                     && (int) $data['stock'] > 0
                     && trim((string) $descriptionForStatus) !== ''
                     ? 1 : 0;
-
-                // A escolha explícita no formulário prevalece sobre o cálculo automático.
-                // Clientes que não enviam status mantêm o comportamento anterior.
-                if ($request->has('status')) {
-                    $data['status'] = $product->is_outlet ? 0 : (int) $request->boolean('status');
-                }
 
                 $data['highlights'] = json_encode($request->input('highlights', []));
                 $data['stores'] = json_encode($request->input('stores', []));

@@ -137,14 +137,7 @@
             <div class="product-edit-savebar d-flex flex-wrap align-items-center justify-content-between gap-2 rounded mb-3">
                 <span id="productUnsavedStatus" class="small text-muted" role="status" aria-live="polite">Sem alterações pendentes</span>
                 <div class="d-flex flex-wrap align-items-center gap-3">
-                    <div class="form-check form-switch mb-0">
-                        <input type="hidden" name="status" value="0">
-                        <input class="form-check-input" type="checkbox" role="switch" id="product_status" name="status" value="1"
-                            @checked(!$item->is_outlet && (int) old('status', $item->status) === 1)
-                            @disabled($item->is_outlet) aria-describedby="productStatusHelp">
-                        <label class="form-check-label fw-semibold" for="product_status">Produto ativo</label>
-                        <span id="productStatusHelp" class="small text-muted d-block">{{ $item->is_outlet ? 'Outlet: restaure antes de ativar.' : 'Aplicado ao salvar.' }}</span>
-                    </div>
+                    <span class="small text-muted">{{ $item->is_outlet ? 'Outlet: restaure antes de ativar.' : 'Ativação automática ao salvar com foto, descrição, preço mínimo de 3 e estoque disponível.' }}</span>
                     <button type="submit" class="btn btn-success btn-sm">
                         <i class="fas fa-save me-2"></i>Salvar Alterações
                     </button>

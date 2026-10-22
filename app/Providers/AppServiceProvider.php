@@ -51,6 +51,18 @@ class AppServiceProvider extends ServiceProvider
         );
 
         if ($languagesTableExists) {
+            // Peer writes bypass Eloquent and local cache invalidation. A small
+            // dictionary revision fingerprint also invalidates its translated labels.
+            if (Schema::hasTable('catalog_attributes')) {
+                $signature = sha1(json_encode([
+                    DB::table('catalog_attributes')->orderBy('id')->pluck('revision')->all(),
+                    DB::table('catalog_attribute_options')->orderBy('id')->pluck('revision')->all(),
+                ]));
+                if (Cache::get('catalog_attribute_translation_signature') !== $signature) {
+                    Cache::forget('all_translations_db');
+                    Cache::forever('catalog_attribute_translation_signature', $signature);
+                }
+            }
             $allTranslations = Cache::remember('all_translations_db', now()->addHours(24), function () {
                 return Language::all();
             });

@@ -48,6 +48,7 @@ trait UsesProductAiDatabase
             '2026_08_13_100000_create_product_ai_preparations_table.php',
             '2026_08_14_100000_create_product_ai_batches_tables.php',
             '2026_09_09_120000_add_ai_controls_to_system_settings.php',
+            '2026_10_19_120100_add_attribute_mode_to_product_ai_batches.php',
         ] as $migration) {
             (require database_path('migrations/'.$migration))->up();
         }

@@ -735,14 +735,22 @@ document.addEventListener("DOMContentLoaded", function() {
         tinymce.init({
             ...editorConfig,
             selector: '#editor-product',
+            height: 360,
+            min_height: 280,
+            plugins: 'lists link paste wordcount code fullscreen',
+            toolbar: 'undo redo | bold italic | bullist numlist | link removeformat | code fullscreen',
+            toolbar_mode: 'wrap',
+            content_style: 'body { font-family: Inter, Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #172033; padding: 12px 20px; }',
             setup: (ed) => {
                 const syncDescription = () => {
                     const target = document.getElementById('real-desc-' + currentLangs.desc);
                     if (target) target.value = ed.getContent();
+                    window.saxRefreshProductDescription?.();
                 };
                 ed.on('init', () => {
                     const real = document.getElementById('real-desc-pt');
                     if (real) ed.setContent(real.value);
+                    window.saxRefreshProductDescription?.();
 
                     const form = document.getElementById('productEditForm');
                     if (form) form.addEventListener('submit', syncDescription);
@@ -777,12 +785,18 @@ function switchLanguage(type, nextLang, element) {
         const editorId = (type === 'content') ? 'editor-content' : 'editor-product';
         const realPrefix = (type === 'content') ? 'real-content-' : 'real-desc-';
 
-        const editor = tinymce.get(editorId);
+        const editor = typeof tinymce !== 'undefined' ? tinymce.get(editorId) : null;
         if (editor) {
             const prevArea = document.getElementById(realPrefix + prevLang);
             const nextArea = document.getElementById(realPrefix + nextLang);
             if (prevArea) prevArea.value = editor.getContent();
             editor.setContent(nextArea ? nextArea.value : '');
+        } else {
+            const visible = document.getElementById(editorId);
+            const prevArea = document.getElementById(realPrefix + prevLang);
+            const nextArea = document.getElementById(realPrefix + nextLang);
+            if (visible && prevArea) prevArea.value = visible.value;
+            if (visible) visible.value = nextArea?.value || '';
         }
     }
     // B. Tratamento para Inputs Visuais (title, name)
@@ -829,7 +843,7 @@ function switchLanguage(type, nextLang, element) {
 
     if (type === 'desc') {
         const languageLabel = document.getElementById('desc-current-language');
-        const labels = { pt: 'Conteúdo em Português', es: 'Contenido en Español', en: 'Content in English' };
+        const labels = { pt: 'Editando en portugués', es: 'Editando en español', en: 'Editando en inglés' };
         if (languageLabel) languageLabel.textContent = labels[nextLang] || '';
     }
 
@@ -850,6 +864,16 @@ function switchLanguage(type, nextLang, element) {
         element.setAttribute('aria-selected', 'true');
         const status = container.querySelector('[data-rich-lang-status]');
         if (status) status.textContent = 'Conteúdo em ' + (element.dataset.langLabel || nextLang.toUpperCase());
+    }
+    if (type === 'desc') {
+        document.querySelectorAll('.product-description .desc-lang-btn').forEach(tab => { tab.tabIndex = tab.dataset.lang === nextLang ? 0 : -1; });
+        document.getElementById('productDescriptionPanel')?.setAttribute('aria-labelledby', 'description-tab-' + nextLang);
+        window.saxRefreshProductDescription?.();
+    } else if (type === 'name') {
+        document.querySelectorAll('.product-identity .name-lang-btn').forEach(tab => { tab.tabIndex = tab.dataset.lang === nextLang ? 0 : -1; });
+        document.getElementById('productNamePanel')?.setAttribute('aria-labelledby', 'name-tab-' + nextLang);
+        const label = document.getElementById('name-current-language');
+        if (label) label.textContent = { pt: 'Editando en portugués', es: 'Editando en español', en: 'Editando en inglés' }[nextLang] || '';
     }
 }
 
@@ -997,11 +1021,20 @@ async function generateSaxDescriptionTranslations() {
     const fields = Object.fromEntries(['pt', 'es', 'en'].map(language => [language, document.getElementById(`real-desc-${language}`)]));
     const button = document.getElementById('translate-desc-btn');
     if (!button?.dataset.aiUrl || Object.values(fields).some(field => !field)) return;
-    if (Object.values(fields).some(field => field.value.trim()) && !confirm('As descrições atuais em PT, ES e EN serão substituídas por uma nova descrição SAX. Deseja continuar?')) return;
+    if (Object.values(fields).some(field => field.value.trim()) && !confirm('La IA reemplazará las descripciones actuales en portugués, español e inglés. ¿Querés continuar?')) return;
 
+    const feedback = document.getElementById('description-ai-feedback');
+    const showFeedback = (message, state) => {
+        if (!feedback) return;
+        feedback.textContent = message;
+        feedback.dataset.state = state;
+        feedback.classList.remove('d-none');
+    };
+    showFeedback('Generando las tres versiones de la descripción…', 'loading');
+    document.getElementById('description-ai-sources')?.classList.add('d-none');
     const originalButton = button.innerHTML;
     button.disabled = true;
-    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Gerando...';
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generando...';
 
     try {
         const response = await fetch(button.dataset.aiUrl, {
@@ -1013,11 +1046,11 @@ async function generateSaxDescriptionTranslations() {
             }
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Não foi possível gerar a descrição.');
+        if (!response.ok) throw new Error(data.message || 'No fue posible generar la descripción.');
 
         const descriptions = data.descriptions;
         if (['pt_br', 'es', 'en'].some(language => !String(descriptions?.[language] || '').trim())) {
-            throw new Error('A IA não devolveu as três descrições esperadas.');
+            throw new Error('La IA no devolvió las tres descripciones esperadas.');
         }
 
         const descriptionToHtml = value => String(value).trim().split(/\n{2,}/).filter(Boolean).map(paragraph => {
@@ -1031,32 +1064,38 @@ async function generateSaxDescriptionTranslations() {
 
         const editor = typeof tinymce !== 'undefined' ? tinymce.get('editor-product') : null;
         if (editor) editor.setContent(fields[currentLangs.desc]?.value || '');
+        else {
+            const visible = document.getElementById('editor-product');
+            if (visible) visible.value = fields[currentLangs.desc]?.value || '';
+        }
+        window.saxRefreshProductDescription?.();
 
         const sourcesContainer = document.getElementById('description-ai-sources');
-        if (sourcesContainer) {
-            sourcesContainer.replaceChildren();
+        const sourceLinks = document.getElementById('description-ai-source-links');
+        if (sourcesContainer && sourceLinks) {
+            sourceLinks.replaceChildren();
+            sourcesContainer.open = false;
             const sources = Array.isArray(data.research?.sources) ? data.research.sources : [];
             sourcesContainer.classList.toggle('d-none', sources.length === 0);
             if (sources.length) {
-                const label = document.createElement('span');
-                label.textContent = 'Fontes consultadas: ';
-                sourcesContainer.appendChild(label);
                 sources.forEach((source, index) => {
                     if (!/^https?:\/\//i.test(source.url || '')) return;
-                    if (index) sourcesContainer.appendChild(document.createTextNode(' · '));
+                    if (index) sourceLinks.appendChild(document.createTextNode(' · '));
                     const link = document.createElement('a');
                     link.href = source.url;
                     link.target = '_blank';
                     link.rel = 'noopener noreferrer';
                     link.textContent = source.title || source.url;
-                    sourcesContainer.appendChild(link);
+                    sourceLinks.appendChild(link);
                 });
             }
         }
-        window.saxToast ? saxToast('success', 'Descrições PT, ES e EN geradas. Revise antes de salvar.') : alert('Descrições PT, ES e EN geradas. Revise antes de salvar.');
+        window.saxToast && saxToast('success', 'Descripciones generadas. Revisá las tres versiones antes de guardar.');
+        showFeedback('Las tres versiones están listas. Revisalas y guardá el producto para confirmar los cambios.', 'success');
     } catch (error) {
+        showFeedback(error.message || 'No fue posible generar la descripción.', 'error');
         console.error('Falha ao gerar descrição com IA:', error);
-        window.saxToast ? saxToast('error', error.message || 'Não foi possível gerar a descrição.') : alert(error.message || 'Não foi possível gerar a descrição.');
+        window.saxToast && saxToast('error', error.message || 'No fue posible generar la descripción.');
     } finally {
         button.disabled = false;
         button.innerHTML = originalButton;
@@ -1184,6 +1223,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const categories = JSON.parse(categorySelect.dataset.categories || '[]');
     const subcategories = JSON.parse(subcategorySelect.dataset.subcategories || '[]');
     const categoriasfilhas = JSON.parse(categoriasfilhasSelect.dataset.categoriasfilhas || '[]');
+    window.saxProductTaxonomy = { subcategories, childcategories: categoriasfilhas };
+
 
     function clearOptions(select) {
         select.innerHTML = '<option value="">Selecione uma opção</option>';
@@ -1269,7 +1310,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'category_id',
             rowCategory.value,
             initialSubcategory,
-            'Selecione uma subcategoria'
+            'Seleccioná una subcategoría'
         );
         populateAdditionalSelect(
             rowChildcategory,
@@ -1277,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'subcategory_id',
             rowSubcategory.value,
             initialChildcategory,
-            'Selecione uma categoria filha'
+            'Seleccioná una categoría hija'
         );
 
         rowCategory.addEventListener('change', function () {
@@ -1287,7 +1328,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'category_id',
                 rowCategory.value,
                 '',
-                'Selecione uma subcategoria'
+                'Seleccioná una subcategoría'
             );
             populateAdditionalSelect(
                 rowChildcategory,
@@ -1295,7 +1336,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'subcategory_id',
                 '',
                 '',
-                'Selecione uma categoria filha'
+                'Seleccioná una categoría hija'
             );
         });
 
@@ -1306,7 +1347,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 'subcategory_id',
                 rowSubcategory.value,
                 '',
-                'Selecione uma categoria filha'
+                'Seleccioná una categoría hija'
             );
         });
     }

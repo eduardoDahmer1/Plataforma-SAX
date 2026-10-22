@@ -14,4 +14,13 @@ return [
         static fn (string $database): string => trim($database),
         explode(',', env('CATALOG_OPTICAL_DATABASE_NAMES', 'plataforma_otica'))
     ))),
+    // Permanecem no catálogo mestre para preservar os vínculos do ERP, mas
+    // não são oferecidas pelas vitrines e seletores da loja SAX.
+    'hidden_category_slugs' => array_values(array_filter(array_map(
+        static fn (string $slug): string => strtolower(trim($slug)),
+        explode(',', env(
+            'CATALOG_HIDDEN_CATEGORY_SLUGS',
+            'chocolate,electronicos,eletronicos,cavalheiro,cavalo'
+        ))
+    ))),
 ];

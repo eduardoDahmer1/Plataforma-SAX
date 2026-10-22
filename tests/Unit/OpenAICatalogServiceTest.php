@@ -30,6 +30,13 @@ class OpenAICatalogServiceTest extends TestCase
                             'suggested_attributes' => [],
                             'seo' => ['title_pt_br' => 'MARCA PRODUTO', 'meta_description_pt_br' => 'Produto', 'search_terms' => ['produto']],
                             'taxonomy_selection' => ['category_id' => 999, 'subcategory_id' => 999, 'childcategory_id' => 999, 'reason' => 'Sem evidência', 'confidence' => 'low'],
+                            'taxonomy_suggestions' => [],
+                            'additional_taxonomy_selections' => [],
+                            'taxonomy_assessment' => [
+                                'child_categories_reason' => 'La clasificación disponible es suficiente; no se justifica crear una categoría hija.',
+                                'additional_categories_reason' => 'No hay otra ruta pertinente entre las categorías disponibles.',
+                                'catalog_opportunities' => ['Una colaboración verificada podría organizarse como colección si se ofrece esa navegación.'],
+                            ],
                             'missing_data' => [],
                             'warnings' => [],
                             'confidence' => 'medium',
@@ -77,6 +84,11 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertSame(str_repeat('Descripción factual. ', 8), $result['proposal']['descriptions']['es']);
         $this->assertNull($result['proposal']['taxonomy_selection']['category_id']);
         $this->assertNull($result['proposal']['taxonomy_selection']['subcategory_id']);
+        $this->assertSame([], $result['proposal']['taxonomy_suggestions']);
+        $this->assertSame([], $result['proposal']['additional_taxonomy_selections']);
+        $this->assertSame('La clasificación disponible es suficiente; no se justifica crear una categoría hija.', $result['proposal']['taxonomy_assessment']['child_categories_reason']);
+        $this->assertSame('No hay otra ruta pertinente entre las categorías disponibles.', $result['proposal']['taxonomy_assessment']['additional_categories_reason']);
+        $this->assertCount(1, $result['proposal']['taxonomy_assessment']['catalog_opportunities']);
         $this->assertSame('matched', $result['research']['status']);
         $this->assertSame([
             ['title' => 'Fuente oficial', 'url' => 'https://brand.example/products/ref-123'],
@@ -104,6 +116,11 @@ class OpenAICatalogServiceTest extends TestCase
 
         $recordedRequest = Http::recorded()[0][0];
         $requestBody = $recordedRequest->data();
+        $schema = $requestBody['text']['format']['schema'];
+        $this->assertContains('taxonomy_assessment', $schema['required']);
+        $this->assertSame(['child_categories_reason', 'additional_categories_reason', 'catalog_opportunities'], $schema['properties']['taxonomy_assessment']['required']);
+        $this->assertStringContainsString('aunque las listas de sugerencias estén vacías', $requestBody['instructions']);
+
         $knownData = json_decode(str($requestBody['input'])->after("\n")->toString(), true);
 
         $this->assertStringContainsString('80 a 160 palabras como referencia editorial', $requestBody['instructions']);

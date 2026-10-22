@@ -101,4 +101,33 @@ class ProductAiBulkSupportTest extends TestCase
         $this->assertNull($normalized['taxonomy_selection']['subcategory_id']);
         $this->assertNull($normalized['taxonomy_selection']['childcategory_id']);
     }
+    public function test_missing_taxonomy_explanations_are_not_replaced_with_invented_decisions(): void
+    {
+        $method = new ReflectionMethod(OpenAICatalogService::class, 'normalizeProposal');
+        $normalized = $method->invoke(new OpenAICatalogService, [], collect(), collect(), collect());
+
+        $this->assertSame([
+            'child_categories_reason' => '',
+            'additional_categories_reason' => '',
+            'catalog_opportunities' => [],
+        ], $normalized['taxonomy_assessment']);
+    }
+
+    public function test_taxonomy_assessment_keeps_real_explanations_and_limits_optional_ideas(): void
+    {
+        $method = new ReflectionMethod(OpenAICatalogService::class, 'normalizeProposal');
+        $proposal = ['taxonomy_assessment' => [
+            'child_categories_reason' => '  Faltan datos para determinar una categoría hija.  ',
+            'additional_categories_reason' => ['invalid'],
+            'catalog_opportunities' => ['', null, ' Colección por colaboración ', 'Colección por colaboración', 'Una segunda posibilidad', 'Una tercera posibilidad'],
+        ]];
+        $normalized = $method->invoke(new OpenAICatalogService, $proposal, collect(), collect(), collect());
+
+        $this->assertSame('Faltan datos para determinar una categoría hija.', $normalized['taxonomy_assessment']['child_categories_reason']);
+        $this->assertSame('', $normalized['taxonomy_assessment']['additional_categories_reason']);
+        $this->assertSame(['Colección por colaboración', 'Una segunda posibilidad'], $normalized['taxonomy_assessment']['catalog_opportunities']);
+        $this->assertSame([], $normalized['taxonomy_suggestions']);
+        $this->assertSame([], $normalized['additional_taxonomy_selections']);
+    }
+
 }

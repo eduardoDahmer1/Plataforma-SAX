@@ -35,6 +35,7 @@ class OpenAICatalogService
         $normalizedManufacturerName = $this->normalizeSearchText($manufacturerIdentity['name'] ?? null);
 
         $knownData = [
+            'structured_attributes' => app(CatalogAttributeService::class)->aiContext($product),
             'internal_sku' => $product->sku,
             'original_name' => $product->external_name,
             'current_commercial_name' => $product->name,
@@ -122,7 +123,11 @@ continúa usando únicamente los datos internos.
 
 Los datos externos deben quedar identificados en web_research.findings. Selecciona la categoría,
 subcategoría y categoría hija que mejor correspondan al producto usando exclusivamente los IDs de
-allowed_categories, allowed_subcategories y allowed_child_categories. La subcategoría debe pertenecer
+allowed_categories, allowed_subcategories y allowed_child_categories. Si falta un nivel adecuado, propone hasta tres nuevas subcategorías o categorías hijas en taxonomy_suggestions con nombre en portugués, IDs de padres existentes y motivo. Nunca propongas categorías raíz ni duplicados o sinónimos de opciones existentes. En additional_taxonomy_selections indica hasta tres clasificaciones adicionales existentes solo cuando haya una relación clara, sin repetir la principal. Evalúa por separado la clasificación principal, las ramas adicionales compatibles y los niveles nuevos que faltan. Una selección principal adecuada no elimina la necesidad de revisar alternativas. Las adicionales pueden estar en otra subcategoría de la misma categoría raíz. Considera tipo de producto, función verificada y público; no asignes otra rama por asociación vaga ni cambies el público sin evidencia. Por ejemplo, un calzado deportivo puede tener una ruta por tipo de calzado y otra deportiva si el alcance de la rama incluye calzado. Si esa segunda ruta corresponde pero le falta una categoría hija adecuada, propón crearla bajo la subcategoría existente. No repitas la ruta principal, sus antecesores ni sinónimos. Devuelve listas vacías cuando no haya alternativas justificadas; no fuerces sugerencias.
+En taxonomy_assessment devuelve SIEMPRE una evaluación breve en español, aunque las listas de sugerencias estén vacías. En child_categories_reason explica por qué elegiste una categoría hija existente, propones crear una subcategoría o hija, o por qué no hace falta ampliar la clasificación. En additional_categories_reason explica qué otras rutas del árbol recibido corresponden o por qué ninguna aporta una clasificación pertinente. Basa las razones en este producto y en el árbol disponible, no en una frase genérica ni en una supuesta revisión humana. Distingue "no es necesario" de "faltan datos para decidir"; cuando la evidencia sea insuficiente, dilo sin inventar características. Las razones deben ser coherentes con taxonomy_selection, taxonomy_suggestions y additional_taxonomy_selections.
+En catalog_opportunities puedes incluir hasta dos posibilidades opcionales para organizar el catálogo, solo si aportan valor a este producto: por ejemplo una colaboración verificada podría tratarse como colección en lugar de categoría. Explica la condición para considerarlas. No presentes estas posibilidades como categorías existentes, asignaciones aprobadas ni características verificadas sin evidencia. Devuelve [] si no hay una ampliación útil. No inventes propuestas para completar cupos. taxonomy_assessment es exclusivamente administrativo y nunca debe incluirse en nombres ni descripciones comerciales.
+
+La subcategoría debe pertenecer
 a la categoría seleccionada y la categoría hija debe pertenecer a ambas. current_selection es solo
 una referencia y puede cambiar. Si no puedes determinar razonablemente un nivel, devuelve null para
 ese nivel y para todos sus niveles inferiores. Una característica solo puede presentarse como un hecho cuando esté
@@ -182,6 +187,13 @@ Escribe pt_br, es y en de manera natural e idiomática para cada público; no ha
 literales. Las tres versiones deben conservar exactamente los mismos hechos, sin añadir datos en
 un idioma que no aparezcan en los demás. No menciones la IA en el contenido comercial.
 PROMPT;
+
+        $instructions .= "\nPara catalog_attributes usa exclusivamente códigos del diccionario global structured_attributes. Completa solo missing_attribute_ids aplicables al producto. No crees atributos ni opciones. "
+            ."Devuelve solo valores nuevos ausentes del producto y su herencia. Excluye los atributos de protected_ids. Cada valor debe corresponder al SKU y variante exactos (product_sku y variant_match). "
+            ."Incluye una evidencia textual concreta y source_url de una página consultada que confirme ese valor para esa variante. "
+            ."No deduzcas polarización, materiales, medidas ni datos técnicos por foto, marca, categoría o variantes parecidas. "
+            ."Usa la unidad del diccionario, booleanos reales y option_codes existentes. Omite cualquier dato no respaldado; devuelve [] si faltan pruebas. "
+            ."No conviertas suggested_attributes en hechos ni uses esos campos libres para asignar atributos estructurados.";
 
         $response = Http::withToken($apiKey)
             ->acceptJson()
@@ -558,6 +570,71 @@ PROMPT;
         ];
     }
 
+    public function generateAttributesOnly(Product $product): array
+    {
+        $context = app(CatalogAttributeService::class)->aiContext($product);
+        if (! $context || ! $context['missing_attribute_ids']) return ['proposal'=>['catalog_attributes'=>[]], 'research'=>['status'=>'not_found','sources'=>[]]];
+        $identity = $product->manufacturerSearchIdentity();
+        [$proposal, $payload] = $this->requestAttributeJson(
+            'Investiga el producto y su variante exacta con web_search, priorizando fabricante y distribuidores autorizados. '
+            .'No confundas el SKU interno con el modelo del fabricante. Usa los candidatos de referencia del fabricante. '
+            .'Completa únicamente los missing_attribute_ids aplicables a este producto usando códigos y unidades del diccionario global. Omite atributos que no correspondan al producto. No modifiques ni generes nombres comerciales o descripciones. '
+            .'Cada dato requiere evidencia textual concreta y URL consultada que identifique esta variante exacta. '
+            .'No deduzcas materiales, polarización, medidas ni propiedades técnicas por imagen, categoría, marca o productos similares. '
+            .'No propagues medidas o colores a otras tallas. Si no se verifica, omítelo. No inventes opciones. '
+            .'Para cada dato informa product_sku exactamente como el SKU recibido y variant_match solo cuando se verificó. Usa [] si no hay datos respaldados.',
+            ['sku'=>$product->sku, 'original_name'=>$product->external_name, 'manufacturer_identity'=>$identity, 'brand'=>$product->brand?->name, 'size'=>$product->size, 'color'=>$product->color, 'attributes'=>$context],
+            ['type'=>'object', 'properties'=>['catalog_attributes'=>$this->catalogAttributeSchema()], 'required'=>['catalog_attributes'], 'additionalProperties'=>false], true,
+        );
+        $sources = $this->extractSources($payload, (array) ($identity['reference_candidates'] ?? []));
+        return ['proposal'=>$proposal, 'research'=>['status'=>$sources ? 'matched' : 'not_found', 'sources'=>$sources], 'source'=>['model'=>config('services.openai.model')]];
+    }
+
+    public function translateCatalogLabel(string $name, string $context): array
+    {
+        [$result] = $this->requestAttributeJson(
+            'Traduce la etiqueta de un atributo u opción de catálogo a español, portugués de Brasil e inglés. '
+            .'Conserva su significado técnico y no agregues propiedades, medidas ni afirmaciones. No traduzcas marcas ni códigos. Devuelve etiquetas breves.',
+            ['name'=>$name, 'context'=>$context],
+            ['type'=>'object', 'properties'=>['pt'=>['type'=>'string'], 'es'=>['type'=>'string'], 'en'=>['type'=>'string']], 'required'=>['pt','es','en'], 'additionalProperties'=>false], false,
+        );
+        foreach (['pt','es','en'] as $locale) {
+            if (! is_string($result[$locale] ?? null) || trim($result[$locale]) === '' || mb_strlen($result[$locale]) > 255) throw new RuntimeException('La IA devolvió una traducción inválida.');
+        }
+        return $result;
+    }
+
+    private function requestAttributeJson(string $instructions, array $input, array $schema, bool $research): array
+    {
+        $settings = app(ProductAiSettingsService::class);
+        $settings->ensureAvailable();
+        if ($settings->apiKey() === '') throw new RuntimeException('La API de OpenAI no está configurada.');
+        $body = ['model'=>config('services.openai.model'), 'instructions'=>$instructions,
+            'input'=>json_encode($input, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 'store'=>false,
+            'max_output_tokens'=>(int) config('services.openai.max_output_tokens',3000),
+            'text'=>['format'=>['type'=>'json_schema','name'=>'catalog_attributes','strict'=>true,'schema'=>$schema]]];
+        if ($research) $body += ['tools'=>[['type'=>'web_search']], 'tool_choice'=>'required', 'include'=>['web_search_call.action.sources']];
+        try {
+            $payload = Http::withToken($settings->apiKey())->acceptJson()->asJson()->timeout((int) config('services.openai.timeout',90))
+                ->post(rtrim(config('services.openai.base_url'),'/').'/responses', $body)->throw()->json();
+        } catch (RequestException $exception) { throw new RuntimeException('No fue posible consultar la IA para atributos.', previous:$exception); }
+        if (data_get($payload,'status') === 'incomplete') throw new RuntimeException('La IA devolvió una respuesta incompleta.');
+        $result = json_decode($this->extractOutputText($payload), true);
+        if (! is_array($result)) throw new RuntimeException('La IA devolvió un formato inválido.');
+        return [$result,$payload];
+    }
+
+    private function catalogAttributeSchema(): array
+    {
+        $properties = [
+            'code'=>['type'=>'string'], 'option_codes'=>['type'=>'array','items'=>['type'=>'string']],
+            'boolean_value'=>['type'=>['boolean','null']], 'number_value'=>['type'=>['string','null']],
+            'confidence'=>['type'=>'string','enum'=>['low','medium','high']], 'source_url'=>['type'=>'string'], 'evidence'=>['type'=>'string'],
+            'product_sku'=>['type'=>'string'], 'variant_match'=>['type'=>'boolean'],
+        ];
+        return ['type'=>'array','items'=>['type'=>'object','properties'=>$properties,'required'=>array_keys($properties),'additionalProperties'=>false]];
+    }
+
     private function responseSchema(): array
     {
         $languageText = [
@@ -571,6 +648,7 @@ PROMPT;
             'type' => 'object',
             'properties' => [
                 'editorial_summary' => ['type' => 'string'],
+                'catalog_attributes' => $this->catalogAttributeSchema(),
                 'commercial_name' => $languageText,
                 'descriptions' => $languageText,
                 'verified_attributes' => ['type' => 'array', 'items' => [
@@ -587,12 +665,24 @@ PROMPT;
                 ]],
                 'seo' => ['type' => 'object', 'properties' => ['title_pt_br' => ['type' => 'string'], 'meta_description_pt_br' => ['type' => 'string'], 'search_terms' => ['type' => 'array', 'items' => ['type' => 'string']]], 'required' => ['title_pt_br', 'meta_description_pt_br', 'search_terms'], 'additionalProperties' => false],
                 'taxonomy_selection' => ['type' => 'object', 'properties' => ['category_id' => ['type' => ['integer', 'null']], 'subcategory_id' => ['type' => ['integer', 'null']], 'childcategory_id' => ['type' => ['integer', 'null']], 'reason' => ['type' => 'string'], 'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']]], 'required' => ['category_id', 'subcategory_id', 'childcategory_id', 'reason', 'confidence'], 'additionalProperties' => false],
+                'taxonomy_suggestions' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['type' => ['type' => 'string', 'enum' => ['subcategory', 'childcategory']], 'name' => ['type' => 'string'], 'category_id' => ['type' => 'integer'], 'subcategory_id' => ['type' => ['integer', 'null']], 'reason' => ['type' => 'string']], 'required' => ['type', 'name', 'category_id', 'subcategory_id', 'reason'], 'additionalProperties' => false]],
+                'additional_taxonomy_selections' => ['type' => 'array', 'items' => ['type' => 'object', 'properties' => ['category_id' => ['type' => 'integer'], 'subcategory_id' => ['type' => ['integer', 'null']], 'childcategory_id' => ['type' => ['integer', 'null']], 'reason' => ['type' => 'string']], 'required' => ['category_id', 'subcategory_id', 'childcategory_id', 'reason'], 'additionalProperties' => false]],
+                'taxonomy_assessment' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'child_categories_reason' => ['type' => 'string'],
+                        'additional_categories_reason' => ['type' => 'string'],
+                        'catalog_opportunities' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 2],
+                    ],
+                    'required' => ['child_categories_reason', 'additional_categories_reason', 'catalog_opportunities'],
+                    'additionalProperties' => false,
+                ],
                 'missing_data' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'warnings' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'confidence' => ['type' => 'string', 'enum' => ['low', 'medium', 'high']],
                 'web_research' => ['type' => 'object', 'properties' => ['status' => ['type' => 'string', 'enum' => ['matched', 'not_found']], 'findings' => ['type' => 'array', 'items' => ['type' => 'string']], 'selected_source_urls' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 3]], 'required' => ['status', 'findings', 'selected_source_urls'], 'additionalProperties' => false],
             ],
-            'required' => ['editorial_summary', 'commercial_name', 'descriptions', 'verified_attributes', 'suggested_attributes', 'seo', 'taxonomy_selection', 'missing_data', 'warnings', 'confidence', 'web_research'],
+            'required' => ['editorial_summary', 'catalog_attributes', 'commercial_name', 'descriptions', 'verified_attributes', 'suggested_attributes', 'seo', 'taxonomy_selection', 'taxonomy_suggestions', 'additional_taxonomy_selections', 'taxonomy_assessment', 'missing_data', 'warnings', 'confidence', 'web_research'],
             'additionalProperties' => false,
         ];
     }
@@ -653,6 +743,30 @@ PROMPT;
                 }
             }
         }
+
+        $proposal['taxonomy_suggestions'] = collect($proposal['taxonomy_suggestions'] ?? [])->filter(function ($item) use ($allowedCategories, $allowedSubcategories) {
+            if (! is_array($item) || ! filled($item['name'] ?? null) || ! $allowedCategories->has((int) ($item['category_id'] ?? 0))) return false;
+            if (($item['type'] ?? null) === 'subcategory') return true;
+            $parent = $allowedSubcategories->get((int) ($item['subcategory_id'] ?? 0));
+            return ($item['type'] ?? null) === 'childcategory' && $parent && (int) $parent->category_id === (int) $item['category_id'];
+        })->take(3)->values()->all();
+        $proposal['additional_taxonomy_selections'] = collect($proposal['additional_taxonomy_selections'] ?? [])->filter(function ($item) use ($allowedCategories, $allowedSubcategories, $allowedChildCategories) {
+            if (! is_array($item) || ! $allowedCategories->has((int) ($item['category_id'] ?? 0))) return false;
+            $sub = $allowedSubcategories->get((int) ($item['subcategory_id'] ?? 0));
+            $child = $allowedChildCategories->get((int) ($item['childcategory_id'] ?? 0));
+            return (empty($item['subcategory_id']) || ($sub && (int) $sub->category_id === (int) $item['category_id']))
+                && (empty($item['childcategory_id']) || ($sub && $child && (int) $child->category_id === (int) $item['category_id'] && (int) $child->subcategory_id === (int) $sub->id));
+        })->take(3)->values()->all();
+
+        $assessment = is_array($proposal['taxonomy_assessment'] ?? null) ? $proposal['taxonomy_assessment'] : [];
+        // Do not invent an explanation for older or incomplete provider responses.
+        $proposal['taxonomy_assessment'] = [
+            'child_categories_reason' => is_string($assessment['child_categories_reason'] ?? null) ? trim($assessment['child_categories_reason']) : '',
+            'additional_categories_reason' => is_string($assessment['additional_categories_reason'] ?? null) ? trim($assessment['additional_categories_reason']) : '',
+            'catalog_opportunities' => collect(is_array($assessment['catalog_opportunities'] ?? null) ? $assessment['catalog_opportunities'] : [])
+                ->filter(fn ($value) => is_string($value) && trim($value) !== '')
+                ->map(fn ($value) => trim($value))->unique()->take(2)->values()->all(),
+        ];
 
         return $proposal;
     }

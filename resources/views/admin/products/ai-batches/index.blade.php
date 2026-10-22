@@ -24,6 +24,8 @@
                     <p class="text-muted mb-4">La vista previa no consume IA. Podrás confirmar después de revisar los códigos encontrados.</p>
 
                     <form method="POST" action="{{ route('admin.products.ai-batches.preview') }}" enctype="multipart/form-data">
+                        <label class="form-check my-3"><input class="form-check-input" type="checkbox" name="attributes_only" value="1" @checked(old('attributes_only'))> Solo completar atributos faltantes (incluye productos preparados o publicados de Óptica)</label>
+                        <p class="small text-muted">Este modo conserva nombres, descripciones y estado; verifica cada SKU por separado.</p>
                         @csrf
                         <div class="mb-4">
                             <label for="aiBatchFile" class="form-label fw-bold">Archivo Excel (.xlsx)</label>

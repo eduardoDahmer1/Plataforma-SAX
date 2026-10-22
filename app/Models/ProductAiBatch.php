@@ -16,10 +16,11 @@ class ProductAiBatch extends Model
 
     protected $fillable = [
         'created_by', 'source_type', 'original_filename', 'status', 'input_count',
-        'duplicate_count', 'eligible_count', 'started_at', 'completed_at',
+        'duplicate_count', 'eligible_count', 'started_at', 'completed_at', 'attributes_only',
     ];
 
     protected $casts = [
+        'attributes_only' => 'boolean',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];

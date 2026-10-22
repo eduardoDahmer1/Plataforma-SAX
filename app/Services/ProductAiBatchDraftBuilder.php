@@ -58,7 +58,8 @@ class ProductAiBatchDraftBuilder
             $foundProducts->push($product);
         }
 
-        $groups = $this->grouper->group($foundProducts);
+        $groups = $batch->attributes_only ? $foundProducts->map(fn ($p) => ['representative_id'=>(int)$p->id, 'linked_family'=>false, 'product_ids'=>[(int)$p->id], 'source_skus'=>[(string)$p->sku]])->all()
+            : $this->grouper->group($foundProducts);
         $candidateRepresentativeIds = collect($groups)->pluck('representative_id')->map(fn ($id) => (int) $id);
         $existingParentIds = Product::withoutGlobalScopes()
             ->whereIn('parent_id', $candidateRepresentativeIds)
@@ -66,7 +67,7 @@ class ProductAiBatchDraftBuilder
             ->map(fn ($id) => (int) $id)
             ->flip();
         foreach ($groups as &$group) {
-            if ($existingParentIds->has((int) $group['representative_id'])) {
+            if (! $batch->attributes_only && $existingParentIds->has((int) $group['representative_id'])) {
                 $group['linked_family'] = true;
             }
         }
@@ -129,7 +130,10 @@ class ProductAiBatchDraftBuilder
             }
 
             $skipMessage = null;
-            if (collect($targetIds)->contains(fn ($id) => (bool) $targets->get($id)?->status)) {
+            if ($batch->attributes_only) {
+                $attributeProduct = Product::withoutGlobalScopes()->find($representativeId);
+                if (! $attributeProduct || ! app(CatalogAttributeService::class)->missing($attributeProduct)) $skipMessage = 'Sin atributos activos faltantes o diccionario no disponible.';
+            } elseif (collect($targetIds)->contains(fn ($id) => (bool) $targets->get($id)?->status)) {
                 $skipMessage = 'Producto o variante activa; no se modifica contenido publicado.';
             } elseif (collect($targetIds)->contains(fn ($id) => in_array(
                 $preparations->get($id)?->status,

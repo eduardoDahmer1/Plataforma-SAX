@@ -255,24 +255,6 @@
                         </a>
                     @endif
 
-                    @if (isset($dhlMeasurement) && min(
-                        (float) $dhlMeasurement['weight'],
-                        (float) $dhlMeasurement['length'],
-                        (float) $dhlMeasurement['width'],
-                        (float) $dhlMeasurement['height'],
-                    ) > 0)
-                        <div class="product-logistics-reference" title="{{ $dhlMeasurement['estimated'] ? 'Referência logística estimada pela categoria' : 'Peso e medidas reais do produto' }}">
-                            <i class="fa-solid fa-box-open" aria-hidden="true"></i>
-                            <span class="product-logistics-label">Peso e medidas</span>
-                            <span>{{ number_format($dhlMeasurement['weight'], 3, ',', '.') }} kg</span>
-                            <span class="product-logistics-divider" aria-hidden="true"></span>
-                            <span>{{ number_format($dhlMeasurement['length'], 1, ',', '.') }} × {{ number_format($dhlMeasurement['width'], 1, ',', '.') }} × {{ number_format($dhlMeasurement['height'], 1, ',', '.') }} cm</span>
-                            @if ($dhlMeasurement['estimated'])
-                                <span class="product-logistics-kind">média</span>
-                            @endif
-                        </div>
-                    @endif
-
                     <div class="product-price-block mb-4">
                         @if ($product->previous_price > $product->price)
                             <span class="text-muted text-decoration-line-through me-2 small fw-light">{{ currency_format($product->previous_price) }}</span>
@@ -405,26 +387,33 @@
                             </div>
                         </div>
 
-                        @if ($product->attributes)
-                            @php $attrs = json_decode($product->attributes, true); @endphp
-                            @if (!empty($attrs))
-                                <div class="accordion-item-sax border-top">
-                                    <div class="accordion-trigger d-flex justify-content-between align-items-center py-3" style="cursor: pointer;">
-                                        <span class="extra-small fw-bold text-uppercase" style="letter-spacing: 1px;">{{ __('messages.detalhes_tecnicos') }}</span>
-                                        <i class="fas fa-plus small text-muted"></i>
-                                    </div>
-                                    <div class="accordion-content pb-3">
-                                        <table class="table table-sm table-borderless m-0 extra-small text-muted">
-                                            @foreach ($attrs as $key => $value)
-                                                <tr>
-                                                    <td class="ps-0 fw-bold text-uppercase pe-4">{{ $key }}:</td>
-                                                    <td class="text-end pe-0">{{ $value }}</td>
-                                                </tr>
-                                            @endforeach
-                                        </table>
-                                    </div>
+                        @php
+                            $attrs = $product->attributes ? json_decode($product->attributes, true) : [];
+                            $hasMeasurements = isset($dhlMeasurement) && min(
+                                (float) $dhlMeasurement['weight'],
+                                (float) $dhlMeasurement['length'],
+                                (float) $dhlMeasurement['width'],
+                                (float) $dhlMeasurement['height'],
+                            ) > 0;
+                            $decimalSeparator = app()->getLocale() === 'en' ? '.' : ',';
+                            $thousandsSeparator = app()->getLocale() === 'en' ? ',' : '.';
+                            $formatDimension = static fn ($value) => rtrim(rtrim(
+                                number_format($value, 1, $decimalSeparator, $thousandsSeparator), '0'
+                            ), $decimalSeparator);
+                        @endphp
+                        @if ($hasMeasurements || !empty($attrs))
+                            <details class="product-technical-details">
+                                <summary>{{ __('messages.product_technical_details') }}</summary>
+                                <div class="product-technical-values">
+                                    @if ($hasMeasurements)
+                                        <p>{{ __('messages.product_technical_weight') }}: {{ number_format($dhlMeasurement['weight'], 3, $decimalSeparator, $thousandsSeparator) }} kg</p>
+                                        <p>{{ __('messages.product_technical_dimensions') }}: {{ $formatDimension($dhlMeasurement['length']) }} × {{ $formatDimension($dhlMeasurement['width']) }} × {{ $formatDimension($dhlMeasurement['height']) }} cm</p>
+                                    @endif
+                                    @foreach ($attrs ?? [] as $key => $value)
+                                        <p>{{ $key }}: {{ $value }}</p>
+                                    @endforeach
                                 </div>
-                            @endif
+                            </details>
                         @endif
                     </div>
 

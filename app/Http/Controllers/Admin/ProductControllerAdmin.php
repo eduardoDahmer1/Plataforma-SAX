@@ -1303,6 +1303,10 @@ class ProductControllerAdmin extends Controller
                     }
                 }
 
+                if ($request->has('catalog_values')) {
+                    app(\App\Services\CatalogAttributeService::class)->saveProduct($product->fresh(), (array) $request->input('catalog_values'), auth()->id());
+                }
+
                 $returnTo = $request->input('return_to');
                 $redirectUrl = $returnTo && str_starts_with($returnTo, config('app.url')) ? $returnTo : route('admin.products.index');
 

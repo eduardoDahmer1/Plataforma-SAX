@@ -7,3 +7,8 @@ O ambiente **sax_stage** continua sendo o único ambiente das lojas autorizado p
 - O código é compartilhado pelo mesmo repositório Git; depois de validar no stage, a publicação nos demais ambientes é feita pelo operador com `git pull`.
 - Migrações e alterações de banco devem ser executadas primeiro no banco do stage.
 - Antes de qualquer alteração, confirme o diretório atual com `pwd` e preserve mudanças não relacionadas.
+
+## Traduções: execução manual pelo operador
+
+- Para inserir ou corrigir traduções, entregar o SQL em texto na resposta para o usuário executar manualmente no banco.
+- Não criar migrations, seeders ou outras automações para traduções e não executar esse SQL automaticamente, salvo autorização explícita do usuário para aquela tarefa.

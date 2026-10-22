@@ -53,6 +53,7 @@ class ProductAiProposalApplier
             }
 
             $product->update($data);
+            app(CatalogAttributeService::class)->applyAi($product, $result, $userId);
             $this->saveTranslations($product->id, $translations);
 
             $resolvedTargetIds = collect($targetProductIds)
@@ -132,7 +133,6 @@ class ProductAiProposalApplier
     {
         $attributes = array_merge(
             (array) data_get($proposal, 'verified_attributes', []),
-            (array) data_get($proposal, 'suggested_attributes', []),
         );
         foreach ($attributes as $name => $attribute) {
             $attributeName = is_array($attribute) ? ($attribute['name'] ?? $name) : $name;

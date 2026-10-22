@@ -138,6 +138,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return Str::is([
             'admin.index',
             'admin.products.*',
+            'admin.catalog-attributes.*',
             'admin.produto.*',
             'admin.brands.*',
             'admin.subcategories.*',

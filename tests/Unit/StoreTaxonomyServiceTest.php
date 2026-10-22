@@ -15,25 +15,34 @@ class StoreTaxonomyServiceTest extends TestCase
     {
         $service = new StoreTaxonomyService($this->storeControl(true));
 
-        $categorySql = $service->categories(Category::query())->toSql();
+        $categorySql = str_replace(['`', '"'], '', $service->categories(Category::query())->toSql());
         $subcategorySql = $service->subcategories(Subcategory::query())->toSql();
         $childCategorySql = $service->childCategories(CategoriasFilhas::query())->toSql();
 
-        $this->assertStringContainsString('lower(categories.name)', strtolower($categorySql));
+        $this->assertStringContainsString('categories.ref_code', strtolower($categorySql));
+        $this->assertStringContainsString('lower(categories.slug)', strtolower($categorySql));
+        $this->assertStringNotContainsString(' like ', strtolower($categorySql));
         $this->assertStringContainsString('exists', strtolower($subcategorySql));
         $this->assertStringContainsString('categories', strtolower($subcategorySql));
         $this->assertStringContainsString('subcategories', strtolower($childCategorySql));
         $this->assertStringContainsString('categories', strtolower($childCategorySql));
     }
 
-    public function test_other_profiles_keep_the_original_query_unchanged(): void
+    public function test_sax_profile_hides_categories_excluded_from_the_storefront(): void
     {
+        config()->set('catalog-sync.hidden_category_slugs', [
+            'chocolate', 'electronicos', 'cavalheiro', 'cavalo',
+        ]);
         $service = new StoreTaxonomyService($this->storeControl(false));
         $query = Category::query();
 
         $this->assertSame($query, $service->categories($query));
-        $this->assertStringContainsString('categories', $query->toSql());
-        $this->assertStringNotContainsString('lower(', strtolower($query->toSql()));
+        $this->assertStringContainsString('lower(categories.slug)', strtolower($query->toSql()));
+        $this->assertStringContainsString('not in', strtolower($query->toSql()));
+        $this->assertSame(
+            ['chocolate', 'electronicos', 'cavalheiro', 'cavalo'],
+            $query->getBindings(),
+        );
     }
 
     private function storeControl(bool $isOtica): StoreControlService

@@ -127,6 +127,12 @@
             <span class="small text-muted">Completa nombres, descripciones y clasificación en el formulario. El operador revisa y guarda manualmente.</span>
         </div>
 
+        @include('admin.products.ai-taxonomy-modal')
+        @if(app(\App\Services\CatalogAttributeService::class)->enabledFor($item))
+            @include('admin.catalog-attributes.modal')
+            <script src="{{ asset('js/catalog-attributes-admin.js') }}" defer></script>
+        @endif
+
         <form id="productEditForm" class="product-edit-form" action="{{ isset($item) ? route('admin.products.update', $item->id) : route('admin.products.store') }}"
             method="POST" enctype="multipart/form-data">
             @csrf
@@ -146,221 +152,237 @@
 
             <div class="row g-4 product-edit-grid">
                 @if ($type === 'product')
-                    <div class="col-md-6">
-                        <label for="sku" class="form-label"><i class="fas fa-barcode me-1"></i>SKU</label>
-                        <input readonly type="text" id="sku" name="sku" class="form-control"
-                            value="{{ old('sku', $item->sku ?? '') }}">
-                    </div>
+                    <section class="col-12 product-identity" aria-labelledby="productIdentityTitle">
+                        <div class="product-identity__header">
+                            <h6 id="productIdentityTitle">Datos del producto</h6>
+                            <p>Identificá el producto y revisá cómo se mostrará en la tienda.</p>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="sku" class="form-label">SKU <span class="product-identity__readonly">Solo lectura</span></label>
+                                <input readonly type="text" id="sku" name="sku" class="form-control" value="{{ old('sku', $item->sku ?? '') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="external_name" class="form-label">Nombre original <span class="product-identity__readonly">Sistema GO · Solo lectura</span></label>
+                                <input readonly type="text" id="external_name" name="external_name" class="form-control" value="{{ old('external_name', $item->external_name ?? '') }}">
+                            </div>
+                            <div class="col-md-6 product-identity__commercial lang-field">
+                                <label for="visual-name-input" class="form-label">Nombre comercial</label>
+                                {{-- The canonical PT name must take precedence over an older translation. --}}
+                                <input type="hidden" id="real-name-pt" name="translate[pt-br][name]" value="{{ old('translate.pt-br.name', $item->name ?: ($ptTranslation->name ?? ($item->external_name ?? ''))) }}">
+                                <input type="hidden" id="real-name-es" name="translate[es][name]" value="{{ old('translate.es.name', $esTranslation->name ?? '') }}">
+                                <input type="hidden" id="real-name-en" name="translate[en][name]" value="{{ old('translate.en.name', $enTranslation->name ?? '') }}">
+                                <div id="productNamePanel" role="tabpanel" aria-labelledby="name-tab-pt">
+                                    <input type="text" id="visual-name-input" class="form-control" value="" aria-describedby="name-current-language">
+                                </div>
+                                <p class="product-identity__hint">Este es el nombre que verá el cliente en el catálogo.</p>
+                                <div class="product-description__languages" role="tablist" aria-label="Idioma del nombre comercial">
+                                    <button type="button" id="name-tab-pt" class="name-lang-btn lang-field__tab active" data-lang="pt" role="tab" aria-selected="true" aria-controls="productNamePanel" onclick="switchLanguage('name', 'pt', this)">Português</button>
+                                    <button type="button" id="name-tab-es" class="name-lang-btn lang-field__tab" data-lang="es" role="tab" aria-selected="false" aria-controls="productNamePanel" tabindex="-1" onclick="switchLanguage('name', 'es', this)">Español</button>
+                                    <button type="button" id="name-tab-en" class="name-lang-btn lang-field__tab" data-lang="en" role="tab" aria-selected="false" aria-controls="productNamePanel" tabindex="-1" onclick="switchLanguage('name', 'en', this)">English</button>
+                                </div>
+                                <div class="product-identity__footer">
+                                    <span id="name-current-language">Editando en portugués</span>
+                                    <button type="button" id="translate-name-btn" class="btn btn-outline-secondary" onclick="translateProductField('name')"><i class="fas fa-language me-2" aria-hidden="true"></i>Detectar y traducir</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="brand_id" class="form-label">Marca</label>
+                                <select name="brand_id" id="brand_id" class="form-select">
+                                    <option value="">Seleccioná una marca</option>
+                                    @foreach ($brands as $brand)
+                                        <option value="{{ $brand->id }}" @selected((int) old('brand_id', $item->brand_id ?? 0) === (int) $brand->id)>{{ $brand->name ?: $brand->slug }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </section>
 
-                    <div class="col-md-6">
-                        <label for="external_name" class="form-label"><i class="fas fa-tag me-1"></i>Nome original (Sistema GO)</label>
-                        <input readonly type="text" id="external_name" name="external_name" class="form-control"
-                            value="{{ old('external_name', $item->external_name ?? '') }}">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label"><i class="fas fa-pencil-alt me-1"></i>Nome comercial do produto</label>
-                        
-                        {{-- products.name é o nome comercial canônico em PT. A tradução antiga
-                             não pode sobrescrevê-lo ao abrir e salvar o formulário. --}}
-                        <input type="hidden" id="real-name-pt" name="translate[pt-br][name]" value="{{ old('translate.pt-br.name', $item->name ?: ($ptTranslation->name ?? ($item->external_name ?? ''))) }}">
-                        <input type="hidden" id="real-name-es" name="translate[es][name]" value="{{ old('translate.es.name', $esTranslation->name ?? '') }}">
-                        <input type="hidden" id="real-name-en" name="translate[en][name]" value="{{ old('translate.en.name', $enTranslation->name ?? '') }}">
-
-                        <div>
-                            <input type="text" id="visual-name-input" class="form-control" value="">
+                    <section class="col-12 mb-3 product-description lang-field" aria-labelledby="productDescriptionTitle">
+                        <div class="product-description__header">
+                            <div>
+                                <h6 id="productDescriptionTitle">Descripción del producto</h6>
+                                <p>Este es el texto que verá el cliente en la tienda.</p>
+                            </div>
                         </div>
 
-                        <div class="mt-1">
-                            <span class="small text-muted d-block mb-1">Este é o nome exibido no catálogo e na loja.</span>
-                            <span class="small text-muted me-2">Editar idioma:</span>
-                            <a href="javascript:void(0)" class="badge bg-primary name-lang-btn text-decoration-none" data-lang="pt" onclick="switchLanguage('name', 'pt', this)">PT</a>
-                            <a href="javascript:void(0)" class="badge bg-secondary name-lang-btn text-decoration-none" data-lang="es" onclick="switchLanguage('name', 'es', this)">ES</a>
-                            <a href="javascript:void(0)" class="badge bg-secondary name-lang-btn text-decoration-none" data-lang="en" onclick="switchLanguage('name', 'en', this)">EN</a>
-                            <button type="button" id="translate-name-btn" class="btn btn-outline-primary btn-sm ms-2"
-                                    onclick="translateProductField('name')">
-                                <i class="fas fa-language me-1"></i>Detectar e traduzir
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="brand_id" class="form-label"><i class="fas fa-industry me-1"></i>Marca</label>
-                        <select name="brand_id" id="brand_id" class="form-select">
-                            <option value="">Selecione uma marca</option>
-                            @foreach ($brands as $brand)
-                                <option value="{{ $brand->id }}"
-                                    {{ (int) old('brand_id', $item->brand_id ?? 0) === (int) $brand->id ? 'selected' : '' }}>
-                                    {{ $brand->name ?: $brand->slug }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-12 mb-3">
-                        <label class="sax-label"><i class="fas fa-align-left me-1"></i>Descrição do Produto</label>
-
-                        {{-- products.description é a descrição canônica em português. ES e EN
-                             permanecem armazenados separadamente em product_translations. --}}
+                        {{-- Preserve the canonical PT description and independent ES/EN translations. --}}
                         <textarea id="real-desc-pt" name="translate[pt-br][details]" class="d-none">{{ old('translate.pt-br.details', $item->description ?: ($ptTranslation->details ?? '')) }}</textarea>
                         <textarea id="real-desc-es" name="translate[es][details]" class="d-none">{{ old('translate.es.details', $esTranslation->details ?? '') }}</textarea>
                         <textarea id="real-desc-en" name="translate[en][details]" class="d-none">{{ old('translate.en.details', $enTranslation->details ?? '') }}</textarea>
 
-                        <div class="editor-rich-wrapper">
+                        <div class="product-description__languages" role="tablist" aria-label="Idioma de la descripción">
+                            <button type="button" id="description-tab-pt" class="desc-lang-btn lang-field__tab active" data-lang="pt" role="tab" aria-selected="true" aria-controls="productDescriptionPanel" onclick="switchLanguage('desc', 'pt', this)">Português <span data-description-presence="pt" class="product-description__presence"></span></button>
+                            <button type="button" id="description-tab-es" class="desc-lang-btn lang-field__tab" data-lang="es" role="tab" aria-selected="false" aria-controls="productDescriptionPanel" tabindex="-1" onclick="switchLanguage('desc', 'es', this)">Español <span data-description-presence="es" class="product-description__presence"></span></button>
+                            <button type="button" id="description-tab-en" class="desc-lang-btn lang-field__tab" data-lang="en" role="tab" aria-selected="false" aria-controls="productDescriptionPanel" tabindex="-1" onclick="switchLanguage('desc', 'en', this)">English <span data-description-presence="en" class="product-description__presence"></span></button>
+                        </div>
+                        <div id="productDescriptionPanel" class="product-description__editor" role="tabpanel" aria-labelledby="description-tab-pt">
+                            <label for="editor-product" class="visually-hidden">Contenido de la descripción</label>
                             <textarea id="editor-product" class="form-control"></textarea>
                         </div>
-
-                        <div class="mt-1">
-                            <span class="small text-muted d-block mb-1" id="desc-current-language">Conteúdo em Português</span>
-                            <span class="small text-muted me-2">Editar idioma:</span>
-                            <a href="javascript:void(0)" class="badge bg-primary desc-lang-btn text-decoration-none" data-lang="pt" onclick="switchLanguage('desc', 'pt', this)">PT</a>
-                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" data-lang="es" onclick="switchLanguage('desc', 'es', this)">ES</a>
-                            <a href="javascript:void(0)" class="badge bg-secondary desc-lang-btn text-decoration-none" data-lang="en" onclick="switchLanguage('desc', 'en', this)">EN</a>
-                            <button type="button" id="translate-desc-btn" class="btn btn-outline-primary btn-sm ms-2"
-                                    data-ai-url="{{ route('admin.products.generateDescriptionWithAi', $item->id) }}"
-                                    @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason())
-                                    onclick="generateSaxDescriptionTranslations()">
-                                <i class="fas fa-wand-magic-sparkles me-1"></i>Gerar descrição SAX
-                            </button>
-                            <div id="description-ai-sources" class="small mt-2 d-none"></div>
+                        <div class="product-description__footer">
+                            <span id="desc-current-language">Editando en portugués</span>
+                            <span>Los cambios se confirman al guardar el producto.</span>
                         </div>
-                    </div>
+                        <div class="product-description__ai">
+                            <button type="button" id="translate-desc-btn" class="btn btn-outline-secondary"
+                                data-ai-url="{{ route('admin.products.generateDescriptionWithAi', $item->id) }}"
+                                @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason())
+                                onclick="generateSaxDescriptionTranslations()">
+                                <i class="fas fa-wand-magic-sparkles me-2" aria-hidden="true"></i>Generar con IA
+                            </button>
+                            <span>Genera las tres versiones.</span>
+                        </div>
 
-                    <div class="col-12 mt-2">
-                        <h6 class="mb-0"><i class="fas fa-sitemap me-1"></i>Categorização principal</h6>
-                    </div>
+                        <p id="description-ai-feedback" class="product-description__feedback d-none" role="status" aria-live="polite"></p>
+                        <details id="description-ai-sources" class="product-description__sources d-none">
+                            <summary>Fuentes consultadas</summary>
+                            <div id="description-ai-source-links" class="mt-2"></div>
+                        </details>
+                    </section>
 
-                    <div class="col-md-4">
-                        <label for="category_id" class="form-label"><i class="fas fa-folder me-1"></i>Categoria</label>
-                        <select name="category_id" id="category_id" class="form-select">
-                            <option value="">Selecione uma categoria</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}"
-                                    {{ $item->category_id === $category->id ? 'selected' : '' }}>
-                                    {{ $category->name ?: $category->slug }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @include('admin.catalog-attributes.product')
 
-                    <div class="col-md-4">
-                        <label for="subcategory_id" class="form-label"><i
-                                class="fas fa-folder-open me-1"></i>Subcategoria</label>
-                        <select name="subcategory_id" id="subcategory_id" class="form-select" data-subcategories='@json($subcategories)' data-selected="{{ old('subcategory_id', $item->subcategory_id ?? '') }}">
-                            <option value="">Selecione uma subcategoria</option>
-                            @foreach ($subcategories as $subcategory)
-                                <option value="{{ $subcategory->id }}"
-                                    {{ $item->subcategory_id === $subcategory->id ? 'selected' : '' }}>
-                                    {{ $subcategory->name ?: $subcategory->slug }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label for="categoriasfilhas_id" class="form-label"><i class="fas fa-sitemap me-1"></i>Categorias
-                            Filhas</label>
-                        <select name="childcategory_id" id="categoriasfilhas_id" class="form-select" data-categoriasfilhas='@json($categoriasfilhas)' data-selected="{{ old('childcategory_id', $item->childcategory_id ?? '') }}">
-                            <option value="">Selecione uma categorias filhas</option>
-                            @foreach ($categoriasfilhas as $childCategory)
-                                <option value="{{ $childCategory->id }}"
-                                    {{ (int) old('childcategory_id', $item->childcategory_id ?? 0) === (int) $childCategory->id ? 'selected' : '' }}>
-                                    {{ $childCategory->name ?: $childCategory->slug }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="border-top pt-3 mt-2">
-                            <h6 class="mb-1"><i class="fas fa-layer-group me-1"></i>Categorizações adicionais</h6>
-                            <p class="small text-muted mb-3">Associe o produto a outras categorias sem alterar a categorização principal.</p>
-
-                            <div id="additionalCategoriesContainer" data-next-index="{{ $additionalCategoryRows->count() }}">
-                                @foreach ($additionalCategoryRows as $index => $assignment)
-                                    @php
-                                        $selectedCategoryId = $assignment['category_id'] ?? null;
-                                        $selectedSubcategoryId = $assignment['subcategory_id'] ?? null;
-                                        $selectedChildcategoryId = $assignment['childcategory_id'] ?? null;
-                                    @endphp
-                                    <div class="additional-category-row border rounded p-3 mb-3">
-                                        <div class="row g-2 align-items-end">
-                                            <div class="col-md-3">
-                                                <label class="form-label">Categoria</label>
-                                                <select name="additional_categories[{{ $index }}][category_id]" class="form-select additional-category-select">
-                                                    <option value="">Selecione uma categoria</option>
-                                                    @foreach ($categories as $category)
-                                                        <option value="{{ $category->id }}" @selected((int) $selectedCategoryId === (int) $category->id)>
-                                                            {{ $category->name ?: $category->slug }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Subcategoria</label>
-                                                <select name="additional_categories[{{ $index }}][subcategory_id]"
-                                                    class="form-select additional-subcategory-select"
-                                                    data-selected="{{ $selectedSubcategoryId }}">
-                                                    <option value="">Selecione uma subcategoria</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Categoria filha</label>
-                                                <select name="additional_categories[{{ $index }}][childcategory_id]"
-                                                    class="form-select additional-childcategory-select"
-                                                    data-selected="{{ $selectedChildcategoryId }}">
-                                                    <option value="">Selecione uma categoria filha</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <button type="button" class="btn btn-outline-danger w-100 remove-additional-category">
-                                                    <i class="fas fa-trash-alt me-1"></i>Remover
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                    <section class="col-12 product-taxonomy" aria-label="Categorización del producto">
+                        <div class="row g-4">
+                            <div class="col-12 mt-2">
+                                <h6 class="product-taxonomy__title mb-0">Categorización principal</h6>
                             </div>
 
-                            <button type="button" id="addAdditionalCategory" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-plus me-1"></i>Adicionar categorização
-                            </button>
+                            <div class="col-md-4">
+                                <label for="category_id" class="form-label">Categoría</label>
+                                <select name="category_id" id="category_id" class="form-select">
+                                    <option value="">Seleccioná una categoría</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}"
+                                            {{ $item->category_id === $category->id ? 'selected' : '' }}>
+                                            {{ $category->name ?: $category->slug }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                            <template id="additionalCategoryTemplate">
-                                <div class="additional-category-row border rounded p-3 mb-3">
-                                    <div class="row g-2 align-items-end">
-                                        <div class="col-md-3">
-                                            <label class="form-label">Categoria</label>
-                                            <select name="additional_categories[__INDEX__][category_id]" class="form-select additional-category-select">
-                                                <option value="">Selecione uma categoria</option>
-                                                @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}">{{ $category->name ?: $category->slug }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">Subcategoria</label>
-                                            <select name="additional_categories[__INDEX__][subcategory_id]" class="form-select additional-subcategory-select">
-                                                <option value="">Selecione uma subcategoria</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label">Categoria filha</label>
-                                            <select name="additional_categories[__INDEX__][childcategory_id]" class="form-select additional-childcategory-select">
-                                                <option value="">Selecione uma categoria filha</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <button type="button" class="btn btn-outline-danger w-100 remove-additional-category">
-                                                <i class="fas fa-trash-alt me-1"></i>Remover
-                                            </button>
-                                        </div>
+                            <div class="col-md-4">
+                                <label for="subcategory_id" class="form-label">Subcategoría</label>
+                                <select name="subcategory_id" id="subcategory_id" class="form-select" data-subcategories='@json($subcategories)' data-selected="{{ old('subcategory_id', $item->subcategory_id ?? '') }}">
+                                    <option value="">Seleccioná una subcategoría</option>
+                                    @foreach ($subcategories as $subcategory)
+                                        <option value="{{ $subcategory->id }}"
+                                            {{ $item->subcategory_id === $subcategory->id ? 'selected' : '' }}>
+                                            {{ $subcategory->name ?: $subcategory->slug }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="categoriasfilhas_id" class="form-label">Categoría hija</label>
+                                <select name="childcategory_id" id="categoriasfilhas_id" class="form-select" data-categoriasfilhas='@json($categoriasfilhas)' data-selected="{{ old('childcategory_id', $item->childcategory_id ?? '') }}">
+                                    <option value="">Seleccioná una categoría hija</option>
+                                    @foreach ($categoriasfilhas as $childCategory)
+                                        <option value="{{ $childCategory->id }}"
+                                            {{ (int) old('childcategory_id', $item->childcategory_id ?? 0) === (int) $childCategory->id ? 'selected' : '' }}>
+                                            {{ $childCategory->name ?: $childCategory->slug }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="product-taxonomy__additional">
+                                    <h6 class="product-taxonomy__title mb-3">Categorías adicionales</h6>
+                                    <p id="additionalCategoriesEmpty" class="product-taxonomy__empty" @if($additionalCategoryRows->isNotEmpty()) hidden @endif>Sin categorías adicionales.</p>
+
+                                    <div id="additionalCategoriesContainer" data-next-index="{{ $additionalCategoryRows->count() }}">
+                                        @foreach ($additionalCategoryRows as $index => $assignment)
+                                            @php
+                                                $selectedCategoryId = $assignment['category_id'] ?? null;
+                                                $selectedSubcategoryId = $assignment['subcategory_id'] ?? null;
+                                                $selectedChildcategoryId = $assignment['childcategory_id'] ?? null;
+                                            @endphp
+                                            <div class="additional-category-row product-taxonomy__assignment">
+                                                <div class="row g-2 align-items-end">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Categoría</label>
+                                                        <select name="additional_categories[{{ $index }}][category_id]" class="form-select additional-category-select">
+                                                            <option value="">Seleccioná una categoría</option>
+                                                            @foreach ($categories as $category)
+                                                                <option value="{{ $category->id }}" @selected((int) $selectedCategoryId === (int) $category->id)>
+                                                                    {{ $category->name ?: $category->slug }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Subcategoría</label>
+                                                        <select name="additional_categories[{{ $index }}][subcategory_id]"
+                                                            class="form-select additional-subcategory-select"
+                                                            data-selected="{{ $selectedSubcategoryId }}">
+                                                            <option value="">Seleccioná una subcategoría</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Categoría hija</label>
+                                                        <select name="additional_categories[{{ $index }}][childcategory_id]"
+                                                            class="form-select additional-childcategory-select"
+                                                            data-selected="{{ $selectedChildcategoryId }}">
+                                                            <option value="">Seleccioná una categoría hija</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <button type="button" class="btn btn-link text-danger remove-additional-category">
+                                                            <i class="fas fa-trash-alt me-1" aria-hidden="true"></i>Quitar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
 
+                                    <button type="button" id="addAdditionalCategory" class="btn btn-link product-taxonomy__link">
+                                        <i class="far fa-plus-square me-2" aria-hidden="true"></i>Agregar manualmente
+                                    </button>
+
+                                    <template id="additionalCategoryTemplate">
+                                        <div class="additional-category-row product-taxonomy__assignment">
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Categoría</label>
+                                                    <select name="additional_categories[__INDEX__][category_id]" class="form-select additional-category-select">
+                                                        <option value="">Seleccioná una categoría</option>
+                                                        @foreach ($categories as $category)
+                                                            <option value="{{ $category->id }}">{{ $category->name ?: $category->slug }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Subcategoría</label>
+                                                    <select name="additional_categories[__INDEX__][subcategory_id]" class="form-select additional-subcategory-select">
+                                                        <option value="">Seleccioná una subcategoría</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Categoría hija</label>
+                                                    <select name="additional_categories[__INDEX__][childcategory_id]" class="form-select additional-childcategory-select">
+                                                        <option value="">Seleccioná una categoría hija</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <button type="button" class="btn btn-link text-danger remove-additional-category">
+                                                        <i class="fas fa-trash-alt me-1" aria-hidden="true"></i>Quitar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                @include('admin.products.ai-taxonomy')
+                            </div>
+                        </div>
+                    </section>
 
                     <div class="col-12">
                         <div class="row g-4">

@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Reutiliza la cascada existente para mantener coherentes los tres niveles.
         categorySelect.value = String(categoryId);
         categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        subcategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
         if (!subcategoryId) return;
 
         const hasSubcategory = Array.from(subcategorySelect.options).some(function (option) {
@@ -84,10 +85,218 @@ document.addEventListener('DOMContentLoaded', function () {
         const editor = typeof tinymce !== 'undefined' ? tinymce.get('editor-product') : null;
         const activeDescriptionLanguage = window.currentLangs?.desc || 'pt';
         if (editor) editor.setContent(document.getElementById('real-desc-' + activeDescriptionLanguage)?.value || '');
+        window.saxRefreshProductDescription?.();
 
         applyTaxonomyToForm(currentProposal.taxonomy_selection);
 
     }
+
+    const suggestions = document.getElementById('aiTaxonomySuggestions');
+    const taxonomyForm = document.getElementById('aiTaxonomyForm');
+    const taxonomyAssessment = document.getElementById('aiTaxonomyAssessment');
+    let selectedSuggestion = null;
+    let suggestionButton = null;
+
+    function assignAdditional(item) {
+        const primary = { category_id: document.getElementById('category_id')?.value, subcategory_id: document.getElementById('subcategory_id')?.value, childcategory_id: document.getElementById('categoriasfilhas_id')?.value };
+        if (['category_id', 'subcategory_id', 'childcategory_id'].every(key => String(primary[key] || '') === String(item[key] || ''))) return 'primary';
+        const container = document.getElementById('additionalCategoriesContainer');
+        const duplicate = Array.from(container?.children || []).some(row =>
+            ['category', 'subcategory', 'childcategory'].every(level =>
+                String(row.querySelector('.additional-' + level + '-select')?.value || '') === String(item[level + '_id'] || '')));
+        if (!container) return 'unavailable';
+        if (duplicate) return 'duplicate';
+        document.getElementById('addAdditionalCategory')?.click();
+        const row = container.lastElementChild;
+        ['category', 'subcategory', 'childcategory'].forEach(level => {
+            const select = row.querySelector('.additional-' + level + '-select');
+            select.value = String(item[level + '_id'] || '');
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        return 'added';
+    }
+
+    function taxonomyPath(item, newName = '') {
+        const category = document.querySelector('#category_id option[value="' + Number(item.category_id) + '"]')?.textContent.trim();
+        const sub = window.saxProductTaxonomy?.subcategories.find(sub => String(sub.id) === String(item.subcategory_id));
+        const child = window.saxProductTaxonomy?.childcategories.find(child => String(child.id) === String(item.childcategory_id));
+        return [category, sub?.name, child?.name, newName].filter(Boolean).join(' / ');
+    }
+
+    function showTaxonomyMessage(message) {
+        if (!suggestions) return;
+        const text = document.createElement('p');
+        text.className = 'product-taxonomy__empty mb-0';
+        text.textContent = message;
+        suggestions.replaceChildren(text);
+    }
+
+    function renderTaxonomyAssessment() {
+        if (!taxonomyAssessment) return;
+        taxonomyAssessment.replaceChildren();
+        const assessment = currentProposal?.taxonomy_assessment || {};
+        const list = document.createElement('dl');
+        function addEvaluation(label, reason) {
+            const heading = document.createElement('dt');
+            heading.textContent = label;
+            const detail = document.createElement('dd');
+            detail.textContent = typeof reason === 'string' && reason.trim()
+                ? reason.trim()
+                : 'La IA no incluyó una explicación para este apartado. Volvé a generar la propuesta para revisarlo.';
+            list.append(heading, detail);
+        }
+        addEvaluation('Categorías hijas', assessment.child_categories_reason);
+        addEvaluation('Categorizaciones adicionales', assessment.additional_categories_reason);
+        taxonomyAssessment.appendChild(list);
+        const opportunities = Array.isArray(assessment.catalog_opportunities)
+            ? assessment.catalog_opportunities.filter(item => typeof item === 'string' && item.trim()).slice(0, 2) : [];
+        if (opportunities.length) {
+            const heading = document.createElement('h6');
+            heading.textContent = 'Posibles ampliaciones del catálogo';
+            const hint = document.createElement('p');
+            hint.className = 'product-taxonomy__assessment-hint';
+            hint.textContent = 'Ideas para revisar; no se crean ni se asignan al producto.';
+            const options = document.createElement('ul');
+            opportunities.forEach(text => {
+                const item = document.createElement('li');
+                item.textContent = text;
+                options.appendChild(item);
+            });
+            taxonomyAssessment.append(heading, hint, options);
+        }
+        taxonomyAssessment.classList.remove('d-none');
+    }
+
+    function renderTaxonomySuggestions() {
+        if (!suggestions) return;
+        suggestions.replaceChildren();
+        function addSuggestion(label, reason, action, callback, badge = '') {
+            const row = document.createElement('div');
+            row.className = 'product-taxonomy__suggestion';
+            const copy = document.createElement('div');
+            copy.className = 'product-taxonomy__suggestion-copy';
+            const title = document.createElement('div');
+            title.className = 'product-taxonomy__suggestion-title';
+            const path = document.createElement('span');
+            path.textContent = label;
+            title.appendChild(path);
+            if (badge) {
+                const tag = document.createElement('span');
+                tag.className = 'product-taxonomy__badge';
+                tag.textContent = badge;
+                title.appendChild(tag);
+            }
+            const detail = document.createElement('small');
+            detail.className = 'product-taxonomy__suggestion-reason';
+            detail.textContent = reason || '';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = badge ? 'btn btn-outline-primary' : 'btn btn-primary';
+            button.textContent = action;
+            button.addEventListener('click', () => callback(button));
+            copy.append(title, detail);
+            row.append(copy, button);
+            suggestions.appendChild(row);
+        }
+        (currentProposal?.additional_taxonomy_selections || []).forEach(item => {
+            addSuggestion(taxonomyPath(item), item.reason, 'Agregar al producto', button => {
+                const result = assignAdditional(item);
+                button.disabled = true;
+                button.textContent = result === 'primary' ? 'Ya es la principal' : result === 'duplicate' ? 'Ya está agregada' : 'Agregada al formulario';
+            });
+        });
+        (currentProposal?.taxonomy_suggestions || []).forEach(item => {
+            addSuggestion(taxonomyPath(item, item.name), item.reason, 'Revisar creación', button => {
+                selectedSuggestion = item;
+                suggestionButton = button;
+                document.getElementById('aiTaxonomyType').value = item.type;
+                document.getElementById('aiTaxonomyName').value = item.name;
+                const category = document.getElementById('aiTaxonomyCategory');
+                category.replaceChildren(...Array.from(document.getElementById('category_id').options).map(option => option.cloneNode(true)));
+                category.value = String(item.category_id);
+                updateModalParents(item.subcategory_id);
+                document.getElementById('aiTaxonomyAssignment').value = 'none';
+                document.getElementById('aiTaxonomyError').classList.add('d-none');
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('aiTaxonomyModal')).show();
+            }, item.type === 'subcategory' ? 'Nueva subcategoría' : 'Nueva categoría hija');
+        });
+        // An empty list is explained by the assessment, never by an invented reason.
+        renderTaxonomyAssessment();
+    }
+
+    function updateModalParents(selectedId = '') {
+        const child = selectedSuggestion?.type === 'childcategory';
+        document.getElementById('aiTaxonomyTitle').textContent = child ? 'Crear categoría hija' : 'Crear subcategoría';
+        const select = document.getElementById('aiTaxonomySubcategory');
+        document.getElementById('aiTaxonomySubcategoryGroup').hidden = !child;
+        select.required = child;
+        select.replaceChildren(new Option('Seleccioná una subcategoría', ''));
+        (window.saxProductTaxonomy?.subcategories || []).filter(item => String(item.category_id) === document.getElementById('aiTaxonomyCategory').value).forEach(item => select.add(new Option(item.name, item.id)));
+        select.value = String(selectedId || '');
+    }
+    function openManualTaxonomy(type) {
+        selectedSuggestion = { type };
+        document.getElementById('aiTaxonomyType').value = type;
+        suggestionButton = null;
+        document.getElementById('aiTaxonomyName').value = '';
+        const category = document.getElementById('aiTaxonomyCategory');
+        const primary = document.getElementById('category_id');
+        category.replaceChildren(...Array.from(primary.options).map(option => option.cloneNode(true)));
+        category.value = primary.value;
+        updateModalParents(document.getElementById('subcategory_id')?.value);
+        document.getElementById('aiTaxonomyAssignment').value = 'none';
+        document.getElementById('aiTaxonomyError').classList.add('d-none');
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('aiTaxonomyModal')).show();
+    }
+    document.getElementById('createProductTaxonomy')?.addEventListener('click', () => openManualTaxonomy(document.getElementById('subcategory_id')?.value ? 'childcategory' : 'subcategory'));
+    document.getElementById('aiTaxonomyType')?.addEventListener('change', event => {
+        if (!selectedSuggestion) return;
+        selectedSuggestion = { ...selectedSuggestion, type: event.target.value };
+        updateModalParents(document.getElementById('aiTaxonomySubcategory').value);
+    });
+    const additionalContainer = document.getElementById('additionalCategoriesContainer');
+    const additionalEmpty = document.getElementById('additionalCategoriesEmpty');
+    if (additionalContainer && additionalEmpty) {
+        const updateEmpty = () => { additionalEmpty.hidden = !!additionalContainer.querySelector('.additional-category-row'); };
+        new MutationObserver(updateEmpty).observe(additionalContainer, { childList: true });
+        updateEmpty();
+    }
+    document.getElementById('aiTaxonomyCategory')?.addEventListener('change', () => updateModalParents());
+    taxonomyForm?.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!selectedSuggestion) return;
+        const submit = taxonomyForm.querySelector('[type="submit"]');
+        const errorBox = document.getElementById('aiTaxonomyError');
+        submit.disabled = true;
+        errorBox.classList.add('d-none');
+        try {
+            const response = await fetch(taxonomyForm.dataset.url, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+                body: JSON.stringify({ type: selectedSuggestion.type, name: document.getElementById('aiTaxonomyName').value, category_id: document.getElementById('aiTaxonomyCategory').value, subcategory_id: document.getElementById('aiTaxonomySubcategory').value || null })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(Object.values(data.errors || {}).flat().join(' ') || data.message || 'No fue posible crear la clasificación.');
+            const list = data.type === 'subcategory' ? window.saxProductTaxonomy.subcategories : window.saxProductTaxonomy.childcategories;
+            if (!list.some(item => String(item.id) === String(data.item.id))) list.push(data.item);
+            const assignment = { category_id: data.item.category_id, subcategory_id: data.type === 'subcategory' ? data.item.id : data.item.subcategory_id, childcategory_id: data.type === 'childcategory' ? data.item.id : null };
+            const mode = document.getElementById('aiTaxonomyAssignment').value;
+            if (mode === 'primary') applyTaxonomyToForm(assignment);
+            if (mode === 'additional') assignAdditional(assignment);
+            bootstrap.Modal.getInstance(document.getElementById('aiTaxonomyModal')).hide();
+            if (suggestionButton) {
+                suggestionButton.disabled = true;
+                suggestionButton.textContent = data.created ? 'Creada' : 'Ya existe';
+            }
+            aiFeedback.className = 'alert alert-success';
+            aiFeedback.textContent = (data.created ? 'Clasificación creada.' : 'Se utilizó la clasificación existente.') + (mode === 'none' ? '' : ' Guardá el producto para confirmar su asignación.');
+        } catch (error) {
+            errorBox.textContent = error.message || 'No fue posible crear la clasificación.';
+            errorBox.classList.remove('d-none');
+        } finally {
+            submit.disabled = false;
+        }
+    });
 
     function renderResearch(research) {
         if (!aiResearch) return;
@@ -143,6 +352,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (aiResearch) aiResearch.className = 'd-none mb-4';
         if (aiGeneratedAt) aiGeneratedAt.value = '';
         currentProposal = null;
+        taxonomyAssessment?.replaceChildren();
+        taxonomyAssessment?.classList.add('d-none');
+        showTaxonomyMessage('Buscando sugerencias de clasificación…');
+        suggestions?.setAttribute('aria-busy', 'true');
 
         try {
             const response = await fetch(aiButton.dataset.aiUrl, {
@@ -162,11 +375,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) throw new Error(data.message || 'No fue posible generar la propuesta.');
 
             currentProposal = data.proposal;
+            window.dispatchEvent(new CustomEvent('sax:catalog-attribute-proposal', {detail: data}));
             if (aiGeneratedAt && data.preparation?.status === 'generated' && data.preparation?.generated_at) {
                 aiGeneratedAt.value = data.preparation.generated_at;
             }
             applyProposalToForm();
             renderResearch(data.research);
+            renderTaxonomySuggestions();
             const requiresReview = data.preparation?.status === 'not_found';
             aiFeedback.className = requiresReview ? 'alert alert-warning' : 'alert alert-success';
             aiFeedback.textContent = requiresReview
@@ -178,11 +393,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     : 'Formulario completado con IA; todavía no fue guardado.')
                 : null;
         } catch (error) {
+            showTaxonomyMessage('No se pudieron generar las sugerencias. Reintentá o creá una clasificación manualmente.');
             aiFeedback.className = 'alert alert-danger';
             aiFeedback.textContent = error instanceof TypeError
                 ? 'No se pudo conectar con el servidor. Verificá tu conexión, el estado del servidor y los logs de Laravel.'
                 : (error.message || 'No fue posible generar la propuesta.');
         } finally {
+            suggestions?.setAttribute('aria-busy', 'false');
             aiButton.disabled = false;
             aiButton.innerHTML = originalHtml;
         }
@@ -1570,4 +1787,59 @@ document.addEventListener('DOMContentLoaded', function () {
         const details = event.target.closest('details');
         if (details) details.open = true;
     }, true);
+});
+
+// Description UI: language presence and keyboard navigation, scoped to products.
+document.addEventListener('DOMContentLoaded', function () {
+    const section = document.querySelector('.product-description');
+    if (!section) return;
+    const tabs = Array.from(section.querySelectorAll('.desc-lang-btn'));
+    window.saxRefreshProductDescription = function () {
+        section.querySelectorAll('[data-description-presence]').forEach(status => {
+            const html = document.getElementById('real-desc-' + status.dataset.descriptionPresence)?.value || '';
+            const content = document.createElement('template');
+            content.innerHTML = html;
+            status.textContent = content.content.textContent.replace(/\u00a0/g, ' ').trim() ? '' : 'Sin texto';
+        });
+    };
+    window.saxRefreshProductDescription();
+    tabs.forEach(tab => tab.addEventListener('keydown', function (event) {
+        const index = tabs.indexOf(tab);
+        let next;
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = tabs.length - 1;
+        else return;
+        event.preventDefault();
+        tabs[next].click();
+        tabs[next].focus();
+    }));
+    const visible = document.getElementById('editor-product');
+    if (visible && (typeof tinymce === 'undefined' || !tinymce.get('editor-product'))) {
+        visible.value = document.getElementById('real-desc-' + (window.currentLangs?.desc || 'pt'))?.value || '';
+    }
+    visible?.addEventListener('input', () => {
+        if (typeof tinymce !== 'undefined' && tinymce.get('editor-product')) return;
+        const target = document.getElementById('real-desc-' + (window.currentLangs?.desc || 'pt'));
+        if (target) target.value = visible.value;
+        window.saxRefreshProductDescription();
+    });
+});
+
+// Product-name language tabs use the same keyboard behavior as description tabs.
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = Array.from(document.querySelectorAll('.product-identity .name-lang-btn'));
+    tabs.forEach(tab => tab.addEventListener('keydown', function (event) {
+        const index = tabs.indexOf(tab);
+        let next;
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = tabs.length - 1;
+        else return;
+        event.preventDefault();
+        tabs[next].click();
+        tabs[next].focus();
+    }));
 });

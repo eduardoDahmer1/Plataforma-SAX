@@ -40,9 +40,13 @@ class OpticalProductSyncService
         $peer = DB::connection((string) config('catalog-sync.connection'));
 
         $peer->transaction(function () use ($peer, $products): void {
+            $attributeSync = app(CatalogAttributeSyncService::class);
+            $attributesEnabled = app(CatalogAttributeService::class)->available();
+            if ($attributesEnabled) $attributeSync->dictionary($peer);
             foreach ($products as $product) {
                 $this->syncReferences($peer, $product);
                 $this->syncProduct($peer, $product);
+                if ($attributesEnabled) $attributeSync->product($peer, (int) $product->id);
             }
         });
 

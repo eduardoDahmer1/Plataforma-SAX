@@ -69,6 +69,21 @@ class GenerateProductAiPreparation implements ShouldQueue
             return;
         }
 
+        if ($item->batch?->attributes_only) {
+            try {
+                $catalog = app(\App\Services\CatalogAttributeService::class);
+                $applied = $catalog->missing($product) ? $catalog->applyAi($product, $openAi->generateAttributesOnly($product), $item->batch->created_by) : 0;
+                $item->update(['status'=>ProductAiBatchItem::STATUS_COMPLETED, 'message'=>$applied ? "Se guardaron {$applied} atributos respaldados; contenido comercial conservado." : 'No se encontraron nuevos valores respaldados. El producto se conservó.', 'finished_at'=>now()]);
+                $item->batch->refreshProgress();
+            } catch (\Illuminate\Validation\ValidationException) {
+                $item->update(['status'=>ProductAiBatchItem::STATUS_QUEUED]); $this->release(60);
+            } catch (Throwable $exception) {
+                if ($this->isRetryable($exception)) throw $exception;
+                $this->finishAsFailed($item, $this->safeMessage($exception));
+            }
+            return;
+        }
+
         if ($product->aiPreparation?->status === ProductAiPreparation::STATUS_COMPLETED) {
             $item->update([
                 'status' => ProductAiBatchItem::STATUS_COMPLETED,
@@ -148,7 +163,7 @@ class GenerateProductAiPreparation implements ShouldQueue
 
     private function finishAsFailed(ProductAiBatchItem $item, string $message): void
     {
-        foreach ($this->targetProductIds($item) as $targetProductId) {
+        foreach ($item->batch?->attributes_only ? [] : $this->targetProductIds($item) as $targetProductId) {
             ProductAiPreparation::updateOrCreate(
                 ['product_id' => $targetProductId],
                 [

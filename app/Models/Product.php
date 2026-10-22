@@ -189,6 +189,11 @@ class Product extends Model
         return $this->hasOne(ProductAiPreparation::class);
     }
 
+    public function catalogAttributeValues()
+    {
+        return $this->hasMany(ProductAttributeValue::class);
+    }
+
     public function productAiDisplayStatus(): string
     {
         $status = $this->aiPreparation?->status;

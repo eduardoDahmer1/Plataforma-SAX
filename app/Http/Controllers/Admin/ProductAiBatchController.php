@@ -172,6 +172,7 @@ class ProductAiBatchController extends Controller
     public function preview(Request $request, ProductAiBatchDraftBuilder $draftBuilder)
     {
         $validated = $request->validate([
+            'attributes_only' => 'nullable|boolean',
             'file' => ['nullable', 'required_without:skus', 'file', 'mimes:xlsx', 'max:5120'],
             'skus' => ['nullable', 'required_without:file', 'string', 'max:100000'],
         ], [
@@ -216,9 +217,10 @@ class ProductAiBatchController extends Controller
         $rawSkus = $rawSkus->values();
         $inputField = filled($validated['skus'] ?? null) ? 'skus' : 'file';
 
-        $batch = DB::transaction(function () use ($rawSkus, $sourceType, $originalFilename, $inputField, $draftBuilder) {
+        $batch = DB::transaction(function () use ($rawSkus, $sourceType, $originalFilename, $inputField, $draftBuilder, $request) {
             $batch = ProductAiBatch::create([
                 'created_by' => auth()->id(),
+                'attributes_only' => $request->boolean('attributes_only'),
                 'source_type' => $sourceType,
                 'original_filename' => $originalFilename,
                 'status' => ProductAiBatch::STATUS_DRAFT,

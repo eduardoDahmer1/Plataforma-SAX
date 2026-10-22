@@ -357,6 +357,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('products/{product}/generate-description', [ProductControllerAdmin::class, 'generateDescriptionWithAi'])
         ->middleware('throttle:20,1')
         ->name('products.generateDescriptionWithAi');
+    Route::get('catalog-attributes', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'index'])->name('catalog-attributes.index');
+    Route::post('catalog-attributes/translate', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'translate'])->middleware('throttle:20,1')->name('catalog-attributes.translate');
+    Route::post('catalog-attributes', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'store'])->name('catalog-attributes.store');
+    Route::put('catalog-attributes/{catalogAttribute}', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'update'])->whereNumber('catalogAttribute')->name('catalog-attributes.update');
+    Route::post('catalog-attributes/{catalogAttribute}/options', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'option'])->whereNumber('catalogAttribute')->name('catalog-attributes.options.store');
+    Route::put('catalog-attributes/{catalogAttribute}/options/{catalogOption}', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'option'])->whereNumber('catalogAttribute')->whereNumber('catalogOption')->name('catalog-attributes.options.update');
+    Route::get('products/{product}/catalog-attributes', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'values'])->name('products.catalog-attributes.values');
+    Route::post('products/{product}/catalog-attributes/complete', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'complete'])->middleware('throttle:20,1')->name('products.catalog-attributes.complete');
+    Route::post('products/ai-taxonomy', [\App\Http\Controllers\Admin\ProductAiTaxonomyController::class, 'store'])->middleware('throttle:30,1')->name('products.ai-taxonomy.store');
     Route::post('products/{product}/complete-with-ai', [ProductControllerAdmin::class, 'completeWithAi'])
         ->middleware('throttle:20,1')
         ->name('products.completeWithAi');

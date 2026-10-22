@@ -3,20 +3,10 @@
 namespace App\Services;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class StoreTaxonomyService
 {
-    private const OPTICAL_TERMS = [
-        'optico',
-        'otico',
-        'otica',
-        'oculo',
-        'lente',
-        'gafa',
-        'eyewear',
-        'optical',
-    ];
-
     public function __construct(private readonly StoreControlService $storeControl)
     {
     }
@@ -24,7 +14,7 @@ class StoreTaxonomyService
     public function categories(Builder $query): Builder
     {
         if (! $this->storeControl->isOtica()) {
-            return $query;
+            return $this->applyPlatformCategoryConstraint($query);
         }
 
         return $this->applyOpticalCategoryConstraint($query);
@@ -60,16 +50,39 @@ class StoreTaxonomyService
 
     public function applyOpticalCategoryConstraint(Builder $query): Builder
     {
-        return $query->where(function (Builder $scope): void {
-            $nameColumn = $scope->getModel()->qualifyColumn('name');
-            $slugColumn = $scope->getModel()->qualifyColumn('slug');
+        $reference = trim((string) config('catalog-sync.optical_category_ref_code'));
+        $slugs = array_values(array_filter(array_map(
+            static fn ($slug): string => mb_strtolower(trim((string) $slug)),
+            (array) config('catalog-sync.optical_category_slugs', []),
+        )));
 
-            foreach (self::OPTICAL_TERMS as $term) {
-                $like = '%' . $term . '%';
-                $scope->orWhereRaw("LOWER({$nameColumn}) LIKE ?", [$like])
-                    ->orWhereRaw("LOWER({$slugColumn}) LIKE ?", [$like]);
+        return $query->where(function (Builder $identity) use ($reference, $slugs): void {
+            if ($reference !== '') {
+                $identity->where($identity->getModel()->qualifyColumn('ref_code'), $reference);
+            }
+
+            if ($slugs !== []) {
+                $method = $reference !== '' ? 'orWhereIn' : 'whereIn';
+                $slugColumn = $identity->getModel()->qualifyColumn('slug');
+                $identity->{$method}(DB::raw("LOWER({$slugColumn})"), $slugs);
             }
         });
+    }
+
+    public function applyPlatformCategoryConstraint(Builder $query): Builder
+    {
+        $hiddenSlugs = array_values(array_filter(array_map(
+            static fn ($slug): string => mb_strtolower(trim((string) $slug)),
+            (array) config('catalog-sync.hidden_category_slugs', []),
+        )));
+
+        if ($hiddenSlugs === []) {
+            return $query;
+        }
+
+        $slugColumn = $query->getModel()->qualifyColumn('slug');
+
+        return $query->whereNotIn(DB::raw("LOWER({$slugColumn})"), $hiddenSlugs);
     }
 
     /**

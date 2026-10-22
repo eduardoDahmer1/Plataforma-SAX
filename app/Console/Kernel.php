@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('rendix:reconcile-pix --limit=50')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('integration:check-health')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('products:refresh-feed')->everyMinute()->withoutOverlapping();
+        $schedule->command('catalog:sync-attributes')->everyFiveMinutes()->withoutOverlapping(10);
         $schedule->command('catalog:sync-pending --max-families=1 --max-seconds=45')
             ->everyMinute()
             ->withoutOverlapping(10);

@@ -217,6 +217,97 @@ class CheckoutPauseCartTest extends TestCase
         $this->assertDatabaseHas('carts', ['quantity' => 6]);
     }
 
+    public function test_expired_order_items_can_be_added_back_to_cart_without_creating_an_order(): void
+    {
+        DB::table('orders')->insert([
+            'id' => 90,
+            'user_id' => 7,
+            'status' => 'failed',
+            'payment_method' => 'bancard_v2',
+            'total' => 50,
+        ]);
+        DB::table('order_items')->insert([
+            'order_id' => 90,
+            'product_id' => 10,
+            'quantity' => 4,
+            'price' => 12.5,
+            'name' => 'Producto & prueba',
+            'sku' => 'SKU-10',
+        ]);
+        DB::table('carts')->insert([
+            'user_id' => 7,
+            'product_id' => 10,
+            'quantity' => 3,
+        ]);
+        session([
+            CuponService::SESSION_KEY => 'ANTIGO',
+            CuponService::SESSION_EXPIRES_KEY => now()->addMinutes(20)->timestamp,
+        ]);
+
+        $this->post(route('user.orders.buy-again', 90))
+            ->assertRedirect(route('cart.view'))
+            ->assertSessionHas('warning');
+
+        $this->assertDatabaseHas('carts', [
+            'user_id' => 7,
+            'product_id' => 10,
+            'quantity' => 5,
+        ]);
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertNull(session(CuponService::SESSION_KEY));
+        $this->assertNull(session(CuponService::SESSION_EXPIRES_KEY));
+    }
+
+    public function test_buy_again_rejects_an_order_owned_by_another_customer(): void
+    {
+        DB::table('orders')->insert([
+            'id' => 91,
+            'user_id' => 8,
+            'status' => 'failed',
+            'payment_method' => 'bancard_v2',
+            'total' => 12.5,
+        ]);
+        DB::table('order_items')->insert([
+            'order_id' => 91,
+            'product_id' => 10,
+            'quantity' => 1,
+            'price' => 12.5,
+            'name' => 'Producto & prueba',
+            'sku' => 'SKU-10',
+        ]);
+
+        $this->post(route('user.orders.buy-again', 91))->assertForbidden();
+        $this->assertDatabaseCount('carts', 0);
+    }
+
+    public function test_buy_again_does_not_restore_an_unavailable_product(): void
+    {
+        DB::table('products')->where('id', 10)->update(['stock' => 0]);
+        DB::table('orders')->insert([
+            'id' => 92,
+            'user_id' => 7,
+            'status' => 'failed',
+            'payment_method' => 'bancard_v2',
+            'total' => 12.5,
+        ]);
+        DB::table('order_items')->insert([
+            'order_id' => 92,
+            'product_id' => 10,
+            'quantity' => 1,
+            'price' => 12.5,
+            'name' => 'Producto & prueba',
+            'sku' => 'SKU-10',
+        ]);
+
+        $this->from(route('user.orders.show', 92))
+            ->post(route('user.orders.buy-again', 92))
+            ->assertRedirect(route('user.orders.show', 92))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('carts', 0);
+        $this->assertDatabaseCount('orders', 1);
+    }
+
     public function test_payment_entry_points_remain_guarded_but_cart_and_callbacks_are_not_blocked(): void
     {
         $routes = app('router')->getRoutes();
@@ -225,7 +316,7 @@ class CheckoutPauseCartTest extends TestCase
             $this->assertContains('store.feature:checkout', $middleware, $name);
             $this->assertContains('catalog.healthy', $middleware, $name);
         }
-        foreach (['cart.view', 'cart.add', 'cart.update', 'cart.remove', 'cart.whatsapp', 'user.abandoned-carts.restore', 'bancard.v2.callback', 'rendix.pix.webhook'] as $name) {
+        foreach (['cart.view', 'cart.add', 'cart.update', 'cart.remove', 'cart.whatsapp', 'user.abandoned-carts.restore', 'user.orders.buy-again', 'bancard.v2.callback', 'rendix.pix.webhook'] as $name) {
             $middleware = $routes->getByName($name)->middleware();
             $this->assertNotContains('catalog.healthy', $middleware, $name);
             $this->assertNotContains('store.feature:checkout', $middleware, $name);

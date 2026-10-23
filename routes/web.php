@@ -193,6 +193,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');
+    Route::post('/orders/{order}/comprar-novamente', [CartController::class, 'buyAgain'])
+        ->middleware(['cliente', 'store.feature:add_to_cart'])
+        ->whereNumber('order')
+        ->name('user.orders.buy-again');
     Route::post('/orders/{order}/rendix-refund-request', [\App\Http\Controllers\RendixRefundRequestController::class, 'store'])
         ->whereNumber('order')
         ->name('user.orders.rendix-refund-request');

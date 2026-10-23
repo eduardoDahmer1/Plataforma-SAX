@@ -84,6 +84,89 @@ class CartController extends Controller
         return back()->with('success', 'Produto adicionado ao carrinho!');
     }
 
+    public function buyAgain(Request $request, Order $order)
+    {
+        $user = $request->user();
+        abort_unless((int) $order->user_id === (int) $user->id, 403);
+
+        // Alterar o carrinho encerra qualquer checkout anterior e invalida o cupom
+        // temporário. Preço, estoque e elegibilidade serão recalculados no novo fluxo.
+        $this->stockReservations->releaseCheckout($user, 'order_buy_again');
+        $this->cupons->remover();
+
+        $requestedItems = $order->items()
+            ->select('product_id')
+            ->selectRaw('SUM(quantity) as quantity')
+            ->whereNotNull('product_id')
+            ->groupBy('product_id')
+            ->get();
+
+        if ($requestedItems->isEmpty()) {
+            return back()->with('error', __('messages.order_buy_again_unavailable'));
+        }
+
+        $result = DB::transaction(function () use ($requestedItems, $user): array {
+            $products = Product::query()
+                ->sellable()
+                ->whereIn('id', $requestedItems->pluck('product_id'))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            $unitsAdded = 0;
+            $unitsUnavailable = 0;
+
+            foreach ($requestedItems as $requestedItem) {
+                $requestedQuantity = max(0, (int) $requestedItem->quantity);
+                $product = $products->get((int) $requestedItem->product_id);
+
+                if (! $product || $requestedQuantity === 0) {
+                    $unitsUnavailable += $requestedQuantity;
+                    continue;
+                }
+
+                $cartItem = Cart::query()
+                    ->where('user_id', $user->id)
+                    ->where('product_id', $product->id)
+                    ->lockForUpdate()
+                    ->first();
+                $currentQuantity = max(0, (int) ($cartItem?->quantity ?? 0));
+                $targetQuantity = min((int) $product->stock, $currentQuantity + $requestedQuantity);
+                $addedQuantity = max(0, $targetQuantity - $currentQuantity);
+
+                if ($addedQuantity === 0) {
+                    $unitsUnavailable += $requestedQuantity;
+                    continue;
+                }
+
+                $cartItem ??= new Cart([
+                    'user_id' => $user->id,
+                    'product_id' => $product->id,
+                ]);
+                $cartItem->quantity = $targetQuantity;
+                $cartItem->save();
+
+                $unitsAdded += $addedQuantity;
+                $unitsUnavailable += $requestedQuantity - $addedQuantity;
+            }
+
+            return compact('unitsAdded', 'unitsUnavailable');
+        });
+
+        if ($result['unitsAdded'] === 0) {
+            return back()->with('error', __('messages.order_buy_again_unavailable'));
+        }
+
+        $messageKey = $result['unitsUnavailable'] > 0
+            ? 'order_buy_again_partial'
+            : 'order_buy_again_success';
+
+        return redirect()->route('cart.view')->with(
+            $result['unitsUnavailable'] > 0 ? 'warning' : 'success',
+            __('messages.'.$messageKey)
+        );
+    }
+
 
     public function whatsapp(Request $request, CartWhatsappService $whatsapp)
     {

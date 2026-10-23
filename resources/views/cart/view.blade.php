@@ -10,10 +10,10 @@
             </div>
         </div>
 
-        @if (session('success') || session('error') || ($resumo['aviso'] ?? null))
+        @if (session('success') || session('warning') || session('error') || ($resumo['aviso'] ?? null))
             <div class="col-12">
-                <div class="alert {{ session('error') || ($resumo['aviso'] ?? null) ? 'alert-danger' : 'alert-success' }} border-0 rounded-3 mb-0">
-                    {{ session('error') ?? ($resumo['aviso'] ?? session('success')) }}
+                <div class="alert {{ session('error') || ($resumo['aviso'] ?? null) ? 'alert-danger' : (session('warning') ? 'alert-warning' : 'alert-success') }} border-0 rounded-3 mb-0">
+                    {{ session('error') ?? ($resumo['aviso'] ?? (session('warning') ?? session('success'))) }}
                 </div>
             </div>
         @endif

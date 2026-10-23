@@ -132,21 +132,42 @@
             <div class="sax-order-message is-danger mb-4">
                 <i class="fas fa-clock"></i>
                 <div>
-                    <strong>A reserva deste pedido expirou.</strong>
-                    <span>Para proteger preços, estoque e validade do cupom, refaça a compra pelo carrinho. Este pedido antigo não pode mais ser pago.</span>
+                    <strong>{{ __('messages.order_reservation_expired_title') }}</strong>
+                    <span>{{ __('messages.order_buy_again_expired_body') }}</span>
+                    <form action="{{ route('user.orders.buy-again', $order) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="sax-order-message__action border-0">
+                            <i class="fas fa-cart-plus"></i> {{ __('messages.order_buy_again_action') }}
+                        </button>
+                    </form>
                 </div>
             </div>
         @elseif ($isCanceled)
             <div class="sax-order-message is-danger mb-4">
                 <i class="fas fa-circle-exclamation"></i>
-                <div><strong>Este pedido não foi concluído.</strong><span>Confira o status do pagamento abaixo ou fale com nossa equipe para receber ajuda.</span></div>
+                <div>
+                    <strong>{{ __('messages.order_not_completed_title') }}</strong>
+                    <span>{{ __('messages.order_buy_again_canceled_body') }}</span>
+                    <form action="{{ route('user.orders.buy-again', $order) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="sax-order-message__action border-0">
+                            <i class="fas fa-cart-plus"></i> {{ __('messages.order_buy_again_action') }}
+                        </button>
+                    </form>
+                </div>
             </div>
         @elseif (! $isPaid && ! $activeStockReservation)
             <div class="sax-order-message is-danger mb-4">
                 <i class="fas fa-clock"></i>
                 <div>
-                    <strong>A reserva deste pedido expirou.</strong>
-                    <span>Para proteger preços, estoque e validade do cupom, refaça a compra pelo carrinho. Este pedido antigo não pode mais ser pago.</span>
+                    <strong>{{ __('messages.order_reservation_expired_title') }}</strong>
+                    <span>{{ __('messages.order_buy_again_expired_body') }}</span>
+                    <form action="{{ route('user.orders.buy-again', $order) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="sax-order-message__action border-0">
+                            <i class="fas fa-cart-plus"></i> {{ __('messages.order_buy_again_action') }}
+                        </button>
+                    </form>
                 </div>
             </div>
         @elseif (! $isPaid && (! $catalogAvailable || ! $checkoutEnabled))

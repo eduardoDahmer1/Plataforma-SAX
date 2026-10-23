@@ -20,8 +20,12 @@ class RendixPixRefundEndpointsTest extends TestCase
         parent::setUp();
 
         $container = new Container();
+        $container->instance('config', new \Illuminate\Config\Repository([
+            'cache' => ['default' => 'array'],
+        ]));
         $container->instance(Factory::class, new Factory());
         $container->instance('cache', new Repository(new ArrayStore()));
+        Facade::clearResolvedInstances();
         Facade::setFacadeApplication($container);
 
         Cache::flush();

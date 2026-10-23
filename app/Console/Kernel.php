@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('carts:send-help --limit=50')->hourly()->withoutOverlapping();
         $schedule->command('rendix:reconcile-pix --limit=50')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('bancard:reconcile-payments --limit=50')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('checkout:release-expired-stock --limit=500')->everyMinute()->withoutOverlapping();
         $schedule->command('integration:check-health')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('products:refresh-feed')->everyMinute()->withoutOverlapping();
         $schedule->command('catalog:sync-attributes')->everyFiveMinutes()->withoutOverlapping(10);

@@ -12,7 +12,10 @@ use RuntimeException;
 
 class RendixPixRefundService
 {
-    public function __construct(private BusinessEventService $events)
+    public function __construct(
+        private BusinessEventService $events,
+        private CheckoutStockReservationService $stockReservations,
+    )
     {
     }
 
@@ -98,13 +101,7 @@ class RendixPixRefundService
                     ]),
                 ]);
 
-                if (! in_array($order->status, ['canceled', 'cancelled', 'refunded'], true)) {
-                    foreach ($order->items as $item) {
-                        if ($item->product) {
-                            $item->product->increment('stock', $item->quantity);
-                        }
-                    }
-                }
+                $this->stockReservations->restoreCommittedOrder($order, 'rendix_refunded');
 
                 $order->update([
                     'status' => 'canceled',

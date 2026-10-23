@@ -2,6 +2,10 @@
 
 @section('page_title', $product->name)
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/copy-link.css') }}?v={{ filemtime(public_path('css/copy-link.css')) }}">
+@endpush
+
 @section('content')
 
 @php
@@ -254,6 +258,21 @@
                             <span>({{ number_format((int) $reviewProduct->rating_count, 0, ',', '.') }})</span>
                         </a>
                     @endif
+
+                    @php
+                        $shareLabel = str_starts_with(app()->getLocale(), 'es')
+                            ? 'Compartir'
+                            : (str_starts_with(app()->getLocale(), 'en') ? 'Share' : 'Compartilhar');
+                    @endphp
+                    <div class="storefront-share-actions product-share-actions" data-share-label="{{ $shareLabel }}">
+                        <a href="https://api.whatsapp.com/send?text={{ rawurlencode($displayName . ' ' . url()->current()) }}"
+                           target="_blank" rel="noopener noreferrer"
+                           class="storefront-share-button storefront-share-button--whatsapp"
+                           aria-label="WhatsApp" title="WhatsApp">
+                            <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                        </a>
+                        <x-copy-link-button :url="url()->current()" class="storefront-share-button" />
+                    </div>
 
                     <div class="product-price-block mb-4">
                         @if ($product->previous_price > $product->price)
@@ -821,3 +840,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 @endsection
+
+@push('scripts')
+<script src="{{ asset('js/copy-link.js') }}?v={{ filemtime(public_path('js/copy-link.js')) }}" defer></script>
+@endpush

@@ -3,6 +3,10 @@
 @section('title', $blog->title)
 @section('meta_description', $blog->meta_description ?? \Illuminate\Support\Str::limit(strip_tags($blog->subtitle), 160))
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/copy-link.css') }}?v={{ filemtime(public_path('css/copy-link.css')) }}">
+@endpush
+
 @section('meta_tags')
     <meta name="description" content="{{ $blog->meta_description ?? \Illuminate\Support\Str::limit(strip_tags($blog->subtitle), 160) }}">
     <meta property="og:title" content="{{ $blog->title }}">
@@ -76,13 +80,11 @@
 
                     <div class="blog-share-panel">
                         <div class="blog-chip">Compartilhar</div>
-                        <div class="sax-social-share">
+                        <div class="sax-social-share storefront-share-actions">
                             <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}" target="_blank" rel="noopener" class="share-btn"><i class="fab fa-facebook-f"></i></a>
                             <a href="https://api.whatsapp.com/send?text={{ rawurlencode($blog->title) }}%20{{ url()->current() }}" target="_blank" rel="noopener" class="share-btn"><i class="fab fa-whatsapp"></i></a>
+                            <x-copy-link-button :url="url()->current()" class="share-btn" />
                             <a href="https://twitter.com/intent/tweet?text={{ rawurlencode($blog->title) }}&url={{ rawurlencode(url()->current()) }}" target="_blank" rel="noopener" class="share-btn"><i class="fab fa-x-twitter"></i></a>
-                            <button type="button" class="share-btn" id="blog-copy-link" data-url="{{ url()->current() }}" title="Copiar link">
-                                <i class="fas fa-link"></i>
-                            </button>
                         </div>
                     </div>
             </div>
@@ -140,6 +142,7 @@
 
 @push('scripts')
 <script src="{{ asset('js/blog-product-carousel.js') }}?v={{ filemtime(public_path('js/blog-product-carousel.js')) }}" defer></script>
+<script src="{{ asset('js/copy-link.js') }}?v={{ filemtime(public_path('js/copy-link.js')) }}" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const lightbox = document.getElementById('blogLightbox');
@@ -175,16 +178,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.key === 'Escape') close();
     });
 
-    const copyBtn = document.getElementById('blog-copy-link');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', function () {
-            navigator.clipboard.writeText(this.dataset.url).then(() => {
-                const icon = this.querySelector('i');
-                icon.className = 'fas fa-check';
-                setTimeout(() => { icon.className = 'fas fa-link'; }, 1500);
-            });
-        });
-    }
 });
 </script>
 @endpush

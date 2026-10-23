@@ -118,13 +118,21 @@ class OpenAICatalogServiceTest extends TestCase
         $requestBody = $recordedRequest->data();
         $schema = $requestBody['text']['format']['schema'];
         $this->assertContains('taxonomy_assessment', $schema['required']);
+        foreach (['MARCA + TIPO DE PRODUCTO + MODELO', 'category_id = 149',
+            'MARCA + NOMBRE DE FRAGANCIA + CONCENTRACIÓN', 'referencias oficiales del fabricante verificadas',
+            'denominación comercial distintiva', 'protected_ids', 'variant_match'] as $rule) {
+            $this->assertStringContainsString($rule, $requestBody['instructions']);
+        }
+        $this->assertSame(['pt_br', 'es', 'en'], $schema['properties']['commercial_name']['required']);
+        $this->assertSame(['pt_br', 'es', 'en'], $schema['properties']['descriptions']['required']);
+
         $this->assertSame(['child_categories_reason', 'additional_categories_reason', 'catalog_opportunities'], $schema['properties']['taxonomy_assessment']['required']);
         $this->assertStringContainsString('aunque las listas de sugerencias estén vacías', $requestBody['instructions']);
 
         $knownData = json_decode(str($requestBody['input'])->after("\n")->toString(), true);
 
-        $this->assertStringContainsString('80 a 160 palabras como referencia editorial', $requestBody['instructions']);
-        $this->assertStringContainsString('60 a 100 palabras es correcta', $requestBody['instructions']);
+        $this->assertStringContainsString('Prioriza calidad y precisión sobre longitud', $requestBody['instructions']);
+        $this->assertStringContainsString('sin cuota mínima', $requestBody['instructions']);
         $this->assertStringContainsString('cada párrafo debe aportar información', $requestBody['instructions']);
         $this->assertStringContainsString('otra variante del mismo modelo', $requestBody['instructions']);
         $this->assertStringContainsString('actitud urbana', $requestBody['instructions']);
@@ -176,7 +184,7 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertSame([], $result['research']['sources']);
     }
 
-    public function test_description_only_uses_one_reduced_responses_request(): void
+    public function test_legacy_description_endpoint_reuses_the_unified_generation(): void
     {
         config()->set('services.openai.api_key', 'test-key');
         config()->set('services.openai.base_url', 'https://api.openai.com/v1');
@@ -186,7 +194,7 @@ class OpenAICatalogServiceTest extends TestCase
                 'type' => 'message',
                 'content' => [[
                     'type' => 'output_text',
-                    'text' => json_encode(['descriptions' => [
+                    'text' => json_encode(['commercial_name' => ['pt_br' => 'MARCA REF-123', 'es' => 'MARCA REF-123', 'en' => 'MARCA REF-123'], 'descriptions' => [
                         'pt_br' => 'Descrição factual.',
                         'es' => 'Descripción factual.',
                         'en' => 'Factual description.',
@@ -205,7 +213,7 @@ class OpenAICatalogServiceTest extends TestCase
         $product->setRelation('subcategory', null);
         $product->setRelation('categoriasFilhas', null);
 
-        $result = app(OpenAICatalogService::class)->generateDescriptionOnly($product);
+        $result = $this->serviceWithTaxonomy()->generateDescriptionOnly($product);
 
         $this->assertSame('Descrição factual.', $result['descriptions']['pt_br']);
         $this->assertSame('Nome existente', $product->name);
@@ -217,14 +225,36 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertSame('https://api.openai.com/v1/responses', $request->url());
         $this->assertSame('required', $body['tool_choice']);
         $this->assertSame('web_search', $body['tools'][0]['type']);
-        $this->assertSame(['descriptions', 'source_urls'], $body['text']['format']['schema']['required']);
+        $this->assertContains('commercial_name', $body['text']['format']['schema']['required']);
+        $this->assertContains('catalog_attributes', $body['text']['format']['schema']['required']);
         $this->assertSame(['pt_br', 'es', 'en'], $body['text']['format']['schema']['properties']['descriptions']['required']);
         $this->assertSame('Marca', $knownData['brand']);
         $this->assertSame(['REF-123'], $knownData['manufacturer_reference_candidates']);
-        $this->assertArrayNotHasKey('taxonomy', $knownData);
-        $this->assertArrayNotHasKey('current_description', $knownData);
+        $this->assertArrayHasKey('taxonomy', $knownData);
+        $this->assertArrayHasKey('current_description', $knownData);
         $this->assertArrayNotHasKey('size', $knownData);
-        $this->assertArrayNotHasKey('color', $knownData);
+        $this->assertArrayHasKey('color', $knownData);
+    }
+
+    public function test_incomplete_translations_are_rejected_without_mutating_the_product(): void
+    {
+        config()->set('services.openai.api_key', 'test-key');
+        Http::fake(['api.openai.com/*' => Http::response([
+            'output' => [['type' => 'message', 'content' => [['type' => 'output_text',
+                'text' => json_encode(['commercial_name' => ['pt_br' => 'MARCA', 'es' => 'MARCA', 'en' => 'MARCA'],
+                    'descriptions' => ['pt_br' => 'Descrição', 'es' => 'Descripción', 'en' => '']]),
+            ]]]],
+        ])]);
+        $product = Product::make(['name' => 'Original']);
+        $product->setRelation('brand', null)->setRelation('category', null)->setRelation('subcategory', null)->setRelation('categoriasFilhas', null);
+        try {
+            $this->serviceWithTaxonomy()->generateProductProposal($product);
+            $this->fail('An incomplete translation must not reach the form.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('tres idiomas', $error->getMessage());
+            $this->assertSame('Original', $product->name);
+            Http::assertSentCount(1);
+        }
     }
 
     private function serviceWithTaxonomy(): OpenAICatalogService

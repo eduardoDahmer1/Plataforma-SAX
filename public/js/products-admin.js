@@ -65,13 +65,21 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!currentProposal) return;
 
         const fieldMap = { pt_br: 'pt', es: 'es', en: 'en' };
+        const optical = String(document.getElementById('category_id')?.value) === '149'
+            || String(currentProposal.taxonomy_selection?.category_id) === '149';
+        const brandSelect = document.getElementById('brand_id');
+        const brand = brandSelect?.value ? brandSelect.selectedOptions?.[0]?.textContent?.trim() : '';
         Object.entries(fieldMap).forEach(function (entry) {
             const sourceLanguage = entry[0];
             const fieldLanguage = entry[1];
             const nameField = document.getElementById('real-name-' + fieldLanguage);
             const descriptionField = document.getElementById('real-desc-' + fieldLanguage);
             if (nameField && currentProposal.commercial_name?.[sourceLanguage]) {
-                nameField.value = currentProposal.commercial_name[sourceLanguage];
+                const name = currentProposal.commercial_name[sourceLanguage];
+                // Normalize the identified commercial name, never reintroduce an unverified raw model.
+                nameField.value = optical && typeof window.normalizeOpticalProductName === 'function'
+                    ? window.normalizeOpticalProductName(brand, name).toLocaleUpperCase()
+                    : name;
             }
             if (descriptionField && currentProposal.descriptions?.[sourceLanguage]) {
                 descriptionField.value = descriptionToHtml(currentProposal.descriptions[sourceLanguage]);
@@ -84,7 +92,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const editor = typeof tinymce !== 'undefined' ? tinymce.get('editor-product') : null;
         const activeDescriptionLanguage = window.currentLangs?.desc || 'pt';
-        if (editor) editor.setContent(document.getElementById('real-desc-' + activeDescriptionLanguage)?.value || '');
+        const description = document.getElementById('real-desc-' + activeDescriptionLanguage)?.value || '';
+        if (editor) editor.setContent(description);
+        else {
+            const visible = document.getElementById('editor-product');
+            if (visible) visible.value = description;
+        }
         window.saxRefreshProductDescription?.();
 
         applyTaxonomyToForm(currentProposal.taxonomy_selection);
@@ -375,6 +388,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (!response.ok) throw new Error(data.message || 'No fue posible generar la propuesta.');
 
+            if (['commercial_name', 'descriptions'].some(field =>
+                ['pt_br', 'es', 'en'].some(locale => typeof data.proposal?.[field]?.[locale] !== 'string'
+                    || !data.proposal[field][locale].trim()))) {
+                throw new Error('La IA no devolvió nombres y descripciones completos en los tres idiomas.');
+            }
             currentProposal = data.proposal;
             window.dispatchEvent(new CustomEvent('sax:catalog-attribute-proposal', {detail: data}));
             if (aiGeneratedAt && data.preparation?.status === 'generated' && data.preparation?.generated_at) {

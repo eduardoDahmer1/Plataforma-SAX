@@ -19,10 +19,16 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Services\ImageConverterService;
 use App\Services\RendixPixRefundService;
+use App\Services\CheckoutStockReservationService;
+use App\Services\CuponService;
 
 class OrderController extends Controller
 {
-    public function __construct(private ReceiptService $receiptService) {}
+    public function __construct(
+        private ReceiptService $receiptService,
+        private CheckoutStockReservationService $stockReservations,
+        private CuponService $cupons,
+    ) {}
     // Lista pedidos
     public function index(Request $request)
     {
@@ -77,11 +83,10 @@ class OrderController extends Controller
             
             // Se o Admin cancelar, devolvemos o estoque (apenas se não estava cancelado antes)
             if ($request->status === 'canceled' && $order->status !== 'canceled') {
-                foreach ($order->items as $item) {
-                    $product = $item->product;
-                    if ($product) {
-                        $product->increment('stock', $item->quantity);
-                    }
+                if ($wasPaid) {
+                    $this->stockReservations->restoreCommittedOrder($order, 'admin_canceled');
+                } else {
+                    $this->stockReservations->releaseOrder($order, 'admin_canceled', false);
                 }
             }
             
@@ -101,7 +106,8 @@ class OrderController extends Controller
         $order->save();
 
         if (!$wasPaid && $order->isPaid()) {
-            $this->reduceOrderStock($order);
+            $this->stockReservations->commitOrder($order);
+            $this->cupons->garantirUsoDoPedidoPago($order);
 
             try {
                 $this->receiptService->issueForOrder($order);
@@ -203,6 +209,10 @@ class OrderController extends Controller
     {
         $order = Order::with('items')->findOrFail($id);
 
+        if (! $order->isPaid()) {
+            $this->stockReservations->releaseOrder($order, 'admin_deleted', false);
+        }
+
         // Deleta comprovante, se existir
         if ($order->depositReceiptPath() && Storage::disk('public')->exists($order->depositReceiptPath())) {
             Storage::disk('public')->delete($order->depositReceiptPath());
@@ -222,6 +232,16 @@ class OrderController extends Controller
     // Submete comprovante de depósito (Admin)
     public function depositSubmit(Request $request, Order $order)
     {
+        if (! $request->user() || ((int) $order->user_id !== (int) $request->user()->getKey() && ! $request->user()->isAdmin())) {
+            abort(403, 'Acesso negado ao pedido.');
+        }
+
+        if (! $order->isPaid() && ! $this->stockReservations->orderHasActiveReservation($order)) {
+            $this->stockReservations->releaseOrder($order, 'reservation_expired');
+            return redirect()->route('user.orders.show', $order)
+                ->with('warning', $this->stockReservations->expiredMessage());
+        }
+
         $request->validate([
             'deposit_receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
@@ -235,27 +255,6 @@ class OrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Comprovante enviado com sucesso!');
-    }
-
-    private function reduceOrderStock(Order $order): void
-    {
-        $order->loadMissing('items.product');
-
-        foreach ($order->items as $item) {
-            $product = $item->product;
-
-            if (!$product) {
-                continue;
-            }
-
-            $quantity = max(0, (int) $item->quantity);
-            $availableStock = max(0, (int) $product->stock);
-            $decrementBy = min($quantity, $availableStock);
-
-            if ($decrementBy > 0) {
-                $product->decrement('stock', $decrementBy);
-            }
-        }
     }
 
     // Cria pedido (Manualmente pelo Admin ou via API)

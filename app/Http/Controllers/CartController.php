@@ -18,12 +18,14 @@ use App\Mail\AbandonedCartHelpMail;
 use App\Services\BusinessEventService;
 use App\Services\CartWhatsappService;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
+use App\Services\CheckoutStockReservationService;
 
 class CartController extends Controller
 {
     public function __construct(
         private CuponService $cupons,
         private DhlProductMeasurementEstimator $dhlMeasurements,
+        private CheckoutStockReservationService $stockReservations,
     )
     {
     }
@@ -54,6 +56,8 @@ class CartController extends Controller
             return redirect()->route('login')->with('error', 'Você precisa estar logado para adicionar ao carrinho.');
         }
 
+        $this->stockReservations->releaseCheckout($user, 'cart_activity');
+
         $productId = $request->input('product_id');
         $quantity  = (int) $request->input('quantity', 1);
 
@@ -83,6 +87,7 @@ class CartController extends Controller
 
     public function whatsapp(Request $request, CartWhatsappService $whatsapp)
     {
+        $this->stockReservations->releaseCheckout($request->user(), 'cart_whatsapp');
         $cart = Cart::available()->with('product')->where('user_id', $request->user()->id)->get();
         if ($cart->isEmpty()) {
             return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_empty_cart'));
@@ -129,6 +134,7 @@ class CartController extends Controller
         $cart = collect();
 
         if ($user) {
+            $this->stockReservations->releaseCheckout($user, 'returned_to_cart');
             $cart = Cart::query()
                 ->select(['id', 'user_id', 'product_id', 'quantity', 'created_at', 'updated_at'])
                 ->where('user_id', $user->id)
@@ -182,6 +188,8 @@ class CartController extends Controller
             return redirect()->route('login')->with('error', 'Você precisa estar logado para comprar.');
         }
 
+        $this->stockReservations->releaseCheckout($user, 'cart_activity');
+
         $productId = $request->input('product_id');
         $quantity  = (int) $request->input('quantity', 1);
 
@@ -210,6 +218,8 @@ class CartController extends Controller
         if (!$user) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para atualizar o carrinho.');
         }
+
+        $this->stockReservations->releaseCheckout($user, 'cart_activity');
 
         $quantity = (int) $request->input('quantity', 1);
 
@@ -250,6 +260,8 @@ class CartController extends Controller
         if (!$user) {
             return redirect()->route('login')->with('error', 'Você precisa estar logado para remover do carrinho.');
         }
+
+        $this->stockReservations->releaseCheckout($user, 'cart_activity');
 
         $removalResult = $this->removeCartProduct($user->id, $productId);
 
@@ -317,6 +329,7 @@ class CartController extends Controller
             'abandon_message' => ['nullable', 'string', 'max:1500'],
         ]);
         $user = auth()->user();
+        $this->stockReservations->releaseCheckout($user, 'cart_abandoned');
         $items = Cart::available()->with('product')->where('user_id', $user->id)->get();
 
         if ($items->isEmpty()) {

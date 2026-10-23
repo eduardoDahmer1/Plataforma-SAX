@@ -16,7 +16,18 @@
             $paymentMethodManuallyEnabled = ! in_array((string) $order->payment_method, $controlledPaymentMethods, true)
                 || app(\App\Services\StoreControlService::class)->paymentEnabled((string) $order->payment_method);
             $checkoutEnabled = app(\App\Services\StoreControlService::class)->enabled('checkout');
-            $paymentMethodEnabled = $catalogAvailable && $checkoutEnabled && $paymentMethodManuallyEnabled;
+            $activeStockReservation = $order->stockReservations
+                ->where('status', 'held')
+                ->filter(fn ($reservation) => $reservation->expires_at?->isFuture())
+                ->sortByDesc('expires_at')
+                ->first();
+            $expiredStockReservation = $order->stockReservations
+                ->where('status', 'released')
+                ->where('release_reason', 'reservation_expired')
+                ->sortByDesc('released_at')
+                ->first();
+            $paymentMethodEnabled = $catalogAvailable && $checkoutEnabled && $paymentMethodManuallyEnabled
+                && ($isPaid || $activeStockReservation);
             $rendixRefundableTransaction = $order->paymentTransactions
                 ->where('provider', \App\Services\RendixPixService::PROVIDER)
                 ->where('status', 'paid')
@@ -107,10 +118,36 @@
             </section>
         @endif
 
-        @if ($isCanceled)
+        @if (! $isPaid && $activeStockReservation && ! $isCanceled)
+            <div class="sax-order-message is-warning mb-4">
+                <i class="fas fa-hourglass-half"></i>
+                <div>
+                    <strong>Estoque reservado temporariamente.</strong>
+                    <span>Os itens deste pedido estão separados até {{ $activeStockReservation->expires_at->format('d/m/Y H:i') }}. O estoque só fica garantido definitivamente após a confirmação do pagamento.</span>
+                </div>
+            </div>
+        @endif
+
+        @if (! $isPaid && $expiredStockReservation)
+            <div class="sax-order-message is-danger mb-4">
+                <i class="fas fa-clock"></i>
+                <div>
+                    <strong>A reserva deste pedido expirou.</strong>
+                    <span>Para proteger preços, estoque e validade do cupom, refaça a compra pelo carrinho. Este pedido antigo não pode mais ser pago.</span>
+                </div>
+            </div>
+        @elseif ($isCanceled)
             <div class="sax-order-message is-danger mb-4">
                 <i class="fas fa-circle-exclamation"></i>
                 <div><strong>Este pedido não foi concluído.</strong><span>Confira o status do pagamento abaixo ou fale com nossa equipe para receber ajuda.</span></div>
+            </div>
+        @elseif (! $isPaid && ! $activeStockReservation)
+            <div class="sax-order-message is-danger mb-4">
+                <i class="fas fa-clock"></i>
+                <div>
+                    <strong>A reserva deste pedido expirou.</strong>
+                    <span>Para proteger preços, estoque e validade do cupom, refaça a compra pelo carrinho. Este pedido antigo não pode mais ser pago.</span>
+                </div>
             </div>
         @elseif (! $isPaid && (! $catalogAvailable || ! $checkoutEnabled))
             <div class="sax-order-message is-warning mb-4">

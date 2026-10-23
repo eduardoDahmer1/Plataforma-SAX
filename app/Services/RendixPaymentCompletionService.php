@@ -15,6 +15,8 @@ class RendixPaymentCompletionService
     public function __construct(
         private ReceiptService $receipts,
         private BusinessEventService $events,
+        private CheckoutStockReservationService $stockReservations,
+        private CuponService $cupons,
     ) {
     }
 
@@ -40,6 +42,8 @@ class RendixPaymentCompletionService
 
             if (!$order->isPaid()) {
                 $newlyPaid = true;
+                $this->stockReservations->commitOrder($order);
+                $this->cupons->garantirUsoDoPedidoPago($order);
                 $order->update([
                     'status' => 'paid',
                     'payment_status' => 'paid',
@@ -51,18 +55,6 @@ class RendixPaymentCompletionService
                     'payment_exchange_rate' => data_get($saleData, 'vetTax', $lockedTransaction->exchange_rate),
                 ]);
 
-                $order->loadMissing('items.product');
-                foreach ($order->items as $item) {
-                    $product = $item->product;
-                    if (!$product) {
-                        continue;
-                    }
-
-                    $decrement = min(max(0, (int) $item->quantity), max(0, (int) $product->stock));
-                    if ($decrement > 0) {
-                        $product->decrement('stock', $decrement);
-                    }
-                }
             }
 
             Cart::where('user_id', $order->user_id)->delete();

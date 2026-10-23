@@ -10,6 +10,7 @@ class RendixPixReconciler
     public function __construct(
         private RendixPaymentCompletionService $completion,
         private BusinessEventService $events,
+        private CheckoutStockReservationService $stockReservations,
     ) {
     }
 
@@ -90,12 +91,18 @@ class RendixPixReconciler
         ]);
 
         if ($localStatus === 'cpf_mismatch_refund') {
-            $transaction->order()->update([
-                'payment_status' => 'failed',
-                'payment_response_code' => $providerStatus,
-                'payment_response_message' => $description,
-                'payment_failed_at' => $transaction->order?->payment_failed_at ?: now(),
-            ]);
+            if ($transaction->order) {
+                $this->stockReservations->releaseOrder($transaction->order, 'rendix_cpf_mismatch');
+            }
+            $transaction->order()
+                ->where('status', '!=', 'paid')
+                ->where('payment_status', '!=', 'paid')
+                ->update([
+                    'payment_status' => 'failed',
+                    'payment_response_code' => $providerStatus,
+                    'payment_response_message' => $description,
+                    'payment_failed_at' => $transaction->order?->payment_failed_at ?: now(),
+                ]);
 
             if ($previousProviderStatus !== $providerStatus) {
                 $this->events->record(
@@ -108,6 +115,10 @@ class RendixPixReconciler
                     (string) $transaction->external_id,
                 );
             }
+        }
+
+        if (in_array($localStatus, ['failed', 'expired'], true) && $transaction->order) {
+            $this->stockReservations->releaseOrder($transaction->order, 'rendix_'.$localStatus);
         }
 
         if ($localStatus === 'refunded') {

@@ -188,6 +188,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/seguranca/senha', [UserController::class, 'editPassword'])->name('user.password.edit');
     Route::put('/seguranca/senha', [UserController::class, 'updatePassword'])->name('user.password.update');
     Route::post('/checkout/calcular-frete', [CheckoutController::class, 'ajaxCalcularFrete'])->middleware(['cliente', 'throttle:30,1'])->name('checkout.calcular-frete');
+    Route::post('/checkout/reserva/renovar', [CheckoutController::class, 'refreshStockReservation'])->middleware(['cliente', 'throttle:30,1'])->name('checkout.reservation.refresh');
+    Route::delete('/checkout/reserva', [CheckoutController::class, 'releaseStockReservation'])->middleware(['cliente', 'throttle:30,1'])->name('checkout.reservation.release');
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');

@@ -244,7 +244,7 @@ class UserController extends Controller
             'items.product.category:id,name',
             'items.product.subcategory:id,name',
             'items.product.categoriasFilhas:id,name',
-            'receipt', 'cupon', 'orderNotes', 'paymentTransactions',
+            'receipt', 'cupon', 'orderNotes', 'paymentTransactions', 'stockReservations',
         ])->where('id', $id)->where('user_id', $user->id)->firstOrFail();
 
         $order->items->each(function ($item) use ($dhlMeasurements): void {

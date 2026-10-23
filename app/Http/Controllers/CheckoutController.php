@@ -31,7 +31,10 @@ use App\Services\StoreControlService;
 use App\Exceptions\DhlApiException;
 use App\Services\Dhl\DhlCheckoutQuoteService;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
+use App\Services\CheckoutStockReservationService;
 use InvalidArgumentException;
+use RuntimeException;
+use Illuminate\Http\JsonResponse;
 
 class CheckoutController extends Controller
 {
@@ -42,6 +45,7 @@ class CheckoutController extends Controller
         private StoreControlService $storeControls,
         private DhlCheckoutQuoteService $dhlQuotes,
         private DhlProductMeasurementEstimator $dhlMeasurements,
+        private CheckoutStockReservationService $stockReservations,
     )
     {
     }
@@ -52,7 +56,18 @@ class CheckoutController extends Controller
         $user = auth()->user();
         $this->ensureLegacyAddress($user);
         $addresses = $user->addresses()->get();
-        $cart = Cart::available()->with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])->where('user_id', $user->id)->get();
+        $cart = Cart::with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])
+            ->where('user_id', $user->id)
+            ->get();
+        if ($cart->isEmpty()) {
+            return redirect()->route('cart.view')->with('error', 'Carrinho vazio');
+        }
+
+        try {
+            $reservationExpiresAt = $this->stockReservations->reserveCart($user, $cart);
+        } catch (RuntimeException $exception) {
+            return redirect()->route('cart.view')->with('error', $exception->getMessage());
+        }
         $paymentMethods = PaymentMethod::where('active', 1)->get()
             ->filter(fn (PaymentMethod $method): bool => $this->paymentModelIsManuallyEnabled($method))
             ->values();
@@ -74,7 +89,7 @@ class CheckoutController extends Controller
         // O cupom da sessão é revalidado contra o carrinho atual a cada carregamento.
         $resumo = $this->cupons->resumoDoCarrinho($user, $cart->filter(fn ($i) => $i->product)->values());
 
-        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies', 'addresses', 'pygCurrency'));
+        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies', 'addresses', 'pygCurrency', 'reservationExpiresAt'));
     }
 
     public function store(Request $request)
@@ -148,6 +163,19 @@ class CheckoutController extends Controller
             ]);
         }
 
+        if ($paymentMethod === 'bancard_v2') {
+            $bancardGateway = PaymentMethod::query()
+                ->where('type', 'gateway')
+                ->whereRaw('LOWER(name) = ?', ['bancard v2'])
+                ->first();
+
+            if (! $bancardGateway?->active || ! \App\Services\BancardV2Service::fromPaymentMethod($bancardGateway)->isConfigured()) {
+                throw ValidationException::withMessages([
+                    'payment_method' => __('messages.store_payment_disabled_message'),
+                ]);
+            }
+        }
+
         if ($request->input('payment_method') === RendixPixService::PROVIDER) {
             if ($documentType !== CustomerDocument::CPF) {
                 throw ValidationException::withMessages([
@@ -163,9 +191,17 @@ class CheckoutController extends Controller
             }
         }
 
-        $cart = Cart::available()->with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])->where('user_id', $user->id)->get();
+        $cart = Cart::with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])
+            ->where('user_id', $user->id)
+            ->get();
         if ($cart->isEmpty()) {
             return redirect()->route('checkout.index')->with('error', 'Carrinho vazio');
+        }
+
+        try {
+            $this->stockReservations->reserveCart($user, $cart);
+        } catch (RuntimeException $exception) {
+            return redirect()->route('cart.view')->with('error', $exception->getMessage());
         }
 
         $selectedAddress = null;
@@ -246,7 +282,12 @@ class CheckoutController extends Controller
         DB::beginTransaction();
         try {
             $cartProductIds = $cart->pluck('product_id')->unique()->values();
-            $sellableProducts = Product::sellable()
+            // O estoque físico já foi reduzido pela reserva deste próprio cliente;
+            // aqui validamos os demais critérios e somamos a quantidade reservada.
+            $sellableProducts = Product::query()
+                ->inActiveCategory()
+                ->where('is_outlet', false)
+                ->where('status', 1)
                 ->whereIn('id', $cartProductIds)
                 ->lockForUpdate()
                 ->get()
@@ -261,6 +302,17 @@ class CheckoutController extends Controller
                 );
             }
 
+            if ($cart->contains(fn ($item) => abs(
+                (float) $item->product->price - (float) $sellableProducts[$item->product_id]->price
+            ) > 0.0001)) {
+                DB::rollBack();
+
+                return redirect()->route('cart.view')->with(
+                    'error',
+                    'O preço de um produto mudou durante o checkout. Revise o carrinho antes de continuar.'
+                );
+            }
+
             $nameParts = explode(' ', trim($request->input('name')));
             $firstName = array_shift($nameParts);
             $lastName = implode(' ', $nameParts) ?: $firstName;
@@ -271,7 +323,10 @@ class CheckoutController extends Controller
                 default => '',
             };
 
-            if ($cart->contains(fn ($item) => $item->quantity < 1 || $item->quantity > $sellableProducts[$item->product_id]->stock)) {
+            $reservedQuantities = $this->stockReservations->checkoutQuantities($user);
+
+            if ($cart->contains(fn ($item) => $item->quantity < 1
+                || $item->quantity > ((int) ($sellableProducts[$item->product_id]->stock ?? 0) + (int) ($reservedQuantities[$item->product_id] ?? 0)))) {
                 DB::rollBack();
 
                 return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_stock_changed'));
@@ -396,6 +451,8 @@ class CheckoutController extends Controller
 
                 return back()->with('error', __('messages.cupon_esgotado'))->withInput();
             }
+
+            $this->stockReservations->attachToOrder($user, $order);
 
             // 7. Comprovante de Depósito
             if ($paymentMethod === 'deposito' && $request->hasFile('deposit_receipt')) {
@@ -539,16 +596,20 @@ class CheckoutController extends Controller
 
         $cidade = $request->input('city');
 
-        // Subtotal e desconto em valor base (USD); o cupom já entra no total do frete.
-        $resumo = $this->cupons->resumoDoCarrinho(auth()->user());
+        $cart = Cart::query()
+            ->with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])
+            ->where('user_id', auth()->id())
+            ->get();
+
+        // O produto pode estar com estoque físico zero porque este próprio checkout
+        // já o reservou; por isso o resumo usa explicitamente os itens carregados.
+        $resumo = $this->cupons->resumoDoCarrinho(
+            auth()->user(),
+            $cart->filter(fn ($item) => $item->product)->values(),
+        );
         $totalComDesconto = $resumo['total'];
 
         if (CountrySupport::usesDhl($pais)) {
-            $cart = Cart::available()
-                ->with(['product.category:id,name', 'product.subcategory:id,name', 'product.categoriasFilhas:id,name'])
-                ->where('user_id', auth()->id())
-                ->get();
-
             try {
                 $quote = $this->dhlQuotes->quote($cart, [
                     'country_code' => CountrySupport::iso2($pais),
@@ -600,6 +661,23 @@ class CheckoutController extends Controller
         ]);
     }
 
+    public function refreshStockReservation(Request $request): JsonResponse
+    {
+        $expiresAt = $this->stockReservations->refreshCheckout($request->user());
+
+        return response()->json([
+            'active' => $expiresAt !== null,
+            'expires_at' => $expiresAt?->toIso8601String(),
+        ], $expiresAt ? 200 : 409);
+    }
+
+    public function releaseStockReservation(Request $request): JsonResponse
+    {
+        $this->stockReservations->releaseCheckout($request->user());
+
+        return response()->json(['released' => true]);
+    }
+
     private function dhlDestination(object $address): array
     {
         return [
@@ -633,9 +711,15 @@ class CheckoutController extends Controller
     public function whatsapp(Request $request)
     {
         $user = auth()->user();
-        $cart = Cart::available()->with('product')->where('user_id', $user->id)->get();
+        $cart = Cart::with('product')->where('user_id', $user->id)->get();
         if ($cart->isEmpty()) {
             return back()->with('error', 'Carrinho vazio');
+        }
+
+        try {
+            $this->stockReservations->reserveCart($user, $cart);
+        } catch (RuntimeException $exception) {
+            return redirect()->route('cart.view')->with('error', $exception->getMessage());
         }
 
         $itensValidos = $cart->filter(fn ($item) => $item->product)->values();
@@ -649,7 +733,10 @@ class CheckoutController extends Controller
         DB::beginTransaction();
         try {
             $cartProductIds = $cart->pluck('product_id')->unique()->values();
-            $sellableProducts = Product::sellable()
+            $sellableProducts = Product::query()
+                ->inActiveCategory()
+                ->where('is_outlet', false)
+                ->where('status', 1)
                 ->whereIn('id', $cartProductIds)
                 ->lockForUpdate()
                 ->get()
@@ -664,7 +751,9 @@ class CheckoutController extends Controller
                 );
             }
 
-            if ($cart->contains(fn ($item) => $item->quantity < 1 || $item->quantity > $sellableProducts[$item->product_id]->stock)) {
+            $reservedQuantities = $this->stockReservations->checkoutQuantities($user);
+            if ($cart->contains(fn ($item) => $item->quantity < 1
+                || $item->quantity > ((int) ($sellableProducts[$item->product_id]->stock ?? 0) + (int) ($reservedQuantities[$item->product_id] ?? 0)))) {
                 DB::rollBack();
 
                 return redirect()->route('cart.view')->with('error', __('messages.checkout_pause_stock_changed'));
@@ -702,6 +791,8 @@ class CheckoutController extends Controller
 
                 return back()->with('error', __('messages.cupon_esgotado'));
             }
+
+            $this->stockReservations->attachToOrder($user, $order);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -745,6 +836,12 @@ class CheckoutController extends Controller
             abort(403, 'Acesso negado ao pedido.');
         }
 
+        if (! $order->isPaid() && ! $this->stockReservations->orderHasActiveReservation($order)) {
+            $this->stockReservations->releaseOrder($order, 'reservation_expired');
+            return redirect()->route('user.orders.show', $order)
+                ->with('warning', $this->stockReservations->expiredMessage());
+        }
+
         $bankAccounts = PaymentMethod::where('type', 'bank')->where('active', 1)->get();
         $order->load('cupon');
         $orderItems = $order->items()->with('product:id,photo,external_name')->get();
@@ -759,6 +856,12 @@ class CheckoutController extends Controller
     {
         if ($order->user_id !== auth()->id()) {
             abort(403, 'Acesso negado ao pedido.');
+        }
+
+        if (! $order->isPaid() && ! $this->stockReservations->orderHasActiveReservation($order)) {
+            $this->stockReservations->releaseOrder($order, 'reservation_expired');
+            return redirect()->route('user.orders.show', $order)
+                ->with('warning', $this->stockReservations->expiredMessage());
         }
 
         $request->validate([

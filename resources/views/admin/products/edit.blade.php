@@ -215,11 +215,6 @@
                             <span id="desc-current-language">Editando en portugués</span>
                             <span>Los cambios se confirman al guardar el producto.</span>
                         </div>
-                        <p id="description-ai-feedback" class="product-description__feedback d-none" role="status" aria-live="polite"></p>
-                        <details id="description-ai-sources" class="product-description__sources d-none">
-                            <summary>Fuentes consultadas</summary>
-                            <div id="description-ai-source-links" class="mt-2"></div>
-                        </details>
                     </section>
 
                     @include('admin.catalog-attributes.product')

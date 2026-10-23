@@ -8,6 +8,7 @@ use App\Services\BusinessEventService;
 use App\Services\RendixPixReconciler;
 use App\Services\RendixPixService;
 use App\Support\CustomerDocument;
+use App\Services\CheckoutStockReservationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class RendixPixController extends Controller
     public function __construct(
         private RendixPixReconciler $reconciler,
         private BusinessEventService $events,
+        private CheckoutStockReservationService $stockReservations,
     ) {
         $this->gateway = RendixPixService::gateway();
         $this->rendix = RendixPixService::fromPaymentMethod($this->gateway);
@@ -41,6 +43,12 @@ class RendixPixController extends Controller
         if ($order->isPaid()) {
             return redirect()->route('user.orders.show', $order)
                 ->with('success', __('messages.pix_order_already_confirmed'));
+        }
+
+        if (! $this->stockReservations->orderHasActiveReservation($order)) {
+            $this->stockReservations->releaseOrder($order, 'reservation_expired');
+            return redirect()->route('user.orders.show', $order)
+                ->with('warning', $this->stockReservations->expiredMessage());
         }
 
         if (!$this->gateway?->active || !$this->rendix->isConfigured()) {
@@ -119,6 +127,12 @@ class RendixPixController extends Controller
         if ($order->isPaid()) {
             return redirect()->route('user.orders.show', $order)
                 ->with('success', __('messages.payment_already_confirmed'));
+        }
+
+        if (! $this->stockReservations->orderHasActiveReservation($order)) {
+            $this->stockReservations->releaseOrder($order, 'reservation_expired');
+            return redirect()->route('user.orders.show', $order)
+                ->with('warning', $this->stockReservations->expiredMessage());
         }
 
         $latest = $order->paymentTransactions()
@@ -318,6 +332,10 @@ class RendixPixController extends Controller
             'payment_response_message' => $message,
             'payment_failed_at' => now(),
         ]);
+
+        if ($transaction->order) {
+            $this->stockReservations->releaseOrder($transaction->order, 'rendix_creation_failed');
+        }
 
         $order = $transaction->order;
         $this->events->record(

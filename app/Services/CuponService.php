@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 class CuponService
 {
     public const SESSION_KEY = 'cupon_codigo';
+    public const SESSION_EXPIRES_KEY = 'cupon_expira_em';
+    public const SESSION_MINUTES = 30;
 
     /** Busca um cupom pelo código, sem julgar validade. */
     public function localizar(?string $codigo): ?Cupon
@@ -191,6 +193,12 @@ class CuponService
         ];
 
         $codigo = session(self::SESSION_KEY);
+        $expiresAt = (int) session(self::SESSION_EXPIRES_KEY, 0);
+
+        if ($codigo && ($expiresAt <= 0 || $expiresAt <= now()->timestamp)) {
+            $this->remover();
+            $codigo = null;
+        }
 
         if (!$codigo || !$user) {
             return $vazio;
@@ -217,12 +225,16 @@ class CuponService
     /** Guarda o cupom na sessão (só o código: o desconto é sempre recalculado). */
     public function aplicarNaSessao(Cupon $cupon): void
     {
-        session([self::SESSION_KEY => $cupon->codigo]);
+        session([
+            self::SESSION_KEY => $cupon->codigo,
+            self::SESSION_EXPIRES_KEY => now()->addMinutes(self::SESSION_MINUTES)->timestamp,
+        ]);
     }
 
     public function remover(): void
     {
         session()->forget(self::SESSION_KEY);
+        session()->forget(self::SESSION_EXPIRES_KEY);
         session()->forget('cupom_aplicado');  // chaves do fluxo antigo
         session()->forget('applied_cupon');
     }
@@ -266,12 +278,61 @@ class CuponService
             return;
         }
 
-        DB::table('cupons')
-            ->where('id', $order->cupon_id)
-            ->where('usado', '>', 0)
-            ->update(['usado' => DB::raw('usado - 1'), 'updated_at' => now()]);
+        DB::transaction(function () use ($order): void {
+            $usage = UserCupon::query()
+                ->where('order_id', $order->id)
+                ->lockForUpdate()
+                ->first();
 
-        UserCupon::where('order_id', $order->id)->delete();
+            // A ausência do resgate torna a devolução idempotente: callbacks,
+            // expiração e cancelamento podem chegar quase ao mesmo tempo.
+            if (! $usage) {
+                return;
+            }
+
+            $usage->delete();
+            DB::table('cupons')
+                ->where('id', $order->cupon_id)
+                ->where('usado', '>', 0)
+                ->update(['usado' => DB::raw('usado - 1'), 'updated_at' => now()]);
+        });
+    }
+
+    /**
+     * Recompõe o registro quando a confirmação financeira chega depois de uma
+     * expiração local. O pagamento já foi capturado pelo provedor, portanto o
+     * desconto concedido precisa voltar a contar, mesmo que o cupom tenha se
+     * esgotado nesse intervalo.
+     */
+    public function garantirUsoDoPedidoPago(Order $order): void
+    {
+        if (! $order->cupon_id) {
+            return;
+        }
+
+        DB::transaction(function () use ($order): void {
+            if (UserCupon::query()->where('order_id', $order->id)->lockForUpdate()->exists()) {
+                return;
+            }
+
+            $cupon = DB::table('cupons')->where('id', $order->cupon_id)->lockForUpdate()->first();
+            if (! $cupon) {
+                return;
+            }
+
+            UserCupon::query()->create([
+                'user_id' => $order->user_id,
+                'cupon_id' => $order->cupon_id,
+                'order_id' => $order->id,
+                'desconto' => round((float) $order->discount, 2),
+                'usado_em' => now(),
+            ]);
+
+            DB::table('cupons')->where('id', $order->cupon_id)->update([
+                'usado' => DB::raw('usado + 1'),
+                'updated_at' => now(),
+            ]);
+        });
     }
 
     /** Cupons vigentes que um cliente ainda pode usar. */

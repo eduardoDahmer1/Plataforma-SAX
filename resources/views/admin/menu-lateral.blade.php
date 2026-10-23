@@ -4,7 +4,7 @@
     $catalogosOpen = request()->routeIs('admin.products.*', 'admin.brands.*', 'admin.subcategories.*', 'admin.categorias-filhas.*')
         || ($isMasterAdmin && request()->routeIs('admin.categories.*'));
     $vendasOpen = request()->routeIs('admin.orders.*', 'admin.clients.*', 'admin.abandoned-carts.*');
-    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.contatos.*', 'admin.contacts.*', 'admin.emails.*', 'admin.email-templates.*', 'admin.contact-guide.*', 'admin.policies.*');
+    $conteudosOpen = request()->routeIs('admin.blogs.*', 'admin.blog-categories.*', 'admin.contatos.*', 'admin.contacts.*', 'admin.emails.*', 'admin.email-templates.*', 'admin.contact-guide.*', 'admin.trabalhe_conosco.*', 'admin.policies.*');
     $institucionaisOpen = request()->routeIs(
         'admin.palace.*',
         'admin.bridal.*',
@@ -94,7 +94,7 @@
                 <i class="fa-solid fa-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="collapse sax-submenu {{ $conteudosOpen ? 'show' : '' }}" id="menuConteudos{{ $menuSuffix }}">
-                <a href="{{ route('admin.blogs.index') }}" class="submenu-link {{ request()->routeIs('admin.blogs.*') ? 'active' : '' }}"><i class="fa-solid fa-blog"></i> {{ __('messages.menu_blog') }}</a>
+                <a href="{{ route('admin.blogs.index') }}" class="submenu-link {{ request()->routeIs('admin.blogs.*', 'admin.blog-categories.*') ? 'active' : '' }}"><i class="fa-solid fa-blog"></i> {{ __('messages.menu_blog') }}</a>
                 @if($isMasterAdmin)
                 <a href="{{ route('admin.contatos.index') }}" class="submenu-link {{ request()->routeIs('admin.contatos.*', 'admin.contacts.*', 'admin.emails.*', 'admin.email-templates.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> {{ __('messages.menu_contato') }}</a>
                 <a href="{{ route('admin.contact-guide.index') }}" class="submenu-link {{ request()->routeIs('admin.contact-guide.*') ? 'active' : '' }}"><i class="fa-solid fa-map-location-dot"></i> {{ __('messages.admin_guide_menu') }}</a>

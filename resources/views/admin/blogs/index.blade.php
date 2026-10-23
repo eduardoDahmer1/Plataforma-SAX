@@ -1,6 +1,11 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
+@endpush
+
 @section('content')
+<div class="content-admin content-blog">
 <x-admin.card>
     <x-admin.page-header
         title="{{ __('messages.conteudo_editorial_titulo') }}"
@@ -150,4 +155,5 @@
         {{ $blogs->links('pagination::bootstrap-4') }}
     </div>
 </x-admin.card>
+</div>
 @endsection

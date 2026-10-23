@@ -1017,6 +1017,7 @@ async function translateProductField(type, options = {}) {
     }
 }
 
+// TODO: Unificar la funcionalidad de "Completar con IA" y "Generar con IA". Actualmente utilizan flujos diferentes. Revisar ambas implementaciones y diseñar un único flujo que permita completar los datos del producto y generar las descripciones en los tres idiomas.
 async function generateSaxDescriptionTranslations() {
     const fields = Object.fromEntries(['pt', 'es', 'en'].map(language => [language, document.getElementById(`real-desc-${language}`)]));
     const button = document.getElementById('translate-desc-btn');

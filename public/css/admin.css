@@ -8010,6 +8010,10 @@ a.sax-msg__value:hover { color: #111; text-decoration: underline; }
     .product-description__presence { display: block; width: 100%; text-align: center; }
 }
 
+/* Restore compact language badges for product names and descriptions. */
+:is(.product-description, .product-identity) .product-description__languages { gap: 4px; border-bottom: 0; margin-bottom: 8px; }
+:is(.product-description, .product-identity) .product-description__languages .badge { cursor: pointer; }
+
 /* Product identity shares the description section's type, tabs, and soft accents. */
 .product-identity { padding-top: 12px; color: #172033; }
 .product-identity__header { margin-bottom: 22px; }

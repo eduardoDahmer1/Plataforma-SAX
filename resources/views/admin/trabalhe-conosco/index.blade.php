@@ -1,8 +1,12 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
+@endpush
+
 @section('content')
 <x-admin.card>
-    <div class="sax-cat">
+    <div class="sax-cat content-admin content-jobs">
 
         {{-- Cabeçalho --}}
         <div class="sax-cat__top">

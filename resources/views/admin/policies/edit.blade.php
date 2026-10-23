@@ -1,6 +1,11 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
+@endpush
+
 @section('content')
+<div class="content-admin content-policies content-editor">
 <x-admin.card>
     <form action="{{ route('admin.policies.update', $policy) }}" method="POST">
         @csrf
@@ -31,4 +36,5 @@
         <x-admin.form-actions :cancelRoute="route('admin.policies.index')" submitLabel="Salvar política" />
     </form>
 </x-admin.card>
+</div>
 @endsection

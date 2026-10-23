@@ -355,6 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
         taxonomyAssessment?.replaceChildren();
         taxonomyAssessment?.classList.add('d-none');
         showTaxonomyMessage('Buscando sugerencias de clasificación…');
+        suggestions?.closest('.product-taxonomy__suggestions')?.classList.remove('d-none');
         suggestions?.setAttribute('aria-busy', 'true');
 
         try {

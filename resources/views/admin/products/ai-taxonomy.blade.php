@@ -1,4 +1,5 @@
-<section class="product-taxonomy__suggestions" aria-labelledby="aiTaxonomyHeading">
+<p class="product-taxonomy__save-hint">Las asignaciones se confirman al guardar el producto.</p>
+<section class="product-taxonomy__suggestions d-none" aria-labelledby="aiTaxonomyHeading">
     <div class="product-taxonomy__suggestions-heading">
         <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
         <div>
@@ -11,7 +12,3 @@
     </div>
     <div id="aiTaxonomyAssessment" class="product-taxonomy__assessment d-none" aria-live="polite"></div>
 </section>
-<button type="button" id="createProductTaxonomy" class="btn btn-link product-taxonomy__link mt-3">
-    <i class="far fa-plus-square me-2" aria-hidden="true"></i>Crear subcategoría o categoría hija
-</button>
-<p class="product-taxonomy__save-hint">Las asignaciones se confirman al guardar el producto.</p>

@@ -1,6 +1,11 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
+@endpush
+
 @section('content')
+<div class="content-admin content-policies">
 <x-admin.card>
     <x-admin.page-header title="Políticas e Termos" description="Gerencie os textos legais exibidos no site e no checkout." />
     <x-admin.alert />
@@ -24,4 +29,5 @@
         @endforelse
     </div>
 </x-admin.card>
+</div>
 @endsection

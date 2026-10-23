@@ -2,11 +2,12 @@
 
 @push('styles')
 <link href="{{ asset('css/email-marketing.css') }}?v={{ filemtime(public_path('css/email-marketing.css')) }}" rel="stylesheet">
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
 @endpush
 
 @section('content')
 <x-admin.card>
-    <div class="email-center">
+    <div class="email-center content-admin content-email">
         <div class="email-center__top">
             <div>
                 <a class="email-center__back" href="{{ route('admin.contatos.index') }}"><i class="fa-solid fa-arrow-left"></i> Central de mensagens</a>

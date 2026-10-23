@@ -20,6 +20,17 @@ class ContactGuideDirectory
                 'name' => $location->translated('name'),
                 'city' => $location->translated('city'),
                 'hours' => $location->translated('service_hours'),
+                'searchTerms' => $this->searchTerms(
+                    $location->name,
+                    $location->name_en,
+                    $location->name_es,
+                    $location->city,
+                    $location->city_en,
+                    $location->city_es,
+                    $location->subtitle,
+                    $location->subtitle_en,
+                    $location->subtitle_es,
+                ),
                 'heroImage' => $isFlagship ? asset('images/contact-guide/sax-banner-1600x300.png') : null,
                 'floors' => $floors->map(function ($entries) {
                     $groups = $entries->groupBy(fn ($entry) => $this->key($entry->sector ?? ''))
@@ -36,6 +47,14 @@ class ContactGuideDirectory
                                 'id' => 'sector-'.$entry->id,
                                 'name' => $entry->translated('sector'),
                                 'description' => $entry->translated('description'),
+                                'searchTerms' => $this->searchTerms(
+                                    $sectorEntries->pluck('sector'),
+                                    $sectorEntries->pluck('sector_en'),
+                                    $sectorEntries->pluck('sector_es'),
+                                    $sectorEntries->pluck('description'),
+                                    $sectorEntries->pluck('description_en'),
+                                    $sectorEntries->pluck('description_es'),
+                                ),
                                 'brands' => $brands,
                                 'contacts' => $sectorEntries->map(fn ($item) => $this->contact($item))->filter()->unique('key')->values()->all(),
                             ];
@@ -66,6 +85,11 @@ class ContactGuideDirectory
                         'id' => 'floor-'.$entries->first()->id,
                         'name' => $entries->first()->translated('floor') ?: __('messages.contact_guide_v2_floor_unspecified'),
                         'searchName' => $entries->first()->floor,
+                        'searchTerms' => $this->searchTerms(
+                            $entries->pluck('floor'),
+                            $entries->pluck('floor_en'),
+                            $entries->pluck('floor_es'),
+                        ),
                         'groups' => $groups->all(),
                         'contacts' => $shared,
                     ];
@@ -77,6 +101,17 @@ class ContactGuideDirectory
     private function key(string $value): string
     {
         return mb_strtolower(trim(preg_replace('/\s+/u', ' ', $value)));
+    }
+
+    private function searchTerms(mixed ...$values): array
+    {
+        return collect($values)
+            ->flatten()
+            ->filter(fn ($value) => is_string($value) && trim($value) !== '')
+            ->map(fn ($value) => trim($value))
+            ->unique(fn ($value) => Str::lower(Str::ascii($value)))
+            ->values()
+            ->all();
     }
 
     private function contact(ContactGuideEntry $entry): ?array

@@ -20,7 +20,7 @@
                     <label for="guideTwoSearch">{{ __('messages.contact_guide_v2_search') }}</label>
                     <div class="guide-two__search">
                         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                        <input id="guideTwoSearch" type="search" placeholder="{{ __('messages.contact_guide_v2_search') }}" autocomplete="off" aria-controls="guideTwoResults">
+                        <input id="guideTwoSearch" type="search" placeholder="{{ __('messages.contact_guide_v2_search') }}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="guideTwoResultList">
                         <button id="guideTwoClear" type="button" aria-label="{{ __('messages.contact_guide_v2_clear') }}" hidden><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
             </div>
             <section id="guideTwoResults" class="guide-two__results" aria-label="{{ __('messages.contact_guide_v2_results') }}" hidden>
                 <p id="guideTwoResultStatus" role="status"></p>
-                <ul id="guideTwoResultList"></ul>
+                <ul id="guideTwoResultList" role="listbox"></ul>
             </section>
             <p id="guideTwoHours" class="guide-two__hours"></p>
             <div class="guide-two__layout">

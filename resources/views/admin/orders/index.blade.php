@@ -1,17 +1,26 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-commerce.css') }}?v={{ file_exists(public_path('css/admin-commerce.css')) ? filemtime(public_path('css/admin-commerce.css')) : time() }}" rel="stylesheet">
+@endpush
+
 @section('content')
+<div class="commerce-admin commerce-orders-index">
 <x-admin.card>
     <x-admin.page-header
         title="{{ __('messages.pedidos_titulo') }}"
         description="{{ __('messages.transacciones_registradas', ['total' => $orders->total()]) }}">
     </x-admin.page-header>
 
-    <div class="mb-4">
+    <div class="commerce-filter-panel mb-4">
+        <div class="commerce-filter-panel__heading">
+            <span><i class="fa-solid fa-sliders" aria-hidden="true"></i></span>
+            <div><strong>Filtrar pedidos</strong><small>Encontre rapidamente o pedido que precisa de atenção.</small></div>
+        </div>
         <form method="GET" action="{{ route('admin.orders.index') }}" id="filterForm" class="row g-3">
             <div class="col-md-2">
                 <label class="x-small fw-bold text-uppercase">Método</label>
-                <select name="payment_method" class="form-select rounded-0" onchange="applyFilters()">
+                <select name="payment_method" class="form-select" onchange="applyFilters()">
                     <option value="">Todos</option>
                     <option value="bancard_v2" {{ request('payment_method') == 'bancard_v2' ? 'selected' : '' }}>Bancard V2</option>
                     <option value="rendix_pix" {{ request('payment_method') == 'rendix_pix' ? 'selected' : '' }}>Pix Rendix</option>
@@ -21,7 +30,7 @@
             </div>
             <div class="col-md-2">
                 <label class="x-small fw-bold text-uppercase">Status Pedido</label>
-                <select name="status" class="form-select rounded-0" onchange="applyFilters()">
+                <select name="status" class="form-select" onchange="applyFilters()">
                     <option value="">Todos</option>
                     @foreach (['pending', 'processing', 'shipped', 'completed', 'canceled'] as $s)
                         <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ __('messages.status_' . $s) }}</option>
@@ -30,7 +39,7 @@
             </div>
             <div class="col-md-2">
                 <label class="x-small fw-bold text-uppercase">Status Pagamento</label>
-                <select name="payment_status" class="form-select rounded-0" onchange="applyFilters()">
+                <select name="payment_status" class="form-select" onchange="applyFilters()">
                     <option value="">Todos</option>
                     @foreach (['pending', 'paid', 'failed', 'refunded'] as $ps)
                         <option value="{{ $ps }}" {{ request('payment_status') == $ps ? 'selected' : '' }}>{{ __('messages.payment_status_' . $ps) }}</option>
@@ -39,7 +48,7 @@
             </div>
             <div class="col-md-2">
                 <label class="x-small fw-bold text-uppercase">Exibir</label>
-                <select name="per_page" class="form-select rounded-0" onchange="applyFilters()">
+                <select name="per_page" class="form-select" onchange="applyFilters()">
                     @foreach([20, 30, 50, 100] as $opt)
                         <option value="{{ $opt }}" @selected($perPage == $opt)>{{ $opt }}</option>
                     @endforeach
@@ -47,10 +56,10 @@
             </div>
             <div class="col-md-3">
                 <label class="x-small fw-bold text-uppercase">Cliente</label>
-                <input type="text" name="user_name" class="form-control rounded-0" placeholder="Nome..." value="{{ request('user_name') }}" onchange="applyFilters()">
+                <input type="text" name="user_name" class="form-control" placeholder="Nome..." value="{{ request('user_name') }}" onchange="applyFilters()">
             </div>
             <div class="col-md-1 d-flex align-items-end">
-                <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary rounded-0 w-100">Limpar</a>
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary w-100"><i class="fa-solid fa-rotate-left me-1"></i>Limpar</a>
             </div>
         </form>
     </div>
@@ -76,7 +85,7 @@
             @endphp
 
             <div class="col-12 col-md-6 col-lg-4">
-                <article class="card admin-order-card h-100">
+                <article class="card admin-order-card {{ $classeStatus }} h-100">
                     <div class="card-body">
                         <div class="admin-order-card__head">
                             <div>
@@ -99,8 +108,10 @@
                                 <span class="text-muted">{{ __('messages.metodo') }}</span>
                                 <span>
                                     {{ ucfirst($order->payment_method) }}
-                                    <i class="fa fa-circle admin-order-payment {{ $classePagamento }}"
-                                       title="{{ __('messages.payment_status_' . $order->payment_status) }}"></i>
+                                    <span class="admin-payment-status {{ $classePagamento }}">
+                                        <i class="fa fa-circle" aria-hidden="true"></i>
+                                        {{ __('messages.payment_status_' . $order->payment_status) }}
+                                    </span>
                                 </span>
                             </div>
 
@@ -138,12 +149,13 @@
 
                     <div class="card-footer admin-order-card__footer">
                         <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-dark flex-grow-1 text-uppercase fw-bold">
+                            <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
                             {{ __('messages.ver_detalhes_btn') }}
                         </a>
                         <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST"
                               onsubmit="return confirm('{{ __('messages.eliminar_btn') }}?');" class="m-0">
                             @csrf @method('DELETE')
-                            <button class="btn btn-outline-dark" title="{{ __('messages.eliminar_registro') }}" aria-label="{{ __('messages.eliminar_registro') }}">
+                            <button class="btn btn-outline-danger" title="{{ __('messages.eliminar_registro') }}" aria-label="{{ __('messages.eliminar_registro') }}">
                                 <i class="fa fa-trash"></i>
                             </button>
                         </form>
@@ -159,4 +171,5 @@
         {{ $orders->appends(request()->query())->links() }}
     </div>
 </x-admin.card>
+</div>
 @endsection

@@ -94,3 +94,89 @@ Final result: blocked (somente comparação visual em navegador; implementação
 - Não houve iteração visual porque nenhum navegador renderizador está instalado no ambiente.
 
 final result: blocked
+
+# Design QA — Conteúdos do admin
+
+- Source visual truth: direção visual 3 aprovada pelo usuário, registrada em `/home/remoto/.codex/generated_images/01a16415-684b-7143-955b-ee5a9cba8d0b/exec-fe8d8846-06b6-45e3-b063-e47c8241fa7c.png`.
+- Source pixels: `1487 x 1058`.
+- Intended CSS viewport: desktop `1440 x 1024` e mobile `390 x 844`.
+- Implementation screenshot: indisponível neste ambiente.
+- State: páginas administrativas autenticadas de Blog, Contato, Guia de atendimento, Trabalhe conosco e Políticas.
+
+## Full-view comparison evidence
+
+Bloqueada. Não há navegador autenticado conectado ao stage nesta sessão, portanto não foi possível capturar as rotas administrativas no mesmo viewport da referência.
+
+## Focused-region comparison evidence
+
+Bloqueada pelo mesmo motivo. As regiões prioritárias para a captura são cabeçalhos, filtros, cards de resumo, listas, editores, estados semânticos, formulários e barras de ação.
+
+## Findings
+
+- P0/P1 funcionais: nenhum encontrado na compilação das views ou no teste de acesso do admin.
+- O sistema visual aprovado foi aplicado a todas as páginas e subpáginas do grupo Conteúdos, preservando campos, ações, textos e rotas existentes.
+- Cores semânticas: preto para ações principais, verde para ativo/sucesso, amarelo para atenção/rascunho, vermelho para perigo/erro e cinza claro para superfícies neutras.
+- Espaçamentos foram normalizados em passos de 8/10/12/14/16/18 px, com cards mais compactos, alinhamento consistente e empilhamento responsivo.
+- O menu Conteúdos agora permanece aberto e marca Blog corretamente nas categorias; Trabalhe conosco também mantém o grupo aberto.
+- O detalhe do pedido recebeu ritmo vertical uniforme de 16 px entre Produtos, Logística, Atualizações e cards laterais.
+
+## Automated verification
+
+- `git diff --check`: passou.
+- CSS: chaves balanceadas em `admin-content.css` e `admin-commerce.css`.
+- Blade: `php artisan view:clear && php artisan view:cache` passou.
+- Permissões: `AdminRoleAccessTest` passou com 4 testes e 45 asserções.
+
+## Implementation checklist
+
+- Capturar as rotas autenticadas de Conteúdos no desktop e no mobile.
+- Conferir quebra dos botões e filtros com dados reais, especialmente Contato e Guia de atendimento.
+- Conferir editor de Blog/Políticas, estados de erro e listas vazias.
+- Ajustar somente diferenças visuais observadas nas capturas e repetir a comparação.
+
+final result: blocked
+
+# Design QA — Pedidos e carrinhos abandonados
+
+- Source visual truth: `/home/remoto/.codex/generated_images/01a16415-684b-7143-955b-ee5a9cba8d0b/exec-fe8d8846-06b6-45e3-b063-e47c8241fa7c.png`
+- Source pixels: `1487 x 1058`
+- Intended CSS viewport: `1440 x 1024`, desktop admin
+- Implementation screenshot: unavailable
+- Implementation pixels / density: unavailable
+- State: order detail, pending order and pending payment
+
+## Full-view comparison evidence
+
+Blocked. The selected source visual was inspected, but this session has no authenticated browser surface connected to the stage admin. The Blade implementation cannot be captured in the same authenticated route and viewport yet.
+
+## Focused-region comparison evidence
+
+Blocked for the same reason. The intended focused regions are the order summary strip, operator action rail, semantic status colors, product table, and the corresponding abandoned-cart states.
+
+## Findings
+
+- No code-level P0/P1 issue was found. Blade compilation passes and all existing actions, forms, links, data fields, and responsive content remain present.
+- Visual fidelity, responsive wrapping, focus states, and browser console behavior still require an authenticated browser capture.
+- Typography uses the project's existing Inter stack; semantic tokens map to black, light gray, green, yellow, and red from the selected direction.
+- Product imagery continues using the existing stored product assets; Font Awesome remains the established icon source.
+- Existing application copy was preserved, with short helper labels added only where they improve scanning.
+
+## Comparison history
+
+- Initial implementation: four admin pages received the selected visual system.
+- Automated validation: CSS braces balanced; Git whitespace check passed; all Blade views compiled successfully.
+- Focused PHP tests: admin role-access tests passed. Order-note feature tests were blocked before application execution by an existing SQLite migration limitation involving multiple column renames.
+- No browser-rendered comparison iteration was possible in this session.
+
+## Implementation checklist
+
+- Capture `/admin/orders`, `/admin/orders/{id}`, `/admin/abandoned-carts`, and `/admin/abandoned-carts/{id}` from the authenticated stage environment.
+- Compare the order detail at a `1440 x 1024` viewport against the selected source visual.
+- Verify status and payment forms, filters, detail links, destructive confirmation, hover/focus states, mobile stacking, and browser console.
+- Fix any P0/P1/P2 visual differences and repeat the comparison.
+
+## Follow-up polish
+
+- Tune only minor density or wrapping differences discovered in the authenticated capture.
+
+final result: blocked

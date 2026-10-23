@@ -1,37 +1,76 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-commerce.css') }}?v={{ file_exists(public_path('css/admin-commerce.css')) ? filemtime(public_path('css/admin-commerce.css')) : time() }}" rel="stylesheet">
+@endpush
+
 @section('content')
 
+<div class="commerce-admin commerce-order-show">
 <x-admin.card>
     <x-admin.alert />
 
-    {{-- Navegação e ID --}}
-    <div class="d-flex justify-content-between align-items-center mb-4 mb-lg-5 header-actions">
-        <div>
-            <a href="{{ route('admin.orders.index') }}" class="text-decoration-none x-small fw-bold text-uppercase text-secondary tracking-wider">
-                <i class="fa fa-chevron-left me-1"></i> {{ __('messages.voltar_pedidos_btn') }}
-            </a>
-            <h1 class="h4 fw-bold mt-2 mb-0 text-uppercase tracking-wider">
-                <span class="fw-light text-secondary">#</span>{{ $order->id }}
-            </h1>
-        </div>
-        <div class="d-flex gap-3 align-items-center">
-            <div class="text-md-end me-md-3">
-                <span class="d-block x-small text-secondary text-uppercase">{{ __('messages.data_pedido') }}</span>
-                <span class="small fw-bold">{{ $order->created_at->format('d/m/Y H:i') }}</span>
-            </div>
-            <div class="status-badge-container shadow-sm border">
-                <span class="status-dot {{ $order->status }}"></span>
-                <span class="x-small text-uppercase fw-bold text-dark">{{ __('messages.status_' . $order->status) }}</span>
-            </div>
-        </div>
-    </div>
+    @php
+        $orderStatusClass = match ($order->status) {
+            'completed' => 'is-success',
+            'canceled' => 'is-danger',
+            'processing', 'shipped' => 'is-neutral',
+            default => 'is-warning',
+        };
+        $paymentStatusClass = match ($order->payment_status) {
+            'paid' => 'is-success',
+            'failed' => 'is-danger',
+            'refunded' => 'is-neutral',
+            default => 'is-warning',
+        };
+        $orderActionTone = match ($order->status) {
+            'completed' => 'commerce-btn--success',
+            'canceled' => 'commerce-btn--danger',
+            default => 'commerce-btn--dark',
+        };
+        $paymentActionTone = match ($order->payment_status) {
+            'paid' => 'commerce-btn--success',
+            'failed' => 'commerce-btn--danger',
+            default => 'commerce-btn--dark',
+        };
+        $orderItemsCount = $order->items->sum('quantity');
+    @endphp
 
-    <div class="row g-4 g-lg-5">
+    <a href="{{ route('admin.orders.index') }}" class="commerce-back-link">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>{{ __('messages.voltar_pedidos_btn') }}
+    </a>
+
+    <header class="commerce-order-hero">
+        <div class="commerce-order-hero__identity">
+            <span class="commerce-eyebrow">Pedido</span>
+            <h1>#{{ $order->order_number ?? $order->id }}</h1>
+            <p><i class="fa-regular fa-calendar me-1"></i>{{ $order->created_at->format('d/m/Y H:i') }}</p>
+        </div>
+        <div class="commerce-order-hero__metric">
+            <span>Cliente</span>
+            <strong>{{ trim(($order->name ?? '').' '.($order->surname ?? '')) ?: ($order->user->name ?? '—') }}</strong>
+            <small>{{ $order->email }}</small>
+        </div>
+        <div class="commerce-order-hero__metric">
+            <span>Total do pedido</span>
+            <strong class="commerce-order-hero__total">{{ order_money($order, $order->total) }}</strong>
+            <small>{{ $orderItemsCount }} {{ $orderItemsCount === 1 ? 'item' : 'itens' }}</small>
+        </div>
+        <div class="commerce-order-hero__metric">
+            <span>Status do pedido</span>
+            <strong class="commerce-status {{ $orderStatusClass }}"><i class="fa-solid fa-circle" aria-hidden="true"></i>{{ __('messages.status_' . $order->status) }}</strong>
+        </div>
+        <div class="commerce-order-hero__metric">
+            <span>Status do pagamento</span>
+            <strong class="commerce-status {{ $paymentStatusClass }}"><i class="fa-solid fa-circle" aria-hidden="true"></i>{{ __('messages.payment_status_' . $order->payment_status) }}</strong>
+        </div>
+    </header>
+
+    <div class="row g-4">
         {{-- Coluna Principal --}}
         <div class="col-lg-8 order-2 order-lg-1">
             
-        <section class="mb-5 bg-white p-3 p-lg-4 rounded shadow-sm border">
+        <section class="commerce-panel mb-4 bg-white p-3 p-lg-4">
             <h6 class="fw-bold text-uppercase tracking-wider mb-4 pb-2 border-bottom">
                 <i class="fa fa-shopping-bag me-2"></i>{{ __('messages.produtos_seccao') }}
             </h6>
@@ -44,6 +83,7 @@
                                 <th class="border-0 ps-0" style="width: 80px;"></th>
                                 <th class="border-0">{{ __('messages.descricao_col') }}</th>
                                 <th class="border-0 text-center">{{ __('messages.quantidade_col') }}</th>
+                                <th class="border-0 text-end">Preço unitário</th>
                                 <th class="border-0 text-end pe-0">Total</th>
                             </tr>
                         </thead>
@@ -66,6 +106,7 @@
                                         @if($product && $product->color) <span class="badge bg-secondary x-small ms-1">{{ $product->color }}</span> @endif
                                     </td>
                                     <td class="py-3 text-center text-secondary">{{ $item->quantity }}</td>
+                                    <td class="py-3 text-end text-secondary">{{ order_money($order, $item->price) }}</td>
                                     <td class="py-3 text-end pe-0 fw-bold text-dark">
                                         {{ order_money($order, $item->quantity * $item->price) }}
                                     </td>
@@ -90,7 +131,7 @@
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-1">
                                         <span class="x-small text-muted">Qtd: {{ $item->quantity }}</span>
-                                        <span class="x-small text-muted">Ref: {{ $item->sku ?? ($product->sku ?? '-') }}</span>
+                                        <span class="x-small text-muted">Unitário: {{ order_money($order, $item->price) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -103,7 +144,7 @@
         </section>
 
             {{-- Logística --}}
-            <section class="bg-white p-3 p-lg-0 rounded">
+            <section class="commerce-panel bg-white p-3 p-lg-4">
                 <h6 class="x-small fw-bold text-uppercase tracking-wider mb-4 pb-2 border-bottom">
                     <i class="fa fa-truck me-2"></i>{{ __('messages.logistica_entrega_seccao') }}
                 </h6>
@@ -141,7 +182,7 @@
             </section>
 
             {{-- Atualizações publicadas pela equipe --}}
-            <section class="mt-4 bg-white p-3 p-lg-4 rounded shadow-sm border">
+            <section class="commerce-panel mt-4 bg-white p-3 p-lg-4">
                 <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-4 pb-3 border-bottom">
                     <div>
                         <h6 class="fw-bold text-uppercase tracking-wider mb-1">
@@ -211,7 +252,7 @@
         </div>
 
         {{-- Coluna Lateral --}}
-        <div class="col-lg-4 order-1 order-lg-2">
+        <div class="col-lg-4 order-1 order-lg-2 commerce-action-rail">
             <div class="sticky-top" style="top: 20px;">
                 
                 {{-- Gestão de Status --}}
@@ -222,23 +263,27 @@
                         @if($order->payment_response_code)<small class="d-block mt-1">Retorno Bancard: {{ $order->payment_response_code }}</small>@endif
                     </div>
                 @endif
-                <div class="border p-4 mb-4 bg-white shadow-sm rounded">
-                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.gestao_pedido_card') }}</h6>
+                <div class="commerce-action-card mb-4">
+                    <div class="commerce-action-card__heading">
+                        <span><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                        <div><h6>{{ __('messages.gestao_pedido_card') }}</h6><p>Atualize cada etapa com clareza.</p></div>
+                    </div>
                     
                     {{-- Form 1: Status do Pedido --}}
-                    <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="mb-4">
+                    <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="commerce-status-form mb-3">
                         @csrf 
                         @method('PUT')
                         <div class="mb-3">
                             <label class="x-small text-secondary text-uppercase fw-bold mb-1 d-block">{{ __('messages.status_pedido_label') }}</label>
-                            <select name="status" class="form-select rounded-0 border-dark-subtle mb-2">
+                            <select name="status" class="form-select mb-2" data-commerce-tone-select="order">
                                 @foreach (['pending', 'processing', 'shipped', 'completed', 'canceled'] as $statusKey)
                                     <option value="{{ $statusKey }}" {{ $order->status === $statusKey ? 'selected' : '' }}>
                                         {{ __('messages.status_' . $statusKey) }}
                                     </option>
                                 @endforeach
                             </select>
-                            <button type="submit" class="btn btn-dark w-100 rounded-0 text-uppercase fw-bold tracking-wider py-2">
+                            <button type="submit" class="btn commerce-btn {{ $orderActionTone }} w-100 text-uppercase fw-bold tracking-wider py-2" data-commerce-tone-button="order">
+                                <i class="fa-solid fa-circle-check me-2" aria-hidden="true"></i>
                                 {{ __('messages.actualizar_estado_btn') }}
                             </button>
                         </div>
@@ -252,14 +297,15 @@
                         @method('PUT')
                         <div class="mb-3">
                             <label class="x-small text-secondary text-uppercase fw-bold mb-1 d-block">{{ __('messages.status_pagamento_label') }}</label>
-                            <select name="payment_status" class="form-select rounded-0 border-dark-subtle mb-2">
+                            <select name="payment_status" class="form-select mb-2" data-commerce-tone-select="payment">
                                 @foreach (['pending', 'paid', 'failed', 'refunded'] as $payStatus)
                                     <option value="{{ $payStatus }}" {{ $order->payment_status === $payStatus ? 'selected' : '' }}>
                                         {{ __('messages.payment_status_' . $payStatus) }}
                                     </option>
                                 @endforeach
                             </select>
-                            <button type="submit" class="btn btn-outline-dark w-100 rounded-0 text-uppercase fw-bold tracking-wider py-2">
+                            <button type="submit" class="btn commerce-btn {{ $paymentActionTone }} w-100 text-uppercase fw-bold tracking-wider py-2" data-commerce-tone-button="payment">
+                                <i class="fa-regular fa-credit-card me-2" aria-hidden="true"></i>
                                 {{ __('messages.actualizar_pagamento_btn') }}
                             </button>
                         </div>
@@ -272,7 +318,7 @@
                     && $order->payment_status === 'paid'
                     && $rendixRefundTransaction
                 )
-                    <div class="border border-danger p-4 mb-4 bg-white shadow-sm rounded">
+                    <div class="commerce-side-card commerce-side-card--danger mb-4">
                         @if ($order->refund_request_status === 'pending')
                             @php
                                 $refundReasonLabels = [
@@ -308,7 +354,7 @@
                         <form action="{{ route('admin.orders.rendix-refund', $order) }}" method="POST"
                               onsubmit='if (!confirm(@js(__("messages.rendix_refund_confirm")))) return false; this.querySelector("button[type=submit]").disabled = true; return true;'>
                             @csrf
-                            <button type="submit" class="btn btn-danger w-100 rounded-0 text-uppercase fw-bold tracking-wider py-2">
+                            <button type="submit" class="btn btn-danger w-100 text-uppercase fw-bold tracking-wider py-2">
                                 {{ __('messages.rendix_refund_action') }}
                             </button>
                         </form>
@@ -317,7 +363,7 @@
                 @endif
 
                 {{-- Comprador --}}
-                <div class="border p-4 mb-4 bg-white shadow-sm rounded">
+                <div class="commerce-side-card mb-4">
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.comprador_card') }}</h6>
                     
                     <div class="mb-3">
@@ -338,7 +384,7 @@
 
                         @if($order->user)
                             <a href="{{ route('admin.clients.show', $order->user->id) }}"
-                               class="btn btn-outline-dark btn-sm w-100 mt-3 rounded-0 fw-bold text-uppercase">
+                               class="btn btn-outline-dark btn-sm w-100 mt-3 fw-bold text-uppercase">
                                 <i class="fa-regular fa-user me-2"></i>Ver perfil do cliente
                             </a>
                         @endif
@@ -349,7 +395,7 @@
                                 $ddi = $order->phone_country ?: optional($order->user)->phone_country ?: '595';
                                 $whatsapp = $ddi . preg_replace('/\D/', '', $order->phone);
                             @endphp
-                            <a href="https://wa.me/{{ $whatsapp }}" target="_blank" class="btn btn-outline-success btn-sm w-100 mt-3 rounded-0 fw-bold">
+                            <a href="https://wa.me/{{ $whatsapp }}" target="_blank" class="btn commerce-btn commerce-btn--success btn-sm w-100 mt-3 fw-bold">
                                 <i class="fab fa-whatsapp me-2"></i>{{ $order->phone }}
                             </a>
                         @endif
@@ -377,16 +423,16 @@
 
                 {{-- Recibo --}}
                 @if ($order->receipt && $order->payment_status === 'paid')
-                <div class="border p-4 mb-4 bg-white shadow-sm rounded">
+                <div class="commerce-side-card mb-4">
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-3 pb-2 border-bottom">{{ __('messages.recibo_de_compra') }}</h6>
                     <p class="x-small text-secondary mb-3">
                         {{ $order->receipt->receipt_number }} &mdash; {{ $order->receipt->issued_at->format('d/m/Y') }}
                     </p>
-                    <a href="{{ route('receipts.show', $order->receipt) }}" class="btn btn-dark btn-sm w-100 rounded-0 fw-bold text-uppercase mb-2">
+                    <a href="{{ route('receipts.show', $order->receipt) }}" class="btn btn-dark btn-sm w-100 fw-bold text-uppercase mb-2">
                         {{ __('messages.ver_recibo') }}
                     </a>
                     @if ($order->receipt->pdf_path && \Storage::exists($order->receipt->pdf_path))
-                    <a href="{{ route('receipts.download', $order->receipt) }}" class="btn btn-outline-dark btn-sm w-100 rounded-0 fw-bold text-uppercase">
+                    <a href="{{ route('receipts.download', $order->receipt) }}" class="btn btn-outline-dark btn-sm w-100 fw-bold text-uppercase">
                         {{ __('messages.descargar_pdf') }}
                     </a>
                     @endif
@@ -401,7 +447,7 @@
                     $cotacaoPedido = (float) ($order->currency_value ?? 1) ?: 1;
                 @endphp
 
-                <div class="border p-4 bg-dark text-white rounded shadow">
+                <div class="commerce-finance-card p-4 bg-dark text-white">
                     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
                         <h6 class="x-small fw-bold text-uppercase tracking-wider mb-0">{{ __('messages.pagamento_titulo') }}</h6>
                         {{-- Moeda travada no fechamento do pedido: é o que o cliente viu e pagou. --}}
@@ -511,6 +557,7 @@
         </div>
     </div>
 </x-admin.card>
+</div>
 @endsection
 
 @push('scripts')
@@ -520,18 +567,37 @@ document.addEventListener('DOMContentLoaded', function () {
     const customWrapper = document.getElementById('order-note-custom-wrapper');
     const customField = document.getElementById('order-note-custom');
 
-    if (!typeField || !customWrapper || !customField) return;
+    if (typeField && customWrapper && customField) {
+        const updateCustomField = function () {
+            const isOther = typeField.value === 'other';
+            customWrapper.hidden = !isOther;
+            customField.required = isOther;
 
-    const updateCustomField = function () {
-        const isOther = typeField.value === 'other';
-        customWrapper.hidden = !isOther;
-        customField.required = isOther;
+            if (!isOther) customField.value = '';
+        };
 
-        if (!isOther) customField.value = '';
+        typeField.addEventListener('change', updateCustomField);
+        updateCustomField();
+    }
+
+    const tones = {
+        order: { completed: 'success', canceled: 'danger' },
+        payment: { paid: 'success', failed: 'danger' },
     };
 
-    typeField.addEventListener('change', updateCustomField);
-    updateCustomField();
+    document.querySelectorAll('[data-commerce-tone-select]').forEach(function (select) {
+        const kind = select.dataset.commerceToneSelect;
+        const button = document.querySelector('[data-commerce-tone-button="' + kind + '"]');
+        if (!button) return;
+
+        const updateButtonTone = function () {
+            button.classList.remove('commerce-btn--success', 'commerce-btn--danger', 'commerce-btn--dark');
+            button.classList.add('commerce-btn--' + (tones[kind]?.[select.value] || 'dark'));
+        };
+
+        select.addEventListener('change', updateButtonTone);
+        updateButtonTone();
+    });
 });
 </script>
 @endpush

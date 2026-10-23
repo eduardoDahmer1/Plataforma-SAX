@@ -1,6 +1,11 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
+@endpush
+
 @section('content')
+<div class="content-admin content-blog-categories">
 <x-admin.card>
     <x-admin.page-header 
         title="{{ __('messages.categoria_blog_detalhes') }}" 
@@ -57,4 +62,5 @@
         </div>
     </div>
 </x-admin.card>
+</div>
 @endsection

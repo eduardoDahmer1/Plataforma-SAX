@@ -2,6 +2,7 @@
 
 @push('styles')
 <link href="{{ asset('css/email-marketing.css') }}?v={{ filemtime(public_path('css/email-marketing.css')) }}" rel="stylesheet">
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
 @endpush
 
 @push('scripts')
@@ -19,7 +20,7 @@
 @endphp
 
 <x-admin.card>
-    <div class="sax-cat sax-msg" id="msg-app" data-delete-url="{{ url('admin/contatos') }}" data-read-url="{{ route('admin.contacts.read', '__ID__') }}" data-confirm-delete="{{ __('messages.confirmar_exclusao') }}" data-error-message="{{ __('messages.activate_erro') }}">
+    <div class="sax-cat sax-msg content-admin content-contacts" id="msg-app" data-delete-url="{{ url('admin/contatos') }}" data-read-url="{{ route('admin.contacts.read', '__ID__') }}" data-confirm-delete="{{ __('messages.confirmar_exclusao') }}" data-error-message="{{ __('messages.activate_erro') }}">
 
         <x-admin.alert />
 

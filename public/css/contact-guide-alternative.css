@@ -42,11 +42,14 @@
 .guide-two__shared { margin-top: 36px; padding-top: 22px; border-top: 1px solid #ddd; }
 .guide-two__shared h3 { font: inherit; font-weight: 600; }
 .guide-two__shared p { color: #666; font-size: 14px; margin: 14px 0 0; }
-.guide-two__results { margin-top: 20px; padding: 20px; background: #f6f6f6; }
-.guide-two__results p { font-size: 14px; margin: 0 0 12px; }
+.guide-two__results { max-height: min(460px, 60vh); margin-top: 12px; padding: 12px 16px; overflow-y: auto; border: 1px solid #ddd; border-top: 3px solid #171717; background: #fff; box-shadow: 0 12px 28px rgba(0, 0, 0, .08); }
+.guide-two__results p { padding: 2px 0 10px; color: #666; font-size: 13px; margin: 0; }
 .guide-two__results ul { list-style: none; margin: 0; padding: 0; }
 .guide-two__results li + li { border-top: 1px solid #ddd; }
-.guide-two__results button { width: 100%; min-height: 48px; display: block; text-align: left; padding: 12px 0; background: transparent; border: 0; color: #171717; }
+.guide-two__results [role="option"][aria-selected="true"] { background: #f2f2f2; }
+.guide-two__results button { width: 100%; min-height: 54px; display: block; text-align: left; padding: 10px 8px; background: transparent; border: 0; color: #171717; cursor: pointer; }
+.guide-two__results button strong { display: flex; align-items: center; gap: 9px; font-size: 14px; }
+.guide-two__results button strong i { width: 18px; color: #666; font-size: 12px; text-align: center; }
 .guide-two__results button span { display: block; color: #666; font-size: 13px; }
 .guide-two :is(.guide-two__floor, .guide-two__group, .guide-two__brands li) { scroll-margin-top: var(--guide-scroll-offset, 164px); }
 .guide-two [tabindex="-1"]:focus { outline: 2px solid #555; outline-offset: 5px; }

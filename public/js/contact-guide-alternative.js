@@ -4,9 +4,16 @@
     const locations = window.saxGuideDirectory || [];
     if (!root || !locations.length) return;
     const BRAND_LIMIT = 6;
+    const RESULT_LIMIT = 12;
     const labels = window.saxGuideLabels;
     const get = id => root.querySelector('#guideTwo' + id);
-    const norm = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().trim();
+    const norm = value => String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLocaleLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ');
     const node = (tag, text, className) => {
         const element = document.createElement(tag);
         if (text != null) element.textContent = text;
@@ -18,6 +25,8 @@
     let scrollFrame = null;
     let expandedGroups = new Set();
     let searchExpansionSnapshot = null;
+    let activeSearchResult = -1;
+    let searchFrame = null;
     const storefrontHeader = document.querySelector('.sax-header, .vista-header');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const floorOrder = item => {
@@ -27,6 +36,85 @@
         return number ? Number(number[0]) : Infinity;
     };
     const orderedFloors = () => [...location.floors].sort((a, b) => floorOrder(a) - floorOrder(b));
+    const editDistance = (left, right, limit = 2) => {
+        if (Math.abs(left.length - right.length) > limit) return limit + 1;
+        let previousPrevious = null;
+        let previous = Array.from({length: right.length + 1}, (_, index) => index);
+        for (let row = 1; row <= left.length; row++) {
+            const current = [row];
+            let rowBest = current[0];
+            for (let column = 1; column <= right.length; column++) {
+                const cost = left[row - 1] === right[column - 1] ? 0 : 1;
+                current[column] = Math.min(
+                    current[column - 1] + 1,
+                    previous[column] + 1,
+                    previous[column - 1] + cost,
+                );
+                if (previousPrevious && row > 1 && column > 1
+                    && left[row - 1] === right[column - 2]
+                    && left[row - 2] === right[column - 1]) {
+                    current[column] = Math.min(current[column], previousPrevious[column - 2] + 1);
+                }
+                rowBest = Math.min(rowBest, current[column]);
+            }
+            if (rowBest > limit) return limit + 1;
+            previousPrevious = previous;
+            previous = current;
+        }
+        return previous[right.length];
+    };
+    const tokenScore = (queryToken, candidateToken) => {
+        if (queryToken === candidateToken) return 100;
+        if (candidateToken.startsWith(queryToken)) return 92;
+        if (queryToken.length >= 3 && candidateToken.includes(queryToken)) return 84;
+        if (queryToken.length < 3 || candidateToken.length < 3) return 0;
+        const limit = Math.max(queryToken.length, candidateToken.length) >= 7 ? 2 : 1;
+        const distance = editDistance(queryToken, candidateToken, limit);
+        return distance <= limit ? 76 - (distance * 9) : 0;
+    };
+    const searchScore = (query, values) => {
+        const normalizedValues = values.map(norm).filter(Boolean);
+        const joined = normalizedValues.join(' ');
+        if (!joined) return 0;
+        if (normalizedValues.some(value => value === query)) return 1000;
+        if (normalizedValues.some(value => value.startsWith(query))) return 920;
+        if (normalizedValues.some(value => value.split(' ').some(word => word.startsWith(query)))) return 880;
+        if (normalizedValues.some(value => value.includes(query))) return 820;
+        const queryTokens = query.split(' ').filter(Boolean);
+        const candidateTokens = joined.split(' ').filter(Boolean);
+        let total = 0;
+        for (const queryToken of queryTokens) {
+            const best = candidateTokens.reduce((score, candidateToken) => Math.max(score, tokenScore(queryToken, candidateToken)), 0);
+            if (!best) return 0;
+            total += best;
+        }
+        return Math.round((total / queryTokens.length) * 7);
+    };
+    const searchIndex = locations.flatMap(destination => destination.floors.flatMap(floor => {
+        const locationTerms = [destination.name, destination.city, ...(destination.searchTerms || [])];
+        const floorResult = {
+            kind: 'floor', location: destination, floor, title: floor.name,
+            context: destination.name + ' — ' + destination.city,
+            target: floor.id,
+            terms: [floor.name, floor.searchName, ...(floor.searchTerms || []), ...locationTerms],
+        };
+        const groupResults = floor.groups.flatMap(group => {
+            const groupResult = {
+                kind: 'group', location: destination, floor, group, title: group.name,
+                context: floor.name + ' · ' + destination.name,
+                target: group.id,
+                terms: [group.name, group.description, ...(group.searchTerms || []), floor.name, ...locationTerms],
+            };
+            const brandResults = group.brands.map((brand, brandIndex) => ({
+                kind: 'brand', location: destination, floor, group, brandIndex, title: brand,
+                context: group.name + ' · ' + floor.name + ' · ' + destination.name,
+                target: group.id + '-brand-' + brandIndex,
+                terms: [brand],
+            }));
+            return [groupResult, ...brandResults];
+        });
+        return [floorResult, ...groupResults];
+    }));
     function headerOffset() {
         const height = storefrontHeader?.getBoundingClientRect().height || 0;
         return Math.ceil(height) + 24;
@@ -195,6 +283,29 @@
         search();
         updateIndex();
     }
+    function setActiveSearchResult(index) {
+        const options = [...get('ResultList').querySelectorAll('[role="option"]')];
+        if (!options.length) {
+            activeSearchResult = -1;
+            get('Search').removeAttribute('aria-activedescendant');
+            return;
+        }
+        activeSearchResult = (index + options.length) % options.length;
+        options.forEach((option, optionIndex) => option.setAttribute('aria-selected', String(optionIndex === activeSearchResult)));
+        const active = options[activeSearchResult];
+        get('Search').setAttribute('aria-activedescendant', active.id);
+        active.scrollIntoView({block: 'nearest'});
+    }
+    function activateSearchResult(result) {
+        if (location.id !== result.location.id) {
+            location = result.location;
+            get('Location').value = location.id;
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+            selectLocation();
+        }
+        if (result.kind === 'brand' && result.brandIndex >= BRAND_LIMIT) revealTarget(result.target, true);
+        navigateTo(result.target);
+    }
     function search() {
         const term = norm(get('Search').value);
         if (!term && searchExpansionSnapshot !== null) {
@@ -204,33 +315,39 @@
         }
         get('Clear').hidden = !get('Search').value;
         get('Results').hidden = !term;
+        get('Search').setAttribute('aria-expanded', String(Boolean(term)));
+        get('Search').removeAttribute('aria-activedescendant');
+        activeSearchResult = -1;
         const list = get('ResultList');
         list.replaceChildren();
         if (!term) return;
-        const results = [];
-        location.floors.forEach(item => {
-            if (norm(item.name + ' ' + item.searchName).includes(term)) {
-                results.push({floor: item, title: item.name, context: location.name, target: item.id});
-            }
-            item.groups.forEach(group => {
-                if (norm(group.name).includes(term)) results.push({floor: item, title: group.name, context: item.name, target: group.id});
-                group.brands.forEach((brand, index) => {
-                    if (norm(brand).includes(term)) results.push({floor: item, group, brandIndex: index, title: brand, context: group.name + ' · ' + item.name, target: group.id + '-brand-' + index});
-                });
-            });
-        });
+        const results = searchIndex
+            .map(result => ({...result, score: searchScore(term, result.terms) + (result.location.id === location.id ? 24 : 0)}))
+            .filter(result => result.score > 0)
+            .sort((left, right) => right.score - left.score || left.title.localeCompare(right.title));
         get('ResultStatus').textContent = results.length ? labels.results_count.replace(':count', results.length) : labels.empty;
-        results.forEach(result => {
+        results.slice(0, RESULT_LIMIT).forEach((result, index) => {
             const li = node('li');
+            li.setAttribute('role', 'none');
             const button = node('button');
             button.type = 'button';
-            button.append(node('strong', result.title), node('span', result.context));
-            button.addEventListener('click', () => {
-                if (result.group && result.brandIndex >= BRAND_LIMIT) revealTarget(result.target, true);
-                navigateTo(result.target);
-            });
+            button.id = 'guideTwoResult-' + index;
+            button.setAttribute('role', 'option');
+            button.setAttribute('aria-selected', 'false');
+            const heading = node('strong', result.title);
+            heading.prepend(node('i', null, result.kind === 'brand' ? 'fa-solid fa-tag' : (result.kind === 'group' ? 'fa-solid fa-location-dot' : 'fa-solid fa-layer-group')));
+            button.append(heading, node('span', result.context));
+            button.addEventListener('mouseenter', () => setActiveSearchResult(index));
+            button.addEventListener('click', () => activateSearchResult(result));
             li.append(button);
             list.append(li);
+        });
+    }
+    function scheduleSearch() {
+        if (searchFrame !== null) cancelAnimationFrame(searchFrame);
+        searchFrame = requestAnimationFrame(() => {
+            searchFrame = null;
+            search();
         });
     }
     get('Location').addEventListener('change', event => {
@@ -241,7 +358,23 @@
     get('Floor').addEventListener('change', event => {
         navigateTo(event.target.value);
     });
-    get('Search').addEventListener('input', search);
+    get('Search').addEventListener('input', scheduleSearch);
+    get('Search').addEventListener('keydown', event => {
+        const options = get('ResultList').querySelectorAll('[role="option"]');
+        if (event.key === 'ArrowDown' && options.length) {
+            event.preventDefault();
+            setActiveSearchResult(activeSearchResult + 1);
+        } else if (event.key === 'ArrowUp' && options.length) {
+            event.preventDefault();
+            setActiveSearchResult(activeSearchResult < 0 ? options.length - 1 : activeSearchResult - 1);
+        } else if (event.key === 'Enter' && activeSearchResult >= 0) {
+            event.preventDefault();
+            options[activeSearchResult].click();
+        } else if (event.key === 'Escape' && get('Search').value) {
+            get('Search').value = '';
+            search();
+        }
+    });
     get('Clear').addEventListener('click', () => { get('Search').value = ''; search(); get('Search').focus(); });
     get('Location').value = location.id;
     function followHash() {

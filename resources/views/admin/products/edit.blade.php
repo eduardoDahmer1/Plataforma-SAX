@@ -30,8 +30,9 @@
     <x-admin.card>
     <x-admin.page-header title="Editar Produto" description="Edite as informações do produto no catálogo"></x-admin.page-header>
 
-        <div class="bg-light border rounded-3 px-3 py-3 mb-4">
-            <div class="row g-3 align-items-center">
+        <details class="border rounded-3 px-3 py-2 mb-3">
+            <summary class="small text-muted">Metadatos del producto</summary>
+            <div class="row g-3 align-items-center mt-1">
                 <div class="col-12 col-md-4">
                     <span class="d-block text-muted text-uppercase fw-bold x-small-7 mb-1">{{ __('messages.product_audit_created') }}</span>
                     <span class="fw-bold text-dark">
@@ -57,10 +58,9 @@
                     @endif
                 </div>
             </div>
-        </div>
+        </details>
 
         <div id="productEditFeedback" class="d-none"></div>
-        <div id="productAiResearch" class="d-none mb-4"></div>
 
         @php
             $aiPreparation = $item->aiPreparation;
@@ -72,21 +72,13 @@
                 'pending' => ['Pendente', 'secondary', 'fa-clock'],
             ][$aiDisplayStatus];
         @endphp
-        <div class="border rounded-3 p-3 mb-4 bg-light-subtle">
+        <div id="productAiResearch" class="d-none mb-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                     <span class="badge text-bg-{{ $aiStatusPresentation[1] }}">
                         <i class="fas {{ $aiStatusPresentation[2] }} me-1"></i>{{ $aiStatusPresentation[0] }}
                     </span>
-                    @if ($aiPreparation?->model)
-                        <span class="small text-muted ms-2">Modelo: {{ $aiPreparation->model }}</span>
-                    @endif
                 </div>
-                @if ($aiPreparation?->completed_at || $aiPreparation?->generated_at)
-                    <span class="small text-muted">
-                        {{ ($aiPreparation->completed_at ?? $aiPreparation->generated_at)->format('d/m/Y H:i') }}
-                    </span>
-                @endif
             </div>
             @if ($aiPreparation?->error_message)
                 <div class="small text-danger mt-2">{{ $aiPreparation->error_message }}</div>
@@ -119,13 +111,6 @@
         </div>
 
         <x-admin.ai-availability />
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-3 border rounded-3 bg-light-subtle">
-            <button type="button" id="completeProductWithAiBtn" class="btn btn-outline-primary" @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason())
-                    data-ai-url="{{ route('admin.products.completeWithAi', $item->id) }}">
-                <i class="fas fa-wand-magic-sparkles me-2"></i>Completar con IA
-            </button>
-            <span class="small text-muted">Completa nombres, descripciones y clasificación en el formulario. El operador revisa y guarda manualmente.</span>
-        </div>
 
         @include('admin.products.ai-taxonomy-modal')
         @if(app(\App\Services\CatalogAttributeService::class)->enabledFor($item))
@@ -143,7 +128,13 @@
             <div class="product-edit-savebar d-flex flex-wrap align-items-center justify-content-between gap-2 rounded mb-3">
                 <span id="productUnsavedStatus" class="small text-muted" role="status" aria-live="polite">Sem alterações pendentes</span>
                 <div class="d-flex flex-wrap align-items-center gap-3">
-                    <span class="small text-muted">{{ $item->is_outlet ? 'Outlet: restaure antes de ativar.' : 'Ativação automática ao salvar com foto, descrição, preço mínimo de 3 e estoque disponível.' }}</span>
+                    @unless ($item->is_outlet)
+                        <span class="small text-muted">Ativação automática ao salvar com foto, descrição, preço mínimo de 3 e estoque disponível.</span>
+                    @endunless
+                    <button type="button" id="completeProductWithAiBtn" class="btn btn-outline-primary btn-sm" @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason())
+                            data-ai-url="{{ route('admin.products.completeWithAi', $item->id) }}">
+                        <i class="fas fa-wand-magic-sparkles me-2"></i>Completar con IA
+                    </button>
                     <button type="submit" class="btn btn-success btn-sm">
                         <i class="fas fa-save me-2"></i>Salvar Alterações
                     </button>
@@ -177,9 +168,9 @@
                                 </div>
                                 <p class="product-identity__hint">Este es el nombre que verá el cliente en el catálogo.</p>
                                 <div class="product-description__languages" role="tablist" aria-label="Idioma del nombre comercial">
-                                    <button type="button" id="name-tab-pt" class="name-lang-btn lang-field__tab active" data-lang="pt" role="tab" aria-selected="true" aria-controls="productNamePanel" onclick="switchLanguage('name', 'pt', this)">Português</button>
-                                    <button type="button" id="name-tab-es" class="name-lang-btn lang-field__tab" data-lang="es" role="tab" aria-selected="false" aria-controls="productNamePanel" tabindex="-1" onclick="switchLanguage('name', 'es', this)">Español</button>
-                                    <button type="button" id="name-tab-en" class="name-lang-btn lang-field__tab" data-lang="en" role="tab" aria-selected="false" aria-controls="productNamePanel" tabindex="-1" onclick="switchLanguage('name', 'en', this)">English</button>
+                                    <button type="button" id="name-tab-pt" class="badge bg-primary name-lang-btn border-0 active" data-lang="pt" role="tab" aria-selected="true" aria-controls="productNamePanel" title="Português" onclick="switchLanguage('name', 'pt', this)">PT</button>
+                                    <button type="button" id="name-tab-es" class="badge bg-secondary name-lang-btn border-0" data-lang="es" role="tab" aria-selected="false" aria-controls="productNamePanel" tabindex="-1" title="Español" onclick="switchLanguage('name', 'es', this)">ES</button>
+                                    <button type="button" id="name-tab-en" class="badge bg-secondary name-lang-btn border-0" data-lang="en" role="tab" aria-selected="false" aria-controls="productNamePanel" tabindex="-1" title="English" onclick="switchLanguage('name', 'en', this)">EN</button>
                                 </div>
                                 <div class="product-identity__footer">
                                     <span id="name-current-language">Editando en portugués</span>
@@ -212,9 +203,9 @@
                         <textarea id="real-desc-en" name="translate[en][details]" class="d-none">{{ old('translate.en.details', $enTranslation->details ?? '') }}</textarea>
 
                         <div class="product-description__languages" role="tablist" aria-label="Idioma de la descripción">
-                            <button type="button" id="description-tab-pt" class="desc-lang-btn lang-field__tab active" data-lang="pt" role="tab" aria-selected="true" aria-controls="productDescriptionPanel" onclick="switchLanguage('desc', 'pt', this)">Português <span data-description-presence="pt" class="product-description__presence"></span></button>
-                            <button type="button" id="description-tab-es" class="desc-lang-btn lang-field__tab" data-lang="es" role="tab" aria-selected="false" aria-controls="productDescriptionPanel" tabindex="-1" onclick="switchLanguage('desc', 'es', this)">Español <span data-description-presence="es" class="product-description__presence"></span></button>
-                            <button type="button" id="description-tab-en" class="desc-lang-btn lang-field__tab" data-lang="en" role="tab" aria-selected="false" aria-controls="productDescriptionPanel" tabindex="-1" onclick="switchLanguage('desc', 'en', this)">English <span data-description-presence="en" class="product-description__presence"></span></button>
+                            <button type="button" id="description-tab-pt" class="badge bg-primary desc-lang-btn border-0 active" data-lang="pt" role="tab" aria-selected="true" aria-controls="productDescriptionPanel" title="Português" onclick="switchLanguage('desc', 'pt', this)">PT <span data-description-presence="pt" class="product-description__presence text-reset"></span></button>
+                            <button type="button" id="description-tab-es" class="badge bg-secondary desc-lang-btn border-0" data-lang="es" role="tab" aria-selected="false" aria-controls="productDescriptionPanel" tabindex="-1" title="Español" onclick="switchLanguage('desc', 'es', this)">ES <span data-description-presence="es" class="product-description__presence text-reset"></span></button>
+                            <button type="button" id="description-tab-en" class="badge bg-secondary desc-lang-btn border-0" data-lang="en" role="tab" aria-selected="false" aria-controls="productDescriptionPanel" tabindex="-1" title="English" onclick="switchLanguage('desc', 'en', this)">EN <span data-description-presence="en" class="product-description__presence text-reset"></span></button>
                         </div>
                         <div id="productDescriptionPanel" class="product-description__editor" role="tabpanel" aria-labelledby="description-tab-pt">
                             <label for="editor-product" class="visually-hidden">Contenido de la descripción</label>
@@ -224,16 +215,6 @@
                             <span id="desc-current-language">Editando en portugués</span>
                             <span>Los cambios se confirman al guardar el producto.</span>
                         </div>
-                        <div class="product-description__ai">
-                            <button type="button" id="translate-desc-btn" class="btn btn-outline-secondary"
-                                data-ai-url="{{ route('admin.products.generateDescriptionWithAi', $item->id) }}"
-                                @disabled(app(\App\Services\ProductAiSettingsService::class)->unavailableReason())
-                                onclick="generateSaxDescriptionTranslations()">
-                                <i class="fas fa-wand-magic-sparkles me-2" aria-hidden="true"></i>Generar con IA
-                            </button>
-                            <span>Genera las tres versiones.</span>
-                        </div>
-
                         <p id="description-ai-feedback" class="product-description__feedback d-none" role="status" aria-live="polite"></p>
                         <details id="description-ai-sources" class="product-description__sources d-none">
                             <summary>Fuentes consultadas</summary>
@@ -339,9 +320,14 @@
                                         @endforeach
                                     </div>
 
-                                    <button type="button" id="addAdditionalCategory" class="btn btn-link product-taxonomy__link">
-                                        <i class="far fa-plus-square me-2" aria-hidden="true"></i>Agregar manualmente
-                                    </button>
+                                    <div class="d-flex flex-wrap align-items-center gap-3">
+                                        <button type="button" id="addAdditionalCategory" class="btn btn-link product-taxonomy__link">
+                                            <i class="far fa-plus-square me-2" aria-hidden="true"></i>Agregar manualmente
+                                        </button>
+                                        <button type="button" id="createProductTaxonomy" class="btn btn-link product-taxonomy__link">
+                                            <i class="far fa-plus-square me-2" aria-hidden="true"></i>Crear subcategoría o categoría hija
+                                        </button>
+                                    </div>
 
                                     <template id="additionalCategoryTemplate">
                                         <div class="additional-category-row product-taxonomy__assignment">
@@ -375,11 +361,9 @@
                                             </div>
                                         </div>
                                     </template>
-                                </div>
-                            </div>
 
-                            <div class="col-12">
-                                @include('admin.products.ai-taxonomy')
+                                    @include('admin.products.ai-taxonomy')
+                                </div>
                             </div>
                         </div>
                     </section>

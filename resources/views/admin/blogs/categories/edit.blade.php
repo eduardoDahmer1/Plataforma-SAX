@@ -1,6 +1,11 @@
 @extends('layout.admin')
 
+@push('styles')
+<link href="{{ asset('css/admin-content.css') }}?v={{ filemtime(public_path('css/admin-content.css')) }}" rel="stylesheet">
+@endpush
+
 @section('content')
+<div class="content-admin content-blog-categories content-editor">
 <x-admin.card>
     <form action="{{ route('admin.blog-categories.update', $category) }}" method="POST" enctype="multipart/form-data">
         @csrf
@@ -70,4 +75,5 @@
         <x-admin.form-actions :cancelRoute="route('admin.blog-categories.index')" :submitLabel="__('messages.salvar_alteracoes_btn')" />
     </form>
 </x-admin.card>
+</div>
 @endsection

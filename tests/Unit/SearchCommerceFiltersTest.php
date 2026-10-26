@@ -46,6 +46,9 @@ class SearchCommerceFiltersTest extends TestCase
         $this->assertStringContainsString('name="coupon"', $facets);
         $this->assertStringContainsString('data-remove-filter', $sidebar);
         $this->assertStringContainsString('data-filter-suggestion', $sidebar);
+        $this->assertStringContainsString('data-filter-suggestions-more', $sidebar);
+        $this->assertStringContainsString('$suggestionPool->shuffle()->take(48)', $sidebar);
+        $this->assertStringContainsString('const suggestionBatchSize = 6', $runtime);
         $this->assertStringContainsString("params.append(el.name, value)", $runtime);
         $this->assertStringContainsString('dynamicFacets.innerHTML = data.facets', $runtime);
         $this->assertStringContainsString("@include('search.partials.filter-runtime'", $catalog);

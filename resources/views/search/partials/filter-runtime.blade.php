@@ -259,6 +259,17 @@
         });
     });
 
+    const suggestionBatchSize = 6;
+    const suggestionMoreButton = document.querySelector('[data-filter-suggestions-more]');
+    suggestionMoreButton?.addEventListener('click', () => {
+        const hiddenSuggestions = [...document.querySelectorAll('[data-filter-suggestion][hidden]')];
+        hiddenSuggestions.slice(0, suggestionBatchSize).forEach(button => button.hidden = false);
+
+        if (hiddenSuggestions.length <= suggestionBatchSize) {
+            suggestionMoreButton.hidden = true;
+        }
+    });
+
     window.addEventListener('popstate', () => location.reload());
     bindPaginationLinks();
     renderSelectedFilters();

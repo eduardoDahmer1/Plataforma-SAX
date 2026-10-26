@@ -47,6 +47,7 @@ class Order extends Model
         'payment_response_code',
         'payment_response_message',
         'payment_failed_at',
+        'read_at',
         'refund_request_status',
         'refund_request_reason',
         'refund_request_details',
@@ -104,6 +105,7 @@ class Order extends Model
 
     protected $casts = [
         'payment_failed_at' => 'datetime',
+        'read_at' => 'datetime',
         'refund_requested_at' => 'datetime',
         'refund_request_resolved_at' => 'datetime',
         'terms_accepted_at' => 'datetime',

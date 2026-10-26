@@ -26,6 +26,36 @@
     $formAction = $formAction ?: route('search');
     $sizeLabels = collect($sizeGroups)->flatMap(fn ($group) => $group->options)->pluck('label', 'key');
     $numberFormat = fn ($value) => number_format((float) $value, $currencyContext['decimals'], ',', '.');
+    $suggestionPool = collect();
+
+    if (! $lockedFilterNames->contains('brand')) {
+        $suggestionPool = $suggestionPool->concat(collect($brands)->map(fn ($brand) => [
+            'name' => 'brand', 'value' => $brand->id, 'label' => $brand->name,
+        ]));
+    }
+
+    if (! $isOpticalLayout && ! $lockedFilterNames->contains('category')) {
+        $suggestionPool = $suggestionPool->concat(collect($categories)->map(fn ($category) => [
+            'name' => 'category', 'value' => $category->id, 'label' => $category->name,
+        ]));
+    }
+
+    if (! $lockedFilterNames->contains('subcategory')) {
+        $suggestionPool = $suggestionPool->concat(collect($subcategories)->map(fn ($subcategory) => [
+            'name' => 'subcategory', 'value' => $subcategory->id, 'label' => $subcategory->name,
+        ]));
+    }
+
+    if (! $lockedFilterNames->contains('categoriasfilhas')) {
+        $suggestionPool = $suggestionPool->concat(collect($categoriasfilhas)->map(fn ($category) => [
+            'name' => 'categoriasfilhas', 'value' => $category->id, 'label' => $category->name,
+        ]));
+    }
+
+    $filterSuggestions = collect([
+        ['name' => 'sort_by', 'value' => 'trending', 'label' => 'Mais procurados'],
+        ['name' => 'sort_by', 'value' => 'latest', 'label' => 'Novidades'],
+    ])->concat($suggestionPool->shuffle()->take(48))->values();
 @endphp
 
 <div class="toolbar-container search-toolbar d-flex justify-content-between align-items-center mb-3">
@@ -71,23 +101,16 @@
 <div class="search-discovery" aria-label="Sugestões de filtros">
     <div class="search-discovery__label"><i class="fa-regular fa-compass"></i> Explore também</div>
     <div class="search-discovery__items">
-        <button type="button" data-filter-suggestion data-name="sort_by" data-value="trending">Mais procurados</button>
-        <button type="button" data-filter-suggestion data-name="sort_by" data-value="latest">Novidades</button>
-        @unless($lockedFilterNames->contains('brand'))
-            @foreach(collect($brands)->take(4) as $brand)
-                <button type="button" data-filter-suggestion data-name="brand" data-value="{{ $brand->id }}">{{ $brand->name }}</button>
-            @endforeach
-        @endunless
-        @unless($isOpticalLayout || $lockedFilterNames->contains('category'))
-            @foreach(collect($categories)->take(3) as $category)
-                <button type="button" data-filter-suggestion data-name="category" data-value="{{ $category->id }}">{{ $category->name }}</button>
-            @endforeach
-        @endunless
-        @unless($lockedFilterNames->contains('subcategory'))
-            @foreach(collect($subcategories)->take(3) as $subcategory)
-                <button type="button" data-filter-suggestion data-name="subcategory" data-value="{{ $subcategory->id }}">{{ $subcategory->name }}</button>
-            @endforeach
-        @endunless
+        @foreach($filterSuggestions as $index => $suggestion)
+            <button type="button" data-filter-suggestion data-name="{{ $suggestion['name'] }}"
+                    data-value="{{ $suggestion['value'] }}" @if($index >= 12) hidden @endif>{{ $suggestion['label'] }}</button>
+        @endforeach
+        @if($filterSuggestions->count() > 12)
+            <button type="button" class="search-discovery__more" data-filter-suggestions-more
+                    aria-label="Mostrar mais sugestões" title="Mostrar mais sugestões">
+                <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+            </button>
+        @endif
     </div>
 </div>
 

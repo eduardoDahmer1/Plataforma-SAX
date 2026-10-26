@@ -142,6 +142,11 @@
 .commerce-admin .admin-order-card.is-completed { border-top-color: var(--commerce-green) !important; }
 .commerce-admin .admin-order-card.is-canceled { border-top-color: var(--commerce-red) !important; }
 
+.commerce-admin .admin-order-card.is-unread-order {
+    background: #fffdf5;
+    box-shadow: 0 8px 24px rgba(179, 119, 0, .12);
+}
+
 .commerce-admin .admin-order-card:hover {
     border-color: #b9bec5 !important;
     box-shadow: 0 12px 28px rgba(23, 28, 36, .1) !important;
@@ -164,6 +169,37 @@
     letter-spacing: .025em;
     text-transform: uppercase;
     white-space: nowrap;
+}
+
+.commerce-admin .admin-order-card__badges {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.commerce-admin .admin-order-read-status {
+    display: inline-flex;
+    min-height: 27px;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border: 1px solid #d4d8dd;
+    border-radius: 999px;
+    color: #626a75;
+    background: #f5f6f7;
+    font-size: .57rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.commerce-admin .admin-order-read-status.is-unread {
+    color: #805400;
+    background: var(--commerce-yellow-soft);
+    border-color: #e8c55b;
 }
 
 .commerce-status i,

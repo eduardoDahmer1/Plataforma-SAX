@@ -44,7 +44,7 @@ class OpticalSearchFiltersTest extends TestCase
     {
         $view = file_get_contents(__DIR__.'/../../resources/views/components/sidebar-filters.blade.php');
 
-        $this->assertStringContainsString('@unless($isOpticalLayout)', $view);
+        $this->assertStringContainsString('if (! $isOpticalLayout && ! $lockedFilterNames', $view);
         $this->assertStringContainsString("'name' => 'subcategory'", $view);
         $this->assertStringContainsString("'name' => 'categoriasfilhas'", $view);
     }

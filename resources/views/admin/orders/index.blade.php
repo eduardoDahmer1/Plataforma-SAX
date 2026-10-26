@@ -18,7 +18,7 @@
             <div><strong>Filtrar pedidos</strong><small>Encontre rapidamente o pedido que precisa de atenção.</small></div>
         </div>
         <form method="GET" action="{{ route('admin.orders.index') }}" id="filterForm" class="row g-3">
-            <div class="col-md-2">
+            <div class="col-md-4 col-xl-2">
                 <label class="x-small fw-bold text-uppercase">Método</label>
                 <select name="payment_method" class="form-select" onchange="applyFilters()">
                     <option value="">Todos</option>
@@ -28,7 +28,7 @@
                     <option value="whatsapp" {{ request('payment_method') == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4 col-xl-2">
                 <label class="x-small fw-bold text-uppercase">Status Pedido</label>
                 <select name="status" class="form-select" onchange="applyFilters()">
                     <option value="">Todos</option>
@@ -37,7 +37,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4 col-xl-2">
                 <label class="x-small fw-bold text-uppercase">Status Pagamento</label>
                 <select name="payment_status" class="form-select" onchange="applyFilters()">
                     <option value="">Todos</option>
@@ -46,7 +46,24 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4 col-xl-2">
+                <label class="x-small fw-bold text-uppercase">Leitura</label>
+                <select name="read_status" class="form-select" onchange="applyFilters()">
+                    <option value="">Lidos e não lidos</option>
+                    <option value="unread" @selected(request('read_status') === 'unread')>Não lidos</option>
+                    <option value="read" @selected(request('read_status') === 'read')>Lidos</option>
+                </select>
+            </div>
+            <div class="col-md-4 col-xl-2">
+                <label class="x-small fw-bold text-uppercase">Data</label>
+                <select name="period" class="form-select" onchange="applyFilters()">
+                    <option value="">Todo o período</option>
+                    <option value="today" @selected(request('period') === 'today')>Hoje</option>
+                    <option value="7_days" @selected(request('period') === '7_days')>Últimos 7 dias</option>
+                    <option value="30_days" @selected(request('period') === '30_days')>Últimos 30 dias</option>
+                </select>
+            </div>
+            <div class="col-md-4 col-xl-2">
                 <label class="x-small fw-bold text-uppercase">Exibir</label>
                 <select name="per_page" class="form-select" onchange="applyFilters()">
                     @foreach([20, 30, 50, 100] as $opt)
@@ -54,11 +71,11 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-9 col-xl-10">
                 <label class="x-small fw-bold text-uppercase">Cliente</label>
                 <input type="text" name="user_name" class="form-control" placeholder="Nome..." value="{{ request('user_name') }}" onchange="applyFilters()">
             </div>
-            <div class="col-md-1 d-flex align-items-end">
+            <div class="col-md-3 col-xl-2 d-flex align-items-end">
                 <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary w-100"><i class="fa-solid fa-rotate-left me-1"></i>Limpar</a>
             </div>
         </form>
@@ -85,14 +102,20 @@
             @endphp
 
             <div class="col-12 col-md-6 col-lg-4">
-                <article class="card admin-order-card {{ $classeStatus }} h-100">
+                <article class="card admin-order-card {{ $classeStatus }} {{ $order->read_at ? 'is-read-order' : 'is-unread-order' }} h-100">
                     <div class="card-body">
                         <div class="admin-order-card__head">
                             <div>
                                 <span class="admin-order-card__number">#{{ $order->order_number ?? $order->id }}</span>
                                 <span class="x-small text-muted">{{ $order->created_at->format('d/m/Y H:i') }}</span>
                             </div>
-                            <span class="admin-order-status {{ $classeStatus }}">{{ __('messages.status_' . $order->status) }}</span>
+                            <div class="admin-order-card__badges">
+                                <span class="admin-order-read-status {{ $order->read_at ? 'is-read' : 'is-unread' }}">
+                                    <i class="fa-solid {{ $order->read_at ? 'fa-envelope-open' : 'fa-envelope' }}" aria-hidden="true"></i>
+                                    {{ $order->read_at ? 'Lido' : 'Não lido' }}
+                                </span>
+                                <span class="admin-order-status {{ $classeStatus }}">{{ __('messages.status_' . $order->status) }}</span>
+                            </div>
                         </div>
 
                         <div class="admin-order-card__customer">

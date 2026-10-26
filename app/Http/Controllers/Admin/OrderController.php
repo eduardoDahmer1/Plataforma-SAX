@@ -53,6 +53,23 @@ class OrderController extends Controller
             $query->where('payment_status', $request->payment_status);
         }
 
+        if ($request->get('read_status') === 'unread') {
+            $query->whereNull('read_at');
+        } elseif ($request->get('read_status') === 'read') {
+            $query->whereNotNull('read_at');
+        }
+
+        $periodStart = match ($request->get('period')) {
+            'today' => now()->startOfDay(),
+            '7_days' => now()->subDays(6)->startOfDay(),
+            '30_days' => now()->subDays(29)->startOfDay(),
+            default => null,
+        };
+
+        if ($periodStart) {
+            $query->where('created_at', '>=', $periodStart);
+        }
+
         if ($request->filled('user_name')) {
             $query->whereHas('user', function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->user_name}%");
@@ -136,6 +153,16 @@ class OrderController extends Controller
     public function show($id)
     {
         $order = Order::with(['user', 'items.product', 'receipt', 'cupon', 'orderNotes.author', 'paymentTransactions'])->findOrFail($id);
+
+        if (is_null($order->read_at)) {
+            $readAt = now();
+            DB::table('orders')
+                ->where('id', $order->getKey())
+                ->whereNull('read_at')
+                ->update(['read_at' => $readAt]);
+            $order->setAttribute('read_at', $readAt);
+        }
+
         $orderNotePresets = OrderNote::presetOptions();
         $rendixRefundTransaction = $order->paymentTransactions
             ->where('provider', \App\Services\RendixPixService::PROVIDER)

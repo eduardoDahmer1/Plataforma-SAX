@@ -26,6 +26,8 @@ Route::post('/integrations/catalog/heartbeat', IntegrationHeartbeatController::c
     ->name('api.integrations.catalog.heartbeat');
 
 Route::prefix('locations')->middleware('throttle:60,1')->group(function () {
+    Route::get('/brazil/states', [LocationController::class, 'brazilStates'])->name('api.locations.brazil.states');
+    Route::get('/brazil/cities', [LocationController::class, 'brazilCities'])->name('api.locations.brazil.cities');
     Route::get('/countries', [LocationController::class, 'countries'])->name('api.locations.countries');
     Route::get('/subdivisions', [LocationController::class, 'subdivisions'])->name('api.locations.subdivisions');
     Route::get('/cities', [LocationController::class, 'cities'])->name('api.locations.cities');

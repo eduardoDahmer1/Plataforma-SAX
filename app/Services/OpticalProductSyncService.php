@@ -235,6 +235,10 @@ class OpticalProductSyncService
         $paths = collect([$product->getRawOriginal('photo'), $product->getRawOriginal('thumbnail')]);
         $gallery = $product->getRawOriginal('gallery');
         $gallery = is_array($gallery) ? $gallery : json_decode((string) $gallery, true);
+        // Older admin saves encoded JSON before the model's array cast encoded it again.
+        if (is_string($gallery)) {
+            $gallery = json_decode($gallery, true);
+        }
         if (is_array($gallery)) {
             $paths = $paths->merge($gallery);
         }

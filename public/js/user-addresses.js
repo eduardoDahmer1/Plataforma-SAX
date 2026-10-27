@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', function () {
             city.disabled = true;
             city.innerHTML = '<option value="">Carregando cidades...</option>';
 
-            fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${stateId}/municipios`)
+            fetch(`/api/locations/brazil/cities?state_id=${encodeURIComponent(stateId)}`, { headers: { Accept: 'application/json' } })
                 .then(response => response.ok ? response.json() : Promise.reject())
-                .then(cities => {
+                .then(payload => {
                     if (sequence !== loadSequence || country.value !== 'brasil') return;
                     city.innerHTML = '<option value="">Selecione a cidade</option>';
-                    cities.forEach(item => city.add(new Option(item.nome, item.nome)));
+                    (payload.data || []).forEach(item => city.add(new Option(item.name, item.name)));
                     city.disabled = false;
                     selectSavedCity();
                 })
@@ -57,13 +57,13 @@ document.addEventListener('DOMContentLoaded', function () {
             city.innerHTML = '<option value="">Selecione o estado primeiro...</option>';
             city.disabled = true;
 
-            fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome')
+            fetch('/api/locations/brazil/states', { headers: { Accept: 'application/json' } })
                 .then(response => response.ok ? response.json() : Promise.reject())
-                .then(states => {
+                .then(payload => {
                     if (sequence !== loadSequence || country.value !== 'brasil') return;
                     state.innerHTML = '<option value="">Selecione o estado</option>';
-                    states.forEach(item => {
-                        const option = new Option(item.nome, item.sigla);
+                    (payload.data || []).forEach(item => {
+                        const option = new Option(item.name, item.code);
                         option.dataset.id = item.id;
                         state.add(option);
                     });

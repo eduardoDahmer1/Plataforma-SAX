@@ -175,6 +175,50 @@ class DhlRateServiceTest extends TestCase
         );
     }
 
+    public function test_it_accepts_an_argentine_cpa_and_sends_the_four_digits_required_by_dhl(): void
+    {
+        Http::fake([
+            'express.api.dhl.com/*' => Http::response(['products' => [['productCode' => 'P']]]),
+        ]);
+
+        $this->service()->quote([
+            'country_code' => 'AR',
+            'postal_code' => 'C1043AAZ',
+            'city_name' => 'Buenos Aires',
+            'province_code' => '07',
+            'address_line_1' => 'Avenida Corrientes 1000',
+        ], [[
+            'weight' => 1,
+            'length' => 10,
+            'width' => 10,
+            'height' => 10,
+        ]], 100);
+
+        Http::assertSent(fn ($request): bool =>
+            data_get($request->data(), 'customerDetails.receiverDetails.countryCode') === 'AR'
+            && data_get($request->data(), 'customerDetails.receiverDetails.postalCode') === '1043'
+        );
+    }
+
+    public function test_it_rejects_an_invalid_argentine_postal_code_before_calling_dhl(): void
+    {
+        Http::fake();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('código postal argentino');
+
+        $this->service()->quote([
+            'country_code' => 'AR',
+            'postal_code' => 'ABC',
+            'city_name' => 'Buenos Aires',
+        ], [[
+            'weight' => 1,
+            'length' => 10,
+            'width' => 10,
+            'height' => 10,
+        ]], 100);
+    }
+
     private function service(): DhlRateService
     {
         return new DhlRateService(new MyDhlApiClient());

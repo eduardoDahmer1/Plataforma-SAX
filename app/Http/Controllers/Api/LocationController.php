@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\BrazilLocationService;
 use App\Services\GeoNamesService;
 use App\Services\StoreControlService;
 use App\Support\CountryCallingCodes;
@@ -15,6 +16,32 @@ use Throwable;
 
 class LocationController extends Controller
 {
+    public function brazilStates(BrazilLocationService $locations): JsonResponse
+    {
+        return response()->json(['success' => true, 'data' => $locations->states()]);
+    }
+
+    public function brazilCities(Request $request, BrazilLocationService $locations): JsonResponse
+    {
+        $validated = $request->validate([
+            'state_id' => ['required', 'integer'],
+        ]);
+
+        try {
+            return response()->json([
+                'success' => true,
+                'data' => $locations->cities((int) $validated['state_id']),
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Não foi possível carregar as cidades brasileiras agora. Tente novamente.',
+            ], 502);
+        }
+    }
+
     public function countries(Request $request, GeoNamesService $geoNames, StoreControlService $controls): JsonResponse
     {
         $locale = substr((string) $request->input('lang', app()->getLocale()), 0, 2);

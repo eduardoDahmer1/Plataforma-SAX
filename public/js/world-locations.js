@@ -3,7 +3,7 @@
 
     const countryPromises = new Map();
     const postalOverrides = {
-        AR: { format: '9999', example: '1000' },
+        AR: { format: 'A9999AAA ou 9999 (a DHL utiliza os 4 dígitos)', example: 'C1043AAZ' },
         AU: { format: '9999', example: '2000' },
         BR: { format: '99999-999', example: '10000-000' },
         CA: { format: 'A9A 9A9', example: 'M5V 3L9' },

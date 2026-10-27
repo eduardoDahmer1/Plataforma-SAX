@@ -84,6 +84,15 @@ final class DhlRateService
             if (strlen($postalCode) !== 8) {
                 throw new InvalidArgumentException('O CEP brasileiro precisa ter exatamente 8 dígitos.');
             }
+        } elseif ($countryCode === 'AR') {
+            $compactPostalCode = strtoupper((string) preg_replace('/\s+/', '', $postalCode));
+
+            if (preg_match('/^[A-Z]?(\d{4})(?:[A-Z]{3})?$/', $compactPostalCode, $matches) !== 1) {
+                throw new InvalidArgumentException('O código postal argentino deve ter 4 dígitos ou o formato CPA completo, como C1043AAZ.');
+            }
+
+            // A API MyDHL aceita para a Argentina somente o código numérico histórico.
+            $postalCode = $matches[1];
         }
 
         return [

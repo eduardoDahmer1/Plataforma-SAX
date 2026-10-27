@@ -709,7 +709,7 @@ class ProductControllerAdmin extends Controller
             foreach ($request->file('gallery') as $image) {
                 $galleryPaths[] = $this->convertToWebp($image, 'gallery');
             }
-            $data['gallery'] = json_encode($galleryPaths);
+            $data['gallery'] = $galleryPaths;
         }
 
         $product = Product::create($data);
@@ -1133,7 +1133,7 @@ class ProductControllerAdmin extends Controller
                         }
                     }
                 }
-                $data['gallery'] = json_encode(array_values($currentGallery));
+                $data['gallery'] = array_values($currentGallery);
 
                 $photoForStatus = $data['photo'] ?? $product->photo;
                 $galleryForStatus = $data['gallery'] ?? $product->gallery;
@@ -1211,7 +1211,8 @@ class ProductControllerAdmin extends Controller
                             'subcategory_id' => $product->subcategory_id,
                             'childcategory_id' => $product->childcategory_id,
                             'photo' => $product->photo,
-                            'gallery' => $data['gallery'],
+                            // Query updates bypass the model's array cast.
+                            'gallery' => json_encode($data['gallery']),
                             'highlights' => $product->highlights,
                             'stores' => $data['stores'],
                         ];

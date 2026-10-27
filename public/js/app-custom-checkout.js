@@ -623,16 +623,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function loadBrasilStates(callback = null) {
         stateSelect.innerHTML = '<option value="">Carregando estados...</option>';
-        fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome')
-            .then(res => res.json())
-            .then(data => {
+        fetch('/api/locations/brazil/states', { headers: { Accept: 'application/json' } })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(payload => {
                 stateSelect.innerHTML = '<option value="">Selecione o Estado</option>';
-                data.forEach(uf => stateSelect.innerHTML += `<option value="${uf.sigla}" data-id="${uf.id}">${uf.nome}</option>`);
+                (payload.data || []).forEach(uf => stateSelect.innerHTML += `<option value="${uf.code}" data-id="${uf.id}">${uf.name}</option>`);
                 if (stateSelect.dataset.selected) {
                     stateSelect.value = stateSelect.dataset.selected;
                     stateSelect.dispatchEvent(new Event('change'));
                 }
                 if (callback) callback();
+            })
+            .catch(() => {
+                stateSelect.innerHTML = '<option value="">Não foi possível carregar os estados</option>';
             });
     }
 
@@ -756,15 +759,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (country === 'brasil') {
             const stateId = this.options[this.selectedIndex].getAttribute('data-id');
-            fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${stateId}/municipios`)
-                .then(res => res.json())
-                .then(data => {
+            fetch(`/api/locations/brazil/cities?state_id=${encodeURIComponent(stateId)}`, { headers: { Accept: 'application/json' } })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(payload => {
                     citySelect.innerHTML = '<option value="">Selecione a Cidade</option>';
-                    data.forEach(c => citySelect.innerHTML += `<option value="${c.nome}">${c.nome}</option>`);
+                    (payload.data || []).forEach(c => citySelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
                     if (citySelect.dataset.selected) {
                         citySelect.value = citySelect.dataset.selected;
                         citySelect.dispatchEvent(new Event('change'));
                     }
+                })
+                .catch(() => {
+                    citySelect.innerHTML = '<option value="">Não foi possível carregar as cidades</option>';
                 });
         } else if (country === 'paraguai' && paraguayData) {
             const cities = paraguayData

@@ -1,0 +1,11 @@
+MyDHL API (DHL Express) — Sandbox
+Operação: consulta de tarifas
+Método: POST
+Endpoint: https://express.api.dhl.com/mydhlapi/test/rates
+Data do teste: 2026-10-27
+Autenticação: HTTP Basic (credenciais omitidas)
+Observação: número da conta mascarado no arquivo compartilhável.
+
+REQUEST JSON
+{"customerDetails":{"shipperDetails":{"postalCode":"100134","cityName":"Ciudad del Este","countryCode":"PY","provinceCode":"10","addressLine1":"Av. San Blás esq. Regimiento Sauce","addressLine2":"Centro","countyName":"Centro"},"receiverDetails":{"postalCode":"10001","cityName":"New York","countryCode":"US"}},"accounts":[{"typeCode":"shipper","number":"*****6374"}],"plannedShippingDateAndTime":"2026-10-28T10:00:00GMT-03:00","unitOfMeasurement":"metric","isCustomsDeclarable":true,"monetaryAmount":[{"typeCode":"declaredValue","value":100,"currency":"USD"}],"requestAllValueAddedServices":false,"estimatedDeliveryDate":{"isRequested":true,"typeCode":"QDDC"},"returnStandardProductsOnly":false,"nextBusinessDay":true,"packages":[{"weight":1,"dimensions":{"length":10,"width":10,"height":10}}]}
+

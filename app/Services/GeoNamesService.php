@@ -76,6 +76,41 @@ class GeoNamesService
         });
     }
 
+    public function secondLevelSubdivisions(string $countryCode, string $adminCode1, string $locale = 'pt'): array
+    {
+        $countryCode = $this->countryCode($countryCode);
+        $adminCode1 = trim($adminCode1);
+
+        if ($adminCode1 === '' || mb_strlen($adminCode1) > 20) {
+            throw new RuntimeException('A subdivisão informada é inválida.');
+        }
+
+        $cacheKey = 'geonames:subdivisions-level-2:'.$countryCode.':'.md5($adminCode1).':'.substr($locale, 0, 2);
+
+        return Cache::remember($cacheKey, now()->addDays(30), function () use ($countryCode, $adminCode1, $locale): array {
+            $data = $this->request('/searchJSON', [
+                'country' => $countryCode,
+                'adminCode1' => $adminCode1,
+                'featureCode' => 'ADM2',
+                'maxRows' => 1000,
+                'style' => 'FULL',
+                'lang' => substr($locale, 0, 2),
+            ]);
+
+            return collect($data['geonames'] ?? [])
+                ->map(fn (array $place): array => [
+                    'geoname_id' => $place['geonameId'] ?? null,
+                    'code' => (string) ($place['adminCode2'] ?? ''),
+                    'name' => (string) ($place['name'] ?? $place['toponymName'] ?? ''),
+                ])
+                ->filter(fn (array $place): bool => $place['name'] !== '')
+                ->unique(fn (array $place): string => mb_strtolower($place['name']))
+                ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values()
+                ->all();
+        });
+    }
+
     public function cities(string $countryCode, string $adminCode1, string $locale = 'pt'): array
     {
         $countryCode = $this->countryCode($countryCode);

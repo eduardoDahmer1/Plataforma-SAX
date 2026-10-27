@@ -146,6 +146,7 @@ class CheckoutController extends Controller
             }],
             'cep' => [Rule::requiredIf(fn (): bool => $request->input('shipping') === '2' && ! CountrySupport::isParaguay($request->input('country'))), 'nullable', 'string', 'max:30'],
             'address_label' => 'required_if:shipping,2|nullable|string|max:80',
+            'save_address' => 'nullable|boolean',
             'make_default_address' => 'nullable|boolean',
             'frete_valor' => 'nullable|numeric', // Validamos o campo que enviamos via JS
             'store' => 'required_if:shipping,3',
@@ -380,34 +381,40 @@ class CheckoutController extends Controller
                     ]);
                     break;
                 case '2':
-                    $makeDefault = $request->boolean('make_default_address') || ! $user->addresses()->exists();
+                    if ($request->boolean('save_address')) {
+                        $makeDefault = $request->boolean('make_default_address') || ! $user->addresses()->exists();
 
-                    if ($makeDefault) {
-                        $user->addresses()->update(['is_default' => false]);
+                        if ($makeDefault) {
+                            $user->addresses()->update(['is_default' => false]);
+                        }
+
+                        $address = $user->addresses()->create([
+                            'label' => $request->input('address_label', 'Meu endereço'),
+                            'country' => CountrySupport::normalizeForStorage($request->input('country')),
+                            'postal_code' => $request->input('cep'),
+                            'state' => $request->input('state'),
+                            'city' => $request->input('city'),
+                            'street' => $request->input('street'),
+                            'number' => $request->input('number'),
+                            'district' => $request->input('district'),
+                            'complement' => $request->input('complement'),
+                            'is_default' => $makeDefault,
+                        ]);
+
+                        if ($makeDefault) {
+                            $this->syncLegacyAddress($user, $address);
+                        }
                     }
 
-                    $address = $user->addresses()->create([
-                        'label' => $request->input('address_label', 'Meu endereço'),
-                        'country' => CountrySupport::normalizeForStorage($request->input('country')),
-                        'postal_code' => $request->input('cep'),
-                        'state' => $request->input('state'),
-                        'city' => $request->input('city'),
+                    $order->update([
                         'street' => $request->input('street'),
                         'number' => $request->input('number'),
                         'district' => $request->input('district'),
                         'complement' => $request->input('complement'),
-                        'is_default' => $makeDefault,
-                    ]);
-
-                    if ($makeDefault) {
-                        $this->syncLegacyAddress($user, $address);
-                    }
-
-                    $order->update([
-                        'street' => $address->street, 'number' => $address->number,
-                        'district' => $address->district, 'complement' => $address->complement,
-                        'city' => $address->city ?? '', 'state' => $address->state ?? '',
-                        'cep' => $address->postal_code ?? '', 'country' => CountrySupport::iso2($address->country),
+                        'city' => $request->input('city', ''),
+                        'state' => $request->input('state', ''),
+                        'cep' => $request->input('cep', ''),
+                        'country' => CountrySupport::iso2($request->input('country')),
                     ]);
                     break;
                 case '3':

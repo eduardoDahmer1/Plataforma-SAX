@@ -333,6 +333,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const bancardPygTotal = document.getElementById('bancard-pyg-total');
     const bancardCountryWarning = document.getElementById('bancard-country-warning');
     const confirmSaveAddress = document.getElementById('confirmSaveAddress');
+    const continueWithoutSavingAddress = document.getElementById('continueWithoutSavingAddress');
+    const saveAddressInput = document.getElementById('save_address');
     const dhlQuoteReferenceInput = document.getElementById('dhl_quote_reference');
     const dhlPackagingSummary = document.getElementById('dhl-packaging-summary');
 
@@ -909,14 +911,24 @@ document.addEventListener('DOMContentLoaded', function () {
     if (countrySelect) countrySelect.addEventListener('change', window.toggleCountryFields);
     if (storeSelect) storeSelect.addEventListener('change', window.updateStoreMap);
     if (addressSelect) addressSelect.addEventListener('change', updateSelectedAddress);
+    function continueAfterAddressChoice(shouldSave) {
+        if (saveAddressInput) saveAddressInput.value = shouldSave ? '1' : '0';
+        const modalElement = document.getElementById('saveAddressModal');
+        if (modalElement && window.bootstrap) {
+            window.bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+        }
+        currentStep = 4;
+        showStep(currentStep);
+    }
+
     if (confirmSaveAddress) {
         confirmSaveAddress.addEventListener('click', function () {
-            const modalElement = document.getElementById('saveAddressModal');
-            if (modalElement && window.bootstrap) {
-                window.bootstrap.Modal.getOrCreateInstance(modalElement).hide();
-            }
-            currentStep = 4;
-            showStep(currentStep);
+            continueAfterAddressChoice(true);
+        });
+    }
+    if (continueWithoutSavingAddress) {
+        continueWithoutSavingAddress.addEventListener('click', function () {
+            continueAfterAddressChoice(false);
         });
     }
 

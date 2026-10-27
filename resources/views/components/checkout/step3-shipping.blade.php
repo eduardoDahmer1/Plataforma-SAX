@@ -117,6 +117,7 @@
         </div>
 
         <div id="shipping_alternative" class="mt-4 sax-shipping-alt" style="{{ $selectedShipping === 2 ? '' : 'display:none;' }}">
+            <input type="hidden" name="save_address" id="save_address" value="0">
             <div class="row g-3">
                 <div class="col-12">
                     <label class="sax-label">Identificação do endereço</label>
@@ -207,9 +208,10 @@
             <div class="modal-body p-4 p-md-5 text-center">
                 <i class="fa-solid fa-location-dot fs-2 mb-3"></i>
                 <h5 id="saveAddressModalTitle" class="fw-bold">Salvar este endereço?</h5>
-                <p class="text-muted">Este novo endereço será salvo na sua conta e ficará disponível nas próximas compras.</p>
-                <div class="d-flex gap-2 justify-content-center mt-4">
+                <p class="text-muted">Você pode salvar este endereço para as próximas compras ou utilizá-lo somente neste pedido.</p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
                     <button type="button" class="btn btn-outline-dark px-4" data-bs-dismiss="modal">Revisar</button>
+                    <button type="button" class="btn btn-outline-dark px-4" id="continueWithoutSavingAddress">Continuar sem salvar</button>
                     <button type="button" class="btn btn-dark px-4" id="confirmSaveAddress">Sim, salvar e continuar</button>
                 </div>
             </div>

@@ -29,7 +29,7 @@ class DhlMeasurementRuleDefaultsTest extends TestCase
             'oculos' => ['optico › Gafas de sol', 'eyewear', .350, false],
             'vestido' => ['feminino › Vestidos', 'dress', .600, false],
             'vinho' => ['bebidas › Vinos', 'wine', 1.500, true],
-            'perfume' => ['Perfumes › Perfumería de nicho', 'perfume', .500, true],
+            'perfume' => ['Perfumes › Perfumería de nicho', 'perfume_100ml', .650, true],
             'moveis' => ['casa › Muebles', 'furniture', 15.000, true],
             'cadeira' => ['casa › Cadeiras e poltronas', 'furniture', 15.000, true],
             'mesa' => ['casa › Mesas', 'furniture', 15.000, true],

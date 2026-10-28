@@ -296,6 +296,7 @@ a.dhl-stat:hover { color: var(--dhl-ink); border-color: #9ea2a7; }
 .dhl-modal-suggestion strong { overflow: hidden; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
 .dhl-modal-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 15px; background: #fff; border: 1px solid var(--dhl-line); border-radius: 7px; }
 .dhl-modal-grid label > span { display: block; margin-bottom: 5px; color: #666b71; font-size: .59rem; font-weight: 800; letter-spacing: .045em; text-transform: uppercase; }
+.dhl-modal-grid .dhl-field-help { display: block; margin-top: 4px; color: #888d92; font-size: .56rem; line-height: 1.25; }
 .dhl-modal-grid .is-wide { grid-column: 1 / -1; }
 .dhl-modal-grid .is-customs { grid-column: span 2; }
 .dhl-dangerous-switch { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 10px; margin: 2px 0 0; padding: 11px 12px; background: #f6f6f5; border: 1px solid #e2e3e3; border-radius: 6px; }

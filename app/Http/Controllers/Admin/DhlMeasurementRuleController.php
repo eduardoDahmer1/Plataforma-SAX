@@ -31,7 +31,7 @@ class DhlMeasurementRuleController extends Controller
             ? (string) $request->query('view')
             : 'products';
         $profiles = DhlProductMeasurementEstimator::profiles();
-        $reviewProfiles = ['perfume', 'wine', 'spirits', 'aerosol', 'battery', 'tobacco', 'furniture', 'restricted'];
+        $reviewProfiles = ['wine', 'spirits', 'aerosol', 'battery', 'tobacco', 'furniture', 'restricted'];
 
         $products = null;
         $rules = null;
@@ -40,7 +40,7 @@ class DhlMeasurementRuleController extends Controller
         if ($view === 'products') {
             $query = Product::withoutGlobalScopes()
                 ->select([
-                    'id', 'sku', 'name', 'external_name', 'photo', 'brand_id', 'category_id',
+                    'id', 'sku', 'name', 'external_name', 'size', 'photo', 'brand_id', 'category_id',
                     'subcategory_id', 'childcategory_id', 'status', 'shipping_profile',
                     'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm',
                     'shipping_height_cm', 'shipping_hs_code', 'shipping_country_of_origin',
@@ -85,6 +85,7 @@ class DhlMeasurementRuleController extends Controller
             } elseif ($measurement === 'review') {
                 $query->where(fn (Builder $review) => $review
                     ->where('shipping_is_dangerous_goods', true)
+                    ->orWhere('shipping_profile', 'like', 'perfume%')
                     ->orWhereIn('shipping_profile', $reviewProfiles));
             } elseif ($measurement === 'incomplete') {
                 $this->whereHasAnyMeasurement($query);
@@ -103,7 +104,7 @@ class DhlMeasurementRuleController extends Controller
                     '(shipping_weight_kg > 0 AND shipping_length_cm > 0 AND shipping_width_cm > 0 AND shipping_height_cm > 0) DESC'
                 )->orderByRaw("COALESCE(NULLIF(name, ''), external_name) ASC"),
                 'review_first' => $query->orderByRaw(
-                    "(shipping_is_dangerous_goods = 1 OR shipping_profile IN ('perfume','wine','spirits','aerosol','battery','tobacco','furniture','restricted')) DESC"
+                    "(shipping_is_dangerous_goods = 1 OR shipping_profile LIKE 'perfume%' OR shipping_profile IN ('wine','spirits','aerosol','battery','tobacco','furniture','restricted')) DESC"
                 )->orderByRaw("COALESCE(NULLIF(name, ''), external_name) ASC"),
                 default => $query->orderByRaw("COALESCE(NULLIF(name, ''), external_name) ASC")->orderBy('id'),
             };
@@ -149,7 +150,7 @@ class DhlMeasurementRuleController extends Controller
             SUM(CASE WHEN shipping_weight_kg > 0 AND shipping_length_cm > 0 AND shipping_width_cm > 0 AND shipping_height_cm > 0 THEN 1 ELSE 0 END) AS exact_count,
             SUM(CASE WHEN shipping_profile IS NOT NULL AND shipping_profile != '' THEN 1 ELSE 0 END) AS profile_count,
             SUM(CASE WHEN (shipping_profile IS NULL OR shipping_profile = '') AND NOT (COALESCE(shipping_weight_kg, 0) > 0 AND COALESCE(shipping_length_cm, 0) > 0 AND COALESCE(shipping_width_cm, 0) > 0 AND COALESCE(shipping_height_cm, 0) > 0) THEN 1 ELSE 0 END) AS automatic_count,
-            SUM(CASE WHEN shipping_is_dangerous_goods = 1 OR shipping_profile IN ('perfume','wine','spirits','aerosol','battery','tobacco','furniture','restricted') THEN 1 ELSE 0 END) AS review_count
+            SUM(CASE WHEN shipping_is_dangerous_goods = 1 OR shipping_profile LIKE 'perfume%' OR shipping_profile IN ('wine','spirits','aerosol','battery','tobacco','furniture','restricted') THEN 1 ELSE 0 END) AS review_count
         SQL)->first();
         $ruleStats = DhlMeasurementRule::query()->selectRaw(
             'COUNT(*) AS total, SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) AS active_count, SUM(CASE WHEN requires_manual_review = 1 THEN 1 ELSE 0 END) AS manual_count'
@@ -161,6 +162,7 @@ class DhlMeasurementRuleController extends Controller
             'rules' => $rules,
             'productCounts' => $productCounts,
             'profiles' => $profiles,
+            'measurementOptions' => DhlProductMeasurementEstimator::measurementOptions(),
             'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
             'subcategories' => Subcategory::query()->orderBy('name')->get(['id', 'name', 'category_id']),
             'childCategories' => CategoriasFilhas::query()->orderBy('name')->get(['id', 'name', 'category_id', 'subcategory_id']),
@@ -375,7 +377,10 @@ class DhlMeasurementRuleController extends Controller
             str_contains($joined, 'vinho') => ['wine'],
             str_contains($joined, 'camiseta') => ['tshirt', 'kids_tshirt', 'apparel_light'],
             str_contains($joined, 'calcado') => ['footwear', 'kids_footwear'],
-            str_contains($joined, 'perfume') => ['perfume'],
+            str_contains($joined, 'perfume') => array_values(array_filter(
+                array_keys(DhlProductMeasurementEstimator::profiles()),
+                static fn (string $code): bool => str_starts_with($code, 'perfume'),
+            )),
             str_contains($joined, 'calca') => ['pants', 'apparel_heavy'],
             str_contains($joined, 'casaco') => ['jacket', 'sweater', 'apparel_heavy'],
             str_contains($joined, 'camisa') => ['shirt', 'polo', 'apparel_light'],

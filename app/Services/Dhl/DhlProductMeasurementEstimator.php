@@ -38,7 +38,16 @@ final class DhlProductMeasurementEstimator
             'outfit' => ['label' => 'Conjunto infantil dobrado', 'weight' => 0.600, 'length' => 32, 'width' => 24, 'height' => 7],
             'small_apparel' => ['label' => 'Meias / roupa íntima', 'weight' => 0.150, 'length' => 20, 'width' => 14, 'height' => 3],
             'kids_footwear' => ['label' => 'Calçado infantil', 'weight' => 0.800, 'length' => 28, 'width' => 18, 'height' => 10],
-            'perfume' => ['label' => 'Perfume / cosmético líquido', 'weight' => 0.500, 'length' => 18, 'width' => 12, 'height' => 8],
+            'perfume_sample' => ['label' => 'Perfume miniatura / amostra (até 15 ml)', 'weight' => 0.180, 'length' => 12, 'width' => 8, 'height' => 5],
+            'perfume_30ml' => ['label' => 'Perfume — frasco de 30 ml', 'weight' => 0.300, 'length' => 14, 'width' => 9, 'height' => 6],
+            'perfume_50ml' => ['label' => 'Perfume — frasco de 50 ml', 'weight' => 0.400, 'length' => 16, 'width' => 10, 'height' => 7],
+            'perfume_75ml' => ['label' => 'Perfume — frasco de 75 ml', 'weight' => 0.500, 'length' => 18, 'width' => 12, 'height' => 8],
+            'perfume_100ml' => ['label' => 'Perfume — frasco de 100 ml', 'weight' => 0.650, 'length' => 20, 'width' => 14, 'height' => 10],
+            'perfume_125ml' => ['label' => 'Perfume — frasco de 125 ml', 'weight' => 0.800, 'length' => 22, 'width' => 15, 'height' => 10],
+            'perfume_150ml' => ['label' => 'Perfume — frasco de 150 ml', 'weight' => 0.950, 'length' => 24, 'width' => 16, 'height' => 11],
+            'perfume_200ml' => ['label' => 'Perfume — frasco de 200 ml', 'weight' => 1.200, 'length' => 26, 'width' => 18, 'height' => 12],
+            'perfume_set' => ['label' => 'Perfume — kit / conjunto presenteável', 'weight' => 1.500, 'length' => 30, 'width' => 24, 'height' => 12],
+            'perfume' => ['label' => 'Perfume — tamanho genérico / legado', 'weight' => 0.500, 'length' => 18, 'width' => 12, 'height' => 8],
             'wine' => ['label' => 'Vinho / espumante', 'weight' => 1.500, 'length' => 35, 'width' => 12, 'height' => 12],
             'spirits' => ['label' => 'Bebida destilada', 'weight' => 1.600, 'length' => 35, 'width' => 13, 'height' => 13],
             'aerosol' => ['label' => 'Aerossol / spray', 'weight' => 0.500, 'length' => 22, 'width' => 10, 'height' => 10],
@@ -46,6 +55,29 @@ final class DhlProductMeasurementEstimator
             'tobacco' => ['label' => 'Tabaco / charuto', 'weight' => 0.500, 'length' => 25, 'width' => 18, 'height' => 8],
             'furniture' => ['label' => 'Móvel / item extragrande', 'weight' => 15.000, 'length' => 80, 'width' => 60, 'height' => 50],
         ];
+    }
+
+    /**
+     * Opções sugeridas para os seletores de medidas. O valor real já salvo é
+     * acrescentado pela interface caso não esteja nesta lista.
+     *
+     * @return array<string, array{weight:list<float>,length:list<float>,width:list<float>,height:list<float>}>
+     */
+    public static function measurementOptions(): array
+    {
+        $options = [];
+        $factors = [0.50, 0.65, 0.80, 1.00, 1.15, 1.30, 1.50, 1.75, 2.00, 2.50];
+
+        foreach (self::profiles() as $code => $profile) {
+            $options[$code] = [
+                'weight' => self::scaledOptions((float) $profile['weight'], $factors, 3, 0.050),
+                'length' => self::scaledOptions((float) $profile['length'], $factors, 1, 1),
+                'width' => self::scaledOptions((float) $profile['width'], $factors, 1, 1),
+                'height' => self::scaledOptions((float) $profile['height'], $factors, 1, 1),
+            ];
+        }
+
+        return $options;
     }
 
     /** @return array{profile:string,label:string,weight:float,length:float,width:float,height:float,volume:float,estimated:bool,restricted:bool} */
@@ -147,7 +179,8 @@ final class DhlProductMeasurementEstimator
 
         if ($rule) {
             $restrictedByText = $this->looksRestricted($searchable)
-                && ! in_array($rule->profile_code, ['perfume', 'wine', 'spirits'], true);
+                && ! str_starts_with((string) $rule->profile_code, 'perfume')
+                && ! in_array($rule->profile_code, ['wine', 'spirits'], true);
             $restricted = $rule->requires_manual_review || $restrictedByText;
 
             return $this->measurement(
@@ -203,6 +236,11 @@ final class DhlProductMeasurementEstimator
             return $specificProfile;
         }
 
+        $savedProfile = trim((string) $product->shipping_profile);
+        if (array_key_exists($savedProfile, self::profiles())) {
+            return $savedProfile;
+        }
+
         $rule = $this->rules?->forProduct($product);
         if ($rule && array_key_exists((string) $rule->profile_code, self::profiles())) {
             return (string) $rule->profile_code;
@@ -216,6 +254,8 @@ final class DhlProductMeasurementEstimator
         $values = [
             $product->name,
             $product->external_name,
+            $product->size,
+            $product->shipping_profile,
             $product->relationLoaded('category') ? $product->category?->name : null,
             $product->relationLoaded('subcategory') ? $product->subcategory?->name : null,
             $product->relationLoaded('categoriasFilhas') ? $product->categoriasFilhas?->name : null,
@@ -229,6 +269,7 @@ final class DhlProductMeasurementEstimator
         return mb_strtolower(Str::ascii(implode(' ', array_filter([
             $product->name,
             $product->external_name,
+            $product->size,
         ]))));
     }
 
@@ -236,8 +277,8 @@ final class DhlProductMeasurementEstimator
     {
         $isKids = Str::contains($searchable, ['infantil', 'kids', 'kid ', 'crianca', 'nino', 'nina', 'bebe', 'baby']);
 
-        if (Str::contains($productText, ['perfume', 'colonia'])) {
-            return 'perfume';
+        if (Str::contains($productText, ['perfume', 'colonia']) || Str::contains($searchable, ['perfume', 'perfumeria', 'colonia'])) {
+            return $this->inferPerfumeProfile($productText);
         }
         if (Str::contains($productText, ['vinho', 'vino', 'champagne', 'espumante'])) {
             return 'wine';
@@ -330,7 +371,7 @@ final class DhlProductMeasurementEstimator
     private function inferProfile(string $text): string
     {
         if (Str::contains($text, ['perfume', 'colonia'])) {
-            return 'perfume';
+            return $this->inferPerfumeProfile($text);
         }
 
         if (Str::contains($text, ['vinho', 'vino', 'champagne', 'espumante'])) {
@@ -389,7 +430,46 @@ final class DhlProductMeasurementEstimator
 
     private function profileRequiresReview(string $profile): bool
     {
-        return in_array($profile, ['perfume', 'wine', 'spirits', 'aerosol', 'battery', 'tobacco', 'furniture'], true);
+        return str_starts_with($profile, 'perfume')
+            || in_array($profile, ['wine', 'spirits', 'aerosol', 'battery', 'tobacco', 'furniture'], true);
+    }
+
+    private function inferPerfumeProfile(string $text): string
+    {
+        if (Str::contains($text, [' kit ', 'set ', ' set', 'coffret', 'estuche', 'conjunto', '+'])) {
+            return 'perfume_set';
+        }
+
+        if (preg_match_all('/(\d{1,3})\s*ml\b/i', $text, $matches) && $matches[1] !== []) {
+            $capacity = max(array_map('intval', $matches[1]));
+
+            return match (true) {
+                $capacity <= 15 => 'perfume_sample',
+                $capacity <= 30 => 'perfume_30ml',
+                $capacity <= 50 => 'perfume_50ml',
+                $capacity <= 75 => 'perfume_75ml',
+                $capacity <= 100 => 'perfume_100ml',
+                $capacity <= 125 => 'perfume_125ml',
+                $capacity <= 150 => 'perfume_150ml',
+                default => 'perfume_200ml',
+            };
+        }
+
+        return 'perfume_100ml';
+    }
+
+    /** @param list<float> $factors @return list<float> */
+    private static function scaledOptions(float $base, array $factors, int $precision, float $minimum): array
+    {
+        $values = array_map(
+            static fn (float $factor): float => max($minimum, round($base * $factor, $precision)),
+            $factors,
+        );
+        $values[] = round($base, $precision);
+        $values = array_values(array_unique($values, SORT_REGULAR));
+        sort($values, SORT_NUMERIC);
+
+        return $values;
     }
 
     /** @return array{profile:string,label:string,weight:float,length:float,width:float,height:float,volume:float,estimated:bool,restricted:bool} */

@@ -93,8 +93,35 @@ class DhlPackingServiceTest extends TestCase
 
         $this->assertCount(1, $result['packages']);
         $this->assertTrue($result['requires_manual_review']);
-        $this->assertSame('perfume', $result['review_items'][0]['profile']);
+        $this->assertSame('perfume_100ml', $result['review_items'][0]['profile']);
         $this->assertGreaterThan(0, $result['actual_weight']);
+    }
+
+    public function test_it_recognizes_a_perfume_set_from_the_catalog_size(): void
+    {
+        $product = new Product([
+            'external_name' => 'Signature Sillage Doriente Musk',
+            'size' => '100ML EDP + 15ML EDP + FUNNEL',
+            'shipping_profile' => 'perfume',
+        ]);
+
+        $estimator = new DhlProductMeasurementEstimator;
+
+        $this->assertSame('perfume_set', $estimator->suggestedProfile($product));
+        $this->assertTrue($estimator->forProduct($product)['restricted']);
+    }
+
+    public function test_each_profile_has_several_selectable_measurement_options(): void
+    {
+        $profiles = DhlProductMeasurementEstimator::profiles();
+        $options = DhlProductMeasurementEstimator::measurementOptions();
+
+        foreach ($profiles as $code => $profile) {
+            foreach (['weight', 'length', 'width', 'height'] as $dimension) {
+                $this->assertGreaterThanOrEqual(8, count($options[$code][$dimension]), "{$code}.{$dimension}");
+                $this->assertContains((float) $profile[$dimension], $options[$code][$dimension]);
+            }
+        }
     }
 
     public function test_exact_measurements_keep_a_restricted_profile_under_manual_review(): void

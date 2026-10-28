@@ -227,10 +227,10 @@
                         </div>
                         <div class="dhl-modal-grid">
                             <label class="is-wide"><span>Perfil de embalagem</span><select class="form-select" data-modal-field="shipping_profile"><option value="">Automático pelo tipo/nome</option>@foreach($profiles as $code => $profile)<option value="{{ $code }}" data-weight="{{ $profile['weight'] }}" data-length="{{ $profile['length'] }}" data-width="{{ $profile['width'] }}" data-height="{{ $profile['height'] }}">{{ $profile['label'] }} — {{ number_format($profile['weight'], 3, ',', '.') }} kg / {{ $profile['length'] }}×{{ $profile['width'] }}×{{ $profile['height'] }} cm</option>@endforeach<option value="restricted">Restrito — exige revisão DHL</option></select></label>
-                            <label><span>Peso (kg)</span><input class="form-control" data-modal-field="shipping_weight_kg" type="number" min="0.001" max="1000" step="0.001" required></label>
-                            <label><span>Comprimento (cm)</span><input class="form-control" data-modal-field="shipping_length_cm" type="number" min="0.01" max="1000" step="0.01" required></label>
-                            <label><span>Largura (cm)</span><input class="form-control" data-modal-field="shipping_width_cm" type="number" min="0.01" max="1000" step="0.01" required></label>
-                            <label><span>Altura (cm)</span><input class="form-control" data-modal-field="shipping_height_cm" type="number" min="0.01" max="1000" step="0.01" required></label>
+                            <label><span>Peso (kg)</span><select class="form-select" data-modal-field="shipping_weight_kg" data-measurement-select="weight" required></select><small class="dhl-field-help">Opções ajustadas ao perfil</small></label>
+                            <label><span>Comprimento (cm)</span><select class="form-select" data-modal-field="shipping_length_cm" data-measurement-select="length" required></select><small class="dhl-field-help">Opções ajustadas ao perfil</small></label>
+                            <label><span>Largura (cm)</span><select class="form-select" data-modal-field="shipping_width_cm" data-measurement-select="width" required></select><small class="dhl-field-help">Opções ajustadas ao perfil</small></label>
+                            <label><span>Altura (cm)</span><select class="form-select" data-modal-field="shipping_height_cm" data-measurement-select="height" required></select><small class="dhl-field-help">Opções ajustadas ao perfil</small></label>
                             <label><span>Código HS</span><input class="form-control" data-modal-field="shipping_hs_code" maxlength="20" placeholder="Ex.: 420221"></label>
                             <label><span>País de origem ISO-2</span><input class="form-control text-uppercase" data-modal-field="shipping_country_of_origin" maxlength="2" placeholder="Ex.: IT"></label>
                             <label class="is-customs"><span>Descrição aduaneira em inglês</span><input class="form-control" data-modal-field="shipping_customs_description" maxlength="255" placeholder="Ex.: Cotton shirt"></label>
@@ -246,6 +246,7 @@
                 </div>
             </div>
         </div>
+        <script type="application/json" id="dhl-measurement-options">@json($measurementOptions)</script>
     @else
         <div class="dhl-guidance">
             <i class="fa-solid fa-circle-info"></i>

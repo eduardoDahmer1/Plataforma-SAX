@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const modalFields = modalElement
             ? Array.from(modalElement.querySelectorAll('[data-modal-field]'))
             : [];
+        const measurementSelects = modalFields.filter((field) => field.dataset.measurementSelect);
+        const measurementOptionsElement = document.getElementById('dhl-measurement-options');
+        let measurementOptions = {};
+        try {
+            measurementOptions = JSON.parse(measurementOptionsElement?.textContent || '{}');
+        } catch (error) {
+            measurementOptions = {};
+        }
         let activeButton = null;
 
         const formatNumber = function (value, decimals) {
@@ -57,7 +65,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            field.value = value ?? '';
+            const normalizedValue = value ?? '';
+            if (field.tagName === 'SELECT' && normalizedValue !== '' && !Array.from(field.options).some((option) => option.value === String(normalizedValue))) {
+                field.add(new Option(String(normalizedValue), String(normalizedValue)));
+            }
+            field.value = normalizedValue;
+        };
+
+        const measurementLabel = function (kind, value) {
+            const decimals = kind === 'weight' ? 3 : (Number(value) % 1 === 0 ? 0 : 1);
+            return formatNumber(value, decimals) + (kind === 'weight' ? ' kg' : ' cm');
+        };
+
+        const refreshMeasurementSelects = function (profileCode, selectedValues) {
+            const fallbackProfile = activeButton?.dataset.suggestedProfile || 'accessory';
+            const optionProfile = measurementOptions[profileCode] ? profileCode : fallbackProfile;
+            const profileOptions = measurementOptions[optionProfile] || measurementOptions.accessory || {};
+
+            measurementSelects.forEach(function (select) {
+                const kind = select.dataset.measurementSelect;
+                const selected = String(selectedValues?.[select.dataset.modalField] ?? '');
+                const values = Array.from(profileOptions[kind] || []).map(Number).filter((value) => value > 0);
+                const selectedNumber = Number(selected);
+                if (selectedNumber > 0 && !values.some((value) => Math.abs(value - selectedNumber) < 0.0001)) {
+                    values.push(selectedNumber);
+                }
+                values.sort((left, right) => left - right);
+
+                select.replaceChildren();
+                values.forEach(function (value) {
+                    const normalized = kind === 'weight' ? Number(value).toFixed(3) : String(Number(value));
+                    select.add(new Option(measurementLabel(kind, value), normalized));
+                });
+
+                if (selectedNumber > 0) {
+                    select.value = kind === 'weight' ? selectedNumber.toFixed(3) : String(selectedNumber);
+                }
+            });
         };
 
         const openProduct = function (button) {
@@ -85,10 +129,19 @@ document.addEventListener('DOMContentLoaded', function () {
             image.src = button.dataset.productImage || '';
             image.alt = button.dataset.productName || '';
 
-            modalFields.forEach(function (field) {
-                const source = hiddenField(row, field.dataset.modalField);
-                setModalField(field.dataset.modalField, source?.value ?? '');
+            const profileValue = hiddenField(row, 'shipping_profile')?.value || '';
+            setModalField('shipping_profile', profileValue);
+            const selectedMeasurements = {};
+            measurementSelects.forEach(function (field) {
+                selectedMeasurements[field.dataset.modalField] = hiddenField(row, field.dataset.modalField)?.value || '';
             });
+            refreshMeasurementSelects(profileValue, selectedMeasurements);
+            modalFields
+                .filter((field) => field.dataset.modalField !== 'shipping_profile' && !field.dataset.measurementSelect)
+                .forEach(function (field) {
+                    const source = hiddenField(row, field.dataset.modalField);
+                    setModalField(field.dataset.modalField, source?.value ?? '');
+                });
 
             modal.show();
         };
@@ -96,11 +149,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const applySuggestedMeasurements = function () {
             if (!activeButton) return;
 
-            setModalField('shipping_profile', activeButton.dataset.suggestedProfile || '');
-            setModalField('shipping_weight_kg', activeButton.dataset.suggestedWeight || '');
-            setModalField('shipping_length_cm', activeButton.dataset.suggestedLength || '');
-            setModalField('shipping_width_cm', activeButton.dataset.suggestedWidth || '');
-            setModalField('shipping_height_cm', activeButton.dataset.suggestedHeight || '');
+            const suggestedProfile = activeButton.dataset.suggestedProfile || '';
+            const suggestedMeasurements = {
+                shipping_weight_kg: activeButton.dataset.suggestedWeight || '',
+                shipping_length_cm: activeButton.dataset.suggestedLength || '',
+                shipping_width_cm: activeButton.dataset.suggestedWidth || '',
+                shipping_height_cm: activeButton.dataset.suggestedHeight || '',
+            };
+            setModalField('shipping_profile', suggestedProfile);
+            refreshMeasurementSelects(suggestedProfile, suggestedMeasurements);
         };
 
         const validateModal = function () {
@@ -202,12 +259,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const profileSelect = modalFields.find((field) => field.dataset.modalField === 'shipping_profile');
         profileSelect?.addEventListener('change', function () {
             const option = profileSelect.selectedOptions[0];
-            if (!option?.dataset.weight) return;
-
-            setModalField('shipping_weight_kg', option.dataset.weight);
-            setModalField('shipping_length_cm', option.dataset.length);
-            setModalField('shipping_width_cm', option.dataset.width);
-            setModalField('shipping_height_cm', option.dataset.height);
+            const defaults = option?.dataset.weight ? {
+                shipping_weight_kg: option.dataset.weight,
+                shipping_length_cm: option.dataset.length,
+                shipping_width_cm: option.dataset.width,
+                shipping_height_cm: option.dataset.height,
+            } : {
+                shipping_weight_kg: activeButton?.dataset.suggestedWeight || '',
+                shipping_length_cm: activeButton?.dataset.suggestedLength || '',
+                shipping_width_cm: activeButton?.dataset.suggestedWidth || '',
+                shipping_height_cm: activeButton?.dataset.suggestedHeight || '',
+            };
+            refreshMeasurementSelects(profileSelect.value, defaults);
         });
 
         bulkForm.addEventListener('submit', function (event) {

@@ -673,7 +673,7 @@ class ProductControllerAdmin extends Controller
             'shipping_country_of_origin' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
             'shipping_customs_description' => 'nullable|string|max:255',
             'shipping_is_dangerous_goods' => 'nullable|boolean',
-            'shipping_profile' => 'nullable|in:accessory,eyewear,apparel_light,apparel_heavy,footwear,handbag,home,kids_tshirt,tshirt,polo,shirt,top,dress,pants,shorts,skirt,sweater,jacket,outfit,small_apparel,kids_footwear,perfume,wine,spirits,aerosol,battery,tobacco,furniture,restricted',
+            'shipping_profile' => 'nullable|in:accessory,eyewear,apparel_light,apparel_heavy,footwear,handbag,home,kids_tshirt,tshirt,polo,shirt,top,dress,pants,shorts,skirt,sweater,jacket,outfit,small_apparel,kids_footwear,perfume_sample,perfume_30ml,perfume_50ml,perfume_75ml,perfume_100ml,perfume_125ml,perfume_150ml,perfume_200ml,perfume_set,perfume,wine,spirits,aerosol,battery,tobacco,furniture,restricted',
         ]);
 
         $data = $request->only([

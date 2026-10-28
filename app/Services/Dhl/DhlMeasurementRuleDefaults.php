@@ -14,7 +14,7 @@ final class DhlMeasurementRuleDefaults
         $text = mb_strtolower(Str::ascii($text));
 
         if (Str::contains($text, ['perfume', 'perfumeria', 'colonia'])) {
-            return $this->values('perfume', .500, 18, 12, 8, true);
+            return $this->values('perfume_100ml', .650, 20, 14, 10, true);
         }
         if (Str::contains($text, ['vinho', 'vino', 'champagne', 'espumante'])) {
             return $this->values('wine', 1.500, 35, 12, 12, true);

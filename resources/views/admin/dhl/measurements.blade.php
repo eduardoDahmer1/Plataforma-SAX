@@ -13,13 +13,6 @@
 
     <x-admin.alert />
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>Não foi possível salvar:</strong>
-            <ul class="mb-0 mt-2">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-        </div>
-    @endif
-
     <div class="dhl-page-actions">
         <a href="{{ route('admin.dhl.edit') }}" class="btn btn-outline-dark"><i class="fa-solid fa-arrow-left"></i>Voltar para DHL</a>
         @if ($view === 'rules')

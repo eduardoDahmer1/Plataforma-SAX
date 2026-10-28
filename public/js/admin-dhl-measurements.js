@@ -296,10 +296,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const selectedChecks = productChecks.filter((checkbox) => checkbox.checked);
             const selected = selectedChecks.length;
             const pendingReview = selectedChecks.filter((checkbox) => !checkbox.closest('[data-product-row]')?.classList.contains('is-staged')).length;
+            const missingDescriptions = selectedChecks.filter(function (checkbox) {
+                const row = checkbox.closest('[data-product-row]');
+                return !hiddenField(row, 'shipping_customs_description')?.value.trim();
+            });
 
             if (pendingReview > 0) {
                 event.preventDefault();
                 window.alert('Revise os produtos selecionados no modal ou clique em “Fixar sugestões” antes de salvar.');
+                return;
+            }
+
+            if (missingDescriptions.length > 0) {
+                event.preventDefault();
+                const firstRow = missingDescriptions[0].closest('[data-product-row]');
+                openProduct(firstRow?.querySelector('[data-edit-measurements]'));
+                window.alert(
+                    missingDescriptions.length === 1
+                        ? 'O produto selecionado não possui descrição EN. Use “Editar descrição EN” antes de salvar.'
+                        : missingDescriptions.length + ' produtos selecionados não possuem descrição EN. O primeiro foi aberto para correção.'
+                );
                 return;
             }
 

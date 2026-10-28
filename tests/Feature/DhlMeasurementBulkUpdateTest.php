@@ -93,7 +93,11 @@ class DhlMeasurementBulkUpdateTest extends TestCase
                 'product_ids' => [10],
                 'products' => [
                     10 => $this->measurements('perfume', '330300', 'fr', 'Eau de parfum', true),
-                    20 => $this->measurements('furniture', '940360', 'it', 'Wood table', false),
+                    20 => array_replace($this->measurements('furniture', '940360', 'it', 'Wood table', false), [
+                        'shipping_profile' => 'invalid-unselected-profile',
+                        'shipping_country_of_origin' => 'INVALID',
+                        'shipping_customs_description' => null,
+                    ]),
                 ],
             ])
             ->assertRedirect()

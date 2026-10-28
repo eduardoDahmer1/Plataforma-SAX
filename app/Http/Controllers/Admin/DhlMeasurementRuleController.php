@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -191,28 +192,46 @@ class DhlMeasurementRuleController extends Controller
         $this->ensureMasterAdmin();
 
         $profileCodes = [...array_keys(DhlProductMeasurementEstimator::profiles()), 'restricted'];
-        $data = $request->validate([
+        $selection = $request->validate([
             'product_ids' => ['required', 'array', 'min:1', 'max:100'],
             'product_ids.*' => ['required', 'integer', 'distinct', 'exists:products,id'],
-            'products' => ['required', 'array', 'max:100'],
+        ], [
+            'product_ids.required' => 'Selecione pelo menos um produto.',
+            'product_ids.max' => 'Selecione no máximo 100 produtos por vez.',
+            'product_ids.*.exists' => 'Um dos produtos selecionados não existe mais. Atualize a página.',
+        ]);
+
+        $selectedIds = collect($selection['product_ids'])->map(static fn ($id): int => (int) $id)->unique()->values();
+        $allProducts = (array) $request->input('products', []);
+        $selectedProducts = [];
+        foreach ($selectedIds as $productId) {
+            if (! array_key_exists($productId, $allProducts)) {
+                throw ValidationException::withMessages([
+                    'products' => "As medidas do produto {$productId} não foram enviadas. Atualize a página e tente novamente.",
+                ]);
+            }
+            $selectedProducts[$productId] = $allProducts[$productId];
+        }
+
+        $data = Validator::make(['products' => $selectedProducts], [
+            'products' => ['required', 'array', 'min:1', 'max:100'],
             'products.*.shipping_profile' => ['nullable', Rule::in($profileCodes)],
             'products.*.shipping_weight_kg' => ['required', 'numeric', 'gt:0', 'max:1000'],
             'products.*.shipping_length_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
             'products.*.shipping_width_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
             'products.*.shipping_height_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
             'products.*.shipping_country_of_origin' => ['required', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
-            'products.*.shipping_customs_description' => ['required', 'string', 'max:255'],
+            'products.*.shipping_customs_description' => ['nullable', 'string', 'max:255'],
             'products.*.shipping_is_dangerous_goods' => ['required', 'boolean'],
-        ]);
-
-        $selectedIds = collect($data['product_ids'])->map(static fn ($id): int => (int) $id)->unique()->values();
-        foreach ($selectedIds as $productId) {
-            if (! isset($data['products'][$productId])) {
-                throw ValidationException::withMessages([
-                    'products' => "As medidas do produto {$productId} não foram enviadas. Atualize a página e tente novamente.",
-                ]);
-            }
-        }
+        ], [
+            'products.*.shipping_country_of_origin.required' => 'Confirme o país de fabricação dos produtos selecionados.',
+            'products.*.shipping_country_of_origin.size' => 'O país de fabricação deve usar exatamente duas letras.',
+            'products.*.shipping_country_of_origin.regex' => 'O país de fabricação deve usar um código ISO-2 válido.',
+            'products.*.shipping_weight_kg.required' => 'Informe o peso dos produtos selecionados.',
+            'products.*.shipping_length_cm.required' => 'Informe o comprimento dos produtos selecionados.',
+            'products.*.shipping_width_cm.required' => 'Informe a largura dos produtos selecionados.',
+            'products.*.shipping_height_cm.required' => 'Informe a altura dos produtos selecionados.',
+        ])->stopOnFirstFailure()->validate();
 
         $customsData = app(DhlCustomsProductData::class);
         $catalogProducts = Product::withoutGlobalScopes()

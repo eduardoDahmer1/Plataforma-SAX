@@ -15,10 +15,10 @@ use App\Models\User;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
 use App\Services\ImageConverterService;
 use App\Services\OpenAICatalogService;
-use App\Services\ProductFeedService;
 use App\Services\ProductFeedRefreshService;
-use App\Services\StoreTaxonomyService;
+use App\Services\ProductFeedService;
 use App\Services\StoreControlService;
+use App\Services\StoreTaxonomyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -44,6 +44,7 @@ class ProductControllerAdmin extends Controller
             return response()->json($openAi->generateDescriptionOnly($product));
         } catch (\Throwable $exception) {
             report($exception);
+
             return response()->json([
                 'message' => $exception instanceof \RuntimeException
                     ? ($exception->getMessage() ?: 'No fue posible generar la descripción.')
@@ -558,6 +559,7 @@ class ProductControllerAdmin extends Controller
 
         if (in_array($context, ['size', 'color'], true)) {
             $current = $excludeId ? Product::with('brand:id,name')->find($excludeId) : null;
+
             return response()->json(app(\App\Services\ProductRelationshipSearch::class)->search($q, $current, $context));
         }
 
@@ -720,7 +722,7 @@ class ProductControllerAdmin extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Produto criado com sucesso!');
     }
 
-    public function edit($id, DhlProductMeasurementEstimator $dhlMeasurements)
+    public function edit($id)
     {
         $item = Product::with([
             'brand:id,name,slug',
@@ -773,8 +775,6 @@ class ProductControllerAdmin extends Controller
 
         $translationsByLocale = $item->translations->keyBy('locale');
         [$suggestedColor, $suggestedColorSource] = $this->suggestColorForProduct($item);
-        $dhlEffectiveMeasurement = $dhlMeasurements->forProduct($item, true);
-
         if (is_string($item->parent_id) && str_contains($item->parent_id, ',')) {
             $item->parent_id =
                 collect(explode(',', $item->parent_id))
@@ -785,7 +785,7 @@ class ProductControllerAdmin extends Controller
             $item->parent_id = collect($item->parent_id)->map(fn ($parentId) => (int) $parentId)->first(fn ($parentId) => $parentId > 0) ?: null;
         }
 
-        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale', 'suggestedColor', 'suggestedColorSource', 'dhlEffectiveMeasurement'));
+        return view('admin.products.edit', compact('item', 'brands', 'categories', 'subcategories', 'categoriasfilhas', 'sizeChildrenProducts', 'colorFamilyProducts', 'translationsByLocale', 'suggestedColor', 'suggestedColorSource'));
     }
 
     private function suggestColorForProduct(Product $product): array
@@ -956,16 +956,6 @@ class ProductControllerAdmin extends Controller
             'colors_values' => 'nullable|array|max:8',
             'colors_values.*' => ['string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'ai_generated_at' => 'nullable|date',
-            'shipping_weight_kg' => 'nullable|numeric|gt:0|max:1000',
-            'shipping_length_cm' => 'nullable|numeric|gt:0|max:1000',
-            'shipping_width_cm' => 'nullable|numeric|gt:0|max:1000',
-            'shipping_height_cm' => 'nullable|numeric|gt:0|max:1000',
-            'shipping_hs_code' => 'nullable|string|max:20',
-            'shipping_country_of_origin' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
-            'shipping_customs_description' => 'nullable|string|max:255',
-            'shipping_is_dangerous_goods' => 'nullable|boolean',
-            'shipping_profile' => 'nullable|in:accessory,eyewear,apparel_light,apparel_heavy,footwear,handbag,home,kids_tshirt,tshirt,polo,shirt,top,dress,pants,shorts,skirt,sweater,jacket,outfit,small_apparel,kids_footwear,perfume,wine,spirits,aerosol,battery,tobacco,furniture,restricted',
-
             'translate' => 'nullable|array',
             'translate.*.name' => 'nullable|string|max:255',
             'translate.*.details' => 'nullable|string|max:5000',
@@ -1080,17 +1070,7 @@ class ProductControllerAdmin extends Controller
 
                 $data = $request->only([
                     'sku', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'size', 'price', 'stock',
-                    'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm', 'shipping_height_cm',
-                    'shipping_hs_code', 'shipping_country_of_origin', 'shipping_customs_description',
-                    'shipping_profile',
                 ]);
-                $data['shipping_country_of_origin'] = $request->filled('shipping_country_of_origin')
-                    ? strtoupper(trim((string) $request->input('shipping_country_of_origin')))
-                    : null;
-                $data['shipping_hs_code'] = $request->filled('shipping_hs_code')
-                    ? preg_replace('/\s+/', '', (string) $request->input('shipping_hs_code'))
-                    : null;
-                $data['shipping_is_dangerous_goods'] = $request->boolean('shipping_is_dangerous_goods');
                 $data['size'] = filled($data['size'] ?? null) ? trim((string) $data['size']) : $product->inferredSize();
 
                 if ($request->has('translate.pt-br')) {

@@ -32,6 +32,11 @@ class DhlMeasurementRuleDefaultsTest extends TestCase
             'perfume' => ['Perfumes › Perfumería de nicho', 'perfume', .500, true],
             'moveis' => ['casa › Muebles', 'furniture', 15.000, true],
             'cadeira' => ['casa › Cadeiras e poltronas', 'furniture', 15.000, true],
+            'mesa' => ['casa › Mesas', 'furniture', 15.000, true],
+            'tabaco' => ['Tabaco e charutos', 'tobacco', .500, true],
+            'xaruto' => ['Xarutos premium', 'tobacco', .500, true],
+            'casa' => ['casa › Pratos e cozinha', 'home', 1.500, false],
+            'noiva' => ['feminino › Noivas', 'dress', .600, false],
         ];
     }
 }

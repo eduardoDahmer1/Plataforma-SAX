@@ -43,7 +43,8 @@ class DhlMeasurementRuleController extends Controller
                     'id', 'sku', 'name', 'external_name', 'photo', 'brand_id', 'category_id',
                     'subcategory_id', 'childcategory_id', 'status', 'shipping_profile',
                     'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm',
-                    'shipping_height_cm', 'shipping_is_dangerous_goods', 'updated_at',
+                    'shipping_height_cm', 'shipping_hs_code', 'shipping_country_of_origin',
+                    'shipping_customs_description', 'shipping_is_dangerous_goods', 'updated_at',
                 ])
                 ->with([
                     'brand:id,name',
@@ -182,79 +183,67 @@ class DhlMeasurementRuleController extends Controller
 
     public function bulkUpdateProducts(
         Request $request,
-        DhlProductMeasurementEstimator $estimator,
         DhlMeasurementRuleResolver $resolver,
     ): RedirectResponse {
         $this->ensureMasterAdmin();
 
-        $profileCodes = array_keys(DhlProductMeasurementEstimator::profiles());
+        $profileCodes = [...array_keys(DhlProductMeasurementEstimator::profiles()), 'restricted'];
         $data = $request->validate([
             'product_ids' => ['required', 'array', 'min:1', 'max:100'],
             'product_ids.*' => ['required', 'integer', 'distinct', 'exists:products,id'],
-            'bulk_action' => ['required', Rule::in([
-                'apply_profile', 'apply_suggestion', 'set_exact', 'clear_exact',
-                'clear_profile', 'mark_review', 'clear_review',
-            ])],
-            'profile' => ['nullable', Rule::in($profileCodes)],
-            'weight_kg' => ['nullable', 'numeric', 'gt:0', 'max:1000'],
-            'length_cm' => ['nullable', 'numeric', 'gt:0', 'max:1000'],
-            'width_cm' => ['nullable', 'numeric', 'gt:0', 'max:1000'],
-            'height_cm' => ['nullable', 'numeric', 'gt:0', 'max:1000'],
+            'products' => ['required', 'array', 'max:100'],
+            'products.*.shipping_profile' => ['nullable', Rule::in($profileCodes)],
+            'products.*.shipping_weight_kg' => ['required', 'numeric', 'gt:0', 'max:1000'],
+            'products.*.shipping_length_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
+            'products.*.shipping_width_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
+            'products.*.shipping_height_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
+            'products.*.shipping_hs_code' => ['nullable', 'string', 'max:20'],
+            'products.*.shipping_country_of_origin' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
+            'products.*.shipping_customs_description' => ['nullable', 'string', 'max:255'],
+            'products.*.shipping_is_dangerous_goods' => ['required', 'boolean'],
         ]);
 
-        if ($data['bulk_action'] === 'apply_profile' && empty($data['profile'])) {
-            throw ValidationException::withMessages(['profile' => 'Escolha o perfil que será aplicado.']);
-        }
-        if ($data['bulk_action'] === 'set_exact') {
-            foreach (['weight_kg', 'length_cm', 'width_cm', 'height_cm'] as $field) {
-                if (! isset($data[$field])) {
-                    throw ValidationException::withMessages([$field => 'Preencha as quatro medidas reais para salvar em lote.']);
-                }
+        $selectedIds = collect($data['product_ids'])->map(static fn ($id): int => (int) $id)->unique()->values();
+        foreach ($selectedIds as $productId) {
+            if (! isset($data['products'][$productId])) {
+                throw ValidationException::withMessages([
+                    'products' => "As medidas do produto {$productId} não foram enviadas. Atualize a página e tente novamente.",
+                ]);
             }
         }
 
-        $products = Product::withoutGlobalScopes()
-            ->with(['category:id,name,slug', 'subcategory:id,name,slug,category_id', 'categoriasFilhas:id,name,slug,category_id,subcategory_id'])
-            ->whereIn('id', $data['product_ids'])
-            ->get();
-
-        DB::transaction(function () use ($products, $data, $estimator): void {
-            foreach ($products as $product) {
-                $changes = match ($data['bulk_action']) {
-                    'apply_profile' => ['shipping_profile' => $data['profile']],
-                    'apply_suggestion' => ['shipping_profile' => $estimator->suggestedProfile($product)],
-                    'set_exact' => [
-                        'shipping_weight_kg' => $data['weight_kg'],
-                        'shipping_length_cm' => $data['length_cm'],
-                        'shipping_width_cm' => $data['width_cm'],
-                        'shipping_height_cm' => $data['height_cm'],
-                    ],
-                    'clear_exact' => [
-                        'shipping_weight_kg' => null,
-                        'shipping_length_cm' => null,
-                        'shipping_width_cm' => null,
-                        'shipping_height_cm' => null,
-                    ],
-                    'clear_profile' => ['shipping_profile' => null],
-                    'mark_review' => ['shipping_profile' => 'restricted', 'shipping_is_dangerous_goods' => true],
-                    'clear_review' => [
-                        'shipping_is_dangerous_goods' => false,
-                        'shipping_profile' => $product->shipping_profile === 'restricted' ? null : $product->shipping_profile,
-                    ],
-                };
-
-                $product->forceFill([
-                    ...$changes,
+        DB::transaction(function () use ($selectedIds, $data): void {
+            foreach ($selectedIds as $productId) {
+                $measurements = $data['products'][$productId];
+                DB::table('products')->where('id', $productId)->update([
+                    'shipping_profile' => filled($measurements['shipping_profile'] ?? null)
+                        ? (string) $measurements['shipping_profile']
+                        : null,
+                    'shipping_weight_kg' => $measurements['shipping_weight_kg'],
+                    'shipping_length_cm' => $measurements['shipping_length_cm'],
+                    'shipping_width_cm' => $measurements['shipping_width_cm'],
+                    'shipping_height_cm' => $measurements['shipping_height_cm'],
+                    'shipping_hs_code' => filled($measurements['shipping_hs_code'] ?? null)
+                        ? preg_replace('/\s+/', '', (string) $measurements['shipping_hs_code'])
+                        : null,
+                    'shipping_country_of_origin' => filled($measurements['shipping_country_of_origin'] ?? null)
+                        ? strtoupper(trim((string) $measurements['shipping_country_of_origin']))
+                        : null,
+                    'shipping_customs_description' => filled($measurements['shipping_customs_description'] ?? null)
+                        ? trim((string) $measurements['shipping_customs_description'])
+                        : null,
+                    'shipping_is_dangerous_goods' => (bool) $measurements['shipping_is_dangerous_goods'],
                     'updated_by' => auth()->id(),
                     'admin_edited_at' => now(),
-                ])->save();
+                    'updated_at' => now(),
+                ]);
             }
         });
 
         $resolver->clearCache();
-        $count = $products->count();
+        $count = $selectedIds->count();
 
-        return back()->with('success', "{$count} produto(s) atualizado(s) em lote para a DHL.");
+        return back()->with('success', "Medidas DHL de {$count} produto(s) salvas em uma única operação. Nenhum outro dado do produto foi alterado.");
     }
 
     public function update(Request $request, DhlMeasurementRule $measurementRule, DhlMeasurementRuleResolver $resolver): RedirectResponse
@@ -354,8 +343,16 @@ class DhlMeasurementRuleController extends Controller
             ['movel', 'moveis', 'mueble', 'muebles', 'cadeira', 'silla', 'chair', 'sofa', 'poltrona', 'mesa', 'armario', 'estante', 'rack', 'comoda', 'escrivaninha'],
             ['vinho', 'vino', 'wine', 'champagne', 'espumante'],
             ['camiseta', 'tshirt', 't-shirt', 'remera'],
-            ['calcado', 'tenis', 'sapato', 'sandalia', 'zapatilla', 'sneaker'],
+            ['calcado', 'tenis', 'sapato', 'sandalia', 'zapatilla', 'sneaker', 'bota', 'boots'],
             ['perfume', 'perfumaria', 'perfumeria', 'colonia'],
+            ['calca', 'pantalon', 'jeans', 'legging'],
+            ['casaco', 'jaqueta', 'chaqueta', 'blazer', 'sueter', 'sweater', 'moletom'],
+            ['camisa', 'shirt', 'polo'],
+            ['cueca', 'calcinha', 'meia', 'calcetin', 'roupa intima'],
+            ['vestido', 'noiva', 'novia', 'bridal'],
+            ['casa', 'prato', 'plato', 'copa', 'vaso', 'taza', 'decoracao', 'cozinha'],
+            ['tabaco', 'tobacco', 'habano', 'charuto', 'xaruto', 'cigarro'],
+            ['oculo', 'oculos', 'anteojo', 'gafa', 'eyewear'],
         ];
 
         foreach ($groups as $aliases) {
@@ -379,6 +376,14 @@ class DhlMeasurementRuleController extends Controller
             str_contains($joined, 'camiseta') => ['tshirt', 'kids_tshirt', 'apparel_light'],
             str_contains($joined, 'calcado') => ['footwear', 'kids_footwear'],
             str_contains($joined, 'perfume') => ['perfume'],
+            str_contains($joined, 'calca') => ['pants', 'apparel_heavy'],
+            str_contains($joined, 'casaco') => ['jacket', 'sweater', 'apparel_heavy'],
+            str_contains($joined, 'camisa') => ['shirt', 'polo', 'apparel_light'],
+            str_contains($joined, 'cueca') => ['small_apparel'],
+            str_contains($joined, 'vestido') => ['dress', 'apparel_light'],
+            str_contains($joined, 'prato') => ['home'],
+            str_contains($joined, 'tabaco') => ['tobacco'],
+            str_contains($joined, 'oculo') => ['eyewear'],
             default => [],
         };
     }

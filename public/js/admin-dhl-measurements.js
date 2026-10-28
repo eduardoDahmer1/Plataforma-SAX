@@ -4,18 +4,35 @@ document.addEventListener('DOMContentLoaded', function () {
     if (bulkForm) {
         const selectPage = document.querySelector('[data-select-page]');
         const productChecks = Array.from(document.querySelectorAll('[data-product-select]'));
+        const editButtons = Array.from(document.querySelectorAll('[data-edit-measurements]'));
         const counter = bulkForm.querySelector('[data-selection-count]');
-        const action = bulkForm.querySelector('[data-bulk-action]');
-        const profileWrap = bulkForm.querySelector('[data-bulk-profile]');
-        const dimensionWrap = bulkForm.querySelector('[data-bulk-dimensions]');
+        const reviewedCounter = bulkForm.querySelector('[data-reviewed-count]');
         const submit = bulkForm.querySelector('[data-bulk-submit]');
-        const profile = profileWrap?.querySelector('select');
-        const dimensions = Array.from(dimensionWrap?.querySelectorAll('input') || []);
+        const suggestSelected = bulkForm.querySelector('[data-bulk-suggest]');
+        const modalElement = document.getElementById('dhlMeasurementModal');
+        const modal = modalElement && window.bootstrap
+            ? window.bootstrap.Modal.getOrCreateInstance(modalElement)
+            : null;
+        const modalFields = modalElement
+            ? Array.from(modalElement.querySelectorAll('[data-modal-field]'))
+            : [];
+        let activeButton = null;
+
+        const formatNumber = function (value, decimals) {
+            return new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+            }).format(Number(value) || 0);
+        };
 
         const updateSelection = function () {
             const selected = productChecks.filter((checkbox) => checkbox.checked).length;
+            const reviewed = document.querySelectorAll('[data-product-row].is-staged').length;
+
             counter.textContent = selected + (selected === 1 ? ' selecionado' : ' selecionados');
-            submit.disabled = selected === 0 || action.value === '';
+            reviewedCounter.textContent = reviewed + (reviewed === 1 ? ' preparado' : ' preparados');
+            submit.disabled = selected === 0;
+            suggestSelected.disabled = selected === 0;
 
             if (selectPage) {
                 selectPage.checked = selected > 0 && selected === productChecks.length;
@@ -23,16 +40,145 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        const updateAction = function () {
-            const needsProfile = action.value === 'apply_profile';
-            const needsDimensions = action.value === 'set_exact';
+        const rowForButton = function (button) {
+            return button?.closest('[data-product-row]') || null;
+        };
 
-            profileWrap.hidden = !needsProfile;
-            if (profile) profile.required = needsProfile;
+        const hiddenField = function (row, fieldName) {
+            return row?.querySelector('[data-measurement-value="' + fieldName + '"]') || null;
+        };
 
-            dimensionWrap.hidden = !needsDimensions;
-            dimensions.forEach((input) => { input.required = needsDimensions; });
+        const setModalField = function (fieldName, value) {
+            const field = modalFields.find((candidate) => candidate.dataset.modalField === fieldName);
+            if (!field) return;
+
+            if (field.type === 'checkbox') {
+                field.checked = String(value) === '1' || value === true;
+                return;
+            }
+
+            field.value = value ?? '';
+        };
+
+        const openProduct = function (button) {
+            if (!button || !modalElement || !modal) return;
+
+            activeButton = button;
+            const row = rowForButton(button);
+            const position = editButtons.indexOf(button) + 1;
+            const image = modalElement.querySelector('[data-modal-image]');
+
+            modalElement.querySelector('[data-modal-product-id]').value = button.dataset.productId;
+            modalElement.querySelector('[data-modal-name]').textContent = button.dataset.productName || 'Produto';
+            modalElement.querySelector('[data-modal-meta]').textContent = button.dataset.productMeta || '';
+            modalElement.querySelector('[data-modal-suggestion]').textContent = [
+                button.dataset.suggestedLabel,
+                formatNumber(button.dataset.suggestedWeight, 3) + ' kg',
+                [
+                    formatNumber(button.dataset.suggestedLength, 1),
+                    formatNumber(button.dataset.suggestedWidth, 1),
+                    formatNumber(button.dataset.suggestedHeight, 1),
+                ].join(' × ') + ' cm',
+            ].filter(Boolean).join(' · ');
+            modalElement.querySelector('[data-modal-progress]').textContent = 'Produto ' + position + ' de ' + editButtons.length + ' nesta página';
+
+            image.src = button.dataset.productImage || '';
+            image.alt = button.dataset.productName || '';
+
+            modalFields.forEach(function (field) {
+                const source = hiddenField(row, field.dataset.modalField);
+                setModalField(field.dataset.modalField, source?.value ?? '');
+            });
+
+            modal.show();
+        };
+
+        const applySuggestedMeasurements = function () {
+            if (!activeButton) return;
+
+            setModalField('shipping_profile', activeButton.dataset.suggestedProfile || '');
+            setModalField('shipping_weight_kg', activeButton.dataset.suggestedWeight || '');
+            setModalField('shipping_length_cm', activeButton.dataset.suggestedLength || '');
+            setModalField('shipping_width_cm', activeButton.dataset.suggestedWidth || '');
+            setModalField('shipping_height_cm', activeButton.dataset.suggestedHeight || '');
+        };
+
+        const validateModal = function () {
+            for (const field of modalFields) {
+                if (!field.checkValidity()) {
+                    field.reportValidity();
+                    field.focus();
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        const saveCurrent = function (openNext) {
+            if (!activeButton || !validateModal()) return;
+
+            const row = rowForButton(activeButton);
+            modalFields.forEach(function (field) {
+                const destination = hiddenField(row, field.dataset.modalField);
+                if (!destination) return;
+                destination.value = field.type === 'checkbox' ? (field.checked ? '1' : '0') : field.value.trim();
+            });
+
+            const profileSelect = modalFields.find((field) => field.dataset.modalField === 'shipping_profile');
+            const profileLabel = profileSelect?.selectedOptions[0]?.textContent?.split(' — ')[0] || 'Automático';
+            row.querySelector('[data-row-profile]').textContent = profileLabel;
+            row.querySelector('[data-row-weight]').textContent = formatNumber(hiddenField(row, 'shipping_weight_kg').value, 3) + ' kg';
+            row.querySelector('[data-row-dimensions]').textContent = [
+                formatNumber(hiddenField(row, 'shipping_length_cm').value, 1),
+                formatNumber(hiddenField(row, 'shipping_width_cm').value, 1),
+                formatNumber(hiddenField(row, 'shipping_height_cm').value, 1),
+            ].join(' × ') + ' cm';
+            row.classList.add('is-staged');
+            row.querySelector('[data-staged-badge]').hidden = false;
+
+            const checkbox = row.querySelector('[data-product-select]');
+            checkbox.checked = true;
             updateSelection();
+
+            if (openNext) {
+                const currentIndex = editButtons.indexOf(activeButton);
+                const nextButton = editButtons[currentIndex + 1];
+                if (nextButton) {
+                    openProduct(nextButton);
+                    return;
+                }
+            }
+
+            modal.hide();
+        };
+
+        const stageSuggestion = function (row) {
+            const button = row?.querySelector('[data-edit-measurements]');
+            if (!row || !button) return;
+
+            const suggested = {
+                shipping_profile: button.dataset.suggestedProfile || '',
+                shipping_weight_kg: button.dataset.suggestedWeight || '',
+                shipping_length_cm: button.dataset.suggestedLength || '',
+                shipping_width_cm: button.dataset.suggestedWidth || '',
+                shipping_height_cm: button.dataset.suggestedHeight || '',
+            };
+
+            Object.entries(suggested).forEach(function ([fieldName, value]) {
+                const destination = hiddenField(row, fieldName);
+                if (destination) destination.value = value;
+            });
+
+            row.querySelector('[data-row-profile]').textContent = button.dataset.suggestedLabel || 'Automático';
+            row.querySelector('[data-row-weight]').textContent = formatNumber(suggested.shipping_weight_kg, 3) + ' kg';
+            row.querySelector('[data-row-dimensions]').textContent = [
+                formatNumber(suggested.shipping_length_cm, 1),
+                formatNumber(suggested.shipping_width_cm, 1),
+                formatNumber(suggested.shipping_height_cm, 1),
+            ].join(' × ') + ' cm';
+            row.classList.add('is-staged');
+            row.querySelector('[data-staged-badge]').hidden = false;
         };
 
         selectPage?.addEventListener('change', function () {
@@ -40,21 +186,42 @@ document.addEventListener('DOMContentLoaded', function () {
             updateSelection();
         });
         productChecks.forEach((checkbox) => checkbox.addEventListener('change', updateSelection));
-        action.addEventListener('change', updateAction);
+        editButtons.forEach((button) => button.addEventListener('click', function () { openProduct(button); }));
+
+        modalElement?.querySelector('[data-use-suggestion]')?.addEventListener('click', applySuggestedMeasurements);
+        modalElement?.querySelector('[data-modal-save]')?.addEventListener('click', function () { saveCurrent(false); });
+        modalElement?.querySelector('[data-modal-save-next]')?.addEventListener('click', function () { saveCurrent(true); });
+        suggestSelected?.addEventListener('click', function () {
+            const selectedRows = productChecks
+                .filter((checkbox) => checkbox.checked)
+                .map((checkbox) => checkbox.closest('[data-product-row]'));
+            selectedRows.forEach(stageSuggestion);
+            updateSelection();
+        });
+
+        const profileSelect = modalFields.find((field) => field.dataset.modalField === 'shipping_profile');
+        profileSelect?.addEventListener('change', function () {
+            const option = profileSelect.selectedOptions[0];
+            if (!option?.dataset.weight) return;
+
+            setModalField('shipping_weight_kg', option.dataset.weight);
+            setModalField('shipping_length_cm', option.dataset.length);
+            setModalField('shipping_width_cm', option.dataset.width);
+            setModalField('shipping_height_cm', option.dataset.height);
+        });
 
         bulkForm.addEventListener('submit', function (event) {
-            const selected = productChecks.filter((checkbox) => checkbox.checked).length;
-            if (selected === 0) {
+            const selectedChecks = productChecks.filter((checkbox) => checkbox.checked);
+            const selected = selectedChecks.length;
+            const pendingReview = selectedChecks.filter((checkbox) => !checkbox.closest('[data-product-row]')?.classList.contains('is-staged')).length;
+
+            if (pendingReview > 0) {
                 event.preventDefault();
+                window.alert('Revise os produtos selecionados no modal ou clique em “Fixar sugestões” antes de salvar.');
                 return;
             }
 
-            const confirmations = {
-                clear_exact: 'Limpar as medidas reais dos produtos selecionados?',
-                clear_profile: 'Remover o perfil fixado e voltar ao cálculo automático?',
-                mark_review: 'Marcar os produtos selecionados como restritos e sujeitos à revisão?',
-            };
-            if (confirmations[action.value] && !window.confirm(confirmations[action.value])) {
+            if (selected === 0 || !window.confirm('Salvar somente as medidas DHL de ' + selected + ' produto(s)?')) {
                 event.preventDefault();
                 return;
             }
@@ -62,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function () {
             submit.disabled = true;
         });
 
-        updateAction();
+        updateSelection();
     }
 
     const category = document.getElementById('dhl-category-filter');

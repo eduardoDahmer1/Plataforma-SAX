@@ -59,6 +59,8 @@ final class DhlProductMeasurementEstimator
         ) > 0;
 
         if ($hasExactMeasurements) {
+            $profile = trim((string) $product->shipping_profile);
+
             return $this->measurement(
                 'exact',
                 'Medidas reais do cadastro',
@@ -67,7 +69,9 @@ final class DhlProductMeasurementEstimator
                 (float) $product->shipping_width_cm,
                 (float) $product->shipping_height_cm,
                 false,
-                (bool) $product->shipping_is_dangerous_goods,
+                (bool) $product->shipping_is_dangerous_goods
+                    || $profile === 'restricted'
+                    || $this->profileRequiresReview($profile),
             );
         }
 
@@ -247,7 +251,7 @@ final class DhlProductMeasurementEstimator
         if (Str::contains($productText, ['bateria', 'battery'])) {
             return 'battery';
         }
-        if (Str::contains($productText, ['habano', 'charuto', 'cigarro'])) {
+        if (Str::contains($productText, ['tabaco', 'tobacco', 'habano', 'charuto', 'xaruto', 'cigarro'])) {
             return 'tobacco';
         }
         if (Str::contains($productText, ['oculo', 'anteojo', 'gafa'])) {
@@ -274,7 +278,7 @@ final class DhlProductMeasurementEstimator
         if (Str::contains($productText, ['camisa'])) {
             return 'shirt';
         }
-        if (Str::contains($productText, ['vestido'])) {
+        if (Str::contains($productText, ['vestido', 'noiva', 'novia', 'bridal'])) {
             return 'dress';
         }
         if (Str::contains($productText, ['pantalon', 'calca', 'jeans', 'legging'])) {
@@ -301,8 +305,11 @@ final class DhlProductMeasurementEstimator
         if (Str::contains($productText, [' top ', 'blusa']) || str_starts_with($productText, 'top ')) {
             return 'top';
         }
+        if (Str::contains($productText, ['prato', 'plato', 'copa', 'vaso', 'taza', 'decoracao', 'decoracion', 'cozinha', 'cocina'])) {
+            return 'home';
+        }
         if (Str::contains($productText, [
-            'movel', 'mueble', 'sofa', 'mesa grande', 'armario', 'cadeira', 'silla', 'chair',
+            'movel', 'mueble', 'sofa', 'mesa', 'armario', 'cadeira', 'silla', 'chair',
             'poltrona', 'estante', 'rack', 'comoda', 'escrivaninha', 'banco alto',
         ])) {
             return 'furniture';
@@ -316,7 +323,7 @@ final class DhlProductMeasurementEstimator
         return Str::contains($text, [
             'perfume', 'colonia', 'aerosol', 'spray', 'alcool', 'alcohol', 'vinho', 'vino',
             'champagne', 'whisky', 'vodka', 'licor', 'tequila', 'espumante', 'bebida',
-            'habanos', 'charuto', 'cigarro', 'bateria', 'battery',
+            'tabaco', 'tobacco', 'habano', 'charuto', 'xaruto', 'cigarro', 'bateria', 'battery',
         ]);
     }
 
@@ -342,11 +349,14 @@ final class DhlProductMeasurementEstimator
             return 'battery';
         }
 
-        if (Str::contains($text, ['habano', 'charuto', 'cigarro'])) {
+        if (Str::contains($text, ['tabaco', 'tobacco', 'habano', 'charuto', 'xaruto', 'cigarro'])) {
             return 'tobacco';
         }
 
-        if (Str::contains($text, ['movel', 'mueble', 'sofa', 'mesa grande', 'armario'])) {
+        if (Str::contains($text, [
+            'movel', 'mueble', 'sofa', 'mesa', 'armario', 'cadeira', 'silla', 'chair',
+            'poltrona', 'estante', 'rack', 'comoda', 'escrivaninha', 'banco alto',
+        ])) {
             return 'furniture';
         }
 
@@ -362,7 +372,7 @@ final class DhlProductMeasurementEstimator
             return 'handbag';
         }
 
-        if (Str::contains($text, ['casa', 'decoracao', 'decoracion', 'cozinha', 'cocina', 'eletrodomestico'])) {
+        if (Str::contains($text, ['casa', 'prato', 'plato', 'copa', 'vaso', 'taza', 'decoracao', 'decoracion', 'cozinha', 'cocina', 'eletrodomestico'])) {
             return 'home';
         }
 
@@ -370,7 +380,7 @@ final class DhlProductMeasurementEstimator
             return 'apparel_heavy';
         }
 
-        if (Str::contains($text, ['camisa', 'camiseta', 'polo', 'vestido', 'roupa', 'short', 'bermuda', 'infantil'])) {
+        if (Str::contains($text, ['camisa', 'camiseta', 'polo', 'vestido', 'noiva', 'novia', 'bridal', 'roupa', 'short', 'bermuda', 'infantil'])) {
             return 'apparel_light';
         }
 

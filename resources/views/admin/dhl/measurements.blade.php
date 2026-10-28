@@ -46,7 +46,7 @@
             <i class="fa-solid fa-lightbulb"></i>
             <div>
                 <strong>Fluxo recomendado</strong>
-                <p>Pesquise um tipo de produto, selecione os itens semelhantes e use <b>Fixar sugestão inteligente</b>. Para produtos idênticos, aplique as quatro medidas reais em lote.</p>
+                <p>Pesquise um tipo de produto e abra o botão de medidas para conferir cada item. Se os produtos forem semelhantes, selecione-os e use <b>Fixar sugestões</b> antes do salvamento único.</p>
             </div>
         </div>
 
@@ -86,6 +86,9 @@
                     <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'q' => 'moveis']) }}"><i class="fa-solid fa-couch"></i>Móveis e cadeiras</a>
                     <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'q' => 'vinho']) }}"><i class="fa-solid fa-wine-bottle"></i>Vinhos</a>
                     <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'q' => 'camiseta']) }}"><i class="fa-solid fa-shirt"></i>Camisetas</a>
+                    <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'q' => 'calçados']) }}"><i class="fa-solid fa-shoe-prints"></i>Calçados</a>
+                    <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'q' => 'casa']) }}"><i class="fa-solid fa-house"></i>Casa</a>
+                    <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'q' => 'tabaco']) }}"><i class="fa-solid fa-smoking"></i>Tabaco e charutos</a>
                     <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'measurement' => 'automatic']) }}"><i class="fa-solid fa-wand-magic-sparkles"></i>Sem perfil fixado</a>
                     <a href="{{ route('admin.dhl.measurements.index', ['view' => 'products', 'measurement' => 'review']) }}"><i class="fa-solid fa-triangle-exclamation"></i>Revisão</a>
                 </div>
@@ -112,17 +115,16 @@
             @csrf
             <div class="dhl-bulk-summary">
                 <span class="dhl-selection-count" data-selection-count>0 selecionados</span>
-                <small>Selecione até 100 produtos desta página.</small>
+                <small><span data-reviewed-count>0 preparados</span> · até 100 por vez</small>
             </div>
-            <label class="dhl-bulk-action"><span>Ação em lote</span><select class="form-select" name="bulk_action" data-bulk-action required><option value="">Escolha uma ação</option><option value="apply_suggestion">Fixar sugestão inteligente</option><option value="apply_profile">Aplicar o mesmo perfil</option><option value="set_exact">Aplicar as mesmas medidas reais</option><option value="clear_exact">Limpar medidas reais</option><option value="clear_profile">Voltar ao perfil automático</option><option value="mark_review">Marcar como restrito / revisão</option><option value="clear_review">Remover marca de restrição</option></select></label>
-            <label class="dhl-bulk-profile" data-bulk-profile hidden><span>Perfil</span><select class="form-select" name="profile"><option value="">Escolha</option>@foreach($profiles as $code => $profile)<option value="{{ $code }}">{{ $profile['label'] }}</option>@endforeach</select></label>
-            <div class="dhl-bulk-dimensions" data-bulk-dimensions hidden>
-                <label><span>Peso kg</span><input class="form-control" name="weight_kg" type="number" min="0.001" max="1000" step="0.001"></label>
-                <label><span>Comp. cm</span><input class="form-control" name="length_cm" type="number" min="0.01" max="1000" step="0.01"></label>
-                <label><span>Larg. cm</span><input class="form-control" name="width_cm" type="number" min="0.01" max="1000" step="0.01"></label>
-                <label><span>Alt. cm</span><input class="form-control" name="height_cm" type="number" min="0.01" max="1000" step="0.01"></label>
+            <div class="dhl-bulk-explanation">
+                <strong>Um único salvamento</strong>
+                <small>Grava somente perfil, peso, dimensões e dados aduaneiros DHL.</small>
             </div>
-            <button class="btn btn-dark dhl-bulk-submit" type="submit" data-bulk-submit disabled><i class="fa-solid fa-floppy-disk"></i>Salvar selecionados</button>
+            <div class="dhl-bulk-actions">
+                <button class="btn btn-outline-dark" type="button" data-bulk-suggest disabled><i class="fa-solid fa-wand-magic-sparkles"></i>Fixar sugestões</button>
+                <button class="btn btn-dark dhl-bulk-submit" type="submit" data-bulk-submit disabled><i class="fa-solid fa-floppy-disk"></i>Salvar medidas dos selecionados</button>
+            </div>
         </form>
 
         <div class="dhl-results-heading">
@@ -138,6 +140,12 @@
                     @php
                         $measurement = $product->dhl_shipping_measurement;
                         $suggestedCode = $product->dhl_suggested_profile;
+                        $stagedProfile = $product->shipping_profile ?: $suggestedCode;
+                        $stagedWeight = (float) $product->shipping_weight_kg > 0 ? (float) $product->shipping_weight_kg : (float) $measurement['weight'];
+                        $stagedLength = (float) $product->shipping_length_cm > 0 ? (float) $product->shipping_length_cm : (float) $measurement['length'];
+                        $stagedWidth = (float) $product->shipping_width_cm > 0 ? (float) $product->shipping_width_cm : (float) $measurement['width'];
+                        $stagedHeight = (float) $product->shipping_height_cm > 0 ? (float) $product->shipping_height_cm : (float) $measurement['height'];
+                        $suggestedDefaults = $profiles[$suggestedCode] ?? $measurement;
                         $currentProfileLabel = $product->shipping_profile === 'restricted'
                             ? 'Restrito / revisão'
                             : ($product->shipping_profile ? ($profiles[$product->shipping_profile]['label'] ?? $product->shipping_profile) : 'Automático');
@@ -145,7 +153,7 @@
                         $hierarchy = collect([$product->category?->name, $product->subcategory?->name, $product->categoriasFilhas?->name])->filter()->implode(' › ');
                         $hasExact = $measurement['profile'] === 'exact';
                     @endphp
-                    <tr class="{{ $measurement['restricted'] ? 'is-review' : '' }}">
+                    <tr class="{{ $measurement['restricted'] ? 'is-review' : '' }}" data-product-row="{{ $product->id }}">
                         <td class="dhl-check-cell"><input form="dhl-product-bulk-form" class="form-check-input" type="checkbox" name="product_ids[]" value="{{ $product->id }}" data-product-select aria-label="Selecionar {{ $product->name ?: $product->external_name }}"></td>
                         <td>
                             <div class="dhl-product-identity">
@@ -154,16 +162,44 @@
                             </div>
                         </td>
                         <td><span class="dhl-hierarchy">{{ $hierarchy ?: 'Sem categoria vinculada' }}</span></td>
-                        <td><strong class="dhl-profile-name">{{ $currentProfileLabel }}</strong><small>Sugestão: {{ $suggestedLabel }}</small></td>
-                        <td><strong>{{ number_format($measurement['weight'], 3, ',', '.') }} kg</strong><small>{{ number_format($measurement['length'], 1, ',', '.') }} × {{ number_format($measurement['width'], 1, ',', '.') }} × {{ number_format($measurement['height'], 1, ',', '.') }} cm</small></td>
-                        <td>
+                        <td><strong class="dhl-profile-name" data-row-profile>{{ $currentProfileLabel }}</strong><small>Sugestão: {{ $suggestedLabel }}</small></td>
+                        <td><strong data-row-weight>{{ number_format($stagedWeight, 3, ',', '.') }} kg</strong><small data-row-dimensions>{{ number_format($stagedLength, 1, ',', '.') }} × {{ number_format($stagedWidth, 1, ',', '.') }} × {{ number_format($stagedHeight, 1, ',', '.') }} cm</small></td>
+                        <td data-row-status>
                             @if($measurement['restricted'])<span class="dhl-status is-review"><i class="fa-solid fa-triangle-exclamation"></i>Revisão</span>
                             @elseif($hasExact)<span class="dhl-status is-exact"><i class="fa-solid fa-ruler-combined"></i>Real</span>
                             @elseif($product->shipping_profile)<span class="dhl-status is-profile"><i class="fa-solid fa-thumbtack"></i>Perfil</span>
                             @else<span class="dhl-status is-auto"><i class="fa-solid fa-wand-magic-sparkles"></i>Automático</span>@endif
                             @if(!$product->status)<span class="dhl-status is-inactive">Inativo</span>@endif
+                            <span class="dhl-status is-staged" data-staged-badge hidden><i class="fa-solid fa-pen"></i>Revisado</span>
                         </td>
-                        <td class="text-end"><a href="{{ route('admin.products.edit', ['product' => $product->id, 'return_to' => request()->fullUrl()]) }}" class="btn btn-sm btn-outline-dark" title="Editar medidas deste produto"><i class="fa-solid fa-pen"></i></a></td>
+                        <td class="text-end">
+                            @foreach([
+                                'shipping_profile' => $stagedProfile,
+                                'shipping_weight_kg' => number_format($stagedWeight, 3, '.', ''),
+                                'shipping_length_cm' => number_format($stagedLength, 2, '.', ''),
+                                'shipping_width_cm' => number_format($stagedWidth, 2, '.', ''),
+                                'shipping_height_cm' => number_format($stagedHeight, 2, '.', ''),
+                                'shipping_hs_code' => $product->shipping_hs_code,
+                                'shipping_country_of_origin' => $product->shipping_country_of_origin,
+                                'shipping_customs_description' => $product->shipping_customs_description,
+                                'shipping_is_dangerous_goods' => $product->shipping_is_dangerous_goods ? 1 : 0,
+                            ] as $field => $value)
+                                <input form="dhl-product-bulk-form" type="hidden" name="products[{{ $product->id }}][{{ $field }}]" value="{{ $value }}" data-measurement-value="{{ $field }}">
+                            @endforeach
+                            <button type="button" class="btn btn-sm btn-outline-dark" title="Conferir medidas DHL"
+                                data-edit-measurements data-product-id="{{ $product->id }}"
+                                data-product-name="{{ $product->name ?: $product->external_name }}"
+                                data-product-meta="SKU {{ $product->sku ?: '—' }}@if($product->brand) · {{ $product->brand->name }}@endif"
+                                data-product-image="{{ $product->dhl_image_url }}"
+                                data-suggested-profile="{{ $suggestedCode }}"
+                                data-suggested-label="{{ $suggestedLabel }}"
+                                data-suggested-weight="{{ number_format((float)$suggestedDefaults['weight'], 3, '.', '') }}"
+                                data-suggested-length="{{ number_format((float)$suggestedDefaults['length'], 2, '.', '') }}"
+                                data-suggested-width="{{ number_format((float)$suggestedDefaults['width'], 2, '.', '') }}"
+                                data-suggested-height="{{ number_format((float)$suggestedDefaults['height'], 2, '.', '') }}">
+                                <i class="fa-solid fa-ruler-combined"></i>
+                            </button>
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="7" class="dhl-empty"><i class="fa-solid fa-magnifying-glass"></i><strong>Nenhum produto encontrado</strong><span>Tente outro termo ou remova alguns filtros.</span></td></tr>
@@ -172,6 +208,44 @@
             </table>
         </div>
         <div class="dhl-pagination">{{ $products->links() }}</div>
+
+        <div class="modal fade dhl-measurement-modal" id="dhlMeasurementModal" tabindex="-1" aria-labelledby="dhlMeasurementModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="dhl-modal-product">
+                            <img src="" alt="" data-modal-image>
+                            <div><span>Medidas DHL do produto</span><h5 class="modal-title" id="dhlMeasurementModalTitle" data-modal-name></h5><small data-modal-meta></small></div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" data-modal-product-id>
+                        <div class="dhl-modal-suggestion">
+                            <div><i class="fa-solid fa-wand-magic-sparkles"></i><span>Sugestão automática</span><strong data-modal-suggestion></strong></div>
+                            <button type="button" class="btn btn-outline-dark btn-sm" data-use-suggestion>Usar sugestão</button>
+                        </div>
+                        <div class="dhl-modal-grid">
+                            <label class="is-wide"><span>Perfil de embalagem</span><select class="form-select" data-modal-field="shipping_profile"><option value="">Automático pelo tipo/nome</option>@foreach($profiles as $code => $profile)<option value="{{ $code }}" data-weight="{{ $profile['weight'] }}" data-length="{{ $profile['length'] }}" data-width="{{ $profile['width'] }}" data-height="{{ $profile['height'] }}">{{ $profile['label'] }} — {{ number_format($profile['weight'], 3, ',', '.') }} kg / {{ $profile['length'] }}×{{ $profile['width'] }}×{{ $profile['height'] }} cm</option>@endforeach<option value="restricted">Restrito — exige revisão DHL</option></select></label>
+                            <label><span>Peso (kg)</span><input class="form-control" data-modal-field="shipping_weight_kg" type="number" min="0.001" max="1000" step="0.001" required></label>
+                            <label><span>Comprimento (cm)</span><input class="form-control" data-modal-field="shipping_length_cm" type="number" min="0.01" max="1000" step="0.01" required></label>
+                            <label><span>Largura (cm)</span><input class="form-control" data-modal-field="shipping_width_cm" type="number" min="0.01" max="1000" step="0.01" required></label>
+                            <label><span>Altura (cm)</span><input class="form-control" data-modal-field="shipping_height_cm" type="number" min="0.01" max="1000" step="0.01" required></label>
+                            <label><span>Código HS</span><input class="form-control" data-modal-field="shipping_hs_code" maxlength="20" placeholder="Ex.: 420221"></label>
+                            <label><span>País de origem ISO-2</span><input class="form-control text-uppercase" data-modal-field="shipping_country_of_origin" maxlength="2" placeholder="Ex.: IT"></label>
+                            <label class="is-customs"><span>Descrição aduaneira em inglês</span><input class="form-control" data-modal-field="shipping_customs_description" maxlength="255" placeholder="Ex.: Cotton shirt"></label>
+                            <label class="dhl-dangerous-switch"><input class="form-check-input" data-modal-field="shipping_is_dangerous_goods" type="checkbox" value="1"><span><strong>Produto perigoso ou restrito</strong><small>Perfume, aerossol, bateria, álcool, tabaco etc.</small></span></label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <span class="dhl-modal-progress" data-modal-progress></span>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-outline-dark" data-modal-save><i class="fa-solid fa-check"></i>Confirmar nesta lista</button>
+                        <button type="button" class="btn btn-dark" data-modal-save-next><i class="fa-solid fa-forward-step"></i>Confirmar e abrir próximo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @else
         <div class="dhl-guidance">
             <i class="fa-solid fa-circle-info"></i>

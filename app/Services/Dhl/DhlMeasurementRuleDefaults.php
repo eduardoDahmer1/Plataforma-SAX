@@ -22,8 +22,11 @@ final class DhlMeasurementRuleDefaults
         if (Str::contains($text, ['whisky', 'vodka', 'licor', 'tequila', 'bebida'])) {
             return $this->values('spirits', 1.600, 35, 13, 13, true);
         }
+        if (Str::contains($text, ['tabaco', 'tobacco', 'habano', 'charuto', 'xaruto', 'cigarro'])) {
+            return $this->values('tobacco', .500, 25, 18, 8, true);
+        }
         if (Str::contains($text, [
-            'movel', 'mueble', 'sofa', 'mesa grande', 'armario', 'cadeira', 'silla', 'chair',
+            'movel', 'mueble', 'sofa', 'mesa', 'armario', 'cadeira', 'silla', 'chair',
             'poltrona', 'estante', 'rack', 'comoda', 'escrivaninha', 'banco alto',
         ])) {
             return $this->values('furniture', 15, 80, 60, 50, true);
@@ -52,7 +55,7 @@ final class DhlMeasurementRuleDefaults
         if (Str::contains($text, ['casaco', 'jaqueta', 'chaqueta', 'sueter', 'moleton', 'blazer', 'terno'])) {
             return $this->values('apparel_heavy', .950, 35, 28, 10);
         }
-        if (Str::contains($text, ['vestido'])) {
+        if (Str::contains($text, ['vestido', 'noiva', 'novia', 'bridal'])) {
             return $this->values('dress', .600, 32, 24, 6);
         }
         if (Str::contains($text, ['camiseta', 'camisa', 'polo', 'blusa', 'top', 'roupa', 'ropa', 'short', 'bermuda', 'fitness'])) {

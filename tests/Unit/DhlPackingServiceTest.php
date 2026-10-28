@@ -97,6 +97,26 @@ class DhlPackingServiceTest extends TestCase
         $this->assertGreaterThan(0, $result['actual_weight']);
     }
 
+    public function test_exact_measurements_keep_a_restricted_profile_under_manual_review(): void
+    {
+        $product = new Product([
+            'sku' => 'PERFUME-EXACT-1',
+            'external_name' => 'Perfume com medidas reais',
+            'shipping_profile' => 'perfume',
+            'shipping_weight_kg' => .55,
+            'shipping_length_cm' => 18,
+            'shipping_width_cm' => 12,
+            'shipping_height_cm' => 8,
+            'shipping_is_dangerous_goods' => false,
+        ]);
+
+        $measurement = (new DhlProductMeasurementEstimator)->forProduct($product);
+
+        $this->assertSame('exact', $measurement['profile']);
+        $this->assertFalse($measurement['estimated']);
+        $this->assertTrue($measurement['restricted']);
+    }
+
     public function test_it_explains_when_estimates_are_disabled_for_a_product_without_measurements(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -139,6 +159,45 @@ class DhlPackingServiceTest extends TestCase
 
         $this->assertSame('furniture', $service->suggestedProfile($product));
         $this->assertSame('furniture', $service->forProduct($product)['profile']);
+    }
+
+    /** @dataProvider catalogFamilies */
+    public function test_it_suggests_measurements_for_the_main_catalog_families(string $name, string $expectedProfile): void
+    {
+        $product = new Product([
+            'sku' => 'CATALOG-'.md5($name),
+            'external_name' => $name,
+        ]);
+
+        $service = new DhlProductMeasurementEstimator;
+        $measurement = $service->forProduct($product);
+
+        $this->assertSame($expectedProfile, $service->suggestedProfile($product));
+        $this->assertSame($expectedProfile, $measurement['profile']);
+        $this->assertGreaterThan(0, $measurement['weight']);
+        $this->assertGreaterThan(0, $measurement['volume']);
+    }
+
+    public static function catalogFamilies(): array
+    {
+        return [
+            'calca' => ['Calça masculina jeans', 'pants'],
+            'casaco' => ['Casaco feminino de inverno', 'jacket'],
+            'camisa' => ['Camisa social masculina', 'shirt'],
+            'roupa intima' => ['Cueca infantil de algodão', 'small_apparel'],
+            'meias' => ['Meias femininas', 'small_apparel'],
+            'vinho' => ['Vinho tinto reserva', 'wine'],
+            'tenis' => ['Tênis esportivo masculino', 'footwear'],
+            'bota infantil' => ['Bota infantil', 'kids_footwear'],
+            'mesa' => ['Mesa para sala de jantar', 'furniture'],
+            'cadeira' => ['Cadeira estofada', 'furniture'],
+            'prato' => ['Prato de porcelana', 'home'],
+            'blusa' => ['Blusa feminina leve', 'top'],
+            'oculos' => ['Óculos de sol', 'eyewear'],
+            'tabaco' => ['Tabaco premium', 'tobacco'],
+            'xaruto' => ['Xaruto artesanal', 'tobacco'],
+            'noiva' => ['Vestido de noiva', 'dress'],
+        ];
     }
 
     private function service(bool $allowFallback = true): DhlPackingService

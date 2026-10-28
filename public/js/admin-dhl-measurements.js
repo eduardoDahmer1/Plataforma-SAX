@@ -104,6 +104,16 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         };
 
+        const updateCustomsDescriptionState = function () {
+            const description = modalFields.find((field) => field.dataset.modalField === 'shipping_customs_description');
+            const missing = modalElement?.querySelector('[data-customs-description-missing]');
+            const editLink = modalElement?.querySelector('[data-edit-product-description]');
+            const hasDescription = Boolean(description?.value.trim());
+
+            if (missing) missing.hidden = hasDescription;
+            if (editLink) editLink.href = activeButton?.dataset.productEditUrl || '#';
+        };
+
         const openProduct = function (button) {
             if (!button || !modalElement || !modal) return;
 
@@ -142,6 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const source = hiddenField(row, field.dataset.modalField);
                     setModalField(field.dataset.modalField, source?.value ?? '');
                 });
+            updateCustomsDescriptionState();
 
             modal.show();
         };
@@ -161,6 +172,14 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const validateModal = function () {
+            const customsDescription = modalFields.find((field) => field.dataset.modalField === 'shipping_customs_description');
+            if (!customsDescription?.value.trim()) {
+                updateCustomsDescriptionState();
+                window.alert('Preencha a descrição em inglês no cadastro do produto antes de concluir a revisão DHL.');
+                modalElement?.querySelector('[data-edit-product-description]')?.focus();
+                return false;
+            }
+
             for (const field of modalFields) {
                 if (!field.checkValidity()) {
                     field.reportValidity();

@@ -299,6 +299,10 @@ a.dhl-stat:hover { color: var(--dhl-ink); border-color: #9ea2a7; }
 .dhl-modal-grid .dhl-field-help { display: block; margin-top: 4px; color: #888d92; font-size: .56rem; line-height: 1.25; }
 .dhl-modal-grid .is-wide { grid-column: 1 / -1; }
 .dhl-modal-grid .is-customs { grid-column: span 2; }
+.dhl-customs-source { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: #765000; background: var(--dhl-warning-soft); border: 1px solid #ead68c; border-radius: 6px; }
+.dhl-customs-source > i { flex: 0 0 auto; }
+.dhl-customs-source > span { flex: 1 1 auto; font-size: .62rem; font-weight: 650; }
+.dhl-customs-source .btn { flex: 0 0 auto; white-space: nowrap; }
 .dhl-dangerous-switch { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 10px; margin: 2px 0 0; padding: 11px 12px; background: #f6f6f5; border: 1px solid #e2e3e3; border-radius: 6px; }
 .dhl-dangerous-switch > input { flex: 0 0 auto; margin-top: 2px; }
 .dhl-dangerous-switch > span { margin: 0 !important; text-transform: none !important; }

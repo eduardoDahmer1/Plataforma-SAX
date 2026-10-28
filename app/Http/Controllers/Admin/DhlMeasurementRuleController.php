@@ -11,7 +11,9 @@ use App\Models\Product;
 use App\Models\Subcategory;
 use App\Services\Dhl\DhlMeasurementRuleDefaults;
 use App\Services\Dhl\DhlMeasurementRuleResolver;
+use App\Services\Dhl\DhlCustomsProductData;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
+use App\Services\Dhl\DhlSettingsService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,6 +33,12 @@ class DhlMeasurementRuleController extends Controller
             ? (string) $request->query('view')
             : 'products';
         $profiles = DhlProductMeasurementEstimator::profiles();
+        $customsData = app(DhlCustomsProductData::class);
+        $storeOrigin = strtoupper(trim((string) data_get(
+            app(DhlSettingsService::class)->resolved(),
+            'origin.country_code',
+            'PY',
+        )));
         $products = null;
         $rules = null;
         $productCounts = [];
@@ -50,6 +58,9 @@ class DhlMeasurementRuleController extends Controller
                     'category:id,name,slug',
                     'subcategory:id,name,slug,category_id',
                     'categoriasFilhas:id,name,slug,category_id,subcategory_id',
+                    'translations' => fn ($translations) => $translations
+                        ->where('locale', 'en')
+                        ->select(['id', 'product_id', 'locale', 'details']),
                 ]);
 
             if ($search = trim((string) $request->query('q'))) {
@@ -98,10 +109,12 @@ class DhlMeasurementRuleController extends Controller
                 ? $request->integer('per_page')
                 : 50;
             $products = $query->paginate($perPage)->withQueryString();
-            $products->getCollection()->transform(function (Product $product) use ($estimator): Product {
+            $products->getCollection()->transform(function (Product $product) use ($estimator, $customsData, $storeOrigin): Product {
                 $product->setAttribute('dhl_shipping_measurement', $estimator->forProduct($product, true));
                 $product->setAttribute('dhl_suggested_profile', $estimator->suggestedProfile($product));
                 $product->setAttribute('dhl_image_url', $product->photo_url);
+                $product->setAttribute('dhl_country_of_origin', $customsData->countryOfOrigin($product, $storeOrigin));
+                $product->setAttribute('dhl_customs_description', $customsData->englishDescription($product));
 
                 return $product;
             });
@@ -149,6 +162,7 @@ class DhlMeasurementRuleController extends Controller
             'productCounts' => $productCounts,
             'profiles' => $profiles,
             'measurementOptions' => DhlProductMeasurementEstimator::measurementOptions(),
+            'storeOrigin' => $storeOrigin,
             'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
             'subcategories' => Subcategory::query()->orderBy('name')->get(['id', 'name', 'category_id']),
             'childCategories' => CategoriasFilhas::query()->orderBy('name')->get(['id', 'name', 'category_id', 'subcategory_id']),
@@ -200,7 +214,28 @@ class DhlMeasurementRuleController extends Controller
             }
         }
 
-        DB::transaction(function () use ($selectedIds, $data): void {
+        $customsData = app(DhlCustomsProductData::class);
+        $catalogProducts = Product::withoutGlobalScopes()
+            ->with(['translations' => fn ($translations) => $translations
+                ->where('locale', 'en')
+                ->select(['id', 'product_id', 'locale', 'details'])])
+            ->whereIn('id', $selectedIds)
+            ->get(['id', 'sku', 'name', 'external_name'])
+            ->keyBy('id');
+        $customsDescriptions = $catalogProducts->mapWithKeys(
+            fn (Product $product): array => [$product->id => $customsData->englishDescription($product)],
+        );
+        $missingDescription = $catalogProducts->first(
+            fn (Product $product): bool => blank($customsDescriptions->get($product->id)),
+        );
+        if ($missingDescription) {
+            $label = $missingDescription->sku ?: ($missingDescription->name ?: $missingDescription->external_name);
+            throw ValidationException::withMessages([
+                'products' => "O produto {$label} não possui descrição EN. Edite o produto, salve a tradução inglesa e tente novamente.",
+            ]);
+        }
+
+        DB::transaction(function () use ($selectedIds, $data, $customsDescriptions): void {
             foreach ($selectedIds as $productId) {
                 $measurements = $data['products'][$productId];
                 DB::table('products')->where('id', $productId)->update([
@@ -214,9 +249,7 @@ class DhlMeasurementRuleController extends Controller
                     'shipping_country_of_origin' => filled($measurements['shipping_country_of_origin'] ?? null)
                         ? strtoupper(trim((string) $measurements['shipping_country_of_origin']))
                         : null,
-                    'shipping_customs_description' => filled($measurements['shipping_customs_description'] ?? null)
-                        ? trim((string) $measurements['shipping_customs_description'])
-                        : null,
+                    'shipping_customs_description' => $customsDescriptions->get($productId),
                     'shipping_is_dangerous_goods' => (bool) $measurements['shipping_is_dangerous_goods'],
                     'shipping_reviewed_at' => now(),
                     'shipping_reviewed_by' => auth()->id(),

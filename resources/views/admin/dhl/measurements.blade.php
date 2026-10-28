@@ -148,6 +148,12 @@
                             ? 'Restrito / confirmar com DHL'
                             : ($product->shipping_profile ? ($profiles[$product->shipping_profile]['label'] ?? $product->shipping_profile) : 'Sugestão ainda não revisada');
                         $suggestedLabel = $profiles[$suggestedCode]['label'] ?? $suggestedCode;
+                        $countryOfOrigin = $product->dhl_country_of_origin;
+                        $customsDescription = $product->dhl_customs_description;
+                        $productEditUrl = route('admin.products.edit', [
+                            'product' => $product->id,
+                            'return_to' => request()->fullUrl(),
+                        ]);
                         $hierarchy = collect([$product->category?->name, $product->subcategory?->name, $product->categoriasFilhas?->name])->filter()->implode(' › ');
                         $hasExact = $measurement['profile'] === 'exact';
                     @endphp
@@ -176,8 +182,8 @@
                                 'shipping_length_cm' => number_format($stagedLength, 2, '.', ''),
                                 'shipping_width_cm' => number_format($stagedWidth, 2, '.', ''),
                                 'shipping_height_cm' => number_format($stagedHeight, 2, '.', ''),
-                                'shipping_country_of_origin' => $product->shipping_country_of_origin,
-                                'shipping_customs_description' => $product->shipping_customs_description,
+                                'shipping_country_of_origin' => $countryOfOrigin,
+                                'shipping_customs_description' => $customsDescription,
                                 'shipping_is_dangerous_goods' => $product->shipping_is_dangerous_goods ? 1 : 0,
                             ] as $field => $value)
                                 <input form="dhl-product-bulk-form" type="hidden" name="products[{{ $product->id }}][{{ $field }}]" value="{{ $value }}" data-measurement-value="{{ $field }}">
@@ -192,7 +198,8 @@
                                 data-suggested-weight="{{ number_format((float)$suggestedDefaults['weight'], 3, '.', '') }}"
                                 data-suggested-length="{{ number_format((float)$suggestedDefaults['length'], 2, '.', '') }}"
                                 data-suggested-width="{{ number_format((float)$suggestedDefaults['width'], 2, '.', '') }}"
-                                data-suggested-height="{{ number_format((float)$suggestedDefaults['height'], 2, '.', '') }}">
+                                data-suggested-height="{{ number_format((float)$suggestedDefaults['height'], 2, '.', '') }}"
+                                data-product-edit-url="{{ $productEditUrl }}">
                                 <i class="fa-solid fa-ruler-combined"></i>
                             </button>
                         </td>
@@ -227,8 +234,13 @@
                             <label><span>Comprimento (cm)</span><select class="form-select" data-modal-field="shipping_length_cm" data-measurement-select="length" required></select><small class="dhl-field-help">Opções ajustadas ao perfil</small></label>
                             <label><span>Largura (cm)</span><select class="form-select" data-modal-field="shipping_width_cm" data-measurement-select="width" required></select><small class="dhl-field-help">Opções ajustadas ao perfil</small></label>
                             <label><span>Altura (cm)</span><select class="form-select" data-modal-field="shipping_height_cm" data-measurement-select="height" required></select><small class="dhl-field-help">Opções ajustadas ao perfil</small></label>
-                            <label><span>País de fabricação ISO-2</span><input class="form-control text-uppercase" data-modal-field="shipping_country_of_origin" maxlength="2" placeholder="Ex.: IT" required><small class="dhl-field-help">Obrigatório para mercadoria internacional</small></label>
-                            <label class="is-wide"><span>Descrição aduaneira em inglês</span><input class="form-control" data-modal-field="shipping_customs_description" maxlength="255" placeholder="Ex.: Eau de parfum, 100 ml" required><small class="dhl-field-help">Obrigatória para a declaração de exportação</small></label>
+                            <label><span>País de fabricação ISO-2</span><input class="form-control text-uppercase" data-modal-field="shipping_country_of_origin" maxlength="2" placeholder="Ex.: FR" required><small class="dhl-field-help">Preenchido com {{ $storeOrigin }} da loja quando não há origem cadastrada. Confirme onde o item foi fabricado.</small></label>
+                            <label class="is-wide"><span>Descrição aduaneira em inglês</span><input class="form-control" data-modal-field="shipping_customs_description" maxlength="255" placeholder="Cadastre a descrição EN no produto" readonly required><small class="dhl-field-help">Carregada automaticamente da descrição EN do catálogo.</small></label>
+                            <div class="dhl-customs-source is-wide" data-customs-description-missing hidden>
+                                <i class="fa-solid fa-language"></i>
+                                <span>A descrição em inglês está vazia. Edite o produto, preencha a aba EN, salve e volte para revisar.</span>
+                                <a class="btn btn-outline-dark btn-sm" href="#" data-edit-product-description>Editar descrição EN</a>
+                            </div>
                             <label class="dhl-dangerous-switch"><input class="form-check-input" data-modal-field="shipping_is_dangerous_goods" type="checkbox" value="1"><span><strong>Produto perigoso ou restrito</strong><small>Perfume, aerossol, bateria, álcool, tabaco etc.</small></span></label>
                         </div>
                     </div>

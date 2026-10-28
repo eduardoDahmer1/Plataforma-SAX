@@ -31,6 +31,7 @@ class DhlMeasurementBulkUpdateTest extends TestCase
             $table->id();
             $table->string('sku');
             $table->string('name')->nullable();
+            $table->string('external_name')->nullable();
             $table->decimal('price', 10, 2)->default(0);
             $table->integer('stock')->default(0);
             $table->string('shipping_profile', 40)->nullable();
@@ -46,6 +47,15 @@ class DhlMeasurementBulkUpdateTest extends TestCase
             $table->unsignedBigInteger('shipping_reviewed_by')->nullable();
             $table->foreignId('updated_by')->nullable();
             $table->timestamp('admin_edited_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('product_translations', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('product_id');
+            $table->string('locale', 10);
+            $table->string('name')->nullable();
+            $table->text('details')->nullable();
             $table->timestamps();
         });
     }
@@ -70,6 +80,13 @@ class DhlMeasurementBulkUpdateTest extends TestCase
                 'shipping_profile' => null, 'shipping_hs_code' => null, 'created_at' => now(), 'updated_at' => now(),
             ],
         ]);
+        DB::table('product_translations')->insert([
+            'product_id' => 10,
+            'locale' => 'en',
+            'details' => '<p>French eau de parfum <strong>100 ml</strong></p>',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $this->actingAs(User::query()->findOrFail($adminId))
             ->post(route('admin.dhl.measurements.products.bulk-update'), [
@@ -91,6 +108,7 @@ class DhlMeasurementBulkUpdateTest extends TestCase
         $this->assertSame('perfume', $updated->shipping_profile);
         $this->assertSame('330300', $updated->shipping_hs_code);
         $this->assertSame('FR', $updated->shipping_country_of_origin);
+        $this->assertSame('French eau de parfum 100 ml', $updated->shipping_customs_description);
         $this->assertSame($adminId, $updated->updated_by);
         $this->assertNotNull($updated->admin_edited_at);
         $this->assertSame($adminId, $updated->shipping_reviewed_by);

@@ -31,8 +31,6 @@ class DhlMeasurementRuleController extends Controller
             ? (string) $request->query('view')
             : 'products';
         $profiles = DhlProductMeasurementEstimator::profiles();
-        $reviewProfiles = ['wine', 'spirits', 'aerosol', 'battery', 'tobacco', 'furniture', 'restricted'];
-
         $products = null;
         $rules = null;
         $productCounts = [];
@@ -43,8 +41,9 @@ class DhlMeasurementRuleController extends Controller
                     'id', 'sku', 'name', 'external_name', 'size', 'photo', 'brand_id', 'category_id',
                     'subcategory_id', 'childcategory_id', 'status', 'shipping_profile',
                     'shipping_weight_kg', 'shipping_length_cm', 'shipping_width_cm',
-                    'shipping_height_cm', 'shipping_hs_code', 'shipping_country_of_origin',
+                    'shipping_height_cm', 'shipping_country_of_origin',
                     'shipping_customs_description', 'shipping_is_dangerous_goods', 'updated_at',
+                    'shipping_reviewed_at', 'shipping_reviewed_by',
                 ])
                 ->with([
                     'brand:id,name',
@@ -73,23 +72,10 @@ class DhlMeasurementRuleController extends Controller
             }
 
             $measurement = (string) $request->query('measurement');
-            if ($measurement === 'exact') {
-                $this->whereHasExactMeasurements($query);
-            } elseif ($measurement === 'profile') {
-                $this->whereMissingExactMeasurements($query)
-                    ->whereNotNull('shipping_profile')->where('shipping_profile', '!=', '');
-            } elseif ($measurement === 'automatic') {
-                $this->whereMissingExactMeasurements($query)
-                    ->where(fn (Builder $automatic) => $automatic
-                        ->whereNull('shipping_profile')->orWhere('shipping_profile', ''));
-            } elseif ($measurement === 'review') {
-                $query->where(fn (Builder $review) => $review
-                    ->where('shipping_is_dangerous_goods', true)
-                    ->orWhere('shipping_profile', 'like', 'perfume%')
-                    ->orWhereIn('shipping_profile', $reviewProfiles));
-            } elseif ($measurement === 'incomplete') {
-                $this->whereHasAnyMeasurement($query);
-                $this->whereMissingExactMeasurements($query);
+            if ($measurement === 'pending_review') {
+                $query->whereNull('shipping_reviewed_at');
+            } elseif ($measurement === 'reviewed') {
+                $query->whereNotNull('shipping_reviewed_at');
             }
 
             if ($request->query('catalog_status') === 'active') {
@@ -103,9 +89,8 @@ class DhlMeasurementRuleController extends Controller
                 'exact_first' => $query->orderByRaw(
                     '(shipping_weight_kg > 0 AND shipping_length_cm > 0 AND shipping_width_cm > 0 AND shipping_height_cm > 0) DESC'
                 )->orderByRaw("COALESCE(NULLIF(name, ''), external_name) ASC"),
-                'review_first' => $query->orderByRaw(
-                    "(shipping_is_dangerous_goods = 1 OR shipping_profile LIKE 'perfume%' OR shipping_profile IN ('wine','spirits','aerosol','battery','tobacco','furniture','restricted')) DESC"
-                )->orderByRaw("COALESCE(NULLIF(name, ''), external_name) ASC"),
+                'review_first' => $query->orderByRaw('shipping_reviewed_at IS NULL DESC')
+                    ->orderByRaw("COALESCE(NULLIF(name, ''), external_name) ASC"),
                 default => $query->orderByRaw("COALESCE(NULLIF(name, ''), external_name) ASC")->orderBy('id'),
             };
 
@@ -150,7 +135,8 @@ class DhlMeasurementRuleController extends Controller
             SUM(CASE WHEN shipping_weight_kg > 0 AND shipping_length_cm > 0 AND shipping_width_cm > 0 AND shipping_height_cm > 0 THEN 1 ELSE 0 END) AS exact_count,
             SUM(CASE WHEN shipping_profile IS NOT NULL AND shipping_profile != '' THEN 1 ELSE 0 END) AS profile_count,
             SUM(CASE WHEN (shipping_profile IS NULL OR shipping_profile = '') AND NOT (COALESCE(shipping_weight_kg, 0) > 0 AND COALESCE(shipping_length_cm, 0) > 0 AND COALESCE(shipping_width_cm, 0) > 0 AND COALESCE(shipping_height_cm, 0) > 0) THEN 1 ELSE 0 END) AS automatic_count,
-            SUM(CASE WHEN shipping_is_dangerous_goods = 1 OR shipping_profile LIKE 'perfume%' OR shipping_profile IN ('wine','spirits','aerosol','battery','tobacco','furniture','restricted') THEN 1 ELSE 0 END) AS review_count
+            SUM(CASE WHEN shipping_reviewed_at IS NULL THEN 1 ELSE 0 END) AS pending_review_count,
+            SUM(CASE WHEN shipping_reviewed_at IS NOT NULL THEN 1 ELSE 0 END) AS reviewed_count
         SQL)->first();
         $ruleStats = DhlMeasurementRule::query()->selectRaw(
             'COUNT(*) AS total, SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) AS active_count, SUM(CASE WHEN requires_manual_review = 1 THEN 1 ELSE 0 END) AS manual_count'
@@ -172,7 +158,8 @@ class DhlMeasurementRuleController extends Controller
                 'exact' => (int) ($productStats->exact_count ?? 0),
                 'profile' => (int) ($productStats->profile_count ?? 0),
                 'automatic' => (int) ($productStats->automatic_count ?? 0),
-                'review' => (int) ($productStats->review_count ?? 0),
+                'pending_review' => (int) ($productStats->pending_review_count ?? 0),
+                'reviewed' => (int) ($productStats->reviewed_count ?? 0),
             ],
             'ruleStats' => [
                 'total' => (int) ($ruleStats->total ?? 0),
@@ -199,9 +186,8 @@ class DhlMeasurementRuleController extends Controller
             'products.*.shipping_length_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
             'products.*.shipping_width_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
             'products.*.shipping_height_cm' => ['required', 'numeric', 'gt:0', 'max:1000'],
-            'products.*.shipping_hs_code' => ['nullable', 'string', 'max:20'],
-            'products.*.shipping_country_of_origin' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
-            'products.*.shipping_customs_description' => ['nullable', 'string', 'max:255'],
+            'products.*.shipping_country_of_origin' => ['required', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
+            'products.*.shipping_customs_description' => ['required', 'string', 'max:255'],
             'products.*.shipping_is_dangerous_goods' => ['required', 'boolean'],
         ]);
 
@@ -225,9 +211,6 @@ class DhlMeasurementRuleController extends Controller
                     'shipping_length_cm' => $measurements['shipping_length_cm'],
                     'shipping_width_cm' => $measurements['shipping_width_cm'],
                     'shipping_height_cm' => $measurements['shipping_height_cm'],
-                    'shipping_hs_code' => filled($measurements['shipping_hs_code'] ?? null)
-                        ? preg_replace('/\s+/', '', (string) $measurements['shipping_hs_code'])
-                        : null,
                     'shipping_country_of_origin' => filled($measurements['shipping_country_of_origin'] ?? null)
                         ? strtoupper(trim((string) $measurements['shipping_country_of_origin']))
                         : null,
@@ -235,6 +218,8 @@ class DhlMeasurementRuleController extends Controller
                         ? trim((string) $measurements['shipping_customs_description'])
                         : null,
                     'shipping_is_dangerous_goods' => (bool) $measurements['shipping_is_dangerous_goods'],
+                    'shipping_reviewed_at' => now(),
+                    'shipping_reviewed_by' => auth()->id(),
                     'updated_by' => auth()->id(),
                     'admin_edited_at' => now(),
                     'updated_at' => now(),
@@ -245,7 +230,7 @@ class DhlMeasurementRuleController extends Controller
         $resolver->clearCache();
         $count = $selectedIds->count();
 
-        return back()->with('success', "Medidas DHL de {$count} produto(s) salvas em uma única operação. Nenhum outro dado do produto foi alterado.");
+        return back()->with('success', "Medidas DHL de {$count} produto(s) revisadas e salvas. Nenhum dado comercial do produto foi alterado.");
     }
 
     public function update(Request $request, DhlMeasurementRule $measurementRule, DhlMeasurementRuleResolver $resolver): RedirectResponse

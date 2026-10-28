@@ -42,6 +42,8 @@ class DhlMeasurementBulkUpdateTest extends TestCase
             $table->string('shipping_country_of_origin', 2)->nullable();
             $table->string('shipping_customs_description')->nullable();
             $table->boolean('shipping_is_dangerous_goods')->default(false);
+            $table->timestamp('shipping_reviewed_at')->nullable();
+            $table->unsignedBigInteger('shipping_reviewed_by')->nullable();
             $table->foreignId('updated_by')->nullable();
             $table->timestamp('admin_edited_at')->nullable();
             $table->timestamps();
@@ -61,11 +63,11 @@ class DhlMeasurementBulkUpdateTest extends TestCase
         DB::table('products')->insert([
             [
                 'id' => 10, 'sku' => 'DHL-10', 'name' => 'Produto selecionado', 'price' => 99.90, 'stock' => 7,
-                'shipping_profile' => null, 'created_at' => now(), 'updated_at' => now(),
+                'shipping_profile' => null, 'shipping_hs_code' => '330300', 'created_at' => now(), 'updated_at' => now(),
             ],
             [
                 'id' => 20, 'sku' => 'DHL-20', 'name' => 'Produto não selecionado', 'price' => 49.90, 'stock' => 3,
-                'shipping_profile' => null, 'created_at' => now(), 'updated_at' => now(),
+                'shipping_profile' => null, 'shipping_hs_code' => null, 'created_at' => now(), 'updated_at' => now(),
             ],
         ]);
 
@@ -91,10 +93,13 @@ class DhlMeasurementBulkUpdateTest extends TestCase
         $this->assertSame('FR', $updated->shipping_country_of_origin);
         $this->assertSame($adminId, $updated->updated_by);
         $this->assertNotNull($updated->admin_edited_at);
+        $this->assertSame($adminId, $updated->shipping_reviewed_by);
+        $this->assertNotNull($updated->shipping_reviewed_at);
 
         $this->assertNull($untouched->shipping_profile);
         $this->assertNull($untouched->updated_by);
         $this->assertNull($untouched->admin_edited_at);
+        $this->assertNull($untouched->shipping_reviewed_at);
     }
 
     /** @return array<string, mixed> */

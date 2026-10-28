@@ -117,6 +117,8 @@ class Product extends Model
         'shipping_customs_description',
         'shipping_is_dangerous_goods',
         'shipping_profile',
+        'shipping_reviewed_at',
+        'shipping_reviewed_by',
     ];
 
     // Casts para JSON/array
@@ -137,6 +139,7 @@ class Product extends Model
         'shipping_width_cm' => 'float',
         'shipping_height_cm' => 'float',
         'shipping_is_dangerous_goods' => 'boolean',
+        'shipping_reviewed_at' => 'datetime',
     ];
 
     protected static ?bool $hasColorParentColumn = null;

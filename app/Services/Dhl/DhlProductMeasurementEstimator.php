@@ -119,7 +119,7 @@ final class DhlProductMeasurementEstimator
             if ($rule) {
                 return $this->measurement(
                     (string) $rule->profile_code,
-                    'Média cadastrada: '.$rule->scope_name.' · requer revisão',
+                    'Média cadastrada: '.$rule->scope_name.' · confirmar com a DHL',
                     (float) $rule->weight_kg,
                     (float) $rule->length_cm,
                     (float) $rule->width_cm,
@@ -134,7 +134,7 @@ final class DhlProductMeasurementEstimator
 
             return $this->measurement(
                 $baseProfile,
-                $base['label'].' · requer revisão',
+                $base['label'].' · confirmar com a DHL',
                 $base['weight'],
                 $base['length'],
                 $base['width'],
@@ -150,7 +150,7 @@ final class DhlProductMeasurementEstimator
 
             return $this->measurement(
                 $profile,
-                $base['label'].($requiresReview ? ' · requer revisão' : ''),
+                $base['label'].($requiresReview ? ' · confirmar com a DHL' : ''),
                 $base['weight'],
                 $base['length'],
                 $base['width'],
@@ -167,7 +167,7 @@ final class DhlProductMeasurementEstimator
 
             return $this->measurement(
                 $specificProfile,
-                'Média automática por tipo: '.$base['label'].($requiresReview ? ' · requer revisão' : ''),
+                'Média automática por tipo: '.$base['label'].($requiresReview ? ' · confirmar com a DHL' : ''),
                 $base['weight'],
                 $base['length'],
                 $base['width'],
@@ -185,7 +185,7 @@ final class DhlProductMeasurementEstimator
 
             return $this->measurement(
                 (string) $rule->profile_code,
-                'Média cadastrada: '.$rule->scope_name.($restricted ? ' · requer revisão' : ''),
+                'Média cadastrada: '.$rule->scope_name.($restricted ? ' · confirmar com a DHL' : ''),
                 (float) $rule->weight_kg,
                 (float) $rule->length_cm,
                 (float) $rule->width_cm,
@@ -201,7 +201,7 @@ final class DhlProductMeasurementEstimator
 
             return $this->measurement(
                 $restrictedProfile,
-                $base['label'].' · requer revisão',
+                $base['label'].' · confirmar com a DHL',
                 $base['weight'],
                 $base['length'],
                 $base['width'],

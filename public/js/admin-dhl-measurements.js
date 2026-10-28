@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const profileSelect = modalFields.find((field) => field.dataset.modalField === 'shipping_profile');
-            const profileLabel = profileSelect?.selectedOptions[0]?.textContent?.split(' — ')[0] || 'Automático';
+            const profileLabel = profileSelect?.selectedOptions[0]?.textContent?.split(' — ')[0] || 'Sugestão não revisada';
             row.querySelector('[data-row-profile]').textContent = profileLabel;
             row.querySelector('[data-row-weight]').textContent = formatNumber(hiddenField(row, 'shipping_weight_kg').value, 3) + ' kg';
             row.querySelector('[data-row-dimensions]').textContent = [
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (destination) destination.value = value;
             });
 
-            row.querySelector('[data-row-profile]').textContent = button.dataset.suggestedLabel || 'Automático';
+            row.querySelector('[data-row-profile]').textContent = button.dataset.suggestedLabel || 'Sugestão não revisada';
             row.querySelector('[data-row-weight]').textContent = formatNumber(suggested.shipping_weight_kg, 3) + ' kg';
             row.querySelector('[data-row-dimensions]').textContent = [
                 formatNumber(suggested.shipping_length_cm, 1),

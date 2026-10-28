@@ -45,3 +45,54 @@ test('dropdown searches translated labels and shows an empty state', () => {
     assert.deepEqual(picker('BRIDGE').items.children.map(c => c.text), ['Diccionario de atributos', 'Puente']);
     assert.equal(picker('unknown').empty.hidden, false);
 });
+
+
+function reviewFixture(items, protectedIds = [], dirtyIds = []) {
+    const box = {textContent:'', children:[], append(child) {this.children.push(child);}};
+    const added = [];
+    const context = {
+        dictionary:[{id:1,code:'polarizado',name:'Polarizado',active:true}],
+        effective:{}, chosen:new Map(dirtyIds.map(id => [id,{dirty:true}])),
+        read() {return protectedIds;},
+        root:{open:false, querySelector() {return box;}, dispatchEvent() {}},
+        feedback(text) {box.textContent=text;},
+        node(tag,text) {return {tag,text,children:[],append(child) {this.children.push(child);}};},
+        addRow(a,state) {added.push(state);context.chosen.set(a.id,state);}, Event:class {},
+    };
+    vm.createContext(context);
+    vm.runInContext(source.slice(source.indexOf('    function showAttributeReview('), source.indexOf('    function matchingAttributes(')), context);
+    context.showAttributeReview({attribute_review:{items}});
+    return {context,box,added};
+}
+const accepted = {code:'polarizado',status:'accepted',value:{attribute_id:1,mode:'value',boolean:true,options:[],ai_proposal:'server-signed'}};
+
+test('review opens the section, counts accepted/rejected values and shows reasons', () => {
+    const {context,box,added} = reviewFixture([accepted,{code:'unknown',status:'rejected',reason:'Falta evidencia textual.'}]);
+    assert.equal(context.root.open,true);
+    assert.match(box.textContent,/2 sugeridos, 1 aceptados, 1 rechazados/);
+    assert.match(box.children[0].children[0].text,/Falta evidencia/);
+    assert.equal(added[0].ai_proposal,'server-signed');
+    assert.equal(added[0].dirty,true);
+});
+
+test('review never overwrites protected or locally edited attributes', () => {
+    for (const [protectedIds,dirtyIds] of [[[1],[]],[[],[1]]]) {
+        const {box,added}=reviewFixture([accepted],protectedIds,dirtyIds);
+        assert.equal(added.length,0);
+        assert.match(box.textContent,/1 sugeridos, 0 aceptados, 1 rechazados/);
+        assert.match(box.children[0].children[0].text,/protegida|cambios pendientes/);
+    }
+});
+
+test('empty review explicitly reports zero attributes without inventing values', () => {
+    const {box,added}=reviewFixture([]);
+    assert.match(box.textContent,/0 sugeridos, 0 aceptados, 0 rechazados/);
+    assert.equal(added.length,0);
+    assert.match(box.children[0].text,/No se encontraron/);
+});
+
+test('unsigned proposals cannot be accepted by the editor', () => {
+    const {box,added}=reviewFixture([{...accepted,value:{attribute_id:1,mode:'value',boolean:true}}]);
+    assert.equal(added.length,0);
+    assert.match(box.textContent,/0 aceptados, 1 rechazados/);
+});

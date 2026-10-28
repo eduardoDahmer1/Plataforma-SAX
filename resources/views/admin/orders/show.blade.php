@@ -70,7 +70,7 @@
         {{-- Coluna Principal --}}
         <div class="col-lg-8 order-2 order-lg-1">
             
-        <section class="commerce-panel mb-4 bg-white p-3 p-lg-4">
+        <section class="commerce-panel commerce-order-products mb-4 bg-white p-3 p-lg-4">
             <h6 class="fw-bold text-uppercase tracking-wider mb-4 pb-2 border-bottom">
                 <i class="fa fa-shopping-bag me-2"></i>{{ __('messages.produtos_seccao') }}
             </h6>
@@ -270,46 +270,46 @@
                     </div>
                     
                     {{-- Form 1: Status do Pedido --}}
-                    <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="commerce-status-form mb-3">
-                        @csrf 
-                        @method('PUT')
-                        <div class="mb-3">
-                            <label class="x-small text-secondary text-uppercase fw-bold mb-1 d-block">{{ __('messages.status_pedido_label') }}</label>
-                            <select name="status" class="form-select mb-2" data-commerce-tone-select="order">
-                                @foreach (['pending', 'processing', 'shipped', 'completed', 'canceled'] as $statusKey)
-                                    <option value="{{ $statusKey }}" {{ $order->status === $statusKey ? 'selected' : '' }}>
-                                        {{ __('messages.status_' . $statusKey) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn commerce-btn {{ $orderActionTone }} w-100 text-uppercase fw-bold tracking-wider py-2" data-commerce-tone-button="order">
-                                <i class="fa-solid fa-circle-check me-2" aria-hidden="true"></i>
-                                {{ __('messages.actualizar_estado_btn') }}
-                            </button>
-                        </div>
-                    </form>
+                    <div class="commerce-action-card__forms">
+                        <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="commerce-status-form">
+                            @csrf
+                            @method('PUT')
+                            <div class="commerce-status-form__fields">
+                                <label class="x-small text-secondary text-uppercase fw-bold d-block">{{ __('messages.status_pedido_label') }}</label>
+                                <select name="status" class="form-select" data-commerce-tone-select="order">
+                                    @foreach (['pending', 'processing', 'shipped', 'completed', 'canceled'] as $statusKey)
+                                        <option value="{{ $statusKey }}" {{ $order->status === $statusKey ? 'selected' : '' }}>
+                                            {{ __('messages.status_' . $statusKey) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn commerce-btn {{ $orderActionTone }} w-100 text-uppercase fw-bold tracking-wider" data-commerce-tone-button="order">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                    {{ __('messages.actualizar_estado_btn') }}
+                                </button>
+                            </div>
+                        </form>
 
-                    <div class="border-top my-3"></div>
-
-                    {{-- Form 2: Status do Pagamento --}}
-                    <form action="{{ route('admin.orders.update', $order->id) }}" method="POST">
-                        @csrf 
-                        @method('PUT')
-                        <div class="mb-3">
-                            <label class="x-small text-secondary text-uppercase fw-bold mb-1 d-block">{{ __('messages.status_pagamento_label') }}</label>
-                            <select name="payment_status" class="form-select mb-2" data-commerce-tone-select="payment">
-                                @foreach (['pending', 'paid', 'failed', 'refunded'] as $payStatus)
-                                    <option value="{{ $payStatus }}" {{ $order->payment_status === $payStatus ? 'selected' : '' }}>
-                                        {{ __('messages.payment_status_' . $payStatus) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="btn commerce-btn {{ $paymentActionTone }} w-100 text-uppercase fw-bold tracking-wider py-2" data-commerce-tone-button="payment">
-                                <i class="fa-regular fa-credit-card me-2" aria-hidden="true"></i>
-                                {{ __('messages.actualizar_pagamento_btn') }}
-                            </button>
-                        </div>
-                    </form>
+                        {{-- Form 2: Status do Pagamento --}}
+                        <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="commerce-status-form">
+                            @csrf
+                            @method('PUT')
+                            <div class="commerce-status-form__fields">
+                                <label class="x-small text-secondary text-uppercase fw-bold d-block">{{ __('messages.status_pagamento_label') }}</label>
+                                <select name="payment_status" class="form-select" data-commerce-tone-select="payment">
+                                    @foreach (['pending', 'paid', 'failed', 'refunded'] as $payStatus)
+                                        <option value="{{ $payStatus }}" {{ $order->payment_status === $payStatus ? 'selected' : '' }}>
+                                            {{ __('messages.payment_status_' . $payStatus) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn commerce-btn {{ $paymentActionTone }} w-100 text-uppercase fw-bold tracking-wider" data-commerce-tone-button="payment">
+                                    <i class="fa-regular fa-credit-card" aria-hidden="true"></i>
+                                    {{ __('messages.actualizar_pagamento_btn') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 @if(

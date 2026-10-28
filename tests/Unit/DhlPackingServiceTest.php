@@ -32,7 +32,7 @@ class DhlPackingServiceTest extends TestCase
             'external_name' => 'Camiseta infantil de algodão',
         ]);
 
-        $measurement = (new DhlProductMeasurementEstimator())->forProduct($product);
+        $measurement = (new DhlProductMeasurementEstimator)->forProduct($product);
 
         $this->assertSame('kids_tshirt', $measurement['profile']);
         $this->assertSame(0.2, $measurement['weight']);
@@ -128,11 +128,24 @@ class DhlPackingServiceTest extends TestCase
         $this->assertTrue($result['requires_manual_review']);
     }
 
+    public function test_it_suggests_the_furniture_profile_for_a_chair(): void
+    {
+        $product = new Product([
+            'sku' => 'CHAIR-1',
+            'external_name' => 'Cadeira estofada para sala',
+        ]);
+
+        $service = new DhlProductMeasurementEstimator;
+
+        $this->assertSame('furniture', $service->suggestedProfile($product));
+        $this->assertSame('furniture', $service->forProduct($product)['profile']);
+    }
+
     private function service(bool $allowFallback = true): DhlPackingService
     {
         return new DhlPackingService(
-            new DhlProductMeasurementEstimator(),
-            new DhlSettingsService(),
+            new DhlProductMeasurementEstimator,
+            new DhlSettingsService,
             ['fallback_measurements_enabled' => $allowFallback, 'volumetric_divisor' => 5000],
         );
     }

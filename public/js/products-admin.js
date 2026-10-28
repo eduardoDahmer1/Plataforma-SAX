@@ -358,6 +358,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     aiButton.addEventListener('click', async function () {
+        const requestedContext = window.saxProductAiContext?.() || {};
         const originalHtml = aiButton.innerHTML;
         aiButton.disabled = true;
         aiButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
@@ -376,9 +377,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                }
+                },
+                body: JSON.stringify({catalog_context: requestedContext})
             });
             let data = {};
             try {
@@ -392,6 +395,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 ['pt_br', 'es', 'en'].some(locale => typeof data.proposal?.[field]?.[locale] !== 'string'
                     || !data.proposal[field][locale].trim()))) {
                 throw new Error('La IA no devolvió nombres y descripciones completos en los tres idiomas.');
+            }
+            if (JSON.stringify(requestedContext) !== JSON.stringify(window.saxProductAiContext?.() || {})) {
+                throw new Error('Cambiaste los datos investigados durante la consulta. Volvé a generar con los datos actuales.');
             }
             currentProposal = data.proposal;
             window.dispatchEvent(new CustomEvent('sax:catalog-attribute-proposal', {detail: data}));
@@ -1789,6 +1795,25 @@ document.addEventListener('DOMContentLoaded', function () {
         ]));
     }
     const initial = snapshot();
+    window.saxProductAiContext = () => {
+        const data = new FormData(form);
+        const context = {};
+        for (const field of ['brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'size']) {
+            if (data.has(field)) context[field] = data.get(field) || null;
+        }
+        if (form.querySelector('[name="no_color"]') || data.has('colors_values[]')) {
+            context.color = data.has('no_color') ? null : (data.getAll('colors_values[]')[0] || null);
+        }
+        const name = document.getElementById('real-name-pt');
+        const description = document.getElementById('real-desc-pt');
+        if (name) context.name = name.value;
+        if (description) context.description = description.value;
+        if (window.currentLangs?.desc === 'pt' && typeof tinymce !== 'undefined') {
+            const editor = tinymce.get('editor-product');
+            if (editor) context.description = editor.getContent();
+        }
+        return context;
+    };
     function updateStatus() {
         const dirty = snapshot() !== initial;
         status.textContent = dirty ? 'Alterações não salvas' : 'Sem alterações pendentes';

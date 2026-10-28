@@ -56,13 +56,14 @@ class CatalogAttributeController extends Controller
 
     public function complete(Product $product, CatalogAttributeService $catalog, OpenAICatalogService $ai)
     {
+        $product = app(\App\Services\ProductAiEditorContext::class)->fromRequest($product, request());
         abort_unless($catalog->enabledFor($product), 404);
         if (! $catalog->missing($product)) {
-            return response()->json(['proposal' => ['catalog_attributes' => []], 'message' => 'No hay atributos activos faltantes.']);
+            return response()->json($catalog->prepareForEditor($product, ['proposal' => ['catalog_attributes' => []], 'message' => 'No hay atributos activos faltantes.']));
         }
 
         // Return suggestions to the existing editor; assignments persist only on its normal save.
-        return response()->json($ai->generateAttributesOnly($product));
+        return response()->json($catalog->prepareForEditor($product, $ai->generateAttributesOnly($product)));
     }
 
     public function translate(Request $request, OpenAICatalogService $ai)

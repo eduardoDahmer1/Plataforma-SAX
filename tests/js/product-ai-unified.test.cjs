@@ -37,7 +37,7 @@ function form(proposal, category = '140', brand = 'MARCA', responseOk = true) {
     const start = source.indexOf("    aiButton.addEventListener('click'");
     const end = source.indexOf('\n});', start);
     vm.runInContext(source.slice(start, end), context);
-    return {elements, button, calls, events};
+    return {elements, button, calls, events, context};
 }
 
 const cases = [
@@ -91,4 +91,30 @@ test('description text is escaped before reaching the editor', async () => {
     const {button, elements} = form({commercial_name: {pt_br: 'A', es: 'A', en: 'A'}, descriptions: {pt_br: '<script>alert(1)</script>', es: 'A', en: 'A'}});
     await button.click();
     assert.equal(elements['real-desc-pt'].value, '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
+});
+
+
+test('unsaved changes do not block research and current editor values are sent', async () => {
+    const proposal = {commercial_name:{pt_br:'A',es:'A',en:'A'},descriptions:{pt_br:'A',es:'A',en:'A'}};
+    const {button, calls, events, elements, context} = form(proposal);
+    context.window.saxProductHasUnsavedChanges = () => true;
+    context.window.saxProductAiContext = () => ({brand_id:'2',size:'L',description:'Texto todavía sin guardar'});
+    await button.click();
+    assert.equal(calls.length, 1);
+    assert.equal(events.length, 1);
+    assert.deepEqual(JSON.parse(calls[0].options.body).catalog_context,{brand_id:'2',size:'L',description:'Texto todavía sin guardar'});
+    assert.equal(elements['real-name-pt'].value,'A');
+});
+
+test('changes during research discard the response without overwriting the form', async () => {
+    const proposal = {commercial_name: {pt_br:'A',es:'A',en:'A'}, descriptions:{pt_br:'A',es:'A',en:'A'}};
+    const {button, calls, events, elements, context} = form(proposal);
+    let snapshot = 0;
+    context.window.saxProductAiContext = () => ({size:String(++snapshot)});
+    await button.click();
+    assert.equal(calls.length, 1);
+    assert.equal(events.length, 0);
+    assert.equal(elements['real-name-pt'].value, 'original');
+    assert.match(elements.feedback.textContent, /Cambiaste los datos investigados/);
+    assert.equal(button.disabled, false);
 });

@@ -9,5 +9,5 @@
     </div>
     @include('admin.catalog-attributes.modal')
 </x-admin.card>
-<script src="{{ asset('js/catalog-attributes-admin.js') }}" defer></script>
+<script src="{{ asset('js/catalog-attributes-admin.js') }}?v={{ filemtime(public_path('js/catalog-attributes-admin.js')) }}" defer></script>
 @endsection

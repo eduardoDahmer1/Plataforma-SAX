@@ -200,8 +200,13 @@ naturalmente, sin enumerar medidas. Conserva números que formen parte del nombr
 La concentración de una fragancia sí puede mencionarse cuando esté verificada: es parte de su identidad,
 no el volumen del envase. No mezcles hechos de distintas concentraciones de una misma fragancia.
 
-Prioriza calidad y precisión sobre longitud. Usa normalmente uno o dos párrafos, sin cuota mínima de
-palabras; cada párrafo debe aportar información nueva. Si hay pocos hechos confiables, escribe menos.
+Redacta textos comerciales premium: precisos, fluidos y específicos, con vocabulario natural y sobrio.
+Cuando existan suficientes hechos verificados, desarrolla normalmente entre 100 y 160 palabras POR
+IDIOMA en dos o tres párrafos. Presenta primero identidad y diseño; desarrolla después materiales,
+construcción, tecnologías o funciones documentadas y explica su utilidad solo si está respaldada.
+Cada párrafo debe aportar hechos distintos: no repitas ideas, no agregues relleno ni afirmaciones
+aspiracionales para alcanzar la extensión. Con pocos hechos confiables, usa menos palabras y párrafos.
+La precisión prevalece sobre la longitud: nunca inventes características, beneficios ni prestaciones.
 Devuelve texto plano con párrafos separados por una línea en blanco. Usa capitalización natural:
 nunca escribas una frase o un párrafo completo en mayúsculas salvo siglas y denominaciones oficiales.
 
@@ -310,7 +315,8 @@ PROMPT;
             'proposal' => $proposal,
             'research' => [
                 'status' => $researchStatus,
-                'sources' => $sources,
+                'sources' => array_slice($sources, 0, 3),
+                'validation_sources' => $sources,
                 'warning' => $researchStatus === 'not_found'
                     ? 'No se encontró una coincidencia web confiable; revisá la propuesta con los datos internos.'
                     : null,
@@ -409,7 +415,7 @@ PROMPT;
             unset($source['selected_order']);
 
             return $source;
-        }, array_slice($sources, 0, 3));
+        }, $sources);
     }
 
     private function urlContainsReference(string $url, array $referenceCandidates): bool
@@ -482,7 +488,7 @@ PROMPT;
             ['type'=>'object', 'properties'=>['catalog_attributes'=>$this->catalogAttributeSchema()], 'required'=>['catalog_attributes'], 'additionalProperties'=>false], true,
         );
         $sources = $this->extractSources($payload, (array) ($identity['reference_candidates'] ?? []));
-        return ['proposal'=>$proposal, 'research'=>['status'=>$sources ? 'matched' : 'not_found', 'sources'=>$sources], 'source'=>['model'=>config('services.openai.model')]];
+        return ['proposal'=>$proposal, 'research'=>['status'=>$sources ? 'matched' : 'not_found', 'sources'=>array_slice($sources, 0, 3), 'validation_sources'=>$sources], 'source'=>['model'=>config('services.openai.model')]];
     }
 
     public function translateCatalogLabel(string $name, string $context): array

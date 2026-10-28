@@ -10,7 +10,7 @@ class DhlMeasurementRuleDefaultsTest extends TestCase
     /** @dataProvider recommendations */
     public function test_it_recommends_realistic_initial_profiles(string $name, string $profile, float $weight, bool $manualReview): void
     {
-        $result = (new DhlMeasurementRuleDefaults())->recommend($name);
+        $result = (new DhlMeasurementRuleDefaults)->recommend($name);
 
         $this->assertSame($profile, $result['profile_code']);
         $this->assertSame($weight, $result['weight_kg']);
@@ -31,6 +31,7 @@ class DhlMeasurementRuleDefaultsTest extends TestCase
             'vinho' => ['bebidas › Vinos', 'wine', 1.500, true],
             'perfume' => ['Perfumes › Perfumería de nicho', 'perfume', .500, true],
             'moveis' => ['casa › Muebles', 'furniture', 15.000, true],
+            'cadeira' => ['casa › Cadeiras e poltronas', 'furniture', 15.000, true],
         ];
     }
 }

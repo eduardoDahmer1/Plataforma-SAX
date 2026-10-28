@@ -2,7 +2,6 @@
 
 namespace App\Services\Dhl;
 
-use App\Models\DhlMeasurementRule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -23,7 +22,10 @@ final class DhlMeasurementRuleDefaults
         if (Str::contains($text, ['whisky', 'vodka', 'licor', 'tequila', 'bebida'])) {
             return $this->values('spirits', 1.600, 35, 13, 13, true);
         }
-        if (Str::contains($text, ['movel', 'mueble', 'sofa', 'mesa grande', 'armario'])) {
+        if (Str::contains($text, [
+            'movel', 'mueble', 'sofa', 'mesa grande', 'armario', 'cadeira', 'silla', 'chair',
+            'poltrona', 'estante', 'rack', 'comoda', 'escrivaninha', 'banco alto',
+        ])) {
             return $this->values('furniture', 15, 80, 60, 50, true);
         }
         if (Str::contains($text, ['oculo', 'anteojo', 'gafa', 'lente', 'optico'])) {

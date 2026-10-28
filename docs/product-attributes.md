@@ -33,6 +33,23 @@ con claves protegidas y actualización de revisión/caché. Las asignaciones sin
 cambios no se reescriben. Los valores existentes de atributos desactivados
 continúan visibles y se conserva la validación de opciones históricas.
 
+El editor del producto presenta los atributos en una cuadrícula responsive. El
+valor se edita directamente; la selección múltiple usa un menú cerrado con
+búsqueda, casillas y botón **Listo**, que también se cierra con Escape o al pulsar
+fuera. El menú **⋯** de cada atributo reúne la edición del diccionario, sus
+opciones seleccionadas y las decisiones de herencia. La etiqueta discreta
+**IA** conserva la misma procedencia; abrir o cerrar menús no cambia valores ni
+comprobantes. El resumen de valores se muestra al plegar la sección.
+
+La prueba de navegador `tests/js/catalog-attributes-editor.browser.cjs` recibe
+un HTML del editor renderizado desde STAGE mediante `SAX_ATTRIBUTE_EDITOR_HTML`.
+Requiere Playwright (o `SAX_PLAYWRIGHT_MODULE`) y un Chromium disponible
+(`SAX_CHROMIUM_PATH`, si no se usa el de Playwright). Intercepta todas las
+peticiones: no guarda productos, definiciones ni traducciones. Comprueba los
+cuatro tipos de valor, selecciones vacías, navegación por teclado, cierre de
+menús, herencia, validación del diccionario, procedencia y comprobantes IA,
+serialización sin reescribir valores intactos y anchos de 320, 390, 768 y 1440 px.
+
 ## Herencia e IA
 
 `CatalogAttributeService::effective()` resuelve solo `parent_id`, con protección
@@ -58,6 +75,36 @@ preparaciones. Omite productos sin atributos activos faltantes o con sistema
 no disponible. Un diccionario global puede ofrecer atributos irrelevantes para
 ciertos productos: la IA debe omitirlos, por lo que un faltante no implica que
 el producto esté incompleto ni garantiza que la investigación produzca valores.
+
+## Propuestas IA en el editor
+
+Las fuentes visibles se limitan a tres. El servicio conserva todas las fuentes
+consultadas en `research.validation_sources` para validar la evidencia; los dos
+endpoints del editor las consumen en Laravel y no envían esa lista al navegador.
+`attribute_review` informa cantidades y motivos por propuesta. Las reglas son las
+mismas para el editor y los lotes: evidencia textual, URL consultada, confianza
+alta, SKU y variante exactos, opciones activas y ausencia de decisiones previas.
+
+Los valores aceptados llevan `catalog_values[*][ai_proposal]`, un comprobante
+cifrado y autenticado por Laravel, ligado al producto, su identidad, el valor y
+la revisión del atributo, con vencimiento de 24 horas. Guardar el formulario
+conserva `source=ai` y la evidencia cuando el valor coincide y sigue sin existir
+una asignación protegida. Un comprobante alterado, vencido o de otra variante
+produce un error de validación; no se convierte silenciosamente en manual.
+Cambiar el valor o el modo en el editor elimina el comprobante y guarda esa
+decisión como manual. No se agregan tablas, atributos ni opciones.
+
+Ambos botones investigan con los datos actuales del formulario, aunque todavía
+no se hayan guardado. Laravel valida ese contexto y lo aplica a una copia en
+memoria del producto, sin guardarlo. Si cambian los datos investigados durante
+la consulta, la respuesta no se aplica y se puede volver a generar sin guardar. La
+sección de atributos se abre al recibir resultados y muestra sugeridos,
+aceptados, rechazados y sus motivos, incluso cuando no se encontraron valores.
+
+El prompt editorial solicita normalmente 100–160 palabras por idioma en dos o
+tres párrafos cuando haya suficientes hechos verificados. Con evidencia escasa
+permite menos texto, sin relleno ni características inventadas. Se mantienen el
+modelo y los límites de la API.
 
 ## Seed, integración y sincronización
 

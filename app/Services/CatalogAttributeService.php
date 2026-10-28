@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductAttributeValue;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -154,9 +155,13 @@ class CatalogAttributeService
                 }
                 $options = $data['option_ids'];
                 unset($data['option_ids']);
+                $provenance = ['source' => 'manual', 'evidence' => null];
+                if (filled($row['ai_proposal'] ?? null)) {
+                    $provenance = $this->verifiedEditorProvenance($product, $attribute, $row, $data, $options, $existing);
+                }
                 $value = ProductAttributeValue::updateOrCreate(['product_id' => $product->id, 'attribute_id' => $attribute->id], $data + [
-                    'mode' => $row['mode'], 'source' => 'manual', 'evidence' => null, 'updated_by' => $userId, 'revision' => (string) Str::uuid(),
-                ]);
+                    'mode' => $row['mode'], 'updated_by' => $userId, 'revision' => (string) Str::uuid(),
+                ] + $provenance);
                 $value->options()->sync($options);
             }
             $this->enqueue($product->id);
@@ -208,47 +213,120 @@ class CatalogAttributeService
             'protected_ids' => ProductAttributeValue::where('product_id', $product->id)->where('source', 'manual')->pluck('attribute_id')->all()];
     }
 
+    /** Validate once for both the editor and batch application; never trust provider fields alone. */
+    public function reviewAi(Product $product, array $result): array
+    {
+        $rows = (array) data_get($result, 'proposal.catalog_attributes', []);
+        $urls = collect(data_get($result, 'research.validation_sources', data_get($result, 'research.sources', [])))->pluck('url')->all();
+        $available = $this->enabledFor($product);
+        $effective = $available ? $this->effective($product) : [];
+        $items = [];
+        $seen = [];
+        foreach ($rows as $row) {
+            $row = is_array($row) ? $row : [];
+            $item = ['code' => (string) ($row['code'] ?? ''), 'status' => 'rejected'];
+            $reason = null;
+            $attribute = null;
+            if (! $available) $reason = 'El diccionario de atributos no está disponible.';
+            elseif (data_get($result, 'research.status') !== 'matched') $reason = 'No hay una coincidencia web confiable.';
+            elseif (($row['confidence'] ?? '') !== 'high') $reason = 'La confianza no es alta.';
+            elseif (! is_string($row['evidence'] ?? null) || trim($row['evidence']) === '') $reason = 'Falta evidencia textual.';
+            elseif (($row['product_sku'] ?? '') !== (string) $product->sku || ($row['variant_match'] ?? false) !== true) $reason = 'No coincide el SKU o la variante exacta.';
+            elseif (! in_array($row['source_url'] ?? '', $urls, true)) $reason = 'La URL de evidencia no pertenece a las fuentes consultadas.';
+            else {
+                $attribute = CatalogAttribute::where('is_active', true)->where('code', $item['code'])->first();
+                if (! $attribute) $reason = 'El atributo no existe o está desactivado.';
+                elseif (isset($seen[$attribute->id])) $reason = 'La propuesta repite el atributo.';
+                elseif (isset($effective[$attribute->id]) || ProductAttributeValue::where('product_id', $product->id)->where('attribute_id', $attribute->id)->exists()) $reason = 'Existe un valor propio, heredado o una decisión protegida.';
+                else {
+                    $codes = $row['option_codes'] ?? [];
+                    $options = is_array($codes) ? $attribute->options()->where('is_active', true)->whereIn('code', $codes)->pluck('id')->all() : [];
+                    if (! is_array($codes) || count($options) !== count($codes)) $reason = 'Las opciones no existen, están desactivadas o se repiten.';
+                    else {
+                        try {
+                            $value = $this->validatedValue($attribute, ['options' => $options, 'boolean' => $row['boolean_value'] ?? null, 'number' => $row['number_value'] ?? null]);
+                            $item['value'] = ['attribute_id' => $attribute->id, 'mode' => 'value', 'options' => $value['option_ids'], 'boolean' => $value['boolean_value'], 'number' => $value['number_value']];
+                            $item['evidence'] = ['url' => $row['source_url'], 'text' => $row['evidence']];
+                            $item['status'] = 'accepted';
+                            $seen[$attribute->id] = true;
+                        } catch (ValidationException) {
+                            $reason = 'El valor no cumple el tipo, unidad u opciones del diccionario.';
+                        }
+                    }
+                }
+            }
+            $item['reason'] = $reason;
+            $items[] = $item;
+        }
+        $accepted = count(array_filter($items, fn ($item) => $item['status'] === 'accepted'));
+        return ['suggested' => count($items), 'accepted' => $accepted, 'rejected' => count($items) - $accepted, 'items' => $items];
+    }
+
+    /** Only encrypted, product-bound proposals may retain AI provenance on a normal form save. */
+    public function prepareForEditor(Product $product, array $result): array
+    {
+        $review = $this->reviewAi($product, $result);
+        foreach ($review['items'] as &$item) {
+            if ($item['status'] !== 'accepted') continue;
+            $item['value']['ai_proposal'] = Crypt::encryptString(json_encode([
+                'product_id' => (int) $product->id, 'identity' => $this->proposalIdentity($product),
+                'expires_at' => now()->addDay()->timestamp, 'value' => $item['value'], 'evidence' => $item['evidence'],
+                'definition_revision' => CatalogAttribute::findOrFail($item['value']['attribute_id'])->revision,
+            ], JSON_THROW_ON_ERROR));
+        }
+        unset($item);
+        $result['attribute_review'] = $review;
+        // Keep the complete validation set on the server; only three sources are displayed.
+        unset($result['research']['validation_sources']);
+        return $result;
+    }
+
+    private function proposalIdentity(Product $product): array
+    {
+        return collect(['sku', 'external_name', 'ref_code', 'brand_id', 'size', 'color'])->mapWithKeys(fn ($field) => [$field => (string) ($field === 'size' ? $product->inferredSize() : $product->getAttribute($field))])->all();
+    }
+
+    private function verifiedEditorProvenance(Product $product, CatalogAttribute $attribute, array $row, array $data, array $options, ?ProductAttributeValue $existing): array
+    {
+        try {
+            $signed = json_decode(Crypt::decryptString($row['ai_proposal']), true, 512, JSON_THROW_ON_ERROR);
+            $value = $signed['value'];
+            $effective = $this->effective($product);
+            $matches = (int) $signed['product_id'] === (int) $product->id
+                && $signed['identity'] === $this->proposalIdentity($product) && $signed['expires_at'] >= now()->timestamp
+                && ! $existing && ! isset($effective[$attribute->id]) && $attribute->is_active
+                && $signed['definition_revision'] === $attribute->revision
+                && $row['mode'] === 'value' && (int) $value['attribute_id'] === (int) $attribute->id
+                && $value['options'] === $options && $value['boolean'] === $data['boolean_value']
+                && (string) $value['number'] === (string) $data['number_value'];
+            if ($matches) return ['source' => 'ai', 'evidence' => $signed['evidence']];
+        } catch (\Throwable) {
+            // A modified or expired token must not silently become a manual assignment.
+        }
+        throw ValidationException::withMessages(['catalog_values' => 'La propuesta IA cambió, expiró o pertenece a otra variante. Revisá el atributo o generá una nueva propuesta.']);
+    }
+
     public function applyAi(Product $product, array $result, ?int $userId): int
     {
         if (! $this->enabledFor($product) || data_get($result, 'research.status') !== 'matched') {
             return 0;
         }
-        $urls = collect(data_get($result, 'research.sources', []))->pluck('url')->all();
-
-        return DB::transaction(function () use ($product, $result, $userId, $urls) {
+        return DB::transaction(function () use ($product, $result, $userId) {
             Product::withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
-            $effective = $this->effective($product->fresh());
+            $review = $this->reviewAi($product->fresh(), $result);
             $applied = 0;
-            foreach ((array) data_get($result, 'proposal.catalog_attributes', []) as $row) {
-                if (! is_array($row) || ($row['confidence'] ?? '') !== 'high' || trim((string) ($row['evidence'] ?? '')) === ''
-                    || ($row['product_sku'] ?? '') !== (string) $product->sku || ($row['variant_match'] ?? false) !== true
-                    || ! in_array($row['source_url'] ?? '', $urls, true)) {
-                    continue;
-                }
-                $attribute = CatalogAttribute::where('is_active', true)->where('code', $row['code'] ?? '')->first();
-                if (! $attribute || isset($effective[$attribute->id]) || ProductAttributeValue::where('product_id', $product->id)->where('attribute_id', $attribute->id)->exists()) {
-                    continue;
-                }
-                // A proposal is for this exact SKU, never every target in a size batch.
-                $optionIds = $attribute->options()->where('is_active', true)->whereIn('code', $row['option_codes'] ?? [])->pluck('id')->all();
-                if (count($optionIds) !== count(array_unique($row['option_codes'] ?? []))) {
-                    continue;
-                }
-                try {
-                    $data = $this->validatedValue($attribute, ['options' => $optionIds, 'boolean' => $row['boolean_value'] ?? null, 'number' => $row['number_value'] ?? null]);
-                } catch (ValidationException) {
-                    continue;
-                }
-                $options = $data['option_ids'];
-                unset($data['option_ids']);
-                $value = ProductAttributeValue::create($data + ['product_id' => $product->id, 'attribute_id' => $attribute->id, 'mode' => 'value',
-                    'source' => 'ai', 'evidence' => ['url' => $row['source_url'], 'text' => $row['evidence']], 'updated_by' => $userId, 'revision' => (string) Str::uuid()]);
-                $value->options()->sync($options);
-                $effective[$attribute->id] = true;
+            foreach ($review['items'] as $item) {
+                if ($item['status'] !== 'accepted') continue;
+                $row = $item['value'];
+                $value = ProductAttributeValue::create([
+                    'product_id' => $product->id, 'attribute_id' => $row['attribute_id'], 'mode' => 'value',
+                    'boolean_value' => $row['boolean'], 'number_value' => $row['number'],
+                    'source' => 'ai', 'evidence' => $item['evidence'], 'updated_by' => $userId, 'revision' => (string) Str::uuid(),
+                ]);
+                $value->options()->sync($row['options']);
                 $applied++;
             }
             $this->enqueue($product->id);
-
             return $applied;
         });
     }

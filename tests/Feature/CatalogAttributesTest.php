@@ -283,6 +283,146 @@ class CatalogAttributesTest extends TestCase
         $this->assertSame([], $this->catalog->effective($child));
     }
 
+    public function test_attributes_only_endpoint_and_normal_product_save_preserve_ai_evidence(): void
+    {
+        $attribute = $this->definition('Polarizado', 'boolean', false);
+        $product = $this->product('EXACT');
+        $result = $this->proposal($attribute, $product);
+        $row = $result['proposal']['catalog_attributes'][0];
+        $row['source_url'] = 'https://manufacturer.example/fourth';
+        config(['services.openai.api_key' => 'test-key']);
+        Http::fake(['api.openai.com/*' => Http::response([
+            'status' => 'completed', 'output' => [
+                ['type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode(['catalog_attributes' => [$row]])]]],
+                ['type' => 'web_search_call', 'action' => ['sources' => [
+                    ['url' => 'https://first.example'], ['url' => 'https://second.example'], ['url' => 'https://third.example'], ['url' => $row['source_url']],
+                ]]],
+            ],
+        ])]);
+        $editor = User::factory()->create(['user_type' => User::TYPE_ADMIN_EDITOR]);
+        $response = $this->actingAs($editor)->postJson(route('admin.products.catalog-attributes.complete', $product), [
+            'catalog_context' => ['size' => 'L', 'color' => '#aabbcc'],
+        ])->assertOk();
+        $response->assertJsonCount(3, 'research.sources')->assertJsonPath('attribute_review.accepted', 1);
+        $this->assertArrayNotHasKey('validation_sources', $response->json('research'));
+        $this->assertDatabaseCount('product_attribute_values', 0);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => data_get(json_decode($request['input'], true), 'size') === 'L'
+            && data_get(json_decode($request['input'], true), 'color') === '#AABBCC');
+
+        Schema::table('products', function (Blueprint $table) {
+            foreach (['slug', 'highlights', 'stores', 'shipping_country_of_origin', 'shipping_hs_code'] as $column) $table->text($column)->nullable();
+            $table->boolean('shipping_is_dangerous_goods')->default(false);
+            $table->integer('updated_by')->nullable();
+            $table->timestamp('admin_edited_at')->nullable();
+        });
+        Schema::create('product_additional_categories', function (Blueprint $table) {
+            $table->id(); $table->integer('product_id');
+        });
+        $feed = \Mockery::mock(\App\Services\ProductFeedRefreshService::class);
+        $feed->shouldReceive('markDirty')->zeroOrMoreTimes();
+        $this->app->instance(\App\Services\ProductFeedRefreshService::class, $feed);
+        $this->putJson(route('admin.products.update', $product), [
+            'sku' => $product->sku, 'price' => 10, 'stock' => 5, 'size' => 'L', 'colors_values' => ['#AABBCC'],
+            'catalog_values' => [$response->json('attribute_review.items.0.value')],
+        ])->assertOk();
+        $this->assertDatabaseHas('product_attribute_values', ['product_id' => $product->id, 'source' => 'ai', 'boolean_value' => true]);
+        $value = \App\Models\ProductAttributeValue::where('product_id', $product->id)->firstOrFail();
+        $this->assertSame($row['source_url'], $value->evidence['url']);
+    }
+
+    public function test_editor_accepts_fourth_consulted_source_and_preserves_signed_ai_provenance(): void
+    {
+        $attribute = $this->definition('Polarizado', 'boolean', false);
+        $product = $this->product('EXACT');
+        $result = $this->proposal($attribute, $product);
+        $result['research']['validation_sources'] = $result['research']['sources'];
+        $result['research']['sources'] = [['url' => 'https://visible.example']];
+        $response = $this->catalog->prepareForEditor($product, $result);
+        $this->assertSame(1, $response['attribute_review']['accepted']);
+        $this->assertArrayNotHasKey('validation_sources', $response['research']);
+        $row = $response['attribute_review']['items'][0]['value'];
+        $this->assertNotEmpty($row['ai_proposal']);
+        $this->catalog->saveProduct($product, [$row], null);
+        $this->assertDatabaseHas('product_attribute_values', ['product_id' => $product->id, 'source' => 'ai', 'boolean_value' => true]);
+        $value = \App\Models\ProductAttributeValue::where('product_id', $product->id)->firstOrFail();
+        $this->assertSame('https://manufacturer.example/model', $value->evidence['url']);
+        $this->assertSame('Exact SKU confirmed polarized', $value->evidence['text']);
+    }
+
+    public function test_editor_proposals_reject_tampering_expiry_variant_changes_and_manual_overwrites(): void
+    {
+        $attribute = $this->definition('Polarizado', 'boolean', false);
+        $product = $this->product('EXACT');
+        $row = $this->catalog->prepareForEditor($product, $this->proposal($attribute, $product))['attribute_review']['items'][0]['value'];
+        $variants = [array_replace($row, ['boolean' => false]), array_replace($row, ['ai_proposal' => 'forged'])];
+        foreach ($variants as $invalid) {
+            try {
+                $this->catalog->saveProduct($product, [$invalid], null);
+                $this->fail('Invalid provenance accepted');
+            } catch (ValidationException $e) {
+                $this->assertArrayHasKey('catalog_values', $e->errors());
+            }
+        }
+        $this->travel(25)->hours();
+        try {
+            $this->catalog->saveProduct($product, [$row], null);
+            $this->fail('Expired proposal accepted');
+        } catch (ValidationException) {
+            $this->assertDatabaseCount('product_attribute_values', 0);
+        }
+        $this->travelBack();
+        $other = $this->product('OTHER');
+        try {
+            $this->catalog->saveProduct($other, [$row], null);
+            $this->fail('Other SKU accepted');
+        } catch (ValidationException) {
+            $this->assertDatabaseCount('product_attribute_values', 0);
+        }
+        DB::table('products')->where('id', $product->id)->update(['size' => 'L']);
+        try {
+            $this->catalog->saveProduct($product->fresh(), [$row], null);
+            $this->fail('Changed variant accepted');
+        } catch (ValidationException) {
+            $this->assertDatabaseCount('product_attribute_values', 0);
+        }
+        DB::table('products')->where('id', $product->id)->update(['size' => null]);
+        $this->assign($product, $attribute, ['boolean' => false]);
+        try {
+            $this->catalog->saveProduct($product, [$row], null);
+            $this->fail('Manual overwrite accepted');
+        } catch (ValidationException) {
+            $this->assertDatabaseHas('product_attribute_values', ['source' => 'manual', 'boolean_value' => false]);
+        }
+    }
+
+    public function test_review_explains_rejections_and_retains_protections(): void
+    {
+        $attribute = $this->definition('Polarizado', 'boolean', false);
+        $product = $this->product('EXACT');
+        $result = $this->proposal($attribute, $product);
+        $valid = $result['proposal']['catalog_attributes'][0];
+        $result['proposal']['catalog_attributes'] = [
+            array_replace($valid, ['confidence' => 'medium']),
+            array_replace($valid, ['evidence' => '']),
+            array_replace($valid, ['variant_match' => false]),
+            array_replace($valid, ['source_url' => 'https://unvisited.example']),
+            array_replace($valid, ['option_codes' => ['invented']]),
+            array_replace($valid, ['boolean_value' => 'invalid']),
+            $valid, $valid,
+        ];
+        $review = $this->catalog->reviewAi($product, $result);
+        $this->assertSame(8, $review['suggested']);
+        $this->assertSame(1, $review['accepted']);
+        $this->assertSame(7, $review['rejected']);
+        foreach ($review['items'] as $item) {
+            if ($item['status'] === 'rejected') $this->assertNotEmpty($item['reason']);
+        }
+        $this->assertDatabaseCount('product_attribute_values', 0);
+        $this->assertSame(1, $this->catalog->applyAi($product, $result, null));
+        $this->assertSame(0, $this->catalog->reviewAi($product, $result)['accepted']);
+    }
+
     public function test_all_categories_are_enabled_and_seed_is_additive(): void
     {
         $category = DB::table('categories')->insertGetId(['name' => 'Ropa', 'slug' => 'ropa', 'ref_code' => '3']);

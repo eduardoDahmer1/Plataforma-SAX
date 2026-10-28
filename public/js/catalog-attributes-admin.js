@@ -161,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hidden = wrap.querySelector('[data-value-inputs]'); hidden.replaceChildren();
         const put = (key,value,array = false) => { const i = node('input'); i.type = 'hidden'; i.name = `catalog_values[${attribute.id}][${key}]` + (array ? '[]' : ''); i.value = value; hidden.append(i); };
         put('attribute_id',attribute.id); put('mode',state.mode);
+        if (state.ai_proposal) put('ai_proposal',state.ai_proposal);
         if (state.mode === 'value') {
             if (attribute.type === 'boolean') put('boolean',state.boolean == null ? '' : Number(state.boolean));
             else if (attribute.type === 'number') put('number',state.number ?? '');
@@ -172,55 +173,161 @@ document.addEventListener('DOMContentLoaded', () => {
     function addRow(attribute, initial = null) {
         if (chosen.has(attribute.id)) return;
         const value = initial || effective[attribute.id];
-        const state = value ? {...value, mode:value.inherited ? 'inherit' : value.mode, options:[...(value.options || [])], dirty:false} : {mode:'value',options:[],boolean:null,number:null,dirty:false};
+        const state = value ? {...value, mode:value.inherited ? 'inherit' : value.mode, options:[...(value.options || [])], dirty:!!value.dirty} : {mode:'value',options:[],boolean:null,number:null,dirty:false};
         chosen.set(attribute.id,state); renderRow(attribute,state);
     }
+    // Keep the native select as the value source; only its multiple-selection UI changes.
+    function multipleValuePicker(attribute, input) {
+        const picker = node('div', null, 'dropdown product-attributes__multiple');
+        const toggle = button('', () => {}, 'btn btn-outline-secondary dropdown-toggle product-attributes__value-input');
+        toggle.id = `catalogAttributeValue${attribute.id}`;
+        toggle.dataset.bsToggle = 'dropdown'; toggle.dataset.bsAutoClose = 'outside';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', attribute.name);
+        toggle.setAttribute('aria-describedby', `catalogAttributeNotice${attribute.id}`);
+        const menu = node('div', null, 'dropdown-menu product-attributes__picker');
+        menu.setAttribute('aria-labelledby', toggle.id);
+        const searchLabel = node('label', 'Buscar opciones de ' + attribute.name, 'visually-hidden');
+        const searchInput = node('input', null, 'form-control form-control-sm');
+        searchInput.type = 'search'; searchInput.placeholder = 'Buscar opción…'; searchInput.autocomplete = 'off';
+        searchInput.id = `catalogAttributeOptionSearch${attribute.id}`; searchLabel.htmlFor = searchInput.id;
+        const list = node('div', null, 'product-attributes__choices');
+        const empty = node('p', 'No hay coincidencias.', 'small text-muted p-2 mb-0'); empty.hidden = true;
+        const choices = Array.from(input.options).map(option => {
+            const label = node('label', null, 'product-attributes__option');
+            const check = node('input', null, 'form-check-input'); check.type = 'checkbox'; check.checked = option.selected;
+            check.addEventListener('change', () => {
+                option.selected = check.checked;
+                input.dispatchEvent(new Event('change', {bubbles:true}));
+            });
+            label.append(check, node('span', option.text)); list.append(label);
+            return {label, check, option};
+        });
+        const filter = () => {
+            let visible = 0;
+            choices.forEach(({label, option}) => { label.hidden = !normalize(option.text).includes(normalize(searchInput.value)); if (!label.hidden) visible++; });
+            empty.hidden = visible > 0;
+        };
+        searchInput.addEventListener('input', filter);
+        // Enter inside a search must not submit the product form.
+        searchInput.addEventListener('keydown', event => { if (event.key === 'Enter') event.preventDefault(); });
+        toggle.addEventListener('shown.bs.dropdown', () => { searchInput.value = ''; filter(); searchInput.focus(); });
+        const done = button('Listo', () => { bootstrap.Dropdown.getOrCreateInstance(toggle).hide(); toggle.focus(); }, 'btn btn-sm btn-outline-secondary w-100 mt-2');
+        menu.append(searchLabel, searchInput, list, empty, done); picker.append(toggle, menu);
+        const refresh = () => {
+            const text = Array.from(input.selectedOptions).map(option => option.text).join(', ');
+            toggle.textContent = text || 'Seleccionar…'; toggle.title = text;
+            toggle.classList.toggle('product-attributes__placeholder', !text);
+            toggle.disabled = input.disabled; picker.hidden = input.hidden;
+            choices.forEach(({check, option}) => { check.checked = option.selected; });
+        };
+        input.addEventListener('change', refresh);
+        input.classList.remove('product-attributes__value-input'); input.classList.add('d-none');
+        return {element:picker, refresh};
+    }
     function renderRow(attribute,state) {
-        rows.querySelector(`[data-attribute-row="${attribute.id}"]`)?.remove();
+        const previous = rows.querySelector(`[data-attribute-row="${attribute.id}"]`);
+        previous?.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(el => bootstrap.Dropdown.getInstance(el)?.dispose());
         const wrap = node('div',null,'product-attributes__row'); wrap.dataset.attributeRow = attribute.id;
-        const heading = node('div',null,'d-flex flex-wrap justify-content-between align-items-center gap-2');
-        heading.append(node('strong',attribute.name + (attribute.unit ? ' (' + attribute.unit + ')' : '') + (!attribute.active ? ' · desactivado' : '')));
-        const actions = node('div',null,'d-flex flex-wrap gap-2');
-        actions.append(button('Editar atributo',()=>{ returnToManager = false; openDefinition(attribute); },'btn btn-sm btn-link p-0'));
-        if (['single','multiple'].includes(attribute.type) && attribute.active) actions.append(button('Crear opción',()=>{ returnToManager = false; openDefinition(null,attribute); },'btn btn-sm btn-link p-0'));
-        heading.append(actions);
-        const mode = node('select',null,'form-select form-select-sm'); mode.setAttribute('aria-label','Origen de '+attribute.name);
+        const heading = node('div',null,'product-attributes__row-heading');
+        const name = node('label',attribute.name + (attribute.unit ? ' (' + attribute.unit + ')' : '') + (!attribute.active ? ' · desactivado' : ''),'product-attributes__name');
+        name.htmlFor = `catalogAttributeValue${attribute.id}`;
+        heading.append(name);
+        const provenance = node('span', 'IA', 'product-attributes__ai');
+        provenance.title = 'Origen: IA'; provenance.setAttribute('aria-label', 'Origen: IA');
+        provenance.hidden = !(state.ai_proposal || state.source === 'ai'); heading.append(provenance);
+        const mode = node('select'); mode.hidden = true; mode.setAttribute('aria-label','Origen de '+attribute.name);
         [['value','Valor propio'],['inherit','Heredar del padre'],['block','Bloquear herencia / sin valor']].forEach(([v,t])=>mode.add(new Option(t,v)));
         mode.value=state.mode;
-        const controls=node('div'); const input=node(attribute.type==='number'?'input':'select',null,'form-control form-control-sm product-attributes__value-input'); input.setAttribute('aria-label',attribute.name);
+        const actions = node('div',null,'dropdown product-attributes__actions');
+        const actionToggle = button('⋯',()=>{},'btn product-attributes__action-toggle');
+        actionToggle.id = `catalogAttributeActions${attribute.id}`;
+        actionToggle.dataset.bsToggle = 'dropdown'; actionToggle.setAttribute('aria-expanded','false');
+        actionToggle.setAttribute('aria-label','Acciones de '+attribute.name);
+        const actionMenu = node('div',null,'dropdown-menu dropdown-menu-end product-attributes__action-menu');
+        actionMenu.setAttribute('aria-labelledby', actionToggle.id);
+        const editTitle = node('div','Diccionario','dropdown-header');
+        const editAttribute = button('Editar atributo',()=>{ returnToManager = false; openDefinition(attribute); },'dropdown-item');
+        actionMenu.append(editTitle, editAttribute);
+        if (['single','multiple'].includes(attribute.type) && attribute.active) actionMenu.append(button('Crear opción',()=>{ returnToManager = false; openDefinition(null,attribute); },'dropdown-item'));
+        const optionActions = node('div'); actionMenu.append(optionActions);
+        actionMenu.append(node('hr',null,'dropdown-divider'),node('div','Valor del producto','dropdown-header'));
+        const modeActions = [];
+        [['value','Usar valor propio'],['inherit','Heredar del padre'],['block','Bloquear herencia / sin valor']].forEach(([value,label])=>{
+            const action = button(label,()=>{ mode.value=value; mode.dispatchEvent(new Event('change')); },'dropdown-item');
+            modeActions.push({value, action}); actionMenu.append(action);
+        });
+        actions.append(actionToggle,actionMenu); heading.append(actions);
+        const controls=node('div',null,'product-attributes__fields');
+        const input=node(attribute.type==='number'?'input':'select',null,(attribute.type==='number'?'form-control':'form-select')+' form-control-sm product-attributes__value-input');
+        input.id = `catalogAttributeValue${attribute.id}`; input.setAttribute('aria-label',attribute.name);
         if (attribute.type==='number') {input.type='number';input.step='any';input.value=state.number??'';}
         else if(attribute.type==='boolean'){input.add(new Option('Seleccionar…',''));input.add(new Option('Sí','1'));input.add(new Option('No','0'));input.value=state.boolean==null?'':String(Number(state.boolean));}
         else {input.multiple=attribute.type==='multiple';if(!input.multiple)input.add(new Option('Seleccionar…',''));attribute.options.filter(o=>o.active||state.options.includes(o.id)).forEach(o=>{const option=new Option(o.name+(o.active?'':' · desactivada'),o.id);option.selected=state.options.includes(o.id);input.add(option);});}
         const hidden=node('div');hidden.dataset.valueInputs='';
         const inherited=effective[attribute.id];
         const notice = node('p', null, 'product-attributes__notice');
-        controls.append(notice, input);
-        const fields = node('div',null,'product-attributes__fields'); fields.append(mode,controls);
-        wrap.append(heading,fields,hidden);rows.append(wrap);
-        let optionActions;
-        if (['single','multiple'].includes(attribute.type)) {
-            optionActions = node('div',null,'d-flex flex-wrap gap-2 mt-2');
-            const renderOptions = () => {
-                optionActions.replaceChildren();
-                Array.from(input.selectedOptions).filter(o=>o.value).forEach(o=>{
-                    const option = attribute.options.find(item=>item.id===Number(o.value));
-                    if (option) optionActions.append(button('Editar '+option.name,()=>{ returnToManager = false; openDefinition(null,attribute,option); },'btn btn-sm btn-link p-0'));
-                });
-            };
-            controls.append(optionActions); renderOptions(); input.addEventListener('change',renderOptions);
+        notice.id = `catalogAttributeNotice${attribute.id}`; input.setAttribute('aria-describedby',notice.id);
+        let multiple;
+        if (input.multiple) {
+            input.id += 'Source';
+            multiple = multipleValuePicker(attribute,input); controls.append(multiple.element);
         }
+        controls.append(input,notice);
+        wrap.append(heading,controls,mode,hidden);
+        if (previous) previous.replaceWith(wrap); else rows.append(wrap);
+        const renderOptions = () => {
+            optionActions.replaceChildren();
+            if (!['single','multiple'].includes(attribute.type)) return;
+            Array.from(input.selectedOptions).filter(o=>o.value).forEach(o=>{
+                const option = attribute.options.find(item=>item.id===Number(o.value));
+                if (option) optionActions.append(button('Editar opción: '+option.name,()=>{ returnToManager = false; openDefinition(null,attribute,option); },'dropdown-item'));
+            });
+        };
+        renderOptions(); input.addEventListener('change',renderOptions);
         const present = () => {
             input.disabled = state.mode !== 'value';
             input.hidden = state.mode === 'block' || (state.mode === 'inherit' && !inherited?.inherited);
             notice.hidden = state.mode === 'value';
-            notice.textContent = state.mode === 'block' ? 'No se heredará ni se asignará un valor.' : inherited?.inherited ? `Heredado del producto #${inherited.from_product_id}` : 'El valor del padre se resolverá al guardar.';
-            if (optionActions) optionActions.hidden = state.mode !== 'value';
+            notice.textContent = state.mode === 'block' ? 'Herencia bloqueada · sin valor' : inherited?.inherited ? `Heredado del producto #${inherited.from_product_id}` : 'El valor del padre se resolverá al guardar.';
+            optionActions.hidden = state.mode !== 'value';
+            modeActions.forEach(({value, action}) => { action.classList.toggle('active',state.mode===value); action.setAttribute('aria-current',state.mode===value?'true':'false'); });
+            multiple?.refresh();
         };
-        const update=()=>{state.mode=mode.value;if(attribute.type==='number')state.number=input.value;else if(attribute.type==='boolean')state.boolean=input.value===''?null:input.value==='1';else state.options=Array.from(input.selectedOptions).map(o=>Number(o.value)).filter(Boolean);present();serialize(attribute,state,wrap);};
+        const update=()=>{delete state.ai_proposal;state.source='manual';provenance.hidden=true;state.mode=mode.value;if(attribute.type==='number')state.number=input.value;else if(attribute.type==='boolean')state.boolean=input.value===''?null:input.value==='1';else state.options=Array.from(input.selectedOptions).map(o=>Number(o.value)).filter(Boolean);present();serialize(attribute,state,wrap);};
         present(); input.addEventListener('change',update);mode.addEventListener('change',update);
         if(state.dirty)serialize(attribute,state,wrap);
         else refreshSummary();
     }
+    function showAttributeReview(result) {
+        const review = result.attribute_review;
+        const items = Array.isArray(review?.items) ? review.items : [];
+        let accepted = 0;
+        const rejected = [];
+        items.forEach(item => {
+            const attribute = dictionary.find(a => a.active && a.code === item.code);
+            let reason = item.status === 'accepted' ? null : (item.reason || 'La propuesta no superó la validación.');
+            if (!reason && (!attribute || !item.value?.ai_proposal)) reason = 'El atributo o su propuesta validada ya no están disponibles.';
+            if (!reason && (effective[attribute.id] || read('[data-attribute-protected]').includes(attribute.id))) reason = 'Existe un valor propio, heredado o una decisión protegida.';
+            if (!reason && chosen.get(attribute.id)?.dirty) reason = 'El atributo tiene cambios pendientes en el formulario.';
+            if (reason) { rejected.push((attribute?.name || item.code || 'Atributo') + ': ' + reason); return; }
+            chosen.delete(attribute.id);
+            addRow(attribute, {...item.value, dirty:true});
+            accepted++;
+        });
+        const suggested = items.length;
+        feedback(`Atributos: ${suggested} sugeridos, ${accepted} aceptados, ${rejected.length} rechazados. ` + (accepted ? 'Revisá los valores antes de guardar.' : 'No se agregaron valores.'));
+        const box = root.querySelector('[data-attribute-feedback]');
+        if (rejected.length) {
+            const list = node('ul', null, 'mb-0 mt-2');
+            rejected.forEach(reason => list.append(node('li', reason)));
+            box.append(list);
+        }
+        if (!suggested) box.append(node('p', result.message || 'No se encontraron nuevos valores respaldados para los atributos disponibles.', 'mb-0 mt-2'));
+        root.open = true;
+        root.dispatchEvent(new Event('sax:attribute-review', {bubbles:true}));
+    }
+
     function matchingAttributes(query) {
         return dictionary.filter(a => normalize([a.code,...Object.values(a.translations)].join(' ')).includes(normalize(query)))
             .sort((a,b) => a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
@@ -263,21 +370,20 @@ document.addEventListener('DOMContentLoaded', () => {
             choices[next].focus();
         });
         Object.keys(effective).forEach(id=>{const a=dictionary.find(a=>a.id===Number(id));if(a)addRow(a);});
-        Object.values(old).forEach(row=>{const a=dictionary.find(a=>a.id===Number(row.attribute_id));if(!a)return;chosen.delete(a.id);addRow(a,{...row,boolean:row.boolean==null?null:String(row.boolean)==='1',options:(row.options||[]).map(Number),dirty:true});const state=chosen.get(a.id);state.dirty=true;renderRow(a,state);});
+        Object.values(old).forEach(row=>{const a=dictionary.find(a=>a.id===Number(row.attribute_id));if(!a)return;chosen.delete(a.id);addRow(a,{...row,boolean:row.boolean==null?null:String(row.boolean)==='1',options:(row.options||[]).map(Number),dirty:true});const state=chosen.get(a.id);state.dirty=true;state.ai_proposal=row.ai_proposal;renderRow(a,state);});
         root.querySelector('[data-complete-attributes]').addEventListener('click',async event=>{
             const aiButton = event.currentTarget;
+            const requestedContext = window.saxProductAiContext?.() || {};
             aiButton.disabled=true;feedback('Buscando información respaldada…');
-            try{const result=await request(root.dataset.aiUrl,{});window.dispatchEvent(new CustomEvent('sax:catalog-attribute-proposal',{detail:result}));feedback(result.message||'Investigación finalizada. Los valores respaldados se guardarán con el producto.');}
+            try {
+                const result=await request(root.dataset.aiUrl,{catalog_context:requestedContext});
+                if (JSON.stringify(requestedContext) !== JSON.stringify(window.saxProductAiContext?.() || {})) throw new Error('Cambiaste los datos investigados durante la consulta. Volvé a generar con los datos actuales.');
+                window.dispatchEvent(new CustomEvent('sax:catalog-attribute-proposal',{detail:result}));
+            }
             catch(error){feedback(error.message,true);}finally{aiButton.disabled=false;}
         });
-        window.addEventListener('sax:catalog-attribute-proposal',event=>{
-            const result=event.detail;if(result.research?.status!=='matched')return;
-            const urls=(result.research.sources||[]).map(s=>s.url);
-            (result.proposal?.catalog_attributes||[]).forEach(v=>{
-                const a=dictionary.find(a=>a.active&&a.code===v.code);if(!a||effective[a.id]||read('[data-attribute-protected]').includes(a.id)||chosen.get(a.id)?.dirty||v.confidence!=='high'||!v.evidence||!urls.includes(v.source_url)||v.product_sku!==root.dataset.productSku||v.variant_match!==true)return;
-                const opts=(v.option_codes||[]).map(code=>a.options.find(o=>o.active&&o.code===code)?.id);if(opts.some(id=>!id))return;
-                chosen.delete(a.id);addRow(a,{mode:'value',number:v.number_value,boolean:v.boolean_value,options:opts});const state=chosen.get(a.id);state.dirty=true;renderRow(a,state);
-            });
+        window.addEventListener('sax:catalog-attribute-proposal', event => {
+            showAttributeReview(event.detail);
         });
     }
     renderDictionary();

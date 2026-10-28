@@ -37,6 +37,7 @@ class ProductControllerAdmin extends Controller
     public function generateDescriptionWithAi(Product $product, OpenAICatalogService $openAi)
     {
         app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
+        $product = app(\App\Services\ProductAiEditorContext::class)->fromRequest($product, request());
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
@@ -54,6 +55,7 @@ class ProductControllerAdmin extends Controller
     public function completeWithAi(Product $product, OpenAICatalogService $openAi)
     {
         app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
+        $product = app(\App\Services\ProductAiEditorContext::class)->fromRequest($product, request());
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
@@ -81,7 +83,7 @@ class ProductControllerAdmin extends Controller
                 'generated_at' => $matched ? $generatedAt->toISOString() : null,
             ];
 
-            return response()->json($result);
+            return response()->json(app(\App\Services\CatalogAttributeService::class)->prepareForEditor($product, $result));
         } catch (\Throwable $exception) {
             report($exception);
             $safeError = $exception instanceof \RuntimeException

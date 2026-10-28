@@ -321,6 +321,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('guia-de-atendimento/setores/{entry}', [AdminContactGuideController::class, 'destroyEntry'])->whereNumber('entry')->name('contact-guide.entries.destroy');
     Route::get('dhl', [DhlSettingController::class, 'edit'])->name('dhl.edit');
     Route::get('dhl/medidas', [DhlMeasurementRuleController::class, 'index'])->name('dhl.measurements.index');
+    Route::post('dhl/medidas/produtos/lote', [DhlMeasurementRuleController::class, 'bulkUpdateProducts'])->name('dhl.measurements.products.bulk-update');
     Route::put('dhl/medidas/{measurementRule}', [DhlMeasurementRuleController::class, 'update'])->name('dhl.measurements.update');
     Route::post('dhl/medidas/sincronizar', [DhlMeasurementRuleController::class, 'sync'])->name('dhl.measurements.sync');
     Route::get('dhl/localidades/paises', [DhlSettingController::class, 'countries'])->middleware('throttle:30,1')->name('dhl.locations.countries');

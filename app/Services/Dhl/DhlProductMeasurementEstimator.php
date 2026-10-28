@@ -7,9 +7,7 @@ use Illuminate\Support\Str;
 
 final class DhlProductMeasurementEstimator
 {
-    public function __construct(private ?DhlMeasurementRuleResolver $rules = null)
-    {
-    }
+    public function __construct(private ?DhlMeasurementRuleResolver $rules = null) {}
 
     /**
      * Bases provisórias e conservadoras. Medidas reais do produto sempre prevalecem.
@@ -191,6 +189,24 @@ final class DhlProductMeasurementEstimator
         );
     }
 
+    /** Retorna o melhor perfil para fixar no cadastro, sem alterar o produto. */
+    public function suggestedProfile(Product $product): string
+    {
+        $searchable = $this->searchableText($product);
+        $specificProfile = $this->inferSpecificProfile($this->productText($product), $searchable);
+
+        if ($specificProfile !== null) {
+            return $specificProfile;
+        }
+
+        $rule = $this->rules?->forProduct($product);
+        if ($rule && array_key_exists((string) $rule->profile_code, self::profiles())) {
+            return (string) $rule->profile_code;
+        }
+
+        return $this->inferProfile($searchable);
+    }
+
     private function searchableText(Product $product): string
     {
         $values = [
@@ -216,30 +232,81 @@ final class DhlProductMeasurementEstimator
     {
         $isKids = Str::contains($searchable, ['infantil', 'kids', 'kid ', 'crianca', 'nino', 'nina', 'bebe', 'baby']);
 
-        if (Str::contains($productText, ['perfume', 'colonia'])) return 'perfume';
-        if (Str::contains($productText, ['vinho', 'vino', 'champagne', 'espumante'])) return 'wine';
-        if (Str::contains($productText, ['whisky', 'vodka', 'licor', 'tequila', 'bebida', 'alcool', 'alcohol'])) return 'spirits';
-        if (Str::contains($productText, ['aerosol', 'spray'])) return 'aerosol';
-        if (Str::contains($productText, ['bateria', 'battery'])) return 'battery';
-        if (Str::contains($productText, ['habano', 'charuto', 'cigarro'])) return 'tobacco';
-        if (Str::contains($productText, ['oculo', 'anteojo', 'gafa'])) return 'eyewear';
-        if (Str::contains($productText, ['bota'])) return $isKids ? 'kids_footwear' : 'footwear';
-        if (Str::contains($productText, ['tenis', 'sapato', 'sandalia', 'mocasin', 'sneaker', 'zapatilla', 'zapato'])) return $isKids ? 'kids_footwear' : 'footwear';
-        if (Str::contains($productText, ['mochila'])) return 'handbag';
-        if (Str::contains($productText, ['bolsa', 'cartera', 'maletin', 'pasta'])) return 'handbag';
-        if (Str::contains($productText, ['camiseta', 't-shirt', 'tshirt', 'remera'])) return $isKids ? 'kids_tshirt' : 'tshirt';
-        if (Str::contains($productText, ['camisa polo', ' polo ']) || str_starts_with($productText, 'polo ')) return 'polo';
-        if (Str::contains($productText, ['camisa'])) return 'shirt';
-        if (Str::contains($productText, ['vestido'])) return 'dress';
-        if (Str::contains($productText, ['pantalon', 'calca', 'jeans', 'legging'])) return 'pants';
-        if (Str::contains($productText, ['short', 'bermuda'])) return 'shorts';
-        if (Str::contains($productText, ['falda', 'saia'])) return 'skirt';
-        if (Str::contains($productText, ['chaqueta', 'jaqueta', 'casaco', 'blazer'])) return 'jacket';
-        if (Str::contains($productText, ['sueter', 'sweater', 'buzo', 'moleton', 'moletom', 'cardigan'])) return 'sweater';
-        if (Str::contains($productText, ['conjunto', 'macacon', 'overall'])) return 'outfit';
-        if (Str::contains($productText, ['meia', 'media ', 'calcetin', 'cueca', 'calcinha'])) return 'small_apparel';
-        if (Str::contains($productText, [' top ', 'blusa']) || str_starts_with($productText, 'top ')) return 'top';
-        if (Str::contains($productText, ['movel', 'mueble', 'sofa', 'mesa grande', 'armario'])) return 'furniture';
+        if (Str::contains($productText, ['perfume', 'colonia'])) {
+            return 'perfume';
+        }
+        if (Str::contains($productText, ['vinho', 'vino', 'champagne', 'espumante'])) {
+            return 'wine';
+        }
+        if (Str::contains($productText, ['whisky', 'vodka', 'licor', 'tequila', 'bebida', 'alcool', 'alcohol'])) {
+            return 'spirits';
+        }
+        if (Str::contains($productText, ['aerosol', 'spray'])) {
+            return 'aerosol';
+        }
+        if (Str::contains($productText, ['bateria', 'battery'])) {
+            return 'battery';
+        }
+        if (Str::contains($productText, ['habano', 'charuto', 'cigarro'])) {
+            return 'tobacco';
+        }
+        if (Str::contains($productText, ['oculo', 'anteojo', 'gafa'])) {
+            return 'eyewear';
+        }
+        if (Str::contains($productText, ['bota'])) {
+            return $isKids ? 'kids_footwear' : 'footwear';
+        }
+        if (Str::contains($productText, ['tenis', 'sapato', 'sandalia', 'mocasin', 'sneaker', 'zapatilla', 'zapato'])) {
+            return $isKids ? 'kids_footwear' : 'footwear';
+        }
+        if (Str::contains($productText, ['mochila'])) {
+            return 'handbag';
+        }
+        if (Str::contains($productText, ['bolsa', 'cartera', 'maletin', 'pasta'])) {
+            return 'handbag';
+        }
+        if (Str::contains($productText, ['camiseta', 't-shirt', 'tshirt', 'remera'])) {
+            return $isKids ? 'kids_tshirt' : 'tshirt';
+        }
+        if (Str::contains($productText, ['camisa polo', ' polo ']) || str_starts_with($productText, 'polo ')) {
+            return 'polo';
+        }
+        if (Str::contains($productText, ['camisa'])) {
+            return 'shirt';
+        }
+        if (Str::contains($productText, ['vestido'])) {
+            return 'dress';
+        }
+        if (Str::contains($productText, ['pantalon', 'calca', 'jeans', 'legging'])) {
+            return 'pants';
+        }
+        if (Str::contains($productText, ['short', 'bermuda'])) {
+            return 'shorts';
+        }
+        if (Str::contains($productText, ['falda', 'saia'])) {
+            return 'skirt';
+        }
+        if (Str::contains($productText, ['chaqueta', 'jaqueta', 'casaco', 'blazer'])) {
+            return 'jacket';
+        }
+        if (Str::contains($productText, ['sueter', 'sweater', 'buzo', 'moleton', 'moletom', 'cardigan'])) {
+            return 'sweater';
+        }
+        if (Str::contains($productText, ['conjunto', 'macacon', 'overall'])) {
+            return 'outfit';
+        }
+        if (Str::contains($productText, ['meia', 'media ', 'calcetin', 'cueca', 'calcinha'])) {
+            return 'small_apparel';
+        }
+        if (Str::contains($productText, [' top ', 'blusa']) || str_starts_with($productText, 'top ')) {
+            return 'top';
+        }
+        if (Str::contains($productText, [
+            'movel', 'mueble', 'sofa', 'mesa grande', 'armario', 'cadeira', 'silla', 'chair',
+            'poltrona', 'estante', 'rack', 'comoda', 'escrivaninha', 'banco alto',
+        ])) {
+            return 'furniture';
+        }
 
         return null;
     }

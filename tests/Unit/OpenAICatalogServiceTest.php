@@ -95,6 +95,8 @@ class OpenAICatalogServiceTest extends TestCase
             ['title' => 'Fuente comercial', 'url' => 'https://retailer.example/product'],
             ['title' => 'Distribuidor', 'url' => 'https://distributor.example/item'],
         ], $result['research']['sources']);
+        $this->assertCount(4, $result['research']['validation_sources']);
+        $this->assertSame('https://fourth.example/item', $result['research']['validation_sources'][3]['url']);
         $this->assertSame(['input_tokens' => 10, 'output_tokens' => 20], $result['usage']);
 
         Http::assertSent(function ($request) {
@@ -131,9 +133,10 @@ class OpenAICatalogServiceTest extends TestCase
 
         $knownData = json_decode(str($requestBody['input'])->after("\n")->toString(), true);
 
-        $this->assertStringContainsString('Prioriza calidad y precisión sobre longitud', $requestBody['instructions']);
-        $this->assertStringContainsString('sin cuota mínima', $requestBody['instructions']);
-        $this->assertStringContainsString('cada párrafo debe aportar información', $requestBody['instructions']);
+        $this->assertStringContainsString('entre 100 y 160 palabras POR', $requestBody['instructions']);
+        $this->assertStringContainsString('dos o tres párrafos', $requestBody['instructions']);
+        $this->assertStringContainsString('Con pocos hechos confiables, usa menos palabras y párrafos', $requestBody['instructions']);
+        $this->assertStringContainsString('Cada párrafo debe aportar hechos distintos', $requestBody['instructions']);
         $this->assertStringContainsString('otra variante del mismo modelo', $requestBody['instructions']);
         $this->assertStringContainsString('actitud urbana', $requestBody['instructions']);
         $this->assertStringContainsString('texto final que verá el cliente', $requestBody['instructions']);

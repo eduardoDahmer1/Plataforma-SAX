@@ -25,8 +25,8 @@
             <button type="button" class="btn btn-sm btn-link" data-create-attribute>Crear atributo</button>
             <button type="button" class="btn btn-sm btn-link" data-manage-attributes>Gestionar diccionario</button>
         </div>
-        <p class="product-attributes__hint">Podés elegir cualquier atributo activo del diccionario global.</p>
-        <div data-product-attribute-rows></div>
+        <p class="product-attributes__hint">Seleccioná un valor para editarlo. Las opciones del diccionario y la herencia están en el menú de cada atributo.</p>
+        <div class="product-attributes__grid" data-product-attribute-rows></div>
         <div class="product-attributes__footer">
             <span>Las asignaciones se guardan con el producto.</span>
             <button type="button" class="btn btn-sm btn-outline-secondary" data-complete-attributes><i class="fas fa-wand-magic-sparkles me-1" aria-hidden="true"></i>Completar faltantes con IA</button>

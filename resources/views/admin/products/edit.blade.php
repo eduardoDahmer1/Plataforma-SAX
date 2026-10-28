@@ -115,7 +115,7 @@
         @include('admin.products.ai-taxonomy-modal')
         @if(app(\App\Services\CatalogAttributeService::class)->enabledFor($item))
             @include('admin.catalog-attributes.modal')
-            <script src="{{ asset('js/catalog-attributes-admin.js') }}" defer></script>
+            <script src="{{ asset('js/catalog-attributes-admin.js') }}?v={{ filemtime(public_path('js/catalog-attributes-admin.js')) }}" defer></script>
         @endif
 
         <form id="productEditForm" class="product-edit-form" action="{{ isset($item) ? route('admin.products.update', $item->id) : route('admin.products.store') }}"

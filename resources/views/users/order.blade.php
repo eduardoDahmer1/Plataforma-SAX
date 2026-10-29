@@ -320,7 +320,11 @@
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="label m-0">{{ __('messages.frete') }}:</span>
                                 <span class="value fw-bold text-dark">
-                                    {{ order_money($order, $order->shipping_cost ?? 0) }}
+                                    @if ($order->shipping_provider === 'manual' || $order->delivery_method === 'manual_arrangement')
+                                        {{ match (app()->getLocale()) { 'es' => 'A coordinar', 'en' => 'To be arranged', default => 'A combinar' } }}
+                                    @else
+                                        {{ order_money($order, $order->shipping_cost ?? 0) }}
+                                    @endif
                                 </span>
                             </div>
 
@@ -340,6 +344,10 @@
                                             </div>
                                         @endforeach
                                     @endif
+                                </div>
+                            @elseif ($order->shipping_provider === 'manual' || $order->delivery_method === 'manual_arrangement')
+                                <div class="p-2 mb-2 border border-warning rounded-3 bg-warning-subtle x-small text-dark">
+                                    O envio não está incluído no total. A equipe SAX entrará em contato para combinar transportadora, prazo e custo do frete.
                                 </div>
                             @endif
 

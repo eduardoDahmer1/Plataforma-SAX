@@ -39,6 +39,12 @@
     };
     $storeName = $translate($storeKey);
     $isPickup = (int) $order->shipping === 3;
+    $isManualShipping = $order->shipping_provider === 'manual' || $order->delivery_method === 'manual_arrangement';
+    $manualShippingNotice = match ($locale) {
+        'es' => 'El envío no está incluido en el total. El equipo de SAX se comunicará contigo para coordinar el transporte, el plazo y su costo.',
+        'en' => 'Shipping is not included in the order total. The SAX team will contact you to arrange the carrier, delivery time and shipping cost.',
+        default => 'O envio não está incluído no total do pedido. A equipe SAX entrará em contato para combinar a transportadora, o prazo e o custo do frete.',
+    };
 @endphp
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -81,6 +87,11 @@
                     @if ($order->country) · {{ strtoupper((string) $order->country) }} @endif
                     @if ($order->cep) · {{ $order->cep }} @endif
                 </p>
+                @if ($isManualShipping)
+                    <p style="margin:0.75rem 0 0;padding:0.75rem;background:#fff7df;border-left:3px solid #d5a20a;font-size:0.82rem;line-height:1.55;color:#4b4330;">
+                        <strong>{{ $manualShippingNotice }}</strong>
+                    </p>
+                @endif
                 @if ($order->observations)
                     <p style="margin:0.65rem 0 0 0;font-size:0.82rem;line-height:1.55;color:#666666;">
                         <strong>{{ $copy['notes'] }}:</strong> {{ $order->observations }}

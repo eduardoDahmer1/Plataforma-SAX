@@ -162,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const put = (key,value,array = false) => { const i = node('input'); i.type = 'hidden'; i.name = `catalog_values[${attribute.id}][${key}]` + (array ? '[]' : ''); i.value = value; hidden.append(i); };
         put('attribute_id',attribute.id); put('mode',state.mode);
         if (state.ai_proposal) put('ai_proposal',state.ai_proposal);
+        if (state.pending_definition) put('pending_definition',state.pending_definition);
         if (state.mode === 'value') {
             if (attribute.type === 'boolean') put('boolean',state.boolean == null ? '' : Number(state.boolean));
             else if (attribute.type === 'number') put('number',state.number ?? '');
@@ -233,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = node('label',attribute.name + (attribute.unit ? ' (' + attribute.unit + ')' : '') + (!attribute.active ? ' · desactivado' : ''),'product-attributes__name');
         name.htmlFor = `catalogAttributeValue${attribute.id}`;
         heading.append(name);
+        if (attribute.pending) heading.append(node('span', 'Nuevo · se crea al guardar', 'small text-muted'));
         const provenance = node('span', 'IA', 'product-attributes__ai');
         provenance.title = 'Origen: IA'; provenance.setAttribute('aria-label', 'Origen: IA');
         provenance.hidden = !(state.ai_proposal || state.source === 'ai'); heading.append(provenance);
@@ -248,14 +250,15 @@ document.addEventListener('DOMContentLoaded', () => {
         actionMenu.setAttribute('aria-labelledby', actionToggle.id);
         const editTitle = node('div','Diccionario','dropdown-header');
         const editAttribute = button('Editar atributo',()=>{ returnToManager = false; openDefinition(attribute); },'dropdown-item');
-        actionMenu.append(editTitle, editAttribute);
-        if (['single','multiple'].includes(attribute.type) && attribute.active) actionMenu.append(button('Crear opción',()=>{ returnToManager = false; openDefinition(null,attribute); },'dropdown-item'));
+        if (!attribute.pending) actionMenu.append(editTitle, editAttribute);
+        if (attribute.pending) actionMenu.append(button('Descartar atributo', () => { chosen.delete(attribute.id); wrap.remove(); dictionary = dictionary.filter(a => a.id !== attribute.id); renderDictionary(); }, 'dropdown-item'));
+        if (!attribute.pending && ['single','multiple'].includes(attribute.type) && attribute.active) actionMenu.append(button('Crear opción',()=>{ returnToManager = false; openDefinition(null,attribute); },'dropdown-item'));
         const optionActions = node('div'); actionMenu.append(optionActions);
         actionMenu.append(node('hr',null,'dropdown-divider'),node('div','Valor del producto','dropdown-header'));
         const modeActions = [];
         [['value','Usar valor propio'],['inherit','Heredar del padre'],['block','Bloquear herencia / sin valor']].forEach(([value,label])=>{
             const action = button(label,()=>{ mode.value=value; mode.dispatchEvent(new Event('change')); },'dropdown-item');
-            modeActions.push({value, action}); actionMenu.append(action);
+            modeActions.push({value, action}); if (!attribute.pending) actionMenu.append(action);
         });
         actions.append(actionToggle,actionMenu); heading.append(actions);
         const controls=node('div',null,'product-attributes__fields');
@@ -278,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (previous) previous.replaceWith(wrap); else rows.append(wrap);
         const renderOptions = () => {
             optionActions.replaceChildren();
-            if (!['single','multiple'].includes(attribute.type)) return;
+            if (attribute.pending || !['single','multiple'].includes(attribute.type)) return;
             Array.from(input.selectedOptions).filter(o=>o.value).forEach(o=>{
                 const option = attribute.options.find(item=>item.id===Number(o.value));
                 if (option) optionActions.append(button('Editar opción: '+option.name,()=>{ returnToManager = false; openDefinition(null,attribute,option); },'dropdown-item'));
@@ -305,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let accepted = 0;
         const rejected = [];
         items.forEach(item => {
+            if (item.status === 'accepted' && item.dictionary_item && !dictionary.some(a => a.id === item.dictionary_item.id)) dictionary.push(item.dictionary_item);
             const attribute = dictionary.find(a => a.active && a.code === item.code);
             let reason = item.status === 'accepted' ? null : (item.reason || 'La propuesta no superó la validación.');
             if (!reason && (!attribute || !item.value?.ai_proposal)) reason = 'El atributo o su propuesta validada ya no están disponibles.';
@@ -315,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addRow(attribute, {...item.value, dirty:true});
             accepted++;
         });
+        renderDictionary();
         const suggested = items.length;
         feedback(`Atributos: ${suggested} sugeridos, ${accepted} aceptados, ${rejected.length} rechazados. ` + (accepted ? 'Revisá los valores antes de guardar.' : 'No se agregaron valores.'));
         const box = root.querySelector('[data-attribute-feedback]');
@@ -342,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function renderDictionary() {
         if (!product) { renderDictionaryCards(root.querySelector('[data-dictionary-list]'), search.value); return; }
-        const matches = matchingAttributes(search.value).filter(a => a.active && !chosen.has(a.id));
+        const matches = matchingAttributes(search.value).filter(a => a.active && !a.pending && !chosen.has(a.id));
         const group = (selector, title, items) => {
             const target = root.querySelector(selector); target.replaceChildren(); target.hidden = !items.length;
             if (!items.length) return;

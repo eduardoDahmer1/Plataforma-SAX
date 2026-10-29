@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentMethodsAllowed = ['deposito', 'bancard_v2', 'rendix_pix', 'whatsapp'];
     const isParaguayCountry = country => ['paraguai', 'paraguay', 'py'].includes(String(country || '').trim().toLowerCase());
     const isDhlCountry = country => String(country || '').trim() !== '' && !isParaguayCountry(country);
+    const dhlCheckoutControl = document.getElementById('dhl_checkout_enabled');
+    let dhlCheckoutEnabled = dhlCheckoutControl?.value === '1';
+    const manualShippingTitle = dhlCheckoutControl?.dataset.manualTitle || 'Envio a combinar';
+    const manualShippingShort = dhlCheckoutControl?.dataset.manualShort || 'A combinar';
+    const manualShippingDescription = dhlCheckoutControl?.dataset.manualDescription || 'A equipe SAX entrará em contato para organizar o envio e informar o custo.';
 
     // A validacao do checkout e feita por etapa abaixo e novamente no servidor.
     // Sem isto, o navegador pode bloquear silenciosamente o submit por causa de
@@ -151,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const selectedOption = document.querySelector('#shipping_address_id option:checked');
             const savedCountry = selectedOption?.dataset.country || '';
-            if (isDhlCountry(savedCountry)) {
+            if (dhlCheckoutEnabled && isDhlCountry(savedCountry)) {
                 if (!fieldValue('#dhl_quote_reference')) {
                     showStepAlert(3, 'Aguarde a cotação DHL deste endereço antes de continuar.');
                     return false;
@@ -188,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
 
-            if (isDhlCountry(country)) {
+            if (dhlCheckoutEnabled && isDhlCountry(country)) {
                 if (!fieldValue('#dhl_quote_reference')) {
                     showStepAlert(3, 'Aguarde a validação do código postal e a cotação DHL para continuar.');
                     return false;
@@ -458,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         }
 
-        if (isDhl && !String(destination.postal_code || '').trim()) {
+        if (dhlCheckoutEnabled && isDhl && !String(destination.postal_code || '').trim()) {
             if (freteDisplay) freteDisplay.innerText = 'Informe o CEP / código postal';
             if (infoContent) infoContent.innerHTML = '<i class="fa-solid fa-location-dot me-2"></i><strong>CEP necessário para a DHL:</strong> informe o código postal do destino ou atualize o endereço salvo antes de continuar.';
             return;
@@ -504,6 +509,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (freteDisplay) freteDisplay.innerText = data.frete_formatado;
             if (totalDisplay) totalDisplay.innerText = data.total_formatado;
             if (freteValorInput) freteValorInput.value = (parseFloat(data.frete) || 0).toFixed(2);
+            if (data.manual_shipping) {
+                dhlCheckoutEnabled = false;
+                if (dhlCheckoutControl) dhlCheckoutControl.value = '0';
+                if (shippingSummaryLabel) shippingSummaryLabel.innerText = manualShippingTitle;
+                if (infoContent) infoContent.innerHTML = `<i class="fa-solid fa-headset me-2"></i><strong>${escapeHtml(manualShippingTitle)}:</strong> ${escapeHtml(data.message || manualShippingDescription)}`;
+            }
             if (data.dhl) {
                 if (dhlQuoteReferenceInput) dhlQuoteReferenceInput.value = data.dhl.reference || '';
                 renderDhlQuote(data.dhl);
@@ -611,6 +622,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isParaguayCountry(country)) {
                 infoContent.innerHTML = '<i class="fa fa-truck me-2"></i> <strong>Envio Nacional (Paraguai):</strong> O custo do frete será calculado com base na sua cidade e adicionado ao total abaixo.';
                 if (freteDisplay) freteDisplay.innerText = 'Calculando...';
+            } else if (!dhlCheckoutEnabled) {
+                infoContent.innerHTML = `<i class="fa-solid fa-headset me-2"></i> <strong>${escapeHtml(manualShippingTitle)}:</strong> ${escapeHtml(manualShippingDescription)}`;
+                if (shippingSummaryLabel) shippingSummaryLabel.innerText = manualShippingTitle;
+                if (freteDisplay) freteDisplay.innerText = manualShippingShort;
+                if (totalDisplay) totalDisplay.innerText = textoTotalSemFrete();
+                if (freteValorInput) freteValorInput.value = '0.00';
             } else {
                 const destinationLabel = country.toLowerCase() === 'brasil' || country.toLowerCase() === 'br'
                     ? 'Entrega ao Brasil via DHL'

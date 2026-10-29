@@ -486,7 +486,7 @@
 
                     <div class="d-flex justify-content-between mb-2">
                         <span class="x-small text-secondary text-uppercase">{{ __('messages.frete') }}</span>
-                        <span class="small fw-bold">{{ order_money($order, $order->shipping_cost ?? 0) }}</span>
+                        <span class="small fw-bold">{{ ($order->shipping_provider === 'manual' || $order->delivery_method === 'manual_arrangement') ? 'A combinar' : order_money($order, $order->shipping_cost ?? 0) }}</span>
                     </div>
 
                     @if ($order->shipping_provider === 'dhl')
@@ -507,6 +507,11 @@
                                 </ul>
                             @endif
                             <div class="x-small text-secondary">Impostos e taxas de importação não incluídos; responsabilidade do destinatário no destino.</div>
+                        </div>
+                    @elseif ($order->shipping_provider === 'manual' || $order->delivery_method === 'manual_arrangement')
+                        <div class="mt-3 p-3 rounded border border-warning" style="background:rgba(255,193,7,.08);">
+                            <div class="fw-bold text-warning mb-1">Envio a combinar com o cliente</div>
+                            <div class="x-small text-secondary">O frete não foi incluído nem cobrado neste pedido. Entre em contato com o cliente para definir transportadora, prazo e pagamento do envio.</div>
                         </div>
                     @endif
 

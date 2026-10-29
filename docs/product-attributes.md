@@ -61,8 +61,10 @@ herencia. Se conservan las filas de restablecimiento para sincronización.
 `missing()` considera todos los atributos activos del diccionario y excluye
 valores efectivos y decisiones manuales. `aiContext()` entrega
 `missing_attribute_ids`, diccionario activo, valores efectivos y `protected_ids`.
-La IA debe omitir atributos que no correspondan al producto, sin crear códigos
-ni opciones y sin deducir características por categoría. Se mantienen:
+La IA debe omitir atributos que no correspondan al producto y no deducir
+características por categoría. En el editor puede proponer hasta ocho atributos
+nuevos con sus opciones cuando el diccionario no cubra un dato verificable.
+Los lotes siguen usando exclusivamente definiciones existentes. Se mantienen:
 
 - Confianza alta y evidencia textual con URL de una fuente consultada.
 - Coincidencia de SKU y variante exactos, validación de tipo y unidad.
@@ -92,7 +94,21 @@ conserva `source=ai` y la evidencia cuando el valor coincide y sigue sin existir
 una asignación protegida. Un comprobante alterado, vencido o de otra variante
 produce un error de validación; no se convierte silenciosamente en manual.
 Cambiar el valor o el modo en el editor elimina el comprobante y guarda esa
-decisión como manual. No se agregan tablas, atributos ni opciones.
+decisión como manual. Las propuestas de atributos existentes no crean definiciones nuevas.
+
+Los dos botones IA del editor pueden mostrar atributos nuevos con la indicación
+**Nuevo · se crea al guardar**. La generación no escribe definiciones ni opciones;
+estas se crean junto con sus asignaciones en la transacción del guardado del
+producto. Los valores son editables y cada atributo nuevo puede descartarse.
+Se exige evidencia de una URL consultada, confianza alta y variante exacta. Las
+definiciones pendientes llevan un comprobante cifrado ligado al producto y su
+identidad, válido por 24 horas. Se comprueban códigos, nombres en ES/PT/EN, tipos,
+unidades y opciones; las coincidencias de código o nombre normalizado con el
+diccionario se rechazan. El prompt también exige evitar sinónimos. Los atributos
+nuevos no heredan automáticamente. Las etiquetas se crean mediante el guardado
+normal de definiciones autorizado por el operador al guardar el producto.
+El botón de atributos investiga incluso si no hay atributos activos faltantes.
+Si falla una validación, las propuestas pendientes válidas se vuelven a mostrar.
 
 Ambos botones investigan con los datos actuales del formulario, aunque todavía
 no se hayan guardado. Laravel valida ese contexto y lo aplica a una copia en

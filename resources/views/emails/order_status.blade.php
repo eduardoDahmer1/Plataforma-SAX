@@ -42,6 +42,12 @@
         $subtotal = $itens->sum(fn ($item) => $item->price * $item->quantity);
         $desconto = (float) ($order->discount ?? 0);
         $frete = (float) ($order->shipping_cost ?? 0);
+        $manualShipping = $order->shipping_provider === 'manual' || $order->delivery_method === 'manual_arrangement';
+        $manualShippingLabel = match ($locale) {
+            'es' => 'A coordinar con SAX',
+            'en' => 'To be arranged with SAX',
+            default => 'A combinar com a SAX',
+        };
         $totalFormatted = $dinheiro($order->total);
 
         $paymentMethod = strtolower((string) $order->payment_method) === 'deposito'
@@ -120,7 +126,7 @@
                             <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15rem;color:#74787d;">{{ $copy['shipping'] }}</span>
                         </td>
                         <td style="padding:0.58rem 0;border-bottom:1px solid #d7d8da;text-align:right;">
-                            <span style="font-size:0.95rem;color:#383b40;">{{ $frete > 0 ? $dinheiro($frete) : $copy['shipping_free'] }}</span>
+                            <span style="font-size:0.95rem;color:#383b40;">{{ $manualShipping ? $manualShippingLabel : ($frete > 0 ? $dinheiro($frete) : $copy['shipping_free']) }}</span>
                         </td>
                     </tr>
 

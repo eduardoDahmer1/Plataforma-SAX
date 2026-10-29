@@ -2,39 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\PaymentMethod;
-use App\Models\Order;
-use App\Models\Cart;
-use App\Models\OrderItem;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Arr;
-use App\Services\CuponService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
+use App\Exceptions\DhlApiException;
 use App\Mail\OrderStatusMail;
+use App\Models\Cart;
+use App\Models\Currency;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\PaymentMethod;
 use App\Models\Policy;
 use App\Models\Product;
 use App\Models\UserAddress;
-use App\Models\Currency;
-use App\Services\BusinessEventService;
-use App\Services\AdminNotificationService;
 use App\Rules\BrazilianCpf;
-use App\Services\RendixPixService;
-use Illuminate\Validation\ValidationException;
 use App\Rules\CustomerDocumentRule;
-use App\Support\CustomerDocument;
-use App\Support\CountrySupport;
-use Illuminate\Validation\Rule;
-use App\Services\StoreControlService;
-use App\Exceptions\DhlApiException;
+use App\Services\AdminNotificationService;
+use App\Services\BusinessEventService;
+use App\Services\CheckoutStockReservationService;
+use App\Services\CuponService;
 use App\Services\Dhl\DhlCheckoutQuoteService;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
-use App\Services\CheckoutStockReservationService;
+use App\Services\Dhl\DhlSettingsService;
+use App\Services\RendixPixService;
+use App\Services\StoreControlService;
+use App\Support\CountrySupport;
+use App\Support\CustomerDocument;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use RuntimeException;
-use Illuminate\Http\JsonResponse;
 
 class CheckoutController extends Controller
 {
@@ -45,10 +46,9 @@ class CheckoutController extends Controller
         private StoreControlService $storeControls,
         private DhlCheckoutQuoteService $dhlQuotes,
         private DhlProductMeasurementEstimator $dhlMeasurements,
+        private DhlSettingsService $dhlSettings,
         private CheckoutStockReservationService $stockReservations,
-    )
-    {
-    }
+    ) {}
 
     // Página inicial do checkout
     public function index(Request $request)
@@ -83,13 +83,16 @@ class CheckoutController extends Controller
                     $this->dhlMeasurements->forProduct($item->product, true),
                 );
             }
+
             return $item;
         });
 
         // O cupom da sessão é revalidado contra o carrinho atual a cada carregamento.
         $resumo = $this->cupons->resumoDoCarrinho($user, $cart->filter(fn ($i) => $i->product)->values());
 
-        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies', 'addresses', 'pygCurrency', 'reservationExpiresAt'));
+        $dhlEnabled = $this->dhlEnabled();
+
+        return view('checkout.index', compact('paymentMethods', 'cart', 'resumo', 'policies', 'addresses', 'pygCurrency', 'reservationExpiresAt', 'dhlEnabled'));
     }
 
     public function store(Request $request)
@@ -117,7 +120,7 @@ class CheckoutController extends Controller
 
         $documentRules = ['required', 'string', 'max:30', new CustomerDocumentRule($documentType)];
         if ($request->input('payment_method') === RendixPixService::PROVIDER) {
-            $documentRules[] = new BrazilianCpf();
+            $documentRules[] = new BrazilianCpf;
         }
 
         $request->validate([
@@ -185,7 +188,7 @@ class CheckoutController extends Controller
             }
 
             $rendixGateway = RendixPixService::gateway();
-            if (!$rendixGateway?->active || !RendixPixService::fromPaymentMethod($rendixGateway)->isConfigured()) {
+            if (! $rendixGateway?->active || ! RendixPixService::fromPaymentMethod($rendixGateway)->isConfigured()) {
                 throw ValidationException::withMessages([
                     'payment_method' => __('messages.checkout_pix_unavailable'),
                 ]);
@@ -246,13 +249,15 @@ class CheckoutController extends Controller
 
         $subtotal = $resumo['subtotal'];
         $desconto = $resumo['desconto'];
-        $cupon    = $resumo['cupon'];
+        $cupon = $resumo['cupon'];
 
         if ($resumo['aviso']) {
             return back()->with('error', $resumo['aviso'])->withInput();
         }
 
-        if (CountrySupport::usesDhl($destinationCountry)) {
+        $manualShipping = CountrySupport::usesDhl($destinationCountry) && ! $this->dhlEnabled();
+
+        if (CountrySupport::usesDhl($destinationCountry) && ! $manualShipping) {
             $destinationAddress = $selectedAddress ?: (object) [
                 'country' => $request->input('country'),
                 'postal_code' => $request->input('cep'),
@@ -320,7 +325,7 @@ class CheckoutController extends Controller
 
             $observations = match ($request->shipping) {
                 '1', '2' => $request->input('observations') ?? '',
-                '3' => 'Retirada na Loja ID: ' . $request->input('store'),
+                '3' => 'Retirada na Loja ID: '.$request->input('store'),
                 default => '',
             };
 
@@ -338,13 +343,13 @@ class CheckoutController extends Controller
                 'status' => 'pending',
                 'total' => $total,
                 'shipping_cost' => $frete,
-                'shipping_provider' => $dhlQuote['provider'] ?? null,
+                'shipping_provider' => $manualShipping ? 'manual' : ($dhlQuote['provider'] ?? null),
                 'shipping_currency' => $dhlQuote['currency'] ?? null,
                 'shipping_markup_percent' => $dhlQuote['markup_percent'] ?? null,
                 'shipping_billable_weight_kg' => $dhlQuote['billable_weight'] ?? null,
                 'shipping_package_count' => $dhlQuote['package_count'] ?? null,
                 'shipping_packages' => $dhlQuote['packages'] ?? null,
-                'delivery_method' => $dhlQuote ? 'dhl' : null,
+                'delivery_method' => $manualShipping ? 'manual_arrangement' : ($dhlQuote ? 'dhl' : null),
                 'payment_method' => $paymentMethod,
                 'cupon_id' => $cupon->id ?? null,
                 'discount' => $desconto,
@@ -453,7 +458,7 @@ class CheckoutController extends Controller
             // 6. Consumo do cupom: o contador de usos é incrementado de forma atômica.
             // Se o último uso foi tomado por outro cliente nesse meio-tempo, o pedido
             // inteiro é revertido em vez de fechar com um desconto indevido.
-            if ($cupon && !$this->cupons->registrarUso($cupon, $user, $order, $desconto)) {
+            if ($cupon && ! $this->cupons->registrarUso($cupon, $user, $order, $desconto)) {
                 DB::rollBack();
 
                 return back()->with('error', __('messages.cupon_esgotado'))->withInput();
@@ -506,7 +511,7 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.success')->with('success', 'Pedido concluído!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Erro crítico no checkout: ' . $e->getMessage());
+            Log::error('Erro crítico no checkout: '.$e->getMessage());
             $this->events->record('checkout', 'Cliente não conseguiu concluir o pedido', 'O checkout encontrou um erro antes de criar o pedido. A equipe pode oferecer ajuda.', 'error', $user?->id);
             $this->adminNotifications->notifyAdmins(
                 'checkout_error',
@@ -515,6 +520,7 @@ class CheckoutController extends Controller
                 '/admin',
                 ['user_id' => $user?->id],
             );
+
             return back()->with('error', 'Erro ao processar pedido.')->withInput();
         }
     }
@@ -571,10 +577,10 @@ class CheckoutController extends Controller
     private function calcularFrete($cidade)
     {
         $cidades10Dolares = [
-    'asuncion', 'san lorenzo', 'luque', 
-    'fernando de la mora', 'ciudad del este', 'presidente franco', 
-    'hernandarias',   'pedro juan caballero'
-    ];
+            'asuncion', 'san lorenzo', 'luque',
+            'fernando de la mora', 'ciudad del este', 'presidente franco',
+            'hernandarias',   'pedro juan caballero',
+        ];
 
         $cidadeNormalizada = strtolower(
             preg_replace(
@@ -586,7 +592,7 @@ class CheckoutController extends Controller
 
         return in_array($cidadeNormalizada, $cidades10Dolares) ? 10.00 : 15.00;
     }
-    
+
     public function ajaxCalcularFrete(Request $request)
     {
         $pais = CountrySupport::normalizeForStorage($request->input('country'));
@@ -594,7 +600,7 @@ class CheckoutController extends Controller
         $request->validate([
             'city' => ['required', 'string', 'max:120'],
             'country' => ['required', 'string', 'max:40'],
-            'postal_code' => [Rule::requiredIf(CountrySupport::usesDhl($pais)), 'nullable', 'string', 'max:30'],
+            'postal_code' => [Rule::requiredIf(CountrySupport::usesDhl($pais) && $this->dhlEnabled()), 'nullable', 'string', 'max:30'],
             'state' => ['nullable', 'string', 'max:120'],
             'street' => ['nullable', 'string', 'max:255'],
             'number' => ['nullable', 'string', 'max:40'],
@@ -615,6 +621,24 @@ class CheckoutController extends Controller
             $cart->filter(fn ($item) => $item->product)->values(),
         );
         $totalComDesconto = $resumo['total'];
+
+        if (CountrySupport::usesDhl($pais) && ! $this->dhlEnabled()) {
+            $manualShippingCopy = match (app()->getLocale()) {
+                'es' => ['short' => 'A coordinar', 'message' => 'El envío no se cobrará en este pedido. El equipo de SAX se comunicará contigo para coordinarlo y confirmar su costo.'],
+                'en' => ['short' => 'To be arranged', 'message' => 'Shipping will not be charged in this order. The SAX team will contact you to arrange delivery and confirm its cost.'],
+                default => ['short' => 'A combinar', 'message' => 'O frete não será cobrado neste pedido. A equipe SAX entrará em contato para combinar o envio e o respectivo custo.'],
+            };
+
+            return response()->json([
+                'frete' => 0,
+                'frete_formatado' => $manualShippingCopy['short'],
+                'desconto' => $resumo['desconto'],
+                'desconto_formatado' => currency_format($resumo['desconto']),
+                'total_formatado' => currency_format($totalComDesconto),
+                'manual_shipping' => true,
+                'message' => $manualShippingCopy['message'],
+            ]);
+        }
 
         if (CountrySupport::usesDhl($pais)) {
             try {
@@ -649,22 +673,22 @@ class CheckoutController extends Controller
 
         if (! CountrySupport::isParaguay($pais) || empty(trim($cidade))) {
             return response()->json([
-                'frete'              => 0,
-                'frete_formatado'    => currency_format(0),
-                'desconto'           => $resumo['desconto'],
+                'frete' => 0,
+                'frete_formatado' => currency_format(0),
+                'desconto' => $resumo['desconto'],
                 'desconto_formatado' => currency_format($resumo['desconto']),
-                'total_formatado'    => currency_format($totalComDesconto),
+                'total_formatado' => currency_format($totalComDesconto),
             ]);
         }
 
         $frete = $this->calcularFrete($cidade);
 
         return response()->json([
-            'frete'              => $frete,
-            'frete_formatado'    => currency_format($frete),
-            'desconto'           => $resumo['desconto'],
+            'frete' => $frete,
+            'frete_formatado' => currency_format($frete),
+            'desconto' => $resumo['desconto'],
             'desconto_formatado' => currency_format($resumo['desconto']),
-            'total_formatado'    => currency_format($totalComDesconto + $frete),
+            'total_formatado' => currency_format($totalComDesconto + $frete),
         ]);
     }
 
@@ -683,6 +707,11 @@ class CheckoutController extends Controller
         $this->stockReservations->releaseCheckout($request->user());
 
         return response()->json(['released' => true]);
+    }
+
+    private function dhlEnabled(): bool
+    {
+        return (bool) ($this->dhlSettings->resolved()['enabled'] ?? false);
     }
 
     private function dhlDestination(object $address): array
@@ -734,8 +763,8 @@ class CheckoutController extends Controller
 
         $subtotal = $resumo['subtotal'];
         $desconto = $resumo['desconto'];
-        $cupon    = $resumo['cupon'];
-        $total    = $resumo['total'];
+        $cupon = $resumo['cupon'];
+        $total = $resumo['total'];
 
         DB::beginTransaction();
         try {
@@ -793,7 +822,7 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            if ($cupon && !$this->cupons->registrarUso($cupon, $user, $order, $desconto)) {
+            if ($cupon && ! $this->cupons->registrarUso($cupon, $user, $order, $desconto)) {
                 DB::rollBack();
 
                 return back()->with('error', __('messages.cupon_esgotado'));
@@ -804,7 +833,8 @@ class CheckoutController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Erro ao criar pedido: ' . $e->getMessage());
+
+            return back()->with('error', 'Erro ao criar pedido: '.$e->getMessage());
         }
 
         Cart::where('user_id', $user->id)->delete();
@@ -817,23 +847,23 @@ class CheckoutController extends Controller
     {
         $message = "Olá! Quero finalizar minha compra:\n\n";
         foreach ($order->items as $item) {
-            $message .= 'Produto: ' . ($item->external_name ?: ($item->name ?: 'Produto não encontrado')) . "\n";
-            $message .= 'SKU: ' . ($item->sku ?: 'N/A') . "\n";
-            $message .= 'Link: ' . route('produto.show', $item->slug ?: $item->product_id) . "\n";
-            $message .= 'Preço: ' . currency($item->price) . "\n";
+            $message .= 'Produto: '.($item->external_name ?: ($item->name ?: 'Produto não encontrado'))."\n";
+            $message .= 'SKU: '.($item->sku ?: 'N/A')."\n";
+            $message .= 'Link: '.route('produto.show', $item->slug ?: $item->product_id)."\n";
+            $message .= 'Preço: '.currency($item->price)."\n";
             $message .= "Qtd: {$item->quantity}\n------------------------\n";
         }
 
-        $message .= 'Subtotal: ' . currency($subtotal) . "\n";
+        $message .= 'Subtotal: '.currency($subtotal)."\n";
 
         if ($cupon) {
-            $message .= 'Cupom: ' . $cupon->codigo . ' (-' . currency($desconto) . ")\n";
+            $message .= 'Cupom: '.$cupon->codigo.' (-'.currency($desconto).")\n";
         }
 
-        $message .= 'Total: ' . currency($total) . "\nCliente: {$user->name}\nTelefone: +{$user->phone_country}{$user->phone_number}\n";
-        $message .= 'Pedido no painel: ' . route('admin.orders.show', $order->id) . "\n";
+        $message .= 'Total: '.currency($total)."\nCliente: {$user->name}\nTelefone: +{$user->phone_country}{$user->phone_number}\n";
+        $message .= 'Pedido no painel: '.route('admin.orders.show', $order->id)."\n";
 
-        return redirect('https://wa.me/595984167575?text=' . urlencode($message));
+        return redirect('https://wa.me/595984167575?text='.urlencode($message));
     }
 
     public function deposito(Order $order)
@@ -845,6 +875,7 @@ class CheckoutController extends Controller
 
         if (! $order->isPaid() && ! $this->stockReservations->orderHasActiveReservation($order)) {
             $this->stockReservations->releaseOrder($order, 'reservation_expired');
+
             return redirect()->route('user.orders.show', $order)
                 ->with('warning', $this->stockReservations->expiredMessage());
         }
@@ -867,6 +898,7 @@ class CheckoutController extends Controller
 
         if (! $order->isPaid() && ! $this->stockReservations->orderHasActiveReservation($order)) {
             $this->stockReservations->releaseOrder($order, 'reservation_expired');
+
             return redirect()->route('user.orders.show', $order)
                 ->with('warning', $this->stockReservations->expiredMessage());
         }

@@ -32,7 +32,7 @@
             <button type="button" class="btn btn-sm btn-outline-secondary" data-complete-attributes><i class="fas fa-wand-magic-sparkles me-1" aria-hidden="true"></i>Completar faltantes con IA</button>
         </div>
     </div>
-    <script type="application/json" data-attribute-dictionary>@json($attributeCatalog->dictionary())</script>
+    <script type="application/json" data-attribute-dictionary>@json($attributeCatalog->editorDictionary($item, (array) old('catalog_values', [])))</script>
     <script type="application/json" data-attribute-effective>@json($attributeCatalog->effective($item))</script>
     <script type="application/json" data-attribute-protected>@json($attributeProtected)</script>
     <script type="application/json" data-attribute-old>@json(old('catalog_values', []))</script>

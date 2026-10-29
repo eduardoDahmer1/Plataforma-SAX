@@ -22,7 +22,7 @@
                 <span class="temporary-test-card__status">{{ $temporaryTestActive ? 'ATIVO AGORA' : 'DESATIVADO' }}</span>
             </div>
             @if($temporaryTestActive)
-                <p class="mb-1">Carrinho, checkout, DHL/localizações e formas de pagamento estão liberados temporariamente, mesmo com a integração indisponível.</p>
+                <p class="mb-1">Carrinho, checkout, localizações e formas de pagamento estão liberados temporariamente, mesmo com a integração indisponível.</p>
                 <small>Expira automaticamente às <strong>{{ $temporaryTestExpiresAt?->format('H:i:s') }}</strong> · tempo restante: <strong data-temporary-test-countdown>calculando…</strong></small>
             @else
                 <p class="mb-1">Libera todo o fluxo de compra por exatamente cinco minutos para testes controlados.</p>
@@ -58,7 +58,7 @@
                     <p>Durante esse período, usuários comuns poderão usar normalmente:</p>
                     <ul class="temporary-test-modal__list">
                         <li>Carrinho e inclusão de produtos</li>
-                        <li>Checkout e cálculo de frete/DHL</li>
+                        <li>Checkout e cálculo de frete conforme a configuração atual da DHL</li>
                         <li>Depósito, Bancard, PIX e WhatsApp</li>
                         <li>Países e localizações usados na entrega</li>
                     </ul>
@@ -103,6 +103,9 @@
                     ['checkout_enabled', 'Checkout', 'Permite iniciar e concluir novos pedidos. Os itens já existentes permanecem guardados no carrinho.', 'fa-lock', 'warning'],
                     ['add_to_cart_enabled', 'Botão Adicionar ao carrinho', 'Permite incluir produtos. Quando desligado, o produto exibe apenas a consulta pelo WhatsApp.', 'fa-cart-plus', 'primary'],
                     ['whatsapp_enabled', 'Compra/consulta por WhatsApp', 'Mantém disponíveis as ações comerciais direcionadas ao WhatsApp.', 'fa-whatsapp', 'success', true],
+                ],
+                'Entrega' => [
+                    ['dhl_enabled', 'Frete automático DHL', 'Ativado: calcula e cobra o frete DHL no pedido. Desativado: a venda continua normalmente, sem cobrar frete, e a equipe combina o envio com o cliente depois da compra.', 'fa-plane', 'warning'],
                 ],
                 'Formas de pagamento' => [
                     ['deposit_enabled', 'Depósito / transferência', 'Exibe e aceita depósito ou transferência em novos pedidos.', 'fa-building-columns', 'secondary'],

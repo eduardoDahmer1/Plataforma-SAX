@@ -52,6 +52,7 @@ function reviewFixture(items, protectedIds = [], dirtyIds = []) {
     const added = [];
     const context = {
         dictionary:[{id:1,code:'polarizado',name:'Polarizado',active:true}],
+        renderDictionary() {},
         effective:{}, chosen:new Map(dirtyIds.map(id => [id,{dirty:true}])),
         read() {return protectedIds;},
         root:{open:false, querySelector() {return box;}, dispatchEvent() {}},
@@ -95,4 +96,14 @@ test('unsigned proposals cannot be accepted by the editor', () => {
     const {box,added}=reviewFixture([{...accepted,value:{attribute_id:1,mode:'value',boolean:true}}]);
     assert.equal(added.length,0);
     assert.match(box.textContent,/0 aceptados, 1 rechazados/);
+});
+
+
+test('new definitions appear immediately with their pending token and editable value', () => {
+    const definition = {id:-123,code:'resistente_al_agua',name:'Resistente al agua',active:true,pending:true};
+    const value = {attribute_id:-123,mode:'value',boolean:true,options:[],ai_proposal:'signed',pending_definition:'signed'};
+    const {context,added} = reviewFixture([{code:definition.code,status:'accepted',dictionary_item:definition,value}]);
+    assert.equal(context.dictionary.find(a => a.id === -123).pending,true);
+    assert.equal(added[0].pending_definition,'signed');
+    assert.equal(added[0].boolean,true);
 });

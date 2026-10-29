@@ -70,6 +70,131 @@ class CatalogAttributesTest extends TestCase
         $this->catalog->saveProduct($p, [['attribute_id' => $a->id, 'mode' => 'value'] + $row], null);
     }
 
+    protected function newAttributeProposal(Product $product, string $type = 'boolean'): array
+    {
+        return ['proposal'=>['catalog_attributes'=>[[
+            'code'=>'resistente_al_agua', 'new_definition'=>['type'=>$type,'unit'=>null,
+                'labels'=>['es'=>'Resistente al agua','pt'=>'Resistente à água','en'=>'Water resistant'],
+                'options'=>$type === 'single' ? [['code'=>'si','labels'=>['es'=>'Sí','pt'=>'Sim','en'=>'Yes']]] : []],
+            'option_codes'=>$type === 'single' ? ['si'] : [], 'boolean_value'=>$type === 'boolean' ? true : null, 'number_value'=>null,
+            'confidence'=>'high','source_url'=>'https://example.com/product','evidence'=>'This exact model is water resistant.',
+            'product_sku'=>$product->sku,'variant_match'=>true,
+        ]]], 'research'=>['status'=>'matched','sources'=>[['url'=>'https://example.com/product']]]];
+    }
+
+    public function test_pending_definition_is_only_created_on_product_save_with_evidence(): void
+    {
+        $product = $this->product('NEW');
+        $result = $this->catalog->prepareForEditor($product, $this->newAttributeProposal($product, 'single'));
+        $item = $result['attribute_review']['items'][0];
+        $this->assertSame('accepted', $item['status']);
+        $this->assertTrue($item['dictionary_item']['pending']);
+        $this->assertSame(0, CatalogAttribute::count());
+        $this->assertCount(1, $this->catalog->editorDictionary($product, [$item['value']]));
+        $this->catalog->saveProduct($product, [$item['value']], null);
+        $attribute = CatalogAttribute::firstOrFail();
+        $this->assertSame('resistente_al_agua', $attribute->code);
+        $this->assertSame('Water resistant', $attribute->language->en);
+        $this->assertSame('si', $attribute->options()->firstOrFail()->code);
+        $value = \App\Models\ProductAttributeValue::firstOrFail();
+        $this->assertSame('ai', $value->source);
+        $this->assertSame('https://example.com/product', $value->evidence['url']);
+        $this->assertCount(1, $value->options);
+    }
+
+    public function test_pending_definition_allows_manual_value_edit_and_rejects_wrong_product(): void
+    {
+        $product = $this->product('NEW');
+        $other = $this->product('OTHER');
+        $row = $this->catalog->prepareForEditor($product, $this->newAttributeProposal($product))['attribute_review']['items'][0]['value'];
+        try {
+            $this->catalog->saveProduct($other, [$row], null);
+            $this->fail('Accepted another product proposal');
+        } catch (ValidationException) {
+            $this->assertSame(0, CatalogAttribute::count());
+        }
+        $row['boolean'] = false;
+        unset($row['ai_proposal']);
+        $this->catalog->saveProduct($product, [$row], null);
+        $value = \App\Models\ProductAttributeValue::firstOrFail();
+        $this->assertFalse($value->boolean_value);
+        $this->assertSame('manual', $value->source);
+    }
+
+    public function test_pending_definition_rolls_back_with_invalid_values_and_requires_web_evidence(): void
+    {
+        $product = $this->product('NEW');
+        $proposal = $this->newAttributeProposal($product);
+        $row = $this->catalog->prepareForEditor($product, $proposal)['attribute_review']['items'][0]['value'];
+        $row['boolean'] = 'invalid';
+        unset($row['ai_proposal']);
+        try {
+            $this->catalog->saveProduct($product, [$row], null);
+            $this->fail('Accepted invalid value');
+        } catch (ValidationException) {
+            $this->assertSame(0, CatalogAttribute::count());
+        }
+        $proposal['proposal']['catalog_attributes'][0]['source_url'] = 'https://unvisited.example';
+        $this->assertSame(0, $this->catalog->prepareForEditor($product, $proposal)['attribute_review']['accepted']);
+        $this->assertSame(0, $this->catalog->reviewAi($product, $this->newAttributeProposal($product))['accepted']);
+    }
+
+    public function test_pending_definition_endpoint_works_with_an_empty_dictionary(): void
+    {
+        $product = $this->product('NEW');
+        $editor = User::factory()->create(['user_type'=>User::TYPE_ADMIN_EDITOR]);
+        $ai = \Mockery::mock(OpenAICatalogService::class);
+        $ai->shouldReceive('generateAttributesOnly')->once()->with(\Mockery::type(Product::class), true)->andReturn($this->newAttributeProposal($product));
+        $this->app->instance(OpenAICatalogService::class, $ai);
+        $this->actingAs($editor)->postJson(route('admin.products.catalog-attributes.complete', $product))
+            ->assertOk()->assertJsonPath('attribute_review.accepted', 1)->assertJsonPath('attribute_review.items.0.dictionary_item.pending', true);
+        $this->assertSame(0, CatalogAttribute::count());
+    }
+
+    public function test_pending_definition_false_value_keeps_ai_origin_and_invalid_tokens_cannot_create(): void
+    {
+        $product = $this->product('NEW');
+        $proposal = $this->newAttributeProposal($product);
+        $proposal['proposal']['catalog_attributes'][0]['boolean_value'] = false;
+        $row = $this->catalog->prepareForEditor($product, $proposal)['attribute_review']['items'][0]['value'];
+        $invalid = $row;
+        $invalid['pending_definition'] = 'tampered';
+        try {
+            $this->catalog->saveProduct($product, [$invalid], null);
+            $this->fail('Accepted invalid token');
+        } catch (ValidationException) {
+            $this->assertSame(0, CatalogAttribute::count());
+        }
+        $row['boolean'] = '0';
+        $this->catalog->saveProduct($product, [$row], null);
+        $value = \App\Models\ProductAttributeValue::firstOrFail();
+        $this->assertFalse($value->boolean_value);
+        $this->assertSame('ai', $value->source);
+    }
+
+    public function test_pending_definition_is_rejected_after_expiry_and_on_duplicate_label(): void
+    {
+        $product = $this->product('NEW');
+        $proposal = $this->newAttributeProposal($product);
+        $row = $this->catalog->prepareForEditor($product, $proposal)['attribute_review']['items'][0]['value'];
+        $this->travel(25)->hours();
+        try {
+            $this->catalog->saveProduct($product, [$row], null);
+            $this->fail('Accepted expired proposal');
+        } catch (ValidationException) {
+            $this->assertSame(0, CatalogAttribute::count());
+        } finally {
+            $this->travelBack();
+        }
+        $this->definition('Resistente al agua', 'boolean', false);
+        $proposal['proposal']['catalog_attributes'][0]['code'] = 'otro_atributo';
+        $proposal['proposal']['catalog_attributes'][0]['new_definition']['labels']['es'] = 'Otro atributo';
+        // Same English label must also be caught across differently named Spanish definitions.
+        $attribute = CatalogAttribute::firstOrFail();
+        $attribute->language->update(['en'=>'Water resistant']);
+        $this->assertSame(0, $this->catalog->prepareForEditor($product, $proposal)['attribute_review']['accepted']);
+    }
+
     public function test_dictionary_http_crud_translations_options_and_duplicate_validation(): void
     {
         $editor = User::factory()->create(['user_type' => User::TYPE_ADMIN_EDITOR]);

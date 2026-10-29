@@ -7,6 +7,23 @@
         $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
         $selectedAddressId = (int) old('shipping_address_id', $defaultAddress?->id);
         $selectedAddress = $addresses->firstWhere('id', $selectedAddressId) ?? $defaultAddress;
+        $manualShippingCopy = match (app()->getLocale()) {
+            'es' => [
+                'title' => 'Envío a coordinar',
+                'short' => 'A coordinar',
+                'description' => 'Finaliza la compra normalmente. El envío no se cobrará ahora; el equipo de SAX se comunicará contigo para organizarlo e informar su costo.',
+            ],
+            'en' => [
+                'title' => 'Shipping to be arranged',
+                'short' => 'To be arranged',
+                'description' => 'Complete your purchase normally. Shipping will not be charged now; the SAX team will contact you to arrange delivery and confirm its cost.',
+            ],
+            default => [
+                'title' => 'Envio a combinar',
+                'short' => 'A combinar',
+                'description' => 'Conclua a compra normalmente. O frete não será cobrado agora; a equipe SAX entrará em contato para organizar o envio e informar o custo.',
+            ],
+        };
     @endphp
     
     <div class="sax-checkout-box">
@@ -18,6 +35,10 @@
 
         <input type="hidden" name="frete_valor" id="frete_valor" value="0">
         <input type="hidden" id="dhl_quote_reference" value="">
+        <input type="hidden" id="dhl_checkout_enabled" value="{{ $dhlEnabled ? '1' : '0' }}"
+               data-manual-title="{{ $manualShippingCopy['title'] }}"
+               data-manual-short="{{ $manualShippingCopy['short'] }}"
+               data-manual-description="{{ $manualShippingCopy['description'] }}">
 
         <div class="sax-shipping-grid mb-4">
             <label class="sax-method-card {{ $selectedShipping === 1 ? 'active' : '' }}" id="label-ship-1">

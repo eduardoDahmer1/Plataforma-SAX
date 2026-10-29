@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemSetting;
+use App\Services\Dhl\DhlSettingsService;
 use App\Services\StoreControlService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class StoreControlController extends Controller
@@ -28,32 +31,56 @@ class StoreControlController extends Controller
         'footer_guide_enabled',
     ];
 
-    public function edit(StoreControlService $controls): View
+    public function edit(StoreControlService $controls, DhlSettingsService $dhlSettings): View
     {
         $this->ensureMasterAdmin();
 
         return view('admin.store-controls.edit', [
-            'controls' => $controls->manualSettings(),
+            'controls' => array_merge($controls->manualSettings(), [
+                'dhl_enabled' => (bool) ($dhlSettings->resolved()['enabled'] ?? false),
+            ]),
             'temporaryTest' => $controls->temporaryPurchaseTestStatus(),
         ]);
     }
 
-    public function update(Request $request, StoreControlService $controls): RedirectResponse
-    {
+    public function update(
+        Request $request,
+        StoreControlService $controls,
+        DhlSettingsService $dhlSettings,
+    ): RedirectResponse {
         $this->ensureMasterAdmin();
 
         $request->validate(array_merge([
             'store_profile' => ['required', 'in:stage,sax,otica'],
+            'dhl_enabled' => ['nullable', 'boolean'],
         ], collect(self::FIELDS)->mapWithKeys(
             fn (string $field): array => [$field => ['nullable', 'boolean']]
         )->all()));
 
-        $settings = SystemSetting::query()->firstOrCreate([], ['maintenance' => false]);
-        $settings->fill(['store_profile' => $request->string('store_profile')->toString()] + collect(self::FIELDS)->mapWithKeys(
-            fn (string $field): array => [$field => $request->boolean($field)]
-        )->all())->save();
+        $dhl = $dhlSettings->current();
+        $enableDhl = $request->boolean('dhl_enabled');
+
+        if ($enableDhl && collect(['api_key', 'api_secret', 'account_number'])
+            ->contains(fn (string $field): bool => blank($dhl->{$field}))) {
+            throw ValidationException::withMessages([
+                'dhl_enabled' => 'Para ativar a DHL, preencha chave da API, segredo e número da conta na página DHL Express.',
+            ]);
+        }
+
+        DB::transaction(function () use ($request, $dhl, $enableDhl): void {
+            $settings = SystemSetting::query()->firstOrCreate([], ['maintenance' => false]);
+            $settings->fill(['store_profile' => $request->string('store_profile')->toString()] + collect(self::FIELDS)->mapWithKeys(
+                fn (string $field): array => [$field => $request->boolean($field)]
+            )->all())->save();
+
+            $dhl->forceFill([
+                'enabled' => $enableDhl,
+                'updated_by' => auth()->id(),
+            ])->save();
+        });
 
         $controls->clearCache();
+        $dhlSettings->clearCache();
 
         return back()->with('success', __('messages.store_controls_saved'));
     }

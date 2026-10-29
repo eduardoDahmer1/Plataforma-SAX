@@ -15,7 +15,7 @@ class OpenAICatalogService
     /**
      * Generates a reviewable proposal only. This method never writes to Product.
      */
-    public function generateProductProposal(Product $product): array
+    public function generateProductProposal(Product $product, bool $allowNewAttributes = false): array
     {
         $settings = app(ProductAiSettingsService::class);
         $settings->ensureAvailable();
@@ -231,6 +231,8 @@ PROMPT;
             ."Usa la unidad del diccionario, booleanos reales y option_codes existentes. Omite cualquier dato no respaldado; devuelve [] si faltan pruebas. "
             ."No conviertas suggested_attributes en hechos ni uses esos campos libres para asignar atributos estructurados.";
 
+        if ($allowNewAttributes) $instructions .= $this->newAttributeInstructions();
+
         $response = Http::withToken($apiKey)
             ->acceptJson()
             ->asJson()
@@ -254,7 +256,7 @@ PROMPT;
                         'type' => 'json_schema',
                         'name' => 'catalog_proposal',
                         'strict' => true,
-                        'schema' => $this->responseSchema(),
+                        'schema' => $this->responseSchema($allowNewAttributes),
                     ],
                 ],
             ]);
@@ -471,10 +473,10 @@ PROMPT;
         ];
     }
 
-    public function generateAttributesOnly(Product $product): array
+    public function generateAttributesOnly(Product $product, bool $allowNewAttributes = false): array
     {
         $context = app(CatalogAttributeService::class)->aiContext($product);
-        if (! $context || ! $context['missing_attribute_ids']) return ['proposal'=>['catalog_attributes'=>[]], 'research'=>['status'=>'not_found','sources'=>[]]];
+        if (! $context || (! $allowNewAttributes && ! $context['missing_attribute_ids'])) return ['proposal'=>['catalog_attributes'=>[]], 'research'=>['status'=>'not_found','sources'=>[]]];
         $identity = $product->manufacturerSearchIdentity();
         [$proposal, $payload] = $this->requestAttributeJson(
             'Investiga el producto y su variante exacta con web_search, priorizando fabricante y distribuidores autorizados. '
@@ -483,9 +485,10 @@ PROMPT;
             .'Cada dato requiere evidencia textual concreta y URL consultada que identifique esta variante exacta. '
             .'No deduzcas materiales, polarización, medidas ni propiedades técnicas por imagen, categoría, marca o productos similares. '
             .'No propagues medidas o colores a otras tallas. Si no se verifica, omítelo. No inventes opciones. '
-            .'Para cada dato informa product_sku exactamente como el SKU recibido y variant_match solo cuando se verificó. Usa [] si no hay datos respaldados.',
+            .'Para cada dato informa product_sku exactamente como el SKU recibido y variant_match solo cuando se verificó. Usa [] si no hay datos respaldados.'
+            .($allowNewAttributes ? $this->newAttributeInstructions() : ''),
             ['sku'=>$product->sku, 'original_name'=>$product->external_name, 'manufacturer_identity'=>$identity, 'brand'=>$product->brand?->name, 'size'=>$product->size, 'color'=>$product->color, 'attributes'=>$context],
-            ['type'=>'object', 'properties'=>['catalog_attributes'=>$this->catalogAttributeSchema()], 'required'=>['catalog_attributes'], 'additionalProperties'=>false], true,
+            ['type'=>'object', 'properties'=>['catalog_attributes'=>$this->catalogAttributeSchema($allowNewAttributes)], 'required'=>['catalog_attributes'], 'additionalProperties'=>false], true,
         );
         $sources = $this->extractSources($payload, (array) ($identity['reference_candidates'] ?? []));
         return ['proposal'=>$proposal, 'research'=>['status'=>$sources ? 'matched' : 'not_found', 'sources'=>array_slice($sources, 0, 3), 'validation_sources'=>$sources], 'source'=>['model'=>config('services.openai.model')]];
@@ -525,7 +528,27 @@ PROMPT;
         return [$result,$payload];
     }
 
-    private function catalogAttributeSchema(): array
+    private function newAttributeInstructions(): string
+    {
+        return "\nEXCEPCIÓN PARA EL EDITOR: Puedes proponer hasta 8 atributos nuevos útiles y verificables cuando el diccionario no cubra el dato. "
+            ."Para códigos existentes devuelve new_definition=null y respeta sus opciones. Para un código nuevo devuelve new_definition con type (single, multiple, boolean o number), unit (solo number, si corresponde), labels (es, pt, en) y options (code y labels). "
+            ."Estas definiciones son propuestas sin guardar: se crearán al guardar el producto. Usa códigos derivados exactamente del nombre en español en snake_case, tanto para atributos como opciones, sin unidades, marcas ni valores en el nombre del atributo. "
+            ."Revisa todo el diccionario y no propongas sinónimos ni duplicados de atributos existentes, incluso desactivados. No crees atributos por SKU, modelo o variante. "
+            ."No propongas datos triviales, texto comercial ni datos ya cubiertos. No inventes hechos ni opciones. Incluye solo las opciones verificadas seleccionadas en option_codes. "
+            ."boolean y number deben tener options y option_codes vacíos. Conserva todas las exigencias de evidencia, confianza alta y variante exacta.";
+    }
+
+    private function newAttributeDefinitionSchema(): array
+    {
+        $labels = ['type'=>'object', 'properties'=>['es'=>['type'=>'string'], 'pt'=>['type'=>'string'], 'en'=>['type'=>'string']], 'required'=>['es','pt','en'], 'additionalProperties'=>false];
+        return ['type'=>['object','null'], 'properties'=>[
+            'type'=>['type'=>'string','enum'=>['single','multiple','boolean','number']],
+            'unit'=>['type'=>['string','null']], 'labels'=>$labels,
+            'options'=>['type'=>'array','items'=>['type'=>'object','properties'=>['code'=>['type'=>'string'],'labels'=>$labels], 'required'=>['code','labels'],'additionalProperties'=>false]],
+        ], 'required'=>['type','unit','labels','options'], 'additionalProperties'=>false];
+    }
+
+    private function catalogAttributeSchema(bool $allowNewAttributes = false): array
     {
         $properties = [
             'code'=>['type'=>'string'], 'option_codes'=>['type'=>'array','items'=>['type'=>'string']],
@@ -533,10 +556,11 @@ PROMPT;
             'confidence'=>['type'=>'string','enum'=>['low','medium','high']], 'source_url'=>['type'=>'string'], 'evidence'=>['type'=>'string'],
             'product_sku'=>['type'=>'string'], 'variant_match'=>['type'=>'boolean'],
         ];
+        if ($allowNewAttributes) $properties['new_definition'] = $this->newAttributeDefinitionSchema();
         return ['type'=>'array','items'=>['type'=>'object','properties'=>$properties,'required'=>array_keys($properties),'additionalProperties'=>false]];
     }
 
-    private function responseSchema(): array
+    private function responseSchema(bool $allowNewAttributes = false): array
     {
         $languageText = [
             'type' => 'object',
@@ -549,7 +573,7 @@ PROMPT;
             'type' => 'object',
             'properties' => [
                 'editorial_summary' => ['type' => 'string'],
-                'catalog_attributes' => $this->catalogAttributeSchema(),
+                'catalog_attributes' => $this->catalogAttributeSchema($allowNewAttributes),
                 'commercial_name' => $languageText,
                 'descriptions' => $languageText,
                 'verified_attributes' => ['type' => 'array', 'items' => [

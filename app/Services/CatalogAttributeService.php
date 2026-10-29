@@ -136,12 +136,17 @@ class CatalogAttributeService
     public function saveProduct(Product $product, array $rows, ?int $userId): void
     {
         abort_unless($this->enabledFor($product), 422, 'El diccionario de atributos no está disponible.');
-        Validator::make(['catalog_values' => $rows], [
-            'catalog_values' => 'array|max:150', 'catalog_values.*.attribute_id' => 'required|integer|distinct|exists:catalog_attributes,id',
-            'catalog_values.*.mode' => 'required|in:value,inherit,block',
-        ])->validate();
         DB::transaction(function () use ($product, $rows, $userId) {
             Product::withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
+            if (count($rows) > 150) throw ValidationException::withMessages(['catalog_values' => 'Demasiados atributos.']);
+            foreach ($rows as &$row) {
+                if (filled($row['pending_definition'] ?? null)) $row = $this->materializeDefinition($product, $row);
+            }
+            unset($row);
+            Validator::make(['catalog_values' => $rows], [
+                'catalog_values' => 'array|max:150', 'catalog_values.*.attribute_id' => 'required|integer|distinct|exists:catalog_attributes,id',
+                'catalog_values.*.mode' => 'required|in:value,inherit,block',
+            ])->validate();
             foreach ($rows as $index => $row) {
                 $attribute = CatalogAttribute::findOrFail($row['attribute_id']);
                 $existing = ProductAttributeValue::where('product_id', $product->id)->where('attribute_id', $attribute->id)->first();
@@ -209,12 +214,12 @@ class CatalogAttributeService
             return [];
         }
 
-        return ['missing_attribute_ids' => $this->missing($product), 'dictionary' => $this->dictionary()->where('active', true)->values()->all(), 'effective' => $this->effective($product),
+        return ['existing_attribute_codes' => $this->dictionary()->map(fn ($attribute) => collect($attribute)->only(['code', 'translations'])->all())->values()->all(), 'missing_attribute_ids' => $this->missing($product), 'dictionary' => $this->dictionary()->where('active', true)->values()->all(), 'effective' => $this->effective($product),
             'protected_ids' => ProductAttributeValue::where('product_id', $product->id)->where('source', 'manual')->pluck('attribute_id')->all()];
     }
 
     /** Validate once for both the editor and batch application; never trust provider fields alone. */
-    public function reviewAi(Product $product, array $result): array
+    public function reviewAi(Product $product, array $result, bool $allowNewAttributes = false): array
     {
         $rows = (array) data_get($result, 'proposal.catalog_attributes', []);
         $urls = collect(data_get($result, 'research.validation_sources', data_get($result, 'research.sources', [])))->pluck('url')->all();
@@ -235,7 +240,14 @@ class CatalogAttributeService
             elseif (! in_array($row['source_url'] ?? '', $urls, true)) $reason = 'La URL de evidencia no pertenece a las fuentes consultadas.';
             else {
                 $attribute = CatalogAttribute::where('is_active', true)->where('code', $item['code'])->first();
-                if (! $attribute) $reason = 'El atributo no existe o está desactivado.';
+                if (! $attribute && $allowNewAttributes && is_array($row['new_definition'] ?? null)) {
+                    try {
+                        $item = $this->reviewNewDefinition($row) + $item;
+                    } catch (ValidationException $exception) {
+                        $reason = collect($exception->errors())->flatten()->implode(' ');
+                    }
+                }
+                elseif (! $attribute) $reason = 'El atributo no existe o está desactivado.';
                 elseif (isset($seen[$attribute->id])) $reason = 'La propuesta repite el atributo.';
                 elseif (isset($effective[$attribute->id]) || ProductAttributeValue::where('product_id', $product->id)->where('attribute_id', $attribute->id)->exists()) $reason = 'Existe un valor propio, heredado o una decisión protegida.';
                 else {
@@ -255,6 +267,10 @@ class CatalogAttributeService
                     }
                 }
             }
+            if ($item['status'] === 'accepted' && isset($item['dictionary_item'])) {
+                if (isset($seen['new:'.$item['code']])) { $item['status'] = 'rejected'; $reason = 'La propuesta repite el atributo.'; }
+                $seen['new:'.$item['code']] = true;
+            }
             $item['reason'] = $reason;
             $items[] = $item;
         }
@@ -265,20 +281,164 @@ class CatalogAttributeService
     /** Only encrypted, product-bound proposals may retain AI provenance on a normal form save. */
     public function prepareForEditor(Product $product, array $result): array
     {
-        $review = $this->reviewAi($product, $result);
+        $review = $this->reviewAi($product, $result, true);
+        $newCount = 0;
         foreach ($review['items'] as &$item) {
             if ($item['status'] !== 'accepted') continue;
+            if (isset($item['dictionary_item']) && ++$newCount > 8) {
+                $item['status'] = 'rejected'; $item['reason'] = 'Se permiten hasta ocho atributos nuevos por propuesta.';
+                $review['accepted']--; $review['rejected']++; continue;
+            }
             $item['value']['ai_proposal'] = Crypt::encryptString(json_encode([
                 'product_id' => (int) $product->id, 'identity' => $this->proposalIdentity($product),
                 'expires_at' => now()->addDay()->timestamp, 'value' => $item['value'], 'evidence' => $item['evidence'],
-                'definition_revision' => CatalogAttribute::findOrFail($item['value']['attribute_id'])->revision,
+                'definition_revision' => isset($item['dictionary_item']) ? null : CatalogAttribute::findOrFail($item['value']['attribute_id'])->revision,
+                'pending_definition' => $item['dictionary_item'] ?? null,
             ], JSON_THROW_ON_ERROR));
+            if (isset($item['dictionary_item'])) $item['value']['pending_definition'] = $item['value']['ai_proposal'];
         }
         unset($item);
         $result['attribute_review'] = $review;
         // Keep the complete validation set on the server; only three sources are displayed.
         unset($result['research']['validation_sources']);
         return $result;
+    }
+
+    private function reviewNewDefinition(array $row): array
+    {
+        $definition = $row['new_definition'];
+        Validator::make($row, [
+            'code' => ['required','string','max:80','regex:/^[a-z0-9_]+$/'],
+            'new_definition.type' => 'required|in:single,multiple,boolean,number',
+            'new_definition.unit' => 'nullable|string|max:20',
+            'new_definition.labels' => 'required|array:es,pt,en',
+            'new_definition.labels.es' => 'required|string|max:255',
+            'new_definition.labels.pt' => 'required|string|max:255',
+            'new_definition.labels.en' => 'required|string|max:255',
+            'new_definition.options' => 'present|array|max:30',
+            'new_definition.options.*.code' => ['required','string','max:80','distinct','regex:/^[a-z0-9_]+$/'],
+            'new_definition.options.*.labels.es' => 'required|string|max:255',
+            'new_definition.options.*.labels.pt' => 'required|string|max:255',
+            'new_definition.options.*.labels.en' => 'required|string|max:255',
+            'option_codes' => 'present|array|max:30', 'option_codes.*' => 'required|string|distinct',
+        ])->validate();
+        if ($row['code'] !== Str::slug($definition['labels']['es'], '_')) throw ValidationException::withMessages(['catalog_values'=>'El código debe corresponder al nombre en español.']);
+        foreach ($definition['options'] as $option) {
+            if ($option['code'] !== Str::slug($option['labels']['es'], '_')) throw ValidationException::withMessages(['catalog_values'=>'El código de opción debe corresponder a su nombre en español.']);
+        }
+        foreach ($this->dictionary() as $existing) {
+            $sameLabel = collect($definition['labels'])->contains(fn ($label, $locale) => Str::slug($label) === Str::slug($existing['translations'][$locale] ?? ''));
+            if ($existing['code'] === $row['code'] || $sameLabel) {
+                throw ValidationException::withMessages(['catalog_values' => 'Ya existe un atributo con ese código o nombre. Usá el diccionario existente.']);
+            }
+        }
+        $select = in_array($definition['type'], ['single','multiple']);
+        $codes = array_column($definition['options'], 'code');
+        if (($definition['type'] !== 'number' && filled($definition['unit']))
+            || (! $select && ($codes || $row['option_codes']))
+            || ($select && (! $row['option_codes'] || array_diff($row['option_codes'], $codes)))
+            || ($definition['type'] === 'single' && count($row['option_codes']) !== 1)) {
+            throw ValidationException::withMessages(['catalog_values' => 'El tipo, unidad u opciones del atributo nuevo no son válidos.']);
+        }
+        Validator::make($row, match ($definition['type']) {
+            'boolean' => ['boolean_value' => 'required|boolean'],
+            'number' => ['number_value' => ['required','numeric','between:-999999999,999999999','regex:/^-?\d+(\.\d{1,6})?$/']],
+            default => [],
+        })->validate();
+        $id = -hexdec(substr(hash('sha256', $row['code']), 0, 10));
+        $options = collect($definition['options'])->values()->map(fn ($option, $index) => [
+            'id' => -($index + 1), 'code' => $option['code'], 'name' => $option['labels']['es'], 'translations' => $option['labels'], 'active' => true,
+        ])->all();
+        $dictionary = ['id'=>$id, 'code'=>$row['code'], 'name'=>$definition['labels']['es'], 'translations'=>$definition['labels'],
+            'type'=>$definition['type'], 'unit'=>$definition['unit'], 'active'=>true, 'inherit'=>false, 'options'=>$options, 'pending'=>true];
+        return ['status'=>'accepted', 'dictionary_item'=>$dictionary,
+            'value'=>['attribute_id'=>$id, 'mode'=>'value', 'options'=>array_column(array_filter($options, fn ($option) => in_array($option['code'], $row['option_codes'], true)), 'id'),
+                'boolean'=>$definition['type'] === 'boolean' ? (bool) $row['boolean_value'] : null,
+                'number'=>$definition['type'] === 'number' ? $row['number_value'] : null],
+            'evidence'=>['url'=>$row['source_url'], 'text'=>$row['evidence']]];
+    }
+
+    /** Called inside the product transaction; a failed product save rolls back definitions too. */
+    private function materializeDefinition(Product $product, array $row): array
+    {
+        try {
+            $signed = json_decode(Crypt::decryptString($row['pending_definition']), true, 512, JSON_THROW_ON_ERROR);
+            $definition = $signed['pending_definition'];
+            if (! is_array($definition) || $signed['product_id'] !== (int) $product->id
+                || $signed['identity'] !== $this->proposalIdentity($product) || $signed['expires_at'] < now()->timestamp
+                || (string) $row['attribute_id'] !== (string) $definition['id'] || $row['mode'] !== 'value') {
+                throw new \RuntimeException;
+            }
+        } catch (\Throwable) {
+            throw ValidationException::withMessages(['catalog_values' => 'El atributo nuevo cambió, expiró o pertenece a otro producto. Volvé a generar la propuesta.']);
+        }
+        $attribute = CatalogAttribute::where('code', $definition['code'])->lockForUpdate()->first();
+        if ($attribute) {
+            if (! $attribute->is_active || $attribute->data_type !== $definition['type'] || $attribute->unit !== $definition['unit']) {
+                throw ValidationException::withMessages(['catalog_values' => 'El atributo ya existe con otra definición. Volvé a generar la propuesta.']);
+            }
+        } else {
+            // Recheck names in case another editor created the definition since generation.
+            foreach ($this->dictionary() as $existing) {
+                foreach ($definition['translations'] as $locale => $label) {
+                    if (Str::slug($label) === Str::slug($existing['translations'][$locale] ?? '')) {
+                        throw ValidationException::withMessages(['catalog_values' => 'Ya existe un atributo con ese nombre. Volvé a generar la propuesta.']);
+                    }
+                }
+            }
+            $attribute = $this->saveDefinition(['data_type'=>$definition['type'], 'unit'=>$definition['unit'], 'is_active'=>true, 'inherit_from_parent'=>false,
+                'translate'=>$this->definitionTranslations($definition['translations'])]);
+
+        }
+        if (isset($this->effective($product)[$attribute->id]) || ProductAttributeValue::where('product_id', $product->id)->where('attribute_id', $attribute->id)->exists()) {
+            throw ValidationException::withMessages(['catalog_values'=>'El atributo ya tiene un valor o una decisión protegida. Volvé a generar la propuesta.']);
+        }
+        $map = [];
+        foreach ($definition['options'] as $option) {
+            $saved = $attribute->options()->where('code', $option['code'])->first();
+            if (! $saved) {
+                $saved = $this->saveOption($attribute, ['is_active'=>true, 'translate'=>$this->definitionTranslations($option['translations'])]);
+            }
+            if (! $saved->is_active) throw ValidationException::withMessages(['catalog_values'=>'Una opción está desactivada. Volvé a generar la propuesta.']);
+            $map[(string) $option['id']] = $saved->id;
+        }
+        $selected = array_map('strval', $row['options'] ?? []);
+        if (array_diff($selected, array_keys($map))) throw ValidationException::withMessages(['catalog_values'=>'La opción del atributo nuevo no es válida.']);
+        $original = $signed['value'];
+        $unchanged = ($row['ai_proposal'] ?? null) === $row['pending_definition']
+            && array_map('strval', $original['options']) === $selected
+            && ($definition['type'] !== 'boolean' || (in_array($row['boolean'] ?? null, [true, false, 0, 1, '0', '1'], true) && $original['boolean'] === (bool) $row['boolean']))
+            && (string) $original['number'] === (string) ($row['number'] ?? null);
+        $row['attribute_id'] = $attribute->id;
+        $row['options'] = array_map(fn ($id) => $map[$id], $selected);
+        unset($row['ai_proposal'], $row['pending_definition']);
+        if ($unchanged) {
+            $signed['value'] = ['attribute_id'=>$attribute->id, 'mode'=>'value', 'options'=>$row['options'], 'boolean'=>$original['boolean'], 'number'=>$original['number']];
+            $signed['definition_revision'] = $attribute->revision;
+            unset($signed['pending_definition']);
+            $row['ai_proposal'] = Crypt::encryptString(json_encode($signed, JSON_THROW_ON_ERROR));
+        }
+        return $row;
+    }
+
+    public function editorDictionary(Product $product, array $oldRows = []): \Illuminate\Support\Collection
+    {
+        $dictionary = $this->dictionary();
+        foreach ($oldRows as $row) {
+            if (empty($row['pending_definition'])) continue;
+            try {
+                $signed = json_decode(Crypt::decryptString($row['pending_definition']), true, 512, JSON_THROW_ON_ERROR);
+                if ($signed['product_id'] === (int) $product->id && $signed['expires_at'] >= now()->timestamp && is_array($signed['pending_definition'] ?? null)) {
+                    $dictionary->push($signed['pending_definition']);
+                }
+            } catch (\Throwable) { /* Invalid proposals cannot create definitions. */ }
+        }
+        return $dictionary->unique('id')->values();
+    }
+
+    private function definitionTranslations(array $labels): array
+    {
+        return ['es'=>['name'=>$labels['es']], 'pt-br'=>['name'=>$labels['pt']], 'en'=>['name'=>$labels['en']]];
     }
 
     private function proposalIdentity(Product $product): array

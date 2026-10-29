@@ -56,4 +56,23 @@ class UserAccountLayoutTest extends TestCase
         $this->assertStringContainsString('[data-notification-mark-read]', $styles);
         $this->assertStringContainsString('grid-row: 1 / span 2', $styles);
     }
+
+    public function test_notification_panel_is_portaled_outside_the_sticky_account_header(): void
+    {
+        $layout = file_get_contents(__DIR__.'/../../resources/views/layout/dashboard.blade.php');
+        $menu = file_get_contents(__DIR__.'/../../resources/views/users/notifications-menu.blade.php');
+        $script = file_get_contents(__DIR__.'/../../public/js/app-custom.js');
+        $baseStyles = file_get_contents(__DIR__.'/../../public/css/app.css');
+        $styles = file_get_contents(__DIR__.'/../../public/css/user.css');
+
+        $this->assertStringContainsString("['notificationMenuPart' => 'trigger']", $layout);
+        $this->assertStringContainsString("['notificationMenuPart' => 'panel']", $layout);
+        $this->assertStringContainsString("\$notificationMenuPart !== 'panel'", $menu);
+        $this->assertStringContainsString("\$notificationMenuPart !== 'trigger'", $menu);
+        $this->assertStringContainsString("classList.add('sax-notifications-open')", $script);
+        $this->assertStringContainsString("event.key === 'Tab'", $script);
+        $this->assertStringContainsString('visibility: hidden', $baseStyles);
+        $this->assertStringContainsString('pointer-events: none', $baseStyles);
+        $this->assertStringContainsString('.sax-account-body.sax-notifications-open :where(.whatsapp-container, #backToTop)', $styles);
+    }
 }

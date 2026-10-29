@@ -299,6 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
             notificationsOverlay?.classList.remove('open');
             notificationsButton?.setAttribute('aria-expanded', 'false');
             notificationsDrawer?.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('sax-notifications-open');
 
             cartSidebar.classList.toggle('open');
             cartOverlay.classList.toggle('open');
@@ -367,16 +368,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Notifications Sidebar (admin)
     if (notificationsDrawer && notificationsOverlay && notificationsButton) {
+        let notificationPreviousFocus = null;
+
         const closeNotifications = () => {
+            if (!notificationsDrawer.classList.contains('open')) return;
             notificationsDrawer.classList.remove('open');
             notificationsOverlay.classList.remove('open');
             notificationsDrawer.setAttribute('aria-hidden', 'true');
             notificationsButton.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('sax-notifications-open');
             document.body.style.overflow = '';
-            notificationsButton.focus();
+            const focusTarget = notificationPreviousFocus?.isConnected
+                ? notificationPreviousFocus
+                : notificationsButton;
+            focusTarget.focus();
+            notificationPreviousFocus = null;
         };
 
         const openNotifications = () => {
+            if (notificationsDrawer.classList.contains('open')) return;
+            notificationPreviousFocus = document.activeElement;
             cartSidebar?.classList.remove('open');
             cartOverlay?.classList.remove('open');
             cartSidebar?.setAttribute('aria-hidden', 'true');
@@ -386,6 +397,7 @@ document.addEventListener('DOMContentLoaded', function () {
             notificationsOverlay.classList.add('open');
             notificationsDrawer.setAttribute('aria-hidden', 'false');
             notificationsButton.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('sax-notifications-open');
             document.body.style.overflow = 'hidden';
             notificationsClose?.focus();
         };
@@ -395,8 +407,32 @@ document.addEventListener('DOMContentLoaded', function () {
         notificationsOverlay.addEventListener('click', closeNotifications);
 
         document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && notificationsDrawer.classList.contains('open')) {
+            if (!notificationsDrawer.classList.contains('open')) return;
+
+            if (event.key === 'Escape') {
                 closeNotifications();
+                return;
+            }
+
+            if (event.key === 'Tab') {
+                const focusable = Array.from(notificationsDrawer.querySelectorAll(
+                    'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                )).filter(element => element.getClientRects().length > 0);
+                if (focusable.length === 0) {
+                    event.preventDefault();
+                    notificationsDrawer.focus();
+                    return;
+                }
+
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
             }
         });
 
@@ -473,7 +509,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Marking notifications should not reload the current page. Individual
         // notifications still navigate after their read state is persisted.
-        const notificationMenu = notificationsDrawer.closest('.sax-admin-notifications');
         const refreshNotificationState = () => {
             const unreadItems = notificationsDrawer.querySelectorAll(
                 '[data-notification-item][data-notification-archived="0"] .sax-admin-notifications__item.is-unread'
@@ -481,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const unreadCount = unreadItems.length;
             const unreadLabel = notificationsDrawer.querySelector('[data-notifications-unread-count]');
             const readAllForm = notificationsDrawer.querySelector('[data-notifications-read-all]');
-            const badge = notificationMenu?.querySelector('[data-notifications-badge]');
+            const badge = document.querySelector('[data-notifications-badge]');
 
             if (unreadLabel) {
                 const unreadText = unreadCount === 1

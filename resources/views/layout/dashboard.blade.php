@@ -62,7 +62,7 @@
                         <div class="d-none d-xl-flex sax-account-locale">
                             <x-locale-currency-selector variant="account" />
                         </div>
-                        @include('users.notifications-menu')
+                        @include('users.notifications-menu', ['notificationMenuPart' => 'trigger'])
                         <a href="{{ route('home') }}" class="sax-account-action" title="Ir para a loja">
                             <i class="fa-solid fa-store" aria-hidden="true"></i>
                             <span>Ir para a loja</span>
@@ -94,6 +94,10 @@
             </footer>
         </div>
     </div>
+
+    {{-- Fora do cabeçalho sticky para o overlay cobrir toda a janela sem herdar
+         o contexto de empilhamento/backdrop-filter da barra superior. --}}
+    @include('users.notifications-menu', ['notificationMenuPart' => 'panel'])
 
     <div class="offcanvas offcanvas-start sax-user-menu-drawer" tabindex="-1" id="userMenu" aria-labelledby="userMenuLabel">
         <div class="offcanvas-header drawer-header">

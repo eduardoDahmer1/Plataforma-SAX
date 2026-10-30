@@ -7,14 +7,14 @@
 
 @php
     $commerceContext = match (true) {
-        request()->routeIs('cart.*') => ['Carrinho', 'Revise seus produtos antes de continuar'],
-        request()->routeIs('checkout.index', 'checkout.store') => ['Checkout', 'Finalize sua compra com segurança'],
-        request()->routeIs('checkout.success', 'bancard.v2.success') => ['Pedido confirmado', 'Acompanhe os detalhes da sua compra'],
-        request()->routeIs('checkout.error', 'bancard.v2.error') => ['Pagamento', 'Revise os dados e tente novamente'],
-        request()->routeIs('checkout.rendix.pix*') => ['Pagamento via PIX', 'Conclua o pagamento no seu banco'],
-        request()->routeIs('checkout.deposito*') => ['Pagamento por depósito', 'Consulte os dados do seu pedido'],
-        request()->routeIs('checkout.bancard.v2*', 'bancard.v2.*') => ['Pagamento seguro', 'Ambiente protegido Bancard'],
-        default => ['Compra segura', 'Carrinho e pagamento'],
+        request()->routeIs('cart.*') => [__('messages.commerce_cart_title'), __('messages.commerce_cart_subtitle')],
+        request()->routeIs('checkout.index', 'checkout.store') => [__('messages.commerce_checkout_title'), __('messages.commerce_checkout_subtitle')],
+        request()->routeIs('checkout.success', 'bancard.v2.success') => [__('messages.commerce_order_confirmed_title'), __('messages.commerce_order_confirmed_subtitle')],
+        request()->routeIs('checkout.error', 'bancard.v2.error') => [__('messages.commerce_payment_title'), __('messages.commerce_payment_review_subtitle')],
+        request()->routeIs('checkout.rendix.pix*') => [__('messages.commerce_pix_payment_title'), __('messages.commerce_pix_payment_subtitle')],
+        request()->routeIs('checkout.deposito*') => [__('messages.commerce_deposit_payment_title'), __('messages.commerce_deposit_payment_subtitle')],
+        request()->routeIs('checkout.bancard.v2*', 'bancard.v2.*') => [__('messages.commerce_bancard_payment_title'), __('messages.commerce_bancard_payment_subtitle')],
+        default => [__('messages.commerce_secure_purchase_title'), __('messages.commerce_secure_purchase_subtitle')],
     };
 @endphp
 
@@ -24,7 +24,7 @@
     <header class="sax-commerce-topbar">
         <div class="sax-commerce-frame sax-commerce-topbar__inner">
             <div class="sax-commerce-context">
-                <a href="{{ route('home') }}" class="sax-commerce-home" aria-label="Ir para a loja">
+                <a href="{{ route('home') }}" class="sax-commerce-home" aria-label="{{ __('messages.ir_para_loja') }}">
                     <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                 </a>
                 <div>
@@ -39,17 +39,17 @@
                 </div>
                 <span class="sax-commerce-secure d-none d-md-inline-flex">
                     <i class="fa-solid fa-lock" aria-hidden="true"></i>
-                    Ambiente seguro
+                    {{ __('messages.commerce_secure_environment') }}
                 </span>
                 @auth
-                    <a href="{{ route('user.dashboard') }}" class="sax-commerce-action" title="Minha conta">
+                    <a href="{{ route('user.dashboard') }}" class="sax-commerce-action" title="{{ __('messages.minha_conta') }}">
                         <i class="fa-regular fa-user" aria-hidden="true"></i>
-                        <span class="d-none d-sm-inline">Minha conta</span>
+                        <span class="d-none d-sm-inline">{{ __('messages.minha_conta') }}</span>
                     </a>
                 @endauth
-                <a href="{{ route('home') }}" class="sax-commerce-action sax-commerce-action--primary" title="Ir para a loja">
+                <a href="{{ route('home') }}" class="sax-commerce-action sax-commerce-action--primary" title="{{ __('messages.ir_para_loja') }}">
                     <i class="fa-solid fa-store" aria-hidden="true"></i>
-                    <span class="d-none d-sm-inline">Ir para a loja</span>
+                    <span class="d-none d-sm-inline">{{ __('messages.ir_para_loja') }}</span>
                 </a>
             </div>
         </div>
@@ -65,7 +65,7 @@
 
     <footer class="sax-commerce-footer">
         <div class="sax-commerce-frame sax-commerce-footer__inner">
-            <span><i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i> Compra protegida</span>
+            <span><i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i> {{ __('messages.commerce_protected_purchase') }}</span>
             <span>&copy; {{ now()->year }} SAX E-commerce</span>
         </div>
     </footer>

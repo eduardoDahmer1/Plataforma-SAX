@@ -16,30 +16,20 @@
     }
 
     $initialStep = max(1, min(4, $initialStep));
-    $reservationCopy = match (app()->getLocale()) {
-        'en' => [
-            'title' => 'Temporary stock reservation',
-            'body' => 'Your items are reserved while this checkout remains active. The reservation is renewed automatically, but stock is only guaranteed after payment confirmation. If you leave or the time expires, the items return to stock.',
-        ],
-        'es' => [
-            'title' => 'Reserva temporal de stock',
-            'body' => 'Tus artículos quedan reservados mientras este checkout siga activo. La reserva se renueva automáticamente, pero el stock solo queda garantizado al confirmarse el pago. Si sales o vence el plazo, los artículos vuelven al stock.',
-        ],
-        default => [
-            'title' => 'Reserva temporária de estoque',
-            'body' => 'Seus itens ficam reservados enquanto este checkout estiver ativo. A reserva é renovada automaticamente, mas o estoque só fica garantido após a confirmação do pagamento. Se você sair ou o prazo expirar, os itens voltam ao estoque.',
-        ],
-    };
+    $reservationCopy = [
+        'title' => __('messages.checkout_reservation_title'),
+        'body' => __('messages.checkout_reservation_body'),
+    ];
 @endphp
 <div class="sax-checkout-container">
     <div class="sax-commerce-page-heading">
         <div>
-            <span>Compra segura</span>
-            <h1>Finalize seu pedido</h1>
-            <p>Revise cada etapa com calma. Seus dados permanecem protegidos durante o processo.</p>
+            <span>{{ __('messages.checkout_safe_purchase_label') }}</span>
+            <h1>{{ __('messages.checkout_finish_order_title') }}</h1>
+            <p>{{ __('messages.checkout_finish_order_body') }}</p>
         </div>
         <a href="{{ route('cart.view') }}" class="sax-commerce-edit-cart">
-            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Editar carrinho
+            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> {{ __('messages.checkout_edit_cart') }}
         </a>
     </div>
     @if ($errors->any() || session('error'))
@@ -69,11 +59,11 @@
     </div>
 
     <div class="sax-checkout-shell">
-        <div class="sax-checkout-progress" aria-label="Etapas do checkout">
-            <div class="sax-checkout-progress-step {{ $initialStep > 1 ? 'is-complete' : ($initialStep === 1 ? 'is-current' : '') }}"><b>1</b><span>Itens</span></div>
-            <div class="sax-checkout-progress-step {{ $initialStep > 2 ? 'is-complete' : ($initialStep === 2 ? 'is-current' : '') }}"><b>2</b><span>Identificação</span></div>
-            <div class="sax-checkout-progress-step {{ $initialStep > 3 ? 'is-complete' : ($initialStep === 3 ? 'is-current' : '') }}"><b>3</b><span>Entrega</span></div>
-            <div class="sax-checkout-progress-step {{ $initialStep === 4 ? 'is-current' : '' }}"><b>4</b><span>Pagamento</span></div>
+        <div class="sax-checkout-progress" aria-label="{{ __('messages.checkout_steps_label') }}">
+            <div class="sax-checkout-progress-step {{ $initialStep > 1 ? 'is-complete' : ($initialStep === 1 ? 'is-current' : '') }}"><b>1</b><span>{{ __('messages.checkout_step_items') }}</span></div>
+            <div class="sax-checkout-progress-step {{ $initialStep > 2 ? 'is-complete' : ($initialStep === 2 ? 'is-current' : '') }}"><b>2</b><span>{{ __('messages.checkout_step_identification') }}</span></div>
+            <div class="sax-checkout-progress-step {{ $initialStep > 3 ? 'is-complete' : ($initialStep === 3 ? 'is-current' : '') }}"><b>3</b><span>{{ __('messages.checkout_step_delivery') }}</span></div>
+            <div class="sax-checkout-progress-step {{ $initialStep === 4 ? 'is-current' : '' }}"><b>4</b><span>{{ __('messages.checkout_step_payment') }}</span></div>
         </div>
 
     <form id="checkoutForm" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data">
@@ -95,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrf = checkoutForm?.querySelector('input[name="_token"]')?.value;
     let submitting = false;
     let expiresAt = new Date(countdown?.dataset.expiresAt || 0);
+    const reservationActiveText = @json(__('messages.checkout_reservation_active'));
 
     checkoutForm?.addEventListener('submit', () => { submitting = true; });
 
@@ -103,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
         const minutes = String(Math.floor(seconds / 60)).padStart(2, '0');
         const rest = String(seconds % 60).padStart(2, '0');
-        countdown.textContent = `Reserva ativa: ${minutes}:${rest}`;
+        countdown.textContent = reservationActiveText.replace(':time', `${minutes}:${rest}`);
     };
 
     const refreshReservation = async () => {

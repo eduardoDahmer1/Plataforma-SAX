@@ -39,7 +39,7 @@ class CommerceLayoutTest extends TestCase
         $this->assertStringContainsString("route('home')", $layout);
         $this->assertStringContainsString("route('user.dashboard')", $layout);
         $this->assertStringNotContainsString('headerPartial', $layout);
-        $this->assertStringNotContainsString("components.footer", $layout);
+        $this->assertStringNotContainsString('components.footer', $layout);
     }
 
     public function test_checkout_exposes_named_responsive_steps_and_neutral_tokens(): void
@@ -47,8 +47,8 @@ class CommerceLayoutTest extends TestCase
         $checkout = file_get_contents(__DIR__.'/../../resources/views/checkout/index.blade.php');
         $styles = file_get_contents(__DIR__.'/../../public/css/checkout.css');
 
-        foreach (['Itens', 'Identificação', 'Entrega', 'Pagamento'] as $step) {
-            $this->assertStringContainsString("<span>{$step}</span>", $checkout);
+        foreach (['items', 'identification', 'delivery', 'payment'] as $step) {
+            $this->assertStringContainsString("__('messages.checkout_step_{$step}')", $checkout);
         }
 
         $this->assertStringContainsString('Commerce workspace', $styles);
@@ -56,5 +56,19 @@ class CommerceLayoutTest extends TestCase
         $this->assertStringContainsString('--commerce-border: #d7d8da', $styles);
         $this->assertStringContainsString('@media (max-width: 767.98px)', $styles);
         $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $styles);
+    }
+
+    public function test_bancard_checkout_announces_pix_and_uses_localized_customer_messages(): void
+    {
+        $checkoutStep = file_get_contents(__DIR__.'/../../resources/views/components/checkout/step4-payment.blade.php');
+        $bancard = file_get_contents(__DIR__.'/../../resources/views/payment/bancard-v2.blade.php');
+        $layout = file_get_contents(__DIR__.'/../../resources/views/layout/checkout.blade.php');
+
+        $this->assertStringContainsString("__('messages.checkout_bancard_caption')", $checkoutStep);
+        $this->assertStringContainsString("__('messages.bancard_pix_notice_title')", $bancard);
+        $this->assertStringContainsString("__('messages.bancard_pix_notice_body')", $bancard);
+        $this->assertStringNotContainsString('o PIX/QR ainda não está disponível', $bancard);
+        $this->assertStringContainsString("__('messages.commerce_bancard_payment_title')", $layout);
+        $this->assertStringContainsString("__('messages.commerce_secure_environment')", $layout);
     }
 }

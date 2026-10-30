@@ -7,69 +7,70 @@
     $totalSelectedCurrency = (float) $order->total * $orderCurrencyValue;
     $orderStatus = strtolower((string) $order->status);
     $isParaguayOrder = $order->shipping === '3' || strtoupper((string) $order->country) === 'PY';
+    $pygFormattedAmount = $pygSymbol.' '.number_format((float) $totalInPyg, 0, ',', '.');
 @endphp
 
 <section class="bancard-checkout-shell py-4 py-lg-5">
     <div class="container">
         <div class="bancard-checkout-panel mx-auto">
             <div class="bancard-head text-center mb-4">
-                <p class="bancard-kicker mb-2">Checkout seguro</p>
-                <h1 class="bancard-title mb-2">Pagamento Bancard V2</h1>
-                <p class="bancard-subtitle mb-0">Escolha a opção adequada ao seu país e finalize em ambiente protegido.</p>
+                <p class="bancard-kicker mb-2">{{ __('messages.bancard_checkout_kicker') }}</p>
+                <h1 class="bancard-title mb-2">{{ __('messages.bancard_checkout_title') }}</h1>
+                <p class="bancard-subtitle mb-0">{{ __('messages.bancard_checkout_subtitle') }}</p>
             </div>
 
             <div class="bancard-meta-grid mb-4">
                 <div class="bancard-meta-item">
-                    <span class="meta-label">Pedido</span>
+                    <span class="meta-label">{{ __('messages.bancard_order_label') }}</span>
                     <strong class="meta-value">#{{ $order->id }}</strong>
                 </div>
                 <div class="bancard-meta-item">
-                    <span class="meta-label">Total na moeda selecionada</span>
+                    <span class="meta-label">{{ __('messages.bancard_selected_currency_total') }}</span>
                     <strong class="meta-value text-primary">{{ $orderCurrencySign }} {{ number_format($totalSelectedCurrency, 2, ',', '.') }}</strong>
                 </div>
                 <div class="bancard-meta-item highlight">
-                    <span class="meta-label">Total em Guaranies</span>
+                    <span class="meta-label">{{ __('messages.bancard_pyg_total') }}</span>
                     <strong class="meta-value">{{ $pygSymbol }} {{ number_format((float) $totalInPyg, 0, ',', '.') }}</strong>
                 </div>
                 <div class="bancard-meta-item">
-                    <span class="meta-label">Status</span>
-                    <strong class="meta-value status-badge {{ $orderStatus }}">{{ strtoupper($orderStatus) }}</strong>
+                    <span class="meta-label">{{ __('messages.bancard_status_label') }}</span>
+                    <strong class="meta-value status-badge {{ $orderStatus }}">{{ __('messages.payment_status_'.$orderStatus) }}</strong>
                 </div>
             </div>
 
             <div class="bancard-exchange-warning mb-4">
                 <div class="bancard-exchange-warning__title">
                     <i class="fas fa-globe-americas"></i>
-                    <strong>Confirme a moeda antes de pagar</strong>
+                    <strong>{{ __('messages.bancard_confirm_currency_title') }}</strong>
                 </div>
-                <p>O valor efetivamente enviado ao Bancard é <strong>{{ $pygSymbol }} {{ number_format((float) $totalInPyg, 0, ',', '.') }} em guaranis (PYG)</strong>. O valor em {{ $orderCurrencySign }} é apenas a referência exibida na loja.</p>
+                <p>{{ __('messages.bancard_amount_sent_message', ['amount' => $pygFormattedAmount, 'currency' => $orderCurrencySign]) }}</p>
                 @if ($isParaguayOrder)
-                    <p class="mb-0">Para compras no Paraguai, a SAX não acrescenta taxa de conversão internacional. Se o cartão ou a conta forem de outro país ou estiverem em outra moeda, o banco emissor poderá realizar sua própria conversão.</p>
+                    <p class="mb-0">{{ __('messages.bancard_paraguay_conversion_notice') }}</p>
                 @else
-                    <p class="mb-0"><strong>Cartões do Brasil e de outros países:</strong> o banco e a bandeira podem aplicar cotação própria, IOF, spread cambial e outros encargos de compra internacional. O valor lançado na fatura pode ser maior e esses encargos não são cobrados nem controlados pela SAX.</p>
+                    <p class="mb-0"><strong>{{ __('messages.bancard_international_conversion_title') }}</strong> {{ __('messages.bancard_international_conversion_body') }}</p>
                 @endif
             </div>
 
-            <div class="bancard-payment-guide mb-4" aria-label="Disponibilidade das formas de pagamento">
+            <div class="bancard-payment-guide mb-4" aria-label="{{ __('messages.bancard_payment_availability_label') }}">
                 <div class="bancard-guide-card is-available">
                     <div class="bancard-guide-icon"><i class="fas fa-credit-card"></i></div>
                     <div>
-                        <span class="bancard-guide-status">Disponível internacionalmente</span>
-                        <h2>Pagamento com cartão</h2>
-                        <p>Use cartões emitidos no <strong>Brasil</strong>, no <strong>Paraguai</strong> ou em <strong>outros países</strong>, sujeito à aprovação do banco emissor.</p>
+                        <span class="bancard-guide-status">{{ __('messages.bancard_card_status') }}</span>
+                        <h2>{{ __('messages.bancard_card_title') }}</h2>
+                        <p>{{ __('messages.bancard_card_body') }}</p>
                     </div>
                 </div>
                 <div class="bancard-guide-card is-paraguay">
                     <div class="bancard-guide-icon"><i class="fas fa-qrcode"></i></div>
                     <div>
-                        <span class="bancard-guide-status">Exclusivo para o Paraguai</span>
-                        <h2>QR Bancard</h2>
-                        <p>Disponível somente para aplicativos e contas compatíveis do <strong>Paraguai</strong>.</p>
+                        <span class="bancard-guide-status">{{ __('messages.bancard_qr_status') }}</span>
+                        <h2>{{ __('messages.bancard_qr_title') }}</h2>
+                        <p>{{ __('messages.bancard_qr_body') }}</p>
                     </div>
                 </div>
                 <div class="bancard-pix-notice">
                     <i class="fas fa-bolt me-2"></i>
-                    <div><strong>Clientes do Brasil:</strong> o PIX/QR ainda não está disponível, mas será implementado em breve. Por enquanto, selecione a opção de cartão.</div>
+                    <div><strong>{{ __('messages.bancard_pix_notice_title') }}</strong> {{ __('messages.bancard_pix_notice_body') }}</div>
                 </div>
             </div>
 
@@ -79,16 +80,16 @@
 
             <div class="bancard-actions mt-4">
                 <a href="{{ route('user.orders.show', $order->id) }}" class="btn btn-action btn-light-custom">
-                    <i class="fa fa-eye me-2"></i> Ver pedido
+                    <i class="fa fa-eye me-2"></i> {{ __('messages.bancard_view_order') }}
                 </a>
                 <a href="{{ route('checkout.bancard.v2.cancel', $order->id) }}" class="btn btn-action btn-danger-custom">
-                    <i class="fa fa-times me-2"></i> Cancelar pagamento
+                    <i class="fa fa-times me-2"></i> {{ __('messages.bancard_cancel_payment') }}
                 </a>
             </div>
 
             <div class="bancard-footer-info mt-4">
                 <p class="bancard-note mb-0">
-                    <i class="fa fa-info-circle me-1"></i> Se houver instabilidade no retorno, acompanhe a confirmação no detalhe do pedido.
+                    <i class="fa fa-info-circle me-1"></i> {{ __('messages.bancard_return_notice') }}
                 </p>
             </div>
         </div>

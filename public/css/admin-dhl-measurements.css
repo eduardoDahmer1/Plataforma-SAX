@@ -198,7 +198,7 @@ a.dhl-stat:hover { color: var(--dhl-ink); border-color: #9ea2a7; }
 .dhl-advanced-filters summary i { margin-right: 6px; }
 .dhl-filter-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(140px, 1fr));
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
     gap: 10px;
     align-items: end;
     margin-top: 11px;

@@ -9,9 +9,9 @@ use App\Models\Category;
 use App\Models\DhlMeasurementRule;
 use App\Models\Product;
 use App\Models\Subcategory;
+use App\Services\Dhl\DhlCustomsProductData;
 use App\Services\Dhl\DhlMeasurementRuleDefaults;
 use App\Services\Dhl\DhlMeasurementRuleResolver;
-use App\Services\Dhl\DhlCustomsProductData;
 use App\Services\Dhl\DhlProductMeasurementEstimator;
 use App\Services\Dhl\DhlSettingsService;
 use Illuminate\Database\Eloquent\Builder;
@@ -89,6 +89,11 @@ class DhlMeasurementRuleController extends Controller
             } elseif ($measurement === 'reviewed') {
                 $query->whereNotNull('shipping_reviewed_at');
             }
+
+            $customsData->applyEnglishDescriptionFilter(
+                $query,
+                (string) $request->query('description_status'),
+            );
 
             if ($request->query('catalog_status') === 'active') {
                 $query->where('status', true);

@@ -472,12 +472,16 @@ class CatalogAttributeService
             return 0;
         }
         return DB::transaction(function () use ($product, $result, $userId) {
-            Product::withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
-            $review = $this->reviewAi($product->fresh(), $result);
+            $product = Product::withoutGlobalScopes()->whereKey($product->id)->lockForUpdate()->firstOrFail();
+            // All entry points use the editor's validation and definition limit.
+            $review = $this->prepareForEditor($product, $result)['attribute_review'];
             $applied = 0;
             foreach ($review['items'] as $item) {
                 if ($item['status'] !== 'accepted') continue;
                 $row = $item['value'];
+                if (isset($row['pending_definition'])) {
+                    $row = $this->materializeDefinition($product, $row);
+                }
                 $value = ProductAttributeValue::create([
                     'product_id' => $product->id, 'attribute_id' => $row['attribute_id'], 'mode' => 'value',
                     'boolean_value' => $row['boolean'], 'number_value' => $row['number'],

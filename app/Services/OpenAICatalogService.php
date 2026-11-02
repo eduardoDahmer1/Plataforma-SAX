@@ -15,7 +15,7 @@ class OpenAICatalogService
     /**
      * Generates a reviewable proposal only. This method never writes to Product.
      */
-    public function generateProductProposal(Product $product, bool $allowNewAttributes = false): array
+    public function generateProductProposal(Product $product): array
     {
         $settings = app(ProductAiSettingsService::class);
         $settings->ensureAvailable();
@@ -36,6 +36,7 @@ class OpenAICatalogService
 
         $knownData = [
             'structured_attributes' => app(CatalogAttributeService::class)->aiContext($product),
+            'attribute_research_checklist' => $this->attributeResearchChecklist(),
             'internal_sku' => $product->sku,
             'original_name' => $product->external_name,
             'current_commercial_name' => $product->name,
@@ -224,14 +225,7 @@ Fuentes, faltantes, incertidumbres y advertencias permanecen exclusivamente en l
 
 PROMPT;
 
-        $instructions .= "\nPara catalog_attributes usa exclusivamente códigos del diccionario global structured_attributes. Completa solo missing_attribute_ids aplicables al producto. No crees atributos ni opciones. "
-            ."Devuelve solo valores nuevos ausentes del producto y su herencia. Excluye los atributos de protected_ids. Cada valor debe corresponder al SKU y variante exactos (product_sku y variant_match). "
-            ."Incluye una evidencia textual concreta y source_url de una página consultada que confirme ese valor para esa variante. "
-            ."No deduzcas polarización, materiales, medidas ni datos técnicos por foto, marca, categoría o variantes parecidas. "
-            ."Usa la unidad del diccionario, booleanos reales y option_codes existentes. Omite cualquier dato no respaldado; devuelve [] si faltan pruebas. "
-            ."No conviertas suggested_attributes en hechos ni uses esos campos libres para asignar atributos estructurados.";
-
-        if ($allowNewAttributes) $instructions .= $this->newAttributeInstructions();
+        $instructions .= $this->catalogAttributeInstructions();
 
         $response = Http::withToken($apiKey)
             ->acceptJson()
@@ -256,7 +250,7 @@ PROMPT;
                         'type' => 'json_schema',
                         'name' => 'catalog_proposal',
                         'strict' => true,
-                        'schema' => $this->responseSchema($allowNewAttributes),
+                        'schema' => $this->responseSchema(),
                     ],
                 ],
             ]);
@@ -473,22 +467,23 @@ PROMPT;
         ];
     }
 
-    public function generateAttributesOnly(Product $product, bool $allowNewAttributes = false): array
+    public function generateAttributesOnly(Product $product): array
     {
         $context = app(CatalogAttributeService::class)->aiContext($product);
-        if (! $context || (! $allowNewAttributes && ! $context['missing_attribute_ids'])) return ['proposal'=>['catalog_attributes'=>[]], 'research'=>['status'=>'not_found','sources'=>[]]];
+        if (! $context) return ['proposal'=>['catalog_attributes'=>[]], 'research'=>['status'=>'not_found','sources'=>[]]];
         $identity = $product->manufacturerSearchIdentity();
         [$proposal, $payload] = $this->requestAttributeJson(
             'Investiga el producto y su variante exacta con web_search, priorizando fabricante y distribuidores autorizados. '
             .'No confundas el SKU interno con el modelo del fabricante. Usa los candidatos de referencia del fabricante. '
-            .'Completa únicamente los missing_attribute_ids aplicables a este producto usando códigos y unidades del diccionario global. Omite atributos que no correspondan al producto. No modifiques ni generes nombres comerciales o descripciones. '
-            .'Cada dato requiere evidencia textual concreta y URL consultada que identifique esta variante exacta. '
-            .'No deduzcas materiales, polarización, medidas ni propiedades técnicas por imagen, categoría, marca o productos similares. '
-            .'No propagues medidas o colores a otras tallas. Si no se verifica, omítelo. No inventes opciones. '
-            .'Para cada dato informa product_sku exactamente como el SKU recibido y variant_match solo cuando se verificó. Usa [] si no hay datos respaldados.'
-            .($allowNewAttributes ? $this->newAttributeInstructions() : ''),
-            ['sku'=>$product->sku, 'original_name'=>$product->external_name, 'manufacturer_identity'=>$identity, 'brand'=>$product->brand?->name, 'size'=>$product->size, 'color'=>$product->color, 'attributes'=>$context],
-            ['type'=>'object', 'properties'=>['catalog_attributes'=>$this->catalogAttributeSchema($allowNewAttributes)], 'required'=>['catalog_attributes'], 'additionalProperties'=>false], true,
+            .'No modifiques ni generes nombres comerciales o descripciones. '
+            .$this->catalogAttributeInstructions(),
+            ['sku'=>$product->sku, 'original_name'=>$product->external_name, 'manufacturer_identity'=>$identity,
+                'brand'=>$product->brand?->name, 'category'=>$product->category?->name,
+                'subcategory'=>$product->subcategory?->name, 'child_category'=>$product->categoriasFilhas?->name,
+                'size'=>$product->size, 'color'=>$product->color, 'material'=>$product->material,
+                'measure'=>$product->measure, 'current_description'=>$product->description,
+                'attribute_research_checklist'=>$this->attributeResearchChecklist(), 'attributes'=>$context],
+            ['type'=>'object', 'properties'=>['catalog_attributes'=>$this->catalogAttributeSchema()], 'required'=>['catalog_attributes'], 'additionalProperties'=>false], true,
         );
         $sources = $this->extractSources($payload, (array) ($identity['reference_candidates'] ?? []));
         return ['proposal'=>$proposal, 'research'=>['status'=>$sources ? 'matched' : 'not_found', 'sources'=>array_slice($sources, 0, 3), 'validation_sources'=>$sources], 'source'=>['model'=>config('services.openai.model')]];
@@ -517,7 +512,11 @@ PROMPT;
             'input'=>json_encode($input, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 'store'=>false,
             'max_output_tokens'=>(int) config('services.openai.max_output_tokens',3000),
             'text'=>['format'=>['type'=>'json_schema','name'=>'catalog_attributes','strict'=>true,'schema'=>$schema]]];
-        if ($research) $body += ['tools'=>[['type'=>'web_search']], 'tool_choice'=>'required', 'include'=>['web_search_call.action.sources']];
+        if ($research) $body += [
+            'tools'=>[['type'=>'web_search', 'search_context_size'=>(string) config('services.openai.catalog_search_context_size', 'high')]],
+            'reasoning'=>['effort'=>(string) config('services.openai.catalog_reasoning_effort', 'medium')],
+            'tool_choice'=>'required', 'include'=>['web_search_call.action.sources'],
+        ];
         try {
             $payload = Http::withToken($settings->apiKey())->acceptJson()->asJson()->timeout((int) config('services.openai.timeout',90))
                 ->post(rtrim(config('services.openai.base_url'),'/').'/responses', $body)->throw()->json();
@@ -528,13 +527,45 @@ PROMPT;
         return [$result,$payload];
     }
 
+    /** Shared by complete generation and the dedicated attribute button. */
+    private function catalogAttributeInstructions(): string
+    {
+        $dictionaryRule = 'Reutiliza los códigos del diccionario para los datos que ya representa. missing_attribute_ids limita solo los atributos existentes: no limita la investigación ni impide proponer atributos nuevos. ';
+
+        return "\nINVESTIGACIÓN DE ATRIBUTOS\n".$dictionaryRule
+            .'Investiga activamente los datos técnicos y descriptivos relevantes para este producto usando attribute_research_checklist como guía de búsqueda, no como hechos. '
+            .'Selecciona solo la familia aplicable; no propongas todas las casillas ni un mínimo obligatorio. '
+            .'Busca primero la ficha del fabricante por marca y referencia o nombre comercial. Si faltan datos, realiza búsquedas dirigidas por referencia y atributo en fuentes fiables. '
+            .'Que una primera página o el diccionario no tengan información no significa que el producto carezca de atributos. '
+            .'Extrae también los hechos de la descripción y del nombre originales como candidatos para contrastar con las fuentes; no los descartes por estar mencionados en el texto comercial. '
+            .'Un dato solo está cubierto cuando ya tiene valor estructurado propio o heredado en effective, o está protegido en protected_ids. No reemplaces esos valores. '
+            .'Cada propuesta requiere confidence=high, evidencia textual concreta y source_url de una página consultada que confirme el dato para este producto. '
+            .'product_sku debe ser exactamente el SKU interno recibido, aunque la web use la referencia del fabricante; variant_match=true solo cuando la identidad y la variante aplicable estén verificadas. '
+            .'No exijas que la web publique el SKU interno de la tienda. No deduzcas polarización, materiales, medidas ni propiedades técnicas por foto, marca, categoría o productos similares. '
+            .'No propagues medidas, volumen o colores entre variantes. Usa unidades del diccionario, booleanos reales y option_codes existentes. '
+            .'Omite cada dato no respaldado individualmente y conserva los que sí están confirmados. Devuelve [] solo si no hay ningún dato nuevo verificable. '
+            .'No conviertas suggested_attributes en hechos ni los uses para asignar atributos estructurados.'
+            .$this->newAttributeInstructions();
+    }
+
+    private function attributeResearchChecklist(): array
+    {
+        return [
+            'perfumeria' => ['concentración', 'familia olfativa', 'notas de salida, corazón y fondo', 'volumen', 'público declarado por el fabricante'],
+            'optica' => ['tipo de montura', 'forma', 'material de montura y lentes', 'polarización y protección UV documentadas', 'ancho de lente, puente y varilla'],
+            'calzado' => ['material exterior, forro y suela', 'tipo de cierre', 'tecnologías documentadas', 'tipo de uso declarado'],
+            'ropa_y_accesorios' => ['composición', 'corte', 'tipo de cierre', 'dimensiones', 'cuidados documentados'],
+            'otros' => ['material o composición', 'capacidad y dimensiones', 'funciones y especificaciones documentadas'],
+        ];
+    }
+
     private function newAttributeInstructions(): string
     {
-        return "\nEXCEPCIÓN PARA EL EDITOR: Puedes proponer hasta 8 atributos nuevos útiles y verificables cuando el diccionario no cubra el dato. "
+        return "\nATRIBUTOS NUEVOS: Puedes proponer hasta 8 atributos nuevos útiles y verificables cuando el diccionario no cubra el dato. "
             ."Para códigos existentes devuelve new_definition=null y respeta sus opciones. Para un código nuevo devuelve new_definition con type (single, multiple, boolean o number), unit (solo number, si corresponde), labels (es, pt, en) y options (code y labels). "
             ."Estas definiciones son propuestas sin guardar: se crearán al guardar el producto. Usa códigos derivados exactamente del nombre en español en snake_case, tanto para atributos como opciones, sin unidades, marcas ni valores en el nombre del atributo. "
             ."Revisa todo el diccionario y no propongas sinónimos ni duplicados de atributos existentes, incluso desactivados. No crees atributos por SKU, modelo o variante. "
-            ."No propongas datos triviales, texto comercial ni datos ya cubiertos. No inventes hechos ni opciones. Incluye solo las opciones verificadas seleccionadas en option_codes. "
+            ."No crees atributos para marca, SKU o precio ni para texto publicitario. No repitas valores estructurados ya cubiertos; un hecho que solo aparece en la descripción sí puede estructurarse si se verifica. No inventes hechos ni opciones. Incluye solo las opciones verificadas seleccionadas en option_codes. "
             ."boolean y number deben tener options y option_codes vacíos. Conserva todas las exigencias de evidencia, confianza alta y variante exacta.";
     }
 
@@ -548,7 +579,7 @@ PROMPT;
         ], 'required'=>['type','unit','labels','options'], 'additionalProperties'=>false];
     }
 
-    private function catalogAttributeSchema(bool $allowNewAttributes = false): array
+    private function catalogAttributeSchema(): array
     {
         $properties = [
             'code'=>['type'=>'string'], 'option_codes'=>['type'=>'array','items'=>['type'=>'string']],
@@ -556,11 +587,11 @@ PROMPT;
             'confidence'=>['type'=>'string','enum'=>['low','medium','high']], 'source_url'=>['type'=>'string'], 'evidence'=>['type'=>'string'],
             'product_sku'=>['type'=>'string'], 'variant_match'=>['type'=>'boolean'],
         ];
-        if ($allowNewAttributes) $properties['new_definition'] = $this->newAttributeDefinitionSchema();
+        $properties['new_definition'] = $this->newAttributeDefinitionSchema();
         return ['type'=>'array','items'=>['type'=>'object','properties'=>$properties,'required'=>array_keys($properties),'additionalProperties'=>false]];
     }
 
-    private function responseSchema(bool $allowNewAttributes = false): array
+    private function responseSchema(): array
     {
         $languageText = [
             'type' => 'object',
@@ -573,7 +604,7 @@ PROMPT;
             'type' => 'object',
             'properties' => [
                 'editorial_summary' => ['type' => 'string'],
-                'catalog_attributes' => $this->catalogAttributeSchema($allowNewAttributes),
+                'catalog_attributes' => $this->catalogAttributeSchema(),
                 'commercial_name' => $languageText,
                 'descriptions' => $languageText,
                 'verified_attributes' => ['type' => 'array', 'items' => [

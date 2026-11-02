@@ -59,7 +59,7 @@ class CatalogAttributeController extends Controller
         $product = app(\App\Services\ProductAiEditorContext::class)->fromRequest($product, request());
         abort_unless($catalog->enabledFor($product), 404);
         // Return suggestions to the existing editor; assignments persist only on its normal save.
-        return response()->json($catalog->prepareForEditor($product, $ai->generateAttributesOnly($product, true)));
+        return response()->json($catalog->prepareForEditor($product, $ai->generateAttributesOnly($product)));
     }
 
     public function translate(Request $request, OpenAICatalogService $ai)

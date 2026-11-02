@@ -235,7 +235,7 @@ class ProductAiBatchController extends Controller
 
     public function show(ProductAiBatch $batch)
     {
-        $batch->load(['items.product:id,sku,name,external_name,photo,gallery', 'creator:id,name']);
+        $batch->load(['items.product:id,sku,name,external_name,photo,gallery', 'items.product.aiPreparation', 'creator:id,name']);
         $counts = $batch->items->countBy('status');
         $groupedCount = $batch->items->sum(fn ($item) => max(0, count($item->source_skus ?: []) - 1));
         $batchSkus = $batch->items
@@ -356,7 +356,7 @@ class ProductAiBatchController extends Controller
 
     public function status(ProductAiBatch $batch)
     {
-        $batch->load(['items.product:id,sku,name,external_name,photo,gallery']);
+        $batch->load(['items.product:id,sku,name,external_name,photo,gallery', 'items.product.aiPreparation']);
         $counts = $batch->items->countBy('status');
         $terminal = collect([
             ProductAiBatchItem::STATUS_COMPLETED,
@@ -373,6 +373,7 @@ class ProductAiBatchController extends Controller
                 'id' => $item->id,
                 'status' => $item->status,
                 'message' => $item->message,
+                'sources' => $item->product?->aiPreparation?->sources ?: [],
                 'has_image' => $item->product
                     ? Product::hasUsableImage($item->product->photo, $item->product->gallery)
                     : false,

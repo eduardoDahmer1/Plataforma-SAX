@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\ProductAiBatch;
 use App\Models\ProductAiBatchItem;
-use App\Models\ProductAiPreparation;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -109,7 +108,6 @@ class ProductAiBatchDraftBuilder
             ->whereIn('id', $allTargetIds)
             ->get(['id', 'sku', 'status'])
             ->keyBy('id');
-        $preparations = ProductAiPreparation::whereIn('product_id', $allTargetIds)->get()->keyBy('product_id');
         $eligibleCount = 0;
 
         foreach ($groups as $group) {
@@ -132,15 +130,9 @@ class ProductAiBatchDraftBuilder
             $skipMessage = null;
             if ($batch->attributes_only) {
                 $attributeProduct = Product::withoutGlobalScopes()->find($representativeId);
-                if (! $attributeProduct || ! app(CatalogAttributeService::class)->missing($attributeProduct)) $skipMessage = 'Sin atributos activos faltantes o diccionario no disponible.';
+                if (! $attributeProduct || ! app(CatalogAttributeService::class)->enabledFor($attributeProduct)) $skipMessage = 'El diccionario de atributos no está disponible.';
             } elseif (collect($targetIds)->contains(fn ($id) => (bool) $targets->get($id)?->status)) {
                 $skipMessage = 'Producto o variante activa; no se modifica contenido publicado.';
-            } elseif (collect($targetIds)->contains(fn ($id) => in_array(
-                $preparations->get($id)?->status,
-                [ProductAiPreparation::STATUS_GENERATED, ProductAiPreparation::STATUS_COMPLETED],
-                true,
-            ))) {
-                $skipMessage = 'La IA ya generó información para este producto.';
             }
 
             $batch->items()->create([

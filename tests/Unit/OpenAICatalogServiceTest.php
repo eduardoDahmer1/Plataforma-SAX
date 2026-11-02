@@ -120,6 +120,7 @@ class OpenAICatalogServiceTest extends TestCase
         $requestBody = $recordedRequest->data();
         $schema = $requestBody['text']['format']['schema'];
         $this->assertContains('taxonomy_assessment', $schema['required']);
+        $this->assertArrayHasKey('new_definition', $schema['properties']['catalog_attributes']['items']['properties']);
         foreach (['MARCA + TIPO DE PRODUCTO + MODELO', 'category_id = 149',
             'MARCA + NOMBRE DE FRAGANCIA + CONCENTRACIÓN', 'referencias oficiales del fabricante verificadas',
             'denominación comercial distintiva', 'protected_ids', 'variant_match'] as $rule) {
@@ -154,6 +155,9 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertSame(['REF-123'], $knownData['manufacturer_reference_candidates']);
         $this->assertSame(10, $knownData['taxonomy']['allowed_categories'][0]['id']);
         $this->assertSame(10, $knownData['taxonomy']['allowed_subcategories'][0]['category_id']);
+        $this->assertArrayHasKey('perfumeria', $knownData['attribute_research_checklist']);
+        $this->assertStringNotContainsString('No crees atributos ni opciones.', $requestBody['instructions']);
+        $this->assertStringContainsString('no limita la investigación', $requestBody['instructions']);
         $this->assertArrayNotHasKey('gtin', $knownData);
         $this->assertArrayNotHasKey('mpn', $knownData);
     }

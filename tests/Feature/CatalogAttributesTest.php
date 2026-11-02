@@ -82,6 +82,85 @@ class CatalogAttributesTest extends TestCase
         ]]], 'research'=>['status'=>'matched','sources'=>[['url'=>'https://example.com/product']]]];
     }
 
+    public function test_full_batch_can_save_the_same_new_attribute_as_the_editor(): void
+    {
+        $product = $this->product('BATCH-NEW');
+        $result = $this->newAttributeProposal($product, 'single');
+        $this->assertSame(1, $this->catalog->prepareForEditor($product, $result)['attribute_review']['accepted']);
+        $this->assertSame(1, $this->catalog->applyAi($product, $result, null));
+        $attribute = CatalogAttribute::firstOrFail();
+        $value = \App\Models\ProductAttributeValue::firstOrFail();
+        $this->assertSame('resistente_al_agua', $attribute->code);
+        $this->assertSame('ai', $value->source);
+        $this->assertSame('https://example.com/product', $value->evidence['url']);
+        $this->assertSame('si', $value->options->firstOrFail()->code);
+        $this->assertSame(0, $this->catalog->applyAi($product, $result, null));
+        $this->assertDatabaseCount('product_attribute_values', 1);
+    }
+
+    public function test_full_batch_rejects_unvisited_sources_and_wrong_variants_for_new_attributes(): void
+    {
+        $product = $this->product('BATCH-INVALID');
+        $result = $this->newAttributeProposal($product);
+        $result['proposal']['catalog_attributes'][0]['product_sku'] = 'OTHER';
+        $this->assertSame(0, $this->catalog->applyAi($product, $result, null));
+        $result = $this->newAttributeProposal($product);
+        $result['proposal']['catalog_attributes'][0]['source_url'] = 'https://unvisited.example';
+        $this->assertSame(0, $this->catalog->applyAi($product, $result, null));
+        $this->assertDatabaseCount('catalog_attributes', 0);
+    }
+
+    public function test_full_batch_can_regenerate_an_inactive_prepared_product(): void
+    {
+        config(['services.openai.api_key' => 'test-key']);
+        $product = $this->product('REGENERATE');
+        $product->update(['status' => 0]);
+        ProductAiPreparation::create(['product_id' => $product->id, 'status' => 'completed']);
+        $batch = ProductAiBatch::create(['source_type' => 'paste', 'status' => 'draft']);
+        app(ProductAiBatchDraftBuilder::class)->rebuild($batch, collect([$product->sku]), 'skus');
+        $item = $batch->items()->firstOrFail();
+        $this->assertSame('ready', $item->status);
+        $item->update(['status' => 'queued']);
+        $result = $this->newAttributeProposal($product);
+        $ai = $this->mock(OpenAICatalogService::class);
+        $ai->shouldReceive('generateProductProposal')->once()->with(\Mockery::type(Product::class))->andReturn($result);
+        $applier = $this->mock(ProductAiProposalApplier::class);
+        $applier->shouldReceive('apply')->once()->with(\Mockery::type(Product::class), $result, null, [$product->id]);
+        (new GenerateProductAiPreparation($item->id, $product->id))->handle($ai, $applier);
+        $this->assertSame('completed', $item->fresh()->status);
+    }
+
+    public function test_attribute_research_can_discover_a_verified_attribute_with_an_empty_dictionary(): void
+    {
+        config(['services.openai.api_key' => 'test-key', 'services.openai.catalog_search_context_size' => 'high', 'services.openai.catalog_reasoning_effort' => 'medium']);
+        $product = $this->product('DISCOVER');
+        $proposal = $this->newAttributeProposal($product);
+        Http::preventStrayRequests();
+        Http::fake(['api.openai.com/*' => Http::response([
+            'status' => 'completed', 'output' => [
+                ['type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode($proposal['proposal'])]]],
+                ['type' => 'web_search_call', 'action' => ['sources' => $proposal['research']['sources']]],
+            ],
+        ])]);
+        $result = app(OpenAICatalogService::class)->generateAttributesOnly($product);
+        $this->assertSame(1, $this->catalog->prepareForEditor($product, $result)['attribute_review']['accepted']);
+        $this->assertDatabaseCount('catalog_attributes', 0);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+            $this->assertSame([], $input['attributes']['missing_attribute_ids']);
+            $this->assertSame('Conservar', $input['current_description']);
+            $this->assertArrayHasKey('perfumeria', $input['attribute_research_checklist']);
+            $this->assertSame('Óptica', $input['category']);
+            $this->assertSame('high', $request['tools'][0]['search_context_size']);
+            $this->assertSame('medium', $request['reasoning']['effort']);
+            $this->assertStringNotContainsString('No crees atributos ni opciones.', $request['instructions']);
+            $this->assertStringNotContainsString('Completa únicamente los missing_attribute_ids', $request['instructions']);
+            $this->assertStringContainsString('ni impide proponer atributos nuevos', $request['instructions']);
+            return true;
+        });
+        Http::assertSentCount(1);
+    }
+
     public function test_pending_definition_is_only_created_on_product_save_with_evidence(): void
     {
         $product = $this->product('NEW');
@@ -144,7 +223,7 @@ class CatalogAttributesTest extends TestCase
         $product = $this->product('NEW');
         $editor = User::factory()->create(['user_type'=>User::TYPE_ADMIN_EDITOR]);
         $ai = \Mockery::mock(OpenAICatalogService::class);
-        $ai->shouldReceive('generateAttributesOnly')->once()->with(\Mockery::type(Product::class), true)->andReturn($this->newAttributeProposal($product));
+        $ai->shouldReceive('generateAttributesOnly')->once()->with(\Mockery::type(Product::class))->andReturn($this->newAttributeProposal($product));
         $this->app->instance(OpenAICatalogService::class, $ai);
         $this->actingAs($editor)->postJson(route('admin.products.catalog-attributes.complete', $product))
             ->assertOk()->assertJsonPath('attribute_review.accepted', 1)->assertJsonPath('attribute_review.items.0.dictionary_item.pending', true);
@@ -303,7 +382,7 @@ class CatalogAttributesTest extends TestCase
         ]]];
     }
 
-    public function test_attributes_only_batch_includes_prepared_active_skus_and_skips_complete_values(): void
+    public function test_attributes_only_batch_includes_prepared_active_skus_even_with_existing_values(): void
     {
         $a = $this->definition('Polarizado', 'boolean', false);
         $p = $this->product('PREPARED');
@@ -313,7 +392,30 @@ class CatalogAttributesTest extends TestCase
         $this->assertSame('ready', $batch->items()->first()->status);
         $this->assign($p, $a, ['boolean' => false]);
         app(ProductAiBatchDraftBuilder::class)->rebuild($batch, collect([$p->sku]), 'skus');
-        $this->assertSame('skipped', $batch->items()->first()->status);
+        $this->assertSame('ready', $batch->items()->first()->status);
+    }
+
+    public function test_attributes_only_batch_discovers_and_saves_new_definitions_with_an_empty_dictionary(): void
+    {
+        config(['services.openai.api_key' => 'test-key']);
+        $product = $this->product('EMPTY-DICTIONARY');
+        ProductAiPreparation::create(['product_id' => $product->id, 'status' => 'completed']);
+        $this->assertSame([], $this->catalog->missing($product));
+        $batch = ProductAiBatch::create(['source_type' => 'paste', 'status' => 'draft', 'attributes_only' => true]);
+        app(ProductAiBatchDraftBuilder::class)->rebuild($batch, collect([$product->sku]), 'skus');
+        $item = $batch->items()->firstOrFail();
+        $this->assertSame('ready', $item->status);
+        $item->update(['status' => 'queued']);
+        $ai = $this->mock(OpenAICatalogService::class);
+        $ai->shouldReceive('generateAttributesOnly')->once()->with(\Mockery::type(Product::class))
+            ->andReturn($this->newAttributeProposal($product));
+        $ai->shouldNotReceive('generateProductProposal');
+        (new GenerateProductAiPreparation($item->id, $product->id))->handle($ai, app(ProductAiProposalApplier::class));
+        $this->assertSame('completed', $item->fresh()->status);
+        $this->assertDatabaseHas('catalog_attributes', ['code' => 'resistente_al_agua']);
+        $this->assertDatabaseHas('product_attribute_values', ['product_id' => $product->id, 'source' => 'ai']);
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'name' => 'Manual', 'description' => 'Conservar', 'status' => 1]);
+        $this->assertDatabaseHas('product_ai_preparations', ['product_id' => $product->id, 'status' => 'completed']);
     }
 
     public function test_attributes_only_worker_preserves_content_and_preparation(): void
@@ -405,6 +507,15 @@ class CatalogAttributesTest extends TestCase
         app(ProductAiProposalApplier::class)->apply($p, $result, null, [$p->id, $child->id]);
         $this->assertDatabaseCount('product_attribute_values', 1);
         $this->assertSame('18.000000', $this->catalog->effective($p)[$a->id]['number']);
+        $this->assertSame([], $this->catalog->effective($child));
+
+        // Full batch application persists new definitions as well as existing ones.
+        $newResult = $this->newAttributeProposal($p);
+        $newResult['proposal'] += collect($result['proposal'])->only(['commercial_name', 'descriptions'])->all();
+        app(ProductAiProposalApplier::class)->apply($p, $newResult, null, [$p->id, $child->id]);
+        $this->assertDatabaseCount('product_attribute_values', 2);
+        $this->assertDatabaseHas('catalog_attributes', ['code' => 'resistente_al_agua']);
+        $this->assertSame('https://example.com/product', $p->fresh()->aiPreparation->sources[0]['url']);
         $this->assertSame([], $this->catalog->effective($child));
     }
 

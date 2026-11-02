@@ -59,7 +59,7 @@
         <div class="card border-0 shadow-sm">
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
-                    <thead><tr><th>Producto</th><th>Códigos recibidos</th><th>Estado</th><th>Detalle</th><th></th></tr></thead>
+                    <thead><tr><th>Producto</th><th>Códigos recibidos</th><th>Estado</th><th>Detalle y fuentes</th><th></th></tr></thead>
                     <tbody>
                     @foreach($batch->items as $item)
                         @php
@@ -76,7 +76,12 @@
                             <td><strong>{{ $item->product?->name ?: $item->product?->external_name ?: 'Sin producto' }}</strong><small class="d-block text-muted">{{ $item->product?->sku ?: $item->submitted_sku }}</small></td>
                             <td class="small">{{ implode(', ', $item->source_skus ?: [$item->submitted_sku]) }}</td>
                             <td><span class="badge text-bg-{{ $statusPresentation[1] }} item-status">{{ $statusPresentation[0] }}</span></td>
-                            <td class="small text-muted item-message">{{ $item->message }}</td>
+                            <td class="small text-muted">
+                                <div class="item-message">{{ $item->message }}</div>
+                                <div class="item-sources">
+                                    @include('admin.products.ai-batches.sources', ['sources' => $item->product?->aiPreparation?->sources ?: []])
+                                </div>
+                            </td>
                             <td>@if($item->product)<a href="{{ route('admin.products.edit', $item->product_id) }}" class="btn btn-sm btn-outline-dark">Abrir</a>@endif</td>
                         </tr>
                     @endforeach
@@ -131,6 +136,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 badge.className = 'badge text-bg-' + presentation[1] + ' item-status';
                 badge.textContent = presentation[0];
                 row.querySelector('.item-message').textContent = item.message || '';
+                const sourcesRoot = row.querySelector('.item-sources');
+                sourcesRoot.replaceChildren();
+                const sources = (Array.isArray(item.sources) ? item.sources : []).filter(source =>
+                    source && typeof source.url === 'string' && /^https?:\/\//i.test(source.url));
+                if (sources.length) {
+                    const heading = document.createElement('strong');
+                    heading.className = 'd-block mt-2';
+                    heading.textContent = 'Fuentes consultadas';
+                    const list = document.createElement('ul');
+                    list.className = 'mb-0 ps-3';
+                    sources.forEach(source => {
+                        const entry = document.createElement('li');
+                        const link = document.createElement('a');
+                        link.href = source.url;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.className = 'text-break';
+                        link.textContent = source.title || source.url;
+                        entry.appendChild(link);
+                        list.appendChild(entry);
+                    });
+                    sourcesRoot.append(heading, list);
+                }
             });
             if (data.status !== 'completed') window.setTimeout(refreshBatch, 4000);
             else bar.classList.remove('progress-bar-animated');

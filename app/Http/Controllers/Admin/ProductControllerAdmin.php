@@ -60,7 +60,7 @@ class ProductControllerAdmin extends Controller
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
-            $result = $openAi->generateProductProposal($product, true);
+            $result = $openAi->generateProductProposal($product);
             $matched = data_get($result, 'research.status') === 'matched';
             $generatedAt = now()->setMicrosecond(0);
 

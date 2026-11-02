@@ -16,6 +16,25 @@ class AdminProductAiBatchCatalogTest extends TestCase
 {
     use UsesProductAiDatabase;
 
+    public function test_batch_status_and_page_expose_saved_source_links(): void
+    {
+        $admin = User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]);
+        $product = Product::create(['sku' => 'WITH-SOURCE', 'name' => 'Producto', 'price' => 10, 'status' => 0]);
+        $batch = \App\Models\ProductAiBatch::create(['source_type' => 'paste', 'status' => 'completed', 'eligible_count' => 1]);
+        $batch->items()->create(['product_id' => $product->id, 'submitted_sku' => $product->sku, 'status' => 'completed']);
+        ProductAiPreparation::create(['product_id' => $product->id, 'status' => 'completed', 'sources' => [
+            ['url' => 'https://manufacturer.example/product', 'title' => 'Fabricante'],
+        ]]);
+        $this->actingAs($admin)->getJson(route('admin.products.ai-batches.status', $batch))
+            ->assertOk()->assertJsonPath('items.0.sources.0.url', 'https://manufacturer.example/product');
+        $page = app(\App\Http\Controllers\Admin\ProductAiBatchController::class)->show($batch);
+        $sources = $page->getData()['batch']->items->first()->product->aiPreparation->sources;
+        $html = view('admin.products.ai-batches.sources', compact('sources'))->render();
+        $this->assertStringContainsString('Fuentes consultadas', $html);
+        $this->assertStringContainsString('href="https://manufacturer.example/product"', $html);
+        $this->assertStringContainsString('rel="noopener noreferrer"', $html);
+    }
+
     public function test_non_admin_cannot_access_the_catalog_endpoint(): void
     {
         $customer = User::factory()->create(['user_type' => User::TYPE_CUSTOMER]);

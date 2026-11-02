@@ -72,7 +72,7 @@ class GenerateProductAiPreparation implements ShouldQueue
         if ($item->batch?->attributes_only) {
             try {
                 $catalog = app(\App\Services\CatalogAttributeService::class);
-                $applied = $catalog->missing($product) ? $catalog->applyAi($product, $openAi->generateAttributesOnly($product), $item->batch->created_by) : 0;
+                $applied = $catalog->applyAi($product, $openAi->generateAttributesOnly($product), $item->batch->created_by);
                 $item->update(['status'=>ProductAiBatchItem::STATUS_COMPLETED, 'message'=>$applied ? "Se guardaron {$applied} atributos respaldados; contenido comercial conservado." : 'No se encontraron nuevos valores respaldados. El producto se conservó.', 'finished_at'=>now()]);
                 $item->batch->refreshProgress();
             } catch (\Illuminate\Validation\ValidationException) {
@@ -81,19 +81,6 @@ class GenerateProductAiPreparation implements ShouldQueue
                 if ($this->isRetryable($exception)) throw $exception;
                 $this->finishAsFailed($item, $this->safeMessage($exception));
             }
-            return;
-        }
-
-        if ($product->aiPreparation?->status === ProductAiPreparation::STATUS_COMPLETED) {
-            $item->update([
-                'status' => ProductAiBatchItem::STATUS_COMPLETED,
-                'message' => Product::hasUsableImage($product->photo, $product->gallery)
-                    ? 'Producto preparado.'
-                    : 'Información generada; falta fotografía.',
-                'finished_at' => now(),
-            ]);
-            $item->batch?->refreshProgress();
-
             return;
         }
 

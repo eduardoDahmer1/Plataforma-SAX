@@ -22,6 +22,7 @@
         'admin.marketing.*',
         'admin.theme-settings.*',
         'admin.store-controls.*',
+        'admin.image-editor.*',
         'admin.ai-settings.*',
         'admin.whatsapp.*',
         'admin.dhl.*'
@@ -133,6 +134,9 @@
                 <i class="fa-solid fa-chevron-down ms-auto arrow-icon"></i>
             </a>
             <div class="collapse sax-submenu {{ $sistemaOpen ? 'show' : '' }}" id="menuSistema{{ $menuSuffix }}">
+                <a href="{{ route('admin.image-editor.index') }}" class="submenu-link {{ request()->routeIs('admin.image-editor.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Editor de imagens
+                </a>
                 @if($isMasterAdmin)
                 <a href="{{ route('admin.store-controls.edit') }}" class="submenu-link {{ request()->routeIs('admin.store-controls.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders"></i> {{ __('messages.store_controls_menu') }}

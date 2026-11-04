@@ -87,9 +87,11 @@ class ProductControllerAdmin extends Controller
             return response()->json(app(\App\Services\CatalogAttributeService::class)->prepareForEditor($product, $result));
         } catch (\Throwable $exception) {
             report($exception);
-            $safeError = $exception instanceof \RuntimeException
+            $safeError = $exception instanceof \Illuminate\Http\Client\ConnectionException
+                ? 'La consulta a la IA superó el tiempo de espera o no pudo conectarse. Volvé a intentarlo.'
+                : ($exception instanceof \RuntimeException
                 ? ($exception->getMessage() ?: 'No fue posible generar la propuesta.')
-                : 'No fue posible generar la propuesta.';
+                : 'No fue posible generar la propuesta.');
 
             ProductAiPreparation::updateOrCreate(
                 ['product_id' => $product->id],
@@ -948,6 +950,8 @@ class ProductControllerAdmin extends Controller
             'additional_categories.*.childcategory_id' => 'nullable|exists:childcategories,id',
             'photo' => 'nullable|image|max:10240',
             'gallery.*' => 'nullable|image|max:10240',
+            'gallery_remove' => 'nullable|array',
+            'gallery_remove.*' => 'string|max:500',
             'highlights' => 'nullable|array',
             'parent_id' => 'nullable|array',
             'color_parent_id' => 'nullable|array',
@@ -1106,6 +1110,29 @@ class ProductControllerAdmin extends Controller
                 $currentGallery = is_string($product->gallery) ? json_decode($product->gallery, true) : $product->gallery ?? [];
                 if (! is_array($currentGallery)) {
                     $currentGallery = [];
+                }
+
+                $requestedGalleryRemovals = array_values(array_unique(array_filter(
+                    (array) $request->input('gallery_remove', []),
+                    fn ($path) => is_string($path) && in_array($path, $currentGallery, true)
+                )));
+
+                foreach ($requestedGalleryRemovals as $removedPath) {
+                    $currentGallery = array_values(array_filter(
+                        $currentGallery,
+                        fn ($path) => $path !== $removedPath
+                    ));
+
+                    $usedElsewhere = Product::where('id', '!=', $product->id)
+                        ->where(function ($query) use ($removedPath) {
+                            $query->where('photo', $removedPath)
+                                ->orWhereJsonContains('gallery', $removedPath);
+                        })
+                        ->exists();
+
+                    if (! $usedElsewhere && Storage::disk('public')->exists($removedPath)) {
+                        Storage::disk('public')->delete($removedPath);
+                    }
                 }
 
                 if ($request->hasFile('gallery')) {

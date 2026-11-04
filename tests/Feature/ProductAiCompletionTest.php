@@ -14,6 +14,24 @@ class ProductAiCompletionTest extends TestCase
 {
     use UsesProductAiDatabase;
 
+    public function test_connection_failures_return_a_specific_message_and_leave_the_product_unchanged(): void
+    {
+        config(['services.openai.api_key' => 'test-key', 'catalog-sync.enabled' => false]);
+        $product = Product::create(['sku' => 'TIMEOUT', 'name' => 'Original', 'price' => 10]);
+        $product->refresh();
+        $before = $product->getRawOriginal();
+        $service = \Mockery::mock(OpenAICatalogService::class);
+        $service->shouldReceive('generateProductProposal')->once()->andThrow(
+            new \Illuminate\Http\Client\ConnectionException('Transport failure')
+        );
+
+        $response = app(ProductControllerAdmin::class)->completeWithAi($product, $service);
+
+        $this->assertSame(502, $response->getStatusCode());
+        $this->assertStringContainsString('tiempo de espera o no pudo conectarse', $response->getData(true)['message']);
+        $this->assertSame($before, $product->fresh()->getRawOriginal());
+    }
+
     public function test_completing_each_product_family_returns_content_without_saving_the_product(): void
     {
         config(['services.openai.api_key' => 'test-key', 'catalog-sync.enabled' => false]);

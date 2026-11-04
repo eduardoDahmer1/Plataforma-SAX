@@ -77,7 +77,8 @@
                 :currentImage="$blog?->image ? Storage::url($blog->image) : null"
                 placeholder="https://placehold.co/1600x1000/1a1a1a/ffffff?text=Imagem+de+Capa"
                 height="300px" maxSize="10MB" dimensions="1600 × 1000 px · proporção 8:5"
-                usage="Capa principal do artigo. Mantenha pessoas e textos na área central." />
+                usage="Capa principal do artigo. Mantenha pessoas e textos na área central."
+                editor inputId="blogCoverInput" editorWidth="1600" editorHeight="1000" editorMode="cover" />
 
             <label for="image_caption" class="sax-label mt-3">{{ __('messages.creditos_imagem_placeholder') }}</label>
             <input type="text" id="image_caption" name="image_caption" class="form-control sax-input-sm"
@@ -112,21 +113,35 @@
             :title="__('messages.galeria_imagens_label')"
             :subtitle="__('messages.galeria_imagens_desc')" />
 
-        <div class="p-4">
+        <div class="p-4" data-sax-image-gallery data-gallery-input="blogGalleryInput"
+             data-gallery-preview="blogGaleriaPreview" data-gallery-count="blogGaleriaCount"
+             data-gallery-max="10" data-editor-width="1400" data-editor-height="1050"
+             data-editor-mode="cover" data-editor-smart-subject="0">
             <div class="admin-media-spec mb-3">
                 <i class="fa-solid fa-expand"></i>
                 <span><strong>1400 × 1050 px · proporção 4:3</strong><small>Até 10 imagens. Use a mesma proporção para uma galeria mais uniforme.</small></span>
             </div>
             <div id="blogGaleriaPreview" class="gallery-preview-grid mb-3">
                 @foreach($blog?->gallery ?? [] as $index => $foto)
-                    <div class="gallery-preview-item is-existing shadow-sm border">
+                    <div class="gallery-preview-item is-existing shadow-sm border" data-gallery-existing>
                         <img src="{{ Storage::url($foto) }}" class="w-100 h-100 object-fit-cover">
                         <input type="hidden" name="gallery_actual[]" value="{{ $foto }}">
+                        <button type="button" class="sax-existing-edit" data-image-edit-existing
+                                data-image-source="{{ Storage::url($foto) }}" data-image-path="{{ $foto }}"
+                                title="Editar/cortar imagem">
+                            <i class="fas fa-crop-simple"></i>
+                        </button>
                         <button type="button" class="gallery-remove-btn">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 @endforeach
+            </div>
+
+            <div class="sax-gallery-toolbar">
+                <button type="button" class="btn btn-warning btn-sm" data-gallery-auto-all>
+                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Ajustar novas imagens automaticamente
+                </button>
             </div>
 
             <div class="upload-zone" id="blogGaleriaZone">

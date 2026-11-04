@@ -89,6 +89,10 @@
     {{-- Modal global de confirmación (forms con data-confirm) --}}
     <x-admin.confirm-modal />
 
+    @if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.image-editor.*'))
+        <x-admin.image-editor />
+    @endif
+
     @if(session('admin_access_restricted_area'))
         <div class="modal fade" id="adminAccessRestrictedModal" tabindex="-1" aria-labelledby="adminAccessRestrictedTitle" aria-hidden="true" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">

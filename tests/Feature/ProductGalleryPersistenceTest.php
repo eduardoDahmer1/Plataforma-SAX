@@ -97,7 +97,7 @@ class ProductGalleryPersistenceTest extends TestCase
         DB::table('products')->where('id', $id)->update(['gallery' => json_encode(json_encode($first))]);
         $childId = DB::table('products')->insertGetId(['sku' => 'CHILD', 'price' => 100, 'stock' => 5, 'size' => 'L']);
         $relationships = \Mockery::mock(ProductRelationshipSearch::class);
-        $relationships->shouldReceive('compatibleSize')->twice()->andReturn(true);
+        $relationships->shouldReceive('compatibleSize')->times(3)->andReturn(true);
         $this->app->instance(ProductRelationshipSearch::class, $relationships);
         $data['parent_id'] = [$childId];
         $response = $controller->update($this->request($data, true), $id);
@@ -109,6 +109,12 @@ class ProductGalleryPersistenceTest extends TestCase
         $response = $controller->update($this->request($data), $id);
         $this->assertSame(200, $response->getStatusCode(), $response->getContent());
         $this->assertGallery($id, $expected);
+
+        $data['gallery_remove'] = [$first[0]];
+        $response = $controller->update($this->request($data), $id);
+        $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+        $this->assertGallery($id, ['products/gallery/second.webp']);
+        $this->assertGallery($childId, ['products/gallery/second.webp']);
     }
 
     public function test_single_and_multiple_deletion_support_both_formats(): void

@@ -110,6 +110,12 @@
 @endif
 
 <!-- 7. TinyMCE somente nos editores ricos; admin.js em todo o painel -->
+@if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.image-editor.*'))
+    <script src="{{ asset('js/admin-image-editor.js') }}?v={{ filemtime(public_path('js/admin-image-editor.js')) }}"></script>
+@endif
+@if(Route::is('admin.image-editor.*'))
+    <script src="{{ asset('js/admin-image-studio.js') }}?v={{ filemtime(public_path('js/admin-image-studio.js')) }}"></script>
+@endif
 @if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.policies.edit', 'admin.institucional.edit', 'admin.emails.create', 'admin.email-templates.*'))
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.7/tinymce.min.js"></script>
 @endif

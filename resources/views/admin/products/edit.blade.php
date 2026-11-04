@@ -363,7 +363,11 @@
                         </div>
                     </section>
 
-                    <div class="col-12">
+                    <div class="col-12" data-sax-image-gallery data-gallery-input="galleryInput"
+                         data-gallery-preview="galleryPreview" data-gallery-count="gallerySelectionCount"
+                         data-gallery-max="50" data-gallery-style="product" data-gallery-remove-name="gallery_remove[]"
+                         data-editor-width="1080" data-editor-height="1080" data-editor-mode="contain"
+                         data-editor-smart-subject="1">
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <label for="photoInput" class="form-label text-bold">
@@ -387,11 +391,23 @@
                                     </div>
 
                                     <div class="product-dropzone {{ $item->photo ? 'mt-3' : '' }}" id="productPhotoDropzone">
-                                        <input type="file" name="photo" id="photoInput" class="product-dropzone-input" accept="image/jpeg,image/png,image/webp">
+                                        <input type="file" name="photo" id="photoInput" class="product-dropzone-input" accept="image/jpeg,image/png,image/webp"
+                                            data-sax-image-editor="single" data-editor-preview="photoPreviewImg"
+                                            data-editor-current="{{ $item->photo ? Storage::url($item->photo) : '' }}"
+                                            data-editor-status="photoSelectionStatus" data-editor-width="1080" data-editor-height="1080"
+                                            data-editor-mode="contain" data-editor-smart-subject="1">
                                         <div class="product-dropzone-icon"><i class="fas fa-cloud-arrow-up"></i></div>
                                         <strong>Arraste a foto principal aqui</strong>
                                         <span>ou clique para selecionar no computador</span>
                                         <small id="photoSelectionStatus">JPG, PNG ou WEBP · máximo 10 MB</small>
+                                    </div>
+                                    <div class="sax-image-editor__trigger-bar">
+                                        <button type="button" class="btn btn-outline-dark btn-sm" data-image-editor-open-for="photoInput">
+                                            <i class="fa-solid fa-crop-simple me-1"></i> Editar/cortar
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-sm" data-image-editor-auto-for="photoInput">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Ajuste automático 1080 × 1080
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -404,6 +420,11 @@
                                     <i class="fas fa-images"></i> Envie imagens nítidas e de boa qualidade. O sistema as adaptará ao espaço disponível sem deformá-las.
                                 </div>
                                 <div class="product-media-panel h-100">
+                                    <div class="sax-gallery-toolbar">
+                                        <button type="button" class="btn btn-warning btn-sm" data-gallery-auto-all>
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Ajustar novas imagens automaticamente
+                                        </button>
+                                    </div>
                                     <div class="product-dropzone" id="productGalleryDropzone">
                                         <input type="file" name="gallery[]" id="galleryInput" class="product-dropzone-input" multiple accept="image/jpeg,image/png,image/webp">
                                         <div class="product-dropzone-icon"><i class="fas fa-images"></i></div>
@@ -459,6 +480,11 @@
                                                     <img src="{{ Storage::url($img) }}" class="w-100 rounded"
                                                         style="aspect-ratio: 1/1; object-fit: cover;">
                                                 </label>
+                                                <button type="button" class="sax-existing-edit" data-image-edit-existing
+                                                    data-image-source="{{ Storage::url($img) }}" data-image-path="{{ $img }}"
+                                                    title="Editar/cortar imagem">
+                                                    <i class="fas fa-crop-simple"></i>
+                                                </button>
                                             </div>
                                         @endforeach
                                     </div>

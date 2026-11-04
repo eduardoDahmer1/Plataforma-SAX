@@ -137,6 +137,9 @@
 @if(Route::is('admin.*') || Route::is('manutencao') || (Route::is('receipts.*') && auth()->user()?->isMasterAdmin()))
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
+    @if(Route::is('admin.products.edit', 'admin.blogs.create', 'admin.blogs.edit', 'admin.image-editor.*'))
+        <link href="{{ asset('css/admin-image-editor.css') }}?v={{ filemtime(public_path('css/admin-image-editor.css')) }}" rel="stylesheet">
+    @endif
 @endif
 
 {{-- 7. User / Dashboard (Adicionado aqui) --}}

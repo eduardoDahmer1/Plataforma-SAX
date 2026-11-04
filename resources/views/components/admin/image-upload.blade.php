@@ -11,8 +11,17 @@
     'circular'     => false,
     'dimensions'   => null,
     'usage'        => null,
+    'editor'       => false,
+    'inputId'      => null,
+    'editorWidth'  => 1080,
+    'editorHeight' => 1080,
+    'editorMode'   => 'contain',
+    'editorSmartSubject' => false,
 ])
-@php $src = $currentImage ?? $placeholder; @endphp
+@php
+    $src = $currentImage ?? $placeholder;
+    $resolvedInputId = $inputId ?: 'imageUpload' . ucfirst($previewId);
+@endphp
 
 @if($circular)
 
@@ -45,9 +54,18 @@
              class="w-100 h-100 object-fit-cover">
     </div>
     <div class="upload-zone {{ $compact ? 'py-2 mb-3' : '' }}">
-        <input type="file" name="{{ $name }}"
+        <input type="file" name="{{ $name }}" id="{{ $resolvedInputId }}"
                class="upload-input img-trigger"
-               data-prev="{{ $previewId }}" accept="{{ $accept }}">
+               data-prev="{{ $previewId }}" accept="{{ $accept }}"
+               @if($editor)
+                   data-sax-image-editor="single"
+                   data-editor-preview="{{ $previewId }}"
+                   data-editor-current="{{ $currentImage }}"
+                   data-editor-width="{{ $editorWidth }}"
+                   data-editor-height="{{ $editorHeight }}"
+                   data-editor-mode="{{ $editorMode }}"
+                   data-editor-smart-subject="{{ $editorSmartSubject ? '1' : '0' }}"
+               @endif>
         @if(!$compact)
             <i class="fas fa-cloud-upload-alt mb-2 opacity-25 fa-lg"></i>
             <p class="x-small fw-bold m-0">Haga clic o arrastre una imagen</p>
@@ -56,5 +74,15 @@
             <p class="x-small text-muted m-0">Cambiar imagen</p>
         @endif
     </div>
+    @if($editor)
+        <div class="sax-image-editor__trigger-bar">
+            <button type="button" class="btn btn-outline-dark btn-sm" data-image-editor-open-for="{{ $resolvedInputId }}">
+                <i class="fa-solid fa-crop-simple me-1"></i> Editar imagem
+            </button>
+            <button type="button" class="btn btn-warning btn-sm" data-image-editor-auto-for="{{ $resolvedInputId }}">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Ajuste automático
+            </button>
+        </div>
+    @endif
 
 @endif

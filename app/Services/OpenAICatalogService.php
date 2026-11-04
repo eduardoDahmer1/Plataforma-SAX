@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Subcategory;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class OpenAICatalogService
@@ -280,9 +281,7 @@ PROMPT;
         }
 
         $payload = $response->json();
-        if (data_get($payload, 'status') === 'incomplete') {
-            throw new RuntimeException('OpenAI devolvió una respuesta incompleta.');
-        }
+        $this->assertCompleteResponse($payload);
 
         $content = $this->extractOutputText($payload);
         if ($content === '') {
@@ -361,6 +360,24 @@ PROMPT;
         }
 
         return trim(implode("\n", $texts));
+    }
+
+    private function assertCompleteResponse(array $payload): void
+    {
+        if (data_get($payload, 'status') !== 'incomplete') return;
+
+        $reason = data_get($payload, 'incomplete_details.reason');
+        Log::warning('Respuesta de IA incompleta.', [
+            'reason' => $reason,
+            'max_output_tokens' => data_get($payload, 'max_output_tokens'),
+            'output_tokens' => data_get($payload, 'usage.output_tokens'),
+        ]);
+
+        throw new RuntimeException(match ($reason) {
+            'max_output_tokens' => 'La IA alcanzó el límite de generación antes de completar la propuesta.',
+            'content_filter' => 'La IA no pudo completar la propuesta por un filtro de contenido.',
+            default => 'La IA devolvió una respuesta incompleta.',
+        });
     }
 
     private function normalizeSearchText(?string $value): ?string
@@ -533,7 +550,7 @@ PROMPT;
             $payload = Http::withToken($settings->apiKey())->acceptJson()->asJson()->timeout((int) config('services.openai.timeout',90))
                 ->post(rtrim(config('services.openai.base_url'),'/').'/responses', $body)->throw()->json();
         } catch (RequestException $exception) { throw new RuntimeException('No fue posible consultar la IA para atributos.', previous:$exception); }
-        if (data_get($payload,'status') === 'incomplete') throw new RuntimeException('La IA devolvió una respuesta incompleta.');
+        $this->assertCompleteResponse($payload);
         $result = json_decode($this->extractOutputText($payload), true);
         if (! is_array($result)) throw new RuntimeException('La IA devolvió un formato inválido.');
         return [$result,$payload];

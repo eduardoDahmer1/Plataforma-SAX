@@ -264,6 +264,39 @@ class OpenAICatalogServiceTest extends TestCase
         }
     }
 
+    /** @dataProvider incompleteResponseReasons */
+    public function test_incomplete_responses_explain_the_reason_without_saving_or_retrying(string $reason, string $message): void
+    {
+        config(['services.openai.api_key' => 'test-key', 'services.openai.max_output_tokens' => 12000]);
+        Http::preventStrayRequests();
+        Http::fake(['api.openai.com/*' => Http::response([
+            'status' => 'incomplete', 'incomplete_details' => ['reason' => $reason],
+            'max_output_tokens' => 12000, 'usage' => ['output_tokens' => 12000],
+        ])]);
+        $product = Product::make(['name' => 'Original']);
+        $product->setRelation('brand', null)->setRelation('category', null)
+            ->setRelation('subcategory', null)->setRelation('categoriasFilhas', null);
+
+        try {
+            $this->serviceWithTaxonomy()->generateProductProposal($product);
+            $this->fail('An incomplete response must not be applied.');
+        } catch (\RuntimeException $error) {
+            $this->assertSame($message, $error->getMessage());
+            $this->assertSame('Original', $product->name);
+        }
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => $request['max_output_tokens'] === 12000);
+    }
+
+    public static function incompleteResponseReasons(): array
+    {
+        return [
+            ['max_output_tokens', 'La IA alcanzó el límite de generación antes de completar la propuesta.'],
+            ['content_filter', 'La IA no pudo completar la propuesta por un filtro de contenido.'],
+            ['unknown', 'La IA devolvió una respuesta incompleta.'],
+        ];
+    }
+
     private function serviceWithTaxonomy(): OpenAICatalogService
     {
         $taxonomy = $this->taxonomy();

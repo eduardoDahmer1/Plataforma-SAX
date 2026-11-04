@@ -481,9 +481,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!form) return;
 
     function galleryItemHtml(path, url) {
-        return '<div class="gallery-preview-item is-existing shadow-sm border">' +
+        return '<div class="gallery-preview-item is-existing shadow-sm border" data-gallery-existing>' +
             '<img src="' + url + '" class="w-100 h-100 object-fit-cover">' +
             '<input type="hidden" name="gallery_actual[]" value="' + path + '">' +
+            '<button type="button" class="sax-existing-edit" data-image-edit-existing data-image-source="' + url + '" data-image-path="' + path + '" title="Editar/cortar imagem">' +
+            '<i class="fas fa-crop-simple"></i></button>' +
             '<button type="button" class="gallery-remove-btn"><i class="fas fa-times"></i></button>' +
             '</div>';
     }
@@ -533,10 +535,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         const imageInput = form.querySelector('input[name="image"]');
-                        if (imageInput) imageInput.value = '';
+                        if (imageInput) {
+                            imageInput.value = '';
+                            imageInput._saxEditedFile = null;
+                        }
                         if (data.blog.image_url) {
                             const coverPreview = document.getElementById('blogCoverPreview');
                             if (coverPreview) coverPreview.src = data.blog.image_url;
+                            if (imageInput) imageInput.dataset.editorCurrent = data.blog.image_url;
                         }
 
                         const galleryInput = form.querySelector('input[name="gallery[]"]');
@@ -592,85 +598,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
     });
-})();
-
-// ── Blog: Galeria — acumula arquivos entre seleções, gera preview e trava em 10 imagens ──
-// Sem isto, cada nova seleção no <input multiple> substitui a anterior (perdendo fotos)
-// e não havia nenhuma pré-visualização das imagens ainda não enviadas.
-(function () {
-    var input = document.getElementById('blogGalleryInput');
-    var preview = document.getElementById('blogGaleriaPreview');
-    var counter = document.getElementById('blogGaleriaCount');
-    if (!input || !preview) return;
-
-    var MAX_TOTAL = 10;
-    var store = new DataTransfer();
-    var urls = [];
-
-    function existingCount() {
-        return preview.querySelectorAll('.gallery-preview-item.is-existing').length;
-    }
-
-    function renderPending() {
-        urls.forEach(function (u) { URL.revokeObjectURL(u); });
-        urls = [];
-        preview.querySelectorAll('.gallery-preview-item.is-pending').forEach(function (el) { el.remove(); });
-
-        Array.from(store.files).forEach(function (file, index) {
-            var url = URL.createObjectURL(file);
-            urls.push(url);
-
-            var item = document.createElement('div');
-            item.className = 'gallery-preview-item is-pending shadow-sm border';
-            item.dataset.fileIndex = index;
-            item.innerHTML =
-                '<img src="' + url + '" class="w-100 h-100 object-fit-cover">' +
-                '<button type="button" class="gallery-remove-btn"><i class="fas fa-times"></i></button>';
-            preview.appendChild(item);
-        });
-
-        if (counter) counter.textContent = existingCount() + store.files.length;
-    }
-
-    input.addEventListener('change', function () {
-        var incoming = Array.from(input.files);
-        var room = MAX_TOTAL - existingCount() - store.files.length;
-
-        if (incoming.length > room) {
-            if (window.saxToast) saxToast('error', 'Você pode ter no máximo ' + MAX_TOTAL + ' imagens na galeria.');
-            incoming = incoming.slice(0, Math.max(room, 0));
-        }
-
-        incoming.forEach(function (file) {
-            var dup = Array.from(store.files).some(function (f) {
-                return f.name === file.name && f.size === file.size;
-            });
-            if (!dup) store.items.add(file);
-        });
-
-        input.files = store.files;
-        renderPending();
-    });
-
-    preview.addEventListener('click', function (e) {
-        var btn = e.target.closest('.gallery-remove-btn');
-        if (!btn) return;
-        var item = btn.closest('.gallery-preview-item.is-pending');
-        if (!item) return;
-
-        e.stopPropagation();
-        store.items.remove(parseInt(item.dataset.fileIndex, 10));
-        input.files = store.files;
-        renderPending();
-    });
-
-    // Chamado após um save AJAX bem-sucedido: os pendentes já foram persistidos no servidor.
-    window.resetBlogGalleryStore = function () {
-        store = new DataTransfer();
-        input.files = store.files;
-        input.value = '';
-        renderPending();
-    };
 })();
 
 // 1. Inicialização segura do Objeto de Estados

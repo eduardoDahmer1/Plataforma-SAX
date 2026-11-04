@@ -8,6 +8,11 @@ use App\Models\SystemSetting;
 
 class SystemController extends Controller
 {
+    public function imageEditor()
+    {
+        return view('admin.image-editor.index');
+    }
+
     public function clearCache()
     {
         $output = [];

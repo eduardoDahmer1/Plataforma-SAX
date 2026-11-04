@@ -557,7 +557,8 @@ class ProductControllerAdmin extends Controller
             return response()->json([]);
         }
 
-        if (in_array($context, ['size', 'color'], true)) {
+        // Size suggestions use family compatibility; manual searches stay unrestricted.
+        if ($context === 'color' || ($context === 'size' && $strictFamily)) {
             $current = $excludeId ? Product::with('brand:id,name')->find($excludeId) : null;
 
             return response()->json(app(\App\Services\ProductRelationshipSearch::class)->search($q, $current, $context));

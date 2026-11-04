@@ -40,6 +40,31 @@ class ProductRelationshipSearchTest extends TestCase
         return Product::with('brand')->findOrFail($id);
     }
 
+    public function test_manual_size_search_finds_products_outside_the_current_family(): void
+    {
+        $current = $this->product('FERRA FANTASY #40 *001');
+        DB::table('brands')->insert(['id' => 2, 'name' => 'OTHER']);
+        $differentBrand = $this->product('GENERAL OTHER MODEL #40 *002', ['brand_id' => 2]);
+        $unknownColor = $this->product('GENERAL UNKNOWN', ['sku' => 'SKU-GENERAL']);
+        $sameSize = $this->product('GENERAL FANTASY #40 *001');
+        $controller = app(\App\Http\Controllers\Admin\ProductControllerAdmin::class);
+        $response = $controller->search(\Illuminate\Http\Request::create('/products/search', 'GET', [
+            'q' => 'GEN', 'exclude_id' => $current->id, 'context' => 'size',
+        ]))->getData(true);
+
+        $this->assertEqualsCanonicalizing(
+            [$differentBrand->id, $unknownColor->id, $sameSize->id], array_column($response, 'id')
+        );
+        $bySku = $controller->search(\Illuminate\Http\Request::create('/products/search', 'GET', [
+            'q' => 'SKU-GENERAL', 'exclude_id' => $current->id, 'context' => 'size',
+        ]))->getData(true);
+        $this->assertSame([$unknownColor->id], array_column($bySku, 'id'));
+        $excluded = $controller->search(\Illuminate\Http\Request::create('/products/search', 'GET', [
+            'q' => 'FERRA', 'exclude_id' => $current->id, 'context' => 'size',
+        ]))->getData(true);
+        $this->assertSame([], $excluded);
+    }
+
     public function test_real_fantasy_format_finds_all_sizes_and_other_compound_colors(): void
     {
         DB::table('brands')->where('id', 1)->update(['name' => 'Salvatore Ferragamo']);

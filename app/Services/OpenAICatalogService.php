@@ -112,6 +112,10 @@ solamente como último recurso si no existen candidatos extraídos. Ignora símb
 de color que puedan impedir coincidencias, pero no elimines letras o números que formen parte de la
 marca, modelo o referencia.
 No limites la investigación a tres páginas: el sistema mostrará después únicamente las tres mejores.
+Encontrar la identidad del producto es el punto de partida: continúa reuniendo características que
+permitan describirlo con detalle. Si las primeras fichas son escuetas, busca por marca y referencia
+los materiales, construcción, componentes, organización, cierre, funciones o cuidados pertinentes.
+Incorpora solo datos documentados y aplicables al modelo; omite los apartados sin respaldo.
 
 Para verificar una coincidencia, compara marca, referencia o identificador, modelo y variante dentro
 del contenido de la página. Que la referencia aparezca en la URL es una señal fuerte y debe recibir
@@ -202,12 +206,20 @@ La concentración de una fragancia sí puede mencionarse cuando esté verificada
 no el volumen del envase. No mezcles hechos de distintas concentraciones de una misma fragancia.
 
 Redacta textos comerciales premium: precisos, fluidos y específicos, con vocabulario natural y sobrio.
-Cuando existan suficientes hechos verificados, desarrolla normalmente entre 100 y 160 palabras POR
-IDIOMA en dos o tres párrafos. Presenta primero identidad y diseño; desarrolla después materiales,
-construcción, tecnologías o funciones documentadas y explica su utilidad solo si está respaldada.
+Cuando existan suficientes hechos verificados distintos, apunta a entre 150 y 220 palabras POR
+IDIOMA en tres párrafos bien desarrollados. Es una orientación condicionada a la información, no un
+mínimo obligatorio ni un límite rígido. No reduzcas una ficha rica en detalles a un resumen de dos frases.
+Presenta primero identidad y diseño; desarrolla después materiales, construcción, componentes,
+organización, cierre, tecnologías o funciones documentadas y explica su utilidad solo si está respaldada.
+Selecciona los aspectos pertinentes al producto: no fuerces apartados que no correspondan. Un hecho
+puede explicarse en la descripción aunque también tenga un atributo estructurado; conserva las
+exclusiones de tallas, colores, medidas, volúmenes y capacidades indicadas antes.
 Cada párrafo debe aportar hechos distintos: no repitas ideas, no agregues relleno ni afirmaciones
 aspiracionales para alcanzar la extensión. Con pocos hechos confiables, usa menos palabras y párrafos.
 La precisión prevalece sobre la longitud: nunca inventes características, beneficios ni prestaciones.
+Antes de finalizar, revisa los hechos reunidos y aprovecha los detalles relevantes que aún no estén
+explicados. Si hay información suficiente y el texto quedó demasiado breve, amplíalo con esos hechos;
+si solo existen pocos datos respaldados, conserva una descripción breve sin alargarla artificialmente.
 Devuelve texto plano con párrafos separados por una línea en blanco. Usa capitalización natural:
 nunca escribas una frase o un párrafo completo en mayúsculas salvo siglas y denominaciones oficiales.
 

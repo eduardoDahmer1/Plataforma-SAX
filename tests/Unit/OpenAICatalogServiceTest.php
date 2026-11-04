@@ -134,8 +134,8 @@ class OpenAICatalogServiceTest extends TestCase
 
         $knownData = json_decode(str($requestBody['input'])->after("\n")->toString(), true);
 
-        $this->assertStringContainsString('entre 100 y 160 palabras POR', $requestBody['instructions']);
-        $this->assertStringContainsString('dos o tres párrafos', $requestBody['instructions']);
+        $this->assertStringContainsString('entre 150 y 220 palabras POR', $requestBody['instructions']);
+        $this->assertStringContainsString('tres párrafos bien desarrollados', $requestBody['instructions']);
         $this->assertStringContainsString('Con pocos hechos confiables, usa menos palabras y párrafos', $requestBody['instructions']);
         $this->assertStringContainsString('Cada párrafo debe aportar hechos distintos', $requestBody['instructions']);
         $this->assertStringContainsString('otra variante del mismo modelo', $requestBody['instructions']);
@@ -146,7 +146,7 @@ class OpenAICatalogServiceTest extends TestCase
         $this->assertStringContainsString('deben devolverse únicamente dentro de web_research', $requestBody['instructions']);
         $this->assertStringContainsString('nunca escribas una frase', $requestBody['instructions']);
         $this->assertStringContainsString('Solo los tres campos commercial_name', $requestBody['instructions']);
-        $this->assertStringNotContainsString('entre 150 y 220 palabras', $requestBody['instructions']);
+        $this->assertStringContainsString('mínimo obligatorio ni un límite rígido', $requestBody['instructions']);
         $this->assertStringContainsString('No limites la investigación a tres páginas', $requestBody['instructions']);
         $this->assertStringContainsString('manufacturer_reference_candidates', $requestBody['instructions']);
         $this->assertStringNotContainsString('GTIN exacto', $requestBody['instructions']);

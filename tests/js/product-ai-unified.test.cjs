@@ -118,3 +118,12 @@ test('changes during research discard the response without overwriting the form'
     assert.match(elements.feedback.textContent, /Cambiaste los datos investigados/);
     assert.equal(button.disabled, false);
 });
+
+test('a failed generation preserves the visible sources of the saved product', async () => {
+    const {button, context} = form({}, '140', 'MARCA', false);
+    const savedResearch = {className: 'alert alert-info mb-4', innerHTML: '<a href="https://brand.example/product">Fabricante</a>'};
+    context.aiResearch = savedResearch;
+    await button.click();
+    assert.equal(savedResearch.className, 'alert alert-info mb-4');
+    assert.match(savedResearch.innerHTML, /https:\/\/brand\.example\/product/);
+});

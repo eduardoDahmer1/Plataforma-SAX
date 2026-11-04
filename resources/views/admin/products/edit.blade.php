@@ -72,7 +72,7 @@
                 'pending' => ['Pendente', 'secondary', 'fa-clock'],
             ][$aiDisplayStatus];
         @endphp
-        <div id="productAiResearch" class="d-none mb-4">
+        <div id="productAiResearch" @class(['alert alert-info mb-4', 'd-none' => empty($aiPreparation?->sources) && blank($aiPreparation?->error_message)])>
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                     <span class="badge text-bg-{{ $aiStatusPresentation[1] }}">

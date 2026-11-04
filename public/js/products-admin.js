@@ -363,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function () {
         aiButton.disabled = true;
         aiButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando...';
         aiFeedback.className = 'alert d-none';
-        if (aiResearch) aiResearch.className = 'd-none mb-4';
         if (aiGeneratedAt) aiGeneratedAt.value = '';
         currentProposal = null;
         taxonomyAssessment?.replaceChildren();

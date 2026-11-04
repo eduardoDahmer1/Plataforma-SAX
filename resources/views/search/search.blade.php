@@ -44,11 +44,21 @@
             </div>
             <div class="search-product-suggestions__rail">
                 @foreach($suggestedProducts as $suggested)
+                    @php
+                        $suggestedName = filled($suggested->name) ? $suggested->name : ($suggested->external_name ?? '');
+                        $translatedName = trim((string) ($suggested->translations->firstWhere('locale', translation_locale())?->name ?? ''));
+                        $externalName = trim((string) ($suggested->external_name ?? ''));
+                        if (translation_locale() !== 'pt-br' && $translatedName !== ''
+                            && (mb_strtolower($translatedName) !== mb_strtolower($externalName)
+                                || mb_strtolower(trim((string) $suggestedName)) === mb_strtolower($externalName))) {
+                            $suggestedName = $translatedName;
+                        }
+                    @endphp
                     <a href="{{ route('produto.show', $suggested->slug) }}" class="search-product-suggestion">
                         <img src="{{ $suggested->photo_url ?? asset('storage/uploads/noimage.webp') }}" alt="" loading="lazy">
                         <span>
                             <small>{{ $suggested->brand?->name ?? 'SAX' }}</small>
-                            <b>{{ $suggested->external_name ?: $suggested->name }}</b>
+                            <b>{{ $suggestedName }}</b>
                             <strong>{{ currency_format($suggested->price) }}</strong>
                         </span>
                     </a>

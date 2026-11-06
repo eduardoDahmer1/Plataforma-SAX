@@ -21,4 +21,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (image) image.src = '';
         }
     });
+
+    const proofInput = document.getElementById('payment-proofs');
+    const proofSelection = document.getElementById('payment-proof-selection');
+
+    proofInput?.addEventListener('change', function () {
+        if (!proofSelection) return;
+
+        const files = Array.from(proofInput.files || []);
+        proofSelection.textContent = files.length
+            ? files.map(function (file) { return file.name; }).join(' • ')
+            : '';
+    });
 });

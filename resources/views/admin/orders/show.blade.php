@@ -34,6 +34,13 @@
             default => 'commerce-btn--dark',
         };
         $orderItemsCount = $order->items->sum('quantity');
+        $financeMessage = sprintf(
+            'Hola, ¿qué tal? Necesito que confirmen el pago del pedido #%s, por el valor de %s. Fecha del pedido: %s. Por favor, confirmen si el valor fue acreditado.',
+            $order->order_number ?: $order->id,
+            order_money($order, $order->total),
+            $order->created_at->format('d/m/Y \a \l\a\s H:i')
+        );
+        $financeWhatsappUrl = 'https://wa.me/595993288327?text=' . rawurlencode($financeMessage);
     @endphp
 
     <a href="{{ route('admin.orders.index') }}" class="commerce-back-link">
@@ -312,6 +319,29 @@
                     </div>
                 </div>
 
+                <div class="commerce-side-card commerce-finance-confirmation mb-4 {{ $order->payment_status === 'paid' ? 'is-ready' : 'is-locked' }}">
+                    <h6 class="x-small fw-bold text-uppercase tracking-wider mb-2">
+                        <i class="fa-brands fa-whatsapp me-1"></i>Confirmação do financeiro
+                    </h6>
+                    <p class="small text-secondary mb-3">
+                        @if ($order->payment_status === 'paid')
+                            Envie ao Sax Financiero a data e o valor deste pedido para confirmar o crédito.
+                        @else
+                            Marque o pagamento como <strong>Pago</strong> e salve para liberar o envio ao financeiro.
+                        @endif
+                    </p>
+                    @if ($order->payment_status === 'paid')
+                        <a href="{{ $financeWhatsappUrl }}" target="_blank" rel="noopener" class="btn commerce-btn commerce-btn--success w-100 fw-bold text-uppercase">
+                            <i class="fa-brands fa-whatsapp"></i> Enviar ao financeiro
+                        </a>
+                        <small class="d-block text-secondary mt-2 text-center">Sax Financiero · +595 993 288327</small>
+                    @else
+                        <button type="button" class="btn btn-secondary w-100 fw-bold text-uppercase" disabled aria-disabled="true">
+                            <i class="fa-solid fa-lock"></i> Aguardando pagamento
+                        </button>
+                    @endif
+                </div>
+
                 @if(
                     request()->user()?->isMasterAdmin()
                     && $order->payment_method === 'rendix_pix'
@@ -359,6 +389,31 @@
                             </button>
                         </form>
                         <small class="d-block text-secondary mt-2">{{ __('messages.rendix_refund_irreversible_notice') }}</small>
+                    </div>
+                @endif
+
+                @if ($order->paymentProofs->isNotEmpty())
+                    <div class="commerce-side-card mb-4">
+                        <h6 class="x-small fw-bold text-uppercase tracking-wider mb-2">
+                            <i class="fa-solid fa-file-shield me-1"></i>Comprovantes do cliente
+                        </h6>
+                        <p class="small text-secondary mb-3">{{ $order->paymentProofs->count() }} arquivo(s) enviado(s). Clique para abrir com acesso protegido.</p>
+                        <div class="commerce-payment-proofs">
+                            @foreach ($order->paymentProofs as $proof)
+                                <a href="{{ route('payment-proofs.show', $proof) }}" target="_blank" rel="noopener" class="commerce-payment-proof">
+                                    @if ($proof->isImage())
+                                        <img src="{{ route('payment-proofs.show', $proof) }}" alt="{{ $proof->original_name }}">
+                                    @else
+                                        <span><i class="fa-solid fa-file-pdf"></i></span>
+                                    @endif
+                                    <div>
+                                        <strong>{{ $proof->original_name }}</strong>
+                                        <small>{{ number_format($proof->size / 1024, 0, ',', '.') }} KB · {{ $proof->created_at->format('d/m/Y H:i') }}</small>
+                                    </div>
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
                 @endif
 

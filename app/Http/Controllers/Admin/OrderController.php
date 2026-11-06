@@ -152,7 +152,7 @@ class OrderController extends Controller
     // Mostra detalhes do pedido
     public function show($id)
     {
-        $order = Order::with(['user', 'items.product', 'receipt', 'cupon', 'orderNotes.author', 'paymentTransactions'])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'receipt', 'cupon', 'orderNotes.author', 'paymentTransactions', 'paymentProofs.uploader'])->findOrFail($id);
 
         if (is_null($order->read_at)) {
             $readAt = now();

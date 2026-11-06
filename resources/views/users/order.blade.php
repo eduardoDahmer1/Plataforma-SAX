@@ -46,6 +46,68 @@
                 'delivery' => __('messages.rendix_refund_reason_delivery'),
                 'other' => __('messages.rendix_refund_reason_other'),
             ];
+            $proofLocale = in_array(app()->getLocale(), ['pt', 'es', 'en'], true) ? app()->getLocale() : 'pt';
+            $proofCopy = [
+                'pt' => [
+                    'title' => 'Envie o comprovante de pagamento',
+                    'subtitle' => 'Este envio ajuda nossa equipe a localizar e confirmar seu pagamento com segurança.',
+                    'pix' => 'Para Pix, envie o comprovante que mostre data, valor e o identificador da transação (ID/E2E).',
+                    'paraguay_card' => 'Para cartão ou QR do Paraguai, envie a tela ou o comprovante da transação Bancard/banco, com data, valor em guaranis e número de autorização ou referência.',
+                    'brazil_card' => 'Para cartão do Brasil, envie o comprovante do banco ou cartão com data, valor e referência da transação.',
+                    'international_card' => 'Para cartão internacional, envie o registro da transação mostrando data, valor, moeda e número de autorização ou referência.',
+                    'bancard_generic' => 'Se pagou por Pix/QR, envie o comprovante com o ID da transação. Se pagou com cartão, envie o registro do banco ou da Bancard com data, valor e autorização.',
+                    'transfer' => 'Envie o comprovante do depósito ou transferência mostrando data, valor e referência da operação.',
+                    'security' => 'Não envie foto completa do cartão, senha ou código CVV. Você pode ocultar os números sensíveis.',
+                    'select' => 'Selecionar fotos ou PDF',
+                    'send' => 'Enviar comprovantes',
+                    'existing' => 'Comprovantes já enviados',
+                    'limit' => 'JPG, PNG, WEBP ou PDF. Até 5 arquivos por envio e 8 MB por arquivo.',
+                ],
+                'es' => [
+                    'title' => 'Envía el comprobante de pago',
+                    'subtitle' => 'Este envío ayuda a nuestro equipo a localizar y confirmar tu pago de forma segura.',
+                    'pix' => 'Para Pix, envía el comprobante que muestre fecha, importe y el identificador de la transacción (ID/E2E).',
+                    'paraguay_card' => 'Para tarjeta o QR de Paraguay, envía la pantalla o comprobante de la transacción de Bancard/banco, con fecha, importe en guaraníes y número de autorización o referencia.',
+                    'brazil_card' => 'Para tarjeta de Brasil, envía el comprobante del banco o de la tarjeta con fecha, importe y referencia de la transacción.',
+                    'international_card' => 'Para tarjeta internacional, envía el registro de la transacción con fecha, importe, moneda y número de autorización o referencia.',
+                    'bancard_generic' => 'Si pagaste por Pix/QR, envía el comprobante con el ID de la transacción. Si pagaste con tarjeta, envía el registro del banco o Bancard con fecha, importe y autorización.',
+                    'transfer' => 'Envía el comprobante del depósito o transferencia con fecha, importe y referencia de la operación.',
+                    'security' => 'No envíes una foto completa de la tarjeta, contraseña ni código CVV. Puedes ocultar los números sensibles.',
+                    'select' => 'Seleccionar fotos o PDF',
+                    'send' => 'Enviar comprobantes',
+                    'existing' => 'Comprobantes enviados',
+                    'limit' => 'JPG, PNG, WEBP o PDF. Hasta 5 archivos por envío y 8 MB por archivo.',
+                ],
+                'en' => [
+                    'title' => 'Upload your payment proof',
+                    'subtitle' => 'This helps our team locate and confirm your payment securely.',
+                    'pix' => 'For Pix, upload the receipt showing the date, amount and transaction identifier (ID/E2E).',
+                    'paraguay_card' => 'For a Paraguayan card or QR payment, upload the Bancard/bank transaction screen or receipt showing the date, amount in guaranies and authorization or reference number.',
+                    'brazil_card' => 'For a Brazilian card, upload the bank or card receipt showing the date, amount and transaction reference.',
+                    'international_card' => 'For an international card, upload the transaction record showing the date, amount, currency and authorization or reference number.',
+                    'bancard_generic' => 'For Pix/QR, upload the receipt with the transaction ID. For card payments, upload the bank or Bancard record showing the date, amount and authorization.',
+                    'transfer' => 'Upload the deposit or bank transfer receipt showing the date, amount and transaction reference.',
+                    'security' => 'Do not upload a full card photo, password or CVV. You may hide sensitive card numbers.',
+                    'select' => 'Select photos or PDF',
+                    'send' => 'Upload proofs',
+                    'existing' => 'Previously uploaded proofs',
+                    'limit' => 'JPG, PNG, WEBP or PDF. Up to 5 files per upload and 8 MB per file.',
+                ],
+            ][$proofLocale];
+            foreach ($proofCopy as $proofKey => $fallbackText) {
+                $translationKey = 'messages.payment_proof_' . $proofKey;
+                $translatedText = __($translationKey);
+                $proofCopy[$proofKey] = $translatedText === $translationKey ? $fallbackText : $translatedText;
+            }
+            $paymentCardIso = \App\Support\CountrySupport::iso2($order->payment_card_country);
+            $proofContext = match (true) {
+                $order->payment_method === 'rendix_pix' => 'pix',
+                $order->payment_method === 'bancard_v2' && $paymentCardIso === 'PY' => 'paraguay_card',
+                $order->payment_method === 'bancard_v2' && $paymentCardIso === 'BR' => 'brazil_card',
+                $order->payment_method === 'bancard_v2' && filled($order->payment_card_country) => 'international_card',
+                $order->payment_method === 'bancard_v2' => 'bancard_generic',
+                default => 'transfer',
+            };
         @endphp
         @if (session('warning'))
             <div class="alert alert-warning mb-4 shadow-sm border-0" role="alert"><i
@@ -273,6 +335,68 @@
             </section>
         @endif
 
+        <section class="sax-payment-proof-card mb-4" aria-labelledby="payment-proof-title">
+            <div class="sax-payment-proof-card__intro">
+                <span class="sax-payment-proof-card__icon"><i class="fa-solid fa-file-shield"></i></span>
+                <div>
+                    <h2 id="payment-proof-title">{{ $proofCopy['title'] }}</h2>
+                    <p>{{ $proofCopy['subtitle'] }}</p>
+                </div>
+            </div>
+
+            <div class="sax-payment-proof-card__guidance">
+                <i class="fa-solid fa-circle-info"></i>
+                <div>
+                    <strong>{{ $proofCopy[$proofContext] }}</strong>
+                    <span><i class="fa-solid fa-lock"></i> {{ $proofCopy['security'] }}</span>
+                </div>
+            </div>
+
+            @if ($order->paymentProofs->isNotEmpty() || $order->deposit_receipt)
+                <div class="sax-payment-proof-card__existing">
+                    <h3>{{ $proofCopy['existing'] }}</h3>
+                    <div class="sax-payment-proof-grid">
+                        @foreach ($order->paymentProofs as $proof)
+                            <a href="{{ route('payment-proofs.show', $proof) }}" target="_blank" rel="noopener" class="sax-payment-proof-file">
+                                @if ($proof->isImage())
+                                    <img src="{{ route('payment-proofs.show', $proof) }}" alt="{{ $proof->original_name }}">
+                                @else
+                                    <span><i class="fa-solid fa-file-pdf"></i></span>
+                                @endif
+                                <small>{{ $proof->original_name }}</small>
+                            </a>
+                        @endforeach
+                        @if ($order->deposit_receipt)
+                            <a href="{{ asset('storage/' . $order->depositReceiptPath()) }}" target="_blank" rel="noopener" class="sax-payment-proof-file">
+                                @if (\Illuminate\Support\Str::endsWith(strtolower($order->depositReceiptPath()), '.pdf'))
+                                    <span><i class="fa-solid fa-file-pdf"></i></span>
+                                @else
+                                    <img src="{{ asset('storage/' . $order->depositReceiptPath()) }}" alt="{{ $proofCopy['existing'] }}">
+                                @endif
+                                <small>{{ basename($order->depositReceiptPath()) }}</small>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            @if (! $isCanceled && $order->paymentProofs->count() < 10)
+                <form action="{{ route('user.orders.payment-proofs.store', $order) }}" method="POST" enctype="multipart/form-data" class="sax-payment-proof-form">
+                    @csrf
+                    <label for="payment-proofs" class="sax-payment-proof-picker">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>{{ $proofCopy['select'] }}</span>
+                        <small>{{ $proofCopy['limit'] }}</small>
+                    </label>
+                    <input id="payment-proofs" type="file" name="proofs[]" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" multiple required>
+                    <output id="payment-proof-selection" class="sax-payment-proof-selection" aria-live="polite"></output>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="fa-solid fa-paper-plane"></i> {{ $proofCopy['send'] }}
+                    </button>
+                </form>
+            @endif
+        </section>
+
         <div class="row g-4 mb-5">
             <div class="col-lg-5">
                 <div class="sax-premium-card h-100 shadow-sm border-0">
@@ -431,32 +555,6 @@
                             </div>
                         @endif
 
-                        <div class="mt-4 pt-3 border-top">
-                            @if ($order->deposit_receipt)
-                                <label class="sax-label d-block mb-2 text-center text-uppercase"
-                                    style="font-size: 9px">{{ __('messages.comprovante_enviado_cap') }}</label>
-                                <div class="receipt-preview-link rounded border shadow-sm"
-                                    data-receipt-preview="{{ asset('storage/' . $order->depositReceiptPath()) }}">
-                                    <img src="{{ asset('storage/' . $order->depositReceiptPath()) }}"
-                                        class="img-fluid d-block mx-auto">
-                                    <div class="overlay"><i class="fas fa-search-plus"></i>
-                                        {{ __('messages.ver_ampliado') }}</div>
-                                </div>
-                            @elseif ($order->payment_method === 'deposito' && $order->payment_status !== 'paid' && $order->status !== 'canceled' && $paymentMethodEnabled)
-                                <div class="upload-sax-box border-dashed p-3 text-center">
-                                    <h6 class="x-small fw-bold text-success mb-3"><i class="fa fa-file-upload me-1"></i>
-                                        {{ __('messages.adjuntar_comprovante') }}</h6>
-                                    <form action="{{ route('orders.deposit.submit', $order->id) }}" method="POST"
-                                        enctype="multipart/form-data">
-                                        @csrf
-                                        <input type="file" name="deposit_receipt"
-                                            class="form-control form-control-sm mb-2" required>
-                                        <button type="submit"
-                                            class="btn btn-dark btn-sax-sm w-100 fw-bold">{{ __('messages.enviar_agora') }}</button>
-                                    </form>
-                                </div>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>

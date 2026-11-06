@@ -583,6 +583,64 @@
     border-top: 4px solid var(--commerce-red) !important;
 }
 
+.commerce-finance-confirmation {
+    border-top: 4px solid #98a2b3 !important;
+}
+
+.commerce-finance-confirmation.is-ready {
+    border-top-color: var(--commerce-green) !important;
+}
+
+.commerce-finance-confirmation.is-locked {
+    background: #f6f7f8;
+}
+
+.commerce-payment-proofs {
+    display: grid;
+    gap: 8px;
+}
+
+.commerce-payment-proof {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px;
+    color: var(--commerce-ink);
+    text-decoration: none;
+    background: #f7f8fa;
+    border: 1px solid #e2e5e9;
+    border-radius: 8px;
+}
+
+.commerce-payment-proof img,
+.commerce-payment-proof > span {
+    width: 46px;
+    height: 46px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.commerce-payment-proof > span {
+    display: grid;
+    place-items: center;
+    color: var(--commerce-red);
+    background: #fff;
+    font-size: 1.25rem;
+}
+
+.commerce-payment-proof strong,
+.commerce-payment-proof small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.commerce-payment-proof strong { font-size: .68rem; }
+.commerce-payment-proof small { color: #667085; font-size: .58rem; }
+
 .commerce-side-card .btn,
 .commerce-finance-card .btn {
     min-height: 40px;

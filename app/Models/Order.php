@@ -152,6 +152,11 @@ class Order extends Model
         return $this->hasMany(PaymentTransaction::class);
     }
 
+    public function paymentProofs()
+    {
+        return $this->hasMany(OrderPaymentProof::class)->latest();
+    }
+
     public function stockReservations()
     {
         return $this->hasMany(CheckoutStockReservation::class);

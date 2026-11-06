@@ -56,6 +56,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\InstitucionalController;
 use App\Http\Controllers\PalaceController;
+use App\Http\Controllers\OrderPaymentProofController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductFeedController;
 use App\Http\Controllers\ProductReviewController;
@@ -193,6 +194,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');
+    Route::post('/orders/{order}/payment-proofs', [OrderPaymentProofController::class, 'store'])
+        ->middleware(['cliente', 'throttle:10,1'])
+        ->whereNumber('order')
+        ->name('user.orders.payment-proofs.store');
+    Route::get('/payment-proofs/{paymentProof}', [OrderPaymentProofController::class, 'show'])
+        ->whereNumber('paymentProof')
+        ->name('payment-proofs.show');
     Route::post('/orders/{order}/comprar-novamente', [CartController::class, 'buyAgain'])
         ->middleware(['cliente', 'store.feature:add_to_cart'])
         ->whereNumber('order')

@@ -108,7 +108,7 @@ class OpenAICatalogServiceTest extends TestCase
                 && $body['tools'][0]['type'] === 'web_search'
                 && $body['tools'][0]['search_context_size'] === 'high'
                 && $body['tool_choice'] === 'required'
-                && $body['reasoning']['effort'] === 'medium'
+                && $body['reasoning']['effort'] === 'low'
                 && $body['text']['format']['type'] === 'json_schema'
                 && $body['text']['format']['schema']['properties']['verified_attributes']['type'] === 'array'
                 && in_array('category_id', $body['text']['format']['schema']['properties']['taxonomy_selection']['required'], true)
@@ -265,7 +265,7 @@ class OpenAICatalogServiceTest extends TestCase
     }
 
     /** @dataProvider incompleteResponseReasons */
-    public function test_incomplete_responses_explain_the_reason_without_saving_or_retrying(string $reason, string $message): void
+    public function test_incomplete_responses_explain_the_reason_and_only_retry_token_exhaustion(string $reason, string $message): void
     {
         config(['services.openai.api_key' => 'test-key', 'services.openai.max_output_tokens' => 12000]);
         Http::preventStrayRequests();
@@ -284,7 +284,7 @@ class OpenAICatalogServiceTest extends TestCase
             $this->assertSame($message, $error->getMessage());
             $this->assertSame('Original', $product->name);
         }
-        Http::assertSentCount(1);
+        Http::assertSentCount($reason === 'max_output_tokens' ? 3 : 1);
         Http::assertSent(fn ($request) => $request['max_output_tokens'] === 12000);
     }
 

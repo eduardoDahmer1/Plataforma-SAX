@@ -9,15 +9,25 @@ class ProgressiveDashboardTest extends TestCase
     public function test_heavy_dashboard_sections_are_loaded_on_demand(): void
     {
         $root = dirname(__DIR__, 2);
-        $view = file_get_contents($root.'/resources/views/admin/dashboard/index.blade.php');
+        $hub = file_get_contents($root.'/resources/views/admin/dashboard/index.blade.php');
+        $metrics = file_get_contents($root.'/resources/views/admin/dashboard/metrics.blade.php');
+        $reports = file_get_contents($root.'/resources/views/admin/dashboard/reports.blade.php');
         $controller = file_get_contents($root.'/app/Http/Controllers/Admin/DashboardController.php');
 
-        $this->assertStringContainsString('data-dashboard-insights', $view);
-        $this->assertStringContainsString('admin.dashboard.insights', $view);
-        $this->assertStringContainsString('admin.dashboard.countries', $view);
-        $this->assertStringNotContainsString("selectedReport['visitors_by_country']->isNotEmpty", $view);
-        $this->assertStringContainsString('public function insights()', $controller);
+        foreach (['orders', 'integration', 'users', 'catalog', 'metrics', 'reports'] as $section) {
+            $this->assertStringContainsString("admin.dashboard.{$section}", $hub);
+        }
+        $this->assertStringNotContainsString('data-dashboard-insights', $hub);
+        $this->assertStringNotContainsString('admin.dashboard.countries', $hub);
+        $this->assertStringContainsString('data-dashboard-insights', $metrics);
+        $this->assertStringContainsString('admin.dashboard.insights', $metrics);
+        $this->assertStringContainsString('admin.dashboard.countries', $reports);
+        $this->assertStringContainsString('public function insights(Request $request)', $controller);
         $this->assertStringContainsString('public function countries(', $controller);
+        $this->assertStringContainsString('dashboardAnalyticsDays', $controller);
+        $this->assertStringContainsString('name="payment_status"', file_get_contents($root.'/resources/views/admin/dashboard/orders.blade.php'));
+        $this->assertStringContainsString('name="verification"', file_get_contents($root.'/resources/views/admin/dashboard/users.blade.php'));
+        $this->assertStringContainsString('name="stock"', file_get_contents($root.'/resources/views/admin/dashboard/catalog.blade.php'));
     }
 
     public function test_screen_dimensions_are_collected_end_to_end(): void

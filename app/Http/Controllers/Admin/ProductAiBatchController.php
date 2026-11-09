@@ -7,6 +7,7 @@ use App\Imports\ProductAiSkuImport;
 use App\Jobs\GenerateProductAiPreparation;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\ContactGuideEntry;
 use App\Models\Product;
 use App\Models\ProductAiBatch;
 use App\Models\ProductAiBatchItem;
@@ -16,6 +17,7 @@ use App\Services\ProductAiBatchDraftBuilder;
 use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
@@ -244,6 +246,36 @@ class ProductAiBatchController extends Controller
             ->unique(fn ($sku) => mb_strtolower((string) $sku))
             ->values();
 
+        $guideEntries = ContactGuideEntry::with('location:id,name,active')
+            ->where('active', true)->whereHas('location', fn ($query) => $query->where('active', true))
+            ->orderBy('sort_order')->orderBy('id')->get();
+        $guideContacts = $guideEntries->map(function (ContactGuideEntry $entry) {
+            $location = Str::lower(Str::ascii((string) $entry->location?->name));
+            $building = match (true) {
+                Str::contains($location, ['guembe', 'casona', 'distrito']) => 'distrito',
+                Str::contains($location, 'dubai') => 'dubai',
+                Str::contains($location, 'department store') => 'department',
+                default => null,
+            };
+            if (! $building) {
+                return null;
+            }
+            $place = match (true) {
+                Str::contains($location, 'guembe') => 'Guembe',
+                Str::contains($location, 'casona') => 'Casona',
+                default => $entry->location?->name,
+            };
+
+            return [
+                'id' => (string) $entry->id,
+                'building' => $building,
+                'label' => collect([$entry->translated('sector'), $place, $entry->translated('floor')])->filter()->implode(' · '),
+                'phone' => (string) $entry->phone,
+            ];
+        })->filter()->values();
+        $consultationProducts = Product::withoutGlobalScopes()->whereIn('sku', $batchSkus)
+            ->get(['sku', 'name', 'external_name'])->keyBy(fn ($product) => mb_strtolower((string) $product->sku));
+
         $brands = collect();
         $categories = collect();
         $subcategories = collect();
@@ -262,10 +294,22 @@ class ProductAiBatchController extends Controller
             'counts',
             'groupedCount',
             'batchSkus',
+            'guideEntries',
+            'guideContacts',
+            'consultationProducts',
             'brands',
             'categories',
             'subcategories',
         ));
+    }
+
+    public function rename(Request $request, ProductAiBatch $batch)
+    {
+        $validated = $request->validate(['name' => ['present', 'nullable', 'string', 'max:120']]);
+        $name = trim($validated['name'] ?? '');
+        $batch->update(['name' => $name === '' ? null : $name]);
+
+        return response()->json(['name' => $batch->name, 'display_name' => $batch->display_name]);
     }
 
     public function addProducts(Request $request, ProductAiBatch $batch, ProductAiBatchDraftBuilder $draftBuilder)

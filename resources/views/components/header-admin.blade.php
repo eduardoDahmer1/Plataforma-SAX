@@ -1,6 +1,12 @@
 @php
     $adminPageTitle = match (true) {
         request()->routeIs('admin.index', 'admin.overview') => 'Visão geral',
+        request()->routeIs('admin.dashboard.orders') => 'Resumo de pedidos',
+        request()->routeIs('admin.dashboard.integration') => 'Integração',
+        request()->routeIs('admin.dashboard.users') => 'Usuários',
+        request()->routeIs('admin.dashboard.catalog') => 'Catálogo e estoque',
+        request()->routeIs('admin.dashboard.metrics', 'admin.dashboard.insights') => 'Métricas e tráfego',
+        request()->routeIs('admin.dashboard.reports', 'admin.dashboard.countries', 'admin.reports.*') => 'Relatórios',
         request()->routeIs('admin.notifications.*') => 'Notificações',
         request()->routeIs('admin.products.*', 'admin.produto.*') => 'Produtos',
         request()->routeIs('admin.brands.*') => 'Marcas',

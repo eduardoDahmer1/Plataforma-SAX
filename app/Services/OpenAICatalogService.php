@@ -6,9 +6,6 @@ use App\Models\CategoriasFilhas;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Subcategory;
-use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class OpenAICatalogService
@@ -240,48 +237,29 @@ PROMPT;
 
         $instructions .= $this->catalogAttributeInstructions();
 
-        $response = Http::withToken($apiKey)
-            ->acceptJson()
-            ->asJson()
-            ->timeout((int) config('services.openai.timeout', 90))
-            ->post(rtrim((string) config('services.openai.base_url'), '/').'/responses', [
-                'model' => (string) config('services.openai.model', 'gpt-5.6-luna'),
-                'instructions' => $instructions,
-                'input' => "Prepare a product catalog proposal from this known JSON data:\n".
-                    json_encode($knownData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                'reasoning' => ['effort' => (string) config('services.openai.catalog_reasoning_effort', 'medium')],
-                'tools' => [[
-                    'type' => 'web_search',
-                    'search_context_size' => (string) config('services.openai.catalog_search_context_size', 'high'),
-                ]],
-                'tool_choice' => 'required',
-                'include' => ['web_search_call.action.sources'],
-                'store' => false,
-                'max_output_tokens' => (int) config('services.openai.max_output_tokens', 3000),
-                'text' => [
-                    'format' => [
-                        'type' => 'json_schema',
-                        'name' => 'catalog_proposal',
-                        'strict' => true,
-                        'schema' => $this->responseSchema(),
-                    ],
+        $payload = app(OpenAIResponseClient::class)->create($apiKey, [
+            'model' => (string) config('services.openai.model', 'gpt-5.6-luna'),
+            'instructions' => $instructions,
+            'input' => "Prepare a product catalog proposal from this known JSON data:\n".
+                json_encode($knownData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'reasoning' => ['effort' => (string) config('services.openai.catalog_reasoning_effort', 'low')],
+            'tools' => [[
+                'type' => 'web_search',
+                'search_context_size' => (string) config('services.openai.catalog_search_context_size', 'high'),
+            ]],
+            'tool_choice' => 'required',
+            'include' => ['web_search_call.action.sources'],
+            'store' => false,
+            'max_output_tokens' => (int) config('services.openai.max_output_tokens', 3000),
+            'text' => [
+                'format' => [
+                    'type' => 'json_schema',
+                    'name' => 'catalog_proposal',
+                    'strict' => true,
+                    'schema' => $this->responseSchema(),
                 ],
-            ]);
-
-        try {
-            $response->throw();
-        } catch (RequestException $exception) {
-            $status = $exception->response?->status();
-            $message = match ($status) {
-                401, 403 => 'La clave de OpenAI no es válida o no tiene permisos.',
-                429 => 'OpenAI rechazó la solicitud por límite de uso o cuota agotada.',
-                default => 'OpenAI no pudo generar la propuesta (HTTP '.($status ?: 'desconocido').').',
-            };
-            throw new RuntimeException($message, previous: $exception);
-        }
-
-        $payload = $response->json();
-        $this->assertCompleteResponse($payload);
+            ],
+        ]);
 
         $content = $this->extractOutputText($payload);
         if ($content === '') {
@@ -360,24 +338,6 @@ PROMPT;
         }
 
         return trim(implode("\n", $texts));
-    }
-
-    private function assertCompleteResponse(array $payload): void
-    {
-        if (data_get($payload, 'status') !== 'incomplete') return;
-
-        $reason = data_get($payload, 'incomplete_details.reason');
-        Log::warning('Respuesta de IA incompleta.', [
-            'reason' => $reason,
-            'max_output_tokens' => data_get($payload, 'max_output_tokens'),
-            'output_tokens' => data_get($payload, 'usage.output_tokens'),
-        ]);
-
-        throw new RuntimeException(match ($reason) {
-            'max_output_tokens' => 'La IA alcanzó el límite de generación antes de completar la propuesta.',
-            'content_filter' => 'La IA no pudo completar la propuesta por un filtro de contenido.',
-            default => 'La IA devolvió una respuesta incompleta.',
-        });
     }
 
     private function normalizeSearchText(?string $value): ?string
@@ -543,14 +503,10 @@ PROMPT;
             'text'=>['format'=>['type'=>'json_schema','name'=>'catalog_attributes','strict'=>true,'schema'=>$schema]]];
         if ($research) $body += [
             'tools'=>[['type'=>'web_search', 'search_context_size'=>(string) config('services.openai.catalog_search_context_size', 'high')]],
-            'reasoning'=>['effort'=>(string) config('services.openai.catalog_reasoning_effort', 'medium')],
+            'reasoning'=>['effort'=>(string) config('services.openai.catalog_reasoning_effort', 'low')],
             'tool_choice'=>'required', 'include'=>['web_search_call.action.sources'],
         ];
-        try {
-            $payload = Http::withToken($settings->apiKey())->acceptJson()->asJson()->timeout((int) config('services.openai.timeout',90))
-                ->post(rtrim(config('services.openai.base_url'),'/').'/responses', $body)->throw()->json();
-        } catch (RequestException $exception) { throw new RuntimeException('No fue posible consultar la IA para atributos.', previous:$exception); }
-        $this->assertCompleteResponse($payload);
+        $payload = app(OpenAIResponseClient::class)->create($settings->apiKey(), $body);
         $result = json_decode($this->extractOutputText($payload), true);
         if (! is_array($result)) throw new RuntimeException('La IA devolvió un formato inválido.');
         return [$result,$payload];

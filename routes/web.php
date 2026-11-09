@@ -275,6 +275,12 @@ Route::post('/ajuda-carrinho/{token}', [\App\Http\Controllers\AbandonedCartFeedb
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('/dashboard/pedidos', [DashboardController::class, 'orders'])->name('dashboard.orders');
+    Route::get('/dashboard/integracao', [DashboardController::class, 'integration'])->name('dashboard.integration');
+    Route::get('/dashboard/usuarios', [DashboardController::class, 'users'])->name('dashboard.users');
+    Route::get('/dashboard/catalogo', [DashboardController::class, 'catalog'])->name('dashboard.catalog');
+    Route::get('/dashboard/metricas', [DashboardController::class, 'metrics'])->name('dashboard.metrics');
+    Route::get('/dashboard/relatorios', [DashboardController::class, 'reports'])->name('dashboard.reports');
     Route::get('/dashboard/insights', [DashboardController::class, 'insights'])->name('dashboard.insights');
     Route::get('/dashboard/countries', [DashboardController::class, 'countries'])->name('dashboard.countries');
     Route::get('/relatorios/{period?}', [DashboardController::class, 'report'])->whereIn('period', ['today', 'week', 'month'])->name('reports.download');
@@ -367,6 +373,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('products/ai-batches/preview', [ProductAiBatchController::class, 'preview'])->name('products.ai-batches.preview');
     Route::get('products/ai-batches/catalog-products',[ProductAiBatchController::class, 'catalogProducts'])->name('products.ai-batches.catalog-products');
     Route::get('products/ai-batches/{batch}', [ProductAiBatchController::class, 'show'])->whereNumber('batch')->name('products.ai-batches.show');
+    Route::patch('products/ai-batches/{batch}/name', [ProductAiBatchController::class, 'rename'])->whereNumber('batch')->name('products.ai-batches.rename');
     Route::post('products/ai-batches/{batch}/products', [ProductAiBatchController::class, 'addProducts'])->whereNumber('batch')->name('products.ai-batches.products.add');
     Route::post('products/ai-batches/{batch}/dispatch', [ProductAiBatchController::class, 'dispatch'])->whereNumber('batch')->name('products.ai-batches.dispatch');
     Route::get('products/ai-batches/{batch}/status', [ProductAiBatchController::class, 'status'])->whereNumber('batch')->name('products.ai-batches.status');
@@ -382,6 +389,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('products/{product}/catalog-attributes', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'values'])->name('products.catalog-attributes.values');
     Route::post('products/{product}/catalog-attributes/complete', [\App\Http\Controllers\Admin\CatalogAttributeController::class, 'complete'])->middleware('throttle:20,1')->name('products.catalog-attributes.complete');
     Route::post('products/ai-taxonomy', [\App\Http\Controllers\Admin\ProductAiTaxonomyController::class, 'store'])->middleware('throttle:30,1')->name('products.ai-taxonomy.store');
+    Route::get('products/{product}/ai-generation/{generation}', [ProductControllerAdmin::class, 'aiGenerationStatus'])
+        ->whereUuid('generation')->name('products.ai-generation.status');
     Route::post('products/{product}/complete-with-ai', [ProductControllerAdmin::class, 'completeWithAi'])
         ->middleware('throttle:20,1')
         ->name('products.completeWithAi');

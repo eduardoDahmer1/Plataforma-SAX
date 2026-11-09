@@ -34,7 +34,7 @@
         <p class="sax-sidebar-heading">Gestão</p>
 
         @if($isMasterAdmin)
-        <a href="{{ route('admin.index') }}" class="sax-nav-item {{ request()->routeIs('admin.index') ? 'active' : '' }}">
+        <a href="{{ route('admin.index') }}" class="sax-nav-item {{ request()->routeIs('admin.index', 'admin.dashboard.*') ? 'active' : '' }}">
             <div class="nav-icon-box bg-soft-primary"><i class="fa-solid fa-chart-line"></i></div>
             <span class="nav-text">Visão geral</span>
         </a>

@@ -75,13 +75,16 @@
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3">Lotes recientes</h6>
                     @forelse($batches as $batch)
-                        <a href="{{ route('admin.products.ai-batches.show', $batch) }}" class="d-flex justify-content-between align-items-center text-decoration-none border-bottom py-3">
-                            <span>
-                                <strong class="text-dark">Lote #{{ $batch->id }}</strong>
-                                <small class="d-block text-muted">{{ $batch->created_at->format('d/m/Y H:i') }} · {{ $batch->input_count }} códigos</small>
-                            </span>
-                            <span class="badge {{ $batch->status === 'completed' ? 'text-bg-success' : ($batch->status === 'draft' ? 'text-bg-secondary' : 'text-bg-primary') }}">{{ $batch->status }}</span>
-                        </a>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom py-3">
+                            <div>
+                                <x-admin.ai-batch-name :batch="$batch" />
+                                <small class="d-block text-muted">#{{ $batch->id }} · {{ $batch->created_at->format('d/m/Y H:i') }} · {{ $batch->input_count }} códigos</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge {{ $batch->status === 'completed' ? 'text-bg-success' : ($batch->status === 'draft' ? 'text-bg-secondary' : 'text-bg-primary') }}">{{ $batch->status }}</span>
+                                <a href="{{ route('admin.products.ai-batches.show', $batch) }}" class="btn btn-sm btn-outline-dark">Abrir</a>
+                            </div>
+                        </div>
                     @empty
                         <p class="text-muted mb-0">Todavía no hay lotes.</p>
                     @endforelse

@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const requestedContext = window.saxProductAiContext?.() || {};
             aiButton.disabled=true;feedback('Buscando información respaldada…');
             try {
-                const result=await request(root.dataset.aiUrl,{catalog_context:requestedContext});
+                const result=await window.saxRequestProductAi(root.dataset.aiUrl,{catalog_context:requestedContext}, message => feedback(message));
                 if (JSON.stringify(requestedContext) !== JSON.stringify(window.saxProductAiContext?.() || {})) throw new Error('Cambiaste los datos investigados durante la consulta. Volvé a generar con los datos actuales.');
                 window.dispatchEvent(new CustomEvent('sax:catalog-attribute-proposal',{detail:result}));
             }

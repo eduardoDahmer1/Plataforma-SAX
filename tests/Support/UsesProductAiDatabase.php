@@ -43,12 +43,14 @@ trait UsesProductAiDatabase
                 $table->timestamps();
             });
         }
+        (require database_path('migrations/2026_08_28_102000_create_contact_guide_tables.php'))->up();
         foreach ([
             '2025_08_25_160934_create_system_settings_table.php',
             '2026_08_13_100000_create_product_ai_preparations_table.php',
             '2026_08_14_100000_create_product_ai_batches_tables.php',
             '2026_09_09_120000_add_ai_controls_to_system_settings.php',
             '2026_10_19_120100_add_attribute_mode_to_product_ai_batches.php',
+            '2026_11_06_120000_add_name_to_product_ai_batches.php',
         ] as $migration) {
             (require database_path('migrations/'.$migration))->up();
         }

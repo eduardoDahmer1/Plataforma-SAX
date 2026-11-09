@@ -15,7 +15,7 @@ class ProductAiBatch extends Model
     public const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [
-        'created_by', 'source_type', 'original_filename', 'status', 'input_count',
+        'name', 'created_by', 'source_type', 'original_filename', 'status', 'input_count',
         'duplicate_count', 'eligible_count', 'started_at', 'completed_at', 'attributes_only',
     ];
 
@@ -24,6 +24,11 @@ class ProductAiBatch extends Model
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
+
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->name ?: 'Lote de IA #'.$this->id;
+    }
 
     public function items()
     {

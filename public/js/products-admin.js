@@ -372,23 +372,10 @@ document.addEventListener('DOMContentLoaded', function () {
         suggestions?.setAttribute('aria-busy', 'true');
 
         try {
-            const response = await fetch(aiButton.dataset.aiUrl, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                },
-                body: JSON.stringify({catalog_context: requestedContext})
+            const data = await window.saxRequestProductAi(aiButton.dataset.aiUrl, {catalog_context: requestedContext}, message => {
+                aiFeedback.className = 'alert alert-info';
+                aiFeedback.textContent = message;
             });
-            let data = {};
-            try {
-                data = await response.json();
-            } catch (parseError) {
-                throw new Error('El servidor respondió con un formato inválido (HTTP ' + response.status + ').');
-            }
-            if (!response.ok) throw new Error(data.message || 'No fue posible generar la propuesta.');
 
             if (['commercial_name', 'descriptions'].some(field =>
                 ['pt_br', 'es', 'en'].some(locale => typeof data.proposal?.[field]?.[locale] !== 'string'

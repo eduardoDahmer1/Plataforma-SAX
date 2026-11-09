@@ -10,8 +10,8 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\SiteAnalyticsEvent;
 use App\Models\User;
-use App\Models\BusinessEvent;
 use App\Models\IntegrationMonitor;
+use App\Models\IntegrationRun;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -25,68 +25,209 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // O Editor entra diretamente no seu espaço de trabalho e não carrega
-        // indicadores comerciais, clientes ou pedidos do dashboard do Master.
         if ($request->user()?->isAdminEditor()) {
             return redirect()->route('admin.products.index');
         }
 
-        $today = now()->toDateString();
-        $start = now()->subDays(29)->startOfDay();
+        return view('admin.dashboard.index');
+    }
 
-        $metrics = Cache::remember('admin.dashboard.metrics', now()->addSeconds(30), function () {
+    public function orders(Request $request): View
+    {
+        $filters = [
+            'period' => $this->dashboardPeriod($request),
+            'payment_status' => $this->allowedFilter($request, 'payment_status', ['pending', 'paid', 'failed', 'refunded']),
+            'status' => $this->allowedFilter($request, 'status', ['pending', 'processing', 'paid', 'shipped', 'completed', 'canceled', 'cancelled', 'failed']),
+            'payment_method' => $this->allowedFilter($request, 'payment_method', ['bancard_v2', 'rendix_pix', 'deposito']),
+        ];
+        $cacheKey = 'admin.dashboard.orders.'.md5(json_encode($filters));
+
+        $data = Cache::remember($cacheKey, now()->addSeconds(45), function () use ($filters): array {
+            $orders = $this->filteredOrders($filters);
+            $summary = (clone $orders)
+                ->selectRaw('COUNT(*) AS total')
+                ->selectRaw("SUM(CASE WHEN payment_status = 'paid' OR status = 'paid' THEN 1 ELSE 0 END) AS paid")
+                ->selectRaw("SUM(CASE WHEN payment_status = 'pending' THEN 1 ELSE 0 END) AS pending_payment")
+                ->selectRaw("SUM(CASE WHEN status IN ('processing', 'shipped') THEN 1 ELSE 0 END) AS in_progress")
+                ->selectRaw("SUM(CASE WHEN status IN ('canceled', 'cancelled', 'failed') THEN 1 ELSE 0 END) AS canceled")
+                ->first();
+
+            return [
+                'summary' => $summary,
+                'paymentMethods' => (clone $orders)->select('payment_method', DB::raw('COUNT(*) AS total'))
+                    ->groupBy('payment_method')->orderByDesc('total')->pluck('total', 'payment_method'),
+                'orderStatuses' => (clone $orders)->select('status', DB::raw('COUNT(*) AS total'))
+                    ->groupBy('status')->orderByDesc('total')->pluck('total', 'status'),
+                'recentOrders' => (clone $orders)->with('user:id,name')->latest()->limit(20)->get(),
+            ];
+        });
+        $data['filters'] = $filters;
+        $data['periodLabel'] = $this->dashboardPeriodLabel($filters['period']);
+
+        return view('admin.dashboard.orders', $data);
+    }
+
+    public function integration(Request $request): View
+    {
+        $runStatus = $this->allowedFilter($request, 'run_status', ['running', 'success', 'failed']);
+        if ($request->boolean('refresh')) {
+            Cache::forget('admin.dashboard.integration.'.$runStatus);
+        }
+
+        $data = Cache::remember('admin.dashboard.integration.'.$runStatus, now()->addSeconds(30), function () use ($runStatus): array {
+            $ready = Schema::hasTable('integration_monitors') && Schema::hasTable('integration_runs');
+            $monitor = $ready ? IntegrationMonitor::where('source', 'catalog')->first() : null;
+            $runs = collect();
+            if ($monitor) {
+                $runsQuery = IntegrationRun::where('integration_monitor_id', $monitor->id);
+                if ($runStatus !== 'all') {
+                    $runsQuery->where('status', $runStatus);
+                }
+                $runs = $runsQuery->latest('started_at')->limit(15)->get();
+            }
+
+            return [
+                'integrationMonitoringReady' => $ready,
+                'integrationEndpointConfigured' => filled(config('services.integration_monitor.token')),
+                'integrationMonitor' => $monitor,
+                'integrationRuns' => $runs,
+            ];
+        });
+        $data['runStatus'] = $runStatus;
+
+        return view('admin.dashboard.integration', $data);
+    }
+
+    public function users(Request $request): View
+    {
+        $filters = [
+            'period' => $this->dashboardPeriod($request),
+            'verification' => $this->allowedFilter($request, 'verification', ['verified', 'unverified']),
+            'country' => mb_substr(trim($request->string('country')->toString()), 0, 100),
+            'q' => mb_substr(trim($request->string('q')->toString()), 0, 100),
+        ];
+
+        $data = Cache::remember('admin.dashboard.users.'.md5(json_encode($filters)), now()->addMinute(), function () use ($filters): array {
+            $customers = User::query()->whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR]);
+            $filtered = clone $customers;
+            $this->applyCreatedPeriod($filtered, $filters['period']);
+            if ($filters['verification'] === 'verified') {
+                $filtered->whereNotNull('email_verified_at');
+            } elseif ($filters['verification'] === 'unverified') {
+                $filtered->whereNull('email_verified_at');
+            }
+            if ($filters['country'] !== '') {
+                $filtered->where('country', $filters['country']);
+            }
+            if ($filters['q'] !== '') {
+                $search = '%'.$filters['q'].'%';
+                $filtered->where(fn ($query) => $query->where('name', 'like', $search)->orWhere('email', 'like', $search));
+            }
+
+            return [
+                'totalCustomers' => (clone $customers)->count(),
+                'filteredCustomers' => (clone $filtered)->count(),
+                'verifiedCustomers' => (clone $filtered)->whereNotNull('email_verified_at')->count(),
+                'unverifiedCustomers' => (clone $filtered)->whereNull('email_verified_at')->count(),
+                'recentCustomers' => (clone $filtered)->latest()->limit(20)->get(['id', 'name', 'email', 'country', 'email_verified_at', 'created_at']),
+                'customerCountries' => (clone $filtered)
+                    ->selectRaw("COALESCE(NULLIF(country, ''), 'Não informado') AS country_label")
+                    ->selectRaw('COUNT(*) AS total')
+                    ->groupBy('country_label')->orderByDesc('total')->limit(8)->get(),
+                'countryOptions' => (clone $customers)->whereNotNull('country')->where('country', '<>', '')
+                    ->distinct()->orderBy('country')->limit(100)->pluck('country'),
+            ];
+        });
+        $data['filters'] = $filters;
+        $data['periodLabel'] = $this->dashboardPeriodLabel($filters['period']);
+
+        return view('admin.dashboard.users', $data);
+    }
+
+    public function catalog(Request $request): View
+    {
+        $filters = [
+            'status' => $this->allowedFilter($request, 'status', ['active', 'inactive']),
+            'stock' => $this->allowedFilter($request, 'stock', ['healthy', 'low', 'out']),
+            'sort' => $this->allowedFilter($request, 'sort', ['views_desc', 'stock_asc', 'recent'], 'views_desc'),
+            'q' => mb_substr(trim($request->string('q')->toString()), 0, 100),
+        ];
+
+        $data = Cache::remember('admin.dashboard.catalog.'.md5(json_encode($filters)), now()->addMinute(), function () use ($filters): array {
             $productMetrics = Product::query()->selectRaw(
                 'COUNT(*) AS total, '
                 .'SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS active_total, '
                 .'SUM(CASE WHEN status = 1 AND stock BETWEEN 1 AND 5 THEN 1 ELSE 0 END) AS low_stock, '
                 .'SUM(CASE WHEN status = 1 AND stock <= 0 THEN 1 ELSE 0 END) AS out_of_stock'
             )->first();
-            $orderMetrics = Order::query()->selectRaw(
-                'COUNT(*) AS total'
-            )->first();
+
+            $products = Product::query();
+            if ($filters['status'] === 'active') {
+                $products->where('status', 1);
+            } elseif ($filters['status'] === 'inactive') {
+                $products->where('status', 0);
+            }
+            if ($filters['stock'] === 'healthy') {
+                $products->where('stock', '>', 5);
+            } elseif ($filters['stock'] === 'low') {
+                $products->whereBetween('stock', [1, 5]);
+            } elseif ($filters['stock'] === 'out') {
+                $products->where('stock', '<=', 0);
+            }
+            if ($filters['q'] !== '') {
+                $search = '%'.$filters['q'].'%';
+                $products->where(fn ($query) => $query->where('name', 'like', $search)
+                    ->orWhere('external_name', 'like', $search)->orWhere('sku', 'like', $search));
+            }
+            match ($filters['sort']) {
+                'stock_asc' => $products->orderBy('stock'),
+                'recent' => $products->latest(),
+                default => $products->orderByDesc('views'),
+            };
 
             return [
-                'brands' => Brand::count(),
-                'categories' => Category::count(),
-                'active_products' => (int) $productMetrics->active_total,
-                'products' => (int) $productMetrics->total,
-                'customers' => User::whereNotIn('user_type', [User::TYPE_ADMIN_MASTER, User::TYPE_ADMIN_EDITOR])->count(),
-                'orders' => (int) $orderMetrics->total,
-                'low_stock' => (int) $productMetrics->low_stock,
+                'productMetrics' => $productMetrics,
+                'brandsCount' => Brand::count(),
+                'categoriesCount' => Category::count(),
+                'filteredProducts' => (clone $products)->count(),
+                'topProducts' => $products->limit(20)->get(['id', 'sku', 'name', 'external_name', 'views', 'stock', 'status']),
+                'lowStockProducts' => Product::query()->where('status', 1)->where('stock', '<=', 5)
+                    ->orderBy('stock')->limit(10)->get(['id', 'name', 'external_name', 'stock']),
             ];
         });
+        $data['filters'] = $filters;
 
+        return view('admin.dashboard.catalog', $data);
+    }
+
+    public function metrics(Request $request): View
+    {
+        $days = $this->dashboardAnalyticsDays($request);
+        $start = now()->subDays($days - 1)->startOfDay();
         $analyticsReady = Cache::remember('schema.site_analytics_events', 3600, fn () => Schema::hasTable('site_analytics_events'));
         $analytics = [
-            'views_today' => 0,
-            'visitors_today' => 0,
-            'clicks_today' => 0,
-            'views_30_days' => 0,
+            'views' => 0,
+            'visitors' => 0,
+            'clicks' => 0,
+            'pages_per_visitor' => 0,
         ];
         $devices = collect();
         $screenSizes = collect();
-        $integrationMonitoringReady = Cache::remember('schema.integration_monitoring', 3600, fn () =>
-            Schema::hasTable('integration_monitors') && Schema::hasTable('integration_runs')
-        );
-        $integrationEndpointConfigured = filled(config('services.integration_monitor.token'));
-        $integrationMonitor = $integrationMonitoringReady
-            ? IntegrationMonitor::where('source', 'catalog')->first()
-            : null;
-
         if ($analyticsReady) {
             $summary = SiteAnalyticsEvent::query()
                 ->where('event_date', '>=', $start->toDateString())
-                ->selectRaw('SUM(CASE WHEN event_type = ? AND event_date = ? THEN 1 ELSE 0 END) AS views_today', ['page_view', $today])
-                ->selectRaw('COUNT(DISTINCT CASE WHEN event_type = ? AND event_date = ? THEN visitor_hash END) AS visitors_today', ['page_view', $today])
-                ->selectRaw('SUM(CASE WHEN event_type = ? AND event_date = ? THEN 1 ELSE 0 END) AS clicks_today', ['click', $today])
-                ->selectRaw('SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) AS views_30_days', ['page_view'])
+                ->selectRaw('SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) AS views', ['page_view'])
+                ->selectRaw('COUNT(DISTINCT CASE WHEN event_type = ? THEN visitor_hash END) AS visitors', ['page_view'])
+                ->selectRaw('SUM(CASE WHEN event_type = ? THEN 1 ELSE 0 END) AS clicks', ['click'])
                 ->first();
 
+            $views = (int) $summary->views;
+            $visitors = (int) $summary->visitors;
             $analytics = [
-                'views_today' => (int) $summary->views_today,
-                'visitors_today' => (int) $summary->visitors_today,
-                'clicks_today' => (int) $summary->clicks_today,
-                'views_30_days' => (int) $summary->views_30_days,
+                'views' => $views,
+                'visitors' => $visitors,
+                'clicks' => (int) $summary->clicks,
+                'pages_per_visitor' => $visitors > 0 ? round($views / $visitors, 2) : 0,
             ];
 
             $devices = SiteAnalyticsEvent::where('event_type', 'page_view')->where('event_date', '>=', $start->toDateString())
@@ -110,28 +251,25 @@ class DashboardController extends Controller
             }
         }
 
-        $reportSelection = $this->resolveReportPeriod($request);
-        $selectedReport = $this->buildReport(
-            $reportSelection['start'],
-            $reportSelection['end'],
-            $reportSelection['label'],
-            false
-        );
-        $reportFilter = $reportSelection['filter'];
-
-        return view('admin.dashboard.index', compact(
-            'metrics', 'analytics', 'analyticsReady', 'devices', 'screenSizes',
-            'integrationMonitor', 'integrationMonitoringReady', 'integrationEndpointConfigured',
-            'selectedReport', 'reportFilter'
-        ));
+        return view('admin.dashboard.metrics', compact('analytics', 'analyticsReady', 'devices', 'screenSizes', 'days'));
     }
 
-    public function insights(): View
+    public function reports(Request $request): View
     {
-        $start = now()->subDays(29)->startOfDay();
+        $selection = $this->resolveReportPeriod($request);
+        $selectedReport = $this->buildReport($selection['start'], $selection['end'], $selection['label'], false);
+        $reportFilter = $selection['filter'];
+
+        return view('admin.dashboard.reports', compact('selectedReport', 'reportFilter'));
+    }
+
+    public function insights(Request $request): View
+    {
+        $days = $this->dashboardAnalyticsDays($request);
+        $start = now()->subDays($days - 1)->startOfDay();
         $analyticsReady = Cache::remember('schema.site_analytics_events', 3600, fn () => Schema::hasTable('site_analytics_events'));
 
-        $data = Cache::remember('admin.dashboard.insights', now()->addMinute(), function () use ($analyticsReady, $start): array {
+        $data = Cache::remember('admin.dashboard.insights.'.$days, now()->addMinute(), function () use ($analyticsReady, $start): array {
             $trafficLabels = [];
             $trafficViews = [];
             $trafficVisitors = [];
@@ -165,17 +303,62 @@ class DashboardController extends Controller
                 'trafficVisitors' => $trafficVisitors,
                 'topPages' => $topPages,
                 'topClicks' => $topClicks,
-                'paymentMethods' => Order::select('payment_method', DB::raw('COUNT(*) AS total'))->groupBy('payment_method')->pluck('total', 'payment_method'),
-                'orderStatuses' => Order::select('status', DB::raw('COUNT(*) AS total'))->groupBy('status')->pluck('total', 'status'),
-                'topProducts' => Product::orderByDesc('views')->limit(6)->get(['id', 'name', 'external_name', 'views', 'stock']),
-                'recentOrders' => Order::with('user:id,name')->latest()->limit(6)->get(),
-                'businessEvents' => Schema::hasTable('business_events')
-                    ? BusinessEvent::with(['user:id,name', 'order:id,order_number'])->latest()->limit(8)->get()
-                    : collect(),
             ];
         });
+        $data['days'] = $days;
 
         return view('admin.dashboard.partials.insights', $data);
+    }
+
+    private function dashboardPeriod(Request $request): string
+    {
+        return in_array($request->string('period')->toString(), ['7', '30', '90', 'all'], true)
+            ? $request->string('period')->toString()
+            : '30';
+    }
+
+    private function dashboardPeriodLabel(string $period): string
+    {
+        return match ($period) {
+            '7' => 'Últimos 7 dias',
+            '90' => 'Últimos 90 dias',
+            'all' => 'Todo o histórico',
+            default => 'Últimos 30 dias',
+        };
+    }
+
+    private function dashboardAnalyticsDays(Request $request): int
+    {
+        $days = (int) $request->integer('days', 30);
+
+        return in_array($days, [7, 30, 90], true) ? $days : 30;
+    }
+
+    private function allowedFilter(Request $request, string $key, array $allowed, string $default = 'all'): string
+    {
+        $value = $request->string($key)->toString();
+
+        return in_array($value, $allowed, true) ? $value : $default;
+    }
+
+    private function applyCreatedPeriod($query, string $period): void
+    {
+        if ($period !== 'all') {
+            $query->where('created_at', '>=', now()->subDays(((int) $period) - 1)->startOfDay());
+        }
+    }
+
+    private function filteredOrders(array $filters)
+    {
+        $orders = Order::query();
+        $this->applyCreatedPeriod($orders, $filters['period']);
+        foreach (['payment_status', 'status', 'payment_method'] as $field) {
+            if ($filters[$field] !== 'all') {
+                $orders->where($field, $filters[$field]);
+            }
+        }
+
+        return $orders;
     }
 
     public function countries(Request $request): View

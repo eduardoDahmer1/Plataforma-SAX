@@ -38,6 +38,7 @@ class ProductControllerAdmin extends Controller
     {
         app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
         $product = app(\App\Services\ProductAiEditorContext::class)->fromRequest($product, request());
+        if (request()->boolean('async')) return $this->startAiGeneration($product, 'description');
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
@@ -57,34 +58,11 @@ class ProductControllerAdmin extends Controller
     {
         app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
         $product = app(\App\Services\ProductAiEditorContext::class)->fromRequest($product, request());
+        if (request()->boolean('async')) return $this->startAiGeneration($product, 'catalog');
         $product->loadMissing(['brand:id,name', 'category:id,name', 'subcategory:id,name', 'categoriasFilhas:id,name']);
 
         try {
-            $result = $openAi->generateProductProposal($product);
-            $matched = data_get($result, 'research.status') === 'matched';
-            $generatedAt = now()->setMicrosecond(0);
-
-            $preparation = ProductAiPreparation::updateOrCreate(
-                ['product_id' => $product->id],
-                [
-                    'status' => $matched
-                        ? ProductAiPreparation::STATUS_GENERATED
-                        : ProductAiPreparation::STATUS_NOT_FOUND,
-                    'sources' => array_slice((array) data_get($result, 'research.sources', []), 0, 3),
-                    'confidence' => data_get($result, 'proposal.confidence'),
-                    'model' => data_get($result, 'source.model'),
-                    'error_message' => $matched ? null : data_get($result, 'research.warning'),
-                    'generated_at' => $generatedAt,
-                    'completed_at' => null,
-                ],
-            );
-
-            $result['preparation'] = [
-                'status' => $preparation->status,
-                'generated_at' => $matched ? $generatedAt->toISOString() : null,
-            ];
-
-            return response()->json(app(\App\Services\CatalogAttributeService::class)->prepareForEditor($product, $result));
+            return response()->json(app(\App\Services\ProductAiEditorGeneration::class)->generate($product, $openAi, 'catalog'));
         } catch (\Throwable $exception) {
             report($exception);
             $safeError = $exception instanceof \Illuminate\Http\Client\ConnectionException
@@ -110,6 +88,18 @@ class ProductControllerAdmin extends Controller
                 'message' => $safeError,
             ], 502);
         }
+    }
+
+    public function startAiGeneration(Product $product, string $kind)
+    {
+        $data = request()->validate(['request_id' => 'required|uuid']);
+        return response()->json(app(\App\Services\ProductAiEditorGeneration::class)->start($product, $kind, (int) auth()->id(), $data['request_id']), 202);
+    }
+
+    public function aiGenerationStatus(Product $product, string $generation)
+    {
+        return response()->json(app(\App\Services\ProductAiEditorGeneration::class)->status($product, $generation, (int) auth()->id()))
+            ->header('Cache-Control', 'no-store');
     }
 
     public function index(Request $request, DhlProductMeasurementEstimator $dhlMeasurements, ProductFeedService $productFeedService)

@@ -58,6 +58,8 @@ class CatalogAttributeController extends Controller
     {
         $product = app(\App\Services\ProductAiEditorContext::class)->fromRequest($product, request());
         abort_unless($catalog->enabledFor($product), 404);
+        app(\App\Services\ProductAiSettingsService::class)->ensureAvailable();
+        if (request()->boolean('async')) return app(ProductControllerAdmin::class)->startAiGeneration($product, 'attributes');
         // Return suggestions to the existing editor; assignments persist only on its normal save.
         return response()->json($catalog->prepareForEditor($product, $ai->generateAttributesOnly($product)));
     }

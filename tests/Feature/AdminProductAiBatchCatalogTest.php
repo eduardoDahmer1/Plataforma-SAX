@@ -35,6 +35,62 @@ class AdminProductAiBatchCatalogTest extends TestCase
         $this->assertStringContainsString('rel="noopener noreferrer"', $html);
     }
 
+    public function test_batch_consultation_uses_active_guide_contacts_and_source_variants(): void
+    {
+        $location = \App\Models\ContactGuideLocation::create(['name' => 'Sucursal', 'city' => 'CDE', 'active' => true]);
+        \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Bolsas', 'floor' => '1', 'phone' => '+595 981 123456', 'active' => true]);
+        \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Oculto', 'floor' => '1', 'phone' => '999', 'active' => false]);
+        $product = Product::create(['sku' => 'VAR-1', 'name' => 'Bolsa chica', 'price' => 10]);
+        Product::create(['sku' => 'VAR-2', 'name' => 'Bolsa grande', 'price' => 10]);
+        $batch = \App\Models\ProductAiBatch::create(['source_type' => 'paste', 'status' => 'completed']);
+        $batch->items()->create(['product_id' => $product->id, 'submitted_sku' => 'VAR-1', 'source_skus' => ['VAR-1', 'VAR-2'], 'status' => 'completed']);
+
+        $data = app(\App\Http\Controllers\Admin\ProductAiBatchController::class)->show($batch)->getData();
+        $this->assertTrue($data['guideEntries']->contains(fn ($entry) => $entry->sector === 'Bolsas' && $entry->phone === '+595 981 123456'));
+        $this->assertFalse($data['guideEntries']->contains(fn ($entry) => $entry->sector === 'Oculto'));
+        $this->assertSame('Bolsa grande', $data['consultationProducts']->get('var-2')->name);
+    }
+
+    public function test_consultation_groups_guide_locations_into_buildings_and_labels_repeated_sectors(): void
+    {
+        $locations = \App\Models\ContactGuideLocation::all()->keyBy('name');
+        $expected = [
+            'SAX Department Store' => ['department', 'SAX Department Store'],
+            'Shopping Dubai' => ['dubai', 'Shopping Dubai'],
+            'Distrito Perseverancia · Guembe' => ['distrito', 'Guembe'],
+            'Distrito Perseverancia · Casona' => ['distrito', 'Casona'],
+        ];
+        $entries = [];
+        foreach ($expected as $locationName => $destination) {
+            $entry = \App\Models\ContactGuideEntry::create([
+                'location_id' => $locations[$locationName]->id,
+                'sector' => 'Sector repetido', 'floor' => 'Piso 1',
+                'phone' => '+595 981 555555', 'active' => true,
+            ]);
+            $entries[$entry->id] = $destination;
+        }
+        $hidden = \App\Models\ContactGuideEntry::create([
+            'location_id' => $locations['Shopping Dubai']->id,
+            'sector' => 'Inactivo', 'floor' => 'PB', 'active' => false,
+        ]);
+        $closed = \App\Models\ContactGuideLocation::create(['name' => 'SAX Shopping Dubai inactivo', 'city' => 'PJC', 'active' => false]);
+        $closedEntry = \App\Models\ContactGuideEntry::create([
+            'location_id' => $closed->id, 'sector' => 'Cerrado', 'floor' => 'PB', 'active' => true,
+        ]);
+        $batch = \App\Models\ProductAiBatch::create(['source_type' => 'paste', 'status' => 'completed']);
+        $contacts = app(\App\Http\Controllers\Admin\ProductAiBatchController::class)->show($batch)->getData()['guideContacts']->keyBy('id');
+
+        foreach ($entries as $id => [$building, $place]) {
+            $contact = $contacts->get($id);
+            $this->assertSame($building, $contact['building']);
+            $this->assertSame('Sector repetido · '.$place.' · Piso 1', $contact['label']);
+            $this->assertSame('+595 981 555555', $contact['phone']);
+            $this->assertStringNotContainsString($contact['phone'], $contact['label']);
+        }
+        $this->assertFalse($contacts->has($hidden->id));
+        $this->assertFalse($contacts->has($closedEntry->id));
+    }
+
     public function test_non_admin_cannot_access_the_catalog_endpoint(): void
     {
         $customer = User::factory()->create(['user_type' => User::TYPE_CUSTOMER]);

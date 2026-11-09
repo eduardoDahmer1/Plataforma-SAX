@@ -29,6 +29,20 @@
     #waBuildings .form-check-input[type="radio"]:checked {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
     }
+    .wa-sector-suggestion {
+        text-align: left;
+        line-height: 1.25;
+    }
+    .wa-sector-suggestion small {
+        display: block;
+        margin-top: .2rem;
+        font-weight: 400;
+    }
+    .wa-sector-suggestion.is-recommended {
+        border-color: #198754;
+        background: #eaf7ef;
+        color: #155f37;
+    }
 </style>
 <x-admin.card>
     <x-admin.page-header
@@ -90,11 +104,31 @@
         @endif
 
         <div id="waConsultation" class="card border-0 shadow-sm">
-                <div id="waSelectionActions" class="p-3 border-bottom d-flex flex-wrap align-items-center gap-2" hidden style="display:none !important">
-                    <label class="me-2"><input type="checkbox" id="waSelectAll"> Seleccionar todos</label>
-                    <span id="waCount" aria-live="polite">0 seleccionados</span>
-                    <button type="button" class="btn btn-success" id="waContinue" disabled>Continuar con la consulta</button>
-                    <button type="button" class="btn btn-outline-secondary" id="waCancel">Cancelar</button>
+                <div id="waSelectionActions" class="p-3 border-bottom" hidden style="display:none !important">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <label class="me-2"><input type="checkbox" id="waSelectAll"> Seleccionar todos</label>
+                        <span id="waCount" aria-live="polite">0 seleccionados</span>
+                        <button type="button" class="btn btn-success" id="waContinue" disabled>Continuar con la consulta</button>
+                        <button type="button" class="btn btn-outline-secondary" id="waCancel">Cancelar</button>
+                    </div>
+                    <div class="mt-3 pt-3 border-top" id="waQuickSelection">
+                        <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-2">
+                            <div>
+                                <strong class="d-block">Selección rápida por sector sugerido</strong>
+                                <small class="text-muted">Usamos las marcas registradas en la guía de sectores. Podés ajustar los productos manualmente después.</small>
+                            </div>
+                            <div>
+                                <label for="waSuggestionBuilding" class="form-label small mb-1">Edificio</label>
+                                <select id="waSuggestionBuilding" class="form-select form-select-sm">
+                                    <option value="department">SAX Department Store</option>
+                                    <option value="dubai">SAX Shopping Dubai</option>
+                                    <option value="distrito">SAX Distrito (Guembe y Casona)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="waQuickSuggestions" class="d-flex flex-wrap gap-2" aria-live="polite"></div>
+                        <div id="waQuickSelectionHelp" class="small text-muted mt-2"></div>
+                    </div>
                 </div>
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
@@ -114,12 +148,16 @@
                         @php
                             $consultationVariants = collect($item->source_skus ?: [$item->submitted_sku])->filter()->unique()->map(function ($sku) use ($consultationProducts) {
                                 $product = $consultationProducts->get(mb_strtolower((string) $sku));
-                                return ['sku' => (string) $sku, 'name' => $product?->external_name ?: $product?->name ?: ''];
+                                return [
+                                    'sku' => (string) $sku,
+                                    'name' => $product?->external_name ?: $product?->name ?: '',
+                                    'brand' => $product?->brand?->name ?: '',
+                                ];
                             })->values();
                         @endphp
                         <tr data-batch-item="{{ $item->id }}">
                             <td class="wa-select-cell" hidden><input type="checkbox" class="wa-item" aria-label="Seleccionar {{ $item->product?->name ?: $item->submitted_sku }}" data-variants="{{ $consultationVariants->toJson() }}"></td>
-                            <td><strong>{{ $item->product?->name ?: $item->product?->external_name ?: 'Sin producto' }}</strong><small class="d-block text-muted">{{ $item->product?->sku ?: $item->submitted_sku }}</small></td>
+                            <td><strong>{{ $item->product?->name ?: $item->product?->external_name ?: 'Sin producto' }}</strong><small class="d-block text-muted">{{ $item->product?->sku ?: $item->submitted_sku }}@if($item->product?->brand) · {{ $item->product->brand->name }}@endif</small></td>
                             <td class="small">{{ implode(', ', $item->source_skus ?: [$item->submitted_sku]) }}</td>
                             <td><span class="badge text-bg-{{ $statusPresentation[1] }} item-status">{{ $statusPresentation[0] }}</span></td>
                             <td class="small text-muted">
@@ -152,6 +190,12 @@
                 </div>
             </fieldset>
             <script type="application/json" id="waContacts">@json($guideContacts)</script>
+            <div id="waSuggestedDestinations" class="alert alert-light border mb-3" hidden>
+                <strong class="d-block mb-1">WhatsApps sugeridos para esta selección</strong>
+                <div class="small text-muted mb-2" id="waSuggestedDestinationsSummary"></div>
+                <div class="d-flex flex-wrap gap-2" id="waSuggestedDestinationList"></div>
+                <div class="small text-muted mt-2">Elegí una sugerencia o seleccioná cualquier otro sector abajo.</div>
+            </div>
             <div class="mb-3"><label for="waSector" class="form-label">Sector de destino</label><select id="waSector" class="form-select"><option value="">Elegir sector o ingresar número manualmente</option></select></div>
             <div class="mb-3"><label for="waPhone" class="form-label">Número de WhatsApp</label><input id="waPhone" type="tel" class="form-control" placeholder="+595 981 123456" aria-describedby="waPhoneHelp"><div id="waPhoneHelp" class="form-text">Incluí el código de país, por ejemplo +595. Solo es necesario para abrir WhatsApp.</div><div class="invalid-feedback">Ingresá un número válido con código de país (entre 8 y 15 dígitos).</div></div>
             <fieldset class="mb-3" id="waReasons" aria-describedby="waReasonsError">

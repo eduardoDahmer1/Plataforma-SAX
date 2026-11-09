@@ -237,7 +237,12 @@ class ProductAiBatchController extends Controller
 
     public function show(ProductAiBatch $batch)
     {
-        $batch->load(['items.product:id,sku,name,external_name,photo,gallery', 'items.product.aiPreparation', 'creator:id,name']);
+        $batch->load([
+            'items.product:id,sku,name,external_name,photo,gallery,brand_id',
+            'items.product.brand:id,name',
+            'items.product.aiPreparation',
+            'creator:id,name',
+        ]);
         $counts = $batch->items->countBy('status');
         $groupedCount = $batch->items->sum(fn ($item) => max(0, count($item->source_skus ?: []) - 1));
         $batchSkus = $batch->items
@@ -271,10 +276,17 @@ class ProductAiBatchController extends Controller
                 'building' => $building,
                 'label' => collect([$entry->translated('sector'), $place, $entry->translated('floor')])->filter()->implode(' · '),
                 'phone' => (string) $entry->phone,
+                'brands' => collect($entry->brands ?? [])
+                    ->filter(fn ($brand) => is_string($brand) && trim($brand) !== '')
+                    ->map(fn ($brand) => trim($brand))
+                    ->values()
+                    ->all(),
             ];
         })->filter()->values();
         $consultationProducts = Product::withoutGlobalScopes()->whereIn('sku', $batchSkus)
-            ->get(['sku', 'name', 'external_name'])->keyBy(fn ($product) => mb_strtolower((string) $product->sku));
+            ->with('brand:id,name')
+            ->get(['sku', 'name', 'external_name', 'brand_id'])
+            ->keyBy(fn ($product) => mb_strtolower((string) $product->sku));
 
         $brands = collect();
         $categories = collect();

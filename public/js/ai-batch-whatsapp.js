@@ -10,7 +10,101 @@ document.addEventListener('DOMContentLoaded', function () {
     const buildingInputs = Array.from(byId('waBuildings').querySelectorAll('input[type="radio"]'));
     const contacts = JSON.parse(byId('waContacts').textContent);
     const sector = byId('waSector');
+    const suggestionBuilding = byId('waSuggestionBuilding');
     const selectedBuilding = () => buildingInputs.find(input => input.checked)?.value;
+    const variantsByItem = new WeakMap(items.map(item => [item, JSON.parse(item.dataset.variants)]));
+    let preferredContactId = '';
+
+    function normalizeBrand(value) {
+        const normalized = String(value || '')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLocaleLowerCase()
+            .replace(/&/g, ' and ')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .replace(/\b(and|e|y)\b/g, ' ')
+            .trim()
+            .replace(/\s+/g, ' ');
+        return {
+            'ysl': 'saint laurent',
+            'yves saint laurent': 'saint laurent',
+            'salvatore ferragamo': 'ferragamo',
+        }[normalized] || normalized;
+    }
+    function brandMatches(productBrand, guideBrand) {
+        const product = normalizeBrand(productBrand);
+        const guide = normalizeBrand(guideBrand);
+        if (!product || !guide) return false;
+        if (product === guide) return true;
+
+        // The guide intentionally qualifies some brands by department, such as
+        // "Boss Feminino" or "Ralph Lauren Kids". Match only complete phrases.
+        const longer = product.length > guide.length ? product : guide;
+        const shorter = product.length > guide.length ? guide : product;
+        return shorter.length >= 4 && (' ' + longer + ' ').includes(' ' + shorter + ' ');
+    }
+    function itemBrands(item) {
+        return Array.from(new Set(variantsByItem.get(item)
+            .map(product => String(product.brand || '').trim())
+            .filter(Boolean)));
+    }
+    function matchContact(contact, sourceItems) {
+        const guideBrands = Array.isArray(contact.brands) ? contact.brands : [];
+        const matchedItems = sourceItems.filter(item => itemBrands(item).some(productBrand =>
+            guideBrands.some(guideBrand => brandMatches(productBrand, guideBrand))));
+        const matchedBrands = Array.from(new Set(matchedItems.flatMap(item => itemBrands(item))));
+        return { contact, items: matchedItems, brands: matchedBrands };
+    }
+    function contactMatches(sourceItems, building = selectedBuilding()) {
+        return contacts
+            .filter(contact => contact.building === building && contact.phone)
+            .map(contact => matchContact(contact, sourceItems))
+            .filter(match => match.items.length > 0)
+            .sort((left, right) => right.items.length - left.items.length);
+    }
+    function appendSuggestionButton(container, match, options = {}) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-sm btn-outline-dark wa-sector-suggestion';
+        if (options.recommended) button.classList.add('is-recommended');
+        button.dataset.contactId = match.contact.id;
+
+        const label = document.createElement('span');
+        label.textContent = match.contact.label;
+        const details = document.createElement('small');
+        const brandSummary = match.brands.slice(0, 3).join(', ') + (match.brands.length > 3 ? '…' : '');
+        details.textContent = match.items.length + (match.items.length === 1 ? ' producto' : ' productos')
+            + (brandSummary ? ' · ' + brandSummary : '');
+        button.append(label, details);
+        button.addEventListener('click', options.onClick);
+        container.appendChild(button);
+    }
+
+    function renderQuickSuggestions() {
+        const list = byId('waQuickSuggestions');
+        const help = byId('waQuickSelectionHelp');
+        list.replaceChildren();
+        const matches = contactMatches(items, suggestionBuilding.value);
+        if (!matches.length) {
+            help.textContent = 'No encontramos sectores por marca en este edificio. Podés seleccionar los productos manualmente.';
+            return;
+        }
+        matches.forEach(match => appendSuggestionButton(list, match, {
+            recommended: preferredContactId === match.contact.id,
+            onClick: function () {
+                preferredContactId = match.contact.id;
+                items.forEach(item => item.checked = match.items.includes(item));
+                updateSelection();
+                renderQuickSuggestions();
+            },
+        }));
+        const matched = new Set(matches.flatMap(match => match.items));
+        const withoutSuggestion = items.length - matched.size;
+        help.textContent = withoutSuggestion > 0
+            ? withoutSuggestion + (withoutSuggestion === 1
+                ? ' producto no tiene una marca vinculada a un sector y sigue disponible para selección manual.'
+                : ' productos no tienen una marca vinculada a un sector y siguen disponibles para selección manual.')
+            : 'Elegí un sector para marcar solamente sus productos.';
+    }
 
     function populateSectors() {
         sector.replaceChildren();
@@ -29,13 +123,55 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         sector.value = '';
     }
+    function markSelectedDestination() {
+        byId('waSuggestedDestinationList').querySelectorAll('[data-contact-id]').forEach(button => {
+            button.classList.toggle('is-recommended', button.dataset.contactId === sector.value);
+        });
+    }
+    function chooseContact(contact) {
+        if (!contact || contact.building !== selectedBuilding()) return;
+        sector.value = contact.id;
+        byId('waPhone').value = contact.phone || '';
+        byId('waPhone').classList.remove('is-invalid');
+        markSelectedDestination();
+    }
+    function renderDestinationSuggestions() {
+        const container = byId('waSuggestedDestinations');
+        const list = byId('waSuggestedDestinationList');
+        const selectedItems = items.filter(item => item.checked);
+        const matches = contactMatches(selectedItems);
+        list.replaceChildren();
+        container.hidden = !matches.length;
+        if (!matches.length) return;
+
+        const recognizedBrands = Array.from(new Set(matches.flatMap(match => match.brands)));
+        byId('waSuggestedDestinationsSummary').textContent = recognizedBrands.length
+            ? 'Marcas reconocidas: ' + recognizedBrands.join(', ') + '.'
+            : 'Encontramos coincidencias con la guía de sectores.';
+        const bestCount = matches[0].items.length;
+        matches.forEach(match => appendSuggestionButton(list, match, {
+            recommended: match.items.length === bestCount,
+            onClick: () => chooseContact(match.contact),
+        }));
+        markSelectedDestination();
+    }
     populateSectors();
     buildingInputs.forEach(input => input.addEventListener('change', function () {
         if (!this.checked) return;
+        suggestionBuilding.value = this.value;
+        preferredContactId = '';
         populateSectors();
         byId('waPhone').value = '';
         byId('waPhone').classList.remove('is-invalid');
+        renderQuickSuggestions();
+        renderDestinationSuggestions();
     }));
+    suggestionBuilding.addEventListener('change', function () {
+        preferredContactId = '';
+        const modalBuilding = buildingInputs.find(input => input.value === this.value);
+        if (modalBuilding) modalBuilding.checked = true;
+        renderQuickSuggestions();
+    });
     const reasonInputs = Array.from(byId('waReasons').querySelectorAll('input[type="checkbox"]'));
     const requests = {
         photos: 'las fotos',
@@ -76,6 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
         actions.hidden = false;
         actions.style.removeProperty('display');
         root.querySelectorAll('.wa-select-cell').forEach(cell => cell.hidden = false);
+        renderQuickSuggestions();
         updateSelection();
     });
     byId('waCancel').addEventListener('click', function () {
@@ -87,13 +224,20 @@ document.addEventListener('DOMContentLoaded', function () {
         drafts = {};
         currentKey = '';
         delete root.dataset.selection;
+        preferredContactId = '';
         updateSelection();
     });
     selectAll.addEventListener('change', function () {
+        preferredContactId = '';
         items.forEach(item => item.checked = this.checked);
         updateSelection();
+        renderQuickSuggestions();
     });
-    items.forEach(item => item.addEventListener('change', updateSelection));
+    items.forEach(item => item.addEventListener('change', function () {
+        preferredContactId = '';
+        updateSelection();
+        renderQuickSuggestions();
+    }));
 
     function generate(products, selectedReason) {
         const needs = selectedReason.split('|').map(key => requests[key]);
@@ -162,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const unique = new Set();
         const selectedFamilies = [];
         items.filter(item => item.checked).forEach(item => {
-            const family = JSON.parse(item.dataset.variants).filter(product => {
+            const family = variantsByItem.get(item).filter(product => {
                 const key = product.sku.trim().toLocaleLowerCase();
                 if (!key || unique.has(key)) return false;
                 unique.add(key);
@@ -179,6 +323,15 @@ document.addEventListener('DOMContentLoaded', function () {
             families = selectedFamilies;
             groupPositions = {};
             populateGroups();
+        }
+        const modalBuilding = buildingInputs.find(input => input.value === suggestionBuilding.value);
+        if (modalBuilding) modalBuilding.checked = true;
+        populateSectors();
+        renderDestinationSuggestions();
+        if (preferredContactId) {
+            chooseContact(contacts.find(contact => contact.id === preferredContactId));
+        } else {
+            byId('waPhone').value = '';
         }
         showDraft();
         validateReasons();
@@ -209,6 +362,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const contact = contacts.find(contact => contact.id === this.value && contact.building === selectedBuilding());
         byId('waPhone').value = contact?.phone || '';
         byId('waPhone').classList.remove('is-invalid');
+        markSelectedDestination();
     });
     byId('waPhone').addEventListener('input', function () { this.classList.remove('is-invalid'); });
     byId('waOpen').addEventListener('click', function () {

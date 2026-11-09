@@ -38,10 +38,11 @@ class AdminProductAiBatchCatalogTest extends TestCase
     public function test_batch_consultation_uses_active_guide_contacts_and_source_variants(): void
     {
         $location = \App\Models\ContactGuideLocation::create(['name' => 'Sucursal', 'city' => 'CDE', 'active' => true]);
-        \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Bolsas', 'floor' => '1', 'phone' => '+595 981 123456', 'active' => true]);
+        \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Bolsas', 'floor' => '1', 'phone' => '+595 981 123456', 'brands' => ['Dolce & Gabbana'], 'active' => true]);
         \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Oculto', 'floor' => '1', 'phone' => '999', 'active' => false]);
-        $product = Product::create(['sku' => 'VAR-1', 'name' => 'Bolsa chica', 'price' => 10]);
-        Product::create(['sku' => 'VAR-2', 'name' => 'Bolsa grande', 'price' => 10]);
+        $brand = Brand::create(['name' => 'Dolce & Gabbana', 'slug' => 'dolce-gabbana', 'status' => 1]);
+        $product = Product::create(['sku' => 'VAR-1', 'name' => 'Bolsa chica', 'price' => 10, 'brand_id' => $brand->id]);
+        Product::create(['sku' => 'VAR-2', 'name' => 'Bolsa grande', 'price' => 10, 'brand_id' => $brand->id]);
         $batch = \App\Models\ProductAiBatch::create(['source_type' => 'paste', 'status' => 'completed']);
         $batch->items()->create(['product_id' => $product->id, 'submitted_sku' => 'VAR-1', 'source_skus' => ['VAR-1', 'VAR-2'], 'status' => 'completed']);
 
@@ -49,6 +50,7 @@ class AdminProductAiBatchCatalogTest extends TestCase
         $this->assertTrue($data['guideEntries']->contains(fn ($entry) => $entry->sector === 'Bolsas' && $entry->phone === '+595 981 123456'));
         $this->assertFalse($data['guideEntries']->contains(fn ($entry) => $entry->sector === 'Oculto'));
         $this->assertSame('Bolsa grande', $data['consultationProducts']->get('var-2')->name);
+        $this->assertSame('Dolce & Gabbana', $data['consultationProducts']->get('var-2')->brand->name);
     }
 
     public function test_consultation_groups_guide_locations_into_buildings_and_labels_repeated_sectors(): void
@@ -65,7 +67,7 @@ class AdminProductAiBatchCatalogTest extends TestCase
             $entry = \App\Models\ContactGuideEntry::create([
                 'location_id' => $locations[$locationName]->id,
                 'sector' => 'Sector repetido', 'floor' => 'Piso 1',
-                'phone' => '+595 981 555555', 'active' => true,
+                'phone' => '+595 981 555555', 'brands' => ['Marca sugerida'], 'active' => true,
             ]);
             $entries[$entry->id] = $destination;
         }
@@ -85,6 +87,7 @@ class AdminProductAiBatchCatalogTest extends TestCase
             $this->assertSame($building, $contact['building']);
             $this->assertSame('Sector repetido · '.$place.' · Piso 1', $contact['label']);
             $this->assertSame('+595 981 555555', $contact['phone']);
+            $this->assertSame(['Marca sugerida'], $contact['brands']);
             $this->assertStringNotContainsString($contact['phone'], $contact['label']);
         }
         $this->assertFalse($contacts->has($hidden->id));

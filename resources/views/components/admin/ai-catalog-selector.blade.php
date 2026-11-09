@@ -5,6 +5,7 @@
     'brands' => collect(),
     'categories' => collect(),
     'subcategories' => collect(),
+    'childcategories' => collect(),
 ])
 
 @php
@@ -33,10 +34,11 @@
                         <input type="search" id="{{ $prefix }}Search" class="form-control" placeholder="Buscar por SKU, nombre o referencia…" autocomplete="off">
                     </div>
                     <div class="row g-2">
-                        <div class="col-12 col-md-6 col-xl-3"><select id="{{ $prefix }}Brand" class="form-select" aria-label="Marca"><option value="">Todas las marcas</option>@foreach($brands as $brand)<option value="{{ $brand->id }}">{{ $brand->name }}</option>@endforeach</select></div>
-                        <div class="col-12 col-md-6 col-xl-3"><select id="{{ $prefix }}Category" class="form-select" aria-label="Categoría"><option value="">Todas las categorías</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select></div>
-                        <div class="col-12 col-md-6 col-xl-3"><select id="{{ $prefix }}Subcategory" class="form-select" aria-label="Subcategoría"><option value="">Todas las subcategorías</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}">{{ $subcategory->name }}</option>@endforeach</select></div>
-                        <div class="col-12 col-md-6 col-xl-3"><select id="{{ $prefix }}Status" class="form-select" aria-label="Preparación con IA"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="prepared">Producto preparado</option><option value="missing_photo">Falta fotografía</option><option value="review">Requiere revisión</option></select></div>
+                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Brand" class="form-select" aria-label="Marca"><option value="">Todas las marcas</option>@foreach($brands as $brand)<option value="{{ $brand->id }}">{{ $brand->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Category" class="form-select" aria-label="Categoría"><option value="">Todas las categorías</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Subcategory" class="form-select" aria-label="Subcategoría"><option value="">Todas las subcategorías</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}">{{ $subcategory->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Childcategory" class="form-select" aria-label="Categoría hija"><option value="">Todas las categorías hijas</option>@foreach($childcategories as $childcategory)<option value="{{ $childcategory->id }}" data-category-id="{{ $childcategory->category_id ?: $subcategories->firstWhere('id', $childcategory->subcategory_id)?->category_id }}" data-subcategory-id="{{ $childcategory->subcategory_id }}">{{ $childcategory->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Status" class="form-select" aria-label="Preparación con IA"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="prepared">Producto preparado</option><option value="missing_photo">Falta fotografía</option><option value="review">Requiere revisión</option></select></div>
                     </div>
                     <details class="mt-3">
                         <summary class="fw-semibold">Más filtros <span id="{{ $prefix }}FilterCount" class="badge text-bg-secondary"></span></summary>
@@ -160,13 +162,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const prefix = @json($prefix), isAppend = @json($isAppend);
     const existingSkus = new Set(@json($existingSkus).map(function (sku) { return String(sku).toLocaleLowerCase(); }));
     const selected = new Map(), get = function (name) { return document.getElementById(prefix + name); };
-    const search = get('Search'), brand = get('Brand'), category = get('Category'), subcategory = get('Subcategory'), status = get('Status');
+    const search = get('Search'), brand = get('Brand'), category = get('Category'), subcategory = get('Subcategory'), childcategory = get('Childcategory'), status = get('Status');
     const extraFilters = Array.from(modal.querySelectorAll('[data-filter]'));
     const list = get('List'), loading = get('Loading'), error = get('Error'), empty = get('Empty'), summary = get('Summary'), pagination = get('Pagination');
     const selectionCount = get('SelectionCount'), clearSelection = get('ClearSelection'), feedback = get('SelectionFeedback'), submit = get('Submit');
     const skuInput = isAppend ? get('Skus') : document.getElementById('aiBatchSkus');
     const formFeedback = document.getElementById('aiCatalogFormFeedback');
     const subcategoryOptions = Array.from(subcategory.options).slice(1).map(function (option) { return { value: option.value, label: option.textContent.trim(), categoryId: option.dataset.categoryId || '' }; });
+    const childcategoryOptions = Array.from(childcategory.options).slice(1).map(function (option) { return { value: option.value, label: option.textContent.trim(), categoryId: option.dataset.categoryId || '', subcategoryId: option.dataset.subcategoryId || '' }; });
     const statusLabels = { pending: ['Pendiente', 'secondary'], prepared: ['Producto preparado', 'success'], missing_photo: ['Falta fotografía', 'warning'], review: ['Requiere revisión', 'danger'] };
     let timer = null, controller = null, currentPage = 1;
 
@@ -185,6 +188,14 @@ document.addEventListener('DOMContentLoaded', function () {
         subcategoryOptions.filter(function (option) { return !category.value || option.categoryId === category.value; }).forEach(function (option) { const item = document.createElement('option'); item.value = option.value; item.textContent = option.label; fragment.appendChild(item); });
         subcategory.replaceChildren(fragment);
     }
+    function refreshChildcategories() {
+        const fragment = document.createDocumentFragment(); const first = document.createElement('option'); first.value = ''; first.textContent = 'Todas las categorías hijas'; fragment.appendChild(first);
+        childcategoryOptions.filter(function (option) {
+            if (subcategory.value) return option.subcategoryId === subcategory.value;
+            return !category.value || option.categoryId === category.value;
+        }).forEach(function (option) { const item = document.createElement('option'); item.value = option.value; item.textContent = option.label; fragment.appendChild(item); });
+        childcategory.replaceChildren(fragment);
+    }
     function renderProducts(products) {
         const fragment = document.createDocumentFragment();
         products.forEach(function (product) {
@@ -192,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
             row.className = 'ai-catalog-selector__product' + (inBatch ? ' is-in-batch' : '') + (selected.has(key) ? ' is-selected' : '');
             const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'form-check-input m-0'; checkbox.disabled = inBatch; checkbox.checked = selected.has(key); checkbox.setAttribute('aria-label', 'Seleccionar ' + (product.name || product.sku));
             const image = document.createElement('img'); image.src = product.image_url; image.alt = ''; image.loading = 'lazy';
-            const copy = document.createElement('div'); copy.className = 'min-w-0'; copy.append(text('span', 'badge bg-light text-dark border mb-1', 'SKU: ' + product.sku), text('div', 'fw-bold text-truncate', product.name), text('small', 'text-muted', [product.brand, product.category, product.subcategory].filter(Boolean).join(' · ')));
+            const copy = document.createElement('div'); copy.className = 'min-w-0'; copy.append(text('span', 'badge bg-light text-dark border mb-1', 'SKU: ' + product.sku), text('div', 'fw-bold text-truncate', product.name), text('small', 'text-muted', [product.brand, product.category, product.subcategory, product.childcategory].filter(Boolean).join(' · ')));
             const state = statusLabels[product.ai_status] || [product.ai_status || 'Sin estado', 'secondary'];
             const badge = text('span', 'ai-catalog-selector__product__status badge ' + (inBatch ? 'text-bg-secondary' : 'text-bg-' + state[1]), inBatch ? 'Ya está en el lote' : state[0]);
             checkbox.addEventListener('change', function () { feedback.textContent = ''; if (checkbox.checked) selected.set(key, product.sku); else selected.delete(key); row.classList.toggle('is-selected', checkbox.checked); updateSelection(); });
@@ -210,16 +221,17 @@ document.addEventListener('DOMContentLoaded', function () {
         get('FilterCount').textContent = extraFilters.filter(function (el) { return !el.dataset.default && el.value !== ''; }).length || '';
         const invalid = extraFilters.find(function (el) { return !el.checkValidity(); });
         if (invalid) { show(loading, false); error.querySelector('[data-error-message]').textContent = 'Revisá los valores de los filtros.'; show(error, true); return; }
-        const url = new URL(modal.dataset.catalogUrl, window.location.origin); const filters = { search: search.value.trim(), brand_id: brand.value, category_id: category.value, subcategory_id: subcategory.value, ai_preparation_filter: status.value };
+        const url = new URL(modal.dataset.catalogUrl, window.location.origin); const filters = { search: search.value.trim(), brand_id: brand.value, category_id: category.value, subcategory_id: subcategory.value, childcategory_id: childcategory.value, ai_preparation_filter: status.value };
         extraFilters.forEach(function (element) { filters[element.dataset.filter] = element.value; });
         Object.entries(filters).forEach(function (entry) { if (entry[1]) url.searchParams.set(entry[0], entry[1]); }); url.searchParams.set('page', currentPage);
         try { const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: requestController.signal }); const payload = await response.json(); if (!response.ok) throw new Error(response.status === 422 ? Object.values(payload.errors || {}).flat().join(' ') : 'No pudimos cargar los productos del catálogo.'); if (controller !== requestController) return; const products = Array.isArray(payload.data) ? payload.data : []; renderProducts(products); renderPagination(payload.meta); show(empty, products.length === 0); summary.textContent = payload.meta ? 'Mostrando ' + products.length + ' de ' + payload.meta.total + ' productos' : ''; } catch (requestError) { if (requestError.name !== 'AbortError' && controller === requestController) { error.querySelector('[data-error-message]').textContent = requestError.message; show(error, true); } } finally { if (controller === requestController) show(loading, false); }
     }
     extraFilters.forEach(function (element) { element.addEventListener(element.tagName === 'SELECT' || element.type === 'date' ? 'change' : 'input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 300); }); });
-    [brand, subcategory, status].forEach(function (element) { element.addEventListener('change', function () { load(1); }); });
-    category.addEventListener('change', function () { refreshSubcategories(); load(1); });
+    [brand, childcategory, status].forEach(function (element) { element.addEventListener('change', function () { load(1); }); });
+    subcategory.addEventListener('change', function () { refreshChildcategories(); load(1); });
+    category.addEventListener('change', function () { refreshSubcategories(); refreshChildcategories(); load(1); });
     search.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 400); });
-    get('ClearFilters').addEventListener('click', function () { search.value = ''; brand.value = ''; category.value = ''; status.value = ''; extraFilters.forEach(function (element) { element.value = element.dataset.default || ''; }); refreshSubcategories(); load(1); });
+    get('ClearFilters').addEventListener('click', function () { search.value = ''; brand.value = ''; category.value = ''; status.value = ''; extraFilters.forEach(function (element) { element.value = element.dataset.default || ''; }); refreshSubcategories(); refreshChildcategories(); load(1); });
     error.querySelector('button').addEventListener('click', function () { load(currentPage); });
     submit.addEventListener('click', function () {
         // TODO: valorar guardado AJAX para actualizar el borrador sin recargar la página.

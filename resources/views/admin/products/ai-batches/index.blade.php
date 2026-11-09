@@ -100,6 +100,7 @@
     :brands="$brands"
     :categories="$categories"
     :subcategories="$subcategories"
+    :childcategories="$childcategories"
     :existing-skus="[]"
 />
 @endsection

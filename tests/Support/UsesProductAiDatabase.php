@@ -25,7 +25,7 @@ trait UsesProductAiDatabase
             foreach (['sku', 'name', 'external_name', 'ref_code', 'photo', 'gallery', 'description'] as $column) {
                 $table->text($column)->nullable();
             }
-            foreach (['brand_id', 'category_id', 'subcategory_id', 'parent_id', 'stock'] as $column) {
+            foreach (['brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'parent_id', 'stock'] as $column) {
                 $table->integer($column)->nullable();
             }
             $table->decimal('price', 12, 2)->default(0);
@@ -43,6 +43,15 @@ trait UsesProductAiDatabase
                 $table->timestamps();
             });
         }
+        Schema::create('childcategories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('slug')->nullable();
+            $table->integer('category_id')->nullable();
+            $table->integer('subcategory_id');
+            $table->boolean('status')->default(true);
+            $table->timestamps();
+        });
         (require database_path('migrations/2026_08_28_102000_create_contact_guide_tables.php'))->up();
         foreach ([
             '2025_08_25_160934_create_system_settings_table.php',

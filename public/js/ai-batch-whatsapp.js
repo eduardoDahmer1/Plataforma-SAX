@@ -15,44 +15,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const variantsByItem = new WeakMap(items.map(item => [item, JSON.parse(item.dataset.variants)]));
     let preferredContactId = '';
 
-    function normalizeBrand(value) {
-        const normalized = String(value || '')
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .toLocaleLowerCase()
-            .replace(/&/g, ' and ')
-            .replace(/[^a-z0-9]+/g, ' ')
-            .replace(/\b(and|e|y)\b/g, ' ')
-            .trim()
-            .replace(/\s+/g, ' ');
-        return {
-            'ysl': 'saint laurent',
-            'yves saint laurent': 'saint laurent',
-            'salvatore ferragamo': 'ferragamo',
-        }[normalized] || normalized;
-    }
-    function brandMatches(productBrand, guideBrand) {
-        const product = normalizeBrand(productBrand);
-        const guide = normalizeBrand(guideBrand);
-        if (!product || !guide) return false;
-        if (product === guide) return true;
-
-        // The guide intentionally qualifies some brands by department, such as
-        // "Boss Feminino" or "Ralph Lauren Kids". Match only complete phrases.
-        const longer = product.length > guide.length ? product : guide;
-        const shorter = product.length > guide.length ? guide : product;
-        return shorter.length >= 4 && (' ' + longer + ' ').includes(' ' + shorter + ' ');
-    }
-    function itemBrands(item) {
-        return Array.from(new Set(variantsByItem.get(item)
-            .map(product => String(product.brand || '').trim())
-            .filter(Boolean)));
-    }
     function matchContact(contact, sourceItems) {
-        const guideBrands = Array.isArray(contact.brands) ? contact.brands : [];
-        const matchedItems = sourceItems.filter(item => itemBrands(item).some(productBrand =>
-            guideBrands.some(guideBrand => brandMatches(productBrand, guideBrand))));
-        const matchedBrands = Array.from(new Set(matchedItems.flatMap(item => itemBrands(item))));
-        return { contact, items: matchedItems, brands: matchedBrands };
+        const matchedProducts = sourceItems.map(item => ({
+            item,
+            products: variantsByItem.get(item).filter(product => product.matches && product.matches[contact.id]),
+        })).filter(match => match.products.length > 0);
+        const reasons = Array.from(new Set(matchedProducts.flatMap(match =>
+            match.products.map(product => product.matches[contact.id]))));
+        const labels = Array.from(new Set(matchedProducts.flatMap(match => match.products.flatMap(product =>
+            product.matches[contact.id] === 'brand' ? [product.brand] : (product.taxonomy || []))))).filter(Boolean);
+        return { contact, items: matchedProducts.map(match => match.item), reasons, labels };
     }
     function contactMatches(sourceItems, building = selectedBuilding()) {
         return contacts
@@ -71,9 +43,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const label = document.createElement('span');
         label.textContent = match.contact.label;
         const details = document.createElement('small');
-        const brandSummary = match.brands.slice(0, 3).join(', ') + (match.brands.length > 3 ? '…' : '');
+        const labelSummary = match.labels.slice(0, 3).join(', ') + (match.labels.length > 3 ? '…' : '');
         details.textContent = match.items.length + (match.items.length === 1 ? ' producto' : ' productos')
-            + (brandSummary ? ' · ' + brandSummary : '');
+            + (labelSummary ? ' · ' + labelSummary : '');
         button.append(label, details);
         button.addEventListener('click', options.onClick);
         container.appendChild(button);
@@ -85,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
         list.replaceChildren();
         const matches = contactMatches(items, suggestionBuilding.value);
         if (!matches.length) {
-            help.textContent = 'No encontramos sectores por marca en este edificio. Podés seleccionar los productos manualmente.';
+            help.textContent = 'No encontramos sectores por marca o categoría en este edificio. Podés seleccionar los productos manualmente.';
             return;
         }
         matches.forEach(match => appendSuggestionButton(list, match, {
@@ -101,8 +73,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const withoutSuggestion = items.length - matched.size;
         help.textContent = withoutSuggestion > 0
             ? withoutSuggestion + (withoutSuggestion === 1
-                ? ' producto no tiene una marca vinculada a un sector y sigue disponible para selección manual.'
-                : ' productos no tienen una marca vinculada a un sector y siguen disponibles para selección manual.')
+                ? ' producto no tiene un destino sugerido y sigue disponible para selección manual.'
+                : ' productos no tienen un destino sugerido y siguen disponibles para selección manual.')
             : 'Elegí un sector para marcar solamente sus productos.';
     }
 
@@ -144,9 +116,9 @@ document.addEventListener('DOMContentLoaded', function () {
         container.hidden = !matches.length;
         if (!matches.length) return;
 
-        const recognizedBrands = Array.from(new Set(matches.flatMap(match => match.brands)));
-        byId('waSuggestedDestinationsSummary').textContent = recognizedBrands.length
-            ? 'Marcas reconocidas: ' + recognizedBrands.join(', ') + '.'
+        const recognizedLabels = Array.from(new Set(matches.flatMap(match => match.labels)));
+        byId('waSuggestedDestinationsSummary').textContent = recognizedLabels.length
+            ? 'Coincidencias reconocidas: ' + recognizedLabels.join(', ') + '.'
             : 'Encontramos coincidencias con la guía de sectores.';
         const bestCount = matches[0].items.length;
         matches.forEach(match => appendSuggestionButton(list, match, {

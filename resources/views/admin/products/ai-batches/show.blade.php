@@ -115,7 +115,7 @@
                         <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-2">
                             <div>
                                 <strong class="d-block">Selección rápida por sector sugerido</strong>
-                                <small class="text-muted">Usamos las marcas registradas en la guía de sectores. Podés ajustar los productos manualmente después.</small>
+                                <small class="text-muted">Cruzamos las marcas y categorías del catálogo con la guía de sectores. Podés ajustar los productos manualmente después.</small>
                             </div>
                             <div>
                                 <label for="waSuggestionBuilding" class="form-label small mb-1">Edificio</label>
@@ -152,6 +152,12 @@
                                     'sku' => (string) $sku,
                                     'name' => $product?->external_name ?: $product?->name ?: '',
                                     'brand' => $product?->brand?->name ?: '',
+                                    'taxonomy' => collect([
+                                        $product?->category?->name,
+                                        $product?->subcategory?->name,
+                                        $product?->categoriasFilhas?->name,
+                                    ])->filter()->unique()->values()->all(),
+                                    'matches' => $product?->guide_matches ?: [],
                                 ];
                             })->values();
                         @endphp
@@ -225,6 +231,7 @@
         :brands="$brands"
         :categories="$categories"
         :subcategories="$subcategories"
+        :childcategories="$childcategories"
     />
 @endif
 

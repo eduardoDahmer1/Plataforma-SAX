@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\CategoriasFilhas;
 use App\Models\Product;
 use App\Models\ProductAiPreparation;
 use App\Models\Subcategory;
@@ -37,12 +38,14 @@ class AdminProductAiBatchCatalogTest extends TestCase
 
     public function test_batch_consultation_uses_active_guide_contacts_and_source_variants(): void
     {
-        $location = \App\Models\ContactGuideLocation::create(['name' => 'Sucursal', 'city' => 'CDE', 'active' => true]);
-        \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Bolsas', 'floor' => '1', 'phone' => '+595 981 123456', 'brands' => ['Dolce & Gabbana'], 'active' => true]);
+        $location = \App\Models\ContactGuideLocation::create(['name' => 'SAX Department Store Test', 'city' => 'CDE', 'active' => true]);
+        $brandEntry = \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Bolsas', 'floor' => '1', 'phone' => '+595 981 123456', 'brands' => ['Dolce & Gabbana'], 'active' => true]);
+        $taxonomyEntry = \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Perfumaria', 'floor' => '1', 'phone' => '+595 981 654321', 'brands' => [], 'active' => true]);
         \App\Models\ContactGuideEntry::create(['location_id' => $location->id, 'sector' => 'Oculto', 'floor' => '1', 'phone' => '999', 'active' => false]);
         $brand = Brand::create(['name' => 'Dolce & Gabbana', 'slug' => 'dolce-gabbana', 'status' => 1]);
-        $product = Product::create(['sku' => 'VAR-1', 'name' => 'Bolsa chica', 'price' => 10, 'brand_id' => $brand->id]);
-        Product::create(['sku' => 'VAR-2', 'name' => 'Bolsa grande', 'price' => 10, 'brand_id' => $brand->id]);
+        $category = Category::create(['name' => 'Perfumes', 'slug' => 'perfumes', 'status' => 1]);
+        $product = Product::create(['sku' => 'VAR-1', 'name' => 'Bolsa chica', 'price' => 10, 'brand_id' => $brand->id, 'category_id' => $category->id]);
+        Product::create(['sku' => 'VAR-2', 'name' => 'Bolsa grande', 'price' => 10, 'brand_id' => $brand->id, 'category_id' => $category->id]);
         $batch = \App\Models\ProductAiBatch::create(['source_type' => 'paste', 'status' => 'completed']);
         $batch->items()->create(['product_id' => $product->id, 'submitted_sku' => 'VAR-1', 'source_skus' => ['VAR-1', 'VAR-2'], 'status' => 'completed']);
 
@@ -51,6 +54,8 @@ class AdminProductAiBatchCatalogTest extends TestCase
         $this->assertFalse($data['guideEntries']->contains(fn ($entry) => $entry->sector === 'Oculto'));
         $this->assertSame('Bolsa grande', $data['consultationProducts']->get('var-2')->name);
         $this->assertSame('Dolce & Gabbana', $data['consultationProducts']->get('var-2')->brand->name);
+        $this->assertSame('brand', $data['consultationProducts']->get('var-2')->guide_matches[(string) $brandEntry->id]);
+        $this->assertSame('taxonomy', $data['consultationProducts']->get('var-2')->guide_matches[(string) $taxonomyEntry->id]);
     }
 
     public function test_consultation_groups_guide_locations_into_buildings_and_labels_repeated_sectors(): void
@@ -112,6 +117,12 @@ class AdminProductAiBatchCatalogTest extends TestCase
             'name' => 'Subcategoría de prueba',
             'category_id' => $category->id,
         ]);
+        $childcategory = CategoriasFilhas::create([
+            'name' => 'Categoría hija de prueba',
+            'slug' => 'categoria-hija-prueba',
+            'category_id' => $category->id,
+            'subcategory_id' => $subcategory->id,
+        ]);
 
         Product::create([
             'sku' => 'SKU-CATALOG-001',
@@ -123,6 +134,7 @@ class AdminProductAiBatchCatalogTest extends TestCase
             'brand_id' => $brand->id,
             'category_id' => $category->id,
             'subcategory_id' => $subcategory->id,
+            'childcategory_id' => $childcategory->id,
             'gallery' => [],
         ]);
 
@@ -141,6 +153,7 @@ class AdminProductAiBatchCatalogTest extends TestCase
                 'brand_id' => $brand->id,
                 'category_id' => $category->id,
                 'subcategory_id' => $subcategory->id,
+                'childcategory_id' => $childcategory->id,
             ]
         ));
 
@@ -151,6 +164,7 @@ class AdminProductAiBatchCatalogTest extends TestCase
             ->assertJsonPath('data.0.brand', 'Marca de prueba')
             ->assertJsonPath('data.0.category', 'Categoría de prueba')
             ->assertJsonPath('data.0.subcategory', 'Subcategoría de prueba')
+            ->assertJsonPath('data.0.childcategory', 'Categoría hija de prueba')
             ->assertJsonPath('data.0.ai_status', 'pending');
     }
 

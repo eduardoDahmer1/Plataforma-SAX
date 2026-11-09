@@ -7,6 +7,7 @@ use App\Imports\ProductAiSkuImport;
 use App\Jobs\GenerateProductAiPreparation;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\CategoriasFilhas;
 use App\Models\ContactGuideEntry;
 use App\Models\Product;
 use App\Models\ProductAiBatch;
@@ -14,6 +15,7 @@ use App\Models\ProductAiBatchItem;
 use App\Models\ProductAiPreparation;
 use App\Models\Subcategory;
 use App\Services\ProductAiBatchDraftBuilder;
+use App\Services\ContactGuideSuggestionMatcher;
 use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,12 +38,17 @@ class ProductAiBatchController extends Controller
             ->whereIn('category_id', $categories->pluck('id'))
             ->orderBy('name')
             ->get(['id', 'category_id', 'name']);
+        $childcategories = app(StoreTaxonomyService::class)->childCategories(CategoriasFilhas::query())
+            ->whereIn('subcategory_id', $subcategories->pluck('id'))
+            ->orderBy('name')
+            ->get(['id', 'category_id', 'subcategory_id', 'name']);
 
         return view('admin.products.ai-batches.index', compact(
             'batches',
             'brands',
             'categories',
             'subcategories',
+            'childcategories',
         ));
     }
 
@@ -52,6 +59,7 @@ class ProductAiBatchController extends Controller
             'brand_id' => ['nullable', 'integer', 'min:1'],
             'category_id' => ['nullable', 'integer', 'min:1'],
             'subcategory_id' => ['nullable', 'integer', 'min:1'],
+            'childcategory_id' => ['nullable', 'integer', 'min:1'],
             'ai_preparation_filter' => ['nullable', 'in:pending,prepared,missing_photo,review'],
             'per_page' => ['nullable', 'integer', 'in:20,30,50,100'],
         ] + \App\Services\ProductAiCatalogFilters::rules($request->all()));
@@ -84,12 +92,14 @@ class ProductAiBatchController extends Controller
                 'brand_id',
                 'category_id',
                 'subcategory_id',
+                'childcategory_id',
                 'status',
             ])
             ->with([
                 'brand:id,name',
                 'category:id,name',
                 'subcategory:id,name',
+                'categoriasFilhas:id,name',
                 'aiPreparation:id,product_id,status',
             ])
             ->when($search !== '', function ($query) use ($search) {
@@ -112,6 +122,10 @@ class ProductAiBatchController extends Controller
             ->when(
                 filled($validated['subcategory_id'] ?? null),
                 fn ($query) => $query->where('subcategory_id', $validated['subcategory_id'])
+            )
+            ->when(
+                filled($validated['childcategory_id'] ?? null),
+                fn ($query) => $query->where('childcategory_id', $validated['childcategory_id'])
             )
             ->when($aiPreparationFilter === 'pending', function ($query) {
                 $query->where(function ($pending) {
@@ -160,6 +174,7 @@ class ProductAiBatchController extends Controller
                 'brand' => $product->brand?->name,
                 'category' => $product->category?->name,
                 'subcategory' => $product->subcategory?->name,
+                'childcategory' => $product->categoriasFilhas?->name,
                 'ai_status' => $product->productAiDisplayStatus(),
             ])->values(),
             'meta' => [
@@ -284,13 +299,31 @@ class ProductAiBatchController extends Controller
             ];
         })->filter()->values();
         $consultationProducts = Product::withoutGlobalScopes()->whereIn('sku', $batchSkus)
-            ->with('brand:id,name')
-            ->get(['sku', 'name', 'external_name', 'brand_id'])
+            ->with([
+                'brand:id,name',
+                'category:id,name',
+                'subcategory:id,name',
+                'categoriasFilhas:id,name',
+            ])
+            ->get([
+                'sku', 'name', 'external_name', 'brand_id', 'category_id', 'subcategory_id', 'childcategory_id',
+            ])
             ->keyBy(fn ($product) => mb_strtolower((string) $product->sku));
+        $guideEntriesById = $guideEntries->keyBy(fn (ContactGuideEntry $entry) => (string) $entry->id);
+        $suggestionMatcher = app(ContactGuideSuggestionMatcher::class);
+        $consultationProducts->each(function (Product $product) use ($guideContacts, $guideEntriesById, $suggestionMatcher) {
+            $product->setAttribute('guide_matches', $guideContacts->mapWithKeys(function (array $contact) use ($product, $guideEntriesById, $suggestionMatcher) {
+                $entry = $guideEntriesById->get($contact['id']);
+                $reason = $entry ? $suggestionMatcher->match($product, $entry) : null;
+
+                return $reason ? [$contact['id'] => $reason] : [];
+            })->all());
+        });
 
         $brands = collect();
         $categories = collect();
         $subcategories = collect();
+        $childcategories = collect();
         if ($batch->status === ProductAiBatch::STATUS_DRAFT) {
             $brands = Brand::where('status', 1)->orderBy('name')->get(['id', 'name']);
             $categories = app(StoreTaxonomyService::class)->categories(Category::query())
@@ -299,6 +332,10 @@ class ProductAiBatchController extends Controller
                 ->whereIn('category_id', $categories->pluck('id'))
                 ->orderBy('name')
                 ->get(['id', 'category_id', 'name']);
+            $childcategories = app(StoreTaxonomyService::class)->childCategories(CategoriasFilhas::query())
+                ->whereIn('subcategory_id', $subcategories->pluck('id'))
+                ->orderBy('name')
+                ->get(['id', 'category_id', 'subcategory_id', 'name']);
         }
 
         return view('admin.products.ai-batches.show', compact(
@@ -312,6 +349,7 @@ class ProductAiBatchController extends Controller
             'brands',
             'categories',
             'subcategories',
+            'childcategories',
         ));
     }
 

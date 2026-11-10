@@ -40,6 +40,13 @@
                         <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Childcategory" class="form-select" aria-label="Categoría hija"><option value="">Todas las categorías hijas</option>@foreach($childcategories as $childcategory)<option value="{{ $childcategory->id }}" data-category-id="{{ $childcategory->category_id ?: $subcategories->firstWhere('id', $childcategory->subcategory_id)?->category_id }}" data-subcategory-id="{{ $childcategory->subcategory_id }}">{{ $childcategory->name }}</option>@endforeach</select></div>
                         <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Status" class="form-select" aria-label="Preparación con IA"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="prepared">Producto preparado</option><option value="missing_photo">Falta fotografía</option><option value="review">Requiere revisión</option></select></div>
                     </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3" aria-label="Filtros rápidos">
+                        <span class="small text-muted fw-semibold me-1">Accesos rápidos:</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="editing_filter" data-quick-value="never_edited">Nunca editados</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="image_filter" data-quick-value="without">Sin imagen</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="content_filter" data-quick-value="incomplete">Contenido incompleto</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="sort_by" data-quick-value="most_viewed">Mayor demanda</button>
+                    </div>
                     <details class="mt-3">
                         <summary class="fw-semibold">Más filtros <span id="{{ $prefix }}FilterCount" class="badge text-bg-secondary"></span></summary>
                         <div class="row g-3 mt-1">
@@ -58,6 +65,22 @@
                             <div class="col-12 col-md-6 col-xl-3">
                                 <label for="{{ $prefix }}reference_filter" class="form-label small">Referencia del fabricante</label>
                                 <select id="{{ $prefix }}reference_filter" data-filter="reference_filter" class="form-select"><option value="">Todas</option><option value="with">Con referencia</option><option value="without">Sin referencia</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}editing_filter" class="form-label small">Edición manual</label>
+                                <select id="{{ $prefix }}editing_filter" data-filter="editing_filter" class="form-select"><option value="">Todos</option><option value="never_edited">Nunca editados</option><option value="edited">Ya editados</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}image_filter" class="form-label small">Imágenes</label>
+                                <select id="{{ $prefix }}image_filter" data-filter="image_filter" class="form-select"><option value="">Todas</option><option value="without">Sin imagen</option><option value="with">Con imagen</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}content_filter" class="form-label small">Calidad del contenido</label>
+                                <select id="{{ $prefix }}content_filter" data-filter="content_filter" class="form-select"><option value="">Todos</option><option value="incomplete">Contenido incompleto</option><option value="complete">Contenido completo</option></select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}views_min" class="form-label small">Visitas mínimas</label>
+                                <input id="{{ $prefix }}views_min" data-filter="views_min" type="number" class="form-control" min="0" step="1" placeholder="Ej.: 20">
                             </div>
                             <div class="col-12 col-md-6 col-xl-3">
                                 <label for="{{ $prefix }}outlet_filter" class="form-label small">Outlet</label>
@@ -96,7 +119,10 @@
                     <div class="row g-2 mt-2">
                         <div class="col-md-8">
                             <label for="{{ $prefix }}Sort" class="form-label small">Ordenar por</label>
-                            <select id="{{ $prefix }}Sort" data-filter="sort_by" class="form-select" data-default="latest">
+                            <select id="{{ $prefix }}Sort" data-filter="sort_by" class="form-select" data-default="priority">
+                                <option value="priority">Prioridad de edición (recomendado)</option>
+                                <option value="unedited_latest">No editados más recientes</option>
+                                <option value="most_viewed">Más vistos / mayor demanda</option>
                                 <option value="latest">Más recientes</option><option value="oldest">Más antiguos</option>
                                 <option value="price_low">Precio: menor a mayor</option><option value="price_high">Precio: mayor a menor</option>
                                 <option value="name_az">Nombre: A–Z</option><option value="name_za">Nombre: Z–A</option>
@@ -111,7 +137,13 @@
                     <div class="text-end mt-3"><button type="button" id="{{ $prefix }}ClearFilters" class="btn btn-sm btn-link text-dark text-decoration-none">Limpiar filtros</button></div>
                 </div>
 
-                <div class="d-flex justify-content-between mb-2"><span id="{{ $prefix }}Summary" class="small text-muted" aria-live="polite"></span></div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <span id="{{ $prefix }}Summary" class="small text-muted" aria-live="polite"></span>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" id="{{ $prefix }}SelectPage" class="btn btn-sm btn-outline-dark" disabled>Seleccionar esta página</button>
+                        <button type="button" id="{{ $prefix }}SelectAllResults" class="btn btn-sm btn-dark" disabled>Seleccionar todos los resultados</button>
+                    </div>
+                </div>
                 <div id="{{ $prefix }}Loading" class="text-center py-5 d-none"><div class="spinner-border text-dark" role="status"><span class="visually-hidden">Cargando…</span></div></div>
                 <div id="{{ $prefix }}Error" class="alert alert-danger d-none"><span data-error-message>No pudimos cargar los productos del catálogo.</span> <button type="button" class="btn btn-sm btn-outline-danger">Reintentar</button></div>
                 <div id="{{ $prefix }}Empty" class="text-center text-muted py-5 d-none">No encontramos productos.</div>
@@ -164,14 +196,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const selected = new Map(), get = function (name) { return document.getElementById(prefix + name); };
     const search = get('Search'), brand = get('Brand'), category = get('Category'), subcategory = get('Subcategory'), childcategory = get('Childcategory'), status = get('Status');
     const extraFilters = Array.from(modal.querySelectorAll('[data-filter]'));
+    const quickFilters = Array.from(modal.querySelectorAll('[data-quick-target]'));
     const list = get('List'), loading = get('Loading'), error = get('Error'), empty = get('Empty'), summary = get('Summary'), pagination = get('Pagination');
+    const selectPage = get('SelectPage'), selectAllResults = get('SelectAllResults');
     const selectionCount = get('SelectionCount'), clearSelection = get('ClearSelection'), feedback = get('SelectionFeedback'), submit = get('Submit');
     const skuInput = isAppend ? get('Skus') : document.getElementById('aiBatchSkus');
     const formFeedback = document.getElementById('aiCatalogFormFeedback');
     const subcategoryOptions = Array.from(subcategory.options).slice(1).map(function (option) { return { value: option.value, label: option.textContent.trim(), categoryId: option.dataset.categoryId || '' }; });
     const childcategoryOptions = Array.from(childcategory.options).slice(1).map(function (option) { return { value: option.value, label: option.textContent.trim(), categoryId: option.dataset.categoryId || '', subcategoryId: option.dataset.subcategoryId || '' }; });
     const statusLabels = { pending: ['Pendiente', 'secondary'], prepared: ['Producto preparado', 'success'], missing_photo: ['Falta fotografía', 'warning'], review: ['Requiere revisión', 'danger'] };
-    let timer = null, controller = null, currentPage = 1;
+    let timer = null, controller = null, selectionController = null, currentPage = 1, renderedProducts = [], currentMeta = null;
 
     function show(element, visible) { element.classList.toggle('d-none', !visible); }
     function updateSelection() {
@@ -196,14 +230,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }).forEach(function (option) { const item = document.createElement('option'); item.value = option.value; item.textContent = option.label; fragment.appendChild(item); });
         childcategory.replaceChildren(fragment);
     }
+    function catalogUrl(page, selectAll) {
+        const url = new URL(modal.dataset.catalogUrl, window.location.origin);
+        const filters = { search: search.value.trim(), brand_id: brand.value, category_id: category.value, subcategory_id: subcategory.value, childcategory_id: childcategory.value, ai_preparation_filter: status.value };
+        extraFilters.forEach(function (element) { filters[element.dataset.filter] = element.value; });
+        Object.entries(filters).forEach(function (entry) { if (entry[1]) url.searchParams.set(entry[0], entry[1]); });
+        if (selectAll) url.searchParams.set('select_all', '1');
+        else url.searchParams.set('page', page || 1);
+        return url;
+    }
+    function refreshQuickFilters() {
+        quickFilters.forEach(function (button) {
+            const target = get(button.dataset.quickTarget);
+            const active = target && target.value === button.dataset.quickValue;
+            button.classList.toggle('btn-dark', active);
+            button.classList.toggle('btn-outline-secondary', !active);
+        });
+    }
     function renderProducts(products) {
+        renderedProducts = products;
         const fragment = document.createDocumentFragment();
         products.forEach(function (product) {
             const key = String(product.sku).toLocaleLowerCase(), inBatch = existingSkus.has(key), row = document.createElement('div');
             row.className = 'ai-catalog-selector__product' + (inBatch ? ' is-in-batch' : '') + (selected.has(key) ? ' is-selected' : '');
             const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'form-check-input m-0'; checkbox.disabled = inBatch; checkbox.checked = selected.has(key); checkbox.setAttribute('aria-label', 'Seleccionar ' + (product.name || product.sku));
             const image = document.createElement('img'); image.src = product.image_url; image.alt = ''; image.loading = 'lazy';
-            const copy = document.createElement('div'); copy.className = 'min-w-0'; copy.append(text('span', 'badge bg-light text-dark border mb-1', 'SKU: ' + product.sku), text('div', 'fw-bold text-truncate', product.name), text('small', 'text-muted', [product.brand, product.category, product.subcategory, product.childcategory].filter(Boolean).join(' · ')));
+            const copy = document.createElement('div'); copy.className = 'min-w-0'; copy.append(text('span', 'badge bg-light text-dark border mb-1', 'SKU: ' + product.sku), text('div', 'fw-bold text-truncate', product.name), text('small', 'text-muted d-block', [product.brand, product.category, product.subcategory, product.childcategory].filter(Boolean).join(' · ')));
+            const reasons = Array.isArray(product.needs_attention) ? product.needs_attention : [];
+            if (reasons.length || product.views > 0) copy.append(text('small', 'text-muted d-block mt-1', reasons.concat(product.views > 0 ? [product.views + ' visitas'] : []).join(' · ')));
             const state = statusLabels[product.ai_status] || [product.ai_status || 'Sin estado', 'secondary'];
             const badge = text('span', 'ai-catalog-selector__product__status badge ' + (inBatch ? 'text-bg-secondary' : 'text-bg-' + state[1]), inBatch ? 'Ya está en el lote' : state[0]);
             checkbox.addEventListener('change', function () { feedback.textContent = ''; if (checkbox.checked) selected.set(key, product.sku); else selected.delete(key); row.classList.toggle('is-selected', checkbox.checked); updateSelection(); });
@@ -217,14 +271,12 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let page = Math.max(1, meta.current_page - 2); page <= Math.min(meta.last_page, meta.current_page + 2); page++) { const item = document.createElement('li'); item.className = 'page-item' + (page === meta.current_page ? ' active' : ''); const button = document.createElement('button'); button.type = 'button'; button.className = 'page-link'; button.textContent = page; button.addEventListener('click', function () { load(page); }); item.appendChild(button); pagination.appendChild(item); }
     }
     async function load(page) {
-        window.clearTimeout(timer); currentPage = page || 1; if (controller) controller.abort(); const requestController = new AbortController(); controller = requestController; show(loading, true); show(error, false); show(empty, false); list.replaceChildren(); pagination.replaceChildren(); summary.textContent = '';
+        window.clearTimeout(timer); currentPage = page || 1; if (controller) controller.abort(); const requestController = new AbortController(); controller = requestController; show(loading, true); show(error, false); show(empty, false); list.replaceChildren(); pagination.replaceChildren(); summary.textContent = ''; selectPage.disabled = true; selectAllResults.disabled = true;
         get('FilterCount').textContent = extraFilters.filter(function (el) { return !el.dataset.default && el.value !== ''; }).length || '';
         const invalid = extraFilters.find(function (el) { return !el.checkValidity(); });
         if (invalid) { show(loading, false); error.querySelector('[data-error-message]').textContent = 'Revisá los valores de los filtros.'; show(error, true); return; }
-        const url = new URL(modal.dataset.catalogUrl, window.location.origin); const filters = { search: search.value.trim(), brand_id: brand.value, category_id: category.value, subcategory_id: subcategory.value, childcategory_id: childcategory.value, ai_preparation_filter: status.value };
-        extraFilters.forEach(function (element) { filters[element.dataset.filter] = element.value; });
-        Object.entries(filters).forEach(function (entry) { if (entry[1]) url.searchParams.set(entry[0], entry[1]); }); url.searchParams.set('page', currentPage);
-        try { const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: requestController.signal }); const payload = await response.json(); if (!response.ok) throw new Error(response.status === 422 ? Object.values(payload.errors || {}).flat().join(' ') : 'No pudimos cargar los productos del catálogo.'); if (controller !== requestController) return; const products = Array.isArray(payload.data) ? payload.data : []; renderProducts(products); renderPagination(payload.meta); show(empty, products.length === 0); summary.textContent = payload.meta ? 'Mostrando ' + products.length + ' de ' + payload.meta.total + ' productos' : ''; } catch (requestError) { if (requestError.name !== 'AbortError' && controller === requestController) { error.querySelector('[data-error-message]').textContent = requestError.message; show(error, true); } } finally { if (controller === requestController) show(loading, false); }
+        refreshQuickFilters();
+        try { const response = await fetch(catalogUrl(currentPage, false), { headers: { Accept: 'application/json' }, signal: requestController.signal }); const payload = await response.json(); if (!response.ok) throw new Error(response.status === 422 ? Object.values(payload.errors || {}).flat().join(' ') : 'No pudimos cargar los productos del catálogo.'); if (controller !== requestController) return; const products = Array.isArray(payload.data) ? payload.data : []; currentMeta = payload.meta || null; renderProducts(products); renderPagination(payload.meta); show(empty, products.length === 0); const orderNote = get('Sort').value === 'priority' ? ' · primero los que más necesitan edición' : ''; summary.textContent = payload.meta ? 'Mostrando ' + products.length + ' de ' + payload.meta.total + ' productos' + orderNote : ''; selectPage.disabled = products.length === 0; selectAllResults.disabled = !payload.meta || payload.meta.total === 0; selectAllResults.textContent = payload.meta ? 'Seleccionar los ' + payload.meta.total + ' resultados' : 'Seleccionar todos los resultados'; } catch (requestError) { if (requestError.name !== 'AbortError' && controller === requestController) { error.querySelector('[data-error-message]').textContent = requestError.message; show(error, true); } } finally { if (controller === requestController) show(loading, false); }
     }
     extraFilters.forEach(function (element) { element.addEventListener(element.tagName === 'SELECT' || element.type === 'date' ? 'change' : 'input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 300); }); });
     [brand, childcategory, status].forEach(function (element) { element.addEventListener('change', function () { load(1); }); });
@@ -232,7 +284,42 @@ document.addEventListener('DOMContentLoaded', function () {
     category.addEventListener('change', function () { refreshSubcategories(); refreshChildcategories(); load(1); });
     search.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 400); });
     get('ClearFilters').addEventListener('click', function () { search.value = ''; brand.value = ''; category.value = ''; status.value = ''; extraFilters.forEach(function (element) { element.value = element.dataset.default || ''; }); refreshSubcategories(); refreshChildcategories(); load(1); });
+    quickFilters.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const target = get(button.dataset.quickTarget);
+            if (!target) return;
+            target.value = target.value === button.dataset.quickValue ? (target.dataset.default || '') : button.dataset.quickValue;
+            load(1);
+        });
+    });
     error.querySelector('button').addEventListener('click', function () { load(currentPage); });
+    selectPage.addEventListener('click', function () {
+        feedback.textContent = '';
+        renderedProducts.forEach(function (product) {
+            const key = String(product.sku).toLocaleLowerCase();
+            if (!existingSkus.has(key) && selected.size < 1000) selected.set(key, product.sku);
+        });
+        renderProducts(renderedProducts); updateSelection();
+    });
+    selectAllResults.addEventListener('click', async function () {
+        feedback.textContent = ''; selectAllResults.disabled = true; selectAllResults.textContent = 'Seleccionando…';
+        if (selectionController) selectionController.abort(); selectionController = new AbortController();
+        try {
+            const response = await fetch(catalogUrl(1, true), { headers: { Accept: 'application/json' }, signal: selectionController.signal });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(response.status === 422 ? Object.values(payload.errors || {}).flat().join(' ') : 'No pudimos seleccionar los resultados.');
+            const combined = new Map(selected);
+            (payload.data || []).forEach(function (product) { const key = String(product.sku).toLocaleLowerCase(); if (!existingSkus.has(key)) combined.set(key, product.sku); });
+            if (combined.size > 1000) throw new Error('La selección combinada supera el máximo de 1.000 códigos. Limpiá la selección o aplicá más filtros.');
+            selected.clear(); combined.forEach(function (sku, key) { selected.set(key, sku); });
+            renderProducts(renderedProducts); updateSelection();
+        } catch (requestError) {
+            if (requestError.name !== 'AbortError') feedback.textContent = requestError.message;
+        } finally {
+            selectAllResults.disabled = !currentMeta || currentMeta.total === 0;
+            selectAllResults.textContent = currentMeta ? 'Seleccionar los ' + currentMeta.total + ' resultados' : 'Seleccionar todos los resultados';
+        }
+    });
     submit.addEventListener('click', function () {
         // TODO: valorar guardado AJAX para actualizar el borrador sin recargar la página.
         if (isAppend) { submit.disabled = true; submit.closest('form').submit(); return; }
@@ -247,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function () {
         list.querySelectorAll('.is-selected').forEach(function (row) { row.classList.remove('is-selected'); }); updateSelection();
     });
     modal.addEventListener('shown.bs.modal', function () { load(currentPage); search.focus(); });
-    modal.addEventListener('hidden.bs.modal', function () { window.clearTimeout(timer); if (controller) controller.abort(); });
+    modal.addEventListener('hidden.bs.modal', function () { window.clearTimeout(timer); if (controller) controller.abort(); if (selectionController) selectionController.abort(); });
     updateSelection();
 });
 </script>

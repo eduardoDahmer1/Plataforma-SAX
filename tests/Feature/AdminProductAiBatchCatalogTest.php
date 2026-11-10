@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Brand;
-use App\Models\Category;
 use App\Models\CategoriasFilhas;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductAiPreparation;
 use App\Models\Subcategory;
@@ -308,5 +308,54 @@ class AdminProductAiBatchCatalogTest extends TestCase
         ] as $filters) {
             $this->getJson(route('admin.products.ai-batches.catalog-products', $filters))->assertUnprocessable();
         }
+    }
+
+    public function test_catalog_filters_products_never_edited_without_image_or_with_incomplete_content(): void
+    {
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        Product::create([
+            'sku' => 'NEEDS-WORK', 'name' => 'Producto incompleto', 'price' => 10,
+            'description' => null, 'photo' => null, 'gallery' => [], 'admin_edited_at' => null,
+        ]);
+        Product::create([
+            'sku' => 'READY', 'name' => 'Producto completo', 'price' => 10,
+            'description' => 'Descripción lista', 'photo' => 'products/ready.webp', 'gallery' => [],
+            'admin_edited_at' => '2026-11-10 10:00:00',
+        ]);
+
+        foreach ([
+            ['editing_filter' => 'never_edited'],
+            ['image_filter' => 'without'],
+            ['content_filter' => 'incomplete'],
+        ] as $filter) {
+            $this->getJson(route('admin.products.ai-batches.catalog-products', $filter))
+                ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.sku', 'NEEDS-WORK');
+        }
+    }
+
+    public function test_priority_sort_uses_editing_need_and_views_and_can_select_all_filtered_results(): void
+    {
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        Product::create([
+            'sku' => 'POPULAR', 'name' => 'Camiseta popular', 'price' => 10, 'description' => '',
+            'views' => 90, 'admin_edited_at' => null, 'created_at' => '2026-11-01',
+        ]);
+        Product::create([
+            'sku' => 'RECENT', 'name' => 'Producto reciente', 'price' => 10, 'description' => '',
+            'views' => 2, 'admin_edited_at' => null, 'created_at' => '2026-11-10',
+        ]);
+        Product::create([
+            'sku' => 'EDITED', 'name' => 'Producto editado', 'price' => 10, 'description' => '',
+            'views' => 500, 'admin_edited_at' => '2026-11-10 12:00:00',
+        ]);
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', ['sort_by' => 'priority']))
+            ->assertOk()->assertJsonPath('data.0.sku', 'POPULAR')
+            ->assertJsonPath('data.0.never_edited', true)
+            ->assertJsonPath('data.0.views', 90);
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', [
+            'editing_filter' => 'never_edited', 'select_all' => 1,
+        ]))->assertOk()->assertJsonPath('meta.selection', true)->assertJsonPath('meta.total', 2)->assertJsonCount(2, 'data');
     }
 }

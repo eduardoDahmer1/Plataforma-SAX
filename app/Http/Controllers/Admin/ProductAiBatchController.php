@@ -6,16 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Imports\ProductAiSkuImport;
 use App\Jobs\GenerateProductAiPreparation;
 use App\Models\Brand;
-use App\Models\Category;
 use App\Models\CategoriasFilhas;
+use App\Models\Category;
 use App\Models\ContactGuideEntry;
 use App\Models\Product;
 use App\Models\ProductAiBatch;
 use App\Models\ProductAiBatchItem;
 use App\Models\ProductAiPreparation;
 use App\Models\Subcategory;
-use App\Services\ProductAiBatchDraftBuilder;
 use App\Services\ContactGuideSuggestionMatcher;
+use App\Services\ProductAiBatchDraftBuilder;
 use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -62,6 +62,7 @@ class ProductAiBatchController extends Controller
             'childcategory_id' => ['nullable', 'integer', 'min:1'],
             'ai_preparation_filter' => ['nullable', 'in:pending,prepared,missing_photo,review'],
             'per_page' => ['nullable', 'integer', 'in:20,30,50,100'],
+            'select_all' => ['nullable', 'boolean'],
         ] + \App\Services\ProductAiCatalogFilters::rules($request->all()));
 
         $search = trim((string) ($validated['search'] ?? ''));
@@ -89,6 +90,10 @@ class ProductAiBatchController extends Controller
                 'ref_code',
                 'photo',
                 'gallery',
+                'description',
+                'admin_edited_at',
+                'views',
+                'created_at',
                 'brand_id',
                 'category_id',
                 'subcategory_id',
@@ -131,37 +136,52 @@ class ProductAiBatchController extends Controller
                 $query->where(function ($pending) {
                     $pending
                         ->whereDoesntHave('aiPreparation')
-                        ->orWhereHas('aiPreparation', fn ($preparation) =>
-                            $preparation->where('status', ProductAiPreparation::STATUS_GENERATED)
+                        ->orWhereHas('aiPreparation', fn ($preparation) => $preparation->where('status', ProductAiPreparation::STATUS_GENERATED)
                         );
                 });
             })
             ->when($aiPreparationFilter === 'prepared', function ($query) use ($productsWithUsableImages) {
                 $query
-                    ->whereHas('aiPreparation', fn ($preparation) =>
-                        $preparation->where('status', ProductAiPreparation::STATUS_COMPLETED)
+                    ->whereHas('aiPreparation', fn ($preparation) => $preparation->where('status', ProductAiPreparation::STATUS_COMPLETED)
                     )
                     ->whereIn('products.id', $productsWithUsableImages ?? []);
             })
             ->when($aiPreparationFilter === 'missing_photo', function ($query) use ($productsWithUsableImages) {
-                $query->whereHas('aiPreparation', fn ($preparation) =>
-                    $preparation->where('status', ProductAiPreparation::STATUS_COMPLETED)
+                $query->whereHas('aiPreparation', fn ($preparation) => $preparation->where('status', ProductAiPreparation::STATUS_COMPLETED)
                 );
 
                 if ($productsWithUsableImages !== []) {
                     $query->whereNotIn('products.id', $productsWithUsableImages);
                 }
             })
-            ->when($aiPreparationFilter === 'review', fn ($query) =>
-                $query->whereHas('aiPreparation', fn ($preparation) =>
-                    $preparation->whereIn('status', [
-                        ProductAiPreparation::STATUS_NOT_FOUND,
-                        ProductAiPreparation::STATUS_FAILED,
-                    ])
-                )
+            ->when($aiPreparationFilter === 'review', fn ($query) => $query->whereHas('aiPreparation', fn ($preparation) => $preparation->whereIn('status', [
+                ProductAiPreparation::STATUS_NOT_FOUND,
+                ProductAiPreparation::STATUS_FAILED,
+            ])
             )
-            ->tap(fn ($query) => app(\App\Services\ProductAiCatalogFilters::class)->apply($query, $validated))
-            ->paginate($perPage);
+            )
+            ->tap(fn ($query) => app(\App\Services\ProductAiCatalogFilters::class)->apply($query, $validated));
+
+        if ($request->boolean('select_all')) {
+            $total = (clone $products)->reorder()->count();
+            if ($total > 1000) {
+                throw ValidationException::withMessages([
+                    'selection' => "Hay {$total} productos en el resultado. Aplicá más filtros para seleccionar hasta 1.000.",
+                ]);
+            }
+
+            $selectionProducts = (clone $products)->setEagerLoads([])->get();
+
+            return response()->json([
+                'data' => $selectionProducts->filter(fn (Product $product) => filled($product->sku))->map(fn (Product $product) => [
+                    'sku' => $product->sku,
+                    'name' => $product->name ?: $product->external_name,
+                ])->values(),
+                'meta' => ['total' => $total, 'selection' => true],
+            ]);
+        }
+
+        $products = $products->paginate($perPage);
 
         return response()->json([
             'data' => $products->getCollection()->map(fn (Product $product) => [
@@ -176,6 +196,14 @@ class ProductAiBatchController extends Controller
                 'subcategory' => $product->subcategory?->name,
                 'childcategory' => $product->categoriasFilhas?->name,
                 'ai_status' => $product->productAiDisplayStatus(),
+                'never_edited' => $product->admin_edited_at === null,
+                'views' => (int) ($product->views ?? 0),
+                'has_image' => Product::hasUsableImage($product->photo, $product->gallery),
+                'needs_attention' => collect([
+                    $product->admin_edited_at === null ? 'Nunca editado' : null,
+                    blank($product->description) ? 'Sin descripción' : null,
+                    Product::hasUsableImage($product->photo, $product->gallery) ? null : 'Sin imagen',
+                ])->filter()->values(),
             ])->values(),
             'meta' => [
                 'current_page' => $products->currentPage(),
@@ -360,6 +388,36 @@ class ProductAiBatchController extends Controller
         $batch->update(['name' => $name === '' ? null : $name]);
 
         return response()->json(['name' => $batch->name, 'display_name' => $batch->display_name]);
+    }
+
+    public function destroy(ProductAiBatch $batch)
+    {
+        $name = $batch->display_name;
+        $batch->delete();
+
+        return redirect()->route('admin.products.ai-batches.index')
+            ->with('success', "Se eliminó el lote «{$name}».");
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'batch_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'batch_ids.*' => ['integer', 'distinct', 'exists:product_ai_batches,id'],
+        ], [
+            'batch_ids.required' => 'Seleccioná al menos un lote para eliminar.',
+        ]);
+
+        $ids = collect($validated['batch_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+        $deleted = DB::transaction(function () use ($ids) {
+            $batches = ProductAiBatch::whereIn('id', $ids)->lockForUpdate()->get();
+            $batches->each->delete();
+
+            return $batches->count();
+        });
+
+        return redirect()->route('admin.products.ai-batches.index')
+            ->with('success', $deleted === 1 ? 'Se eliminó 1 lote.' : "Se eliminaron {$deleted} lotes.");
     }
 
     public function addProducts(Request $request, ProductAiBatch $batch, ProductAiBatchDraftBuilder $draftBuilder)

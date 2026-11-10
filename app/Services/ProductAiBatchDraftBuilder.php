@@ -10,17 +10,17 @@ use Illuminate\Validation\ValidationException;
 
 class ProductAiBatchDraftBuilder
 {
-    public function __construct(private ProductAiSizeGrouper $grouper)
-    {
-    }
+    public function __construct(
+        private ProductAiSizeGrouper $grouper,
+        private ProductAiBatchNameSuggester $nameSuggester,
+    ) {}
 
     public function rebuild(
         ProductAiBatch $batch,
         Collection $rawSkus,
         string $inputField,
         ?int $duplicateCount = null,
-    ): void
-    {
+    ): void {
         $rawSkus = $rawSkus
             ->map(fn ($sku) => trim((string) $sku))
             ->filter()
@@ -38,7 +38,15 @@ class ProductAiBatchDraftBuilder
 
         $products = Product::withoutGlobalScopes()
             ->whereIn('sku', $uniqueSkus)
-            ->get(['id', 'sku', 'parent_id', 'status', 'brand_id', 'external_name', 'name', 'color', 'size']);
+            ->with([
+                'category:id,name',
+                'subcategory:id,name',
+                'categoriasFilhas:id,name',
+            ])
+            ->get([
+                'id', 'sku', 'parent_id', 'status', 'brand_id', 'category_id', 'subcategory_id',
+                'childcategory_id', 'external_name', 'name', 'color', 'size',
+            ]);
         $foundBySku = $products->keyBy(fn ($product) => mb_strtolower((string) $product->sku));
         $foundProducts = collect();
 
@@ -57,7 +65,7 @@ class ProductAiBatchDraftBuilder
             $foundProducts->push($product);
         }
 
-        $groups = $batch->attributes_only ? $foundProducts->map(fn ($p) => ['representative_id'=>(int)$p->id, 'linked_family'=>false, 'product_ids'=>[(int)$p->id], 'source_skus'=>[(string)$p->sku]])->all()
+        $groups = $batch->attributes_only ? $foundProducts->map(fn ($p) => ['representative_id' => (int) $p->id, 'linked_family' => false, 'product_ids' => [(int) $p->id], 'source_skus' => [(string) $p->sku]])->all()
             : $this->grouper->group($foundProducts);
         $candidateRepresentativeIds = collect($groups)->pluck('representative_id')->map(fn ($id) => (int) $id);
         $existingParentIds = Product::withoutGlobalScopes()
@@ -130,7 +138,9 @@ class ProductAiBatchDraftBuilder
             $skipMessage = null;
             if ($batch->attributes_only) {
                 $attributeProduct = Product::withoutGlobalScopes()->find($representativeId);
-                if (! $attributeProduct || ! app(CatalogAttributeService::class)->enabledFor($attributeProduct)) $skipMessage = 'El diccionario de atributos no está disponible.';
+                if (! $attributeProduct || ! app(CatalogAttributeService::class)->enabledFor($attributeProduct)) {
+                    $skipMessage = 'El diccionario de atributos no está disponible.';
+                }
             } elseif (collect($targetIds)->contains(fn ($id) => (bool) $targets->get($id)?->status)) {
                 $skipMessage = 'Producto o variante activa; no se modifica contenido publicado.';
             }
@@ -156,10 +166,14 @@ class ProductAiBatchDraftBuilder
             ]);
         }
 
-        $batch->update([
+        $updates = [
             'input_count' => $uniqueSkus->count(),
             'duplicate_count' => $duplicateCount ?? max(0, $rawSkus->count() - $uniqueSkus->count()),
             'eligible_count' => $eligibleCount,
-        ]);
+        ];
+        if (blank($batch->name) && $foundProducts->isNotEmpty()) {
+            $updates['name'] = $this->nameSuggester->suggest($foundProducts);
+        }
+        $batch->update($updates);
     }
 }

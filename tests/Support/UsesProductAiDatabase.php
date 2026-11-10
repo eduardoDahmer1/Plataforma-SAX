@@ -28,6 +28,8 @@ trait UsesProductAiDatabase
             foreach (['brand_id', 'category_id', 'subcategory_id', 'childcategory_id', 'parent_id', 'stock'] as $column) {
                 $table->integer($column)->nullable();
             }
+            $table->unsignedInteger('views')->default(0);
+            $table->timestamp('admin_edited_at')->nullable();
             $table->decimal('price', 12, 2)->default(0);
             $table->boolean('status')->default(false);
             $table->boolean('is_outlet')->default(false);

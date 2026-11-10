@@ -73,16 +73,47 @@
             </div>
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3">Lotes recientes</h6>
+                    <form id="aiBatchBulkDeleteForm" method="POST" action="{{ route('admin.products.ai-batches.bulk-destroy') }}"
+                        data-confirm="¿Eliminar los lotes seleccionados? Esta acción no se puede deshacer.">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h6 class="fw-bold mb-0">Lotes recientes</h6>
+                        @if($batches->isNotEmpty())
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="form-check small mb-0">
+                                    <input id="aiBatchSelectAll" class="form-check-input" type="checkbox">
+                                    <span class="form-check-label">Seleccionar página</span>
+                                </label>
+                                <button id="aiBatchBulkDelete" type="submit" form="aiBatchBulkDeleteForm" class="btn btn-sm btn-outline-danger" disabled>
+                                    <i class="fa fa-trash me-1"></i> Eliminar seleccionados
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                    @error('batch_ids')<div class="alert alert-danger py-2">{{ $message }}</div>@enderror
                     @forelse($batches as $batch)
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom py-3">
-                            <div>
-                                <x-admin.ai-batch-name :batch="$batch" />
-                                <small class="d-block text-muted">#{{ $batch->id }} · {{ $batch->created_at->format('d/m/Y H:i') }} · {{ $batch->input_count }} códigos</small>
+                            <div class="d-flex align-items-start gap-2">
+                                <input class="form-check-input mt-1 ai-batch-checkbox" type="checkbox" name="batch_ids[]"
+                                    value="{{ $batch->id }}" form="aiBatchBulkDeleteForm" aria-label="Seleccionar {{ $batch->display_name }}">
+                                <div>
+                                    <x-admin.ai-batch-name :batch="$batch" />
+                                    <small class="d-block text-muted">#{{ $batch->id }} · {{ $batch->created_at->format('d/m/Y H:i') }} · {{ $batch->input_count }} códigos</small>
+                                </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge {{ $batch->status === 'completed' ? 'text-bg-success' : ($batch->status === 'draft' ? 'text-bg-secondary' : 'text-bg-primary') }}">{{ $batch->status }}</span>
                                 <a href="{{ route('admin.products.ai-batches.show', $batch) }}" class="btn btn-sm btn-outline-dark">Abrir</a>
+                                <form method="POST" action="{{ route('admin.products.ai-batches.destroy', $batch) }}"
+                                    onsubmit="return confirm('¿Eliminar «{{ addslashes($batch->display_name) }}»? Esta acción no se puede deshacer.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar lote" aria-label="Eliminar {{ $batch->display_name }}">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     @empty
@@ -104,3 +135,36 @@
     :existing-skus="[]"
 />
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('aiBatchBulkDeleteForm');
+    const selectAll = document.getElementById('aiBatchSelectAll');
+    const submit = document.getElementById('aiBatchBulkDelete');
+    const checkboxes = Array.from(document.querySelectorAll('.ai-batch-checkbox'));
+    if (!form || !selectAll || !submit) return;
+
+    function refresh() {
+        const checked = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
+        submit.disabled = checked === 0;
+        submit.innerHTML = '<i class="fa fa-trash me-1"></i> ' + (checked ? 'Eliminar ' + checked + (checked === 1 ? ' lote' : ' lotes') : 'Eliminar seleccionados');
+        selectAll.checked = checked > 0 && checked === checkboxes.length;
+        selectAll.indeterminate = checked > 0 && checked < checkboxes.length;
+    }
+
+    selectAll.addEventListener('change', function () {
+        checkboxes.forEach(function (checkbox) { checkbox.checked = selectAll.checked; });
+        refresh();
+    });
+    checkboxes.forEach(function (checkbox) { checkbox.addEventListener('change', refresh); });
+    form.addEventListener('submit', function (event) {
+        const count = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
+        if (!count || !confirm('¿Eliminar ' + count + (count === 1 ? ' lote seleccionado?' : ' lotes seleccionados?') + ' Esta acción no se puede deshacer.')) {
+            event.preventDefault();
+        }
+    });
+    refresh();
+});
+</script>
+@endpush

@@ -372,7 +372,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('products/ai-batches', [ProductAiBatchController::class, 'index'])->name('products.ai-batches.index');
     Route::post('products/ai-batches/preview', [ProductAiBatchController::class, 'preview'])->name('products.ai-batches.preview');
     Route::get('products/ai-batches/catalog-products',[ProductAiBatchController::class, 'catalogProducts'])->name('products.ai-batches.catalog-products');
+    Route::delete('products/ai-batches/bulk', [ProductAiBatchController::class, 'bulkDestroy'])->name('products.ai-batches.bulk-destroy');
     Route::get('products/ai-batches/{batch}', [ProductAiBatchController::class, 'show'])->whereNumber('batch')->name('products.ai-batches.show');
+    Route::delete('products/ai-batches/{batch}', [ProductAiBatchController::class, 'destroy'])->whereNumber('batch')->name('products.ai-batches.destroy');
     Route::patch('products/ai-batches/{batch}/name', [ProductAiBatchController::class, 'rename'])->whereNumber('batch')->name('products.ai-batches.rename');
     Route::post('products/ai-batches/{batch}/products', [ProductAiBatchController::class, 'addProducts'])->whereNumber('batch')->name('products.ai-batches.products.add');
     Route::post('products/ai-batches/{batch}/dispatch', [ProductAiBatchController::class, 'dispatch'])->whereNumber('batch')->name('products.ai-batches.dispatch');

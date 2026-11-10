@@ -172,7 +172,7 @@
                                     @include('admin.products.ai-batches.sources', ['sources' => $item->product?->aiPreparation?->sources ?: []])
                                 </div>
                             </td>
-                            <td>@if($item->product)<a href="{{ route('admin.products.edit', $item->product_id) }}" class="btn btn-sm btn-outline-dark">Abrir</a>@endif</td>
+                            <td>@if($item->product)<a href="{{ route('admin.products.edit', $item->product_id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-dark">Abrir</a>@endif</td>
                         </tr>
                     @endforeach
                     </tbody>

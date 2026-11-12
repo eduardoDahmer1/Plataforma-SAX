@@ -1,6 +1,7 @@
 @extends('layout.layout')
 
 @section('page_title', $product->name)
+@section('og_image', url($product->photo_url))
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/copy-link.css') }}?v={{ filemtime(public_path('css/copy-link.css')) }}">

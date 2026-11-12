@@ -58,11 +58,11 @@
 <meta property="og:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: __('messages.seo_default_description'))">
 <meta property="og:url" content="{{ $canonicalUrl }}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="{{ $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg') }}">
+<meta property="og:image" content="@yield('og_image', $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg'))">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="@yield('title', $isVistaIdentity ? $titleDefault : ($marketingSettings->og_title ?: $titleDefault))">
 <meta name="twitter:description" content="@yield('meta_description', $marketingSettings->og_description ?: $marketingSettings->default_meta_description ?: __('messages.seo_twitter_description'))">
-<meta name="twitter:image" content="{{ $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg') }}">
+<meta name="twitter:image" content="@yield('og_image', $marketingSettings->og_image_url ?: asset('images/sax-og-image.jpg'))">
 @if($marketingSettings->twitter_site)<meta name="twitter:site" content="{{ str_starts_with($marketingSettings->twitter_site, '@') ? $marketingSettings->twitter_site : '@'.$marketingSettings->twitter_site }}">@endif
 @if($marketingSettings->google_site_verification)<meta name="google-site-verification" content="{{ $marketingSettings->google_site_verification }}">@endif
 @if($marketingSettings->bing_site_verification)<meta name="msvalidate.01" content="{{ $marketingSettings->bing_site_verification }}">@endif

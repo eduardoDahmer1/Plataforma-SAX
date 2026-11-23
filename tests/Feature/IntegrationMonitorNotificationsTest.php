@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\IntegrationAlertMail;
+use App\Models\IntegrationRun;
 use App\Models\User;
 use App\Services\IntegrationMonitorService;
 use Carbon\Carbon;
@@ -79,6 +80,23 @@ class IntegrationMonitorNotificationsTest extends TestCase
         ]));
 
         Mail::assertNothingSent();
+    }
+
+    public function test_only_the_ten_most_recent_runs_are_retained(): void
+    {
+        $service = app(IntegrationMonitorService::class);
+
+        foreach (range(1, 12) as $runNumber) {
+            $service->report($this->payload('succeeded', 'run-'.$runNumber, [
+                'occurred_at' => now()->addMinutes($runNumber)->toIso8601String(),
+                'duration_seconds' => $runNumber,
+            ]));
+        }
+
+        $this->assertSame(10, IntegrationRun::query()->count());
+        $this->assertDatabaseMissing('integration_runs', ['run_id' => 'run-1']);
+        $this->assertDatabaseMissing('integration_runs', ['run_id' => 'run-2']);
+        $this->assertDatabaseHas('integration_runs', ['run_id' => 'run-12']);
     }
 
     private function payload(string $event, string $runId, array $extra = []): array

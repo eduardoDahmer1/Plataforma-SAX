@@ -27,7 +27,35 @@
         </x-slot:actions>
     </x-admin.page-header>
 
-    <div class="product-feed-panel mb-3">
+    @php
+        $integrationStatus = $integrationMonitor?->status ?? 'never_reported';
+        $integrationPresentation = [
+            'healthy' => ['Integração ativa', 'success', 'fa-check', 'Última sincronização concluída normalmente.'],
+            'running' => ['Integração em andamento', 'warning', 'fa-arrows-rotate', 'O catálogo está sendo atualizado agora.'],
+            'failed' => ['Integração com alerta', 'danger', 'fa-triangle-exclamation', 'A última sincronização terminou com falha.'],
+            'stale' => ['Integração sem comunicação', 'danger', 'fa-triangle-exclamation', 'O integrador está há muito tempo sem responder.'],
+            'never_reported' => ['Aguardando integração', 'secondary', 'fa-clock', 'Nenhuma comunicação foi recebida ainda.'],
+        ][$integrationStatus] ?? ['Status desconhecido', 'secondary', 'fa-circle-question', 'Não foi possível identificar o estado atual.'];
+    @endphp
+
+    <div class="product-sync-grid mb-3">
+        <a href="{{ route('admin.dashboard.integration') }}"
+           class="product-integration-status product-integration-status--{{ $integrationPresentation[1] }}"
+           aria-label="{{ $integrationPresentation[0] }}. Abrir detalhes da integração.">
+            <span class="product-integration-status__icon" aria-hidden="true">
+                <i class="fa-solid {{ $integrationPresentation[2] }}"></i>
+            </span>
+            <span class="product-integration-status__content">
+                <span class="product-integration-status__eyebrow">Status do integrador</span>
+                <strong>{{ $integrationPresentation[0] }}</strong>
+                <small>Última comunicação: {{ $integrationMonitor?->last_heartbeat_at?->format('d/m/Y H:i:s') ?? 'ainda não recebida' }}</small>
+            </span>
+            <span class="product-integration-status__action">
+                Detalhes <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </span>
+        </a>
+
+        <div class="product-feed-panel">
         <button
             class="product-feed-panel__toggle collapsed"
             type="button"
@@ -91,10 +119,87 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 
     @push('styles')
         <style>
+            .product-sync-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                align-items: start;
+                gap: 12px;
+            }
+            .product-integration-status {
+                --integration-color: #667085;
+                --integration-soft: #f2f4f7;
+                display: grid;
+                grid-template-columns: 38px minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 11px;
+                min-height: 60px;
+                padding: 8px 12px;
+                color: #172033;
+                text-decoration: none;
+                border: 1px solid #e3e8f0;
+                border-left: 4px solid var(--integration-color);
+                border-radius: 12px;
+                background: #fff;
+                box-shadow: 0 3px 12px rgba(15, 23, 42, .035);
+                transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+            }
+            .product-integration-status:hover {
+                color: #172033;
+                border-color: var(--integration-color);
+                box-shadow: 0 7px 20px rgba(15, 23, 42, .08);
+                transform: translateY(-1px);
+            }
+            .product-integration-status--success { --integration-color: #039855; --integration-soft: #ecfdf3; }
+            .product-integration-status--warning { --integration-color: #d97706; --integration-soft: #fffaeb; }
+            .product-integration-status--danger { --integration-color: #d92d20; --integration-soft: #fef3f2; }
+            .product-integration-status__icon {
+                display: grid;
+                width: 38px;
+                height: 38px;
+                place-items: center;
+                color: var(--integration-color);
+                background: var(--integration-soft);
+                border-radius: 9px;
+                font-size: .9rem;
+            }
+            .product-integration-status--warning .product-integration-status__icon i {
+                animation: product-integration-spin 1.6s linear infinite;
+            }
+            @keyframes product-integration-spin { to { transform: rotate(360deg); } }
+            .product-integration-status__content {
+                display: flex;
+                min-width: 0;
+                flex-direction: column;
+                gap: 1px;
+            }
+            .product-integration-status__eyebrow,
+            .product-integration-status__content small {
+                color: #7a8497;
+                font-size: .63rem;
+            }
+            .product-integration-status__eyebrow {
+                color: #7a8497;
+                font-size: .6rem;
+                font-weight: 700;
+                letter-spacing: .05em;
+                text-transform: uppercase;
+            }
+            .product-integration-status__content strong { font-size: .82rem; }
+            .product-integration-status__action {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                color: var(--integration-color);
+                font-size: .64rem;
+                font-weight: 750;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
             .product-feed-panel {
                 overflow: hidden;
                 border: 1px solid #e3e8f0;
@@ -104,11 +209,11 @@
             }
             .product-feed-panel__toggle {
                 width: 100%;
-                min-height: 64px;
+                min-height: 60px;
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                padding: 10px 16px;
+                padding: 8px 12px;
                 border: 0;
                 background: #fff;
                 color: #172033;
@@ -142,7 +247,7 @@
                 gap: 2px;
             }
             .product-feed-panel__title {
-                font-size: .94rem;
+                font-size: .86rem;
                 font-weight: 700;
                 line-height: 1.2;
             }
@@ -151,7 +256,7 @@
                 align-items: center;
                 gap: 9px;
                 color: #7a8497;
-                font-size: .75rem;
+                font-size: .68rem;
             }
             .product-feed-panel__status {
                 display: inline-flex;
@@ -208,7 +313,16 @@
                 color: #7a8497;
                 font-size: .75rem;
             }
+            @media (max-width: 991.98px) {
+                .product-sync-grid { grid-template-columns: 1fr; }
+            }
             @media (max-width: 575.98px) {
+                .product-integration-status {
+                    grid-template-columns: 42px minmax(0, 1fr);
+                    padding: 11px 12px;
+                }
+                .product-integration-status__icon { width: 42px; height: 42px; }
+                .product-integration-status__action { display: none; }
                 .product-feed-panel__toggle {
                     min-height: 58px;
                     padding: 9px 12px;

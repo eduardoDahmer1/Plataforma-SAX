@@ -4,18 +4,19 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\CustomerDocumentRule;
+use App\Services\RegistrationProtectionService;
+use App\Support\CustomerDocument;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
-use App\Rules\CustomerDocumentRule;
-use App\Support\CustomerDocument;
 
 class RegisteredUserController extends Controller
 {
@@ -30,7 +31,7 @@ class RegisteredUserController extends Controller
     /**
      * Processa a requisição de registro.
      */
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(Request $request, RegistrationProtectionService $protection): RedirectResponse|JsonResponse
     {
         $documentType = CustomerDocument::inferType(
             $request->input('document_type'),
@@ -48,7 +49,7 @@ class RegisteredUserController extends Controller
         ]);
 
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'min:2', 'max:255'],
+            'name' => ['required', 'string', 'min:2', 'max:100'],
             'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:'.User::class],
             'document_type' => ['required', 'string', 'in:'.implode(',', CustomerDocument::types())],
             'document' => ['required', 'string', 'max:30', new CustomerDocumentRule($documentType)],
@@ -81,6 +82,12 @@ class RegisteredUserController extends Controller
             'password' => 'senha',
         ]);
 
+        $validator->after(function ($validator) use ($request, $protection) {
+            if ($reason = $protection->suspiciousNameReason((string) $request->input('name'))) {
+                $validator->errors()->add('name', $reason);
+            }
+        });
+
         if ($validator->fails()) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -96,8 +103,23 @@ class RegisteredUserController extends Controller
                 ->with('auth_modal', 'register');
         }
 
+        if ($protectionError = $protection->validationError($request)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $protectionError,
+                    'errors' => ['registration' => [$protectionError]],
+                ], 422);
+            }
+
+            return back()
+                ->withErrors(['registration' => $protectionError])
+                ->withInput($request->except(['password', 'password_confirmation', 'company_website']))
+                ->with('auth_modal', 'register');
+        }
+
         $validated = $validator->validated();
-    
+
         try {
             $user = User::create([
                 'name' => $validated['name'],
@@ -143,7 +165,9 @@ class RegisteredUserController extends Controller
                 ->withInput($request->except(['password', 'password_confirmation']))
                 ->with('auth_modal', 'register');
         }
-    
+
+        $protection->consume($request);
+
         // Dispara o evento de registro (envio de e-mail de verificação)
         // O try/catch evita que o cadastro trave se o servidor de e-mail oscilar
         try {
@@ -151,12 +175,12 @@ class RegisteredUserController extends Controller
         } catch (\Throwable $e) {
             Log::error('Falha ao disparar evento Registered: '.$e->getMessage(), [
                 'user_id' => $user->id,
-                'email'   => $user->email
+                'email' => $user->email,
             ]);
         }
-    
+
         Auth::login($user);
-    
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -168,5 +192,5 @@ class RegisteredUserController extends Controller
         return redirect()
             ->route('user.profile.edit')
             ->with('success', 'Conta criada com sucesso. Complete seus dados de endereco para agilizar seus pedidos.');
-    }    
+    }
 }

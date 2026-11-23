@@ -1068,6 +1068,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            if (window.turnstile && registerForm.querySelector('.cf-turnstile')) {
+                window.turnstile.reset();
+            }
+
             const errors = data.errors || {};
 
             if (errors.name) registerName?.classList.add('is-invalid');

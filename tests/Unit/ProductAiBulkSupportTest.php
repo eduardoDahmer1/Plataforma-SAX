@@ -11,6 +11,14 @@ use ReflectionMethod;
 
 class ProductAiBulkSupportTest extends TestCase
 {
+    public function test_optical_batch_names_follow_editor_normalization(): void
+    {
+        $method = new ReflectionMethod(ProductAiProposalApplier::class, 'normalizeOpticalName');
+        $applier = new ProductAiProposalApplier;
+        $this->assertSame('RAY BAN RB123', $method->invoke($applier, 'Ray Ban', 'BAN RAY BAN RB123 #52 *BLACK'));
+        $this->assertSame('RB123', $method->invoke($applier, null, 'RB123 #52'));
+    }
+
     public function test_excel_numeric_codes_are_normalized_without_decimal_suffix(): void
     {
         $method = new ReflectionMethod(ProductAiBatchController::class, 'normalizeCellValue');

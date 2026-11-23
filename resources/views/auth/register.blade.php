@@ -22,11 +22,12 @@
 
                 <form method="POST" action="{{ route('register') }}">
                     @csrf
+                    <x-auth.registration-protection />
 
                     <div class="auth-section-label">Dados da conta</div>
 
                     <div class="form-group">
-                        <input id="name" class="form-input @error('name') is-invalid @enderror" type="text" name="name" value="{{ old('name') }}" placeholder="Nome Completo" required autofocus autocomplete="name" minlength="2" maxlength="255" />
+                        <input id="name" class="form-input @error('name') is-invalid @enderror" type="text" name="name" value="{{ old('name') }}" placeholder="Nome Completo" required autofocus autocomplete="name" minlength="2" maxlength="100" />
                         @error('name')
                             <div class="sax-auth-field-error">{{ $message }}</div>
                         @enderror

@@ -28,6 +28,7 @@ class AdminRoleAccessTest extends TestCase
         $this->assertTrue($editor->isAdminEditor());
         $this->assertTrue($editor->canAccessAdminRoute('admin.index'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.products.edit'));
+        $this->assertTrue($editor->canAccessAdminRoute('admin.dashboard.integration'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.products.ai-batches.index'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.products.outlet.update'));
         $this->assertTrue($editor->canAccessAdminRoute('admin.brands.update'));

@@ -17,6 +17,22 @@ class ProductAiEditorContextTest extends TestCase
 {
     use UsesProductAiDatabase;
 
+    public function test_batch_context_uses_the_same_portuguese_fallbacks_as_the_editor(): void
+    {
+        require_once database_path('migrations/2025_07_11_192100_create_product_translations_table.php');
+        (new \CreateProductTranslationsTable)->up();
+        $product = Product::create(['sku' => 'BATCH-CONTEXT', 'external_name' => 'Nombre original', 'price' => 10]);
+        DB::table('product_translations')->insert(['product_id' => $product->id, 'locale' => 'pt-br', 'name' => 'Nome traduzido', 'details' => 'Descrição traduzida']);
+
+        $context = app(ProductAiEditorContext::class)->fromStoredProduct($product);
+        $this->assertSame('Nome traduzido', $context->name);
+        $this->assertSame('Descrição traduzida', $context->description);
+        $this->assertNull($product->fresh()->name);
+
+        DB::table('product_translations')->delete();
+        $this->assertSame('Nombre original', app(ProductAiEditorContext::class)->fromStoredProduct($product)->name);
+    }
+
     public function test_current_values_override_loaded_relations_without_saving_the_product(): void
     {
         $old = Brand::forceCreate(['name' => 'Old']);

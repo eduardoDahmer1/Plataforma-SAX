@@ -83,7 +83,7 @@ class DashboardController extends Controller
                 if ($runStatus !== 'all') {
                     $runsQuery->where('status', $runStatus);
                 }
-                $runs = $runsQuery->latest('started_at')->limit(15)->get();
+                $runs = $runsQuery->latest('started_at')->limit(10)->get();
             }
 
             return [

@@ -36,6 +36,8 @@ class IntegrationMonitorService
             ]);
 
             if ($run->exists && in_array($run->status, ['success', 'failed'], true) && $event !== 'started') {
+                $this->pruneRuns($monitor);
+
                 return $monitor;
             }
 
@@ -57,6 +59,8 @@ class IntegrationMonitorService
                     'last_heartbeat_at' => $occurredAt,
                     'metadata' => $metadata,
                 ])->save();
+
+                $this->pruneRuns($monitor);
 
                 return $monitor;
             }
@@ -87,6 +91,8 @@ class IntegrationMonitorService
                     'last_failure_notification_at' => null,
                     'metadata' => $metadata,
                 ])->save();
+
+                $this->pruneRuns($monitor);
 
                 return $monitor;
             }
@@ -122,10 +128,27 @@ class IntegrationMonitorService
                     : $monitor->last_failure_notification_at,
             ])->save();
 
+            $this->pruneRuns($monitor);
+
             return $monitor;
         });
 
         return $monitor->fresh();
+    }
+
+    private function pruneRuns(IntegrationMonitor $monitor): void
+    {
+        $retainedRunIds = IntegrationRun::query()
+            ->where('integration_monitor_id', $monitor->id)
+            ->orderByDesc('started_at')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->pluck('id');
+
+        IntegrationRun::query()
+            ->where('integration_monitor_id', $monitor->id)
+            ->whereNotIn('id', $retainedRunIds)
+            ->delete();
     }
 
     public function checkForStaleIntegrations(): int

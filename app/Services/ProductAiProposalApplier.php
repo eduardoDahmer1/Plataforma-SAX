@@ -15,6 +15,14 @@ class ProductAiProposalApplier
             $product = Product::withoutGlobalScopes()->lockForUpdate()->findOrFail($product->id);
             $proposal = (array) data_get($result, 'proposal', []);
             $this->assertValidProposal($proposal);
+            if ((int) $product->category_id === 149 || (int) data_get($proposal, 'taxonomy_selection.category_id') === 149) {
+                $brand = $product->brand?->name;
+                foreach (['pt_br', 'es', 'en'] as $locale) {
+                    $name = $this->normalizeOpticalName($brand, data_get($proposal, "commercial_name.{$locale}"));
+                    data_set($proposal, "commercial_name.{$locale}", $name);
+                }
+                $this->assertValidProposal($proposal);
+            }
             $generatedAt = now()->setMicrosecond(0);
             $translations = [
                 'pt-br' => [
@@ -127,6 +135,30 @@ class ProductAiProposalApplier
         return collect($paragraphs)->map(function ($paragraph) {
             return '<p>'.nl2br(e(trim($paragraph)), false).'</p>';
         })->implode('');
+    }
+
+    private function normalizeOpticalName(?string $brand, string $name): string
+    {
+        $brandTokens = preg_split('/\s+/u', trim((string) $brand), -1, PREG_SPLIT_NO_EMPTY);
+        $tokens = array_values(array_filter(preg_split('/\s+/u', trim($name), -1, PREG_SPLIT_NO_EMPTY),
+            fn ($token) => ! str_starts_with($token, '*') && ! str_starts_with($token, '#')));
+        if (! $tokens) return '';
+
+        while ($brandTokens && $tokens) {
+            $matched = 0;
+            for ($length = count($brandTokens); $length > 0; $length--) {
+                if (count($tokens) < $length) continue;
+                $suffix = array_slice($brandTokens, -$length);
+                if (array_map('mb_strtoupper', $suffix) === array_map('mb_strtoupper', array_slice($tokens, 0, $length))) {
+                    $matched = $length;
+                    break;
+                }
+            }
+            if (! $matched) break;
+            array_splice($tokens, 0, $matched);
+        }
+
+        return mb_strtoupper(implode(' ', array_filter([trim((string) $brand), ...$tokens])), 'UTF-8');
     }
 
     private function verifiedHexColor(array $proposal): ?string

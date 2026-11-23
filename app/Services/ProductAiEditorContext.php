@@ -7,6 +7,17 @@ use Illuminate\Http\Request;
 
 class ProductAiEditorContext
 {
+    /** Reproduce the persisted values displayed in the editor for unattended generation. */
+    public function fromStoredProduct(Product $product): Product
+    {
+        $translation = $product->translations()->where('locale', 'pt-br')->first();
+        $context = clone $product;
+        $context->name = $product->name ?: ($translation->name ?? $product->external_name ?? '');
+        $context->description = $product->description ?: ($translation->details ?? '');
+
+        return $context;
+    }
+
     /** Use current editor values for research without saving the product. */
     public function fromRequest(Product $product, Request $request): Product
     {

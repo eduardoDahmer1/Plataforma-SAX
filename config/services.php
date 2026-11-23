@@ -95,4 +95,11 @@ return [
         'timeout' => (int) env('IP_GEOLOCATION_TIMEOUT', 2),
     ],
 
+    'turnstile' => [
+        'enabled' => filter_var(env('TURNSTILE_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+        'minimum_fill_seconds' => (int) env('REGISTRATION_MINIMUM_FILL_SECONDS', 2),
+    ],
+
 ];

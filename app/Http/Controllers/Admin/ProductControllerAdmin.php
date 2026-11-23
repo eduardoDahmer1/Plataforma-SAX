@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\CategoriasFilhas;
 use App\Models\Category;
+use App\Models\IntegrationMonitor;
 use App\Models\Product;
 use App\Models\ProductAiPreparation;
 use App\Models\ProductOutletEvent;
@@ -27,6 +28,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -306,8 +308,11 @@ class ProductControllerAdmin extends Controller
         });
 
         $productFeed = $productFeedService->status();
+        $integrationMonitor = Schema::hasTable('integration_monitors')
+            ? IntegrationMonitor::query()->where('source', 'catalog')->first()
+            : null;
 
-        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'dateFilter', 'productType', 'outletFilter', 'outletUsers', 'perPage', 'highlights', 'productFeed'));
+        return view('admin.products.index', compact('products', 'brands', 'categories', 'search', 'brandId', 'categoryId', 'statusFilter', 'highlightFilter', 'stockFilter', 'sortBy', 'dateFilter', 'productType', 'outletFilter', 'outletUsers', 'perPage', 'highlights', 'productFeed', 'integrationMonitor'));
     }
 
     public function outletForm(Request $request)
@@ -1181,6 +1186,7 @@ class ProductControllerAdmin extends Controller
                     }
                 }
 
+                // TODO: Evitar que formulários desatualizados ou validações automáticas desvinculem tamanhos sem remoção explícita.
                 Product::where('parent_id', $product->id)
                     ->whereNotIn('id', $selectedSizeChildIds)
                     ->update([

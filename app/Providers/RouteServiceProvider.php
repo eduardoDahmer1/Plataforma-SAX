@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use App\Models\Product;
 use App\Models\ProductReview;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -93,6 +93,17 @@ class RouteServiceProvider extends ServiceProvider
 
                     return redirect()->to($target)->withHeaders($headers)->with('warning', $message);
                 });
+        });
+
+        RateLimiter::for('registration', function (Request $request) {
+            $cloudflareIp = trim((string) $request->header('CF-Connecting-IP'));
+            $visitor = filter_var($cloudflareIp, FILTER_VALIDATE_IP) ? $cloudflareIp : $request->ip();
+            $email = mb_strtolower(trim((string) $request->input('email')));
+
+            return [
+                Limit::perMinutes(10, 5)->by('registration:ip:'.$visitor),
+                Limit::perHour(2)->by('registration:email:'.hash('sha256', $email)),
+            ];
         });
 
         $this->routes(function () {

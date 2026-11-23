@@ -85,7 +85,8 @@ class GenerateProductAiPreparation implements ShouldQueue
         }
 
         try {
-            $result = $openAi->generateProductProposal($product);
+            $context = app(\App\Services\ProductAiEditorContext::class)->fromStoredProduct($product);
+            $result = $openAi->generateProductProposal($context);
             if (data_get($result, 'research.status') !== 'matched') {
                 foreach ($this->targetProductIds($item) as $targetProductId) {
                     ProductAiPreparation::updateOrCreate(

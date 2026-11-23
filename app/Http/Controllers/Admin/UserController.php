@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\UserAccountSafetyService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -31,9 +32,9 @@ class UserController extends Controller
         ]);
 
         User::create([
-            'name'      => $request->name,
-            'email'     => $request->email,
-            'password'  => Hash::make($request->password),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
             'user_type' => $request->user_type,
         ]);
 
@@ -90,6 +91,10 @@ class UserController extends Controller
             return back()->with('error', __('messages.cannot_remove_last_master'));
         }
 
+        if ($user->orders()->exists()) {
+            return back()->with('error', 'Este usuário possui pedidos e não pode ser excluído.');
+        }
+
         DB::transaction(function () use ($user) {
             $user->delete();
         });
@@ -98,6 +103,55 @@ class UserController extends Controller
         Cache::forget('users_all');
 
         return redirect()->back()->with('success', 'Usuário excluído com sucesso.');
+    }
+
+    public function bulkDestroy(Request $request, UserAccountSafetyService $safety)
+    {
+        abort_unless(auth()->user()?->isMasterAdmin(), 403);
+
+        $validated = $request->validate([
+            'user_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'user_ids.*' => ['integer', 'distinct', 'exists:users,id'],
+        ], [
+            'user_ids.required' => 'Selecione pelo menos um usuário para excluir.',
+        ]);
+
+        $ids = collect($validated['user_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+        $result = DB::transaction(function () use ($ids, $safety) {
+            $query = User::whereIn('id', $ids)->withCount('orders');
+            $safety->applySuspicious($query);
+            $users = $query->lockForUpdate()->get();
+            $deleted = 0;
+            $skipped = $ids->count() - $users->count();
+
+            foreach ($users as $user) {
+                $eligible = (int) $user->user_type === User::TYPE_CUSTOMER
+                    && ! $user->is(auth()->user())
+                    && (int) $user->orders_count === 0
+                    && ! $user->orders()->exists();
+
+                if (! $eligible) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                $user->delete();
+                $deleted++;
+            }
+
+            return compact('deleted', 'skipped');
+        });
+
+        Cache::forget('users_all');
+        $message = $result['deleted'] === 1
+            ? '1 usuário selecionado foi excluído.'
+            : "{$result['deleted']} usuários selecionados foram excluídos.";
+        if ($result['skipped'] > 0) {
+            $message .= " {$result['skipped']} foram preservados por não atenderem aos critérios de conta suspeita ou possuírem pedidos.";
+        }
+
+        return redirect()->back()->with($result['deleted'] > 0 ? 'success' : 'error', $message);
     }
 
     public function index(Request $request)
@@ -111,9 +165,9 @@ class UserController extends Controller
 
         // Filtro por nome ou email
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('email', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('email', 'like', '%'.$request->search.'%');
             });
         }
 

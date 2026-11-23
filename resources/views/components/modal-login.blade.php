@@ -61,6 +61,7 @@
 
           <form method="POST" action="{{ route('register') }}" class="login-form d-none" id="registerForm">
             @csrf
+            <x-auth.registration-protection />
             <input type="hidden" name="redirect_to" value="{{ url()->current() }}" data-auth-redirect-field>
 
             @if (session('auth_modal') === 'register' && $errors->any())
@@ -71,7 +72,7 @@
 
             <div class="sax-auth-section-label">{{ __('messages.dados_da_conta') }}</div>
             <div class="sax-auth-field">
-              <input id="name" type="text" name="name" value="{{ old('name') }}" placeholder="{{ __('messages.nome_completo') }}" required minlength="2" maxlength="255" class="form-control @error('name') is-invalid @enderror"/>
+              <input id="name" type="text" name="name" value="{{ old('name') }}" placeholder="{{ __('messages.nome_completo') }}" required minlength="2" maxlength="100" class="form-control @error('name') is-invalid @enderror"/>
               @error('name')
                 <div class="sax-auth-field-error">{{ $message }}</div>
               @enderror

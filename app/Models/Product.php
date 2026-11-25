@@ -192,6 +192,11 @@ class Product extends Model
         return $this->hasOne(ProductAiPreparation::class);
     }
 
+    public function aiBatchItems()
+    {
+        return $this->hasMany(ProductAiBatchItem::class);
+    }
+
     public function catalogAttributeValues()
     {
         return $this->hasMany(ProductAttributeValue::class);

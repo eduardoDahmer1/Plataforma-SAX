@@ -70,12 +70,14 @@ class ProductAiBatchController extends Controller
             'subcategory_id' => ['nullable', 'integer', 'min:1'],
             'childcategory_id' => ['nullable', 'integer', 'min:1'],
             'ai_preparation_filter' => ['nullable', 'in:pending,prepared,missing_photo,review'],
+            'batch_membership' => ['nullable', 'in:available,in_batch,all'],
             'per_page' => ['nullable', 'integer', 'in:20,30,50,100'],
             'select_all' => ['nullable', 'boolean'],
         ] + \App\Services\ProductAiCatalogFilters::rules($request->all()));
 
         $search = trim((string) ($validated['search'] ?? ''));
         $aiPreparationFilter = $validated['ai_preparation_filter'] ?? null;
+        $batchMembership = $validated['batch_membership'] ?? 'available';
         $perPage = (int) ($validated['per_page'] ?? 20);
 
         $this->validateTaxonomyFilters($validated);
@@ -120,6 +122,7 @@ class ProductAiBatchController extends Controller
                 'categoriasFilhas:id,name',
                 'aiPreparation:id,product_id,status',
             ])
+            ->withExists(['aiBatchItems as in_ai_batch'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($searchQuery) use ($search) {
                     $searchQuery
@@ -173,27 +176,32 @@ class ProductAiBatchController extends Controller
             ])
             )
             )
+            ->when($batchMembership === 'available', fn ($query) => $query->whereDoesntHave('aiBatchItems'))
+            ->when($batchMembership === 'in_batch', fn ($query) => $query->whereHas('aiBatchItems'))
             ->tap(fn ($query) => app(\App\Services\ProductAiCatalogFilters::class)->apply($query, $validated));
 
         if ($request->boolean('select_all')) {
             $total = (clone $products)->reorder()->count();
-            if ($total > 1000) {
+            $selectableProducts = (clone $products)->whereDoesntHave('aiBatchItems');
+            $selectableTotal = (clone $selectableProducts)->reorder()->count();
+            if ($selectableTotal > 1000) {
                 throw ValidationException::withMessages([
-                    'selection' => "Hay {$total} productos en el resultado. Aplicá más filtros para seleccionar hasta 1.000.",
+                    'selection' => "Hay {$selectableTotal} productos disponibles en el resultado. Aplicá más filtros para seleccionar hasta 1.000.",
                 ]);
             }
 
-            $selectionProducts = (clone $products)->setEagerLoads([])->get();
+            $selectionProducts = $selectableProducts->setEagerLoads([])->get();
 
             return response()->json([
                 'data' => $selectionProducts->filter(fn (Product $product) => filled($product->sku))->map(fn (Product $product) => [
                     'sku' => $product->sku,
                     'name' => $product->name ?: $product->external_name,
                 ])->values(),
-                'meta' => ['total' => $total, 'selection' => true],
+                'meta' => ['total' => $total, 'selectable_total' => $selectableTotal, 'selection' => true],
             ]);
         }
 
+        $selectableTotal = (clone $products)->reorder()->whereDoesntHave('aiBatchItems')->count();
         $products = $products->paginate($perPage);
 
         return response()->json([
@@ -215,6 +223,7 @@ class ProductAiBatchController extends Controller
                     'never_edited' => $product->admin_edited_at === null,
                     'views' => (int) ($product->views ?? 0),
                     'has_image' => Product::hasUsableImage($product->photo, $product->gallery),
+                    'in_ai_batch' => (bool) $product->in_ai_batch,
                     'readiness' => $productReadiness,
                     'needs_attention' => collect([
                         $product->admin_edited_at === null ? 'Nunca editado' : null,
@@ -226,6 +235,7 @@ class ProductAiBatchController extends Controller
                 'last_page' => $products->lastPage(),
                 'per_page' => $products->perPage(),
                 'total' => $products->total(),
+                'selectable_total' => $selectableTotal,
             ],
         ]);
     }

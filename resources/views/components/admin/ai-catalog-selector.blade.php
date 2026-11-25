@@ -50,6 +50,14 @@
                         <summary class="fw-semibold">Más filtros <span id="{{ $prefix }}FilterCount" class="badge text-bg-secondary"></span></summary>
                         <div class="row g-3 mt-1">
                             <div class="col-12 col-md-6 col-xl-3">
+                                <label for="{{ $prefix }}batch_membership" class="form-label small">Disponibilidad para lote</label>
+                                <select id="{{ $prefix }}batch_membership" data-filter="batch_membership" data-default="available" class="form-select">
+                                    <option value="available">Sin lote (recomendado)</option>
+                                    <option value="all">Todos</option>
+                                    <option value="in_batch">Ya incluidos en un lote</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-xl-3">
                                 <label for="{{ $prefix }}publication" class="form-label small">Publicación</label>
                                 <select id="{{ $prefix }}publication" data-filter="publication" class="form-select"><option value="">Todos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
                             </div>
@@ -211,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderedProducts = products;
         const fragment = document.createDocumentFragment();
         products.forEach(function (product) {
-            const key = String(product.sku).toLocaleLowerCase(), inBatch = existingSkus.has(key), row = document.createElement('div');
+            const key = String(product.sku).toLocaleLowerCase(), inCurrentBatch = existingSkus.has(key), inBatch = inCurrentBatch || Boolean(product.in_ai_batch), row = document.createElement('div');
             row.className = 'ai-catalog-selector__product' + (inBatch ? ' is-in-batch' : '') + (selected.has(key) ? ' is-selected' : '');
             const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'form-check-input m-0'; checkbox.disabled = inBatch; checkbox.checked = selected.has(key); checkbox.setAttribute('aria-label', 'Seleccionar ' + (product.name || product.sku));
             const image = document.createElement('img'); image.src = product.image_url; image.alt = ''; image.loading = 'lazy';
@@ -219,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const reasons = Array.isArray(product.needs_attention) ? product.needs_attention : [];
             if (reasons.length || product.views > 0) copy.append(text('small', 'text-muted d-block mt-1', reasons.concat(product.views > 0 ? [product.views + ' visitas'] : []).join(' · ')));
             const readiness = product.readiness || { percentage: 0 }, readinessTone = readiness.percentage === 100 ? 'success' : (readiness.percentage >= 50 ? 'warning' : 'danger');
-            const badge = text('span', 'ai-catalog-selector__product__status badge ' + (inBatch ? 'text-bg-secondary' : 'text-bg-' + readinessTone), inBatch ? 'Ya está en el lote' : readiness.percentage + '% listo');
+            const badge = text('span', 'ai-catalog-selector__product__status badge ' + (inBatch ? 'text-bg-secondary' : 'text-bg-' + readinessTone), inBatch ? (inCurrentBatch ? 'Ya está en este lote' : 'Ya está en otro lote') : readiness.percentage + '% listo');
             checkbox.addEventListener('change', function () { feedback.textContent = ''; if (checkbox.checked) selected.set(key, product.sku); else selected.delete(key); row.classList.toggle('is-selected', checkbox.checked); updateSelection(); });
             row.addEventListener('click', function (event) { if (!inBatch && event.target !== checkbox) checkbox.click(); });
             row.append(checkbox, image, copy, badge); fragment.appendChild(row);
@@ -228,7 +236,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     function renderPagination(meta) {
         pagination.replaceChildren(); if (!meta || meta.last_page <= 1) return;
-        for (let page = Math.max(1, meta.current_page - 2); page <= Math.min(meta.last_page, meta.current_page + 2); page++) { const item = document.createElement('li'); item.className = 'page-item' + (page === meta.current_page ? ' active' : ''); const button = document.createElement('button'); button.type = 'button'; button.className = 'page-link'; button.textContent = page; button.addEventListener('click', function () { load(page); }); item.appendChild(button); pagination.appendChild(item); }
+        function addButton(label, page, options) {
+            options = options || {};
+            const item = document.createElement('li'); item.className = 'page-item' + (options.active ? ' active' : '') + (options.disabled ? ' disabled' : '');
+            const button = document.createElement('button'); button.type = 'button'; button.className = 'page-link'; button.textContent = label; button.disabled = Boolean(options.disabled); button.setAttribute('aria-label', options.ariaLabel || ('Página ' + page));
+            if (options.active) button.setAttribute('aria-current', 'page');
+            if (!options.disabled && !options.active) button.addEventListener('click', function () { load(page); });
+            item.appendChild(button); pagination.appendChild(item);
+        }
+        function addEllipsis() { const item = document.createElement('li'); item.className = 'page-item disabled'; const span = document.createElement('span'); span.className = 'page-link'; span.textContent = '…'; span.setAttribute('aria-hidden', 'true'); item.appendChild(span); pagination.appendChild(item); }
+        addButton('‹', meta.current_page - 1, { disabled: meta.current_page === 1, ariaLabel: 'Página anterior' });
+        const start = Math.max(2, meta.current_page - 2), end = Math.min(meta.last_page - 1, meta.current_page + 2);
+        addButton('1', 1, { active: meta.current_page === 1 });
+        if (start > 2) addEllipsis();
+        for (let page = start; page <= end; page++) addButton(String(page), page, { active: page === meta.current_page });
+        if (end < meta.last_page - 1) addEllipsis();
+        addButton(String(meta.last_page), meta.last_page, { active: meta.current_page === meta.last_page });
+        addButton('›', meta.current_page + 1, { disabled: meta.current_page === meta.last_page, ariaLabel: 'Página siguiente' });
+    }
+    function updateSelectAllButton(meta) {
+        const selectable = meta ? Number(meta.selectable_total || 0) : 0;
+        selectAllResults.disabled = !meta || selectable === 0 || selectable > 1000;
+        if (!meta) selectAllResults.textContent = 'Seleccionar todos los resultados';
+        else if (selectable > 1000) selectAllResults.textContent = 'Aplicá más filtros (máximo 1.000)';
+        else if (selectable === 0) selectAllResults.textContent = 'No hay productos disponibles';
+        else selectAllResults.textContent = 'Seleccionar los ' + selectable + (selectable === Number(meta.total) ? ' resultados' : ' disponibles');
     }
     async function load(page) {
         window.clearTimeout(timer); currentPage = page || 1; if (controller) controller.abort(); const requestController = new AbortController(); controller = requestController; show(loading, true); show(error, false); show(empty, false); list.replaceChildren(); pagination.replaceChildren(); summary.textContent = ''; selectPage.disabled = true; selectAllResults.disabled = true;
@@ -236,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const invalid = extraFilters.find(function (el) { return !el.checkValidity(); });
         if (invalid) { show(loading, false); error.querySelector('[data-error-message]').textContent = 'Revisá los valores de los filtros.'; show(error, true); return; }
         refreshQuickFilters();
-        try { const response = await fetch(catalogUrl(currentPage, false), { headers: { Accept: 'application/json' }, signal: requestController.signal }); const payload = await response.json(); if (!response.ok) throw new Error(response.status === 422 ? Object.values(payload.errors || {}).flat().join(' ') : 'No pudimos cargar los productos del catálogo.'); if (controller !== requestController) return; const products = Array.isArray(payload.data) ? payload.data : []; currentMeta = payload.meta || null; renderProducts(products); renderPagination(payload.meta); show(empty, products.length === 0); const orderNote = get('Sort').value === 'priority' ? ' · primero los que más necesitan edición' : ''; summary.textContent = payload.meta ? 'Mostrando ' + products.length + ' de ' + payload.meta.total + ' productos' + orderNote : ''; selectPage.disabled = products.length === 0; selectAllResults.disabled = !payload.meta || payload.meta.total === 0; selectAllResults.textContent = payload.meta ? 'Seleccionar los ' + payload.meta.total + ' resultados' : 'Seleccionar todos los resultados'; } catch (requestError) { if (requestError.name !== 'AbortError' && controller === requestController) { error.querySelector('[data-error-message]').textContent = requestError.message; show(error, true); } } finally { if (controller === requestController) show(loading, false); }
+        try { const response = await fetch(catalogUrl(currentPage, false), { headers: { Accept: 'application/json' }, signal: requestController.signal }); const payload = await response.json(); if (!response.ok) throw new Error(response.status === 422 ? Object.values(payload.errors || {}).flat().join(' ') : 'No pudimos cargar los productos del catálogo.'); if (controller !== requestController) return; const products = Array.isArray(payload.data) ? payload.data : []; currentMeta = payload.meta || null; renderProducts(products); renderPagination(payload.meta); show(empty, products.length === 0); const orderNote = get('Sort').value === 'priority' ? ' · primero los que más necesitan edición' : ''; const availableNote = payload.meta && Number(payload.meta.selectable_total) !== Number(payload.meta.total) ? ' · ' + payload.meta.selectable_total + ' disponibles para agregar' : ''; summary.textContent = payload.meta ? 'Mostrando ' + products.length + ' de ' + payload.meta.total + ' productos · Página ' + payload.meta.current_page + ' de ' + payload.meta.last_page + availableNote + orderNote : ''; selectPage.disabled = !products.some(function (product) { return !product.in_ai_batch && !existingSkus.has(String(product.sku).toLocaleLowerCase()); }); updateSelectAllButton(payload.meta); } catch (requestError) { if (requestError.name !== 'AbortError' && controller === requestController) { error.querySelector('[data-error-message]').textContent = requestError.message; show(error, true); } } finally { if (controller === requestController) show(loading, false); }
     }
     extraFilters.forEach(function (element) { element.addEventListener(element.tagName === 'SELECT' || element.type === 'date' ? 'change' : 'input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 300); }); });
     [brand, childcategory, status].forEach(function (element) { element.addEventListener('change', function () { load(1); }); });
@@ -257,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
         feedback.textContent = '';
         renderedProducts.forEach(function (product) {
             const key = String(product.sku).toLocaleLowerCase();
-            if (!existingSkus.has(key) && selected.size < 1000) selected.set(key, product.sku);
+            if (!product.in_ai_batch && !existingSkus.has(key) && selected.size < 1000) selected.set(key, product.sku);
         });
         renderProducts(renderedProducts); updateSelection();
     });
@@ -276,8 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (requestError) {
             if (requestError.name !== 'AbortError') feedback.textContent = requestError.message;
         } finally {
-            selectAllResults.disabled = !currentMeta || currentMeta.total === 0;
-            selectAllResults.textContent = currentMeta ? 'Seleccionar los ' + currentMeta.total + ' resultados' : 'Seleccionar todos los resultados';
+            updateSelectAllButton(currentMeta);
         }
     });
     submit.addEventListener('click', function () {

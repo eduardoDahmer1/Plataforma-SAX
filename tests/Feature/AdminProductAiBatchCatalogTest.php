@@ -225,6 +225,52 @@ class AdminProductAiBatchCatalogTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    public function test_catalog_hides_products_already_in_a_batch_by_default_and_can_filter_them(): void
+    {
+        $admin = User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]);
+        $available = Product::create([
+            'sku' => 'AVAILABLE-FOR-BATCH', 'name' => 'Producto disponible', 'price' => 10, 'status' => 0,
+        ]);
+        $included = Product::create([
+            'sku' => 'ALREADY-IN-BATCH', 'name' => 'Producto incluido', 'price' => 10, 'status' => 0,
+        ]);
+        $batch = \App\Models\ProductAiBatch::create(['source_type' => 'paste', 'status' => 'draft']);
+        $batch->items()->create([
+            'product_id' => $included->id,
+            'submitted_sku' => $included->sku,
+            'status' => 'ready',
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson(route('admin.products.ai-batches.catalog-products'))
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('meta.selectable_total', 1)
+            ->assertJsonPath('data.0.sku', $available->sku)
+            ->assertJsonPath('data.0.in_ai_batch', false);
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', ['batch_membership' => 'all']))
+            ->assertOk()
+            ->assertJsonPath('meta.total', 2)
+            ->assertJsonPath('meta.selectable_total', 1)
+            ->assertJsonFragment(['sku' => $included->sku, 'in_ai_batch' => true]);
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', ['batch_membership' => 'in_batch']))
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('meta.selectable_total', 0)
+            ->assertJsonPath('data.0.sku', $included->sku);
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', [
+            'batch_membership' => 'all', 'select_all' => 1,
+        ]))
+            ->assertOk()
+            ->assertJsonPath('meta.total', 2)
+            ->assertJsonPath('meta.selectable_total', 1)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.sku', $available->sku);
+    }
+
     public function test_catalog_endpoint_filters_ai_preparation_states(): void
     {
         Storage::fake('public');
@@ -335,6 +381,7 @@ class AdminProductAiBatchCatalogTest extends TestCase
             ['price_min' => 30, 'price_max' => 20], ['stock_min' => 10, 'stock_max' => 0],
             ['created_from' => '2026-09-09', 'created_to' => '2026-09-08'],
             ['stock_min' => -1], ['sort_by' => 'arbitrary_sql'], ['publication' => 'invalid'],
+            ['batch_membership' => 'invalid'],
         ] as $filters) {
             $this->getJson(route('admin.products.ai-batches.catalog-products', $filters))->assertUnprocessable();
         }

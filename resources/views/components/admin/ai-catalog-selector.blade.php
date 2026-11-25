@@ -33,19 +33,18 @@
                         <span class="input-group-text bg-white"><i class="fa fa-magnifying-glass text-muted"></i></span>
                         <input type="search" id="{{ $prefix }}Search" class="form-control" placeholder="Buscar por SKU, nombre o referencia…" autocomplete="off">
                     </div>
-                    <div class="row g-2">
-                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Brand" class="form-select" aria-label="Marca"><option value="">Todas las marcas</option>@foreach($brands as $brand)<option value="{{ $brand->id }}">{{ $brand->name }}</option>@endforeach</select></div>
-                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Category" class="form-select" aria-label="Categoría"><option value="">Todas las categorías</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select></div>
-                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Subcategory" class="form-select" aria-label="Subcategoría"><option value="">Todas las subcategorías</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}">{{ $subcategory->name }}</option>@endforeach</select></div>
-                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Childcategory" class="form-select" aria-label="Categoría hija"><option value="">Todas las categorías hijas</option>@foreach($childcategories as $childcategory)<option value="{{ $childcategory->id }}" data-category-id="{{ $childcategory->category_id ?: $subcategories->firstWhere('id', $childcategory->subcategory_id)?->category_id }}" data-subcategory-id="{{ $childcategory->subcategory_id }}">{{ $childcategory->name }}</option>@endforeach</select></div>
-                        <div class="col-12 col-md-6 col-xl"><select id="{{ $prefix }}Status" class="form-select" aria-label="Preparación con IA"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="prepared">Producto preparado</option><option value="missing_photo">Falta fotografía</option><option value="review">Requiere revisión</option></select></div>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-md-6 col-xl"><label for="{{ $prefix }}Brand" class="form-label small">Marca</label><select id="{{ $prefix }}Brand" class="form-select"><option value="">Todas las marcas</option>@foreach($brands as $brand)<option value="{{ $brand->id }}">{{ $brand->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><label for="{{ $prefix }}Category" class="form-label small"><span class="ai-catalog-selector__step">1</span> Categoría</label><select id="{{ $prefix }}Category" class="form-select"><option value="">Todas las categorías</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><label for="{{ $prefix }}Subcategory" class="form-label small"><span class="ai-catalog-selector__step">2</span> Subcategoría</label><select id="{{ $prefix }}Subcategory" class="form-select" disabled><option value="">Primero elegí una categoría</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category-id="{{ $subcategory->category_id }}">{{ $subcategory->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><label for="{{ $prefix }}Childcategory" class="form-label small"><span class="ai-catalog-selector__step">3</span> Categoría hija</label><select id="{{ $prefix }}Childcategory" class="form-select" disabled><option value="">Primero elegí una subcategoría</option>@foreach($childcategories as $childcategory)<option value="{{ $childcategory->id }}" data-category-id="{{ $childcategory->category_id ?: $subcategories->firstWhere('id', $childcategory->subcategory_id)?->category_id }}" data-subcategory-id="{{ $childcategory->subcategory_id }}">{{ $childcategory->name }}</option>@endforeach</select></div>
+                        <div class="col-12 col-md-6 col-xl"><label for="{{ $prefix }}Status" class="form-label small">Preparación con IA</label><select id="{{ $prefix }}Status" class="form-select"><option value="">Todos los estados</option><option value="pending">Pendiente</option><option value="prepared">Producto preparado</option><option value="missing_photo">Falta fotografía</option><option value="review">Requiere revisión</option></select></div>
                     </div>
                     <div class="d-flex flex-wrap align-items-center gap-2 mt-3" aria-label="Filtros rápidos">
                         <span class="small text-muted fw-semibold me-1">Accesos rápidos:</span>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="editing_filter" data-quick-value="never_edited">Nunca editados</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="image_filter" data-quick-value="without">Sin imagen</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="content_filter" data-quick-value="incomplete">Contenido incompleto</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-quick-target="sort_by" data-quick-value="most_viewed">Mayor demanda</button>
                     </div>
                     <details class="mt-3">
                         <summary class="fw-semibold">Más filtros <span id="{{ $prefix }}FilterCount" class="badge text-bg-secondary"></span></summary>
@@ -63,10 +62,6 @@
                                 <select id="{{ $prefix }}description_filter" data-filter="description_filter" class="form-select"><option value="">Todas</option><option value="with">Con descripción</option><option value="without">Sin descripción</option></select>
                             </div>
                             <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}reference_filter" class="form-label small">Referencia del fabricante</label>
-                                <select id="{{ $prefix }}reference_filter" data-filter="reference_filter" class="form-select"><option value="">Todas</option><option value="with">Con referencia</option><option value="without">Sin referencia</option></select>
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
                                 <label for="{{ $prefix }}editing_filter" class="form-label small">Edición manual</label>
                                 <select id="{{ $prefix }}editing_filter" data-filter="editing_filter" class="form-select"><option value="">Todos</option><option value="never_edited">Nunca editados</option><option value="edited">Ya editados</option></select>
                             </div>
@@ -78,42 +73,6 @@
                                 <label for="{{ $prefix }}content_filter" class="form-label small">Calidad del contenido</label>
                                 <select id="{{ $prefix }}content_filter" data-filter="content_filter" class="form-select"><option value="">Todos</option><option value="incomplete">Contenido incompleto</option><option value="complete">Contenido completo</option></select>
                             </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}views_min" class="form-label small">Visitas mínimas</label>
-                                <input id="{{ $prefix }}views_min" data-filter="views_min" type="number" class="form-control" min="0" step="1" placeholder="Ej.: 20">
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}outlet_filter" class="form-label small">Outlet</label>
-                                <select id="{{ $prefix }}outlet_filter" data-filter="outlet_filter" class="form-select"><option value="">Todos</option><option value="outlet">Solo outlet</option><option value="regular">Fuera de outlet</option></select>
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}product_type" class="form-label small">Relación de tallas</label>
-                                <select id="{{ $prefix }}product_type" data-filter="product_type" class="form-select"><option value="">Todas</option><option value="parent">Principales / independientes</option><option value="child">Variantes de talla</option></select>
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}price_min" class="form-label small">Precio mínimo (USD)</label>
-                                <input id="{{ $prefix }}price_min" data-filter="price_min" type="number" class="form-control" min="0" step="0.01">
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}price_max" class="form-label small">Precio máximo (USD)</label>
-                                <input id="{{ $prefix }}price_max" data-filter="price_max" type="number" class="form-control" min="0" step="0.01">
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}stock_min" class="form-label small">Stock mínimo</label>
-                                <input id="{{ $prefix }}stock_min" data-filter="stock_min" type="number" class="form-control" min="0" step="1">
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}stock_max" class="form-label small">Stock máximo</label>
-                                <input id="{{ $prefix }}stock_max" data-filter="stock_max" type="number" class="form-control" min="0" step="1">
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}created_from" class="form-label small">Creado desde</label>
-                                <input id="{{ $prefix }}created_from" data-filter="created_from" type="date" class="form-control">
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-3">
-                                <label for="{{ $prefix }}created_to" class="form-label small">Creado hasta</label>
-                                <input id="{{ $prefix }}created_to" data-filter="created_to" type="date" class="form-control">
-                            </div>
                         </div>
                     </details>
                     <div class="row g-2 mt-2">
@@ -121,12 +80,9 @@
                             <label for="{{ $prefix }}Sort" class="form-label small">Ordenar por</label>
                             <select id="{{ $prefix }}Sort" data-filter="sort_by" class="form-select" data-default="priority">
                                 <option value="priority">Prioridad de edición (recomendado)</option>
-                                <option value="unedited_latest">No editados más recientes</option>
                                 <option value="most_viewed">Más vistos / mayor demanda</option>
                                 <option value="latest">Más recientes</option><option value="oldest">Más antiguos</option>
-                                <option value="price_low">Precio: menor a mayor</option><option value="price_high">Precio: mayor a menor</option>
                                 <option value="name_az">Nombre: A–Z</option><option value="name_za">Nombre: Z–A</option>
-                                <option value="stock_low">Stock: menor a mayor</option><option value="stock_high">Stock: mayor a menor</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -177,6 +133,8 @@
     #{{ $modalId }} .modal-dialog { max-width: min(1180px, calc(100vw - 2rem)); }
     #{{ $modalId }} .modal-body { background: #f8fafc; }
     .ai-catalog-selector__toolbar { padding: 1rem; background: #fff; border: 1px solid #e1e6ee; border-radius: 14px; }
+    .ai-catalog-selector__toolbar .form-label { margin-bottom: .35rem; color: #465468; font-weight: 700; }
+    .ai-catalog-selector__step { display: inline-grid; width: 1.15rem; height: 1.15rem; place-items: center; margin-right: .2rem; border-radius: 50%; color: #fff; background: #212529; font-size: .65rem; }
     .ai-catalog-selector__list { display: grid; gap: .65rem; }
     .ai-catalog-selector__product { display: grid; grid-template-columns: auto 58px minmax(0, 1fr) auto; gap: .85rem; align-items: center; padding: .75rem; background: #fff; border: 1px solid #e1e6ee; border-radius: 12px; cursor: pointer; }
     .ai-catalog-selector__product.is-selected { border-color: #212529; background: #f3f5f7; }
@@ -204,7 +162,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const formFeedback = document.getElementById('aiCatalogFormFeedback');
     const subcategoryOptions = Array.from(subcategory.options).slice(1).map(function (option) { return { value: option.value, label: option.textContent.trim(), categoryId: option.dataset.categoryId || '' }; });
     const childcategoryOptions = Array.from(childcategory.options).slice(1).map(function (option) { return { value: option.value, label: option.textContent.trim(), categoryId: option.dataset.categoryId || '', subcategoryId: option.dataset.subcategoryId || '' }; });
-    const statusLabels = { pending: ['Pendiente', 'secondary'], prepared: ['Producto preparado', 'success'], missing_photo: ['Falta fotografía', 'warning'], review: ['Requiere revisión', 'danger'] };
     let timer = null, controller = null, selectionController = null, currentPage = 1, renderedProducts = [], currentMeta = null;
 
     function show(element, visible) { element.classList.toggle('d-none', !visible); }
@@ -218,17 +175,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     function text(tag, className, value) { const element = document.createElement(tag); element.className = className; element.textContent = value || ''; return element; }
     function refreshSubcategories() {
-        const fragment = document.createDocumentFragment(); const first = document.createElement('option'); first.value = ''; first.textContent = 'Todas las subcategorías'; fragment.appendChild(first);
-        subcategoryOptions.filter(function (option) { return !category.value || option.categoryId === category.value; }).forEach(function (option) { const item = document.createElement('option'); item.value = option.value; item.textContent = option.label; fragment.appendChild(item); });
+        const selectedValue = subcategory.value;
+        const fragment = document.createDocumentFragment(); const first = document.createElement('option'); first.value = ''; first.textContent = category.value ? 'Todas las subcategorías' : 'Primero elegí una categoría'; fragment.appendChild(first);
+        subcategoryOptions.filter(function (option) { return category.value && option.categoryId === category.value; }).forEach(function (option) { const item = document.createElement('option'); item.value = option.value; item.textContent = option.label; fragment.appendChild(item); });
         subcategory.replaceChildren(fragment);
+        subcategory.disabled = !category.value;
+        if (category.value && subcategoryOptions.some(function (option) { return option.value === selectedValue && option.categoryId === category.value; })) subcategory.value = selectedValue;
     }
     function refreshChildcategories() {
-        const fragment = document.createDocumentFragment(); const first = document.createElement('option'); first.value = ''; first.textContent = 'Todas las categorías hijas'; fragment.appendChild(first);
-        childcategoryOptions.filter(function (option) {
-            if (subcategory.value) return option.subcategoryId === subcategory.value;
-            return !category.value || option.categoryId === category.value;
-        }).forEach(function (option) { const item = document.createElement('option'); item.value = option.value; item.textContent = option.label; fragment.appendChild(item); });
+        const selectedValue = childcategory.value;
+        const fragment = document.createDocumentFragment(); const first = document.createElement('option'); first.value = ''; first.textContent = subcategory.value ? 'Todas las categorías hijas' : 'Primero elegí una subcategoría'; fragment.appendChild(first);
+        childcategoryOptions.filter(function (option) { return subcategory.value && option.subcategoryId === subcategory.value; }).forEach(function (option) { const item = document.createElement('option'); item.value = option.value; item.textContent = option.label; fragment.appendChild(item); });
         childcategory.replaceChildren(fragment);
+        childcategory.disabled = !subcategory.value;
+        if (subcategory.value && childcategoryOptions.some(function (option) { return option.value === selectedValue && option.subcategoryId === subcategory.value; })) childcategory.value = selectedValue;
     }
     function catalogUrl(page, selectAll) {
         const url = new URL(modal.dataset.catalogUrl, window.location.origin);
@@ -258,8 +218,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const copy = document.createElement('div'); copy.className = 'min-w-0'; copy.append(text('span', 'badge bg-light text-dark border mb-1', 'SKU: ' + product.sku), text('div', 'fw-bold text-truncate', product.name), text('small', 'text-muted d-block', [product.brand, product.category, product.subcategory, product.childcategory].filter(Boolean).join(' · ')));
             const reasons = Array.isArray(product.needs_attention) ? product.needs_attention : [];
             if (reasons.length || product.views > 0) copy.append(text('small', 'text-muted d-block mt-1', reasons.concat(product.views > 0 ? [product.views + ' visitas'] : []).join(' · ')));
-            const state = statusLabels[product.ai_status] || [product.ai_status || 'Sin estado', 'secondary'];
-            const badge = text('span', 'ai-catalog-selector__product__status badge ' + (inBatch ? 'text-bg-secondary' : 'text-bg-' + state[1]), inBatch ? 'Ya está en el lote' : state[0]);
+            const readiness = product.readiness || { percentage: 0 }, readinessTone = readiness.percentage === 100 ? 'success' : (readiness.percentage >= 50 ? 'warning' : 'danger');
+            const badge = text('span', 'ai-catalog-selector__product__status badge ' + (inBatch ? 'text-bg-secondary' : 'text-bg-' + readinessTone), inBatch ? 'Ya está en el lote' : readiness.percentage + '% listo');
             checkbox.addEventListener('change', function () { feedback.textContent = ''; if (checkbox.checked) selected.set(key, product.sku); else selected.delete(key); row.classList.toggle('is-selected', checkbox.checked); updateSelection(); });
             row.addEventListener('click', function (event) { if (!inBatch && event.target !== checkbox) checkbox.click(); });
             row.append(checkbox, image, copy, badge); fragment.appendChild(row);
@@ -280,10 +240,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     extraFilters.forEach(function (element) { element.addEventListener(element.tagName === 'SELECT' || element.type === 'date' ? 'change' : 'input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 300); }); });
     [brand, childcategory, status].forEach(function (element) { element.addEventListener('change', function () { load(1); }); });
-    subcategory.addEventListener('change', function () { refreshChildcategories(); load(1); });
-    category.addEventListener('change', function () { refreshSubcategories(); refreshChildcategories(); load(1); });
+    subcategory.addEventListener('change', function () { childcategory.value = ''; refreshChildcategories(); load(1); });
+    category.addEventListener('change', function () { subcategory.value = ''; childcategory.value = ''; refreshSubcategories(); refreshChildcategories(); load(1); });
     search.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { load(1); }, 400); });
-    get('ClearFilters').addEventListener('click', function () { search.value = ''; brand.value = ''; category.value = ''; status.value = ''; extraFilters.forEach(function (element) { element.value = element.dataset.default || ''; }); refreshSubcategories(); refreshChildcategories(); load(1); });
+    get('ClearFilters').addEventListener('click', function () { search.value = ''; brand.value = ''; category.value = ''; subcategory.value = ''; childcategory.value = ''; status.value = ''; extraFilters.forEach(function (element) { element.value = element.dataset.default || ''; }); refreshSubcategories(); refreshChildcategories(); load(1); });
     quickFilters.forEach(function (button) {
         button.addEventListener('click', function () {
             const target = get(button.dataset.quickTarget);
@@ -335,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     modal.addEventListener('shown.bs.modal', function () { load(currentPage); search.focus(); });
     modal.addEventListener('hidden.bs.modal', function () { window.clearTimeout(timer); if (controller) controller.abort(); if (selectionController) selectionController.abort(); });
-    updateSelection();
+    refreshSubcategories(); refreshChildcategories(); updateSelection();
 });
 </script>
 @endpush

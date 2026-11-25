@@ -72,7 +72,14 @@ class ProductAiCatalogFilters
                                 ->where(fn (Builder $q) => $q->whereNull('external_name')->orWhereRaw("TRIM(external_name) = ''"));
                         })
                         ->orWhere(fn (Builder $q) => $q->whereNull('description')->orWhereRaw("TRIM(description) = ''"))
-                        ->orWhere(fn (Builder $q) => $this->whereMissingImage($q));
+                        ->orWhere(fn (Builder $q) => $this->whereMissingImage($q))
+                        ->orWhereNull('brand_id')
+                        ->orWhereNull('category_id')
+                        ->orWhereNull('subcategory_id')
+                        ->orWhereNull('childcategory_id')
+                        ->orWhereNull('price')
+                        ->orWhere('price', '<=', 0)
+                        ->orWhereNull('stock');
                 })
                 : $query
                     ->where(function (Builder $name) {
@@ -80,7 +87,13 @@ class ProductAiCatalogFilters
                             ->orWhere(fn (Builder $q) => $q->whereNotNull('external_name')->whereRaw("TRIM(external_name) != ''"));
                     })
                     ->whereNotNull('description')->whereRaw("TRIM(description) != ''")
-                    ->where(fn (Builder $q) => $this->whereHasImageReference($q));
+                    ->where(fn (Builder $q) => $this->whereHasImageReference($q))
+                    ->whereNotNull('brand_id')
+                    ->whereNotNull('category_id')
+                    ->whereNotNull('subcategory_id')
+                    ->whereNotNull('childcategory_id')
+                    ->where('price', '>', 0)
+                    ->whereNotNull('stock');
         }
         if ($value = $filters['outlet_filter'] ?? null) {
             $query->where('is_outlet', $value === 'outlet');

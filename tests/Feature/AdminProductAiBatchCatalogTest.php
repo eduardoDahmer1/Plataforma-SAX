@@ -168,6 +168,36 @@ class AdminProductAiBatchCatalogTest extends TestCase
             ->assertJsonPath('data.0.ai_status', 'pending');
     }
 
+    public function test_catalog_rejects_taxonomy_filters_outside_the_selected_hierarchy(): void
+    {
+        $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        $firstCategory = Category::create(['name' => 'Primera', 'slug' => 'primera', 'status' => 1]);
+        $secondCategory = Category::create(['name' => 'Segunda', 'slug' => 'segunda', 'status' => 1]);
+        $subcategory = Subcategory::create([
+            'name' => 'Subcategoría segunda',
+            'category_id' => $secondCategory->id,
+        ]);
+        $childcategory = CategoriasFilhas::create([
+            'name' => 'Hija segunda',
+            'subcategory_id' => $subcategory->id,
+            'category_id' => $secondCategory->id,
+        ]);
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', [
+            'subcategory_id' => $subcategory->id,
+        ]))->assertUnprocessable()->assertJsonValidationErrors('subcategory_id');
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', [
+            'category_id' => $firstCategory->id,
+            'subcategory_id' => $subcategory->id,
+        ]))->assertUnprocessable()->assertJsonValidationErrors('subcategory_id');
+
+        $this->getJson(route('admin.products.ai-batches.catalog-products', [
+            'category_id' => $secondCategory->id,
+            'childcategory_id' => $childcategory->id,
+        ]))->assertUnprocessable()->assertJsonValidationErrors('childcategory_id');
+    }
+
     public function test_catalog_endpoint_paginates_results(): void
     {
         $admin = User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]);
@@ -313,6 +343,14 @@ class AdminProductAiBatchCatalogTest extends TestCase
     public function test_catalog_filters_products_never_edited_without_image_or_with_incomplete_content(): void
     {
         $this->actingAs(User::factory()->create(['user_type' => User::TYPE_ADMIN_MASTER]));
+        $brand = Brand::create(['name' => 'Marca completa', 'slug' => 'marca-completa', 'status' => 1]);
+        $category = Category::create(['name' => 'Categoría completa', 'slug' => 'categoria-completa', 'status' => 1]);
+        $subcategory = Subcategory::create(['name' => 'Subcategoría completa', 'category_id' => $category->id]);
+        $childcategory = CategoriasFilhas::create([
+            'name' => 'Categoría hija completa',
+            'subcategory_id' => $subcategory->id,
+            'category_id' => $category->id,
+        ]);
         Product::create([
             'sku' => 'NEEDS-WORK', 'name' => 'Producto incompleto', 'price' => 10,
             'description' => null, 'photo' => null, 'gallery' => [], 'admin_edited_at' => null,
@@ -320,7 +358,9 @@ class AdminProductAiBatchCatalogTest extends TestCase
         Product::create([
             'sku' => 'READY', 'name' => 'Producto completo', 'price' => 10,
             'description' => 'Descripción lista', 'photo' => 'products/ready.webp', 'gallery' => [],
-            'admin_edited_at' => '2026-11-10 10:00:00',
+            'admin_edited_at' => '2026-11-10 10:00:00', 'stock' => 0,
+            'brand_id' => $brand->id, 'category_id' => $category->id,
+            'subcategory_id' => $subcategory->id, 'childcategory_id' => $childcategory->id,
         ]);
 
         foreach ([

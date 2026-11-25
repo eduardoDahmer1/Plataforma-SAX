@@ -69,7 +69,22 @@
         <div class="row g-3 mb-4">
             <div class="col-6 col-lg"><div class="card border-0 shadow-sm p-3"><small class="text-muted">Códigos</small><strong class="fs-4">{{ $batch->input_count }}</strong></div></div>
             <div class="col-6 col-lg"><div class="card border-0 shadow-sm p-3"><small class="text-muted">A procesar</small><strong class="fs-4">{{ $batch->eligible_count }}</strong></div></div>
-            <div class="col-6 col-lg"><div class="card border-0 shadow-sm p-3"><small class="text-muted">Completados</small><strong id="countCompleted" class="fs-4 text-success">{{ $counts['completed'] ?? 0 }}</strong></div></div>
+            <div class="col-12 col-lg">
+                <div class="card border-0 shadow-sm p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <x-admin.catalog-readiness
+                            id="batchReadinessCircle"
+                            size="large"
+                            :percentage="$batchReadiness['percentage']"
+                            :title="$batchReadiness['complete_products'].' de '.$batchReadiness['total_products'].' productos están completos'" />
+                        <div>
+                            <small class="text-muted d-block">Calidad del catálogo</small>
+                            <strong id="batchReadinessCaption" class="d-block">{{ $batchReadiness['complete_products'] }}/{{ $batchReadiness['total_products'] }} productos listos</strong>
+                            <small class="text-muted">Foto, descripción, marca, taxonomía, precio y stock</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="col-6 col-lg"><div class="card border-0 shadow-sm p-3"><small class="text-muted">En proceso</small><strong id="countActive" class="fs-4 text-primary">{{ ($counts['queued'] ?? 0) + ($counts['processing'] ?? 0) }}</strong></div></div>
             <div class="col-6 col-lg"><div class="card border-0 shadow-sm p-3"><small class="text-muted">Revisión</small><strong id="countReview" class="fs-4 text-danger">{{ ($counts['not_found'] ?? 0) + ($counts['failed'] ?? 0) }}</strong></div></div>
         </div>
@@ -96,10 +111,6 @@
                         </form>
                     @endif
                 </div>
-            </div>
-        @else
-            <div class="progress mb-4" style="height: 22px;">
-                <div id="batchProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
             </div>
         @endif
 
@@ -136,11 +147,13 @@
                     <tbody>
                     @foreach($batch->items as $item)
                         @php
+                            $itemReadiness = $item->catalog_readiness;
                             $statusPresentation = [
                                 'ready' => ['Listo', 'secondary'], 'queued' => ['En cola', 'primary'],
                                 'processing' => ['Procesando', 'primary'],
-                                'completed' => $item->product && \App\Models\Product::hasUsableImage($item->product->photo, $item->product->gallery)
-                                    ? ['Producto preparado', 'success'] : ['Falta fotografía', 'warning'],
+                                'completed' => $itemReadiness['complete']
+                                    ? ['Producto listo', 'success']
+                                    : [$itemReadiness['percentage'].'% listo', $itemReadiness['percentage'] >= 50 ? 'warning' : 'danger'],
                                 'not_found' => ['No encontrado', 'danger'], 'failed' => ['Error', 'danger'],
                                 'skipped' => ['Omitido', 'secondary'], 'missing' => ['SKU inexistente', 'danger'],
                             ][$item->status] ?? [$item->status, 'secondary'];
@@ -241,9 +254,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const root = document.getElementById('aiBatchProgress');
     const labels = {
         queued: ['En cola', 'primary'], processing: ['Procesando', 'primary'],
-        completed: ['Falta fotografía', 'warning'], not_found: ['No encontrado', 'danger'],
+        completed: ['Datos incompletos', 'warning'], not_found: ['No encontrado', 'danger'],
         failed: ['Error', 'danger'], skipped: ['Omitido', 'secondary'], missing: ['SKU inexistente', 'danger']
     };
+    function updateReadiness(readiness) {
+        if (!readiness) return;
+        const percentage = Math.max(0, Math.min(100, Number(readiness.percentage) || 0));
+        const circle = document.getElementById('batchReadinessCircle');
+        circle.style.setProperty('--readiness', percentage);
+        circle.classList.remove('catalog-readiness--danger', 'catalog-readiness--warning', 'catalog-readiness--complete');
+        circle.classList.add(percentage === 100 ? 'catalog-readiness--complete' : (percentage >= 50 ? 'catalog-readiness--warning' : 'catalog-readiness--danger'));
+        circle.setAttribute('aria-valuenow', percentage);
+        circle.title = readiness.complete_products + ' de ' + readiness.total_products + ' productos están completos';
+        circle.setAttribute('aria-label', circle.title);
+        circle.querySelector('.catalog-readiness__value').textContent = percentage + '%';
+        document.getElementById('batchReadinessCaption').textContent = readiness.complete_products + '/' + readiness.total_products + ' productos listos';
+    }
     async function refreshBatch() {
         try {
             const response = await fetch(root.dataset.statusUrl, { headers: { Accept: 'application/json' } });
@@ -253,18 +279,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const data = await response.json();
             const counts = data.counts || {};
-            document.getElementById('countCompleted').textContent = counts.completed || 0;
             document.getElementById('countActive').textContent = (counts.queued || 0) + (counts.processing || 0);
             document.getElementById('countReview').textContent = (counts.not_found || 0) + (counts.failed || 0);
-            const bar = document.getElementById('batchProgressBar');
-            bar.style.width = data.progress + '%';
-            bar.textContent = data.progress + '%';
+            updateReadiness(data.readiness);
             data.items.forEach(function (item) {
                 const row = document.querySelector('[data-batch-item="' + item.id + '"]');
                 if (!row || !labels[item.status]) return;
                 const badge = row.querySelector('.item-status');
-                const presentation = item.status === 'completed' && item.has_image
-                    ? ['Producto preparado', 'success'] : labels[item.status];
+                const percentage = item.readiness ? item.readiness.percentage : 0;
+                const presentation = item.status === 'completed'
+                    ? (percentage === 100 ? ['Producto listo', 'success'] : [percentage + '% listo', percentage >= 50 ? 'warning' : 'danger'])
+                    : labels[item.status];
                 badge.className = 'badge text-bg-' + presentation[1] + ' item-status';
                 badge.textContent = presentation[0];
                 row.querySelector('.item-message').textContent = item.message || '';
@@ -293,7 +318,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             if (data.status !== 'completed') window.setTimeout(refreshBatch, 4000);
-            else bar.classList.remove('progress-bar-animated');
         } catch (error) {
             window.setTimeout(refreshBatch, 8000);
         }

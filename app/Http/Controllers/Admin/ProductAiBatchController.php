@@ -16,6 +16,7 @@ use App\Models\ProductAiPreparation;
 use App\Models\Subcategory;
 use App\Services\ContactGuideSuggestionMatcher;
 use App\Services\ProductAiBatchDraftBuilder;
+use App\Services\ProductCatalogReadiness;
 use App\Services\StoreTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,9 +29,16 @@ class ProductAiBatchController extends Controller
 {
     public function index()
     {
-        $batches = ProductAiBatch::with('creator:id,name')
+        $readiness = app(ProductCatalogReadiness::class);
+        $batches = ProductAiBatch::with([
+            'creator:id,name',
+            'items.product:id,sku,name,external_name,description,photo,gallery,brand_id,category_id,subcategory_id,childcategory_id,price,stock',
+        ])
             ->latest()
             ->paginate(15);
+        $batches->getCollection()->each(function (ProductAiBatch $batch) use ($readiness): void {
+            $batch->setAttribute('catalog_readiness', $readiness->batch($batch));
+        });
         $brands = Brand::where('status', 1)->orderBy('name')->get(['id', 'name']);
         $categories = app(StoreTaxonomyService::class)->categories(Category::query())
             ->where('status', 1)->orderBy('name')->get(['id', 'name']);
@@ -54,6 +62,7 @@ class ProductAiBatchController extends Controller
 
     public function catalogProducts(Request $request)
     {
+        $readiness = app(ProductCatalogReadiness::class);
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'brand_id' => ['nullable', 'integer', 'min:1'],
@@ -68,6 +77,8 @@ class ProductAiBatchController extends Controller
         $search = trim((string) ($validated['search'] ?? ''));
         $aiPreparationFilter = $validated['ai_preparation_filter'] ?? null;
         $perPage = (int) ($validated['per_page'] ?? 20);
+
+        $this->validateTaxonomyFilters($validated);
 
         // These two states depend on whether an image really exists in storage,
         // so keep the same semantics used by the admin product listing.
@@ -91,6 +102,8 @@ class ProductAiBatchController extends Controller
                 'photo',
                 'gallery',
                 'description',
+                'price',
+                'stock',
                 'admin_edited_at',
                 'views',
                 'created_at',
@@ -184,27 +197,30 @@ class ProductAiBatchController extends Controller
         $products = $products->paginate($perPage);
 
         return response()->json([
-            'data' => $products->getCollection()->map(fn (Product $product) => [
-                'id' => $product->id,
-                'sku' => $product->sku,
-                'name' => $product->name ?: $product->external_name,
-                'external_name' => $product->external_name,
-                'ref_code' => $product->ref_code,
-                'image_url' => $product->photo_url,
-                'brand' => $product->brand?->name,
-                'category' => $product->category?->name,
-                'subcategory' => $product->subcategory?->name,
-                'childcategory' => $product->categoriasFilhas?->name,
-                'ai_status' => $product->productAiDisplayStatus(),
-                'never_edited' => $product->admin_edited_at === null,
-                'views' => (int) ($product->views ?? 0),
-                'has_image' => Product::hasUsableImage($product->photo, $product->gallery),
-                'needs_attention' => collect([
-                    $product->admin_edited_at === null ? 'Nunca editado' : null,
-                    blank($product->description) ? 'Sin descripción' : null,
-                    Product::hasUsableImage($product->photo, $product->gallery) ? null : 'Sin imagen',
-                ])->filter()->values(),
-            ])->values(),
+            'data' => $products->getCollection()->map(function (Product $product) use ($readiness): array {
+                $productReadiness = $readiness->product($product);
+
+                return [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name ?: $product->external_name,
+                    'external_name' => $product->external_name,
+                    'ref_code' => $product->ref_code,
+                    'image_url' => $product->photo_url,
+                    'brand' => $product->brand?->name,
+                    'category' => $product->category?->name,
+                    'subcategory' => $product->subcategory?->name,
+                    'childcategory' => $product->categoriasFilhas?->name,
+                    'ai_status' => $product->productAiDisplayStatus(),
+                    'never_edited' => $product->admin_edited_at === null,
+                    'views' => (int) ($product->views ?? 0),
+                    'has_image' => Product::hasUsableImage($product->photo, $product->gallery),
+                    'readiness' => $productReadiness,
+                    'needs_attention' => collect([
+                        $product->admin_edited_at === null ? 'Nunca editado' : null,
+                    ])->concat($productReadiness['missing'])->filter()->unique()->values(),
+                ];
+            })->values(),
             'meta' => [
                 'current_page' => $products->currentPage(),
                 'last_page' => $products->lastPage(),
@@ -280,13 +296,18 @@ class ProductAiBatchController extends Controller
 
     public function show(ProductAiBatch $batch)
     {
+        $readiness = app(ProductCatalogReadiness::class);
         $batch->load([
-            'items.product:id,sku,name,external_name,photo,gallery,brand_id',
+            'items.product:id,sku,name,external_name,description,photo,gallery,brand_id,category_id,subcategory_id,childcategory_id,price,stock',
             'items.product.brand:id,name',
             'items.product.aiPreparation',
             'creator:id,name',
         ]);
         $counts = $batch->items->countBy('status');
+        $batchReadiness = $readiness->batch($batch);
+        $batch->items->each(function (ProductAiBatchItem $item) use ($readiness): void {
+            $item->setAttribute('catalog_readiness', $readiness->product($item->product));
+        });
         $groupedCount = $batch->items->sum(fn ($item) => max(0, count($item->source_skus ?: []) - 1));
         $batchSkus = $batch->items
             ->flatMap(fn ($item) => $item->source_skus ?: [$item->submitted_sku])
@@ -369,6 +390,7 @@ class ProductAiBatchController extends Controller
         return view('admin.products.ai-batches.show', compact(
             'batch',
             'counts',
+            'batchReadiness',
             'groupedCount',
             'batchSkus',
             'guideEntries',
@@ -508,7 +530,11 @@ class ProductAiBatchController extends Controller
 
     public function status(ProductAiBatch $batch)
     {
-        $batch->load(['items.product:id,sku,name,external_name,photo,gallery', 'items.product.aiPreparation']);
+        $readiness = app(ProductCatalogReadiness::class);
+        $batch->load([
+            'items.product:id,sku,name,external_name,description,photo,gallery,brand_id,category_id,subcategory_id,childcategory_id,price,stock',
+            'items.product.aiPreparation',
+        ]);
         $counts = $batch->items->countBy('status');
         $terminal = collect([
             ProductAiBatchItem::STATUS_COMPLETED,
@@ -521,6 +547,7 @@ class ProductAiBatchController extends Controller
             'status' => $batch->status,
             'counts' => $counts,
             'progress' => $total ? (int) round(($terminal / $total) * 100) : 100,
+            'readiness' => $readiness->batch($batch),
             'items' => $batch->items->map(fn ($item) => [
                 'id' => $item->id,
                 'status' => $item->status,
@@ -529,8 +556,48 @@ class ProductAiBatchController extends Controller
                 'has_image' => $item->product
                     ? Product::hasUsableImage($item->product->photo, $item->product->gallery)
                     : false,
+                'readiness' => $readiness->product($item->product),
             ])->values(),
         ]);
+    }
+
+    private function validateTaxonomyFilters(array $filters): void
+    {
+        $categoryId = $filters['category_id'] ?? null;
+        $subcategoryId = $filters['subcategory_id'] ?? null;
+        $childcategoryId = $filters['childcategory_id'] ?? null;
+
+        if ($subcategoryId && ! $categoryId) {
+            throw ValidationException::withMessages([
+                'subcategory_id' => 'Elegí primero una categoría.',
+            ]);
+        }
+
+        if ($subcategoryId && ! app(StoreTaxonomyService::class)
+            ->subcategories(Subcategory::query())
+            ->whereKey($subcategoryId)
+            ->where('category_id', $categoryId)
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'subcategory_id' => 'La subcategoría no pertenece a la categoría seleccionada.',
+            ]);
+        }
+
+        if ($childcategoryId && ! $subcategoryId) {
+            throw ValidationException::withMessages([
+                'childcategory_id' => 'Elegí primero una subcategoría.',
+            ]);
+        }
+
+        if ($childcategoryId && ! app(StoreTaxonomyService::class)
+            ->childCategories(CategoriasFilhas::query())
+            ->whereKey($childcategoryId)
+            ->where('subcategory_id', $subcategoryId)
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'childcategory_id' => 'La categoría hija no pertenece a la subcategoría seleccionada.',
+            ]);
+        }
     }
 
     private function normalizeCellValue($value): string

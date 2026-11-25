@@ -104,7 +104,12 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge {{ $batch->status === 'completed' ? 'text-bg-success' : ($batch->status === 'draft' ? 'text-bg-secondary' : 'text-bg-primary') }}">{{ $batch->status }}</span>
+                                <div class="ai-batch-readiness-copy">
+                                    <x-admin.catalog-readiness
+                                        :percentage="$batch->catalog_readiness['percentage']"
+                                        :title="$batch->catalog_readiness['complete_products'].' de '.$batch->catalog_readiness['total_products'].' productos están completos'" />
+                                    <small>{{ $batch->catalog_readiness['complete_products'] }}/{{ $batch->catalog_readiness['total_products'] }} listos</small>
+                                </div>
                                 <a href="{{ route('admin.products.ai-batches.show', $batch) }}" class="btn btn-sm btn-outline-dark">Abrir</a>
                                 <form method="POST" action="{{ route('admin.products.ai-batches.destroy', $batch) }}"
                                     onsubmit="return confirm('¿Eliminar «{{ addslashes($batch->display_name) }}»? Esta acción no se puede deshacer.');">
@@ -125,6 +130,13 @@
         </div>
     </div>
 </x-admin.card>
+
+@push('styles')
+<style>
+    .ai-batch-readiness-copy { display: flex; flex-direction: column; align-items: center; gap: .15rem; }
+    .ai-batch-readiness-copy small { color: #6c757d; font-size: .62rem; white-space: nowrap; }
+</style>
+@endpush
 
 <x-admin.ai-catalog-selector
     mode="create"

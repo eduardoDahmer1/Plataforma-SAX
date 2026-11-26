@@ -688,8 +688,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectedCountryIso2() !== iso2) return;
             if (guide.example) postalInput.placeholder = `Ex.: ${guide.example}`;
             postalFormatHint.textContent = guide.format
-                ? `Formato orientativo: ${guide.format}. Use o código postal exato do endereço de entrega.`
-                : 'Informe o código postal oficial do endereço. A DHL validará o formato ao calcular o frete.';
+                ? `Formato esperado: ${guide.format}. Informe o código postal exato do imóvel; a DHL usa este dado para validar o endereço e calcular o frete.`
+                : 'Informe o código postal oficial e exato do imóvel. A DHL validará o endereço antes de liberar a compra.';
         });
     }
 
@@ -822,10 +822,10 @@ document.addEventListener('DOMContentLoaded', function () {
         postalInput.required = country !== 'paraguai';
         if (districtInput) districtInput.required = ['brasil', 'paraguai'].includes(country);
         if (country === 'brasil') {
-            labelPostal.innerText = "CEP";
+            labelPostal.innerText = "CEP do endereço de entrega";
             postalInput.placeholder = "00000-000";
             labelState.innerText = "Estado";
-            if (postalFormatHint) postalFormatHint.textContent = 'Formato: 00000-000.';
+            if (postalFormatHint) postalFormatHint.textContent = 'Digite os 8 números do CEP do imóvel (ex.: 00000-000). A DHL valida o endereço e calcula o frete com este dado.';
             loadBrasilStates();
         } else if (country === 'paraguai') {
             labelPostal.innerText = "Código da Casa (opcional)";
@@ -834,7 +834,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (postalFormatHint) postalFormatHint.textContent = 'Opcional para entrega local no Paraguai.';
             loadParaguayData();
         } else {
-            labelPostal.innerText = "Código postal";
+            labelPostal.innerText = "Código postal da entrega";
             postalInput.placeholder = "Ex.: 10001";
             labelState.innerText = "Estado / Província / Região";
             if (postalFormatHint) postalFormatHint.textContent = 'Consultando o formato postal do país...';

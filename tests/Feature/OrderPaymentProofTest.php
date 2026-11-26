@@ -95,7 +95,7 @@ class OrderPaymentProofTest extends TestCase
         $this->assertDatabaseCount('order_payment_proofs', 0);
     }
 
-    public function test_only_owner_or_admin_can_view_a_private_payment_proof(): void
+    public function test_only_owner_or_admin_can_view_or_download_a_private_payment_proof(): void
     {
         Storage::fake('local');
         $owner = User::factory()->create(['user_type' => User::TYPE_CUSTOMER]);
@@ -113,8 +113,17 @@ class OrderPaymentProofTest extends TestCase
         ]);
 
         $this->actingAs($intruder)->get(route('payment-proofs.show', $proof))->assertForbidden();
+        $this->actingAs($intruder)->get(route('payment-proofs.download', $proof))->assertForbidden();
         $this->actingAs($owner)->get(route('payment-proofs.show', $proof))->assertOk();
         $this->actingAs($admin)->get(route('payment-proofs.show', $proof))->assertOk();
+        $this->actingAs($owner)
+            ->get(route('payment-proofs.download', $proof))
+            ->assertOk()
+            ->assertDownload('proof.pdf');
+        $this->actingAs($admin)
+            ->get(route('payment-proofs.download', $proof))
+            ->assertOk()
+            ->assertDownload('proof.pdf');
     }
 
     private function orderFor(User $customer): Order

@@ -99,6 +99,11 @@
                 $translatedText = __($translationKey);
                 $proofCopy[$proofKey] = $translatedText === $translationKey ? $fallbackText : $translatedText;
             }
+            $proofActions = match ($proofLocale) {
+                'es' => ['preview' => 'Ver', 'download' => 'Descargar'],
+                'en' => ['preview' => 'View', 'download' => 'Download'],
+                default => ['preview' => 'Visualizar', 'download' => 'Baixar'],
+            };
             $paymentCardIso = \App\Support\CountrySupport::iso2($order->payment_card_country);
             $proofContext = match (true) {
                 $order->payment_method === 'rendix_pix' => 'pix',
@@ -357,24 +362,57 @@
                     <h3>{{ $proofCopy['existing'] }}</h3>
                     <div class="sax-payment-proof-grid">
                         @foreach ($order->paymentProofs as $proof)
-                            <a href="{{ route('payment-proofs.show', $proof) }}" target="_blank" rel="noopener" class="sax-payment-proof-file">
-                                @if ($proof->isImage())
-                                    <img src="{{ route('payment-proofs.show', $proof) }}" alt="{{ $proof->original_name }}">
-                                @else
-                                    <span><i class="fa-solid fa-file-pdf"></i></span>
-                                @endif
-                                <small>{{ $proof->original_name }}</small>
-                            </a>
+                            <div class="sax-payment-proof-item">
+                                <a href="{{ route('payment-proofs.show', $proof) }}"
+                                   class="sax-payment-proof-file"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#paymentProofPreviewModal"
+                                   data-payment-proof-preview="{{ route('payment-proofs.show', $proof) }}"
+                                   data-payment-proof-download="{{ route('payment-proofs.download', $proof) }}"
+                                   data-payment-proof-name="{{ $proof->original_name }}"
+                                   data-payment-proof-type="{{ $proof->isImage() ? 'image' : 'pdf' }}"
+                                   aria-label="{{ $proofActions['preview'] }}: {{ $proof->original_name }}">
+                                    @if ($proof->isImage())
+                                        <img src="{{ route('payment-proofs.show', $proof) }}" alt="{{ $proof->original_name }}">
+                                    @else
+                                        <span><i class="fa-solid fa-file-pdf"></i></span>
+                                    @endif
+                                    <small>{{ $proof->original_name }}</small>
+                                    <em><i class="fa-regular fa-eye"></i> {{ $proofActions['preview'] }}</em>
+                                </a>
+                                <a href="{{ route('payment-proofs.download', $proof) }}" class="sax-payment-proof-download">
+                                    <i class="fa-solid fa-download"></i> {{ $proofActions['download'] }}
+                                </a>
+                            </div>
                         @endforeach
                         @if ($order->deposit_receipt)
-                            <a href="{{ asset('storage/' . $order->depositReceiptPath()) }}" target="_blank" rel="noopener" class="sax-payment-proof-file">
-                                @if (\Illuminate\Support\Str::endsWith(strtolower($order->depositReceiptPath()), '.pdf'))
-                                    <span><i class="fa-solid fa-file-pdf"></i></span>
-                                @else
-                                    <img src="{{ asset('storage/' . $order->depositReceiptPath()) }}" alt="{{ $proofCopy['existing'] }}">
-                                @endif
-                                <small>{{ basename($order->depositReceiptPath()) }}</small>
-                            </a>
+                            @php
+                                $legacyProofUrl = asset('storage/' . $order->depositReceiptPath());
+                                $legacyProofName = basename($order->depositReceiptPath());
+                                $legacyProofIsPdf = \Illuminate\Support\Str::endsWith(strtolower($order->depositReceiptPath()), '.pdf');
+                            @endphp
+                            <div class="sax-payment-proof-item">
+                                <a href="{{ $legacyProofUrl }}"
+                                   class="sax-payment-proof-file"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#paymentProofPreviewModal"
+                                   data-payment-proof-preview="{{ $legacyProofUrl }}"
+                                   data-payment-proof-download="{{ $legacyProofUrl }}"
+                                   data-payment-proof-name="{{ $legacyProofName }}"
+                                   data-payment-proof-type="{{ $legacyProofIsPdf ? 'pdf' : 'image' }}"
+                                   aria-label="{{ $proofActions['preview'] }}: {{ $legacyProofName }}">
+                                    @if ($legacyProofIsPdf)
+                                        <span><i class="fa-solid fa-file-pdf"></i></span>
+                                    @else
+                                        <img src="{{ $legacyProofUrl }}" alt="{{ $proofCopy['existing'] }}">
+                                    @endif
+                                    <small>{{ $legacyProofName }}</small>
+                                    <em><i class="fa-regular fa-eye"></i> {{ $proofActions['preview'] }}</em>
+                                </a>
+                                <a href="{{ $legacyProofUrl }}" download="{{ $legacyProofName }}" class="sax-payment-proof-download">
+                                    <i class="fa-solid fa-download"></i> {{ $proofActions['download'] }}
+                                </a>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -396,6 +434,8 @@
                 </form>
             @endif
         </section>
+
+        <x-payment-proof-preview-modal />
 
         <div class="row g-4 mb-5">
             <div class="col-lg-5">
@@ -467,6 +507,56 @@
                                                 {{ number_format((float) ($package['billable_weight'] ?? 0), 3, ',', '.') }} kg faturáveis
                                             </div>
                                         @endforeach
+                                    @endif
+
+                                    @if ($order->dhl_tracking_number)
+                                        @php
+                                            $trackingText = match (app()->getLocale()) {
+                                                'es' => ['title' => 'Código de seguimiento', 'refresh' => 'Actualizar seguimiento', 'open' => 'Ver en DHL', 'delivery' => 'Opciones de entrega'],
+                                                'en' => ['title' => 'Tracking number', 'refresh' => 'Refresh tracking', 'open' => 'Track with DHL', 'delivery' => 'Delivery options'],
+                                                default => ['title' => 'Código de rastreio', 'refresh' => 'Atualizar rastreio', 'open' => 'Acompanhar na DHL', 'delivery' => 'Opções de entrega'],
+                                            };
+                                            $trackingStatus = match ($order->dhl_shipment_status) {
+                                                'created' => match(app()->getLocale()) {'es' => 'Guía creada', 'en' => 'Shipment created', default => 'Guia criada'},
+                                                'picked_up' => match(app()->getLocale()) {'es' => 'Recogido por DHL', 'en' => 'Collected by DHL', default => 'Coletado pela DHL'},
+                                                'in_transit' => match(app()->getLocale()) {'es' => 'En tránsito', 'en' => 'In transit', default => 'Em trânsito'},
+                                                'out_for_delivery' => match(app()->getLocale()) {'es' => 'En reparto', 'en' => 'Out for delivery', default => 'Saiu para entrega'},
+                                                'delivered' => match(app()->getLocale()) {'es' => 'Entregado', 'en' => 'Delivered', default => 'Entregue'},
+                                                'exception' => match(app()->getLocale()) {'es' => 'Incidencia', 'en' => 'Delivery exception', default => 'Exceção no transporte'},
+                                                'returned' => match(app()->getLocale()) {'es' => 'En devolución', 'en' => 'Being returned', default => 'Em devolução'},
+                                                default => $order->dhl_shipment_status,
+                                            };
+                                        @endphp
+                                        <div class="border-top mt-2 pt-2">
+                                            <span class="d-block text-uppercase" style="font-size:10px">{{ $trackingText['title'] }}</span>
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <strong class="text-dark">{{ $order->dhl_tracking_number }}</strong>
+                                                @if($trackingStatus)<span class="badge text-bg-warning">{{ $trackingStatus }}</span>@endif
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                                <form action="{{ route('user.orders.dhl.track', $order) }}" method="POST">@csrf<button class="btn btn-sm btn-outline-dark" type="submit">{{ $trackingText['refresh'] }}</button></form>
+                                                @if($order->dhl_tracking_url)<a class="btn btn-sm btn-dark" href="{{ $order->dhl_tracking_url }}" target="_blank" rel="noopener">{{ $trackingText['open'] }}</a>@endif
+                                                @if($order->dhl_odd_url)<a class="btn btn-sm btn-outline-dark" href="{{ $order->dhl_odd_url }}" target="_blank" rel="noopener">{{ $trackingText['delivery'] }}</a>@endif
+                                            </div>
+                                            @if(is_array($order->dhl_tracking_events) && $order->dhl_tracking_events !== [])
+                                                <div class="mt-3">
+                                                    @foreach(array_slice($order->dhl_tracking_events, 0, 5) as $event)
+                                                        <div class="border-start border-2 ps-2 pb-2">
+                                                            <strong class="d-block text-dark">{{ $event['description'] ?: $event['type_code'] }}</strong>
+                                                            <span>{{ $event['location'] }} @if($event['occurred_at'])· {{ \Carbon\Carbon::parse($event['occurred_at'])->setTimezone(config('app.timezone'))->format('d/m/Y H:i') }}@endif</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div class="border-top mt-2 pt-2">
+                                            {{ match (app()->getLocale()) {
+                                                'es' => 'El código de seguimiento aparecerá aquí después de que SAX genere la guía DHL.',
+                                                'en' => 'Your tracking number will appear here after SAX creates the DHL shipment.',
+                                                default => 'O código de rastreio aparecerá aqui depois que a SAX gerar a guia DHL.',
+                                            } }}
+                                        </div>
                                     @endif
                                 </div>
                             @elseif ($order->shipping_provider === 'manual' || $order->delivery_method === 'manual_arrangement')

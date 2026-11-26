@@ -154,10 +154,10 @@
 
                 <div id="dynamic_address_section" class="row g-3 mx-0 px-0">
                     <div class="col-md-4" id="cep_container">
-                        <label class="sax-label" id="label-postal">CEP</label>
-                        <input type="text" id="postal_code" name="cep" class="sax-form-control" placeholder="00000-000" value="{{ old('cep') }}" list="checkout-postal-options" autocomplete="postal-code">
+                        <label class="sax-label" id="label-postal" for="postal_code">CEP do endereço de entrega</label>
+                        <input type="text" id="postal_code" name="cep" class="sax-form-control" placeholder="00000-000" value="{{ old('cep') }}" list="checkout-postal-options" autocomplete="postal-code" aria-describedby="postal-format-hint">
                         <datalist id="checkout-postal-options"></datalist>
-                        <div class="form-text" id="postal-format-hint">Informe o código postal exato do endereço.</div>
+                        <div class="form-text" id="postal-format-hint">Use o CEP exato do imóvel. A DHL valida esse dado para confirmar que atende o endereço e calcular o frete; um CEP aproximado pode impedir a compra.</div>
                     </div>
                     <div class="col-md-4">
                         <label class="sax-label" id="label-state">Estado</label>

@@ -27,6 +27,10 @@ class OrderItem extends Model
         'shipping_width_cm',
         'shipping_height_cm',
         'shipping_measurement_estimated',
+        'shipping_hs_code',
+        'shipping_country_of_origin',
+        'shipping_customs_description',
+        'shipping_is_dangerous_goods',
     ];
 
     protected $casts = [
@@ -35,13 +39,14 @@ class OrderItem extends Model
         'shipping_width_cm' => 'float',
         'shipping_height_cm' => 'float',
         'shipping_measurement_estimated' => 'boolean',
+        'shipping_is_dangerous_goods' => 'boolean',
     ];
 
     public function order()
     {
         return $this->belongsTo(Order::class);
     }
-    
+
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id')

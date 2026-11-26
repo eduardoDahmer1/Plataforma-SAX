@@ -83,16 +83,12 @@ class OrderPaymentProofController extends Controller
 
     public function show(Request $request, OrderPaymentProof $paymentProof): BinaryFileResponse
     {
-        $user = $request->user();
-        abort_unless(
-            $user && ($user->isAdmin() || (int) $paymentProof->order->user_id === (int) $user->getKey()),
-            403
-        );
+        $this->authorizeAccess($request, $paymentProof);
 
         $disk = Storage::disk('local');
         abort_unless($disk->exists($paymentProof->path), 404);
 
-        $safeName = str_replace(["\r", "\n", '"'], '', $paymentProof->original_name);
+        $safeName = $this->safeFileName($paymentProof);
 
         return response()->file($disk->path($paymentProof->path), [
             'Content-Type' => $paymentProof->mime_type,
@@ -100,5 +96,47 @@ class OrderPaymentProofController extends Controller
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, max-age=300',
         ]);
+    }
+
+    public function download(Request $request, OrderPaymentProof $paymentProof): BinaryFileResponse
+    {
+        $this->authorizeAccess($request, $paymentProof);
+
+        $disk = Storage::disk('local');
+        abort_unless($disk->exists($paymentProof->path), 404);
+
+        return response()->download(
+            $disk->path($paymentProof->path),
+            $this->safeFileName($paymentProof),
+            [
+                'Content-Type' => $paymentProof->mime_type,
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, no-store',
+            ]
+        );
+    }
+
+    private function authorizeAccess(Request $request, OrderPaymentProof $paymentProof): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user && ($user->isAdmin() || (int) $paymentProof->order->user_id === (int) $user->getKey()),
+            403
+        );
+    }
+
+    private function safeFileName(OrderPaymentProof $paymentProof): string
+    {
+        $name = basename(str_replace('\\', '/', $paymentProof->original_name));
+        $name = trim(str_replace(["\r", "\n", '"'], '', $name));
+
+        if ($name !== '') {
+            return $name;
+        }
+
+        $extension = pathinfo($paymentProof->path, PATHINFO_EXTENSION);
+
+        return 'comprovante-'.$paymentProof->getKey().($extension ? '.'.$extension : '');
     }
 }

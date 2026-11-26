@@ -23,6 +23,7 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping(10);
         $schedule->command('emails:send-pending --limit=3')->everyMinute()->withoutOverlapping();
+        $schedule->command('dhl:sync-tracking --limit=50')->everyThirtyMinutes()->withoutOverlapping(20);
         // Rede de segurança para alterações externas que não disparam eventos Eloquent.
         $schedule->command('products:refresh-feed --force')->hourly()->withoutOverlapping();
     }

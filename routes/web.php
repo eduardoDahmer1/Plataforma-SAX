@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\WhatsappWidgetController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DhlSettingController;
 use App\Http\Controllers\Admin\DhlMeasurementRuleController;
+use App\Http\Controllers\Admin\DhlShipmentController;
 use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\AllCategoriesController;
 use App\Http\Controllers\Auth\UserController;
@@ -49,6 +50,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactGuideController;
+use App\Http\Controllers\CustomerDhlTrackingController;
 use App\Http\Controllers\EmailUnsubscribeController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CuponUserController;
@@ -194,6 +196,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/orders', [UserController::class, 'orders'])->name('user.orders');
     Route::get('/orders/{id}', [UserController::class, 'showOrder'])->name('user.orders.show');
+    Route::post('/orders/{order}/dhl/rastreamento', CustomerDhlTrackingController::class)
+        ->middleware(['cliente', 'throttle:6,1'])
+        ->whereNumber('order')
+        ->name('user.orders.dhl.track');
     Route::post('/orders/{order}/payment-proofs', [OrderPaymentProofController::class, 'store'])
         ->middleware(['cliente', 'throttle:10,1'])
         ->whereNumber('order')
@@ -201,6 +207,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/payment-proofs/{paymentProof}', [OrderPaymentProofController::class, 'show'])
         ->whereNumber('paymentProof')
         ->name('payment-proofs.show');
+    Route::get('/payment-proofs/{paymentProof}/download', [OrderPaymentProofController::class, 'download'])
+        ->whereNumber('paymentProof')
+        ->name('payment-proofs.download');
     Route::post('/orders/{order}/comprar-novamente', [CartController::class, 'buyAgain'])
         ->middleware(['cliente', 'store.feature:add_to_cart'])
         ->whereNumber('order')
@@ -439,6 +448,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('categories/{category}/upload-banner', [CategoryControllerAdmin::class, 'uploadBanner'])->name('categories.uploadBanner');
     Route::get('categories/convert-images', [CategoryControllerAdmin::class, 'convertCategoryImagesToWebp'])->name('categories.convertImages');
     Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
+    Route::post('orders/{order}/dhl/remessa', [DhlShipmentController::class, 'store'])
+        ->middleware('throttle:3,1')->name('orders.dhl.shipment.store');
+    Route::post('orders/{order}/dhl/rastreamento', [DhlShipmentController::class, 'track'])
+        ->middleware('throttle:10,1')->name('orders.dhl.track');
+    Route::post('orders/{order}/dhl/comprovante-entrega', [DhlShipmentController::class, 'proofOfDelivery'])
+        ->middleware('throttle:5,1')->name('orders.dhl.proof-of-delivery');
+    Route::get('orders/{order}/dhl/documentos/{document}', [DhlShipmentController::class, 'document'])
+        ->whereNumber('document')->name('orders.dhl.documents.show');
     Route::post('orders/{order}/notes', [OrderController::class, 'storeNote'])->name('orders.notes.store');
     Route::post('orders/{order}/rendix-refund', [OrderController::class, 'refundRendix'])
         ->name('orders.rendix-refund');

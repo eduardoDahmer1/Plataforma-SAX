@@ -3,24 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\OrderItem; // Importante para o método store
-use App\Models\OrderNote;
-use App\Services\ReceiptService;
-use App\Services\CustomerNotificationService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB; // Faltava essa importação para as transactions
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPaidMail;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use App\Services\ImageConverterService;
-use App\Services\RendixPixRefundService;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\OrderNote;
 use App\Services\CheckoutStockReservationService;
 use App\Services\CuponService;
+use App\Services\CustomerNotificationService;
+use App\Services\Dhl\DhlSettingsService;
+use App\Services\ImageConverterService;
+use App\Services\ReceiptService;
+use App\Services\RendixPixRefundService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
@@ -28,7 +28,9 @@ class OrderController extends Controller
         private ReceiptService $receiptService,
         private CheckoutStockReservationService $stockReservations,
         private CuponService $cupons,
+        private DhlSettingsService $dhlSettings,
     ) {}
+
     // Lista pedidos
     public function index(Request $request)
     {
@@ -97,7 +99,7 @@ class OrderController extends Controller
 
         // Se veio atualização de STATUS DO PEDIDO
         if ($request->has('status')) {
-            
+
             // Se o Admin cancelar, devolvemos o estoque (apenas se não estava cancelado antes)
             if ($request->status === 'canceled' && $order->status !== 'canceled') {
                 if ($wasPaid) {
@@ -106,9 +108,9 @@ class OrderController extends Controller
                     $this->stockReservations->releaseOrder($order, 'admin_canceled', false);
                 }
             }
-            
+
             $order->status = $request->status;
-            
+
             // Lógica automática: Se marcar pedido como concluído, presume-se pago (opcional)
             if ($request->status === 'completed') {
                 $order->payment_status = 'paid';
@@ -122,7 +124,7 @@ class OrderController extends Controller
 
         $order->save();
 
-        if (!$wasPaid && $order->isPaid()) {
+        if (! $wasPaid && $order->isPaid()) {
             $this->stockReservations->commitOrder($order);
             $this->cupons->garantirUsoDoPedidoPago($order);
 
@@ -131,7 +133,7 @@ class OrderController extends Controller
             } catch (\Throwable $e) {
                 Log::error('Error al emitir recibo para pedido de depósito', [
                     'order_id' => $order->id,
-                    'message'  => $e->getMessage(),
+                    'message' => $e->getMessage(),
                 ]);
             }
 
@@ -141,7 +143,7 @@ class OrderController extends Controller
             } catch (\Throwable $e) {
                 Log::error('Error al enviar correo de confirmación de pago', [
                     'order_id' => $order->id,
-                    'message'  => $e->getMessage(),
+                    'message' => $e->getMessage(),
                 ]);
             }
         }
@@ -171,7 +173,9 @@ class OrderController extends Controller
             ->sortByDesc('id')
             ->first();
 
-        return view('admin.orders.show', compact('order', 'orderNotePresets', 'rendixRefundTransaction'));
+        $dhlConfig = $this->dhlSettings->resolved();
+
+        return view('admin.orders.show', compact('order', 'orderNotePresets', 'rendixRefundTransaction', 'dhlConfig'));
     }
 
     public function refundRendix(Order $order, RendixPixRefundService $refunds)
@@ -265,6 +269,7 @@ class OrderController extends Controller
 
         if (! $order->isPaid() && ! $this->stockReservations->orderHasActiveReservation($order)) {
             $this->stockReservations->releaseOrder($order, 'reservation_expired');
+
             return redirect()->route('user.orders.show', $order)
                 ->with('warning', $this->stockReservations->expiredMessage());
         }
@@ -289,97 +294,99 @@ class OrderController extends Controller
     {
         $request->validate([
             'payment_method' => 'required|string',
-            'status'         => 'required|string',
-            'name'            => 'required|string',
-            'document'       => 'nullable|string',
-            'email'          => 'required|email',
-            'phone'          => 'nullable|string',
-            'address'        => 'nullable|string',
-            'city'           => 'nullable|string',
-            'state'          => 'nullable|string',
-            'country'        => 'nullable|string',
-            'cep'            => 'nullable|string',
-            'street'         => 'nullable|string',
-            'number'         => 'nullable|string',
-            'district'       => 'nullable|string',
-            'complement'     => 'nullable|string',
-            'observations'   => 'nullable|string',
-            'shipping'       => 'nullable|integer',
-            'store'          => 'nullable|integer',
-            'shipping_cost'  => 'nullable|numeric',
-            'total'          => 'required|numeric',
+            'status' => 'required|string',
+            'name' => 'required|string',
+            'document' => 'nullable|string',
+            'email' => 'required|email',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string',
+            'state' => 'nullable|string',
+            'country' => 'nullable|string',
+            'cep' => 'nullable|string',
+            'street' => 'nullable|string',
+            'number' => 'nullable|string',
+            'district' => 'nullable|string',
+            'complement' => 'nullable|string',
+            'observations' => 'nullable|string',
+            'shipping' => 'nullable|integer',
+            'store' => 'nullable|integer',
+            'shipping_cost' => 'nullable|numeric',
+            'total' => 'required|numeric',
         ]);
 
         DB::beginTransaction();
         try {
             $order = Order::create([
-                'user_id'         => auth()->id(),
-                'order_number'    => strtoupper(Str::random(10)),
-                'txnid'           => $request->txnid ?? null,
-                'charge_id'       => $request->charge_id ?? null,
-                'pay_id'          => $request->pay_id ?? null,
-                'payment_status'  => $request->payment_status ?? 'pending',
-                'total'           => $request->total,
-                'discount'        => $request->discount ?? 0,
-                'payment_method'  => $request->payment_method,
-                'status'          => $request->status,
-                'name'            => $request->name,
-                'document'        => $request->document,
-                'email'           => $request->email,
-                'phone'           => $request->phone,
-                'address'         => $request->address,
-                'city'            => $request->city,
-                'state'           => $request->state,
-                'country'         => $request->country,
-                'cep'             => $request->cep,
-                'street'          => $request->street,
-                'number'          => $request->number,
-                'district'        => $request->district,
-                'complement'      => $request->complement,
-                'observations'    => $request->observations,
-                'shipping'        => $request->shipping,
-                'store'           => $request->store,
-                'shipping_cost'   => $request->shipping_cost,
-                'packing_cost'    => $request->packing_cost,
-                'tax'             => $request->tax,
-                'currency_sign'   => $request->currency_sign ?? 'US$',
-                'currency_value'  => $request->currency_value ?? 1,
-                'order_note'      => $request->order_note,
-                'internal_note'   => $request->internal_note,
-                
-                'shipping_name'     => $request->shipping_name ?? $request->name,
-                'shipping_email'    => $request->shipping_email ?? $request->email,
-                'shipping_phone'    => $request->shipping_phone ?? $request->phone,
-                'shipping_country'  => $request->shipping_country ?? $request->country,
-                'shipping_state'    => $request->shipping_state ?? $request->state,
-                'shipping_city'     => $request->shipping_city ?? $request->city,
-                'shipping_zip'      => $request->shipping_zip ?? $request->cep,
-                'shipping_address'  => $request->shipping_address ?? $request->street,
+                'user_id' => auth()->id(),
+                'order_number' => strtoupper(Str::random(10)),
+                'txnid' => $request->txnid ?? null,
+                'charge_id' => $request->charge_id ?? null,
+                'pay_id' => $request->pay_id ?? null,
+                'payment_status' => $request->payment_status ?? 'pending',
+                'total' => $request->total,
+                'discount' => $request->discount ?? 0,
+                'payment_method' => $request->payment_method,
+                'status' => $request->status,
+                'name' => $request->name,
+                'document' => $request->document,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'city' => $request->city,
+                'state' => $request->state,
+                'country' => $request->country,
+                'cep' => $request->cep,
+                'street' => $request->street,
+                'number' => $request->number,
+                'district' => $request->district,
+                'complement' => $request->complement,
+                'observations' => $request->observations,
+                'shipping' => $request->shipping,
+                'store' => $request->store,
+                'shipping_cost' => $request->shipping_cost,
+                'packing_cost' => $request->packing_cost,
+                'tax' => $request->tax,
+                'currency_sign' => $request->currency_sign ?? 'US$',
+                'currency_value' => $request->currency_value ?? 1,
+                'order_note' => $request->order_note,
+                'internal_note' => $request->internal_note,
+
+                'shipping_name' => $request->shipping_name ?? $request->name,
+                'shipping_email' => $request->shipping_email ?? $request->email,
+                'shipping_phone' => $request->shipping_phone ?? $request->phone,
+                'shipping_country' => $request->shipping_country ?? $request->country,
+                'shipping_state' => $request->shipping_state ?? $request->state,
+                'shipping_city' => $request->shipping_city ?? $request->city,
+                'shipping_zip' => $request->shipping_zip ?? $request->cep,
+                'shipping_address' => $request->shipping_address ?? $request->street,
                 'shipping_address_number' => $request->shipping_address_number ?? $request->number,
-                'shipping_complement'     => $request->shipping_complement ?? $request->complement,
-                'shipping_district'       => $request->shipping_district ?? $request->district,
-                'shipping_document'       => $request->shipping_document ?? $request->document,
+                'shipping_complement' => $request->shipping_complement ?? $request->complement,
+                'shipping_district' => $request->shipping_district ?? $request->district,
+                'shipping_document' => $request->shipping_document ?? $request->document,
             ]);
 
             if ($request->filled('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
                     OrderItem::create([
-                        'order_id'      => $order->id,
-                        'product_id'    => $item['product_id'] ?? null,
-                        'name'          => $item['name'] ?? 'Produto',
-                        'sku'           => $item['sku'] ?? null,
-                        'quantity'      => $item['quantity'] ?? 1,
-                        'price'         => $item['price'] ?? 0,
+                        'order_id' => $order->id,
+                        'product_id' => $item['product_id'] ?? null,
+                        'name' => $item['name'] ?? 'Produto',
+                        'sku' => $item['sku'] ?? null,
+                        'quantity' => $item['quantity'] ?? 1,
+                        'price' => $item['price'] ?? 0,
                     ]);
                 }
             }
 
             DB::commit();
+
             return redirect()->route('admin.orders.index')->with('success', 'Pedido criado com sucesso!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Erro ao criar pedido: ' . $e->getMessage())->withInput();
+
+            return back()->with('error', 'Erro ao criar pedido: '.$e->getMessage())->withInput();
         }
     }
 }

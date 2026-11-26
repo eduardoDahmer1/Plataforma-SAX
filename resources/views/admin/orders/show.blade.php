@@ -319,6 +319,129 @@
                     </div>
                 </div>
 
+                @if ($order->shipping_provider === 'dhl')
+                    @php
+                        $nextShippingDay = now()->addDay();
+                        while ($nextShippingDay->isWeekend()) $nextShippingDay->addDay();
+                        $dhlEnvironment = $dhlConfig['environment'] ?? 'sandbox';
+                        $dhlStatusLabels = [
+                            'created' => 'Guia criada / aguardando coleta',
+                            'picked_up' => 'Coletado pela DHL',
+                            'in_transit' => 'Em trânsito',
+                            'out_for_delivery' => 'Saiu para entrega',
+                            'delivered' => 'Entregue',
+                            'exception' => 'Exceção no transporte',
+                            'returned' => 'Em devolução',
+                        ];
+                        $dhlMissingCustoms = $order->items->filter(fn ($item) => blank($item->shipping_hs_code ?: $item->product?->shipping_hs_code)
+                            || blank($item->shipping_customs_description ?: $item->product?->shipping_customs_description));
+                        $dhlDangerous = $order->items->filter(fn ($item) => (bool) ($item->shipping_is_dangerous_goods ?: $item->product?->shipping_is_dangerous_goods));
+                    @endphp
+                    <div class="commerce-side-card mb-4 border border-warning">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                            <div>
+                                <h6 class="x-small fw-bold text-uppercase tracking-wider mb-1"><i class="fa-solid fa-plane-departure me-1"></i>Expedição DHL</h6>
+                                <p class="small text-secondary mb-0">Guia, etiqueta, fatura, packing list, coleta e rastreamento.</p>
+                            </div>
+                            <span class="badge {{ $dhlEnvironment === 'production' ? 'bg-danger' : 'bg-warning text-dark' }} text-uppercase">{{ $dhlEnvironment }}</span>
+                        </div>
+
+                        @if (! $order->hasDhlShipment())
+                            @if (! $order->isPaid())
+                                <div class="alert alert-secondary small py-2"><i class="fa-solid fa-lock me-1"></i>Confirme o pagamento para liberar a geração da guia.</div>
+                            @endif
+                            @if ($dhlMissingCustoms->isNotEmpty())
+                                <div class="alert alert-warning small py-2">{{ $dhlMissingCustoms->count() }} item(ns) ainda sem código HS ou descrição aduaneira em inglês.</div>
+                            @endif
+                            @if ($dhlDangerous->isNotEmpty())
+                                <div class="alert alert-danger small py-2">Há produto restrito/DG. A geração automática fica bloqueada até a DHL informar os códigos aplicáveis.</div>
+                            @endif
+
+                            <form action="{{ route('admin.orders.dhl.shipment.store', $order) }}" method="POST"
+                                  onsubmit="if (!confirm('Esta ação criará uma guia no ambiente {{ $dhlEnvironment }} da DHL. Confirma?')) return false; this.querySelector('button[type=submit]').disabled = true; return true;">
+                                @csrf
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="x-small fw-bold text-uppercase" for="dhl-product-code">Produto</label>
+                                        <input id="dhl-product-code" class="form-control form-control-sm text-uppercase" name="product_code" maxlength="3" value="{{ old('product_code', $order->shipping_service_code ?: 'P') }}" required>
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="x-small fw-bold text-uppercase" for="dhl-date">Data</label>
+                                        <input id="dhl-date" type="date" class="form-control form-control-sm" name="planned_shipping_date" min="{{ now()->toDateString() }}" value="{{ old('planned_shipping_date', $nextShippingDay->toDateString()) }}" required>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="x-small fw-bold text-uppercase" for="dhl-time">Hora</label>
+                                        <input id="dhl-time" type="time" class="form-control form-control-sm" name="planned_shipping_time" value="{{ old('planned_shipping_time', '10:00') }}" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check form-switch">
+                                            <input type="hidden" name="request_pickup" value="0">
+                                            <input class="form-check-input" type="checkbox" name="request_pickup" value="1" id="dhl-pickup" @checked(old('request_pickup', '1'))>
+                                            <label class="form-check-label small fw-bold" for="dhl-pickup">Solicitar coleta neste envio</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="x-small fw-bold text-uppercase" for="dhl-close-time">Fechamento</label>
+                                        <input id="dhl-close-time" type="time" class="form-control form-control-sm" name="pickup_close_time" value="{{ old('pickup_close_time', '16:00') }}">
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="x-small fw-bold text-uppercase" for="dhl-location">Local da coleta</label>
+                                        <input id="dhl-location" class="form-control form-control-sm" name="pickup_location" maxlength="80" value="{{ old('pickup_location', 'Recepção da SAX') }}">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-warning w-100 mt-3 text-uppercase fw-bold" @disabled(! $order->isPaid() || $dhlMissingCustoms->isNotEmpty() || $dhlDangerous->isNotEmpty())>
+                                    <i class="fa-solid fa-barcode me-1"></i>Gerar guia, documentos e coleta
+                                </button>
+                                <small class="d-block text-secondary mt-2">A ação não tem repetição automática. Em caso de timeout, confira o MyDHL antes de tentar novamente.</small>
+                            </form>
+                        @else
+                            <div class="p-3 bg-light border rounded mb-3">
+                                <span class="x-small text-secondary text-uppercase d-block">AWB / código de rastreio</span>
+                                <strong class="fs-5">{{ $order->dhl_tracking_number }}</strong>
+                                <span class="badge bg-dark ms-1">{{ $dhlStatusLabels[$order->dhl_shipment_status] ?? $order->dhl_shipment_status }}</span>
+                                @if($order->dhl_dispatch_confirmation_number)
+                                    <small class="d-block text-secondary mt-1">Coleta: {{ $order->dhl_dispatch_confirmation_number }}</small>
+                                @endif
+                            </div>
+                            @if(is_array($order->dhl_warnings) && $order->dhl_warnings !== [])
+                                <div class="alert alert-warning small py-2" role="alert">
+                                    <strong class="d-block mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>Avisos da DHL</strong>
+                                    @foreach($order->dhl_warnings as $warning)
+                                        <span class="d-block">{{ $warning }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
+                            <div class="d-grid gap-2 mb-3">
+                                <form action="{{ route('admin.orders.dhl.track', $order) }}" method="POST">@csrf<button class="btn btn-outline-dark w-100" type="submit"><i class="fa-solid fa-rotate me-1"></i>Atualizar rastreamento</button></form>
+                                @if($order->dhl_shipment_status === 'delivered')
+                                    <form action="{{ route('admin.orders.dhl.proof-of-delivery', $order) }}" method="POST">@csrf<button class="btn btn-outline-dark w-100" type="submit"><i class="fa-solid fa-file-signature me-1"></i>Baixar comprovante de entrega</button></form>
+                                @endif
+                                @if($order->dhl_tracking_url)<a class="btn btn-outline-dark" target="_blank" rel="noopener" href="{{ $order->dhl_tracking_url }}"><i class="fa-solid fa-arrow-up-right-from-square me-1"></i>Abrir rastreio DHL</a>@endif
+                                @if($order->dhl_odd_url)<a class="btn btn-outline-dark" target="_blank" rel="noopener" href="{{ $order->dhl_odd_url }}">Opções de entrega (ODD)</a>@endif
+                            </div>
+                            @if(is_array($order->dhl_documents) && $order->dhl_documents !== [])
+                                <div class="list-group mb-3">
+                                    @foreach($order->dhl_documents as $documentIndex => $document)
+                                        <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ route('admin.orders.dhl.documents.show', [$order, $documentIndex]) }}">
+                                            <span><i class="fa-regular fa-file-pdf me-1"></i>{{ $document['name'] ?? 'Documento DHL' }}</span><small>{{ $document['format'] ?? '' }}</small>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
+                            @if(is_array($order->dhl_tracking_events) && $order->dhl_tracking_events !== [])
+                                <div class="small">
+                                    @foreach(array_slice($order->dhl_tracking_events, 0, 4) as $event)
+                                        <div class="border-start border-2 ps-2 pb-2">
+                                            <strong>{{ $event['description'] ?: $event['type_code'] }}</strong>
+                                            <small class="d-block text-secondary">{{ $event['location'] }} @if($event['occurred_at'])· {{ \Carbon\Carbon::parse($event['occurred_at'])->setTimezone(config('app.timezone'))->format('d/m/Y H:i') }}@endif</small>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                @endif
+
                 <div class="commerce-side-card commerce-finance-confirmation mb-4 {{ $order->payment_status === 'paid' ? 'is-ready' : 'is-locked' }}">
                     <h6 class="x-small fw-bold text-uppercase tracking-wider mb-2">
                         <i class="fa-brands fa-whatsapp me-1"></i>Confirmação do financeiro
@@ -400,18 +523,31 @@
                         <p class="small text-secondary mb-3">{{ $order->paymentProofs->count() }} arquivo(s) enviado(s). Clique para abrir com acesso protegido.</p>
                         <div class="commerce-payment-proofs">
                             @foreach ($order->paymentProofs as $proof)
-                                <a href="{{ route('payment-proofs.show', $proof) }}" target="_blank" rel="noopener" class="commerce-payment-proof">
-                                    @if ($proof->isImage())
-                                        <img src="{{ route('payment-proofs.show', $proof) }}" alt="{{ $proof->original_name }}">
-                                    @else
-                                        <span><i class="fa-solid fa-file-pdf"></i></span>
-                                    @endif
-                                    <div>
-                                        <strong>{{ $proof->original_name }}</strong>
-                                        <small>{{ number_format($proof->size / 1024, 0, ',', '.') }} KB · {{ $proof->created_at->format('d/m/Y H:i') }}</small>
-                                    </div>
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                </a>
+                                <div class="commerce-payment-proof-item">
+                                    <a href="{{ route('payment-proofs.show', $proof) }}"
+                                       class="commerce-payment-proof"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#paymentProofPreviewModal"
+                                       data-payment-proof-preview="{{ route('payment-proofs.show', $proof) }}"
+                                       data-payment-proof-download="{{ route('payment-proofs.download', $proof) }}"
+                                       data-payment-proof-name="{{ $proof->original_name }}"
+                                       data-payment-proof-type="{{ $proof->isImage() ? 'image' : 'pdf' }}"
+                                       aria-label="Visualizar: {{ $proof->original_name }}">
+                                        @if ($proof->isImage())
+                                            <img src="{{ route('payment-proofs.show', $proof) }}" alt="{{ $proof->original_name }}">
+                                        @else
+                                            <span><i class="fa-solid fa-file-pdf"></i></span>
+                                        @endif
+                                        <div>
+                                            <strong>{{ $proof->original_name }}</strong>
+                                            <small>{{ number_format($proof->size / 1024, 0, ',', '.') }} KB · {{ $proof->created_at->format('d/m/Y H:i') }}</small>
+                                        </div>
+                                        <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                    </a>
+                                    <a href="{{ route('payment-proofs.download', $proof) }}" class="commerce-payment-proof-download">
+                                        <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar arquivo
+                                    </a>
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -605,10 +741,30 @@
                     @endif
 
                     @if ($order->deposit_receipt)
+                        @php
+                            $legacyProofUrl = asset('storage/' . $order->depositReceiptPath());
+                            $legacyProofName = basename($order->depositReceiptPath());
+                            $legacyProofIsPdf = \Illuminate\Support\Str::endsWith(strtolower($order->depositReceiptPath()), '.pdf');
+                        @endphp
                         <div class="pt-4 mt-4 border-top border-secondary">
                             <label class="x-small fw-bold text-uppercase d-block mb-3 text-secondary text-center">Comprovante</label>
-                            <a href="{{ asset('storage/' . $order->depositReceiptPath()) }}" target="_blank" class="d-block border border-secondary p-1 rounded bg-white">
-                                <img src="{{ asset('storage/' . $order->depositReceiptPath()) }}" class="img-fluid d-block mx-auto" style="max-height: 150px;">
+                            <a href="{{ $legacyProofUrl }}"
+                               class="d-flex align-items-center justify-content-center border border-secondary p-2 rounded bg-white text-decoration-none"
+                               data-bs-toggle="modal"
+                               data-bs-target="#paymentProofPreviewModal"
+                               data-payment-proof-preview="{{ $legacyProofUrl }}"
+                               data-payment-proof-download="{{ $legacyProofUrl }}"
+                               data-payment-proof-name="{{ $legacyProofName }}"
+                               data-payment-proof-type="{{ $legacyProofIsPdf ? 'pdf' : 'image' }}"
+                               aria-label="Visualizar: {{ $legacyProofName }}">
+                                @if ($legacyProofIsPdf)
+                                    <span class="d-grid text-danger fs-1 py-4"><i class="fa-solid fa-file-pdf"></i></span>
+                                @else
+                                    <img src="{{ $legacyProofUrl }}" alt="{{ $legacyProofName }}" class="img-fluid d-block mx-auto" style="max-height: 150px;">
+                                @endif
+                            </a>
+                            <a href="{{ $legacyProofUrl }}" download="{{ $legacyProofName }}" class="btn btn-outline-light btn-sm w-100 mt-2 fw-bold">
+                                <i class="fa-solid fa-download me-1"></i> Baixar arquivo
                             </a>
                         </div>
                     @endif
@@ -618,6 +774,8 @@
     </div>
 </x-admin.card>
 </div>
+
+<x-payment-proof-preview-modal />
 @endsection
 
 @push('scripts')

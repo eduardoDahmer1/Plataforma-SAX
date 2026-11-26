@@ -600,6 +600,12 @@
     gap: 8px;
 }
 
+.commerce-payment-proof-item {
+    display: grid;
+    min-width: 0;
+    gap: 5px;
+}
+
 .commerce-payment-proof {
     display: grid;
     min-width: 0;
@@ -612,6 +618,15 @@
     background: #f7f8fa;
     border: 1px solid #e2e5e9;
     border-radius: 8px;
+    cursor: zoom-in;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.commerce-payment-proof:hover,
+.commerce-payment-proof:focus-visible {
+    color: var(--commerce-ink);
+    border-color: #98a2b3;
+    box-shadow: 0 5px 14px rgba(16, 24, 40, .08);
 }
 
 .commerce-payment-proof img,
@@ -640,6 +655,26 @@
 
 .commerce-payment-proof strong { font-size: .68rem; }
 .commerce-payment-proof small { color: #667085; font-size: .58rem; }
+
+.commerce-payment-proof-download {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #fff;
+    background: var(--commerce-ink);
+    border-radius: 7px;
+    font-size: .62rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.commerce-payment-proof-download:hover,
+.commerce-payment-proof-download:focus-visible {
+    color: #fff;
+    background: #000;
+}
 
 .commerce-side-card .btn,
 .commerce-finance-card .btn {

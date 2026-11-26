@@ -344,11 +344,16 @@ class CheckoutController extends Controller
                 'total' => $total,
                 'shipping_cost' => $frete,
                 'shipping_provider' => $manualShipping ? 'manual' : ($dhlQuote['provider'] ?? null),
+                'shipping_service_code' => $dhlQuote['service_code'] ?? null,
+                'shipping_service_name' => $dhlQuote['service_name'] ?? null,
                 'shipping_currency' => $dhlQuote['currency'] ?? null,
+                'shipping_provider_cost' => $dhlQuote['provider_price'] ?? null,
                 'shipping_markup_percent' => $dhlQuote['markup_percent'] ?? null,
                 'shipping_billable_weight_kg' => $dhlQuote['billable_weight'] ?? null,
                 'shipping_package_count' => $dhlQuote['package_count'] ?? null,
                 'shipping_packages' => $dhlQuote['packages'] ?? null,
+                'shipping_estimated_delivery_at' => $dhlQuote['estimated_delivery_at'] ?? null,
+                'shipping_quote_reference' => $dhlQuote['reference'] ?? null,
                 'delivery_method' => $manualShipping ? 'manual_arrangement' : ($dhlQuote ? 'dhl' : null),
                 'payment_method' => $paymentMethod,
                 'cupon_id' => $cupon->id ?? null,
@@ -741,6 +746,10 @@ class CheckoutController extends Controller
             'shipping_width_cm' => $measurement['width'],
             'shipping_height_cm' => $measurement['height'],
             'shipping_measurement_estimated' => $measurement['estimated'],
+            'shipping_hs_code' => $product->shipping_hs_code,
+            'shipping_country_of_origin' => $product->shipping_country_of_origin,
+            'shipping_customs_description' => $product->shipping_customs_description,
+            'shipping_is_dangerous_goods' => (bool) $product->shipping_is_dangerous_goods,
         ];
     }
 

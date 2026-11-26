@@ -116,6 +116,48 @@ final class MyDhlApiClient
         return $this->request('GET', '/address-validate', $query, true);
     }
 
+    /**
+     * Cria uma remessa e sua guia. Não há retry automático: repetir este POST
+     * após timeout pode gerar duas guias para o mesmo pedido.
+     */
+    public function createShipment(array $payload): array
+    {
+        return $this->request('POST', '/shipments', $payload, false);
+    }
+
+    /**
+     * Obtém todos os checkpoints conhecidos para um AWB.
+     */
+    public function trackShipment(string $shipmentTrackingNumber): array
+    {
+        return $this->request(
+            'GET',
+            '/shipments/'.rawurlencode($shipmentTrackingNumber).'/tracking',
+            [
+                'trackingView' => 'all-checkpoints-with-remarks',
+                'levelOfDetail' => 'all',
+                'requestGMTOffsetPerEvent' => 'true',
+            ],
+            true,
+        );
+    }
+
+    /**
+     * Obtém o comprovante assinado depois da entrega.
+     */
+    public function proofOfDelivery(string $shipmentTrackingNumber): array
+    {
+        return $this->request(
+            'GET',
+            '/shipments/'.rawurlencode($shipmentTrackingNumber).'/proof-of-delivery',
+            [
+                'shipperAccountNumber' => $this->accountNumber,
+                'content' => 'epod-detail',
+            ],
+            true,
+        );
+    }
+
     private function request(string $method, string $path, array $data, bool $retryable): array
     {
         $this->assertConfigured();

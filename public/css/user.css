@@ -485,9 +485,17 @@ grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
 gap: 10px;
 }
 
+.sax-payment-proof-item {
+display: flex;
+min-width: 0;
+flex-direction: column;
+gap: 6px;
+}
+
 .sax-payment-proof-file {
 display: flex;
 min-width: 0;
+flex: 1;
 flex-direction: column;
 gap: 7px;
 padding: 8px;
@@ -496,6 +504,16 @@ text-decoration: none;
 background: #f7f8fa;
 border: 1px solid #e1e4e8;
 border-radius: 9px;
+cursor: zoom-in;
+transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+
+.sax-payment-proof-file:hover,
+.sax-payment-proof-file:focus-visible {
+color: #111827;
+border-color: #98a2b3;
+box-shadow: 0 6px 16px rgba(15, 23, 42, .1);
+transform: translateY(-1px);
 }
 
 .sax-payment-proof-file img,
@@ -520,6 +538,35 @@ font-size: .66rem;
 font-weight: 700;
 text-overflow: ellipsis;
 white-space: nowrap;
+}
+
+.sax-payment-proof-file em {
+color: #667085;
+font-size: .64rem;
+font-style: normal;
+font-weight: 700;
+text-align: center;
+}
+
+.sax-payment-proof-download {
+display: inline-flex;
+min-height: 32px;
+align-items: center;
+justify-content: center;
+gap: 6px;
+padding: 6px 8px;
+color: #fff;
+background: #1f2937;
+border-radius: 7px;
+font-size: .66rem;
+font-weight: 800;
+text-decoration: none;
+}
+
+.sax-payment-proof-download:hover,
+.sax-payment-proof-download:focus-visible {
+color: #fff;
+background: #000;
 }
 
 .sax-payment-proof-form {

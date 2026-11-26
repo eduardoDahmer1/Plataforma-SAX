@@ -7,8 +7,8 @@ use App\Services\Dhl\MyDhlApiClient;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Http\Client\Factory;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -18,7 +18,7 @@ class MyDhlApiClientTest extends TestCase
     {
         parent::setUp();
 
-        $container = new Container();
+        $container = new Container;
         Container::setInstance($container);
         Facade::setFacadeApplication($container);
         $container->instance('config', new Repository([
@@ -33,8 +33,8 @@ class MyDhlApiClientTest extends TestCase
                 'retry_times' => 1,
             ]],
         ]));
-        $container->instance(Factory::class, new Factory());
-        $container->instance('log', new NullLogger());
+        $container->instance(Factory::class, new Factory);
+        $container->instance('log', new NullLogger);
     }
 
     protected function tearDown(): void
@@ -52,7 +52,7 @@ class MyDhlApiClientTest extends TestCase
             'express.api.dhl.com/*' => Http::response(['products' => []]),
         ]);
 
-        $result = (new MyDhlApiClient())->rates(['packages' => []]);
+        $result = (new MyDhlApiClient)->rates(['packages' => []]);
 
         $this->assertSame(['products' => []], $result);
         Http::assertSent(function ($request): bool {
@@ -70,7 +70,7 @@ class MyDhlApiClientTest extends TestCase
         Http::fake();
 
         try {
-            (new MyDhlApiClient())->rates([]);
+            (new MyDhlApiClient)->rates([]);
             $this->fail('A configuração incompleta deveria impedir a chamada.');
         } catch (DhlApiException $exception) {
             $this->assertContains('DHL_API_SECRET', $exception->details()['missing']);
@@ -91,7 +91,7 @@ class MyDhlApiClientTest extends TestCase
         ]);
 
         try {
-            (new MyDhlApiClient())->rates([]);
+            (new MyDhlApiClient)->rates([]);
             $this->fail('A resposta inválida deveria lançar uma exceção.');
         } catch (DhlApiException $exception) {
             $this->assertSame(400, $exception->httpStatus());
@@ -103,7 +103,7 @@ class MyDhlApiClientTest extends TestCase
 
     public function test_configuration_summary_masks_the_account_number(): void
     {
-        $summary = (new MyDhlApiClient())->configurationSummary();
+        $summary = (new MyDhlApiClient)->configurationSummary();
 
         $this->assertSame('*****6789', $summary['account']);
         $this->assertTrue($summary['credentials_present']);
@@ -120,7 +120,7 @@ class MyDhlApiClientTest extends TestCase
         ]);
 
         try {
-            (new MyDhlApiClient())->rates([]);
+            (new MyDhlApiClient)->rates([]);
             $this->fail('O código postal inválido deveria lançar uma exceção.');
         } catch (DhlApiException $exception) {
             $this->assertSame('Código postal inválido para AU. A DHL exige exatamente 4 dígitos.', $exception->getMessage());
@@ -132,7 +132,7 @@ class MyDhlApiClientTest extends TestCase
         config()->set('services.dhl.base_url', 'https://express.api.dhl.com/mydhlapi');
         Http::fake();
 
-        $client = new MyDhlApiClient();
+        $client = new MyDhlApiClient;
 
         $this->assertFalse($client->isConfigured());
         $this->assertContains('DHL_BASE_URL/DHL_ENVIRONMENT', $client->missingConfiguration());
@@ -148,7 +148,7 @@ class MyDhlApiClientTest extends TestCase
         ]);
 
         try {
-            (new MyDhlApiClient())->rates([]);
+            (new MyDhlApiClient)->rates([]);
             $this->fail('A resposta HTML deveria lançar uma exceção segura.');
         } catch (DhlApiException $exception) {
             $this->assertSame(502, $exception->httpStatus());
@@ -168,6 +168,58 @@ class MyDhlApiClientTest extends TestCase
         $this->expectException(DhlApiException::class);
         $this->expectExceptionMessage('A DHL devolveu uma resposta inesperada');
 
-        (new MyDhlApiClient())->rates([]);
+        (new MyDhlApiClient)->rates([]);
+    }
+
+    public function test_it_creates_a_shipment_without_changing_the_official_payload(): void
+    {
+        Http::fake([
+            'express.api.dhl.com/*' => Http::response(['shipmentTrackingNumber' => '1234567890']),
+        ]);
+
+        $payload = [
+            'productCode' => 'P',
+            'pickup' => ['isRequested' => true],
+            'customerReferences' => [['typeCode' => 'CU', 'value' => 'SAX-100']],
+        ];
+
+        $response = (new MyDhlApiClient)->createShipment($payload);
+
+        $this->assertSame('1234567890', $response['shipmentTrackingNumber']);
+        Http::assertSent(fn ($request): bool => $request->method() === 'POST'
+            && $request->url() === 'https://express.api.dhl.com/mydhlapi/test/shipments'
+            && $request->data() === $payload
+        );
+    }
+
+    public function test_it_requests_complete_tracking_with_event_time_offsets(): void
+    {
+        Http::fake([
+            'express.api.dhl.com/*' => Http::response(['shipments' => []]),
+        ]);
+
+        (new MyDhlApiClient)->trackShipment('1234567890');
+
+        Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+            && str_starts_with($request->url(), 'https://express.api.dhl.com/mydhlapi/test/shipments/1234567890/tracking?')
+            && $request['trackingView'] === 'all-checkpoints-with-remarks'
+            && $request['levelOfDetail'] === 'all'
+            && $request['requestGMTOffsetPerEvent'] === 'true'
+        );
+    }
+
+    public function test_it_requests_the_detailed_proof_of_delivery_for_the_shipper_account(): void
+    {
+        Http::fake([
+            'express.api.dhl.com/*' => Http::response(['documents' => []]),
+        ]);
+
+        (new MyDhlApiClient)->proofOfDelivery('1234567890');
+
+        Http::assertSent(fn ($request): bool => $request->method() === 'GET'
+            && str_starts_with($request->url(), 'https://express.api.dhl.com/mydhlapi/test/shipments/1234567890/proof-of-delivery?')
+            && $request['shipperAccountNumber'] === '123456789'
+            && $request['content'] === 'epod-detail'
+        );
     }
 }

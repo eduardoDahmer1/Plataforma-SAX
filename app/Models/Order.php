@@ -57,11 +57,28 @@ class Order extends Model
 
         'shipping_cost',
         'shipping_provider',
+        'shipping_service_code',
+        'shipping_service_name',
         'shipping_currency',
+        'shipping_provider_cost',
         'shipping_markup_percent',
         'shipping_billable_weight_kg',
         'shipping_package_count',
         'shipping_packages',
+        'shipping_estimated_delivery_at',
+        'shipping_quote_reference',
+        'dhl_tracking_number',
+        'dhl_dispatch_confirmation_number',
+        'dhl_tracking_url',
+        'dhl_odd_url',
+        'dhl_shipment_status',
+        'dhl_shipment_environment',
+        'dhl_planned_shipping_at',
+        'dhl_shipment_created_at',
+        'dhl_last_tracking_at',
+        'dhl_tracking_events',
+        'dhl_documents',
+        'dhl_warnings',
         'packing_cost',
         'tax',
 
@@ -111,6 +128,14 @@ class Order extends Model
         'terms_accepted_at' => 'datetime',
         'rendix_terms_accepted_at' => 'datetime',
         'shipping_packages' => 'array',
+        'shipping_provider_cost' => 'float',
+        'shipping_estimated_delivery_at' => 'datetime',
+        'dhl_planned_shipping_at' => 'datetime',
+        'dhl_shipment_created_at' => 'datetime',
+        'dhl_last_tracking_at' => 'datetime',
+        'dhl_tracking_events' => 'array',
+        'dhl_documents' => 'array',
+        'dhl_warnings' => 'array',
     ];
 
     public function depositReceiptPath(): ?string
@@ -121,7 +146,7 @@ class Order extends Model
 
         return str_starts_with($this->deposit_receipt, 'deposits/')
             ? $this->deposit_receipt
-            : 'deposits/' . $this->deposit_receipt;
+            : 'deposits/'.$this->deposit_receipt;
     }
 
     // Relacionamento com itens do pedido
@@ -170,5 +195,10 @@ class Order extends Model
     public function isPaid(): bool
     {
         return $this->status === 'paid' || $this->payment_status === 'paid';
+    }
+
+    public function hasDhlShipment(): bool
+    {
+        return filled($this->dhl_tracking_number);
     }
 }
